@@ -10,7 +10,7 @@ export type Incoterm = Enums<"incoterm">;
 
 export const MODOS: ModoTransporte[] = ["Marítimo", "Aéreo", "Terrestre", "Multimodal"];
 export const TIPOS: TipoOperacion[] = ["Importación", "Exportación", "Nacional", "Cross Trade", "Intra USA"];
-export const INCOTERMS: Incoterm[] = ["EXW", "FOB", "CIF", "DAP", "DDP", "FCA", "CFR", "CPT", "CIP", "DAT", "N/A"];
+export const INCOTERMS: Incoterm[] = ["EXW", "FOB", "CIF", "DAP", "DDP", "FCA", "CFR", "CPT", "CIP", "DAT", "N/A", "FAS", "DPU"];
 
 export const UNIDADES_MEDIDA = [
   "BL",

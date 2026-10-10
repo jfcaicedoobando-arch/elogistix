@@ -34,6 +34,7 @@ export function DatosGeneralesCard({ embarque }: { embarque: EmbarqueRow }) {
                 embarque.incoterm === "CPT" ||
                 embarque.incoterm === "DAP" ||
                 embarque.incoterm === "DDP" ||
+                embarque.incoterm === "DPU" ||
                 embarque.incoterm === "DAT") && (
                 <span
                   className="inline-flex items-center rounded-full bg-primary/10 px-2 py-0.5 text-2xs font-medium text-primary"

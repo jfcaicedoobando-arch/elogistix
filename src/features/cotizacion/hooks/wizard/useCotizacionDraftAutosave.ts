@@ -112,7 +112,7 @@ export function useCotizacionDraftAutosave({ form, userId, organizationId = null
     tipoCambioUsd: ventasRef.current.tipoCambioUsd,
     costosSincronizados: ventasRef.current.getCostosSincronizados?.() ?? costosRef.current,
     savedAt: Date.now(),
-    cotizacionId: cotIdRef.current,
+    cotizacionId: values.pricingVinculoPendienteId ?? cotIdRef.current,
     updatedAt: selloRef.current?.() ?? null,
     values,
     currentStep: stepRef.current,
@@ -146,8 +146,13 @@ export function useCotizacionDraftAutosave({ form, userId, organizationId = null
 
   useEffect(() => {
     if (!enabled) return;
-    const subscription = form.watch(() => {
+    const subscription = form.watch((values, { name }) => {
       if (timerRef.current) clearTimeout(timerRef.current);
+      // El ID se registra antes de iniciar la RPC, sin esperar el debounce.
+      if (name === "pricingVinculoPendienteId" && values.pricingVinculoPendienteId) {
+        persist(form.getValues());
+        return;
+      }
       timerRef.current = setTimeout(() => persist(form.getValues()), DEBOUNCE_MS);
     });
     return () => {

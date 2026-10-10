@@ -108,8 +108,8 @@ export function CosteoTarifasFiltros({
       </Select>
 
       <Select value={tipoId} onValueChange={onTipoChange}>
-        <SelectTrigger className="h-9 w-auto gap-1.5" aria-label="Filtrar por contenedor">
-          <span className="text-body-sm text-muted-foreground">Contenedor:</span>
+        <SelectTrigger className="h-9 w-auto gap-1.5" aria-label="Filtrar por tipo de contenedor">
+          <span className="text-body-sm text-muted-foreground">Tipo de contenedor:</span>
           <SelectValue />
         </SelectTrigger>
         <SelectContent>

@@ -72,13 +72,13 @@ export function SolicitudPricingCampos({ datos, set, disabled }: Props) {
         <CampoTexto id="pr-dim" label="Dimensions" {...d} value={datos.dimensiones} onChange={txt("dimensiones")} />
       </FormDialogSection>
       <FormDialogSection title="Ruta">
-        <CampoLista id="pr-origen" label="País de Origen" required {...d} value={datos.origen}
+        <CampoLista id="pr-origen" label="País de origen" required {...d} value={datos.origen}
           opciones={paises} onChange={cambiarPais("origen", "pol")} />
-        <CampoPuerto id="pr-pol" label="Puerto origen" {...d} pais={datos.origen} value={datos.pol}
+        <CampoPuerto id="pr-pol" label="Puerto de origen" {...d} pais={datos.origen} value={datos.pol}
           puertos={puertos} excluirEtiqueta={datos.pod} onChange={(v) => set("pol", v)} />
-        <CampoLista id="pr-destino" label="País de Destino" required {...d} value={datos.destino}
+        <CampoLista id="pr-destino" label="País de destino" required {...d} value={datos.destino}
           opciones={paises} onChange={cambiarPais("destino", "pod")} />
-        <CampoPuerto id="pr-pod" label="Puerto destino" {...d} pais={datos.destino} value={datos.pod}
+        <CampoPuerto id="pr-pod" label="Puerto de destino" {...d} pais={datos.destino} value={datos.pod}
           puertos={puertos} excluirEtiqueta={datos.pol} onChange={(v) => set("pod", v)} />
         <CampoTexto id="pr-carga" label="Fecha tentativa de carga" type="date" {...d} value={datos.fecha_tentativa_carga}
           onChange={txt("fecha_tentativa_carga")} />

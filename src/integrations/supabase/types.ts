@@ -2866,6 +2866,7 @@ export type Database = {
           peso_fisico_kg: number | null
           peso_kg: number
           piezas: number
+          pricing_solicitud_id: string | null
           prospecto_contacto: string
           prospecto_email: string
           prospecto_empresa: string
@@ -2959,6 +2960,7 @@ export type Database = {
           peso_fisico_kg?: number | null
           peso_kg?: number
           piezas?: number
+          pricing_solicitud_id?: string | null
           prospecto_contacto?: string
           prospecto_email?: string
           prospecto_empresa?: string
@@ -3052,6 +3054,7 @@ export type Database = {
           peso_fisico_kg?: number | null
           peso_kg?: number
           piezas?: number
+          pricing_solicitud_id?: string | null
           prospecto_contacto?: string
           prospecto_email?: string
           prospecto_empresa?: string
@@ -3138,6 +3141,13 @@ export type Database = {
             columns: ["organization_id"]
             isOneToOne: false
             referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cotizaciones_pricing_solicitud_id_fkey"
+            columns: ["pricing_solicitud_id"]
+            isOneToOne: false
+            referencedRelation: "crm_solicitudes_pricing"
             referencedColumns: ["id"]
           },
           {
@@ -11473,6 +11483,15 @@ export type Database = {
         }
         Returns: Json
       }
+      crm_vincular_cotizacion_cliente_pricing: {
+        Args: {
+          p_cotizacion_id: string
+          p_oportunidad_id: string
+          p_solicitud_id: string
+          p_tarifa_id: string
+        }
+        Returns: Json
+      }
       cron_try_lock: {
         Args: { p_key: string; p_owner?: string; p_ttl_seconds?: number }
         Returns: boolean
@@ -13338,6 +13357,8 @@ export type Database = {
         | "CIP"
         | "DAT"
         | "N/A"
+        | "FAS"
+        | "DPU"
       modo_transporte: "Marítimo" | "Aéreo" | "Terrestre" | "Multimodal"
       moneda: "MXN" | "USD" | "EUR"
       motivo_nota_credito:
@@ -13651,6 +13672,8 @@ export const Constants = {
         "CIP",
         "DAT",
         "N/A",
+        "FAS",
+        "DPU",
       ],
       modo_transporte: ["Marítimo", "Aéreo", "Terrestre", "Multimodal"],
       moneda: ["MXN", "USD", "EUR"],

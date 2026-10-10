@@ -1,0 +1,232 @@
+-- LOCAL REVIEW ONLY. Exposure is intentionally disabled; see PENDING-ACL.sql.
+BEGIN;
+-- Fail closed on an existing homonym before using IF NOT EXISTS.
+DO $pricing_index_preflight$
+BEGIN
+  IF pg_catalog.to_regclass('public.cotizaciones_pricing_solicitud_idx') IS NOT NULL THEN
+    RAISE EXCEPTION 'LC_PRICING_SCHEMA_DRIFT' USING ERRCODE='55000',
+      DETAIL='Pricing lineage index name already exists; review the schema before installation.';
+  END IF;
+END;
+$pricing_index_preflight$;
+ALTER TABLE public.cotizaciones ADD COLUMN pricing_solicitud_id uuid
+  REFERENCES public.crm_solicitudes_pricing(id);
+CREATE INDEX IF NOT EXISTS cotizaciones_pricing_solicitud_idx ON public.cotizaciones(pricing_solicitud_id)
+  WHERE pricing_solicitud_id IS NOT NULL;
+-- A concurrent unrelated relation must not turn IF NOT EXISTS into a silent skip.
+DO $pricing_index_postcheck$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_catalog.pg_index i
+    JOIN pg_catalog.pg_class c ON c.oid=i.indexrelid
+    WHERE i.indexrelid=pg_catalog.to_regclass('public.cotizaciones_pricing_solicitud_idx')
+      AND i.indrelid='public.cotizaciones'::regclass AND c.relkind='i'
+      AND i.indisvalid AND i.indisready AND i.indislive
+      AND NOT i.indisunique AND NOT i.indisprimary AND NOT i.indisexclusion
+      AND pg_catalog.pg_get_indexdef(i.indexrelid,0,false)=
+        ('CREATE INDEX ' || 'cotizaciones_pricing_solicitud_idx ON public.cotizaciones USING btree (pricing_solicitud_id) WHERE (pricing_solicitud_id IS NOT NULL)')
+  ) THEN
+    RAISE EXCEPTION 'LC_PRICING_SCHEMA_DRIFT' USING ERRCODE='55000',
+      DETAIL='Pricing lineage index does not match the reviewed definition.';
+  END IF;
+END;
+$pricing_index_postcheck$;
+COMMENT ON COLUMN public.cotizaciones.pricing_solicitud_id IS
+  'Exact Pricing response origin confirmed by the client-link RPC. NULL means unverified/historical, never inferred from tariff.';
+-- Local review candidate. Does not change the existing prospect trigger.
+CREATE OR REPLACE FUNCTION public.guard_cotizacion_origen_pricing()
+RETURNS trigger LANGUAGE plpgsql SECURITY INVOKER SET search_path TO 'public', 'pg_temp'
+AS $function$
+BEGIN
+  IF TG_OP='UPDATE' AND OLD.pricing_solicitud_id IS NOT NULL AND
+    ROW(NEW.pricing_solicitud_id,NEW.oportunidad_id,NEW.cliente_id,NEW.tarifa_id,NEW.organization_id,NEW.es_prospecto,NEW.moneda)
+      IS DISTINCT FROM
+    ROW(OLD.pricing_solicitud_id,OLD.oportunidad_id,OLD.cliente_id,OLD.tarifa_id,OLD.organization_id,OLD.es_prospecto,OLD.moneda) THEN
+    RAISE EXCEPTION 'LC_COT_PRICING_ORIGEN_CONFIRMADO' USING ERRCODE='22023';
+  END IF;
+  IF NEW.pricing_solicitud_id IS NULL THEN RETURN NEW; END IF;
+  IF TG_OP='INSERT' OR OLD.pricing_solicitud_id IS NULL THEN
+    -- No client-controlled GUC can bypass this guard. The reviewed RPC is owned
+    -- by postgres, as other canonical RPCs; application roles cannot set lineage.
+    IF current_user <> 'postgres' THEN
+      RAISE EXCEPTION 'LC_COT_PRICING_SOLO_RPC' USING ERRCODE='42501';
+    END IF;
+    IF NEW.es_prospecto IS DISTINCT FROM false OR NEW.cliente_id IS NULL
+      OR NEW.oportunidad_id IS NULL OR NEW.tarifa_id IS NULL
+      OR NOT EXISTS (
+        SELECT 1 FROM public.crm_solicitudes_pricing s
+        JOIN public.crm_oportunidades o ON o.id=s.oportunidad_id
+        JOIN public.clientes c ON c.id=o.cliente_id
+        JOIN public.costeo_tarifas t ON t.id=NEW.tarifa_id
+        WHERE s.id=NEW.pricing_solicitud_id AND s.oportunidad_id=NEW.oportunidad_id
+          AND s.organization_id=NEW.organization_id AND s.deleted_at IS NULL
+          AND o.organization_id=NEW.organization_id AND o.deleted_at IS NULL
+          AND c.organization_id=NEW.organization_id AND c.deleted_at IS NULL AND c.id=NEW.cliente_id
+          AND t.organization_id=NEW.organization_id
+          AND (s.tarifa_tarifario_id=t.id OR t.solicitud_pricing_id=s.id)
+      ) THEN
+      RAISE EXCEPTION 'LC_COT_PRICING_ORIGEN_INVALIDO' USING ERRCODE='22023';
+    END IF;
+  END IF;
+  RETURN NEW;
+END;
+$function$;
+ALTER FUNCTION public.guard_cotizacion_origen_pricing() OWNER TO postgres;
+REVOKE ALL ON FUNCTION public.guard_cotizacion_origen_pricing() FROM PUBLIC,anon,authenticated,service_role;
+DROP TRIGGER IF EXISTS trg_guard_cotizacion_origen_pricing ON public.cotizaciones;
+CREATE TRIGGER trg_guard_cotizacion_origen_pricing
+BEFORE INSERT OR UPDATE OF pricing_solicitud_id,oportunidad_id,cliente_id,tarifa_id,organization_id,es_prospecto,moneda
+ON public.cotizaciones FOR EACH ROW EXECUTE FUNCTION public.guard_cotizacion_origen_pricing();
+-- LOCAL REVIEW CANDIDATE. New RPC has NO application EXECUTE grant.
+-- Base 5f8270a629d67d132356d5e00247e629e51de7dc. Do not apply remotely yet.
+-- audit:allow-no-grants - RPC deliberately has no application EXECUTE; activation requires specific approval.
+CREATE OR REPLACE FUNCTION public.crm_vincular_cotizacion_cliente_pricing(
+  p_cotizacion_id uuid, p_oportunidad_id uuid, p_solicitud_id uuid, p_tarifa_id uuid
+) RETURNS jsonb LANGUAGE plpgsql SECURITY DEFINER
+SET search_path TO 'public', 'pg_temp'
+AS $function$
+DECLARE
+  v_c public.cotizaciones%ROWTYPE;
+  v_o public.crm_oportunidades%ROWTYPE;
+  v_s public.crm_solicitudes_pricing%ROWTYPE;
+  v_t public.costeo_tarifas%ROWTYPE;
+  v_e public.crm_etapas_pipeline%ROWTYPE;
+  v_catalog jsonb;
+  v_updated_at timestamptz;
+  v_historical boolean;
+  v_today date := (now() AT TIME ZONE 'America/Mexico_City')::date;
+BEGIN
+  IF auth.uid() IS NULL THEN
+    RAISE EXCEPTION 'LC_SIN_SESION' USING ERRCODE='42501';
+  END IF;
+  IF p_cotizacion_id IS NULL OR p_oportunidad_id IS NULL OR p_solicitud_id IS NULL OR p_tarifa_id IS NULL THEN
+    RAISE EXCEPTION 'LC_PRICING_ORIGEN_INCOMPLETO' USING ERRCODE='22023';
+  END IF;
+
+  -- Policies and authorization helper bodies are pinned to reviewed 5f8270a.
+  -- Changes fail closed; regenerate/review with RLS equivalence tests before upgrade.
+  SELECT jsonb_agg(to_jsonb(p) ORDER BY tablename,policyname) INTO v_catalog
+    FROM pg_catalog.pg_policies p WHERE schemaname='public'
+    AND tablename IN ('clientes','costeo_agentes','costeo_tarifas','cotizaciones','crm_etapas_pipeline','crm_oportunidades','crm_solicitudes_pricing','organization_members');
+  IF v_catalog IS DISTINCT FROM $policies$[{"cmd":"DELETE","qual":"(((organization_id = ( SELECT current_user_org_id() AS current_user_org_id)) OR ( SELECT has_role(( SELECT auth.uid() AS uid), 'super_admin'::app_role) AS has_role)) AND es_admin_catalogo(( SELECT auth.uid() AS uid)))","roles":["authenticated"],"tablename":"clientes","permissive":"PERMISSIVE","policyname":"Admin catalog delete clientes","schemaname":"public","with_check":null},{"cmd":"SELECT","qual":"(( SELECT has_role(( SELECT auth.uid() AS uid), 'cliente'::app_role) AS has_role) AND (id IN ( SELECT current_user_client_ids() AS current_user_client_ids)))","roles":["authenticated"],"tablename":"clientes","permissive":"PERMISSIVE","policyname":"Cliente read own clientes","schemaname":"public","with_check":null},{"cmd":"ALL","qual":"((NOT ( SELECT has_role(( SELECT auth.uid() AS uid), 'super_admin'::app_role) AS has_role)) OR rls_tenant_scope_ok(organization_id))","roles":["authenticated"],"tablename":"clientes","permissive":"RESTRICTIVE","policyname":"Scope tenant activo super admin","schemaname":"public","with_check":"((NOT ( SELECT has_role(( SELECT auth.uid() AS uid), 'super_admin'::app_role) AS has_role)) OR rls_tenant_scope_ok(organization_id))"},{"cmd":"SELECT","qual":"(((organization_id = ( SELECT current_user_org_id() AS current_user_org_id)) OR ( SELECT has_role(( SELECT auth.uid() AS uid), 'super_admin'::app_role) AS has_role)) AND (NOT ( SELECT has_role(( SELECT auth.uid() AS uid), 'cliente'::app_role) AS has_role)))","roles":["authenticated"],"tablename":"clientes","permissive":"PERMISSIVE","policyname":"Tenant read clientes","schemaname":"public","with_check":null},{"cmd":"UPDATE","qual":"(((organization_id = ( SELECT current_user_org_id() AS current_user_org_id)) OR ( SELECT has_role(( SELECT auth.uid() AS uid), 'super_admin'::app_role) AS has_role)) AND (( SELECT has_role(( SELECT auth.uid() AS uid), 'admin'::app_role) AS has_role) OR ( SELECT has_role(( SELECT auth.uid() AS uid), 'admin_org'::app_role) AS has_role) OR ( SELECT has_role(( SELECT auth.uid() AS uid), 'operador'::app_role) AS has_role) OR ( SELECT has_role(( SELECT auth.uid() AS uid), 'contador'::app_role) AS has_role) OR ( SELECT has_role(( SELECT auth.uid() AS uid), 'super_admin'::app_role) AS has_role)))","roles":["authenticated"],"tablename":"clientes","permissive":"PERMISSIVE","policyname":"Tenant update clientes","schemaname":"public","with_check":"(((organization_id = ( SELECT current_user_org_id() AS current_user_org_id)) OR ( SELECT has_role(( SELECT auth.uid() AS uid), 'super_admin'::app_role) AS has_role)) AND (( SELECT has_role(( SELECT auth.uid() AS uid), 'admin'::app_role) AS has_role) OR ( SELECT has_role(( SELECT auth.uid() AS uid), 'admin_org'::app_role) AS has_role) OR ( SELECT has_role(( SELECT auth.uid() AS uid), 'operador'::app_role) AS has_role) OR ( SELECT has_role(( SELECT auth.uid() AS uid), 'contador'::app_role) AS has_role) OR ( SELECT has_role(( SELECT auth.uid() AS uid), 'super_admin'::app_role) AS has_role)))"},{"cmd":"SELECT","qual":"(((organization_id = ( SELECT current_user_org_id() AS current_user_org_id)) OR ( SELECT has_role(( SELECT auth.uid() AS uid), 'super_admin'::app_role) AS has_role)) AND ( SELECT has_role(( SELECT auth.uid() AS uid), 'viewer'::app_role) AS has_role))","roles":["authenticated"],"tablename":"clientes","permissive":"PERMISSIVE","policyname":"Tenant viewer clientes","schemaname":"public","with_check":null},{"cmd":"ALL","qual":"((NOT ( SELECT has_role(( SELECT auth.uid() AS uid), 'super_admin'::app_role) AS has_role)) OR rls_tenant_scope_ok(organization_id))","roles":["authenticated"],"tablename":"costeo_agentes","permissive":"RESTRICTIVE","policyname":"Scope tenant activo super admin","schemaname":"public","with_check":"((NOT ( SELECT has_role(( SELECT auth.uid() AS uid), 'super_admin'::app_role) AS has_role)) OR rls_tenant_scope_ok(organization_id))"},{"cmd":"SELECT","qual":"(EXISTS ( SELECT 1\n   FROM organization_members m\n  WHERE ((m.organization_id = costeo_agentes.organization_id) AND (m.user_id = ( SELECT auth.uid() AS uid)))))","roles":["authenticated"],"tablename":"costeo_agentes","permissive":"PERMISSIVE","policyname":"costeo_agentes_select_org","schemaname":"public","with_check":null},{"cmd":"ALL","qual":"((EXISTS ( SELECT 1\n   FROM organization_members m\n  WHERE ((m.organization_id = costeo_agentes.organization_id) AND (m.user_id = ( SELECT auth.uid() AS uid)) AND ((m.role)::text = ANY (ARRAY['admin'::text, 'admin_org'::text, 'gerente_operaciones'::text, 'ejecutivo_pricing'::text, 'operador'::text, 'coordinador_logistico'::text]))))) OR ( SELECT has_role(( SELECT auth.uid() AS uid), 'super_admin'::app_role) AS has_role))","roles":["public"],"tablename":"costeo_agentes","permissive":"PERMISSIVE","policyname":"costeo_agentes_write_org","schemaname":"public","with_check":"((EXISTS ( SELECT 1\n   FROM organization_members m\n  WHERE ((m.organization_id = costeo_agentes.organization_id) AND (m.user_id = ( SELECT auth.uid() AS uid)) AND ((m.role)::text = ANY (ARRAY['admin'::text, 'admin_org'::text, 'gerente_operaciones'::text, 'ejecutivo_pricing'::text, 'operador'::text, 'coordinador_logistico'::text]))))) OR ( SELECT has_role(( SELECT auth.uid() AS uid), 'super_admin'::app_role) AS has_role))"},{"cmd":"DELETE","qual":"((NOT has_role(( SELECT auth.uid() AS uid), 'agente_carga'::app_role)) OR (estado_aprobacion = ANY (ARRAY['borrador'::text, 'rechazada'::text])))","roles":["authenticated"],"tablename":"costeo_tarifas","permissive":"RESTRICTIVE","policyname":"Agente borra solo tarifas no aprobadas","schemaname":"public","with_check":null},{"cmd":"ALL","qual":"(has_role(( SELECT auth.uid() AS uid), 'agente_carga'::app_role) AND (agente_id = current_agente_id()) AND (organization_id = current_agente_org()))","roles":["authenticated"],"tablename":"costeo_tarifas","permissive":"PERMISSIVE","policyname":"Agente escribe own tarifas","schemaname":"public","with_check":"(has_role(( SELECT auth.uid() AS uid), 'agente_carga'::app_role) AND (agente_id = current_agente_id()) AND (organization_id = current_agente_org()) AND (estado_aprobacion = ANY (ARRAY['borrador'::text, 'rechazada'::text])))"},{"cmd":"ALL","qual":"((NOT ( SELECT has_role(( SELECT auth.uid() AS uid), 'super_admin'::app_role) AS has_role)) OR rls_tenant_scope_ok(organization_id))","roles":["authenticated"],"tablename":"costeo_tarifas","permissive":"RESTRICTIVE","policyname":"Scope tenant activo super admin","schemaname":"public","with_check":"((NOT ( SELECT has_role(( SELECT auth.uid() AS uid), 'super_admin'::app_role) AS has_role)) OR rls_tenant_scope_ok(organization_id))"},{"cmd":"SELECT","qual":"(EXISTS ( SELECT 1\n   FROM organization_members m\n  WHERE ((m.organization_id = costeo_tarifas.organization_id) AND (m.user_id = ( SELECT auth.uid() AS uid)))))","roles":["authenticated"],"tablename":"costeo_tarifas","permissive":"PERMISSIVE","policyname":"costeo_tarifas_select_org","schemaname":"public","with_check":null},{"cmd":"ALL","qual":"((EXISTS ( SELECT 1\n   FROM organization_members m\n  WHERE ((m.organization_id = costeo_tarifas.organization_id) AND (m.user_id = ( SELECT auth.uid() AS uid)) AND ((m.role)::text = ANY (ARRAY['admin'::text, 'admin_org'::text, 'gerente_operaciones'::text, 'ejecutivo_pricing'::text, 'operador'::text, 'coordinador_logistico'::text]))))) OR ( SELECT has_role(( SELECT auth.uid() AS uid), 'super_admin'::app_role) AS has_role))","roles":["public"],"tablename":"costeo_tarifas","permissive":"PERMISSIVE","policyname":"costeo_tarifas_write_org","schemaname":"public","with_check":"((EXISTS ( SELECT 1\n   FROM organization_members m\n  WHERE ((m.organization_id = costeo_tarifas.organization_id) AND (m.user_id = ( SELECT auth.uid() AS uid)) AND ((m.role)::text = ANY (ARRAY['admin'::text, 'admin_org'::text, 'gerente_operaciones'::text, 'ejecutivo_pricing'::text, 'operador'::text, 'coordinador_logistico'::text]))))) OR ( SELECT has_role(( SELECT auth.uid() AS uid), 'super_admin'::app_role) AS has_role))"},{"cmd":"SELECT","qual":"((deleted_at IS NULL) AND has_role(auth.uid(), 'cliente'::app_role) AND (cliente_id IN ( SELECT current_user_client_ids() AS current_user_client_ids)))","roles":["authenticated"],"tablename":"cotizaciones","permissive":"PERMISSIVE","policyname":"Cliente read own cotizaciones","schemaname":"public","with_check":null},{"cmd":"ALL","qual":"((NOT ( SELECT has_role(( SELECT auth.uid() AS uid), 'super_admin'::app_role) AS has_role)) OR rls_tenant_scope_ok(organization_id))","roles":["authenticated"],"tablename":"cotizaciones","permissive":"RESTRICTIVE","policyname":"Scope tenant activo super admin","schemaname":"public","with_check":"((NOT ( SELECT has_role(( SELECT auth.uid() AS uid), 'super_admin'::app_role) AS has_role)) OR rls_tenant_scope_ok(organization_id))"},{"cmd":"ALL","qual":"(((organization_id = ( SELECT current_user_org_id() AS current_user_org_id)) OR ( SELECT has_role(( SELECT auth.uid() AS uid), 'super_admin'::app_role) AS has_role)) AND ( SELECT puede_escribir_cotizaciones(( SELECT auth.uid() AS uid)) AS puede_escribir_cotizaciones))","roles":["authenticated"],"tablename":"cotizaciones","permissive":"PERMISSIVE","policyname":"Tenant CRUD cotizaciones","schemaname":"public","with_check":"(((organization_id = ( SELECT current_user_org_id() AS current_user_org_id)) OR ( SELECT has_role(( SELECT auth.uid() AS uid), 'super_admin'::app_role) AS has_role)) AND ( SELECT puede_escribir_cotizaciones(( SELECT auth.uid() AS uid)) AS puede_escribir_cotizaciones))"},{"cmd":"SELECT","qual":"(((organization_id = ( SELECT current_user_org_id() AS current_user_org_id)) OR ( SELECT has_role(( SELECT auth.uid() AS uid), 'super_admin'::app_role) AS has_role)) AND ( SELECT has_role(( SELECT auth.uid() AS uid), 'viewer'::app_role) AS has_role))","roles":["authenticated"],"tablename":"cotizaciones","permissive":"PERMISSIVE","policyname":"Tenant viewer cotizaciones","schemaname":"public","with_check":null},{"cmd":"ALL","qual":"((NOT ( SELECT has_role(( SELECT auth.uid() AS uid), 'super_admin'::app_role) AS has_role)) OR rls_tenant_scope_ok(organization_id))","roles":["authenticated"],"tablename":"crm_etapas_pipeline","permissive":"RESTRICTIVE","policyname":"Scope tenant activo super admin","schemaname":"public","with_check":"((NOT ( SELECT has_role(( SELECT auth.uid() AS uid), 'super_admin'::app_role) AS has_role)) OR rls_tenant_scope_ok(organization_id))"},{"cmd":"ALL","qual":"(((organization_id = ( SELECT current_user_org_id() AS current_user_org_id)) OR has_role(( SELECT auth.uid() AS uid), 'super_admin'::app_role)) AND (has_role(( SELECT auth.uid() AS uid), 'admin'::app_role) OR has_role(( SELECT auth.uid() AS uid), 'admin_org'::app_role) OR has_role(( SELECT auth.uid() AS uid), 'gerente_comercial'::app_role) OR has_role(( SELECT auth.uid() AS uid), 'super_admin'::app_role)))","roles":["authenticated"],"tablename":"crm_etapas_pipeline","permissive":"PERMISSIVE","policyname":"Tenant admin crm_etapas_pipeline","schemaname":"public","with_check":"(((organization_id = ( SELECT current_user_org_id() AS current_user_org_id)) OR has_role(( SELECT auth.uid() AS uid), 'super_admin'::app_role)) AND (has_role(( SELECT auth.uid() AS uid), 'admin'::app_role) OR has_role(( SELECT auth.uid() AS uid), 'admin_org'::app_role) OR has_role(( SELECT auth.uid() AS uid), 'gerente_comercial'::app_role) OR has_role(( SELECT auth.uid() AS uid), 'super_admin'::app_role)))"},{"cmd":"SELECT","qual":"((organization_id = ( SELECT current_user_org_id() AS current_user_org_id)) OR ( SELECT has_role(( SELECT auth.uid() AS uid), 'super_admin'::app_role) AS has_role))","roles":["authenticated"],"tablename":"crm_etapas_pipeline","permissive":"PERMISSIVE","policyname":"Tenant read crm_etapas_pipeline","schemaname":"public","with_check":null},{"cmd":"ALL","qual":"((NOT ( SELECT has_role(( SELECT auth.uid() AS uid), 'super_admin'::app_role) AS has_role)) OR rls_tenant_scope_ok(organization_id))","roles":["authenticated"],"tablename":"crm_oportunidades","permissive":"RESTRICTIVE","policyname":"Scope tenant activo super admin","schemaname":"public","with_check":"((NOT ( SELECT has_role(( SELECT auth.uid() AS uid), 'super_admin'::app_role) AS has_role)) OR rls_tenant_scope_ok(organization_id))"},{"cmd":"ALL","qual":"(((organization_id = ( SELECT current_user_org_id() AS current_user_org_id)) OR ( SELECT has_role(( SELECT auth.uid() AS uid), 'super_admin'::app_role) AS has_role)) AND (( SELECT has_role(( SELECT auth.uid() AS uid), 'admin'::app_role) AS has_role) OR ( SELECT has_role(( SELECT auth.uid() AS uid), 'admin_org'::app_role) AS has_role) OR ( SELECT has_role(( SELECT auth.uid() AS uid), 'gerente_comercial'::app_role) AS has_role) OR ( SELECT has_role(( SELECT auth.uid() AS uid), 'operador'::app_role) AS has_role) OR ( SELECT has_role(( SELECT auth.uid() AS uid), 'super_admin'::app_role) AS has_role)))","roles":["authenticated"],"tablename":"crm_oportunidades","permissive":"PERMISSIVE","policyname":"Staff CRUD crm_oportunidades","schemaname":"public","with_check":"(((organization_id = ( SELECT current_user_org_id() AS current_user_org_id)) OR ( SELECT has_role(( SELECT auth.uid() AS uid), 'super_admin'::app_role) AS has_role)) AND (( SELECT has_role(( SELECT auth.uid() AS uid), 'admin'::app_role) AS has_role) OR ( SELECT has_role(( SELECT auth.uid() AS uid), 'admin_org'::app_role) AS has_role) OR ( SELECT has_role(( SELECT auth.uid() AS uid), 'gerente_comercial'::app_role) AS has_role) OR ( SELECT has_role(( SELECT auth.uid() AS uid), 'operador'::app_role) AS has_role) OR ( SELECT has_role(( SELECT auth.uid() AS uid), 'super_admin'::app_role) AS has_role)))"},{"cmd":"SELECT","qual":"(((organization_id = ( SELECT current_user_org_id() AS current_user_org_id)) OR ( SELECT has_role(( SELECT auth.uid() AS uid), 'super_admin'::app_role) AS has_role)) AND ( SELECT has_role(( SELECT auth.uid() AS uid), 'viewer'::app_role) AS has_role))","roles":["authenticated"],"tablename":"crm_oportunidades","permissive":"PERMISSIVE","policyname":"Tenant viewer crm_oportunidades","schemaname":"public","with_check":null},{"cmd":"ALL","qual":"((organization_id = ( SELECT current_user_org_id() AS current_user_org_id)) AND ( SELECT has_role(( SELECT auth.uid() AS uid), 'vendedor'::app_role) AS has_role) AND (vendedor_id = ( SELECT auth.uid() AS uid)))","roles":["authenticated"],"tablename":"crm_oportunidades","permissive":"PERMISSIVE","policyname":"Vendedor own crm_oportunidades","schemaname":"public","with_check":"((organization_id = ( SELECT current_user_org_id() AS current_user_org_id)) AND ( SELECT has_role(( SELECT auth.uid() AS uid), 'vendedor'::app_role) AS has_role) AND (vendedor_id = ( SELECT auth.uid() AS uid)))"},{"cmd":"INSERT","qual":null,"roles":["authenticated"],"tablename":"crm_solicitudes_pricing","permissive":"PERMISSIVE","policyname":"crm_sol_pricing_crear","schemaname":"public","with_check":"((organization_id = org_scope()) AND (estado = 'borrador'::text))"},{"cmd":"UPDATE","qual":"((organization_id = org_scope()) AND (((estado = 'borrador'::text) AND (created_by = auth.uid())) OR _crm_es_pricing(organization_id)))","roles":["authenticated"],"tablename":"crm_solicitudes_pricing","permissive":"PERMISSIVE","policyname":"crm_sol_pricing_editar","schemaname":"public","with_check":"(organization_id = org_scope())"},{"cmd":"SELECT","qual":"(organization_id = org_scope())","roles":["authenticated"],"tablename":"crm_solicitudes_pricing","permissive":"PERMISSIVE","policyname":"crm_sol_pricing_leer","schemaname":"public","with_check":null},{"cmd":"ALL","qual":"rls_tenant_scope_ok(organization_id)","roles":["authenticated"],"tablename":"crm_solicitudes_pricing","permissive":"RESTRICTIVE","policyname":"crm_solicitudes_pricing_tenant_restrictive","schemaname":"public","with_check":"rls_tenant_scope_ok(organization_id)"},{"cmd":"ALL","qual":"is_org_admin(( SELECT auth.uid() AS uid), organization_id)","roles":["authenticated"],"tablename":"organization_members","permissive":"PERMISSIVE","policyname":"Org admins manage own org members","schemaname":"public","with_check":"is_org_admin(( SELECT auth.uid() AS uid), organization_id)"},{"cmd":"ALL","qual":"( SELECT has_role(( SELECT auth.uid() AS uid), 'super_admin'::app_role) AS has_role)","roles":["authenticated"],"tablename":"organization_members","permissive":"PERMISSIVE","policyname":"Super admins manage members","schemaname":"public","with_check":"( SELECT has_role(( SELECT auth.uid() AS uid), 'super_admin'::app_role) AS has_role)"},{"cmd":"SELECT","qual":"((user_id = ( SELECT auth.uid() AS uid)) OR ( SELECT has_role(( SELECT auth.uid() AS uid), 'super_admin'::app_role) AS has_role))","roles":["authenticated"],"tablename":"organization_members","permissive":"PERMISSIVE","policyname":"Users read own memberships","schemaname":"public","with_check":null}]$policies$::jsonb THEN
+    RAISE EXCEPTION 'LC_PRICING_ACL_DRIFT' USING ERRCODE='42501';
+  END IF;
+  SELECT jsonb_agg(jsonb_build_object('signature',p.oid::regprocedure::text,
+    'source_md5',md5(p.prosrc),'config',p.proconfig,'security_definer',p.prosecdef,
+    'volatility',p.provolatile) ORDER BY p.oid::regprocedure::text) INTO v_catalog
+    FROM pg_catalog.pg_proc p JOIN pg_catalog.pg_namespace n ON n.oid=p.pronamespace
+    WHERE n.nspname='public' AND p.proname IN ('_crm_es_pricing','current_agente_id','current_agente_org','current_user_client_ids','current_user_org_id','default_user_org_id','es_admin_catalogo','get_user_org_ids','has_role','is_org_admin','is_org_member','org_scope','puede_escribir_cotizaciones','rls_tenant_scope_ok','roles_jerarquia');
+  IF v_catalog IS DISTINCT FROM $helpers$[{"config":["search_path=public"],"signature":"_crm_es_pricing(uuid)","source_md5":"9712ff3986b38c8c69918c3b2bfd3d9e","volatility":"s","security_definer":true},{"config":["search_path=public"],"signature":"current_agente_id()","source_md5":"e78c421a6384475f8ff90aad18e6a1ec","volatility":"s","security_definer":true},{"config":["search_path=public"],"signature":"current_agente_org()","source_md5":"e1ae96bc348feaa34313802621c837e1","volatility":"s","security_definer":true},{"config":["search_path=public"],"signature":"current_user_client_ids()","source_md5":"344c708ed02e90960553abd5219cc9b2","volatility":"s","security_definer":true},{"config":["search_path=public"],"signature":"current_user_org_id()","source_md5":"8ae92929010ad9d586e7fcc033443c92","volatility":"s","security_definer":true},{"config":["search_path=public"],"signature":"default_user_org_id()","source_md5":"86ebf4f6d06138fd93c9c201b3fde611","volatility":"s","security_definer":true},{"config":["search_path=public"],"signature":"es_admin_catalogo(uuid)","source_md5":"3dcbffcd27fdccb6514d56edbb68e62a","volatility":"s","security_definer":true},{"config":["search_path=public"],"signature":"get_user_org_ids(uuid)","source_md5":"a14933dceef9739a9e351dbdfcf4ea7c","volatility":"s","security_definer":true},{"config":["search_path=public"],"signature":"has_role(uuid,app_role)","source_md5":"978b46d0f372e2715710482b0e15247c","volatility":"s","security_definer":true},{"config":["search_path=public"],"signature":"is_org_admin(uuid,uuid)","source_md5":"c4c0810cc8a7060585fc96e20746d3b2","volatility":"s","security_definer":true},{"config":["search_path=public"],"signature":"is_org_member(uuid)","source_md5":"cb3b222b94be33a45916863643576934","volatility":"s","security_definer":true},{"config":["search_path=public"],"signature":"org_scope()","source_md5":"7c33bde220e8debd95ca9e3be3e8f30e","volatility":"s","security_definer":true},{"config":["search_path=public"],"signature":"puede_escribir_cotizaciones(uuid)","source_md5":"1c14f940ee4f07e2710b5ff45b163c2c","volatility":"s","security_definer":true},{"config":["search_path=public"],"signature":"rls_tenant_scope_ok(uuid)","source_md5":"59dddd53956cd142cb142266bbe6430c","volatility":"s","security_definer":true},{"config":["search_path=public"],"signature":"roles_jerarquia(app_role)","source_md5":"0319faa0f75b5caa86e2eef8f6df157f","volatility":"i","security_definer":false}]$helpers$::jsonb THEN
+    RAISE EXCEPTION 'LC_PRICING_ACL_DRIFT' USING ERRCODE='42501';
+  END IF;
+  IF EXISTS (SELECT 1 FROM pg_catalog.pg_class c JOIN pg_catalog.pg_namespace n ON n.oid=c.relnamespace
+    WHERE n.nspname='public' AND c.relname IN ('clientes','costeo_agentes','costeo_tarifas','cotizaciones','crm_etapas_pipeline','crm_oportunidades','crm_solicitudes_pricing','organization_members')
+      AND (NOT c.relrowsecurity OR NOT has_table_privilege('authenticated',c.oid,'SELECT')))
+     OR NOT has_table_privilege('authenticated','public.cotizaciones','UPDATE')
+     OR NOT has_table_privilege('authenticated','public.crm_oportunidades','UPDATE') THEN
+    RAISE EXCEPTION 'LC_PRICING_ACL_DRIFT' USING ERRCODE='42501';
+  END IF;
+
+  -- Generated exact SELECT + UPDATE USING + UPDATE WITH CHECK policy predicates.
+  SELECT * INTO v_c FROM public.cotizaciones
+    WHERE id=p_cotizacion_id AND deleted_at IS NULL
+      AND (((((deleted_at IS NULL) AND has_role(auth.uid(), 'cliente'::app_role) AND (cliente_id IN ( SELECT current_user_client_ids() AS current_user_client_ids)))) OR ((((organization_id = ( SELECT current_user_org_id() AS current_user_org_id)) OR ( SELECT has_role(( SELECT auth.uid() AS uid), 'super_admin'::app_role) AS has_role)) AND ( SELECT puede_escribir_cotizaciones(( SELECT auth.uid() AS uid)) AS puede_escribir_cotizaciones))) OR ((((organization_id = ( SELECT current_user_org_id() AS current_user_org_id)) OR ( SELECT has_role(( SELECT auth.uid() AS uid), 'super_admin'::app_role) AS has_role)) AND ( SELECT has_role(( SELECT auth.uid() AS uid), 'viewer'::app_role) AS has_role)))) AND (((NOT ( SELECT has_role(( SELECT auth.uid() AS uid), 'super_admin'::app_role) AS has_role)) OR rls_tenant_scope_ok(organization_id)))) AND ((((((organization_id = ( SELECT current_user_org_id() AS current_user_org_id)) OR ( SELECT has_role(( SELECT auth.uid() AS uid), 'super_admin'::app_role) AS has_role)) AND ( SELECT puede_escribir_cotizaciones(( SELECT auth.uid() AS uid)) AS puede_escribir_cotizaciones)))) AND (((NOT ( SELECT has_role(( SELECT auth.uid() AS uid), 'super_admin'::app_role) AS has_role)) OR rls_tenant_scope_ok(organization_id))))
+      AND ((((((organization_id = ( SELECT current_user_org_id() AS current_user_org_id)) OR ( SELECT has_role(( SELECT auth.uid() AS uid), 'super_admin'::app_role) AS has_role)) AND ( SELECT puede_escribir_cotizaciones(( SELECT auth.uid() AS uid)) AS puede_escribir_cotizaciones)))) AND (((NOT ( SELECT has_role(( SELECT auth.uid() AS uid), 'super_admin'::app_role) AS has_role)) OR rls_tenant_scope_ok(organization_id))))
+    FOR UPDATE;
+  IF NOT FOUND OR NOT public.is_org_member(v_c.organization_id)
+    OR NOT public.rls_tenant_scope_ok(v_c.organization_id)
+    OR v_c.organization_id IS DISTINCT FROM public.org_scope()
+    OR NOT public.puede_escribir_cotizaciones() THEN
+    RAISE EXCEPTION 'LC_PRICING_ORIGEN_NO_AUTORIZADO' USING ERRCODE='42501';
+  END IF;
+  IF v_c.cliente_id IS NULL OR v_c.es_prospecto IS DISTINCT FROM false THEN
+    RAISE EXCEPTION 'LC_PRICING_REQUIERE_CLIENTE' USING ERRCODE='22023';
+  END IF;
+  -- Cotización then opportunity follows quote→CRM triggers. Request then tariff
+  -- follows crm_aplicar_tarifa_tarifario. Row locks recheck data after waits.
+  SELECT * INTO v_o FROM public.crm_oportunidades
+    WHERE id=p_oportunidad_id AND organization_id=v_c.organization_id AND deleted_at IS NULL
+      AND ((((((organization_id = ( SELECT current_user_org_id() AS current_user_org_id)) OR ( SELECT has_role(( SELECT auth.uid() AS uid), 'super_admin'::app_role) AS has_role)) AND (( SELECT has_role(( SELECT auth.uid() AS uid), 'admin'::app_role) AS has_role) OR ( SELECT has_role(( SELECT auth.uid() AS uid), 'admin_org'::app_role) AS has_role) OR ( SELECT has_role(( SELECT auth.uid() AS uid), 'gerente_comercial'::app_role) AS has_role) OR ( SELECT has_role(( SELECT auth.uid() AS uid), 'operador'::app_role) AS has_role) OR ( SELECT has_role(( SELECT auth.uid() AS uid), 'super_admin'::app_role) AS has_role)))) OR ((((organization_id = ( SELECT current_user_org_id() AS current_user_org_id)) OR ( SELECT has_role(( SELECT auth.uid() AS uid), 'super_admin'::app_role) AS has_role)) AND ( SELECT has_role(( SELECT auth.uid() AS uid), 'viewer'::app_role) AS has_role))) OR (((organization_id = ( SELECT current_user_org_id() AS current_user_org_id)) AND ( SELECT has_role(( SELECT auth.uid() AS uid), 'vendedor'::app_role) AS has_role) AND (vendedor_id = ( SELECT auth.uid() AS uid))))) AND (((NOT ( SELECT has_role(( SELECT auth.uid() AS uid), 'super_admin'::app_role) AS has_role)) OR rls_tenant_scope_ok(organization_id)))) AND ((((((organization_id = ( SELECT current_user_org_id() AS current_user_org_id)) OR ( SELECT has_role(( SELECT auth.uid() AS uid), 'super_admin'::app_role) AS has_role)) AND (( SELECT has_role(( SELECT auth.uid() AS uid), 'admin'::app_role) AS has_role) OR ( SELECT has_role(( SELECT auth.uid() AS uid), 'admin_org'::app_role) AS has_role) OR ( SELECT has_role(( SELECT auth.uid() AS uid), 'gerente_comercial'::app_role) AS has_role) OR ( SELECT has_role(( SELECT auth.uid() AS uid), 'operador'::app_role) AS has_role) OR ( SELECT has_role(( SELECT auth.uid() AS uid), 'super_admin'::app_role) AS has_role)))) OR (((organization_id = ( SELECT current_user_org_id() AS current_user_org_id)) AND ( SELECT has_role(( SELECT auth.uid() AS uid), 'vendedor'::app_role) AS has_role) AND (vendedor_id = ( SELECT auth.uid() AS uid))))) AND (((NOT ( SELECT has_role(( SELECT auth.uid() AS uid), 'super_admin'::app_role) AS has_role)) OR rls_tenant_scope_ok(organization_id))))
+      AND ((((((organization_id = ( SELECT current_user_org_id() AS current_user_org_id)) OR ( SELECT has_role(( SELECT auth.uid() AS uid), 'super_admin'::app_role) AS has_role)) AND (( SELECT has_role(( SELECT auth.uid() AS uid), 'admin'::app_role) AS has_role) OR ( SELECT has_role(( SELECT auth.uid() AS uid), 'admin_org'::app_role) AS has_role) OR ( SELECT has_role(( SELECT auth.uid() AS uid), 'gerente_comercial'::app_role) AS has_role) OR ( SELECT has_role(( SELECT auth.uid() AS uid), 'operador'::app_role) AS has_role) OR ( SELECT has_role(( SELECT auth.uid() AS uid), 'super_admin'::app_role) AS has_role)))) OR (((organization_id = ( SELECT current_user_org_id() AS current_user_org_id)) AND ( SELECT has_role(( SELECT auth.uid() AS uid), 'vendedor'::app_role) AS has_role) AND (vendedor_id = ( SELECT auth.uid() AS uid))))) AND (((NOT ( SELECT has_role(( SELECT auth.uid() AS uid), 'super_admin'::app_role) AS has_role)) OR rls_tenant_scope_ok(organization_id))))
+    FOR UPDATE;
+  IF NOT FOUND THEN
+    RAISE EXCEPTION 'LC_PRICING_ORIGEN_NO_AUTORIZADO' USING ERRCODE='42501';
+  END IF;
+  IF v_o.cliente_id IS DISTINCT FROM v_c.cliente_id THEN
+    RAISE EXCEPTION 'LC_PRICING_CLIENTE_INCOMPATIBLE' USING ERRCODE='22023';
+  END IF;
+  PERFORM 1 FROM public.clientes WHERE id=v_c.cliente_id AND organization_id=v_c.organization_id
+    AND deleted_at IS NULL AND ((((( SELECT has_role(( SELECT auth.uid() AS uid), 'cliente'::app_role) AS has_role) AND (id IN ( SELECT current_user_client_ids() AS current_user_client_ids)))) OR ((((organization_id = ( SELECT current_user_org_id() AS current_user_org_id)) OR ( SELECT has_role(( SELECT auth.uid() AS uid), 'super_admin'::app_role) AS has_role)) AND (NOT ( SELECT has_role(( SELECT auth.uid() AS uid), 'cliente'::app_role) AS has_role)))) OR ((((organization_id = ( SELECT current_user_org_id() AS current_user_org_id)) OR ( SELECT has_role(( SELECT auth.uid() AS uid), 'super_admin'::app_role) AS has_role)) AND ( SELECT has_role(( SELECT auth.uid() AS uid), 'viewer'::app_role) AS has_role)))) AND (((NOT ( SELECT has_role(( SELECT auth.uid() AS uid), 'super_admin'::app_role) AS has_role)) OR rls_tenant_scope_ok(organization_id)))) FOR SHARE;
+  IF NOT FOUND THEN
+    RAISE EXCEPTION 'LC_PRICING_ORIGEN_NO_AUTORIZADO' USING ERRCODE='42501';
+  END IF;
+  SELECT * INTO v_s FROM public.crm_solicitudes_pricing
+    WHERE id=p_solicitud_id AND organization_id=v_c.organization_id AND deleted_at IS NULL
+      AND ((((organization_id = org_scope()))) AND (rls_tenant_scope_ok(organization_id))) FOR SHARE;
+  IF NOT FOUND THEN
+    RAISE EXCEPTION 'LC_PRICING_ORIGEN_NO_AUTORIZADO' USING ERRCODE='42501';
+  END IF;
+  SELECT * INTO v_t FROM public.costeo_tarifas
+    WHERE id=p_tarifa_id AND organization_id=v_c.organization_id
+      AND ((((has_role(( SELECT auth.uid() AS uid), 'agente_carga'::app_role) AND (agente_id = current_agente_id()) AND (organization_id = current_agente_org()))) OR ((EXISTS ( SELECT 1
+   FROM organization_members m
+  WHERE ((m.organization_id = costeo_tarifas.organization_id) AND (m.user_id = ( SELECT auth.uid() AS uid)))))) OR (((EXISTS ( SELECT 1
+   FROM organization_members m
+  WHERE ((m.organization_id = costeo_tarifas.organization_id) AND (m.user_id = ( SELECT auth.uid() AS uid)) AND ((m.role)::text = ANY (ARRAY['admin'::text, 'admin_org'::text, 'gerente_operaciones'::text, 'ejecutivo_pricing'::text, 'operador'::text, 'coordinador_logistico'::text]))))) OR ( SELECT has_role(( SELECT auth.uid() AS uid), 'super_admin'::app_role) AS has_role)))) AND (((NOT ( SELECT has_role(( SELECT auth.uid() AS uid), 'super_admin'::app_role) AS has_role)) OR rls_tenant_scope_ok(organization_id)))) FOR SHARE;
+  IF NOT FOUND THEN
+    RAISE EXCEPTION 'LC_PRICING_ORIGEN_NO_AUTORIZADO' USING ERRCODE='42501';
+  END IF;
+  IF v_s.oportunidad_id IS DISTINCT FROM v_o.id
+    OR (v_s.tarifa_tarifario_id IS DISTINCT FROM v_t.id AND v_t.solicitud_pricing_id IS DISTINCT FROM v_s.id)
+    OR v_c.tarifa_id IS DISTINCT FROM v_t.id THEN
+    RAISE EXCEPTION 'LC_PRICING_ORIGEN_INCOMPATIBLE' USING ERRCODE='22023';
+  END IF;
+  v_historical := v_c.pricing_solicitud_id IS NOT NULL;
+  IF v_c.oportunidad_id IS NOT NULL OR v_historical THEN
+    IF v_c.oportunidad_id IS DISTINCT FROM v_o.id OR v_c.pricing_solicitud_id IS DISTINCT FROM v_s.id THEN
+      RAISE EXCEPTION 'LC_COT_VINCULO_CONFIRMADO' USING ERRCODE='22023';
+    END IF;
+    -- Historical acknowledgement, NOT a fresh offer or eligibility certificate.
+    RETURN jsonb_build_object('oportunidad_id',v_o.id,'cliente_id',v_c.cliente_id,
+      'solicitud_id',v_s.id,'tarifa_id',v_t.id,'updated_at',v_c.updated_at,'ya_ligada',true);
+  END IF;
+  IF v_c.estado NOT IN ('Borrador','Solicitada') OR v_c.embarque_id IS NOT NULL THEN
+    RAISE EXCEPTION 'LC_PRICING_COTIZACION_NO_EDITABLE' USING ERRCODE='22023';
+  END IF;
+  IF v_s.estado IS DISTINCT FROM 'respondida' THEN
+    RAISE EXCEPTION 'LC_PRICING_SOLICITUD_NO_RESPONDIDA' USING ERRCODE='22023';
+  END IF;
+  SELECT * INTO v_e FROM public.crm_etapas_pipeline
+    WHERE id=v_o.etapa_id AND organization_id=v_c.organization_id AND deleted_at IS NULL
+      AND ((((((organization_id = ( SELECT current_user_org_id() AS current_user_org_id)) OR has_role(( SELECT auth.uid() AS uid), 'super_admin'::app_role)) AND (has_role(( SELECT auth.uid() AS uid), 'admin'::app_role) OR has_role(( SELECT auth.uid() AS uid), 'admin_org'::app_role) OR has_role(( SELECT auth.uid() AS uid), 'gerente_comercial'::app_role) OR has_role(( SELECT auth.uid() AS uid), 'super_admin'::app_role)))) OR (((organization_id = ( SELECT current_user_org_id() AS current_user_org_id)) OR ( SELECT has_role(( SELECT auth.uid() AS uid), 'super_admin'::app_role) AS has_role)))) AND (((NOT ( SELECT has_role(( SELECT auth.uid() AS uid), 'super_admin'::app_role) AS has_role)) OR rls_tenant_scope_ok(organization_id)))) FOR SHARE;
+  IF NOT FOUND OR v_e.activa IS DISTINCT FROM true OR v_e.tipo IS DISTINCT FROM 'abierta'::public.crm_etapa_tipo THEN
+    RAISE EXCEPTION 'LC_PRICING_OPORTUNIDAD_NO_ELEGIBLE' USING ERRCODE='22023';
+  END IF;
+  IF v_o.moneda IS DISTINCT FROM v_c.moneda::text THEN
+    RAISE EXCEPTION 'LC_CRM_MONEDA_INCOMPATIBLE' USING ERRCODE='22023';
+  END IF;
+  -- Match direct tariff view: status, approval, active agent and inclusive end
+  -- in Mexico City. No invented start-date, Incoterm or FCL quantity rule.
+  IF v_t.estado IS DISTINCT FROM 'vigente' OR v_t.estado_aprobacion IS DISTINCT FROM 'vigente'
+    OR (v_t.vigente_hasta IS NOT NULL AND v_t.vigente_hasta < v_today) THEN
+    RAISE EXCEPTION 'LC_TARIFA_NO_VIGENTE' USING ERRCODE='22023';
+  END IF;
+  PERFORM 1 FROM public.costeo_agentes WHERE id=v_t.agente_id
+    AND organization_id=v_c.organization_id AND activo IS TRUE
+    AND ((((EXISTS ( SELECT 1
+   FROM organization_members m
+  WHERE ((m.organization_id = costeo_agentes.organization_id) AND (m.user_id = ( SELECT auth.uid() AS uid)))))) OR (((EXISTS ( SELECT 1
+   FROM organization_members m
+  WHERE ((m.organization_id = costeo_agentes.organization_id) AND (m.user_id = ( SELECT auth.uid() AS uid)) AND ((m.role)::text = ANY (ARRAY['admin'::text, 'admin_org'::text, 'gerente_operaciones'::text, 'ejecutivo_pricing'::text, 'operador'::text, 'coordinador_logistico'::text]))))) OR ( SELECT has_role(( SELECT auth.uid() AS uid), 'super_admin'::app_role) AS has_role)))) AND (((NOT ( SELECT has_role(( SELECT auth.uid() AS uid), 'super_admin'::app_role) AS has_role)) OR rls_tenant_scope_ok(organization_id)))) FOR SHARE;
+  IF NOT FOUND THEN
+    RAISE EXCEPTION 'LC_TARIFA_NO_VIGENTE' USING ERRCODE='22023';
+  END IF;
+  UPDATE public.cotizaciones SET oportunidad_id=v_o.id, pricing_solicitud_id=v_s.id, updated_at=now()
+    WHERE id=v_c.id RETURNING updated_at INTO v_updated_at;
+  RETURN jsonb_build_object('oportunidad_id',v_o.id,'cliente_id',v_c.cliente_id,
+    'solicitud_id',v_s.id,'tarifa_id',v_t.id,'updated_at',v_updated_at,'ya_ligada',false);
+END;
+$function$;
+ALTER FUNCTION public.crm_vincular_cotizacion_cliente_pricing(uuid,uuid,uuid,uuid) OWNER TO postgres;
+REVOKE ALL ON FUNCTION public.crm_vincular_cotizacion_cliente_pricing(uuid,uuid,uuid,uuid) FROM PUBLIC,anon,authenticated,service_role;
+COMMIT;

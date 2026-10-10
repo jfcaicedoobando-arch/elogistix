@@ -27,6 +27,12 @@ export interface CotizacionFormValues {
   clienteId: string;
   prospectoModo: ProspectoVinculacionModo;
   oportunidadId: string;
+  /** Identidad explícita de la respuesta; nunca inferida de oportunidad/tarifa. */
+  pricingSolicitudId?: string | null;
+  pricingOrigen?: { solicitudId: string; organizationId: string; clienteId: string; oportunidadId: string; tarifaId: string } | null;
+  /** Guardado terminado, vínculo aún por confirmar; sobrevive a la recarga. */
+  pricingVinculoPendienteId?: string | null;
+  pricingVinculoPendienteFirma?: string | null;
   leadId: string;
   /**
    * A1/A7 (v13.823.151): moneda registrada en la oportunidad CRM vinculada.
@@ -116,6 +122,8 @@ export interface CotizacionInitialData {
   cliente_id: string | null;
   /** P0: vínculo CRM real; se restaura al editar para no dejarla huérfana. */
   oportunidad_id?: string | null;
+  pricing_solicitud_id?: string | null;
+  organization_id?: string | null;
   /** A1/A7: moneda persistida; se conserva como moneda del vínculo al editar. */
   moneda?: string | null;
   /** 13.823.281: TC USD/MXN congelado (sólo para el encabezado de una cotización mixta). */

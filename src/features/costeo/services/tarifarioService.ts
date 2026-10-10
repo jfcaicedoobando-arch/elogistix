@@ -3,7 +3,7 @@
  * FOB de agentes / locales de revalidación por naviera.
  */
 import { z } from "zod";
-import { CAP_POSTGREST } from "@/constants/queryCaps";
+import { leerTodasLasPaginas } from "@/lib/supabase/paginado";
 import { supabase } from "@/integrations/supabase/client";
 import { fromDb } from "@/lib/supabase/cast";
 
@@ -62,17 +62,18 @@ export function estadoVigencia(
 }
 
 export async function listarTarifasTarifario(filtro: FiltroVigencia, hoy: string): Promise<TarifaTarifario[]> {
-  let q = supabase.from("costeo_tarifas").select(COLS).eq("estado", "vigente")
-    .order("vigente_hasta", { ascending: false }).limit(CAP_POSTGREST);
-  if (filtro === "vigentes") {
-    q = q.or(`vigente_desde.is.null,vigente_desde.lte.${hoy}`).or(`vigente_hasta.is.null,vigente_hasta.gte.${hoy}`);
-  } else if (filtro === "proximas") {
-    q = q.gt("vigente_desde", hoy);
-  } else if (filtro === "vencidas") {
-    q = q.lt("vigente_hasta", hoy);
-  }
-  const { data, error } = await q;
-  if (error) throw error;
+  const data = await leerTodasLasPaginas("costeo.tarifario", (desde, hasta) => {
+    let q = supabase.from("costeo_tarifas").select(COLS).eq("estado", "vigente")
+      .order("vigente_hasta", { ascending: false }).order("id");
+    if (filtro === "vigentes") {
+      q = q.or(`vigente_desde.is.null,vigente_desde.lte.${hoy}`).or(`vigente_hasta.is.null,vigente_hasta.gte.${hoy}`);
+    } else if (filtro === "proximas") {
+      q = q.gt("vigente_desde", hoy);
+    } else if (filtro === "vencidas") {
+      q = q.lt("vigente_hasta", hoy);
+    }
+    return q.range(desde, hasta);
+  });
   return fromDb(data ?? [], tarifaDbSchema).filter(entraAlTarifario);
 }
 
@@ -117,3 +118,4 @@ function nuevaFilaTarifario(t: TarifaTarifario, clave: string): FilaTarifario {
   return { clave, origen: t.ruta?.origen?.name ?? "—", destino: t.ruta?.destino?.name ?? "—",
     agente: t.agente?.nombre ?? "—", naviera: t.naviera?.name ?? "—", tarifa20: null, tarifa40: null, otras: [], base: t };
 }
+

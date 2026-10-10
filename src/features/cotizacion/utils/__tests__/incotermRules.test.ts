@@ -10,6 +10,11 @@ describe("esIncotermSinFleteVenta", () => {
     ["CFR", "Marítimo", true],
     ["DAP", "Marítimo", true],
     ["DDP", "Marítimo", true],
+    ["DPU", "Marítimo", true],
+    ["DAT", "Marítimo", true],
+    ["FAS", "Marítimo", false],
+    ["DPU", "Aéreo", false],
+    ["DPU", "Terrestre", false],
     ["CIP", "Marítimo", true],
     ["FOB", "Marítimo", false],
     ["EXW", "Marítimo", false],
@@ -37,6 +42,8 @@ describe("esIncotermConSeguroIncluido", () => {
   it("otros no", () => {
     expect(esIncotermConSeguroIncluido("FOB")).toBe(false);
     expect(esIncotermConSeguroIncluido("CFR")).toBe(false);
+    expect(esIncotermConSeguroIncluido("DPU")).toBe(false);
+    expect(esIncotermConSeguroIncluido("FAS")).toBe(false);
     expect(esIncotermConSeguroIncluido(null)).toBe(false);
   });
 });

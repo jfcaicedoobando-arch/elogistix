@@ -28,10 +28,10 @@ export default function OrigenDestinoBlock({
   if (usarPortSelect) {
     return (
       <>
-        <FormField label="Origen">
+        <FormField label="Puerto de origen">
           <PortSelect value={watch("origen")} onValueChange={seleccionar("origen")} placeholder="Buscar puerto de origen…" />
         </FormField>
-        <FormField label="Destino">
+        <FormField label="Puerto de destino">
           <PortSelect value={watch("destino")} onValueChange={seleccionar("destino")} placeholder="Buscar puerto de destino…" />
         </FormField>
         {avisoTarifa && (

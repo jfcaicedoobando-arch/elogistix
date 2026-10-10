@@ -19,7 +19,7 @@ export function OpcionesTarifario({ solicitud: s, puedeElegir }: Props) {
   const { opciones, elegida, esFob, cargosFob, cargosLocales, isLoading, busy, elegir } = useOpcionesTarifario(s);
   const navigate = useNavigate();
   const irACotizar = (tarifaId: string) => {
-    const q = new URLSearchParams({ tarifa: tarifaId });
+    const q = new URLSearchParams({ tarifa: tarifaId, solicitud: s.id });
     if (s.oportunidad_id) q.set("oportunidad", s.oportunidad_id);
     navigate(`/cotizaciones/nueva?${q.toString()}`);
   };
@@ -87,9 +87,9 @@ function OpcionTarifarioCard({ tarifa: t, cargosFob, cargosLocales, puedeElegir,
 function ResumenTarifa({ tarifa: t }: Pick<CardProps, "tarifa">) {
   return (
     <>
-      <div><span className="text-muted-foreground">Puertos: </span>{t.ruta?.origen?.name ?? "—"} → {t.ruta?.destino?.name ?? "—"}</div>
-      <div><span className="text-muted-foreground">Agente / Naviera: </span>{t.agente?.nombre ?? "—"} / {t.naviera?.name ?? "—"}</div>
-      <div><span className="text-muted-foreground">{t.tipo?.code ?? ""}: </span>{formatCurrency(t.flete_base, t.moneda || "USD")}</div>
+      <div><span className="text-muted-foreground">Puerto de origen: </span>{t.ruta?.origen?.name ?? "—"}<br /><span className="text-muted-foreground">Puerto de destino: </span>{t.ruta?.destino?.name ?? "—"}</div>
+      <div><span className="text-muted-foreground">Agente: </span>{t.agente?.nombre ?? "—"}<br /><span className="text-muted-foreground">Naviera: </span>{t.naviera?.name ?? "—"}</div>
+      <div><span className="text-muted-foreground">Tipo de contenedor: </span>{t.tipo?.code ?? "—"}<br /><span className="text-muted-foreground">Flete base: </span>{formatCurrency(t.flete_base, t.moneda || "USD")}</div>
       <div><span className="text-muted-foreground">Vigencia hasta: </span>{t.vigente_hasta ? formatDate(t.vigente_hasta) : "—"}</div>
     </>
   );

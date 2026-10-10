@@ -13,6 +13,8 @@
  */
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useFormContext } from "react-hook-form";
+import { captureAuthOperationScope } from "@/lib/auth/authOperationScope";
+import { esIncotermSinFleteVenta } from "@/features/cotizacion/utils/incotermRules";
 import { fetchRecargosDeTarifa } from "@/features/costeo/services/topTarifas";
 import { fetchTarifaVinculada } from "@/features/cotizacion/services/tarifaVinculada";
 import { useTarifaVinculada } from "@/features/cotizacion/hooks/useTarifaVinculada";
@@ -52,8 +54,11 @@ export interface CostosAutoSync {
 }
 
 export function useCostosAutoSync({ filas, setFilas, onDesajusteChange }: Args): CostosAutoSync {
-  const { watch } = useFormContext<CotizacionFormValues>();
-  const tarifaId = watch("tarifaId");
+  const { watch, getValues } = useFormContext<CotizacionFormValues>();
+  const tarifaOrigenId = watch("tarifaId");
+  const sinFleteVenta = esIncotermSinFleteVenta(watch("incoterm"), watch("modo"));
+  // Una tarifa retenida como origen Pricing no autoriza generar flete.
+  const tarifaId = sinFleteVenta ? null : tarifaOrigenId;
   const numContenedores = watch("numContenedores") ?? 1;
   const tipoEmbarque = watch("tipoEmbarque");
   const lclFleteManual = watch("lclFleteManual");
@@ -65,6 +70,8 @@ export function useCostosAutoSync({ filas, setFilas, onDesajusteChange }: Args):
   const markup = useConfigValue<number>("cotizaciones", "markup_default_maritimo", 0.15);
 
   const cantidad = Math.max(1, Number(numContenedores) || 1);
+  const montado = useRef(false);
+  useEffect(() => { montado.current = true; return () => { montado.current = false; }; }, []);
   const precargadaRef = useRef<string | null>(null);
   const precargadaLclRef = useRef<boolean>(false);
   const [lclAutoCargado, setLclAutoCargado] = useState(false);
@@ -77,7 +84,7 @@ export function useCostosAutoSync({ filas, setFilas, onDesajusteChange }: Args):
 
   /** Filas que hoy produciría el bloque "Flete LCL manual" del Paso 1. */
   const filasLclEsperadas = useMemo(() => {
-    if (tipoEmbarque !== "LCL" || tarifaId) return [];
+    if (sinFleteVenta || tipoEmbarque !== "LCL" || tarifaId) return [];
     const consolidador = proveedores.find((p) => p.id === lclFleteManual?.consolidadorId);
     return buildCostosLCLManual({
       lclFleteManual,
@@ -86,20 +93,31 @@ export function useCostosAutoSync({ filas, setFilas, onDesajusteChange }: Args):
       consolidadorNombre: consolidador?.nombre ?? null,
       markup, // B-075: mismo markup configurable que la rama FCL.
     });
-  }, [tipoEmbarque, tarifaId, proveedores, lclFleteManual, dimensionesLCL, pesoKg, markup]);
+  }, [sinFleteVenta, tipoEmbarque, tarifaId, proveedores, lclFleteManual, dimensionesLCL, pesoKg, markup]);
 
   /** Filas de flete + recargos que hoy produciría la tarifa vinculada. */
   const construirFilasTarifa = useCallback(async (): Promise<FilaCostoLocal[]> => {
     if (!tarifaId) return [];
-    const row = await fetchTarifaVinculada(tarifaId);
-    if (!row) return [];
-    const recargos = await fetchRecargosDeTarifa(row.id);
-    return buildCostosDesdeTarifa({ tarifa: row, recargos, markup, cantidad, tipoEmbarque });
-  }, [tarifaId, markup, cantidad, tipoEmbarque]);
+    const scope = captureAuthOperationScope();
+    const vigente = () => montado.current && scope.isCurrent() && getValues("tarifaId") === tarifaId
+      && !esIncotermSinFleteVenta(getValues("incoterm"), getValues("modo"))
+      && getValues("tipoEmbarque") === tipoEmbarque
+      && Math.max(1, Number(getValues("numContenedores")) || 1) === cantidad;
+    try {
+      const row = await fetchTarifaVinculada(tarifaId);
+      if (!row || !vigente()) return [];
+      const recargos = await fetchRecargosDeTarifa(row.id);
+      if (!vigente()) return [];
+      return buildCostosDesdeTarifa({ tarifa: row, recargos, markup, cantidad, tipoEmbarque });
+    } catch (error) {
+      if (vigente()) throw error;
+      return [];
+    }
+  }, [tarifaId, markup, cantidad, tipoEmbarque, getValues]);
 
   // Precarga desde tarifa: sólo si la lista está vacía (no pisa nada capturado).
   useEffect(() => {
-    if (!tarifaId) return;
+    if (!tarifaId) { precargadaRef.current = null; return; }
     if (precargadaRef.current === tarifaId) return;
     if (filas.length > 0) { precargadaRef.current = tarifaId; return; }
     let cancelado = false;
@@ -113,14 +131,14 @@ export function useCostosAutoSync({ filas, setFilas, onDesajusteChange }: Args):
 
   // Precarga del flete LCL manual (una sola vez, guard con ref).
   useEffect(() => {
-    if (tipoEmbarque !== "LCL" || tarifaId) return;
+    if (sinFleteVenta || tipoEmbarque !== "LCL" || tarifaId) return;
     if (precargadaLclRef.current) return;
     if (filas.length > 0) { precargadaLclRef.current = true; return; }
     if (filasLclEsperadas.length === 0) return;
     setFilas((prev) => (prev.length > 0 ? prev : filasLclEsperadas));
     precargadaLclRef.current = true;
     setLclAutoCargado(true);
-  }, [tipoEmbarque, tarifaId, filas.length, filasLclEsperadas, setFilas]);
+  }, [sinFleteVenta, tipoEmbarque, tarifaId, filas.length, filasLclEsperadas, setFilas]);
 
   const desajuste: DesajusteCostos | null = useMemo(() => {
     // P1-3/P2-5: cada fila automática debe pertenecer a la tarifa vigente.
