@@ -55,6 +55,41 @@ describe('job-scoped process tree sampling', () => {
     const fake = fakeTree(); delete fake.files['/proc/101/stat'];
     expect(createTreeSampler(100, fake)()).toMatchObject({ rssBytes: 10 * 1024, processCount: 1, exitRaces: 1 });
   });
+  it.each(['Z', 'X'])('verifies the same generation became %s when VmRSS disappears between stat and status', (state) => {
+    const fake = fakeTree(); let childStatReads = 0;
+    fake.files['/proc/101/status'] = `State: ${state}\nVmSize: 0 kB`;
+    const read = (file: string) => {
+      if (file === '/proc/101/stat') return stat(100, '1001', ++childStatReads === 1 ? 'S' : state);
+      return fake.read(file);
+    };
+    expect(createTreeSampler(100, { ...fake, read })()).toMatchObject({ rssBytes: 10 * 1024, processCount: 1, exitRaces: 1 });
+    expect(childStatReads).toBe(2);
+  });
+  it.each(['ENOENT', 'ESRCH'])('handles verified disappearance %s during the missing-RSS recheck', (code) => {
+    const fake = fakeTree(); let childStatReads = 0;
+    fake.files['/proc/101/status'] = 'State: S\nVmSize: 0 kB';
+    const read = (file: string) => {
+      if (file === '/proc/101/stat' && ++childStatReads === 2) throw Object.assign(new Error('exited'), { code });
+      return fake.read(file);
+    };
+    expect(createTreeSampler(100, { ...fake, read })()).toMatchObject({ rssBytes: 10 * 1024, processCount: 1, exitRaces: 1 });
+  });
+  it.each(['live', 'reused-zombie', 'permission', 'invalid-stat'])('does not excuse missing RSS after a %s recheck', (change) => {
+    const fake = fakeTree(); let childStatReads = 0;
+    // Even a status that says zombie does not suffice without identity/state
+    // verification from stat; malformed/inconsistent reads remain restrictive.
+    fake.files['/proc/101/status'] = 'State: Z\nVmSize: 0 kB';
+    const read = (file: string) => {
+      if (file === '/proc/101/stat' && ++childStatReads === 2) {
+        if (change === 'reused-zombie') return stat(100, '2000', 'Z');
+        if (change === 'permission') throw Object.assign(new Error('permission denied'), { code: 'EACCES' });
+        if (change === 'invalid-stat') return 'malformed';
+      }
+      return fake.read(file);
+    };
+    const expected = { live: 'MISSING_RSS', 'reused-zombie': 'PID_REUSED', permission: 'permission denied', 'invalid-stat': 'INVALID_PROC_STAT' }[change];
+    expect(createTreeSampler(100, { ...fake, read })).toThrow(expected);
+  });
   it('rejects malformed counters, unverified descendants and exceeded sampling budgets', () => {
     const fake = fakeTree(); fake.files['/proc/101/status'] = 'VmSize: 100 kB';
     expect(createTreeSampler(100, fake)).toThrow('MISSING_RSS');
@@ -120,6 +155,15 @@ describe.runIf(process.platform === 'linux')('transparent command wrapper', () =
     expect(result.code).toBe(0);
     expect(result.report).toMatchObject({ status: 'unavailable', peakRssBytes: null });
     expect(['SIGINT', 'SIGTERM', 'SIGHUP'].map((signal) => process.listenerCount(signal))).toEqual(before);
+  });
+  it('retains the primary sensor failure without inventing a gap after sampling was disabled', async () => {
+    let clockCalls = 0;
+    const result = await measureCommand(command('process.exit(0)'), {
+      env: environment(temporary()), now: () => [0, 10, 100_000][Math.min(clockCalls++, 2)],
+      samplerFactory: () => () => { throw Object.assign(new Error('no RSS'), { code: 'MISSING_RSS' }); },
+    });
+    expect(result.code).toBe(0);
+    expect(result.report).toMatchObject({ status: 'unavailable', errors: ['MISSING_RSS', 'NO_MEMORY_SAMPLES'], maxObservedGapMs: 10, elapsedMs: 100_000 });
   });
   it('does not mistake spawn failure for functional success', async () => {
     const result = await measureCommand(['/nonexistent/ci-memory-command'], { env: environment(temporary()) });

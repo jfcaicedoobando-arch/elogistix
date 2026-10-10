@@ -185,6 +185,12 @@ sus hilos. No busca procesos por nombre, escanea procesos ajenos ni lee
 tras reparenting y comprueba start ticks para evitar reutilización de PID.
 Si falta `children` para un hilo vivo o no puede leer un descendiente, falla el
 sensor; **no sustituye por RSS del padre**.
+Desde la versión 2 del método, si VmRSS desaparece entre `stat` y `status`,
+se relee `stat`: sólo se considera carrera de salida si desapareció el proceso
+o la misma identidad/start ticks ya está zombie/terminada. Un proceso vivo sin
+VmRSS, otra generación de PID o un error de permisos siguen invalidando la
+muestra. Desactivar el sensor conserva ese error; no se añade un gap artificial
+por el tiempo posterior sin observación. No mezclar versiones del método.
 
 Muestrea cada 250 ms, sin lecturas solapadas; máximo 512 procesos, 4.096 hilos,
 50 ms por recorrido y gap observado máximo de 1.000 ms. Superar los límites

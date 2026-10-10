@@ -12,7 +12,7 @@ import { pathToFileURL } from 'node:url';
 import { constants } from 'node:os';
 
 export const MEMORY_METHOD = Object.freeze({
-  metric: 'discovered-process-tree-rss-sum-sampled', version: 1,
+  metric: 'discovered-process-tree-rss-sum-sampled', version: 2,
   source: 'linux-proc-status-VmRSS', intervalMs: 250,
   maxGapMs: 1000, maxSampleMs: 50, maxProcesses: 512, maxTasks: 4096,
   scope: 'command-and-discovered-descendants-excluding-sensor',
@@ -57,7 +57,15 @@ export function createTreeSampler(rootPid, { read = fs.readFileSync, list = fs.r
         if (identity.state === 'Z' || identity.state === 'X') { known.delete(pid); continue; }
         const status = read(`/proc/${pid}/status`, 'utf8');
         const match = /^VmRSS:\s+(\d+) kB$/m.exec(status);
-        if (!match) throw sensorError('MISSING_RSS');
+        if (!match) {
+          // A userspace process can exit after the first stat read and lose
+          // its mm/VmRSS before status is read. Verify its generation/state:
+          // never turn an unreadable or still-live process into zero RSS.
+          const after = parseIdentity(read(`/proc/${pid}/stat`, 'utf8'));
+          if (after.start !== identity.start) throw sensorError('PID_REUSED');
+          if (after.state === 'Z' || after.state === 'X') { known.delete(pid); exitRaces++; continue; }
+          throw sensorError('MISSING_RSS');
+        }
         const rss = Number(match[1]) * 1024;
         if (!Number.isSafeInteger(rss) || rss < 0) throw sensorError('INVALID_RSS');
         // Read all threads' children: a worker spawned by a non-main thread
@@ -143,11 +151,13 @@ export async function measureCommand(command, {
   let timer; let cancellationTimer; let lastSampleAt = started; let sampler;
   let child; let launchError = null;
   const sample = () => {
+    // A sensor failure already invalidates the sample. Time after disabling
+    // it is unobserved, not a new scheduling gap in an active sampler.
+    if (!sampler) return;
     const at = now();
     report.maxObservedGapMs = Math.max(report.maxObservedGapMs, at - lastSampleAt);
     if (at - lastSampleAt > MEMORY_METHOD.maxGapMs) fail('SAMPLING_GAP_EXCEEDED');
     lastSampleAt = at;
-    if (!sampler) return;
     try {
       const value = sampler();
       report.samplingWallMs += value.durationMs;
