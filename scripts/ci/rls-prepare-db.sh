@@ -74,8 +74,15 @@ if ! existing_relations="$(psql -v ON_ERROR_STOP=1 -X -A -t -c \
   exit 1
 fi
 
+# Timing only; the existing SQL, checkpoints, ordering and exit status are intact.
+# shellcheck source=scripts/ci/selector148/profile-replay.sh
+source scripts/ci/selector148/profile-replay.sh
+replay_profile_init
+trap 'replay_profile_finish "$?"' EXIT
+replay_profile_begin bootstrap
 echo "▶ Bootstrap (stubs auth/storage/cron/net/pgmq)"
 "${PSQL[@]}" -f supabase/tests/rls/_ci_bootstrap.sql
+replay_profile_begin squash_setup
 
 requerir_archivo "$CUTOFF_ENV" "corte del squash"
 # Archivo del repo con asignaciones conocidas: SQUASH_FILE y SQUASH_INCLUDED.
@@ -88,7 +95,9 @@ requerir_archivo "${SQUASH_FILE:-}" "baseline squash"
 requerir_archivo "${SQUASH_INCLUDED:-}" "inventario incluido en el squash"
 
 echo "▶ Baseline squash: $SQUASH_FILE"
+replay_profile_begin squash
 stub_extensiones "$SQUASH_FILE" | "${PSQL[@]}" --single-transaction
+replay_profile_begin replay_setup
 
 # Opt-in snapshot for selector installer negatives. The exact hash is reviewed;
 # capture before its atomic migration, while no psql connection owns postgres.
@@ -125,37 +134,50 @@ for f in $(printf '%s\n' supabase/migrations/*.sql | LC_ALL=C sort); do
   if [[ "${AUD54_CI:-}" == 1 && "$base" == "$AUD54_FORWARD" ]]; then
     [[ "$audit54_runtime_checked" == 0 ]] || { echo "::error::AUD54 runtime checkpoint repeated"; exit 1; }
     echo "AUD54 mandatory catalog/transaction runtime on pre-forward checkpoint"
+    replay_profile_begin checkpoint/audit54
     audit54_checkpoint_runtime
+    replay_profile_begin replay_dispatch
     audit54_runtime_checked=1
   fi
 
   # Focused financial-envelope controls supplied by the financial49 package.
   if [[ "${FINANCIAL49_CI:-}" == 1 ]] && [[ "$base" == 20261009010000_audit148_cobertura_documental_exacta.sql || "$base" == 20261009010100_audit148_papelera_seguros.sql ]]; then
+    replay_profile_begin "checkpoint/financial49/$base"
     node scripts/ci/financial49/test-envelope.mjs "$f"
+    replay_profile_begin replay_dispatch
   fi
 
   if [[ -n "$selector148_installer" && "$f" == "$selector148_installer" ]]; then
+    replay_profile_begin checkpoint/selector148
     node scripts/ci/selector148/control.cjs capture
+    replay_profile_begin replay_dispatch
   fi
 
   # Narrow real-schema installer controls run before the exact container forward.
   if [[ "${PRICING_CONTAINER_CI:-}" == 1 && "$base" == 20261009014000_pricing_container_rpc_guard.sql ]]; then
+    replay_profile_begin checkpoint/pricing_container
     node scripts/ci/pricing-container/test-envelope.mjs "$f"
+    replay_profile_begin replay_dispatch
   fi
 
   # Leads installer controls are opt-in only in the disposable Actions service.
   if [[ "${LEADS_SCOPE_CI:-}" == 1 && "$base" == 20261009031000_crm_leads_duplicados_scope.sql ]]; then
+    replay_profile_begin checkpoint/leads_scope
     node scripts/ci/leads-scope/test-envelope.mjs "$f"
+    replay_profile_begin replay_dispatch
   fi
 
   echo "▶ $base"
+  replay_profile_begin "migration/$base"
   if stub_extensiones "$f" | "${PSQL[@]}" --single-transaction; then
+    replay_profile_begin replay_dispatch
     aplicadas=$((aplicadas + 1))
     continue
   fi
   echo "::error file=$f::la migración no aplica sobre el baseline squash"
   exit 1
 done
+replay_profile_begin replay_final_check
 
 if [[ "${AUD54_CI:-}" == 1 && "$audit54_runtime_checked" != 1 ]]; then
   echo "::error::AUD54 runtime checkpoint was not executed before its forward"

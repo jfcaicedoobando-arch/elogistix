@@ -150,6 +150,7 @@ jobs:
           node -e "require('node:assert/strict')(Number(process.versions.node.split('.')[0]) >= 20)"
           npm ci --prefix scripts/ci/selector148 --ignore-scripts --omit=optional --no-audit --no-fund
           node scripts/ci/selector148/static-check.cjs
+          npm test --prefix scripts/ci/selector148
 
       - name: Validate AUD54 catalog runtime harness syntax
         run: |
@@ -348,6 +349,10 @@ jobs:
           path: |
             reports/rls-evidence/inventory.json
             .rls-logs/execution.tsv
+            .selector148-logs/profile.json
+            .selector148-logs/replay-profile.jsonl
+          # Four explicit generated files only; no hidden directory or secret glob.
+          include-hidden-files: true
           if-no-files-found: error
           retention-days: 7
 

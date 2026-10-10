@@ -4,5 +4,8 @@
   "version": "1.0.0",
   "dependencies": {
     "pg": "npm:@supabase/pg@8.21.1"
+  },
+  "scripts": {
+    "test": "node --test tests/profile.test.cjs"
   }
 }

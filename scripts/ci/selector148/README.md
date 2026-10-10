@@ -86,3 +86,52 @@ Preparation checks are syntax, frozen-source parity, dependency-lock closure,
 workflow parsing, discovery and patch roundtrip only. No local PostgreSQL replay,
 UI matrix, full suite or typecheck is needed to prepare this patch. GitHub Actions
 must establish runtime results; historical local evidence is not remote CI status.
+
+## Runtime profiling (CI plan, phase 3)
+
+The existing evidence artifact now includes `profile.json` from the serial runner
+and `replay-profile.jsonl` from the original replay. No additional job, database,
+query, parallel execution, credential, checkpoint or cache is introduced.
+
+`profile.json` records wall time, parent-process CPU time, sampled RSS and counts,
+totals, minima/maxima and thrown-operation failures for these operations:
+
+- the same nine serial snapshot queries, JSON parsing and received JSON bytes;
+- fixture reads, JSON serialization, SHA-256, gzip level 1 and evidence writes;
+- owned database cloning/closing, SQL subprocesses and the concurrency subprocess.
+
+The query timing combines server work, transfer and driver overhead; it is not a
+server-only SQL execution time. The byte count is decoded JSON text, not protocol
+traffic. Parent CPU excludes PostgreSQL/child-process CPU, and sampled RSS is not
+continuous peak RSS. Nested operation durations overlap: do not sum all metrics
+into wall time. No SQL text, fixture values, credentials or environment dump is
+included in the profiler. Existing full evidence remains unchanged and recoverable.
+Metrics never determine the functional result: a sensor or profiler-file failure
+emits one fixed warning and disables only telemetry. A surviving Node report has
+`profiling_complete: false` and null overall measurements; its metric entries are
+partial. A replay JSONL without a complete `total` row is incomplete. Do not treat
+either as a valid benchmark. Failures writing required snapshots, hashes or other
+functional evidence still fail normally, and original SQL/errors/exit codes remain.
+
+Replay uses Bash wall-clock microsecond timestamps, without a new process per
+phase. It records bootstrap, squash, ordered individual migrations, dispatch and
+each enabled pre-forward checkpoint. A `total` row retains the original exit code;
+the failing phase also retains it. Backwards clock changes are marked invalid.
+These phase times are disjoint except `total`, which must not be added to them.
+Safety checks still run before replay/profile initialization. Existing workflow
+`always()` cleanup and artifact upload remain required, including on failures.
+
+Run `npm test --prefix scripts/ci/selector148` after installing its locked dependency
+to check metrics, byte-identical gzip/manifest evidence, serial query order, notice
+validation and failure propagation. The tests do not contact PostgreSQL. Full
+installer, mutation, ACL, rollback and concurrency proof still runs only through
+the guarded CI harness; profiling does not replace any of it.
+
+An initial local experiment removed the outer `jsonb_pretty` presentation wrapper
+while retaining all fields/order. Across 12 alternating samples per mode on the
+same disposable PostgreSQL 17.9 lineage, serialized JSON and gzip were identical
+and received JSON shrank from 10,353,792 to 7,800,730 bytes. However, median snapshot
+time changed from 1.077 s to 1.208 s under shared-machine contention. This is not an
+Actions benchmark or reproducible speedup; the compact candidate was rejected and
+is not included. Production SQL, transport and snapshots keep the original format.
+Use comparable Actions runs and the new metrics before choosing an optimization.

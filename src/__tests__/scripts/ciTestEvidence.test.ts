@@ -51,6 +51,27 @@ describe("CI catalog: effective discovery", () => {
       .toEqual(["tests/pdf/carteraPagination.test.tsx"]);
   });
 
+  it("routes only the exact selector148 npm test files to its Node lane", () => {
+    const expected = catalog.entries.filter(entry => entry.lane === "node-selector148").map(entry => entry.path);
+    const pkg = JSON.parse(source("scripts/ci/selector148/package.json"));
+    expect(pkg.scripts.test).toBe("node --test tests/profile.test.cjs");
+    const actual = pkg.scripts.test.slice("node --test ".length).split(/\s+/)
+      .map((file: string) => `scripts/ci/selector148/${file}`);
+    expect(() => assertExactPaths(expected, actual, "selector148 npm test discovery")).not.toThrow();
+    expect(expected.every(file => fs.existsSync(file))).toBe(true);
+    expect(catalog.entries.find(entry => entry.path === expected[0])?.mode).toBe("automatic");
+    expect(source(".github/workflows/rls-tests.yml")).toMatch(/^\s+node scripts\/ci\/selector148\/static-check\.cjs\r?\n\s+npm test --prefix scripts\/ci\/selector148$/m);
+  });
+
+  it("rejects unexecuted new selector148 CJS tests instead of accepting a folder wildcard", () => {
+    const files = catalog.entries.map(entry => entry.path);
+    const guards = catalog.entries.filter(entry => entry.lane === "sql-guards").map(entry => entry.path);
+    const support = Object.fromEntries(catalog.entries.filter(entry => entry.lane === "sql-support").map(entry => [entry.path, entry.reason]));
+    for (const extra of ["scripts/ci/selector148/tests/new.test.cjs", "scripts/ci/selector148/tests/nested/profile.test.cjs"]) {
+      expect(() => classifyFiles([...files, extra], guards, support)).toThrow(/no execution lane/);
+    }
+  });
+
   it("fails closed for new unmatched SQL, script tests, missing and duplicate guards", () => {
     const files = catalog.entries.map(entry => entry.path);
     const guards = catalog.entries.filter(entry => entry.lane === "sql-guards").map(entry => entry.path);
