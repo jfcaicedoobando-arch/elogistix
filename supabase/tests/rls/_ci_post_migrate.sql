@@ -1,3 +1,6 @@
+-- Fail before blanket grants if either disabled Pricing lineage function leaked.
+\ir _ci_check_pricing_lineage_acl.sql
+
 -- ============================================================================
 -- Post-migración CI: relaja restricciones que dependen de GoTrue real.
 --
@@ -209,3 +212,10 @@ BEGIN
     END IF;
   END LOOP;
 END $$;
+
+-- Pricing lineage remains disabled in the disposable CI database too.
+-- Restore only its two reviewed revocations after the blanket grants above.
+REVOKE ALL ON FUNCTION public.crm_vincular_cotizacion_cliente_pricing(uuid,uuid,uuid,uuid) FROM PUBLIC, anon, authenticated, service_role;
+REVOKE ALL ON FUNCTION public.guard_cotizacion_origen_pricing() FROM PUBLIC, anon, authenticated, service_role;
+-- This final assertion fails on any direct or inherited client EXECUTE leak.
+\ir _ci_check_pricing_lineage_acl.sql

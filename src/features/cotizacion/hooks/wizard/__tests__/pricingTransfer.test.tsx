@@ -153,7 +153,9 @@ describe("transferencia de respuesta Pricing", () => {
     const { result, rerender } = montar();
     await waitFor(() => expect(result.current.prefill.estado).toBe("aplicado"));
     expect(result.current.form.getValues()).toMatchObject({ clienteId: "cliente", esProspecto: false, oportunidadId: "op", monedaCrm: "USD", tarifaId: "tarifa", incoterm: "FOB", numContenedores: 3 });
-    expect(result.current.form.getValues("validezPropuesta").getMonth()).toBe(9);
+    const validezPropuesta = result.current.form.getValues("validezPropuesta");
+    if (!(validezPropuesta instanceof Date)) throw new Error("Falta la fecha de validez de la propuesta");
+    expect(validezPropuesta.getMonth()).toBe(9);
     rerender({}); expect(m.resolver).toHaveBeenCalledTimes(1); expect(m.recargos).not.toHaveBeenCalled();
   });
   it("conserva prospecto y hereda SOL sobre ICP", async () => {
