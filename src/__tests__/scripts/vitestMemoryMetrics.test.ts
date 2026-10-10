@@ -4,7 +4,7 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { spawn } from 'node:child_process';
-import { createTreeSampler, measureCommand, MEMORY_METHOD, parseIdentity, type ExitVerification } from '../../../scripts/ci/measure-vitest-memory.mjs';
+import { createTreeSampler, measureCommand, MEMORY_METHOD, parseIdentity, type ExitVerification, type RecoveryDiagnostic } from '../../../scripts/ci/measure-vitest-memory.mjs';
 
 const directories: string[] = [];
 const temporary = () => { const directory = fs.mkdtempSync(path.join(os.tmpdir(), 'ci-memory-')); directories.push(directory); return directory; };
@@ -65,6 +65,15 @@ function pendingParentTree() {
   fake.files['/proc/200/task/200/children'] = '';
   const list = (file: string) => file === '/proc/200/task' ? ['200'] : fake.list(file);
   return { ...fake, list };
+}
+function recoveryTree() {
+  const fake = fakeTree();
+  fake.files['/proc/100/stat'] = stat(process.pid, '1000', 'Z');
+  fake.files['/proc/100/status'] = procStatus(100, undefined, 'Z');
+  fake.files['/proc/100/task/100/stat'] = stat(process.pid, '1000', 'Z');
+  fake.files['/proc/100/task/102/status'] = procStatus(102, 48 * 1024, 'S', 100);
+  fake.files['/proc/100/task/102/children'] = '';
+  return fake;
 }
 
 describe('job-scoped process tree sampling', () => {
@@ -153,11 +162,53 @@ describe('job-scoped process tree sampling', () => {
     fake.files['/proc/101/task/101/stat'] = stat(100, '1001', 'Z', 101);
     fake.files['/proc/101/task/103/stat'] = stat(100, '1003', 'S', 103);
     fake.files['/proc/101/task/103/status'] = procStatus(103, undefined, 'S', 101);
-    // RSS fallback enumerates once; confirmExit must see the new task only
-    // during its second enumeration, after an initially terminal group.
-    const list = (file: string) => file === '/proc/101/task' ? (++lists <= 2 ? ['101'] : ['101', '103']) : fake.list(file);
+    fake.files['/proc/101/task/103/children'] = '';
+    // Initial RSS and its replay each enumerate once. Exit verification must
+    // see the new task only in its second enumeration of the terminal group.
+    const list = (file: string) => file === '/proc/101/task' ? (++lists <= 3 ? ['101'] : ['101', '103']) : fake.list(file);
     expect(createTreeSampler(100, { ...fake, list })).toThrow('MISSING_RSS');
-    expect(lists).toBeGreaterThanOrEqual(3);
+    expect(lists).toBeGreaterThanOrEqual(4);
+  });
+  it('rejects a terminal task generation that changes after guarded discovery and before the exit certificate', () => {
+    const fake = recoveryTree(); let taskReads = 0;
+    fake.files['/proc/100/task/102/stat'] = stat(process.pid, '1002', 'Z', 102);
+    const read = (file: string) => {
+      // Initial observation: before/after children and candidate reads 1–3.
+      // Replay: reads 4–6. The terminal certificate first sees generation 9002.
+      if (file === '/proc/100/task/102/stat' && ++taskReads >= 7) return stat(process.pid, '9002', 'Z', 102);
+      return fake.read(file);
+    };
+    expect(createTreeSampler(100, { ...fake, read })).toThrow('PID_REUSED');
+    expect(taskReads).toBeGreaterThanOrEqual(7);
+  });
+  it.each(['recaptured', 'omitted', 'reused'])('preserves a newly observed terminal task capture obligation and its live child: %s', (change) => {
+    const fake = recoveryTree(); let enumerations = 0;
+    fake.files['/proc/100/task/102/stat'] = stat(process.pid, '1002', 'Z', 102);
+    fake.files['/proc/100/task/103/stat'] = stat(process.pid, '1003', 'Z', 103);
+    fake.files['/proc/100/task/103/status'] = procStatus(103, undefined, 'Z', 100);
+    fake.files['/proc/100/task/103/children'] = '101';
+    const list = (file: string) => {
+      if (file !== '/proc/100/task') return fake.list(file);
+      enumerations++;
+      // The task first appears in the terminal certificate, after both
+      // initial and replayed complete observations have discovered children.
+      return enumerations <= 2 || (change === 'omitted' && enumerations >= 5) ? ['100', '102'] : ['100', '102', '103'];
+    };
+    const read = (file: string) => {
+      if (change === 'reused' && file === '/proc/100/task/103/stat' && enumerations >= 5) return stat(process.pid, '9003', 'Z', 103);
+      return fake.read(file);
+    };
+    const sample = createTreeSampler(100, { ...fake, list, read });
+    if (change === 'recaptured') {
+      expect(sample()).toMatchObject({ rssBytes: 25 * 1024, processCount: 1, exitVerificationCount: 1 });
+      expect(fake.reads).toContain('/proc/100/task/103/children');
+      expect(fake.reads).toContain('/proc/101/status');
+    } else {
+      expect(sample).toThrow(change === 'reused' ? 'PID_REUSED' : 'MISSING_RSS');
+      expect(fake.reads).not.toContain('/proc/101/status');
+      if (change === 'omitted') expect(fake.now()).toBe(MEMORY_METHOD.exitVerificationMs);
+    }
+    expect(enumerations).toBeGreaterThanOrEqual(5);
   });
   it('rechecks TGID generation after the terminal task group was re-enumerated', () => {
     const fake = fakeTree(); let reads = 0;
@@ -174,7 +225,8 @@ describe('job-scoped process tree sampling', () => {
     };
     expect(createTreeSampler(100, { ...fake, read, pause: () => { pauses++; } })).toThrow('MISSING_RSS');
     expect(pauses).toBeLessThanOrEqual(MEMORY_METHOD.exitMaxChecks);
-    expect(reads).toBeLessThanOrEqual(MEMORY_METHOD.exitMaxChecks + 6);
+    // Each bounded check now retries RSS with its task/group identity guards.
+    expect(reads).toBeLessThanOrEqual(MEMORY_METHOD.exitMaxChecks * 6 + 6);
   });
   it('keeps deferred classification inside the existing overall sample budget', () => {
     const fake = fakeTree(); fake.files['/proc/101/status'] = procStatus(101);
@@ -242,7 +294,7 @@ describe('job-scoped process tree sampling', () => {
         return fake.read(file);
       };
       const list = (file: string) => { if (missing === 'task' && file === '/proc/101/task') throw procError(code); return fake.list(file); };
-      expect(createTreeSampler(100, { ...fake, read, list }), missing).toThrow('MISSING_RSS');
+      expect(createTreeSampler(100, { ...fake, read, list }), missing).toThrow(missing === 'children' ? 'CHILD_DISCOVERY_UNAVAILABLE' : 'MISSING_RSS');
       expect(fake.reads.filter((file) => file === '/proc/101/stat').length, missing).toBeGreaterThan(1);
     }
   });
@@ -682,6 +734,182 @@ describe('job-scoped process tree sampling', () => {
     // certify the group or become a complete sample.
     expect(createTreeSampler(100, { ...fake, read })).toThrow('MISSING_RSS');
   });
+  it.each(['group-status', 'task-list', 'task-stat-before', 'child-stat'])('recaptures the same TGID after transient %s unavailability and counts its real RSS once', (route) => {
+    const fake = recoveryTree(); let injected = false; let rssReads = 0;
+    const read = (file: string) => {
+      if (!injected && ((route === 'group-status' && file === '/proc/100/status') || (route === 'task-stat-before' && file === '/proc/100/task/102/stat'))) { injected = true; throw procError('ENOENT'); }
+      if (route === 'child-stat' && file === '/proc/101/stat') { injected = true; throw procError('ENOENT'); }
+      if (route === 'child-stat' && file === '/proc/100/task/102/children' && !injected) return '101';
+      if (file === '/proc/100/task/102/status') rssReads++;
+      return fake.read(file);
+    };
+    const list = (file: string) => {
+      if (!injected && route === 'task-list' && file === '/proc/100/task') { injected = true; return []; }
+      return fake.list(file);
+    };
+    const result = createTreeSampler(100, { ...fake, read, list })();
+    expect(injected).toBe(true);
+    expect(rssReads).toBeGreaterThan(0);
+    expect(result).toMatchObject({ rssBytes: 48 * 1024 * 1024, processCount: 1, recoveryCount: route === 'child-stat' ? 2 : 1, exitVerificationCount: route === 'child-stat' ? 1 : 0 });
+    expect(result.lastRecovery).toMatchObject({ outcome: route === 'child-stat' ? 'gone' : 'rss-recovered', initialPhase: route === 'child-stat' ? 'group-stat' : route, initialCause: route === 'task-list' ? 'EMPTY_TASK_LIST' : 'ENOENT' });
+    expect(result.lastRecovery?.rssAttempts).toBeGreaterThanOrEqual(route === 'child-stat' ? 1 : 2);
+    expect(fake.now()).toBeLessThanOrEqual(MEMORY_METHOD.exitVerificationMs);
+  });
+  it('keeps a stable live thread with persistently unknown RSS incomplete throughout recovery', () => {
+    const fake = recoveryTree(); fake.files['/proc/100/task/102/status'] = procStatus(102, undefined, 'S', 100);
+    expect(createTreeSampler(100, fake)).toThrow('MISSING_RSS');
+    expect(fake.reads.filter((file) => file === '/proc/100/task/102/status').length).toBeGreaterThan(1);
+    expect(fake.now()).toBe(MEMORY_METHOD.exitVerificationMs);
+  });
+  it.each(['group', 'task'])('rejects a changed %s generation while recapturing RSS', (kind) => {
+    const fake = recoveryTree(); let triggered = false;
+    const read = (file: string) => {
+      if (kind === 'group' && file === '/proc/100/status' && !triggered) { triggered = true; throw procError('ENOENT'); }
+      if (kind === 'task' && file === '/proc/100/task/102/status' && !triggered) { triggered = true; return procStatus(102, undefined, 'S', 100); }
+      if (triggered && kind === 'group' && file === '/proc/100/stat') return stat(process.pid, '2000', 'Z');
+      if (triggered && kind === 'task' && file === '/proc/100/task/102/stat') return stat(process.pid, '2002', 'S', 102);
+      return fake.read(file);
+    };
+    expect(createTreeSampler(100, { ...fake, read })).toThrow('PID_REUSED');
+  });
+  it('retains an observed child token whose unverified generation reparents during recovery', () => {
+    const fake = recoveryTree(); let childReads = 0;
+    fake.files['/proc/100/task/102/children'] = '101';
+    const read = (file: string) => {
+      if (file === '/proc/101/stat') { if (++childReads === 1) throw procError('ENOENT'); return stat(1, '1001', 'S', 101); }
+      return fake.read(file);
+    };
+    expect(createTreeSampler(100, { ...fake, read })).toThrow('UNVERIFIED_DESCENDANT');
+    expect(fake.reads).not.toContain('/proc/101/status');
+  });
+  it.each(['EACCES', 'EIO'])('does not turn a group status %s failure into an RSS recovery', (code) => {
+    const fake = recoveryTree(); let statusAttempts = 0;
+    const read = (file: string) => { if (file === '/proc/100/status') { statusAttempts++; throw procError(code); } return fake.read(file); };
+    expect(createTreeSampler(100, { ...fake, read })).toThrow(code);
+    expect(statusAttempts).toBe(1);
+    expect(fake.reads).not.toContain('/proc/100/task/102/status');
+  });
+  it('cannot replace an uncaptured vanished task obligation with another live task RSS', () => {
+    const fake = recoveryTree(); let vanished = false;
+    fake.files['/proc/100/task/103/stat'] = stat(process.pid, '1003', 'S', 103);
+    fake.files['/proc/100/task/103/status'] = procStatus(103, 48 * 1024, 'S', 100);
+    fake.files['/proc/100/task/103/children'] = '';
+    const read = (file: string) => { if (file === '/proc/100/task/102/stat') { vanished = true; throw procError('ENOENT'); } return fake.read(file); };
+    const list = (file: string) => file === '/proc/100/task' ? (vanished ? ['100', '103'] : ['100', '102', '103']) : fake.list(file);
+    expect(createTreeSampler(100, { ...fake, read, list })).toThrow('MISSING_RSS');
+    expect(fake.now()).toBeLessThanOrEqual(MEMORY_METHOD.exitVerificationMs);
+  });
+  it('cannot bypass an unresolved representative by recovering the live leader RSS', () => {
+    const fake = fakeTree(); let failed = false; let vanishedStatReads = 0; let recoveredLeaderReads = 0;
+    fake.files['/proc/100/status'] = procStatus(100);
+    fake.files['/proc/100/task/102/children'] = '';
+    fake.files['/proc/100/task/103/stat'] = stat(process.pid, '1003', 'S', 103);
+    fake.files['/proc/100/task/103/status'] = procStatus(103, 48 * 1024, 'S', 100);
+    fake.files['/proc/100/task/103/children'] = '';
+    const read = (file: string) => {
+      if (file === '/proc/100/status' && failed) { recoveredLeaderReads++; return procStatus(100, 48 * 1024); }
+      if (file === '/proc/100/task/102/status') { failed = true; throw procError('ENOENT'); }
+      if (file === '/proc/100/task/102/stat' && failed && ++vanishedStatReads === 1) throw procError('ENOENT');
+      return fake.read(file);
+    };
+    const list = (file: string) => file === '/proc/100/task' ? (failed ? ['100', '103'] : ['100', '102', '103']) : fake.list(file);
+    expect(createTreeSampler(100, { ...fake, read, list })).toThrow('MISSING_RSS');
+    expect(recoveredLeaderReads).toBeGreaterThan(0);
+    expect(vanishedStatReads).toBeGreaterThanOrEqual(2);
+    expect(fake.now()).toBe(MEMORY_METHOD.exitVerificationMs);
+  });
+  it('does not recover RSS from a leader generation previously observed terminal', () => {
+    const fake = recoveryTree(); let attempted = false; let recoveredLeaderReads = 0;
+    const read = (file: string) => {
+      if (file === '/proc/100/task/102/status') { attempted = true; return procStatus(102, undefined, 'S', 100); }
+      if (file === '/proc/100/stat' && attempted) return stat(process.pid, '1000', 'S');
+      if (file === '/proc/100/status' && attempted) { recoveredLeaderReads++; return procStatus(100, 48 * 1024); }
+      return fake.read(file);
+    };
+    expect(createTreeSampler(100, { ...fake, read })).toThrow('MISSING_RSS');
+    expect(recoveredLeaderReads).toBeGreaterThan(0);
+    expect(fake.now()).toBe(MEMORY_METHOD.exitVerificationMs);
+  });
+  it('does not restart the original recovery deadline after a different transient failure', () => {
+    const fake = recoveryTree(); let secondFailure = false;
+    const read = (file: string) => {
+      if (file === '/proc/100/task/102/status') {
+        if (!secondFailure && fake.now() >= 20) { secondFailure = true; throw procError('ENOENT'); }
+        return procStatus(102, undefined, 'S', 100);
+      }
+      return fake.read(file);
+    };
+    expect(createTreeSampler(100, { ...fake, read })).toThrow('MISSING_RSS');
+    expect(secondFailure).toBe(true);
+    expect(fake.now()).toBe(MEMORY_METHOD.exitVerificationMs);
+  });
+  it('rejects real RSS obtained after the original recovery deadline', () => {
+    const fake = recoveryTree(); let attempts = 0;
+    const read = (file: string) => {
+      if (file === '/proc/100/task/102/status') {
+        if (++attempts === 1) return procStatus(102, undefined, 'S', 100);
+        fake.pause(MEMORY_METHOD.exitVerificationMs + 1);
+      }
+      return fake.read(file);
+    };
+    expect(createTreeSampler(100, { ...fake, read })).toThrow('MISSING_RSS');
+    expect(attempts).toBe(2);
+    expect(fake.now()).toBe(MEMORY_METHOD.exitVerificationMs + 1);
+  });
+  it('starts the original recovery deadline before verifying a vanished RSS candidate', () => {
+    const fake = survivingTree(); let vanished = false;
+    const read = (file: string) => {
+      if (file === '/proc/100/task/102/status') { vanished = true; throw procError('ENOENT'); }
+      if (file === '/proc/100/task/102/stat' && vanished) throw procError('ENOENT');
+      return fake.read(file);
+    };
+    const list = (file: string) => {
+      if (file === '/proc/100/task' && vanished) { fake.pause(MEMORY_METHOD.exitVerificationMs + 1); return ['100', '103']; }
+      return fake.list(file);
+    };
+    expect(createTreeSampler(100, { ...fake, read, list })).toThrow('MISSING_RSS');
+    expect(fake.now()).toBe(MEMORY_METHOD.exitVerificationMs + 1);
+    expect(fake.reads).not.toContain('/proc/100/task/103/status');
+  });
+  it('keeps RSS recovery inside the sample time budget', () => {
+    const fake = recoveryTree(); let attempts = 0;
+    const read = (file: string) => {
+      if (file === '/proc/100/task/102/status') {
+        if (++attempts === 1) { fake.pause(40); return procStatus(102, undefined, 'S', 100); }
+        fake.pause(11);
+      }
+      return fake.read(file);
+    };
+    expect(createTreeSampler(100, { ...fake, read })).toThrow('SAMPLE_BUDGET_EXCEEDED');
+    expect(fake.now()).toBe(51);
+  });
+  it('does not reset the cumulative task budget when replaying a whole TGID observation', () => {
+    const fake = recoveryTree(); let rssAttempts = 0;
+    const tids = ['100', '102', ...Array.from({ length: 2047 }, (_, index) => String(103 + index))];
+    const read = (file: string) => {
+      if (file === '/proc/100/task/102/status' && ++rssAttempts === 1) return procStatus(102, undefined, 'S', 100);
+      const extra = /^\/proc\/100\/task\/(\d+)\/(stat|children)$/.exec(file);
+      if (extra && Number(extra[1]) >= 103) return extra[2] === 'stat' ? stat(process.pid, String(1000 + Number(extra[1])), 'Z', Number(extra[1])) : '';
+      return fake.read(file);
+    };
+    const list = (file: string) => file === '/proc/100/task' ? tids : fake.list(file);
+    expect(createTreeSampler(100, { ...fake, read, list })).toThrow('TASK_BUDGET_EXCEEDED');
+    expect(rssAttempts).toBe(1);
+  });
+  it('retains the process budget and previously discovered children across RSS replay', () => {
+    const fake = recoveryTree(); let replay = false;
+    const children = Array.from({ length: MEMORY_METHOD.maxProcesses - 2 }, (_, index) => String(200 + index));
+    const read = (file: string) => {
+      if (file === '/proc/100/task/102/children') return [...children, ...(replay ? ['710', '711'] : [])].join(' ');
+      if (file === '/proc/100/task/102/status' && !replay) { replay = true; return procStatus(102, undefined, 'S', 100); }
+      const descendant = /^\/proc\/(\d+)\/stat$/.exec(file);
+      if (descendant && Number(descendant[1]) >= 200) return stat(100, String(1000 + Number(descendant[1])), 'S', Number(descendant[1]));
+      return fake.read(file);
+    };
+    expect(createTreeSampler(100, { ...fake, read })).toThrow('PROCESS_BUDGET_EXCEEDED');
+    expect(replay).toBe(true);
+    expect(fake.reads).not.toContain('/proc/200/status');
+  });
   it('rejects duplicate VmRSS even when the first counter is valid', () => {
     const fake = fakeTree(); fake.files['/proc/100/status'] = `${procStatus(100, 10)}\nVmRSS: 10 kB`;
     expect(createTreeSampler(100, fake)).toThrow('INVALID_RSS');
@@ -706,6 +934,37 @@ describe('job-scoped process tree sampling', () => {
     };
     fake.files['/proc/100/status'] = statuses[change];
     expect(createTreeSampler(100, fake)).toThrow('INVALID_PROC_STATUS');
+  });
+  it.each([true, false])('serializes only internally constructed recovery categories and counters, recovered=%s', async (recovers) => {
+    const fake = recoveryTree(); let injected = false; let samples = 0;
+    if (!recovers) fake.files['/proc/100/task/102/status'] = procStatus(102, undefined, 'S', 100);
+    const privateError = Object.assign(new Error('/proc/9999/status private-start-ticks'), {
+      code: 'ENOENT', initialPhase: '/proc/9999/status', initialCause: 'private-start-ticks', rssAttempts: 9999, pid: 9999,
+    });
+    const read = (file: string) => { if (file === '/proc/100/status' && !injected) { injected = true; throw privateError; } return fake.read(file); };
+    const sample = createTreeSampler(100, { ...fake, read });
+    const serialized: string[] = [];
+    const result = await measureCommand(command('process.exit(0)'), {
+      env: environment(temporary()), platform: 'linux', write: (_file, value) => { serialized.push(JSON.stringify(value)); },
+      samplerFactory: () => () => samples++ === 0 ? sample() : {
+        rssBytes: 0, processCount: 0, taskCount: 0, exitRaces: 0, durationMs: 0,
+        exitVerificationCount: 0, exitVerificationWallMs: 0, lastExitVerification: null,
+        recoveryCount: 0, recoveryWallMs: 0, lastRecovery: null,
+      },
+    });
+    expect(result.code).toBe(0);
+    expect(result.report.status).toBe(recovers ? 'complete' : 'unavailable');
+    expect(result.report.recoveryCount).toBe(1);
+    const diagnostic = result.report.lastRecovery as RecoveryDiagnostic;
+    expect(diagnostic).toMatchObject({ outcome: recovers ? 'rss-recovered' : 'unconfirmed', initialPhase: 'group-status', initialCause: 'ENOENT' });
+    expect(Object.keys(diagnostic).sort()).toEqual(['outcome', 'elapsedMs', 'checks', 'trace', 'initialPhase', 'initialCause', 'rssAttempts'].sort());
+    expect(diagnostic.rssAttempts).toBeGreaterThanOrEqual(2);
+    expect(diagnostic.rssAttempts).toBeLessThanOrEqual(MEMORY_METHOD.exitMaxChecks + 1);
+    expect(diagnostic.checks).toBeLessThanOrEqual(MEMORY_METHOD.exitMaxChecks);
+    expect(diagnostic.trace).toHaveLength(diagnostic.checks);
+    for (const point of diagnostic.trace) expect(Object.keys(point).sort()).toEqual(['atMs', 'state', 'exitFlag', 'nonTerminalTasks', 'stableTasks'].sort());
+    expect(JSON.stringify(diagnostic)).not.toMatch(/pid|\/proc|9999|private-start-ticks|startTicks/i);
+    expect(serialized.every((value) => !/private-start-ticks|\/proc\//.test(value))).toBe(true);
   });
   it.each([
     ['first-list', 'EACCES'], ['second-list', 'EACCES'],

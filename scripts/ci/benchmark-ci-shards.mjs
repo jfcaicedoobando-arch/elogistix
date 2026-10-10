@@ -9,6 +9,36 @@ import { MEMORY_METHOD } from './measure-vitest-memory.mjs';
 
 const hash = (value) => createHash('sha256').update(JSON.stringify(value)).digest('hex');
 const invariant = (condition, message) => { if (!condition) throw new Error(message); };
+const recoveryPhases = ['group-stat', 'group-status', 'task-list', 'task-stat-before', 'task-children', 'task-stat-after', 'child-stat', 'representative-stat-before', 'representative-status', 'representative-stat-after', 'group-recheck', 'rss-result'];
+const recoveryCauses = ['ENOENT', 'ESRCH', 'RSS_ABSENT', 'EMPTY_TASK_LIST'];
+const validateRecovery = (memory) => {
+  invariant(Number.isSafeInteger(memory.recoveryCount) && memory.recoveryCount >= 0 && Number.isFinite(memory.recoveryWallMs) && memory.recoveryWallMs >= 0 && memory.recoveryWallMs <= memory.samplingWallMs, 'Invalid memory recovery counters');
+  if (memory.recoveryCount === 0) {
+    invariant(memory.lastRecovery === null && memory.recoveryWallMs === 0, 'Unexpected memory recovery');
+    return;
+  }
+  const recovery = memory.lastRecovery;
+  invariant(recovery && ['rss-recovered', 'gone', 'terminal'].includes(recovery.outcome), 'Unconfirmed memory recovery');
+  const keys = ['outcome', 'elapsedMs', 'checks', 'trace', 'initialPhase', 'initialCause', 'rssAttempts'];
+  invariant(Object.keys(recovery).length === keys.length && Object.keys(recovery).every((key) => keys.includes(key)) && recoveryPhases.includes(recovery.initialPhase) && recoveryCauses.includes(recovery.initialCause), 'Invalid memory recovery origin');
+  invariant(Number.isFinite(recovery.elapsedMs) && recovery.elapsedMs >= 0 && recovery.elapsedMs <= MEMORY_METHOD.exitVerificationMs && recovery.elapsedMs <= memory.recoveryWallMs, 'Invalid memory recovery time');
+  invariant(Number.isSafeInteger(recovery.rssAttempts) && recovery.rssAttempts >= 0 && recovery.rssAttempts <= MEMORY_METHOD.exitMaxChecks + 1 && (recovery.outcome !== 'rss-recovered' || recovery.rssAttempts > 0), 'Invalid memory recovery RSS attempts');
+  invariant(recovery.outcome === 'rss-recovered' || memory.exitVerificationCount > 0, 'Memory recovery exit lacks verification');
+  invariant(Array.isArray(recovery.trace) && Number.isSafeInteger(recovery.checks) && recovery.checks === recovery.trace.length && recovery.checks <= MEMORY_METHOD.exitMaxChecks, 'Invalid memory recovery trace');
+  invariant(recovery.rssAttempts <= recovery.checks + 1, 'Memory recovery attempts exceed checks');
+  let previousAt = 0;
+  for (const point of recovery.trace) {
+    invariant(point && Object.keys(point).length === 5 && Object.keys(point).every((key) => ['atMs', 'state', 'exitFlag', 'nonTerminalTasks', 'stableTasks'].includes(key)) && Number.isFinite(point.atMs) && point.atMs >= previousAt && point.atMs <= recovery.elapsedMs && /^[RSDTtZXIP]$/.test(point.state) && typeof point.exitFlag === 'boolean', 'Invalid memory recovery state/timing');
+    const unknownTasks = point.nonTerminalTasks === null && point.stableTasks === null;
+    const observedTasks = Number.isSafeInteger(point.nonTerminalTasks) && point.nonTerminalTasks >= 0 && typeof point.stableTasks === 'boolean';
+    invariant(unknownTasks || observedTasks, 'Invalid memory recovery task-group diagnostic');
+    previousAt = point.atMs;
+  }
+  if (recovery.outcome === 'terminal') {
+    const last = recovery.trace.at(-1);
+    invariant(last && ['Z', 'X'].includes(last.state) && last.nonTerminalTasks === 0 && last.stableTasks === true, 'Memory recovery exit is not fully terminal');
+  }
+};
 const time = (value, label) => {
   invariant(typeof value === 'string' && Number.isFinite(Date.parse(value)), `Missing/invalid ${label}`);
   return Date.parse(value);
@@ -194,6 +224,7 @@ export function summarizeSample({ label, shardCount, maxParallel, loadClass, exp
         invariant(last && ['Z', 'X'].includes(last.state) && last.nonTerminalTasks === 0 && last.stableTasks === true, 'Memory process exit is not fully terminal');
       }
     }
+    validateRecovery(memory);
     invariant(memory.maxObservedGapMs <= MEMORY_METHOD.maxGapMs && memory.maxSampleDurationMs <= MEMORY_METHOD.maxSampleMs, 'Memory sampling budget/gap exceeded');
     invariant(memory.elapsedMs >= report.wallTimeMs && memory.elapsedMs > 0 && memory.samplingWallMs <= memory.elapsedMs, 'Memory observation window incomplete');
   }
@@ -202,7 +233,7 @@ export function summarizeSample({ label, shardCount, maxParallel, loadClass, exp
     // Each shard has its own runner. This maximum is not a simultaneous
     // aggregate across runners, VM memory usage, or the account's peak.
     shardPeakRssMaxBytes: Math.max(...memoryReports.map((item) => item.peakRssBytes)),
-    shards: memoryReports.map((item) => ({ index: item.shard.index, peakRssBytes: item.peakRssBytes, sampleCount: item.sampleCount, peakProcessCount: item.peakProcessCount, samplingWallMs: item.samplingWallMs, sensorCpuMicros: item.sensorCpuMicros, sensorMaxRssBytes: item.sensorMaxRssBytes, maxObservedGapMs: item.maxObservedGapMs, exitRaces: item.exitRaces, exitVerificationCount: item.exitVerificationCount, exitVerificationWallMs: item.exitVerificationWallMs })).sort((a, b) => a.index - b.index),
+    shards: memoryReports.map((item) => ({ index: item.shard.index, peakRssBytes: item.peakRssBytes, sampleCount: item.sampleCount, peakProcessCount: item.peakProcessCount, samplingWallMs: item.samplingWallMs, sensorCpuMicros: item.sensorCpuMicros, sensorMaxRssBytes: item.sensorMaxRssBytes, maxObservedGapMs: item.maxObservedGapMs, exitRaces: item.exitRaces, exitVerificationCount: item.exitVerificationCount, exitVerificationWallMs: item.exitVerificationWallMs, recoveryCount: item.recoveryCount, recoveryWallMs: item.recoveryWallMs })).sort((a, b) => a.index - b.index),
   };
   const aggregators = ci.jobs.filter((job) => job.name === 'CI Success (aggregator)');
   invariant(aggregators.length === 1 && !aggregators[0].skipped, 'Missing/skipped CI Success (aggregator)');
@@ -304,7 +335,7 @@ async function main(manifestPath) {
     'loadClass is an operator observation; account-wide headroom needs separate verification.',
     'Runtime/cache/runner comparability is enforced only for Vitest shards. CI non-shard jobs and companion workflows require separate environment/cache confirmation; CI/check-set comparisons remain observational until then.',
     'No automatic promotion; validate reliability, memory, shared load and applicable checks before changing defaults.',
-    'Memory method 4 samples RSS once per discovered process/TGID, excluding the sensor, using an identity-verified live thread when the leader lacks VmRSS, and discovers children from every thread. Shared pages across processes can be counted repeatedly; short-lived processes and brief peaks can be missed. Per-shard maxima are not a simultaneous account/VM peak.',
+    'Memory method 5 samples RSS once per discovered process/TGID, excluding the sensor, using an identity-verified live thread when the leader lacks VmRSS, and discovers children from every thread. Transient reads trigger complete guarded observations within the original 25 ms deadline and sample budgets. Shared pages across processes can be counted repeatedly; short-lived processes and brief peaks can be missed. Per-shard maxima are not a simultaneous account/VM peak.',
   ] }, null, 2));
   if (rejected.length || !results.length) process.exitCode = 1;
 }

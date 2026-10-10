@@ -50,32 +50,54 @@ El reporter de evidencia exige la suite completa (no filtros de archivos ni `-t`
 El wrapper añade `vitest-memory-i-of-n.json`, unido al reporter por UUID, SHA,
 run/intento/evento y coordenadas de shard. El gate funcional conserva su
 contrato; la telemetría incompleta invalida la muestra de benchmark aunque
-Vitest apruebe. El analizador exige el método 4 y rechaza versiones anteriores,
+Vitest apruebe. El analizador exige el método 5 y rechaza versiones anteriores,
 memoria desconocida, confirmaciones de salida pendientes y sumas parciales.
 
-El método 4 lee RSS una vez por proceso/TGID. Si el líder pierde VmRSS mientras
+El método 5 lee RSS una vez por proceso/TGID. Si el líder pierde VmRSS mientras
 un hilo sigue vivo, puede usar el status de ese representante con identidad,
 generación y pertenencia `Pid`/`Tgid` verificadas antes/después. Antes de buscar
 otro representante captura los hijos de todos los hilos con guardas TGID/TID.
 Un candidato desaparecido después de la captura sólo permite continuar si
 dos lecturas confirman stat ausente, task ya no incluye ese TID y TGID conserva
 su generación; redescubre hijos de supervivientes y hilos nuevos antes de
-leer otro representante. No recupera una identidad o hijos que faltaban antes
-de la captura, un TID persistente/reaparecido, reutilización, `EACCES` o `EIO`.
+leer otro representante. No permite omitir identidades ni hijos que no se logran
+capturar, reutilización, `EACCES` o `EIO`.
 Un descendiente nuevo debe tener como padre el TGID, cuya generación se comprueba antes y después;
 otro padre observado no acredita su linaje. Su generación sólo se valida tras
 confirmar al final la misma generación del TGID. Un hijo ya verificado de la
 misma generación conserva su seguimiento tras reparentarse. Conserva los hijos
 observados; uno vivo sin verificar mantiene la suma incompleta. Un hilo sin RSS
-no se declara terminado. Las demás ausencias parciales
-`ENOENT`/`ESRCH` o task vacío exigen
-revalidar el TGID; sólo desaparición verificada o grupo completo terminal
-permite retirarlo. Una actividad incierta conserva la muestra incompleta.
+no se declara terminado.
+
+Reintenta cuatro observaciones transitorias: status del TGID ausente, task
+vacío, stat de un hilo ausente antes de capturar sus hijos y stat de un hijo
+ausente. Conserva identidad y linaje durante los reintentos. Para retirar un
+hijo verifica la desaparición o salida de ese hijo, no la del padre. Sólo RSS
+real verificada o salida demostrada permite completar la lectura; actividad
+o identidad inciertas conservan la muestra incompleta. PF_EXITING, líder Z,
+status ausente o task vacío no prueban por sí solos salida del grupo.
 Los diagnósticos de conteo/estabilidad desconocidos permanecen ambos `null`.
-Los límites siguen en 25 ms para verificar salida y 50 ms por recorrido;
+Recuperación y confirmación comparten los 25 ms originales por TGID desde el
+primer evento recuperable; cambiar de fase no renueva la ventana. Reintentos,
+verificación de hijos y salida permanecen dentro de ella y de los 50 ms por recorrido;
 RSS desconocida no se reemplaza con cero ni con la lectura anterior.
+
+`recoveryCount` y `recoveryWallMs` registran todas las ventanas iniciadas.
+`lastRecovery` admite `rss-recovered`, `gone`, `terminal`, `unconfirmed`,
+`pid-reused` o `read-error`. `gone`/`terminal` también registran salida real en
+`lastExitVerification`; RSS recuperada o fallo no acreditan salida ni retiro.
+El diagnóstico
+contiene `outcome`, `elapsedMs`, `checks`, `trace`, `initialPhase`, `initialCause`
+y `rssAttempts`; este último cuenta el intento inicial fallido más hasta 26
+observaciones del TGID, máximo 27, sin afirmar que cada intento leyó RSS. Las causas son
+`ENOENT`, `ESRCH`, `RSS_ABSENT` y `EMPTY_TASK_LIST`. Estado pendiente o error
+mantiene memoria incompleta. Los tiempos de recuperación/salida pueden
+solaparse; el coste total se toma de `samplingWallMs`, sin sumarlos.
 
 Ver [alcance, costes y límites del sensor](ci-shard-benchmark.md#memoria-alcance-y-límites-explícitos)
 antes de interpretar los máximos. El piloto `38083872299` tuvo evidencia
-funcional completa y sólo 3/5 sidecars RSS completos; queda pendiente validar
-5/5 con método 4 en Actions.
+funcional completa y sólo 3/5 sidecars RSS completos. El piloto V2 `38088786278`
+(head `adf38da10a0cb57c686a414c212dfb0cd9811f5b`) aprobó la suite funcional y
+obtuvo sólo 4/5 sidecars RSS completos. La causa real sigue desconocida por
+diagnóstico insuficiente; V3 no acredita retrospectivamente esa memoria.
+Queda pendiente validar 5/5 con método 5 en Actions.
