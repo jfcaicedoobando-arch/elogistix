@@ -13,9 +13,9 @@ name: CI
 #
 # Shards/workers: 5 shards × maxWorkers=2. Medición real en run 35464373548
 # (3 m 08 s de pared) vs run 35462835847 con 3 shards (4 m 13 s): −65 s (~26 %),
-# a costa de más tiempo total de runners. El cuello de botella pasó a ser ESLint
-# (2 m 41 s). NO se ajusta otra vez sin medir duración del shard más lento,
-# tiempo total y costo/recursos; falta una segunda corrida comparable antes de
+# a costa de más tiempo total de runners. En octubre ESLint bajó a 6–11 s y
+# Vitest pasó a dominar (shard más lento 303–325 s). NO ajustar sin medir
+# tiempo total y costo/recursos; falta un ensayo controlado comparable antes de
 # fijarlo. Procedimiento, criterios e historial en docs/ci-vitest-shards.md
 # (herramienta: scripts/bench-vitest-shards.sh).
 
@@ -63,6 +63,10 @@ jobs:
           BEFORE_SHA: ${{ github.event.before }}
           HEAD_SHA: ${{ github.sha }}
         run: bash scripts/ci/detect-areas.sh
+
+      - name: Validate workflows (actionlint)
+        if: steps.areas.outputs.workflows == 'true'
+        run: bash scripts/ci/lint-workflows.sh
 
 
   lint:
@@ -218,7 +222,8 @@ jobs:
   tests:
     name: Vitest shard ${{ matrix.shard }}/5
     needs: detector
-    if: needs.detector.outputs.frontend == 'true'
+    # Los tests de contrato también inspeccionan SQL/Edge, aunque no haya UI.
+    if: needs.detector.outputs.frontend == 'true' || needs.detector.outputs.database == 'true' || needs.detector.outputs.edge == 'true'
     runs-on: ubuntu-24.04
     timeout-minutes: 30
     strategy:
@@ -295,13 +300,13 @@ jobs:
             fail=1
           fi
 
-          if [ "$FRONTEND" = "true" ]; then
+          if [ "$FRONTEND" = "true" ] || [ "$EDGE" = "true" ] || [ "$DATABASE" = "true" ]; then
             if [ "$TESTS_RESULT" != "success" ]; then
               echo "::error::los 5 shards de Vitest debían terminar en success ($TESTS_RESULT)."
               fail=1
             fi
           elif [ "$TESTS_RESULT" != "skipped" ]; then
-            echo "::error::tests debía omitirse sin frontend ($TESTS_RESULT)."
+            echo "::error::tests debía omitirse sin áreas activas ($TESTS_RESULT)."
             fail=1
           fi
 

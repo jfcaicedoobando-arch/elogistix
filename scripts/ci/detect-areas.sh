@@ -41,6 +41,7 @@ if [ -z "$diff" ]; then
     echo "frontend=true"
     echo "edge=true"
     echo "database=true"
+    echo "workflows=true"
   } >> "$out"
   exit 0
 fi
@@ -49,10 +50,15 @@ echo "$diff"
 frontend=false
 edge=false
 database=false
+workflows=false
 # here-string en vez de `printf | grep -q`: sin SIGPIPE con diffs grandes.
-# Cualquier cambio fuera de docs/markdown toca el camino de app.
-if grep -qvE '^(docs/|\.github/ISSUE_TEMPLATE/)|\.md$' <<<"$diff"; then
+# Sólo SQL conocido evita lint/build/PDF. Vitest sigue probando sus contratos.
+# Rutas desconocidas conservan frontend=true por seguridad.
+if grep -qvE '^(docs/|\.github/ISSUE_TEMPLATE/)|\.md$|^(supabase/(migrations|schema|tests)/|drizzle/migrations/).*\.sql$' <<<"$diff"; then
   frontend=true
+fi
+if grep -qE '^\.github/(workflows/|actions/|dependabot\.yml$)|^scripts/ci/(detect-areas|lint-workflows)\.sh$' <<<"$diff"; then
+  workflows=true
 fi
 if grep -qE '^supabase/functions/|^tests/contracts/|^scripts/check-edge-entrypoints\.sh$|^deno\.(json|jsonc|lock)$|^\.github/workflows/ci\.yml$|^\.github/actions/setup-bun/|^scripts/ci/detect-areas\.sh$' <<<"$diff"; then
   edge=true
@@ -64,4 +70,5 @@ fi
   echo "frontend=$frontend"
   echo "edge=$edge"
   echo "database=$database"
+  echo "workflows=$workflows"
 } >> "$out"

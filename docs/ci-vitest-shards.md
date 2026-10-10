@@ -1,6 +1,6 @@
 # Vitest: shards, workers y mediciones
 
-Configuración revisada el **2026-09-26**: Vite 8 / Vitest 5 / Router 7.
+Configuración revisada el **2026-10-10**: Vite 8 / Vitest 5 / Router 8.
 Fuente: `ci.yml`, `vitest.config.ts`, `vitest.shared.ts`.
 
 ## Configuración vigente
@@ -18,6 +18,30 @@ la concurrencia efectiva se mide. Cinco runners reducen latencia pero pueden
 aumentar minutos totales facturados.
 
 ## Medir antes de ajustar
+
+Muestra de tres ejecuciones verdes observadas el 2026-10-10 (duración del
+paso, no del job completo):
+
+| Run | ESLint | TypeScript | Build | Shard Vitest más lento |
+| --- | ---: | ---: | ---: | ---: |
+| 38017661959 | 11 s | 69 s | 34 s | 322 s |
+| 38017188393 | 6 s | 63 s | 27 s | 325 s |
+| 38014356853 | 8 s | 78 s | 35 s | 303 s |
+
+En 38017661959 los shards tardaron 286/165/322/307/282 s: 1,362 segundos
+sumados sólo en Vitest. Son commits distintos, no un benchmark controlado.
+El shard lento cambia entre ejecuciones; no justifica todavía un repartidor
+personalizado ni aumentar workers. Se conservan cinco shards/dos workers.
+
+Mantenimiento de workflows: actionlint ahora se ejecuta dentro del detector de
+CI para cambios de `.github`, del detector y del script de lint (también en
+ejecución manual/fallback). Se elimina sólo `actionlint.yml`; cualquier error
+sigue fallando el detector y el agregador. Los dos harnesses de Pricing conservan
+sus workflows porque tienen contratos y preflights propios congelados.
+Las modificaciones exclusivamente SQL conocidas evitan lint/build/PDF, pero
+mantienen Vitest completo por los tests que inspeccionan SQL. Las fixtures
+visuales siguen activándose con cualquier cambio en `src`, sus configuraciones
+o dependencias. Main permanece sin protección; no se cambia la versión del ERP.
 
 `scripts/bench-vitest-shards.sh` conserva un ensayo local de 1/2/3 shards.
 Consultar parámetros y límites del script antes de usarlo para otro escenario.
