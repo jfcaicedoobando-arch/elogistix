@@ -1,3 +1,4 @@
+// @vitest-environment node
 /**
  * Protección de la selección de `bun run test:perf`.
  *

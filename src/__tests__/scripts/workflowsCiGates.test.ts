@@ -94,7 +94,7 @@ describe("docs de shards", () => {
     expect(ci).toContain("shard: [1, 2, 3, 4, 5]");
     expect(ci).toContain("Vitest shard ${{ matrix.shard }}/5");
     expect(ci).toContain("--shard=${{ matrix.shard }}/5");
-    expect(ci).toContain("Sin coverage, sin blobs/merge/artifacts");
+    expect(ci).toContain("Sin coverage, sin blobs/merge");
   });
 
   it("documenta la medición real de 5 shards con caché caliente", () => {

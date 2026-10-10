@@ -31,6 +31,8 @@ on:
       - "scripts/ci/receivable155/**"
       - "scripts/ci/pricing-container/**"
       - "scripts/ci/leads-scope/**"
+      - "scripts/ci/test-catalog.*"
+      - "scripts/ci/test-catalog/**"
       - "scripts/ci/run-rls-suites.sh"
       - "scripts/ci/run-guards.sh"
       - "scripts/ci/concurrencia-cotizacion-ganadora.sh"
@@ -56,6 +58,8 @@ on:
       - "scripts/ci/receivable155/**"
       - "scripts/ci/pricing-container/**"
       - "scripts/ci/leads-scope/**"
+      - "scripts/ci/test-catalog.*"
+      - "scripts/ci/test-catalog/**"
       - "scripts/ci/run-rls-suites.sh"
       - "scripts/ci/run-guards.sh"
       - "scripts/ci/concurrencia-cotizacion-ganadora.sh"
@@ -119,6 +123,9 @@ jobs:
         with:
           # No se hace push/fetch autenticado.
           persist-credentials: false
+
+      - name: Catálogo completo de pruebas
+        run: node scripts/ci/test-catalog.mjs --output reports/rls-evidence/inventory.json
 
       - name: Cliente de Postgres 17 (paridad con la imagen pinneada)
         uses: ./.github/actions/setup-pg-client
@@ -236,12 +243,14 @@ jobs:
           LOG_DIR: /tmp/guards-logs
         run: bash scripts/ci/run-guards.sh
 
-      # Descubre por patrón TODAS las suites test_rls_*.sql (34 hoy) y verifica
+      # Descubre por patrón TODAS las suites test_rls_*.sql y verifica
       # su aislamiento BEGIN…ROLLBACK antes de ejecutarlas.
       - name: Suites RLS (descubrimiento por patrón)
         env:
           LOG_DIR: .rls-logs
-        run: bash scripts/ci/run-rls-suites.sh
+        run: |
+          bash scripts/ci/run-rls-suites.sh
+          node scripts/ci/test-catalog.mjs --verify-rls .rls-logs/execution.tsv
 
       - name: Selector148 — instalador, mutaciones y concurrencia serial
         # Serial coverage: supabase/tests/selector148_disabled_gate.sql is the
@@ -330,6 +339,17 @@ jobs:
           path: /tmp/audit54-cxc-forward-runtime/
           if-no-files-found: ignore
           retention-days: 14
+
+      - name: Evidencia compacta del catálogo y ejecución RLS
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: rls-test-inventory-attempt-${{ github.run_attempt }}
+          path: |
+            reports/rls-evidence/inventory.json
+            .rls-logs/execution.tsv
+          if-no-files-found: error
+          retention-days: 7
 
       - name: Subir logs y diff (sólo al fallar)
         if: failure()

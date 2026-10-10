@@ -80,13 +80,15 @@ export interface TestEnvSplit {
 }
 
 /**
- * Recorre `src/` una sola vez al cargar la config y devuelve las dos listas.
+ * Recorre `src/` y `scripts/` al cargar la config y devuelve las dos listas.
  * Coste medido: ~80 ms para ~850 archivos.
  */
 export function splitTestsByEnvironment(root: string): TestEnvSplit {
-  const srcDir = path.join(root, "src");
   const files: string[] = [];
-  walkTests(srcDir, files);
+  for (const dir of ["src", "scripts"]) {
+    const full = path.join(root, dir);
+    if (fs.existsSync(full)) walkTests(full, files);
+  }
 
   const jsdom: string[] = [];
   const node: string[] = [];

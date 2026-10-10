@@ -64,6 +64,9 @@ jobs:
           HEAD_SHA: ${{ github.sha }}
         run: bash scripts/ci/detect-areas.sh
 
+      - name: Catálogo completo de pruebas (sin ejecutar carriles manuales)
+        run: node scripts/ci/test-catalog.mjs --output reports/test-inventory.json
+
       - name: Validate workflows (actionlint)
         if: steps.areas.outputs.workflows == 'true'
         run: bash scripts/ci/lint-workflows.sh
@@ -239,11 +242,26 @@ jobs:
           persist-credentials: false
 
       - name: Setup Bun + install
+        id: setup
         uses: ./.github/actions/setup-bun
 
-      # Sin coverage, sin blobs/merge/artifacts, sin retries globales.
+      # Sin coverage, sin blobs/merge, sin retries globales; evidencia compacta obligatoria.
       - name: Vitest (shard ${{ matrix.shard }}/5)
+        env:
+          CI_EVIDENCE_DIR: reports/ci-evidence
+          CI_TEST_SHARD: ${{ matrix.shard }}/5
+          CI_TEST_MAX_PARALLEL: "5"
+          CI_CACHE_HIT: ${{ steps.setup.outputs.cache-hit }}
         run: bun run test -- --shard=${{ matrix.shard }}/5
+
+      - name: Evidencia Vitest por shard
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: vitest-evidence-${{ matrix.shard }}-of-5-attempt-${{ github.run_attempt }}
+          path: reports/ci-evidence/*.json
+          if-no-files-found: error
+          retention-days: 7
 
   ci-success:
     # Nombre visible conservado por compatibilidad con los checks previos
@@ -314,3 +332,21 @@ jobs:
             exit 1
           fi
           echo "CI OK."
+
+      - name: Checkout para verificar evidencia
+        if: needs.tests.result == 'success'
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Descargar evidencia de todos los shards
+        if: needs.tests.result == 'success'
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          pattern: vitest-evidence-*-of-5-attempt-*
+          path: reports/ci-evidence
+          merge-multiple: false
+
+      - name: Verificar unión exacta de archivos y casos
+        if: needs.tests.result == 'success'
+        run: node scripts/ci/verify-test-evidence.mjs reports/ci-evidence 5

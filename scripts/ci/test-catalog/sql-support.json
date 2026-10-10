@@ -1,0 +1,19 @@
+{
+  "supabase/tests/_audit40_importacion_fixture.sql": "Included fixture for audit40 guards",
+  "supabase/tests/_catalogo_columnas_internas.sql": "Shared internal-column catalog included by guards",
+  "supabase/tests/_decisiones_negocio.sql": "Shared business decisions included by guards",
+  "supabase/tests/rls/_ci_bootstrap.sql": "Ephemeral database bootstrap in rls-prepare-db.sh",
+  "supabase/tests/rls/_ci_check_pricing_container_acl.sql": "Pre-forward ACL check in rls-prepare-db.sh",
+  "supabase/tests/rls/_ci_check_pricing_lineage_acl.sql": "Pre-forward ACL check in rls-prepare-db.sh",
+  "supabase/tests/rls/_ci_check_service_role_only.sql": "Pre-forward ACL check in rls-prepare-db.sh",
+  "supabase/tests/rls/_ci_drift.sql": "Replay drift preflight in rls-prepare-db.sh",
+  "supabase/tests/rls/_ci_exempt_tables.sql": "Explicit table exclusions consumed by RLS preflights",
+  "supabase/tests/rls/_ci_post_migrate.sql": "Post-replay checks in rls-tests.yml",
+  "supabase/tests/rls/_ci_roles.sql": "Ephemeral role bootstrap in rls-prepare-db.sh",
+  "supabase/tests/rls/_ci_selector148_capture_acl.sql": "Pre-forward ACL checkpoint consumed by selector148",
+  "supabase/tests/rls/_ci_selector148_restore_acl.sql": "Checkpoint ACL restoration consumed by selector148",
+  "supabase/tests/rls/_ci_service_role_only.sql": "Service-role ACL catalog consumed by RLS preflights",
+  "supabase/tests/rls/_ci_verify_rls.sql": "RLS enablement preflight in rls-prepare-db.sh",
+  "supabase/tests/rls/_helpers.sql": "Transaction-local helpers included by RLS suites",
+  "supabase/tests/selector148_disabled_gate.sql": "Serial selector148 clone contract; not a parallel guard"
+}
