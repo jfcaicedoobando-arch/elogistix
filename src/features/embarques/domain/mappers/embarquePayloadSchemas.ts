@@ -33,6 +33,8 @@ export const incotermSchema = z.enum([
   "CIP",
   "DAT",
   "N/A",
+  "FAS",
+  "DPU",
 ]);
 
 export const tipoServicioMaritimoSchema = z.enum(["FCL", "LCL"]);

@@ -1,54 +1,70 @@
-/**
- * Respuestas de Pricing disponibles para una cotización nueva: solicitudes
- * respondidas de oportunidades en etapa "En negociación" de la empresa
- * (por oportunidad vinculada o por cliente). Sólo lectura con RLS.
- */
+/** Respuestas vigentes de solicitudes respondidas en negociación; sólo lectura con RLS. */
 import { supabase } from "@/integrations/supabase/client";
 import type { TopTarifaRow } from "@/features/costeo/types";
-import { fetchTarifasVigentesPorIds } from "@/features/costeo/services/topTarifas";
+import type { MetadataRespuestaPricing } from "@/features/cotizacion/domain/respuestaPricing";
+import { fetchTarifasPricingOrganizacion } from "./tarifasPricingCotizacion";
+import { captureAuthOperationScope, AuthOperationChangedError } from "@/lib/auth/authOperationScope";
+import { CAP_LOTES_DURO } from "@/constants/queryCaps";
+import { ResultadoTruncadoError } from "@/lib/supabase/assertNotTruncated";
+import { leerTodasLasPaginas } from "@/lib/supabase/paginado";
 
-export interface OpcionPricingCotizacion {
+export interface OpcionPricingCotizacion extends MetadataRespuestaPricing {
+  organizationId: string;
+  solicitudId: string;
   solicitudFolio: string;
   oportunidadId: string;
+  clienteId: string | null;
   tarifa: TopTarifaRow;
 }
-
-interface FilaSolicitud {
-  id: string;
-  folio: string | null;
-  tarifa_tarifario_id: string | null;
-  oportunidad: { id: string; cliente_id: string | null; etapa: { nombre: string } | null } | null;
-}
-
 const norm = (s: string) => s.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim();
 export const esEnNegociacion = (nombre: string | null | undefined) => norm(nombre ?? "") === "en negociacion";
 
-export async function fetchOpcionesPricingCotizacion(
-  filtro: { oportunidadId?: string; clienteId?: string },
-): Promise<OpcionPricingCotizacion[]> {
-  if (!filtro.oportunidadId && !filtro.clienteId) return [];
-  let q = supabase.from("crm_solicitudes_pricing")
-    .select("id, folio, tarifa_tarifario_id, oportunidad:crm_oportunidades!crm_solicitudes_pricing_oportunidad_id_fkey!inner(id, cliente_id, etapa:crm_etapas_pipeline!crm_oportunidades_etapa_id_fkey(nombre))")
-    .eq("estado", "respondida").is("deleted_at", null).limit(50);
-  q = filtro.oportunidadId ? q.eq("oportunidad_id", filtro.oportunidadId) : q.eq("oportunidad.cliente_id", filtro.clienteId ?? "");
-  const { data, error } = await q;
-  if (error) throw error;
-  const solicitudes = (data ?? []).filter((s) => esEnNegociacion(s.oportunidad?.etapa?.nombre));
-  if (solicitudes.length === 0) return [];
+async function leerSolicitudes(filtro: { organizationId: string; oportunidadId?: string; clienteId?: string }) {
+  return leerTodasLasPaginas("opciones de Pricing", (desde, hasta) => {
+    let q = supabase.from("crm_solicitudes_pricing")
+      .select("id, folio, tarifa_tarifario_id, incoterm, cantidad, servicio, tipo_carga, oportunidad:crm_oportunidades!crm_solicitudes_pricing_oportunidad_id_fkey!inner(id, cliente_id, etapa:crm_etapas_pipeline!crm_oportunidades_etapa_id_fkey(nombre))")
+      .eq("organization_id", filtro.organizationId).eq("oportunidad.organization_id", filtro.organizationId)
+      .eq("oportunidad.etapa.organization_id", filtro.organizationId).eq("oportunidad.etapa.activa", true).eq("oportunidad.etapa.tipo", "abierta")
+      .is("oportunidad.etapa.deleted_at", null).eq("estado", "respondida").is("deleted_at", null).is("oportunidad.deleted_at", null);
+    if (filtro.oportunidadId) q = q.eq("oportunidad_id", filtro.oportunidadId);
+    if (filtro.clienteId) q = q.eq("oportunidad.cliente_id", filtro.clienteId);
+    return q.order("id").range(desde, hasta);
+  });
+}
 
-  // Respuesta = opción elegida del tarifario + tarifas capturadas por Pricing en la solicitud.
-  const { data: ligadas, error: e2 } = await supabase.from("costeo_tarifas")
-    .select("id, solicitud_pricing_id").in("solicitud_pricing_id", solicitudes.map((s) => s.id)).limit(200);
-  if (e2) throw e2;
-  const porTarifa = new Map<string, FilaSolicitud>();
-  for (const s of solicitudes) if (s.tarifa_tarifario_id) porTarifa.set(s.tarifa_tarifario_id, s);
-  for (const l of ligadas ?? []) {
-    const s = solicitudes.find((x) => x.id === l.solicitud_pricing_id);
-    if (s) porTarifa.set(l.id, s);
+async function leerLigadas(ids: string[], organizationId: string) {
+  const ligadas: { id: string; solicitud_pricing_id: string | null }[] = [];
+  for (let offset = 0; offset < ids.length; offset += 200) {
+    const lote = ids.slice(offset, offset + 200);
+    ligadas.push(...await leerTodasLasPaginas("tarifas de solicitudes Pricing", (desde, hasta) =>
+      supabase.from("costeo_tarifas").select("id, solicitud_pricing_id")
+        .eq("organization_id", organizationId).in("solicitud_pricing_id", lote).order("id").range(desde, hasta)));
+    if (ligadas.length >= CAP_LOTES_DURO) throw new ResultadoTruncadoError("tarifas de solicitudes Pricing", CAP_LOTES_DURO);
   }
-  const tarifas = await fetchTarifasVigentesPorIds([...porTarifa.keys()]);
-  return tarifas.map((t) => {
-    const s = porTarifa.get(String(t.id));
-    return { solicitudFolio: s?.folio ?? "", oportunidadId: s?.oportunidad?.id ?? "", tarifa: t };
+  return ligadas;
+}
+
+export async function fetchOpcionesPricingCotizacion(filtro: { organizationId: string; oportunidadId?: string; clienteId?: string }): Promise<OpcionPricingCotizacion[]> {
+  const scope = captureAuthOperationScope();
+  if (!filtro.organizationId || scope.organizationId !== filtro.organizationId) throw new AuthOperationChangedError();
+  if (!filtro.oportunidadId && !filtro.clienteId) return [];
+  const solicitudes = (await leerSolicitudes(filtro)).filter((s) => esEnNegociacion(s.oportunidad?.etapa?.nombre));
+  scope.assertCurrent();
+  if (solicitudes.length === 0) return [];
+  const ligadas = await leerLigadas(solicitudes.map((s) => s.id), filtro.organizationId);
+  const pares = solicitudes.flatMap((s) => {
+    const ids = new Set(ligadas.filter((l) => l.solicitud_pricing_id === s.id).map((l) => l.id));
+    if (s.tarifa_tarifario_id) ids.add(s.tarifa_tarifario_id);
+    return [...ids].map((tarifaId) => ({ s, tarifaId }));
+  });
+  const tarifas = await fetchTarifasPricingOrganizacion(filtro.organizationId, pares.map((p) => p.tarifaId));
+  scope.assertCurrent();
+  const porId = new Map(tarifas.map((t) => [t.id, t]));
+  return pares.flatMap(({ s, tarifaId }) => {
+    const tarifa = porId.get(tarifaId);
+    if (!tarifa) return [];
+    return [{ organizationId: filtro.organizationId, solicitudId: s.id, solicitudFolio: s.folio, oportunidadId: s.oportunidad.id,
+      clienteId: s.oportunidad.cliente_id, incoterm: s.incoterm, cantidad: s.cantidad,
+      servicio: s.servicio, tipo_carga: s.tipo_carga, tarifa }];
   });
 }

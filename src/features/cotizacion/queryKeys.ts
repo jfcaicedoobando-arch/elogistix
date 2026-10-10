@@ -1,3 +1,5 @@
+interface PricingScopeKey { organizationId: string | null; userId: string | null; generation: number }
+
 export const cotizaciones = {
   all: ['cotizaciones'] as const,
   byOrg: (organizationId?: string | null) => ['cotizaciones', organizationId] as const,
@@ -13,8 +15,10 @@ export const cotizaciones = {
     ['cotizacion', cotizacionId, 'filtros-tarifa'] as const,
   envios: (cotizacionId?: string) => ['cotizacion-envios', cotizacionId] as const,
   tarifaVinculada: (tarifaId: string | null) => ['cotizacion', 'tarifa-vinculada', tarifaId] as const,
-  opcionesPricing: (oportunidadId?: string | null, clienteId?: string | null) =>
-    ['cotizacion', 'opciones-pricing', oportunidadId ?? null, clienteId ?? null] as const,
+  opcionesPricing: (scope: PricingScopeKey, oportunidadId?: string | null, clienteId?: string | null) =>
+    ['cotizacion', 'opciones-pricing', scope.organizationId, scope.userId, scope.generation, oportunidadId ?? null, clienteId ?? null] as const,
+  contextoPricing: (scope: PricingScopeKey, oportunidadId: string | null, solicitudId: string | null, tarifaId: string | null) =>
+    ['cotizacion', 'contexto-pricing', scope.organizationId, scope.userId, scope.generation, oportunidadId, solicitudId, tarifaId] as const,
   prefillTarifaPricing: (tarifaId: string | null) => ['cotizacion', 'prefill-tarifa-pricing', tarifaId] as const,
   pendientesReaprobacion: {
     all: ['cotizaciones', 'pendientes-reaprobacion', 'all'] as const,

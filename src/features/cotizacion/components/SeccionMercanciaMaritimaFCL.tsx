@@ -35,9 +35,9 @@ export default function SeccionMercanciaMaritimaFCL({ msdsFile, setMsdsFile }: P
     <SeccionMercanciaWrapper msdsFile={msdsFile} setMsdsFile={setMsdsFile}>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
-          <Label>Tipo de Contenedor</Label>
+          <Label htmlFor="cotizacion-tipo-contenedor">Tipo de contenedor</Label>
           <Select value={tipoContenedor || undefined} onValueChange={v => setValue("tipoContenedor", v)}>
-            <SelectTrigger><SelectValue placeholder="Seleccionar contenedor" /></SelectTrigger>
+            <SelectTrigger id="cotizacion-tipo-contenedor"><SelectValue placeholder="Seleccionar tipo de contenedor" /></SelectTrigger>
             <SelectContent>
               {opcionGuardada && (
                 <SelectItem value={opcionGuardada.value}>{opcionGuardada.label}</SelectItem>

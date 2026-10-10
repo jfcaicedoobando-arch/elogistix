@@ -26,6 +26,21 @@ function baseData(overrides: Partial<CotizacionInitialData> = {}): CotizacionIni
 }
 
 describe("buildCotizacionDefaultValues", () => {
+  it("restaura el origen Pricing exclusivamente desde el ID durable", () => {
+    const out = buildCotizacionDefaultValues(baseData({ organization_id: "org", oportunidad_id: "op", tarifa_id: "tarifa", pricing_solicitud_id: "sol" }));
+    expect(out.pricingSolicitudId).toBe("sol");
+    expect(out.pricingOrigen).toEqual({ organizationId: "org", clienteId: "cli-1", oportunidadId: "op", tarifaId: "tarifa", solicitudId: "sol" });
+    expect(out.pricingVinculoPendienteId).toBeNull();
+  });
+  it("histórico sin solicitud no infiere origen desde oportunidad y tarifa", () => {
+    const out = buildCotizacionDefaultValues(baseData({ organization_id: "org", oportunidad_id: "op", tarifa_id: "tarifa" }));
+    expect(out.pricingSolicitudId).toBeNull(); expect(out.pricingOrigen).toBeNull();
+  });
+  it("sin tenant explícito no construye una identidad utilizable", () => {
+    const out = buildCotizacionDefaultValues(baseData({ oportunidad_id: "op", tarifa_id: "tarifa", pricing_solicitud_id: "sol" }));
+    expect(out.pricingSolicitudId).toBe("sol"); expect(out.pricingOrigen).toBeNull();
+  });
+
   it("retorna defaults cuando no hay data", () => {
     expect(buildCotizacionDefaultValues()).toEqual(COTIZACION_FORM_DEFAULTS);
   });

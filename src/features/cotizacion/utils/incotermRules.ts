@@ -22,6 +22,7 @@ export const INCOTERMS_SIN_FLETE_VENTA = [
   "DAP",
   "DDP",
   "DAT",
+  "DPU",
 ] as const;
 
 

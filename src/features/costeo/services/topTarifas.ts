@@ -8,6 +8,9 @@
  */
 import { supabase } from "@/integrations/supabase/client";
 import type { TopTarifaRow, CosteoTarifaRecargo } from "@/features/costeo/types";
+import { CAP_LOTES_DURO } from "@/constants/queryCaps";
+import { leerTodasLasPaginas } from "@/lib/supabase/paginado";
+import { ResultadoTruncadoError } from "@/lib/supabase/assertNotTruncated";
 import { todayLocalISO } from "@/lib/date/today";
 
 export interface TopTarifasParams {
@@ -87,10 +90,26 @@ export async function fetchTarifaVigentePorId(id: string): Promise<TopTarifaRow 
   return (data as TopTarifaRow | null) ?? null;
 }
 
-/** Varias tarifas vigentes por id. */
+/** Varias tarifas vigentes, sin duplicados y en el orden de los IDs pedidos. */
 export async function fetchTarifasVigentesPorIds(ids: readonly string[]): Promise<TopTarifaRow[]> {
-  if (ids.length === 0) return [];
-  const { data, error } = await supabase.from("costeo_tarifas_vigentes_v").select("*").in("id", [...ids]).limit(200);
-  if (error) throw error;
-  return (data ?? []) as TopTarifaRow[];
+  const unicos = [...new Set(ids)];
+  if (unicos.length === 0) return [];
+  if (unicos.length >= CAP_LOTES_DURO) {
+    throw new ResultadoTruncadoError("costeo.tarifasVigentesPorIds", CAP_LOTES_DURO);
+  }
+  // Acota el tamaño de la URL del filtro IN, no el número total de resultados.
+  const loteIds = 200;
+  const porId = new Map<string, TopTarifaRow>();
+  for (let inicio = 0; inicio < unicos.length; inicio += loteIds) {
+    const lote = unicos.slice(inicio, inicio + loteIds);
+    const filas = await leerTodasLasPaginas("costeo.tarifasVigentesPorIds", (desde, hasta) =>
+      supabase.from("costeo_tarifas_vigentes_v").select("*").in("id", lote)
+        .order("id").range(desde, hasta),
+    );
+    for (const fila of filas as TopTarifaRow[]) porId.set(fila.id, fila);
+  }
+  return unicos.flatMap((id) => {
+    const fila = porId.get(id);
+    return fila ? [fila] : [];
+  });
 }

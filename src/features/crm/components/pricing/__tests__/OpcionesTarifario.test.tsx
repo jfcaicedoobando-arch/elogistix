@@ -46,6 +46,19 @@ beforeEach(() => {
 afterEach(() => { cleanup(); client.clear(); });
 
 describe("OpcionesTarifario", () => {
+  it("separa etiquetas de ruta, agente, naviera, contenedor y flete sin alterar valores", async () => {
+    montar();
+    await screen.findByRole("button", { name: "Usar esta opción" });
+    for (const [label, value] of [
+      ["Puerto de origen:", "Shanghai"], ["Puerto de destino:", "Manzanillo"],
+      ["Agente:", "Agente"], ["Naviera:", "Naviera"],
+      ["Tipo de contenedor:", "20"], ["Flete base:", "100"],
+    ]) {
+      expect(screen.getByText(label).nextSibling?.textContent).toContain(value);
+    }
+    expect(screen.queryByText("Puertos:")).not.toBeInTheDocument();
+    expect(screen.queryByText("Agente / Naviera:")).not.toBeInTheDocument();
+  });
   it("comparte las claves de Costeo y omite cargos FOB si el incoterm no aplica", async () => {
     montar();
     await screen.findByRole("button", { name: "Usar esta opción" });

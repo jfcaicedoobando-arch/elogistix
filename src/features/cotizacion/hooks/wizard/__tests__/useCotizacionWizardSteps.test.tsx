@@ -5,6 +5,8 @@
  */
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { renderHook, act } from "@testing-library/react";
+import { useForm } from "react-hook-form";
+import { COTIZACION_FORM_DEFAULTS, type CotizacionFormValues } from "@/features/cotizacion/types";
 
 const savePaso1 = vi.fn();
 const savePaso2 = vi.fn();
@@ -35,6 +37,15 @@ vi.mock("../handlePaso1Crm", () => ({
 
 import { useCotizacionWizardSteps } from "../useCotizacionWizardSteps";
 
+function makeForm(values: Partial<CotizacionFormValues> = {}) {
+  // RHF conserva los contratos reales de getValues(campo), watch y unsubscribe.
+  const { result } = renderHook(() => useForm<CotizacionFormValues>({
+    defaultValues: { ...COTIZACION_FORM_DEFAULTS, clienteId: "cli-1", esProspecto: false, ...values },
+  }));
+  vi.spyOn(result.current, "setError");
+  return result.current;
+}
+
 function makeDeps(over: Partial<Parameters<typeof useCotizacionWizardSteps>[0]> = {}) {
   const refs = {
     setCurrentStep: vi.fn(),
@@ -59,9 +70,7 @@ function makeDeps(over: Partial<Parameters<typeof useCotizacionWizardSteps>[0]> 
       registrarActividad: { mutate: vi.fn() },
     },
   };
-  const form = {
-    getValues: () => ({ clienteId: "cli-1", esProspecto: false }),
-  } as never;
+  const form = over.form ?? makeForm();
   const deps = {
     form, toast: vi.fn(), navigate: refs.navigate, isEditMode: false,
     cotizacionId: null, setCotizacionId: refs.setCotizacionId,
@@ -81,7 +90,7 @@ beforeEach(() => { vi.clearAllMocks(); savePaso1.mockResolvedValue("cot-1"); sav
 describe("useCotizacionWizardSteps", () => {
   it("handleSiguiente paso 1: si validatePaso1 falla, notifyError y no avanza", async () => {
     const { deps } = makeDeps({
-      form: { getValues: () => ({ clienteId: "", esProspecto: false }), setError: vi.fn() } as never,
+      form: makeForm({ clienteId: "" }),
     });
     const { result } = renderHook(() => useCotizacionWizardSteps(deps));
     await act(async () => { await result.current.handleSiguiente(); });
@@ -176,7 +185,7 @@ describe("useCotizacionWizardSteps", () => {
 
   it("handleGuardar: éxito navega a /cotizaciones/:id y notifySuccess", async () => {
     const { deps, refs } = makeDeps({ cotizacionId: "cot-1",
-      form: { getValues: (key?: string) => key === "sinDesgloseCostos" ? true : { clienteId: "cli-1", esProspecto: false } } as never,
+      form: makeForm({ sinDesgloseCostos: true }),
       conceptosUSD: [{ descripcion: "Manual", unidad_medida: "Servicio", cantidad: 1, precio_unitario: 150, moneda: "USD", total: 150, aplica_iva: false }],
     });
     const { result } = renderHook(() => useCotizacionWizardSteps(deps));

@@ -27,7 +27,7 @@ import {
   clearDraft,
 } from "@/features/cotizacion/hooks/wizard/useCotizacionDraftAutosave";
 import { usePrefillProspectoOportunidad } from "@/features/cotizacion/hooks/wizard/usePrefillProspectoOportunidad";
-import { usePrefillTarifaPricing } from "@/features/cotizacion/hooks/wizard/usePrefillTarifaPricing";
+import { usePrefillContextoPricing } from "@/features/cotizacion/hooks/wizard/usePrefillContextoPricing";
 import { useDraftRestore } from "./useDraftRestore";
 
 function permitePrefill(id: string | null, permitePrefillProspecto: boolean, cotizacionId: string | null) {
@@ -99,12 +99,14 @@ export function useNuevaCotizacionPageController() {
   usePrefillProspectoOportunidad({
     form: w.form,
     oportunidadId: oportunidadPrefill,
-    enabled: permitePrefill(oportunidadPrefill, permitePrefillProspecto, w.cotizacionId),
+    enabled: !tarifaPrefill && permitePrefill(oportunidadPrefill, permitePrefillProspecto, w.cotizacionId),
   });
-  usePrefillTarifaPricing({
+  usePrefillContextoPricing({
     form: w.form,
     tarifaId: tarifaPrefill,
-    esperarOportunidad: Boolean(oportunidadPrefill),
+    oportunidadId: oportunidadPrefill,
+    solicitudId: searchParams.get("solicitud"),
+    organizationId,
     enabled: permitePrefill(tarifaPrefill, permitePrefillProspecto, w.cotizacionId),
   });
 

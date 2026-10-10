@@ -31,6 +31,10 @@ function partesCliente(d: CotizacionInitialData) {
     // cotización quedaba huérfana al volver a guardar).
     prospectoModo: "vincular" as const,
     oportunidadId: d.oportunidad_id ?? "",
+    pricingSolicitudId: d.pricing_solicitud_id ?? null,
+    pricingOrigen: d.pricing_solicitud_id && d.organization_id && d.cliente_id && d.oportunidad_id && d.tarifa_id
+      ? { solicitudId: d.pricing_solicitud_id, organizationId: d.organization_id, clienteId: d.cliente_id, oportunidadId: d.oportunidad_id, tarifaId: d.tarifa_id } : null,
+    pricingVinculoPendienteId: null,
     leadId: "",
     // A1/A7: se conserva la moneda ya persistida como moneda del vínculo, para
     // que reeditar un borrador no la cambie a USD sin que el usuario lo pida.
