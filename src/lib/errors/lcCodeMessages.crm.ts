@@ -19,6 +19,10 @@ export const LC_CODE_MESSAGES_CRM: Record<string, string> = {
   LC_CRM_ETAPA_PROSPECTO_FALTANTE:
     "Configura una etapa Prospecto activa en el pipeline antes de convertir esta empresa a prospecto.",
   LC_SCORING_OBJETO_INVALIDO: "El puntaje sólo puede calcularse para empresas u oportunidades del CRM.",
+  LC_COT_PRICING_SUBTOTAL_SCHEMA_DRIFT:
+    "La definición del cálculo del subtotal de Pricing cambió respecto a la actualización revisada. Avisa a soporte: se requiere revisión técnica antes de aplicar la actualización.",
+  LC_COT_PRICING_SUBTOTAL_SECURITY_CHANGED:
+    "La configuración de seguridad del cálculo del subtotal de Pricing cambió. Avisa a soporte: se requiere revisión técnica antes de aplicar la actualización.",
   LC_COT_PRICING_TC_REQUERIDO:
     "Captura el tipo de cambio de la cotización en el paso 3 para conservar la moneda de Pricing. Los conceptos mantendrán su moneda original.",
   LC_COT_PRICING_MONEDA_INVALIDA:
