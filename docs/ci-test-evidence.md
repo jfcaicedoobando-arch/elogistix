@@ -44,3 +44,38 @@ Las pruebas del gate incluyen omisión, sustitución con mismo conteo, duplicado
 Para herramientas de benchmark se exportan `validateEvidence(catalog, reports, total)` (puro, válido para artifacts históricos) y `verifyEvidence(directory, total)` (compara además el checkout actual). `cacheHit=null` expresa entorno local desconocido y no debe admitirse como muestra comparable de cache caliente/fría.
 
 El reporter de evidencia exige la suite completa (no filtros de archivos ni `-t`). Para ejecutar focales locales, omitir `CI_EVIDENCE_DIR`. Para comprobar el contrato real de eventos de Vitest5 con fixtures pequeñas: `node scripts/ci/test-evidence-smoke.mjs`.
+
+## Sidecar de memoria para benchmark
+
+El wrapper añade `vitest-memory-i-of-n.json`, unido al reporter por UUID, SHA,
+run/intento/evento y coordenadas de shard. El gate funcional conserva su
+contrato; la telemetría incompleta invalida la muestra de benchmark aunque
+Vitest apruebe. El analizador exige el método 4 y rechaza versiones anteriores,
+memoria desconocida, confirmaciones de salida pendientes y sumas parciales.
+
+El método 4 lee RSS una vez por proceso/TGID. Si el líder pierde VmRSS mientras
+un hilo sigue vivo, puede usar el status de ese representante con identidad,
+generación y pertenencia `Pid`/`Tgid` verificadas antes/después. Antes de buscar
+otro representante captura los hijos de todos los hilos con guardas TGID/TID.
+Un candidato desaparecido después de la captura sólo permite continuar si
+dos lecturas confirman stat ausente, task ya no incluye ese TID y TGID conserva
+su generación; redescubre hijos de supervivientes y hilos nuevos antes de
+leer otro representante. No recupera una identidad o hijos que faltaban antes
+de la captura, un TID persistente/reaparecido, reutilización, `EACCES` o `EIO`.
+Un descendiente nuevo debe tener como padre el TGID, cuya generación se comprueba antes y después;
+otro padre observado no acredita su linaje. Su generación sólo se valida tras
+confirmar al final la misma generación del TGID. Un hijo ya verificado de la
+misma generación conserva su seguimiento tras reparentarse. Conserva los hijos
+observados; uno vivo sin verificar mantiene la suma incompleta. Un hilo sin RSS
+no se declara terminado. Las demás ausencias parciales
+`ENOENT`/`ESRCH` o task vacío exigen
+revalidar el TGID; sólo desaparición verificada o grupo completo terminal
+permite retirarlo. Una actividad incierta conserva la muestra incompleta.
+Los diagnósticos de conteo/estabilidad desconocidos permanecen ambos `null`.
+Los límites siguen en 25 ms para verificar salida y 50 ms por recorrido;
+RSS desconocida no se reemplaza con cero ni con la lectura anterior.
+
+Ver [alcance, costes y límites del sensor](ci-shard-benchmark.md#memoria-alcance-y-límites-explícitos)
+antes de interpretar los máximos. El piloto `38083872299` tuvo evidencia
+funcional completa y sólo 3/5 sidecars RSS completos; queda pendiente validar
+5/5 con método 4 en Actions.

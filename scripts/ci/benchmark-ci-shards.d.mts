@@ -1,3 +1,5 @@
+import type { MemoryMethod } from './measure-vitest-memory.mjs';
+
 export interface JobTiming { id: number; name: string; skipped: boolean; runnerSeconds: number; createdToStartSeconds?: number }
 export interface RunSummary {
   runId: number; name: string; sha: string; event: string; ref: string;
@@ -10,7 +12,7 @@ export interface SampleSummary {
   comparisonContext: Record<string, unknown>; runIds: number[]; fileCount: number; cases: number;
   ciLatencySeconds: number; checkSetLatencySeconds: number; dispatchSpreadSeconds: number; runnerSeconds: number;
   createdToStartP95Seconds: number; shardWallMaxSeconds: number; peakObservedCheckSetJobs: number; workflows: RunSummary[];
-  shardPeakRssMaxBytes: number; memory: { method: Record<string, unknown>; shardPeakRssMaxBytes: number; shards: Record<string, number>[] };
+  shardPeakRssMaxBytes: number; memory: { method: Readonly<MemoryMethod>; shardPeakRssMaxBytes: number; shards: Record<string, number>[] };
 }
 export interface BenchmarkComparison {
   context: Record<string, unknown>;

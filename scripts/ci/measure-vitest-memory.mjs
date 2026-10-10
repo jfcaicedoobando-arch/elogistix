@@ -12,7 +12,7 @@ import { pathToFileURL } from 'node:url';
 import { constants } from 'node:os';
 
 export const MEMORY_METHOD = Object.freeze({
-  metric: 'discovered-process-tree-rss-sum-sampled', version: 3,
+  metric: 'discovered-process-tree-rss-sum-sampled', version: 4,
   source: 'linux-proc-status-VmRSS', intervalMs: 250,
   maxGapMs: 1000, maxSampleMs: 50, maxProcesses: 512, maxTasks: 4096,
   exitVerificationMs: 25, exitPollMs: 1, exitMaxChecks: 26,
@@ -50,11 +50,37 @@ export function createTreeSampler(rootPid, { read = fs.readFileSync, list = fs.r
     const checkBudget = () => {
       if (now() - started > MEMORY_METHOD.maxSampleMs) throw sensorError('SAMPLE_BUDGET_EXCEEDED');
     };
+    const readIdentity = (file, expectedPid) => {
+      checkBudget();
+      const raw = read(file, 'utf8');
+      const pid = raw.slice(0, raw.indexOf('(')).trim();
+      if (!/^\d+$/.test(pid) || !positive(Number(pid)) || Number(pid) !== expectedPid) throw sensorError('INVALID_PROC_STAT');
+      return { raw, identity: parseIdentity(raw) };
+    };
+    const readGroupIdentity = (pid, expectedStart) => {
+      const { identity } = readIdentity(`/proc/${pid}/stat`, pid);
+      if (identity.start !== expectedStart) throw sensorError('PID_REUSED');
+      return identity;
+    };
+    const statusRss = (status, pid, tid = pid) => {
+      const lines = status.split('\n');
+      for (const [field, expected] of [['Tgid', pid], ['Pid', tid]]) {
+        const values = lines.filter((line) => line.startsWith(`${field}:`));
+        const match = values.length === 1 && new RegExp(`^${field}:[ \\t]+(\\d+)[ \\t]*$`).exec(values[0]);
+        if (!match || !positive(Number(match[1])) || Number(match[1]) !== expected) throw sensorError('INVALID_PROC_STATUS');
+      }
+      const values = lines.filter((line) => line.startsWith('VmRSS:'));
+      if (!values.length) return null;
+      const match = values.length === 1 && /^VmRSS:[ \t]+(\d+) kB[ \t]*$/.exec(values[0]);
+      if (!match) throw sensorError('INVALID_RSS');
+      const rss = Number(match[1]) * 1024;
+      if (!Number.isSafeInteger(rss) || rss < 0) throw sensorError('INVALID_RSS');
+      return rss;
+    };
     const tasks = (pid) => {
       checkBudget();
       const tids = list(`/proc/${pid}/task`).filter((tid) => /^\d+$/.test(tid));
       taskCount += tids.length;
-      if (!tids.length) throw sensorError('EMPTY_TASK_LIST');
       if (taskCount > MEMORY_METHOD.maxTasks) throw sensorError('TASK_BUDGET_EXCEEDED');
       return tids;
     };
@@ -74,10 +100,12 @@ export function createTreeSampler(rootPid, { read = fs.readFileSync, list = fs.r
         for (let check = 0; check < MEMORY_METHOD.exitMaxChecks; check++) {
           checkBudget();
           if (now() - begin > MEMORY_METHOD.exitVerificationMs) { outcome = 'unconfirmed'; throw sensorError('MISSING_RSS'); }
-          let raw;
-          try { raw = read(`/proc/${pid}/stat`, 'utf8'); }
+          let raw; let identity;
+          try { ({ raw, identity } = readIdentity(`/proc/${pid}/stat`, pid)); }
           catch (error) { if (gone(error)) return result('gone'); throw error; }
-          const identity = parseIdentity(raw);
+          // Without a previously observed generation an earlier missing stat
+          // cannot be reconciled with a process that has appeared meanwhile.
+          if (expectedStart == null) { outcome = 'unconfirmed'; throw sensorError('MISSING_RSS'); }
           if (identity.start !== expectedStart) { outcome = 'pid-reused'; throw sensorError('PID_REUSED'); }
           const flags = Number(raw.slice(raw.lastIndexOf(')') + 2).trim().split(/\s+/)[6]);
           if (!Number.isSafeInteger(flags) || flags < 0) throw sensorError('INVALID_PROC_STAT');
@@ -86,34 +114,37 @@ export function createTreeSampler(rootPid, { read = fs.readFileSync, list = fs.r
           if (terminal(identity.state)) {
             // A zombie leader can have live threads. Verify the entire TGID,
             // re-enumerate it, then recheck every remaining task and TGID identity.
-            const identities = new Map();
-            const liveTasks = new Set();
-            point.nonTerminalTasks = 0;
-            for (const tid of tasks(pid)) {
-              checkBudget();
-              try {
-                const task = Number(tid) === pid ? identity : parseIdentity(read(`/proc/${pid}/task/${tid}/stat`, 'utf8'));
+            const identities = new Map(); const liveTasks = new Set();
+            let first = []; let second = []; let enumerated = true;
+            try {
+              first = tasks(pid);
+              // An empty/partially vanished task directory does not establish
+              // that a zombie leader's whole group has finished.
+              if (!first.length) enumerated = false;
+              for (const tid of first) {
+                const task = Number(tid) === pid ? identity : readIdentity(`/proc/${pid}/task/${tid}/stat`, Number(tid)).identity;
                 identities.set(tid, task.start);
                 if (!terminal(task.state)) liveTasks.add(tid);
-              } catch (error) { if (!gone(error)) throw error; }
-            }
-            point.stableTasks = true;
-            for (const tid of tasks(pid)) {
-              checkBudget();
-              if (!identities.has(tid)) { point.stableTasks = false; continue; }
-              try {
-                const task = parseIdentity(read(Number(tid) === pid ? `/proc/${pid}/stat` : `/proc/${pid}/task/${tid}/stat`, 'utf8'));
-                if (task.start !== identities.get(tid)) { outcome = 'pid-reused'; throw sensorError('PID_REUSED'); }
+              }
+              second = tasks(pid);
+              if (!second.length) enumerated = false;
+              for (const tid of second) {
+                const task = readIdentity(Number(tid) === pid ? `/proc/${pid}/stat` : `/proc/${pid}/task/${tid}/stat`, Number(tid)).identity;
+                if (identities.has(tid) && task.start !== identities.get(tid)) { outcome = 'pid-reused'; throw sensorError('PID_REUSED'); }
                 if (!terminal(task.state)) liveTasks.add(tid);
-              } catch (error) { if (!gone(error)) throw error; }
-            }
+              }
+            } catch (error) { if (!gone(error)) throw error; enumerated = false; }
             let finalIdentity;
-            try { finalIdentity = parseIdentity(read(`/proc/${pid}/stat`, 'utf8')); }
+            try { finalIdentity = readGroupIdentity(pid, expectedStart); }
             catch (error) { if (gone(error)) return result('gone'); throw error; }
-            if (finalIdentity.start !== expectedStart) { outcome = 'pid-reused'; throw sensorError('PID_REUSED'); }
-            point.nonTerminalTasks = liveTasks.size;
+            if (enumerated) {
+              // Publish both counters only after the entire enumeration and
+              // identity recheck completed; unknown must remain null.
+              point.nonTerminalTasks = liveTasks.size;
+              point.stableTasks = first.length === second.length && second.every((tid) => identities.has(tid));
+            }
             checkBudget();
-            if (now() - begin <= MEMORY_METHOD.exitVerificationMs && terminal(finalIdentity.state) && point.nonTerminalTasks === 0 && point.stableTasks) return result('terminal');
+            if (now() - begin <= MEMORY_METHOD.exitVerificationMs && terminal(finalIdentity.state) && point.nonTerminalTasks === 0 && point.stableTasks === true) return result('terminal');
           }
           const remaining = Math.min(MEMORY_METHOD.exitVerificationMs - (now() - begin), MEMORY_METHOD.maxSampleMs - (now() - started));
           if (remaining <= 0) break;
@@ -125,17 +156,18 @@ export function createTreeSampler(rootPid, { read = fs.readFileSync, list = fs.r
         // Missing task paths alone never prove TGID exit: recheck its identity.
         if (gone(error)) {
           try {
-            if (parseIdentity(read(`/proc/${pid}/stat`, 'utf8')).start !== expectedStart) { outcome = 'pid-reused'; error = sensorError('PID_REUSED'); }
+            if (readIdentity(`/proc/${pid}/stat`, pid).identity.start !== expectedStart) { outcome = 'pid-reused'; error = sensorError('PID_REUSED'); }
             else error = sensorError('MISSING_RSS');
           } catch (again) { if (gone(again)) return result('gone'); error = again; }
         }
         if (error.code === 'MISSING_RSS') outcome = 'unconfirmed';
+        if (error.code === 'PID_REUSED') outcome = 'pid-reused';
         exitDiagnostics.set(error, result(outcome));
         throw error;
       }
     };
-    const removeVerifiedExit = (pid, identity) => {
-      const diagnostic = confirmExit(pid, identity.start);
+    const removeVerifiedExit = (pid, expectedStart) => {
+      const diagnostic = confirmExit(pid, expectedStart);
       known.delete(pid); exitRaces++; exitVerificationCount++;
       exitVerificationWallMs += diagnostic.elapsedMs; lastExitVerification = diagnostic;
     };
@@ -145,51 +177,148 @@ export function createTreeSampler(rootPid, { read = fs.readFileSync, list = fs.r
       if (seen.has(pid)) continue;
       seen.add(pid);
       if (seen.size > MEMORY_METHOD.maxProcesses) throw sensorError('PROCESS_BUDGET_EXCEEDED');
+      let identity;
       try {
-        const identity = parseIdentity(read(`/proc/${pid}/stat`, 'utf8'));
+        ({ identity } = readIdentity(`/proc/${pid}/stat`, pid));
         const previous = known.get(pid);
         if (pid === rootPid && previous === null && identity.parent !== process.pid) throw sensorError('UNVERIFIED_ROOT');
         if (previous !== undefined && previous !== null && previous !== identity.start) throw sensorError('PID_REUSED');
         // Newly discovered PIDs must still belong to the observed tree.
         if (previous === undefined && !known.has(identity.parent)) throw sensorError('UNVERIFIED_DESCENDANT');
         known.set(pid, identity.start);
-        if (terminal(identity.state)) { removeVerifiedExit(pid, identity); continue; }
         const status = read(`/proc/${pid}/status`, 'utf8');
-        const match = /^VmRSS:\s+(\d+) kB$/m.exec(status);
-        if (!match) {
-          removeVerifiedExit(pid, identity);
-          continue;
-        }
-        const rss = Number(match[1]) * 1024;
-        if (!Number.isSafeInteger(rss) || rss < 0) throw sensorError('INVALID_RSS');
+        let rss = statusRss(status, pid);
         // Read all threads' children: a worker spawned by a non-main thread
         // would be missed by reading only /proc/PID/task/PID/children.
-        const tids = tasks(pid);
-        for (const tid of tids) {
-          if (now() - started > MEMORY_METHOD.maxSampleMs) throw sensorError('SAMPLE_BUDGET_EXCEEDED');
-          try {
-            const children = read(`/proc/${pid}/task/${tid}/children`, 'utf8').trim();
-            if (children) for (const token of children.split(/\s+/)) {
+        let tids = tasks(pid);
+        if (!tids.length) { removeVerifiedExit(pid, identity.start); continue; }
+        const taskGenerations = new Map();
+        const discoverChildren = (current, verifyTasks) => {
+          const descendantGenerations = new Map(); const newDescendants = new Set();
+          if (verifyTasks) readGroupIdentity(pid, identity.start);
+          for (const tid of current) {
+            checkBudget();
+            const file = `/proc/${pid}/task/${tid}`;
+            let before;
+            if (verifyTasks) {
+              before = readIdentity(`${file}/stat`, Number(tid)).identity;
+              if ((Number(tid) === pid && before.start !== identity.start)
+                || (taskGenerations.has(tid) && before.start !== taskGenerations.get(tid))) throw sensorError('PID_REUSED');
+            }
+            let children;
+            try { children = read(`${file}/children`, 'utf8').trim(); }
+            catch (error) {
+              if (!gone(error)) throw error;
+              // A surviving task makes discovery unavailable. A vanished
+              // task with uncaptured children cannot authorize partial RSS.
+              try { readIdentity(`${file}/stat`, Number(tid)); }
+              catch (taskError) { if (!gone(taskError)) throw taskError; throw error; }
+              throw sensorError('CHILD_DISCOVERY_UNAVAILABLE');
+            }
+            const observedChildren = children ? children.split(/\s+/).map((token) => {
               const child = Number(token);
               if (!positive(child)) throw sensorError('INVALID_CHILD_PID');
-              if (!seen.has(child)) queue.push(child);
+              return child;
+            }) : [];
+            // Preserve tokens immediately, before any later identity guard
+            // can fail. Otherwise a partial read could silently erase a child.
+            for (const child of observedChildren) if (!seen.has(child)) queue.push(child);
+            if (verifyTasks) {
+              const after = readIdentity(`${file}/stat`, Number(tid)).identity;
+              if (after.start !== before.start) throw sensorError('PID_REUSED');
+              taskGenerations.set(tid, before.start);
             }
-          } catch (error) {
-            if (!gone(error)) throw error;
-            // Some container kernels omit task/children. ENOENT is an exit
-            // race only if that task itself disappeared, otherwise discovery
-            // is unavailable and counting just the parent would be dishonest.
-            try { read(`/proc/${pid}/task/${tid}/stat`, 'utf8'); }
-            catch (taskError) { if (!gone(taskError)) throw taskError; exitRaces++; continue; }
-            throw sensorError('CHILD_DISCOVERY_UNAVAILABLE');
+            for (const child of observedChildren) {
+              if (verifyTasks) {
+                // Capture the generation now, but authorize it only once the
+                // parent's final generation check completes below.
+                const descendant = readIdentity(`/proc/${child}/stat`, child).identity;
+                const previousChild = descendantGenerations.get(child) ?? known.get(child);
+                if (previousChild != null && previousChild !== descendant.start) throw sensorError('PID_REUSED');
+                // Only this TGID is protected by the current before/after
+                // generation checks. Another known parent may be pending or
+                // already reused; it cannot authorize a first child identity.
+                if (previousChild === undefined && descendant.parent !== pid) throw sensorError('UNVERIFIED_DESCENDANT');
+                if (!known.has(child) && !newDescendants.has(child)) {
+                  if (known.size + newDescendants.size >= MEMORY_METHOD.maxProcesses) throw sensorError('PROCESS_BUDGET_EXCEEDED');
+                  newDescendants.add(child);
+                }
+                descendantGenerations.set(child, descendant.start);
+              }
+            }
           }
-        }
+          if (verifyTasks) {
+            try { readGroupIdentity(pid, identity.start); }
+            catch (error) {
+              if (gone(error) && newDescendants.size) throw sensorError('UNVERIFIED_DESCENDANT');
+              throw error;
+            }
+            for (const [child, start] of descendantGenerations) known.set(child, start);
+          }
+        };
+        if (rss === null || terminal(identity.state)) {
+          rss = null;
+          // Capture every enumerated task's descendants before a memory
+          // representative can disappear, and guard those reads against reuse.
+          discoverChildren(tids, true);
+          const verifyTaskGone = (tid) => {
+            readGroupIdentity(pid, identity.start);
+            const requireAbsent = () => {
+              let current;
+              try { current = readIdentity(`/proc/${pid}/task/${tid}/stat`, Number(tid)).identity; }
+              catch (error) { if (gone(error)) return; throw error; }
+              if (current.start !== taskGenerations.get(tid)) throw sensorError('PID_REUSED');
+              throw sensorError('MISSING_RSS');
+            };
+            requireAbsent();
+            const current = tasks(pid);
+            if (current.includes(tid)) throw sensorError('MISSING_RSS');
+            // Reject a task that reappears after the enumeration too.
+            requireAbsent();
+            readGroupIdentity(pid, identity.start);
+            // Revisit every survivor/new task: exited threads can transfer
+            // children to another task, and a new task may have descendants.
+            discoverChildren(current, true);
+            exitRaces++;
+            return current;
+          };
+          // A leader may have exited and relinquished its mm while another
+          // task keeps the shared address space alive. Its status provides
+          // process RSS once, never a per-thread value to add repeatedly.
+          for (let taskCursor = 0; taskCursor < tids.length; taskCursor++) {
+            const tid = tids[taskCursor];
+            const file = `/proc/${pid}/task/${tid}`;
+            readGroupIdentity(pid, identity.start);
+            let candidate = null; let after;
+            try {
+              const before = readIdentity(`${file}/stat`, Number(tid)).identity;
+              if (before.start !== taskGenerations.get(tid)) throw sensorError('PID_REUSED');
+              if (!terminal(before.state)) {
+                candidate = statusRss(read(`${file}/status`, 'utf8'), pid, Number(tid));
+                after = readIdentity(`${file}/stat`, Number(tid)).identity;
+                if (after.start !== before.start) throw sensorError('PID_REUSED');
+              }
+            } catch (error) {
+              if (!gone(error)) throw error;
+              tids = verifyTaskGone(tid);
+              taskCursor = -1;
+              continue;
+            }
+            readGroupIdentity(pid, identity.start);
+            if (candidate !== null && after && !terminal(after.state)) { rss = candidate; break; }
+          }
+          if (rss === null) { removeVerifiedExit(pid, identity.start); continue; }
+        } else discoverChildren(tids, false);
         // Recheck identity before counting: do not merge two generations of PID.
-        if (parseIdentity(read(`/proc/${pid}/stat`, 'utf8')).start !== identity.start) throw sensorError('PID_REUSED');
-        rssBytes += rss; processCount++;
+        readGroupIdentity(pid, identity.start);
+        const totalRss = rssBytes + rss;
+        if (!Number.isSafeInteger(totalRss)) throw sensorError('INVALID_RSS');
+        rssBytes = totalRss; processCount++;
       } catch (error) {
         if (!gone(error)) throw error;
-        known.delete(pid); exitRaces++;
+        // status/task/children disappearance alone never authorizes a partial
+        // tree sum. Revalidate the TGID generation and whole-group exit first.
+        removeVerifiedExit(pid, identity?.start ?? known.get(pid));
       }
     }
     const durationMs = now() - started;
@@ -270,7 +399,7 @@ export async function measureCommand(command, {
       report.samplingWallMs += failedDuration;
       report.maxSampleDurationMs = Math.max(report.maxSampleDurationMs, failedDuration);
       // No paths/messages: only a bounded, allowlisted sensor failure category.
-      const allowed = ['SAMPLE_BUDGET_EXCEEDED', 'PROCESS_BUDGET_EXCEEDED', 'TASK_BUDGET_EXCEEDED', 'PID_REUSED', 'UNVERIFIED_ROOT', 'UNVERIFIED_DESCENDANT', 'EMPTY_TASK_LIST', 'CHILD_DISCOVERY_UNAVAILABLE', 'MISSING_RSS', 'INVALID_RSS', 'INVALID_PROC_STAT', 'INVALID_CHILD_PID'];
+      const allowed = ['SAMPLE_BUDGET_EXCEEDED', 'PROCESS_BUDGET_EXCEEDED', 'TASK_BUDGET_EXCEEDED', 'PID_REUSED', 'UNVERIFIED_ROOT', 'UNVERIFIED_DESCENDANT', 'EMPTY_TASK_LIST', 'CHILD_DISCOVERY_UNAVAILABLE', 'MISSING_RSS', 'INVALID_RSS', 'INVALID_PROC_STAT', 'INVALID_PROC_STATUS', 'INVALID_CHILD_PID'];
       fail(allowed.includes(error.code) ? error.code : 'PROC_READ_FAILED');
       const diagnostic = exitDiagnostics.get(error);
       if (diagnostic) {

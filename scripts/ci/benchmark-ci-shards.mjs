@@ -182,7 +182,11 @@ export function summarizeSample({ label, shardCount, maxParallel, loadClass, exp
       let previousAt = 0;
       for (const point of verification.trace) {
         invariant(point && Number.isFinite(point.atMs) && point.atMs >= previousAt && point.atMs <= verification.elapsedMs && /^[RSDTtZXIP]$/.test(point.state) && typeof point.exitFlag === 'boolean', 'Invalid memory exit state/timing');
-        invariant((point.nonTerminalTasks === null || (Number.isSafeInteger(point.nonTerminalTasks) && point.nonTerminalTasks >= 0)) && (point.stableTasks === null || typeof point.stableTasks === 'boolean'), 'Invalid memory task-group diagnostic');
+        // Task diagnostics are unknown until enumeration and identity rechecks
+        // finish. A partial count must never look like a verified empty group.
+        const unknownTasks = point.nonTerminalTasks === null && point.stableTasks === null;
+        const observedTasks = Number.isSafeInteger(point.nonTerminalTasks) && point.nonTerminalTasks >= 0 && typeof point.stableTasks === 'boolean';
+        invariant(unknownTasks || observedTasks, 'Invalid memory task-group diagnostic');
         previousAt = point.atMs;
       }
       if (verification.outcome === 'terminal') {
@@ -300,7 +304,7 @@ async function main(manifestPath) {
     'loadClass is an operator observation; account-wide headroom needs separate verification.',
     'Runtime/cache/runner comparability is enforced only for Vitest shards. CI non-shard jobs and companion workflows require separate environment/cache confirmation; CI/check-set comparisons remain observational until then.',
     'No automatic promotion; validate reliability, memory, shared load and applicable checks before changing defaults.',
-    'Memory is sampled RSS summed over discovered command descendants, excluding the sensor. Shared pages can be counted repeatedly; short-lived processes and brief peaks can be missed. Per-shard maxima are not a simultaneous account/VM peak.',
+    'Memory method 4 samples RSS once per discovered process/TGID, excluding the sensor, using an identity-verified live thread when the leader lacks VmRSS, and discovers children from every thread. Shared pages across processes can be counted repeatedly; short-lived processes and brief peaks can be missed. Per-shard maxima are not a simultaneous account/VM peak.',
   ] }, null, 2));
   if (rejected.length || !results.length) process.exitCode = 1;
 }

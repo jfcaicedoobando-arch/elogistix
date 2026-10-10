@@ -179,42 +179,89 @@ UUID `CI_MEMORY_MEASUREMENT_ID` para unir la ejecución con su sidecar; no guard
 el resto del entorno ni argumentos del comando.
 
 La métrica `discovered-process-tree-rss-sum-sampled` suma VmRSS de Linux para
-el comando y descendientes descubiertos a través de `task/*/children`, en todos
-sus hilos. No busca procesos por nombre, escanea procesos ajenos ni lee
+el comando y descendientes descubiertos a través de `task/*/children`, leyendo
+los hijos de todos sus hilos. Cuenta RSS **una vez por proceso/TGID**; no suma
+una copia por hilo. No busca procesos por nombre, escanea procesos ajenos ni lee
 `environ`, `cmdline`, mapas o memoria de aplicación. Sigue descendientes conocidos
 tras reparenting y comprueba start ticks para evitar reutilización de PID.
 Si falta `children` para un hilo vivo o no puede leer un descendiente, falla el
 sensor; **no sustituye por RSS del padre**.
-La versión 3 confirma la salida de forma acotada cuando desaparece VmRSS o
-el líder parece zombie/terminado. PF_EXITING y el estado del líder son sólo
-diagnóstico: pueden coexistir con otros hilos vivos del mismo proceso. Se
+La versión 4 puede leer `/proc/TGID/task/TID/status` de un representante vivo
+cuando el líder carece de VmRSS, incluso si está zombie. Comprueba PID/TID,
+start ticks y pertenencia `Pid`/`Tgid` del status, y revalida las identidades
+del TGID y del representante antes de contar la lectura. RSS ausente sigue
+desconocida; un campo VmRSS presente pero malformado produce `INVALID_RSS`,
+y `Pid`/`Tgid` inválidos producen `INVALID_PROC_STATUS`. No usa cero ni
+una lectura anterior para completar una muestra incierta.
+
+Antes de buscar RSS en un representante, captura los `children` de todos los
+hilos enumerados con comprobaciones de generación TGID/TID antes y después.
+Si un candidato devuelve `ENOENT`/`ESRCH` después de esa captura, sólo intenta
+otro representante tras comprobar dos veces que su stat está ausente, que una
+nueva lista task excluye ese TID y que el TGID conserva su generación. Vuelve
+a descubrir los hijos de todos los supervivientes y hilos nuevos, con las
+mismas guardas, antes de continuar. Un descendiente nuevo debe tener como padre
+ese TGID, cuya generación se comprueba antes y después; otro padre observado no acredita su linaje.
+Su generación sólo queda validada tras confirmar al final la misma generación
+del TGID. Un hijo ya verificado de la misma generación conserva su seguimiento
+tras reparentarse. Conserva todos los hijos observados; uno vivo sin verificar
+mantiene la suma incompleta. La ausencia de identidad o
+`children` antes de capturarlos no permite esta recuperación. Un TID que
+persiste o reaparece, reutilización de identidad, `EACCES` o `EIO` invalidan
+la muestra. Recuperar otro representante no declara terminado al hilo sin RSS;
+la suma sigue pendiente hasta obtener RSS verificable del mismo TGID.
+
+PF_EXITING y el estado del líder son sólo diagnóstico: pueden coexistir con
+otros hilos vivos del mismo proceso. Si no hay RSS verificable, se
 relee la identidad/start ticks del TGID, se comprueban todos sus hilos, se
 re-enumeran y se vuelven a comprobar identidades/estados antes de una última
 verificación del TGID. Sólo una desaparición verificada o todo el grupo
 terminal permite retirar el proceso de esa lectura.
+Las demás ausencias `ENOENT`/`ESRCH` de status/task y una lista task vacía
+siguen esa misma verificación: una ausencia parcial no demuestra salida. Una lista vacía con
+TGID aún presente no acredita un grupo terminal; una generación distinta
+invalida la muestra. Se conservan los hijos de todos los hilos también cuando
+RSS procede del representante.
 
 La confirmación espera como máximo 25 ms nominales, con pausas de 1 ms y
 hasta 26 comprobaciones, incluidas dentro del presupuesto global de 50 ms y
 4.096 lecturas/listados de hilos del recorrido. No se publica la suma parcial
-mientras está pendiente. Un proceso aún vivo, un hilo activo, identidad
-cambiada, permiso denegado o confirmación agotada invalidan el muestreo. Los
+mientras está pendiente. Sin RSS verificable, un proceso aún vivo, un hilo
+activo o confirmación agotada invalidan el muestreo; también lo hacen una
+identidad cambiada o permiso denegado. Un representante vivo verificado se
+cuenta como proceso vivo, sin esperar a que termine. Los
 presupuestos se comprueban antes y después: una lectura/planificación que los
 exceda también invalida; no se promete interrumpir una llamada del kernel.
+La recuperación del representante y el redescubrimiento de hijos también
+consumen el presupuesto de 50 ms; no amplían los 25 ms de confirmación de salida.
 La pausa consume tiempo del sampler y puede demorar brevemente la atención de
 señales, dentro de ese recorrido; no cambia la señal ni salida funcional.
 
 `exitVerificationCount`, `exitVerificationWallMs` y `lastExitVerification`
 registran el coste y el último resultado, también al fallar. El diagnóstico se
 limita a hasta 26 estados, booleano PF_EXITING, conteo de hilos no terminales,
-estabilidad del conjunto y tiempos relativos; no guarda PID, start ticks,
+estabilidad del conjunto y tiempos relativos. El conteo y la estabilidad son
+ambos `null` hasta completar enumeración y comprobaciones; cero sólo expresa
+un conteo conocido. No guarda PID, start ticks,
 rutas, nombres, argumentos ni entorno. El analizador rechaza confirmaciones
 pendientes o fuera de presupuesto incluso si el resto del sidecar afirma
 complete. Desactivar el sensor conserva el error primario, sin añadir un gap
-artificial por el tiempo posterior no observado. No mezclar versiones del método.
+artificial por el tiempo posterior no observado. El analizador exige método 4;
+rechaza las versiones anteriores, incluida la 3, y no mezcla sus cohortes.
 
-La carrera concreta del piloto fallido no está demostrada retrospectivamente:
-sus artifacts no guardaban estado/flags en el momento del fallo. El siguiente
-piloto debe validar el diagnóstico nativo y toda la evidencia antes de cohortes.
+El piloto Actions `38083872299` aprobó 2.213 archivos y 14.573 casos, pero
+aportó sólo 3/5 mediciones RSS completas: shard 3 falló con `EMPTY_TASK_LIST`
+y shard 5 con `MISSING_RSS`, con líder Z e hilo vivo al agotar 25 ms. Es
+evidencia funcional válida y memoria insuficiente para promoción.
+Una reproducción Linux separada con `pthread_exit` confirmó el líder Z sin
+VmRSS, mismo start tick y RSS legible en el hilo superviviente; tocar 48 MiB
+aumentó esa lectura en 49.152 kB. El método 3 devolvió `MISSING_RSS` a 25,7 ms.
+Esto confirma la viabilidad del representante, sin atribuir retrospectivamente
+la causa de `EMPTY_TASK_LIST`. El sandbox de esa reproducción omite
+`task/*/children`: allí `CHILD_DISCOVERY_UNAVAILABLE` sigue siendo correcto,
+y no certifica descubrimiento nativo del árbol. El siguiente piloto Actions
+debe aportar 5/5 sidecars completos del método 4 y validar toda la evidencia
+antes de formar cohortes; no se declara ese resultado alcanzado.
 Fuentes: [salida de tareas Linux](https://raw.githubusercontent.com/torvalds/linux/master/kernel/exit.c)
 y [estado/memoria en proc](https://raw.githubusercontent.com/torvalds/linux/master/fs/proc/array.c).
 

@@ -170,18 +170,31 @@ describe('comparable 5/8 evidence', () => {
 
 
 describe('memory evidence required for promotion samples, independent from functional CI', () => {
-  it.each(['live-thread', 'live-leader', 'unstable', 'empty', 'late', 'bad-state', 'old-method', 'underreported-time'])('rejects contradictory %s exit diagnostics', (change) => {
+  it('requires the identity-verified thread representative method 4', () => {
+    expect(MEMORY_METHOD.version).toBe(4);
+    expect(MEMORY_METHOD.exitVerificationMs).toBe(25);
+    expect(MEMORY_METHOD.maxSampleMs).toBe(50);
+    expect(summarizeSample(makeSample(5)).memory.method).toEqual(MEMORY_METHOD);
+  });
+  it.each([1, 2, 3])('rejects preceding memory method version %i for promotion', (version) => {
+    const sample = makeSample(5);
+    sample.memoryReports[0].method.version = version;
+    expect(() => summarizeSample(sample)).toThrow(/Unknown\/mixed memory measurement method/);
+  });
+  it.each(['live-thread', 'live-leader', 'unstable', 'unknown-group', 'unknown-count', 'unknown-stability', 'empty', 'late', 'bad-state', 'underreported-time'])('rejects contradictory %s exit diagnostics', (change) => {
     const sample = makeSample(5); const memory = sample.memoryReports[0];
-    const point = { atMs: 1, state: 'Z', exitFlag: true, nonTerminalTasks: 0, stableTasks: true };
+    const point = { atMs: 1, state: 'Z', exitFlag: true, nonTerminalTasks: 0 as number | null, stableTasks: true as boolean | null };
     memory.exitVerificationCount = 1; memory.exitVerificationWallMs = 2;
     memory.lastExitVerification = { outcome: 'terminal', elapsedMs: 2, checks: 1, trace: [point] };
     if (change === 'live-thread') point.nonTerminalTasks = 1;
     if (change === 'live-leader') point.state = 'R';
     if (change === 'unstable') point.stableTasks = false;
+    if (change === 'unknown-group') { point.nonTerminalTasks = null; point.stableTasks = null; }
+    if (change === 'unknown-count') point.nonTerminalTasks = null;
+    if (change === 'unknown-stability') point.stableTasks = null;
     if (change === 'empty') { memory.lastExitVerification.trace = []; memory.lastExitVerification.checks = 0; }
     if (change === 'late') point.atMs = 3;
     if (change === 'bad-state') point.state = 'invalid';
-    if (change === 'old-method') memory.method.version = 2;
     if (change === 'underreported-time') memory.exitVerificationWallMs = 0;
     expect(() => summarizeSample(sample)).toThrow(/[Mm]emory/);
   });
@@ -190,6 +203,33 @@ describe('memory evidence required for promotion samples, independent from funct
     memory.exitVerificationCount = 1; memory.exitVerificationWallMs = 2;
     memory.lastExitVerification = { outcome, elapsedMs: 2, checks: outcome === 'terminal' ? 1 : 0, trace: outcome === 'terminal' ? [{ atMs: 1, state: 'Z', exitFlag: true, nonTerminalTasks: 0, stableTasks: true }] : [] };
     expect(summarizeSample(sample).memory.shards).toHaveLength(5);
+  });
+  it('preserves unknown task diagnostics before independently verified TGID disappearance', () => {
+    const sample = makeSample(5); const memory = sample.memoryReports[0];
+    memory.exitVerificationCount = 1; memory.exitVerificationWallMs = 2;
+    memory.lastExitVerification = { outcome: 'gone', elapsedMs: 2, checks: 1, trace: [{ atMs: 1, state: 'Z', exitFlag: true, nonTerminalTasks: null, stableTasks: null }] };
+    expect(summarizeSample(sample).memory.shards).toHaveLength(5);
+  });
+  it.each(['count', 'stability'])('rejects partially known %s diagnostics even when TGID later disappears', (unknown) => {
+    const sample = makeSample(5); const memory = sample.memoryReports[0];
+    const point = { atMs: 1, state: 'Z', exitFlag: true, nonTerminalTasks: unknown === 'count' ? null : 0, stableTasks: unknown === 'stability' ? null : true };
+    memory.exitVerificationCount = 1; memory.exitVerificationWallMs = 2;
+    memory.lastExitVerification = { outcome: 'gone', elapsedMs: 2, checks: 1, trace: [point] };
+    expect(() => summarizeSample(sample)).toThrow(/Invalid memory task-group diagnostic/);
+  });
+  it('accepts initially unknown tasks when a later complete enumeration verifies terminal exit', () => {
+    const sample = makeSample(5); const memory = sample.memoryReports[0];
+    memory.exitVerificationCount = 1; memory.exitVerificationWallMs = 2;
+    memory.lastExitVerification = { outcome: 'terminal', elapsedMs: 2, checks: 2, trace: [
+      { atMs: 0, state: 'R', exitFlag: true, nonTerminalTasks: null, stableTasks: null },
+      { atMs: 1, state: 'Z', exitFlag: true, nonTerminalTasks: 0, stableTasks: true },
+    ] };
+    expect(summarizeSample(sample).memory.shards).toHaveLength(5);
+  });
+  it.each(['peakRssBytes', 'peakProcessCount'])('rejects complete memory evidence with unknown %s', (field) => {
+    const sample = makeSample(5);
+    const memoryReports = sample.memoryReports.map((memory, index) => index === 0 ? { ...memory, [field]: null } : memory);
+    expect(() => summarizeSample({ ...sample, memoryReports })).toThrow(/Missing\/invalid memory samples/);
   });
   it('summarizes the maximum observed shard RSS, never a sum of runner peaks', () => {
     const sample = makeSample(5);
