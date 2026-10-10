@@ -1,6 +1,8 @@
 name: CI
 
-# ENSAYO DE 5 SHARDS + LINT/CHECKS EN PARALELO (ya medido, ver docs).
+# DEFAULT 5 SHARDS; EXPERIMENTO MANUAL 5/8 SIN PROMOCIÓN AUTOMÁTICA.
+# El detector valida la matriz, su max-parallel y todos sus consumidores.
+# Benchmark comparable y presupuesto compartido: docs/ci-shard-benchmark.md
 #
 # Son 5 definiciones de job en YAML que se expanden a 9 jobs reales:
 #   1. detector        → sólo checkout + diff robusto; expone frontend/edge/database.
@@ -29,6 +31,16 @@ on:
   push:
     branches: [main]
   workflow_dispatch:
+    inputs:
+      vitest_shards:
+        description: "Native shard experiment; automatic PR/push stays at 5"
+        type: choice
+        options: ["5", "8"]
+        default: "5"
+      vitest_max_parallel:
+        description: "Per-matrix concurrency (blank = shard count; 3 = shared-load experiment)"
+        type: string
+        default: ""
 
 permissions:
   contents: read
@@ -46,6 +58,9 @@ jobs:
       frontend: ${{ steps.areas.outputs.frontend }}
       edge: ${{ steps.areas.outputs.edge }}
       database: ${{ steps.areas.outputs.database }}
+      shard_count: ${{ steps.shards.outputs.shard_count }}
+      shard_max_parallel: ${{ steps.shards.outputs.shard_max_parallel }}
+      shard_matrix: ${{ steps.shards.outputs.shard_matrix }}
     steps:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -63,6 +78,13 @@ jobs:
           BEFORE_SHA: ${{ github.event.before }}
           HEAD_SHA: ${{ github.sha }}
         run: bash scripts/ci/detect-areas.sh
+
+      - name: Validate native shard plan
+        id: shards
+        env:
+          VITEST_SHARD_COUNT: ${{ inputs.vitest_shards }}
+          VITEST_MAX_PARALLEL: ${{ inputs.vitest_max_parallel }}
+        run: node scripts/ci/vitest-shard-plan.mjs
 
       - name: Catálogo completo de pruebas (sin ejecutar carriles manuales)
         run: node scripts/ci/test-catalog.mjs --output reports/test-inventory.json
@@ -223,7 +245,7 @@ jobs:
             "${tests[@]}"
 
   tests:
-    name: Vitest shard ${{ matrix.shard }}/5
+    name: Vitest shard ${{ matrix.shard }}/${{ needs.detector.outputs.shard_count }}
     needs: detector
     # Los tests de contrato también inspeccionan SQL/Edge, aunque no haya UI.
     if: needs.detector.outputs.frontend == 'true' || needs.detector.outputs.database == 'true' || needs.detector.outputs.edge == 'true'
@@ -231,9 +253,9 @@ jobs:
     timeout-minutes: 30
     strategy:
       fail-fast: false
-      max-parallel: 5
-      matrix:
-        shard: [1, 2, 3, 4, 5]
+      # Per-matrix only; other workflows/PRs share the account budget of 20.
+      max-parallel: ${{ fromJSON(needs.detector.outputs.shard_max_parallel) }}
+      matrix: ${{ fromJSON(needs.detector.outputs.shard_matrix) }}
     steps:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -246,19 +268,19 @@ jobs:
         uses: ./.github/actions/setup-bun
 
       # Sin coverage, sin blobs/merge, sin retries globales; evidencia compacta obligatoria.
-      - name: Vitest (shard ${{ matrix.shard }}/5)
+      - name: Vitest (shard ${{ matrix.shard }}/${{ needs.detector.outputs.shard_count }})
         env:
           CI_EVIDENCE_DIR: reports/ci-evidence
-          CI_TEST_SHARD: ${{ matrix.shard }}/5
-          CI_TEST_MAX_PARALLEL: "5"
+          CI_TEST_SHARD: ${{ matrix.shard }}/${{ needs.detector.outputs.shard_count }}
+          CI_TEST_MAX_PARALLEL: ${{ needs.detector.outputs.shard_max_parallel }}
           CI_CACHE_HIT: ${{ steps.setup.outputs.cache-hit }}
-        run: bun run test -- --shard=${{ matrix.shard }}/5
+        run: bun run test -- --shard=${{ matrix.shard }}/${{ needs.detector.outputs.shard_count }}
 
       - name: Evidencia Vitest por shard
         if: always()
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
-          name: vitest-evidence-${{ matrix.shard }}-of-5-attempt-${{ github.run_attempt }}
+          name: vitest-evidence-${{ matrix.shard }}-of-${{ needs.detector.outputs.shard_count }}-attempt-${{ github.run_attempt }}
           path: reports/ci-evidence/*.json
           if-no-files-found: error
           retention-days: 7
@@ -320,7 +342,7 @@ jobs:
 
           if [ "$FRONTEND" = "true" ] || [ "$EDGE" = "true" ] || [ "$DATABASE" = "true" ]; then
             if [ "$TESTS_RESULT" != "success" ]; then
-              echo "::error::los 5 shards de Vitest debían terminar en success ($TESTS_RESULT)."
+              echo "::error::todos los shards de Vitest debían terminar en success ($TESTS_RESULT)."
               fail=1
             fi
           elif [ "$TESTS_RESULT" != "skipped" ]; then
@@ -343,10 +365,10 @@ jobs:
         if: needs.tests.result == 'success'
         uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
         with:
-          pattern: vitest-evidence-*-of-5-attempt-*
+          pattern: vitest-evidence-*-of-${{ needs.detector.outputs.shard_count }}-attempt-*
           path: reports/ci-evidence
           merge-multiple: false
 
       - name: Verificar unión exacta de archivos y casos
         if: needs.tests.result == 'success'
-        run: node scripts/ci/verify-test-evidence.mjs reports/ci-evidence 5
+        run: node scripts/ci/verify-test-evidence.mjs reports/ci-evidence ${{ needs.detector.outputs.shard_count }}

@@ -1,0 +1,164 @@
+// @vitest-environment node
+import { describe, expect, it } from 'vitest';
+import { createShardPlan, planFromEnvironment, assessCapacity } from '../../../scripts/ci/vitest-shard-plan.mjs';
+import { summarizeActionsRun, summarizeSample, compareSamples, jobsFromPayload, peakConcurrentJobs, percentile } from '../../../scripts/ci/benchmark-ci-shards.mjs';
+
+const sha = 'a'.repeat(40);
+const stamp = (seconds: number) => new Date(Date.UTC(2026, 9, 10, 12, 0, seconds)).toISOString();
+function makeRun(count: number, id = count, duration = 100) {
+  const run = { id, head_sha: sha, head_branch: 'benchmark', run_attempt: 1, status: 'completed', conclusion: 'success', name: 'CI', event: 'workflow_dispatch', created_at: stamp(0) };
+  const jobs = Array.from({ length: count }, (_, index) => ({
+    id: id * 100 + index, run_id: id, run_attempt: 1, head_sha: sha, status: 'completed', conclusion: 'success',
+    name: `Vitest shard ${index + 1}/${count}`, labels: ['ubuntu-24.04'], created_at: stamp(1), started_at: stamp(3), completed_at: stamp(duration),
+  }));
+  return { run, jobs: { total_count: jobs.length, jobs } };
+}
+function makeSample(count: number, id = count) {
+  const files = Array.from({ length: 40 }, (_, index) => ({ path: `src/a${index}.test.ts`, project: 'node', state: 'passed', cases: { total: 2, passed: 2, failed: 0, skipped: 0, pending: 0 }, retries: 0, flaky: 0 }));
+  const environment = { node: '22.22.0', bun: '1.4.0', vitest: '5.0.3', platform: 'linux', arch: 'x64', runnerOS: 'Linux', runnerArch: 'X64', imageOS: 'ubuntu24', imageVersion: '20261001', lockDigest: 'b'.repeat(64), maxWorkers: 2, pool: 'forks', isolate: true };
+  const primary = makeRun(count, id);
+  primary.jobs.jobs.push({ ...primary.jobs.jobs[0], id: id * 100 + count, name: 'CI Success (aggregator)', started_at: stamp(100), completed_at: stamp(102) });
+  primary.jobs.total_count++;
+  return {
+    label: `sample-${id}`, shardCount: count, maxParallel: count, loadClass: 'isolated', expectedWorkflows: ['CI'], runs: [primary],
+    reports: Array.from({ length: count }, (_, index) => ({ schemaVersion: 1, sha, treeDigest: 'catalog', status: 'passed', unhandledErrors: 0, run: { id: String(id), attempt: '1', event: 'workflow_dispatch' }, shard: { index: index + 1, total: count, maxParallel: count }, environment, cacheHit: true, wallTimeMs: 90_000, discovered: files.map(({ path, project }) => ({ path, project })), selected: files.filter((_, i) => i % count === index).map(({ path, project }) => ({ path, project })), files: files.filter((_, i) => i % count === index) })),
+  };
+}
+
+describe('native shard plan', () => {
+  it('retains five by default and generates all eight without duplicates', () => {
+    expect(createShardPlan()).toEqual({ count: 5, maxParallel: 5, matrix: { shard: [1, 2, 3, 4, 5] } });
+    expect(createShardPlan({ count: '8' }).matrix.shard).toEqual([1, 2, 3, 4, 5, 6, 7, 8]);
+  });
+  it.each(['0', '-1', '6', '10', '12', '8; echo unsafe', ' 8', '08', '8.0', 'NaN'])('rejects unreviewed/invalid count %s', (count) => {
+    expect(() => createShardPlan({ count })).toThrow();
+  });
+  it.each(['0', '-1', '9', '3.5', ' 3'])('rejects invalid max-parallel %s', (maxParallel) => {
+    expect(() => createShardPlan({ count: 8, maxParallel })).toThrow();
+  });
+  it('dispatch can cap the matrix but PR/push overrides cannot promote eight', () => {
+    expect(planFromEnvironment({ GITHUB_EVENT_NAME: 'workflow_dispatch', VITEST_SHARD_COUNT: '8', VITEST_MAX_PARALLEL: '3' }).maxParallel).toBe(3);
+    expect(planFromEnvironment({ GITHUB_EVENT_NAME: 'pull_request', VITEST_SHARD_COUNT: '8' }).count).toBe(5);
+  });
+  it('accounts for other runs/workflows explicitly and never claims a global max-parallel', () => {
+    expect(assessCapacity({ plans: [{ count: 8 }, { count: 8 }], otherJobs: 6 })).toMatchObject({ total: 22, budget: 20, fits: false });
+    expect(assessCapacity({ plans: [{ count: 8, maxParallel: 3 }, { count: 8, maxParallel: 3 }], otherJobs: 14 })).toMatchObject({ total: 20, fits: true, headroom: 0 });
+    expect(() => assessCapacity({ plans: [{ count: 8 }], otherJobs: -1 })).toThrow();
+  });
+});
+
+describe('Actions measurement, separate from local diagnostics', () => {
+  it('uses job completion, not mutable run.updated_at, and reports runner occupancy/wait separately', () => {
+    const { run, jobs } = makeRun(5);
+    const result = summarizeActionsRun({ ...run, updated_at: stamp(900) }, jobs);
+    expect(result.latencySeconds).toBe(100);
+    expect(result.runnerSeconds).toBe(485);
+    expect(result.createdToStartP95Seconds).toBe(2);
+    expect(result.peakObservedJobs).toBe(5);
+  });
+  it('does not double-count adjacent runner intervals', () => {
+    expect(peakConcurrentJobs([{ started_at: stamp(1), completed_at: stamp(3) }, { started_at: stamp(3), completed_at: stamp(4) }])).toBe(1);
+  });
+  it('uses an interpolated median and nearest-rank p95 with explicit small-sample limitations', () => {
+    expect(percentile([100, 10, 30, 20], 0.5)).toBe(25);
+    expect(percentile([100, 10, 30, 20], 0.95)).toBe(100);
+  });
+  it('fails closed on partial or duplicated pagination', () => {
+    const { jobs } = makeRun(5);
+    expect(() => jobsFromPayload({ ...jobs, jobs: jobs.jobs.slice(0, 4) })).toThrow(/pagination/);
+    expect(() => jobsFromPayload({ ...jobs, jobs: [jobs.jobs[0], ...jobs.jobs.slice(0, 4)] })).toThrow(/Duplicate/);
+  });
+  it('accepts complete paginated jobs exactly once', () => {
+    const { jobs } = makeRun(5);
+    expect(jobsFromPayload([{ total_count: 5, jobs: jobs.jobs.slice(0, 2) }, { total_count: 5, jobs: jobs.jobs.slice(2) }])).toHaveLength(5);
+  });
+  it.each(['failure', 'cancelled', 'timed_out', 'skipped'])('rejects %s workflow samples', (conclusion) => {
+    const { run, jobs } = makeRun(5);
+    expect(() => summarizeActionsRun({ ...run, conclusion }, jobs)).toThrow(/successfully/);
+  });
+  it('rejects reruns, mixed attempts/SHAs, pending jobs and missing timestamps', () => {
+    const { run, jobs } = makeRun(5);
+    expect(() => summarizeActionsRun({ ...run, run_attempt: 2 }, jobs)).toThrow(/Reruns/);
+    for (const change of [{ run_attempt: 2 }, { head_sha: 'b'.repeat(40) }, { status: 'in_progress' }, { completed_at: null }]) {
+      const altered = structuredClone(jobs);
+      Object.assign(altered.jobs[0], change);
+      expect(() => summarizeActionsRun(run, altered)).toThrow();
+    }
+  });
+});
+
+describe('comparable 5/8 evidence', () => {
+  it('matches the complete per-file case contract across native partitions', () => {
+    const five = summarizeSample(makeSample(5));
+    const eight = summarizeSample(makeSample(8));
+    expect(five.fileCount).toBe(40);
+    expect(five.cases).toBe(80);
+    expect(five.comparisonKey).toBe(eight.comparisonKey);
+    const [result] = compareSamples([five, eight]);
+    expect(result.configurations[5].n).toBe(1);
+    expect(result.thresholds?.minimumTenPerConfiguration).toBe(false);
+    expect(result.automaticPromotion).toBe(false);
+    expect(result.scope).toBe('CI-only');
+  });
+  it('does not pool different SHAs, cache classes, load classes, runner images or bounded-parallelism experiments', () => {
+    const baseline = summarizeSample(makeSample(5));
+    for (const change of ['sha', 'cache', 'ref', 'runner-label', 'load', 'image', 'parallel', 'cases']) {
+      const sample = makeSample(8);
+      if (change === 'sha') {
+        sample.runs[0].run.head_sha = 'b'.repeat(40);
+        for (const job of sample.runs[0].jobs.jobs) job.head_sha = 'b'.repeat(40);
+        for (const report of sample.reports) report.sha = 'b'.repeat(40);
+      }
+      if (change === 'ref') sample.runs[0].run.head_branch = 'other-ref';
+      if (change === 'runner-label') for (const job of sample.runs[0].jobs.jobs) job.labels = ['other-runner'];
+      if (change === 'cache') for (const report of sample.reports) report.cacheHit = false;
+      if (change === 'load') sample.loadClass = 'shared-load';
+      if (change === 'image') for (const report of sample.reports) report.environment.imageVersion = 'different';
+      if (change === 'parallel') { sample.maxParallel = 3; for (const report of sample.reports) report.shard.maxParallel = 3; }
+      if (change === 'cases') { sample.reports[0].files[0].cases.passed--; sample.reports[0].files[0].cases.skipped++; }
+      expect(compareSamples([baseline, summarizeSample(sample)])).toHaveLength(2);
+    }
+  });
+  it('rejects missing/duplicate coordinates, duplicate files and skipped/missing Actions shards', () => {
+    for (const change of ['missing-report', 'duplicate-report', 'duplicate-file', 'missing-job', 'skipped-job']) {
+      const sample = makeSample(5);
+      if (change === 'missing-report') sample.reports.pop();
+      if (change === 'duplicate-report') sample.reports[0] = sample.reports[1];
+      if (change === 'duplicate-file') sample.reports[0].files.push(sample.reports[1].files[0]);
+      if (change === 'missing-job') sample.runs[0].jobs.jobs[0].name = 'something else';
+      if (change === 'skipped-job') sample.runs[0].jobs.jobs[0].conclusion = 'skipped';
+      expect(() => summarizeSample(sample)).toThrow();
+    }
+  });
+  it('does not bless cache uncertainty, retries, failures or altered worker/isolation settings', () => {
+    for (const change of ['cache', 'retry', 'failure', 'workers', 'runtime', 'run', 'parallel']) {
+      const sample = makeSample(5);
+      if (change === 'cache') sample.reports[0].cacheHit = false;
+      if (change === 'retry') sample.reports[0].files[0].retries = 1;
+      if (change === 'failure') sample.reports[0].files[0].cases.failed = 1;
+      if (change === 'run') sample.reports[0].run.id = 'other-run';
+      if (change === 'parallel') sample.reports[0].shard.maxParallel = 3;
+      if (change === 'workers') for (const report of sample.reports) report.environment.maxWorkers = 4;
+      if (change === 'runtime') for (const report of sample.reports) report.environment.node = '';
+      expect(() => summarizeSample(sample)).toThrow();
+    }
+  });
+  it('requires the declared workflow set and does not call CI-only a full check set', () => {
+    const sample = makeSample(5);
+    sample.expectedWorkflows.push('rls-tests');
+    expect(() => summarizeSample(sample)).toThrow(/Missing/);
+    const companion = makeRun(1, 100, 150);
+    companion.run.name = 'rls-tests';
+    companion.jobs.jobs[0].name = 'RLS tests result';
+    sample.runs.push(companion);
+    const result = summarizeSample(sample);
+    expect(result.ciLatencySeconds).toBe(102);
+    expect(result.checkSetLatencySeconds).toBe(150);
+    expect(compareSamples([result])[0].scope).toBe('declared-check-set');
+  });
+  it('does not count duplicated runs or labels as repeated experiments', () => {
+    const sample = summarizeSample(makeSample(5));
+    expect(() => compareSamples([sample, sample])).toThrow(/Duplicate sample/);
+    expect(() => compareSamples([sample, { ...sample, label: 'different' }])).toThrow(/Run reused/);
+  });
+});

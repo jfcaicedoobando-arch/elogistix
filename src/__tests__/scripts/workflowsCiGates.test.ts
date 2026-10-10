@@ -89,12 +89,26 @@ describe("docs de shards", () => {
     expect(ci).toContain("docs/ci-vitest-shards.md");
   });
 
-  it("mantiene el ensayo de cinco shards sin cobertura ni blobs", () => {
-    expect(ci).toContain("max-parallel: 5");
-    expect(ci).toContain("shard: [1, 2, 3, 4, 5]");
-    expect(ci).toContain("Vitest shard ${{ matrix.shard }}/5");
-    expect(ci).toContain("--shard=${{ matrix.shard }}/5");
+  it("conecta una única matriz validada a todos los consumidores sin coverage ni blobs", () => {
+    expect(ci).toContain("node scripts/ci/vitest-shard-plan.mjs");
+    expect(ci).toContain("shard_count: ${{ steps.shards.outputs.shard_count }}");
+    expect(ci).toContain("shard_max_parallel: ${{ steps.shards.outputs.shard_max_parallel }}");
+    expect(ci).toContain("shard_matrix: ${{ steps.shards.outputs.shard_matrix }}");
+    expect(ci).toContain("max-parallel: ${{ fromJSON(needs.detector.outputs.shard_max_parallel) }}");
+    expect(ci).toContain("matrix: ${{ fromJSON(needs.detector.outputs.shard_matrix) }}");
+    expect(ci).toContain("Vitest shard ${{ matrix.shard }}/${{ needs.detector.outputs.shard_count }}");
+    expect(ci).toContain("--shard=${{ matrix.shard }}/${{ needs.detector.outputs.shard_count }}");
+    expect(ci).toContain("CI_TEST_SHARD: ${{ matrix.shard }}/${{ needs.detector.outputs.shard_count }}");
+    expect(ci).toContain("CI_TEST_MAX_PARALLEL: ${{ needs.detector.outputs.shard_max_parallel }}");
+    expect(ci).toContain("-of-${{ needs.detector.outputs.shard_count }}");
+    expect(ci).toContain("verify-test-evidence.mjs reports/ci-evidence ${{ needs.detector.outputs.shard_count }}");
+    expect(ci).not.toContain("${{ matrix.shard }}/5");
+    expect(ci).not.toContain("-of-5");
+    expect(ci).toContain("fail-fast: false");
     expect(ci).toContain("Sin coverage, sin blobs/merge");
+    expect(ci).toContain("name: CI Success (aggregator)");
+    expect(ci).toContain("needs: [detector, lint, checks, tests]");
+    expect(ci).toContain("if: always()");
   });
 
   it("documenta la medición real de 5 shards con caché caliente", () => {
