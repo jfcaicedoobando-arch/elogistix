@@ -1,0 +1,43 @@
+name: Pricing RPC baseline and CRM candidate
+
+on:
+  pull_request:
+    paths:
+      - 'scripts/ci/pricing-rpc-bounded/**'
+      - 'scripts/ci/pricing-crm-trigger/**'
+      - '.github/workflows/pricing-rpc-bounded.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: pricing-rpc-bounded-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  bounded-replay:
+    name: Frozen L04 baseline and isolated CRM candidate
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          fetch-depth: 1
+      - name: Require both explicit isolated PostgreSQL 17 outcomes
+        run: |
+          set -o pipefail
+          python3 -B scripts/ci/pricing-crm-trigger/test-orchestration.py 2>&1 | tee pricing-crm-preflight.log
+          bash scripts/ci/pricing-crm-trigger/run-ci.sh
+      - name: Preserve both arms and migration evidence even on failure
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: pricing-crm-two-arm-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            pricing-crm-preflight.log
+            pricing-crm-trigger-evidence/
+          if-no-files-found: error
+          retention-days: 14
