@@ -94,6 +94,7 @@ export default class EvidenceReporter implements Reporter {
     try { bun = execFileSync("bun", ["--version"], { encoding: "utf8", stdio: ["ignore", "pipe", "ignore"] }).trim(); } catch { /* local Node-only runs are explicit */ }
     writeJson(path.join(this.directory, `vitest-shard-${this.shard.index}-of-${this.shard.total}.json`), {
       schemaVersion: 1, sha: this.catalog.sha, treeDigest: this.catalog.treeDigest,
+      memoryMeasurementId: process.env.CI_MEMORY_MEASUREMENT_ID ?? null,
       shard: this.shard, discovered: this.discovered, selected: this.selected.slice().sort((a, b) => key(a).localeCompare(key(b))), files,
       status, unhandledErrors, wallTimeMs: Date.now() - this.started,
       cacheHit: process.env.CI_CACHE_HIT === "true" ? true : process.env.CI_CACHE_HIT === "false" ? false : null,
