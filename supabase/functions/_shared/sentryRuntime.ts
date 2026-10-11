@@ -1,6 +1,7 @@
 import { scrubTelemetryData, scrubTelemetryText } from "./scrubTelemetryData.ts";
 
-export type SentryEdgeSDK = typeof import("npm:@sentry/deno@10.76.0");
+export type SentryEdgeSDK = typeof import("npm:@sentry/deno@11.4.0");
+type EdgeOptions = NonNullable<Parameters<SentryEdgeSDK["init"]>[0]>;
 let ready: Promise<SentryEdgeSDK | null> | null = null;
 
 /** SDK-generated trace identity is opaque, not a phone number or credential. */
@@ -19,10 +20,10 @@ function scrubContexts<T extends Record<string, unknown> | undefined>(contexts: 
 }
 
 /** Exact SDK version; one initialized client per isolate, no secret in logs. */
-export function loadSentryEdge(): Promise<SentryEdgeSDK | null> {
+export function loadSentryEdge(transport?: EdgeOptions["transport"]): Promise<SentryEdgeSDK | null> {
   if (!Deno.env.get("SENTRY_DSN_EDGE")) return Promise.resolve(null);
   if (!ready) {
-    ready = import("npm:@sentry/deno@10.76.0").then((sdk) => {
+    ready = import("npm:@sentry/deno@11.4.0").then((sdk) => {
       const build = Deno.env.get("SENTRY_RELEASE_EDGE") ?? Deno.env.get("DENO_DEPLOYMENT_ID") ?? "unversioned";
       sdk.init({
         dsn: Deno.env.get("SENTRY_DSN_EDGE"),
@@ -30,13 +31,17 @@ export function loadSentryEdge(): Promise<SentryEdgeSDK | null> {
         release: `libre-carga-edge@${build}`,
         tracesSampleRate: 0.1,
         traceLifecycle: "static",
+        // Optional first-init transport permits offline contracts with the real SDK.
+        transport,
         // Manual scoped reporting: don't monkey-patch Supabase's shared runtime.
         defaultIntegrations: false,
-        skipOpenTelemetrySetup: true,
-        sendDefaultPii: false,
+        enableOpenTelemetrySetup: false,
+        // Preserve v10 message privacy; real Error stacks still report normally.
+        attachStacktrace: false,
         dataCollection: { userInfo: false, cookies: false, httpHeaders: false,
           httpBodies: [], urlQueryParams: false, genAI: { inputs: false, outputs: false },
-          databaseQueryData: false, graphQL: { document: false, variables: false } },
+          databaseQueryData: false, queues: false, stackFrameVariables: false,
+          frameContextLines: 0, graphQL: { document: false, variables: false } },
         beforeSend(event) {
           if (event.message) event.message = scrubTelemetryText(event.message);
           for (const value of event.exception?.values ?? []) {
@@ -48,15 +53,15 @@ export function loadSentryEdge(): Promise<SentryEdgeSDK | null> {
           if (event.user) event.user = { id: event.user.id };
           return event;
         },
-        beforeSendSpan(span) {
+        beforeSendSpan: sdk.withStaticSpan((span) => {
           if (span.description) span.description = scrubTelemetryText(span.description);
           span.data = scrubTelemetryData(span.data) as typeof span.data;
           if (span.links) span.links = span.links.map((link) => ({
             ...link, attributes: scrubTelemetryData(link.attributes) as typeof link.attributes,
           }));
           return span;
-        },
-        // SDK 10 sends the root span as a transaction, not a streamed span.
+        }),
+        // Static lifecycle sends the root span as a transaction.
         beforeSendTransaction(event) {
           if (event.transaction) event.transaction = scrubTelemetryText(event.transaction);
           const sampling = event.sdkProcessingMetadata?.dynamicSamplingContext;
