@@ -132,7 +132,7 @@ describe("docs de shards", () => {
 
   it("usa ocho shards por defecto y conserva dos workers con aislamiento", () => {
     const input = ci.match(/ {6}vitest_shards:\n([\s\S]*?)(?=\n {6}vitest_max_parallel:)/)?.[1] ?? "";
-    expect(input).toContain('options: ["5", "8"]');
+    expect(input).toContain('options: ["5", "8", "10"]');
     expect(input).toContain('default: "8"');
     expect(leer("scripts/ci/vitest-shard-plan.mjs")).toContain("DEFAULT_SHARD_COUNT = 8");
     const shared = leer("vitest.shared.ts");

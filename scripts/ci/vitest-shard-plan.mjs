@@ -5,7 +5,7 @@ import { resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
 
 export const DEFAULT_SHARD_COUNT = 8;
-export const ALLOWED_SHARD_COUNTS = Object.freeze([5, 8]);
+export const ALLOWED_SHARD_COUNTS = Object.freeze([5, 8, 10]);
 export const ACCOUNT_JOB_BUDGET = 20;
 
 function integer(value, name, fallback) {
@@ -16,7 +16,7 @@ function integer(value, name, fallback) {
 
 export function createShardPlan({ count, maxParallel } = {}) {
   const total = integer(count, 'shard count', DEFAULT_SHARD_COUNT);
-  if (!ALLOWED_SHARD_COUNTS.includes(total)) throw new Error('Supported shard counts: 5, 8');
+  if (!ALLOWED_SHARD_COUNTS.includes(total)) throw new Error(`Supported shard counts: ${ALLOWED_SHARD_COUNTS.join(', ')}`);
   const parallel = integer(maxParallel, 'max parallel', total);
   if (parallel > total) throw new Error('max parallel must not exceed shard count');
   return {

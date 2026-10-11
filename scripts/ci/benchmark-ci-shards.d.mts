@@ -13,6 +13,7 @@ export interface SampleSummary {
 }
 export interface BenchmarkComparison {
   context: Record<string, unknown>;
+  comparison: { control: number; candidate: number };
   configurations: Record<number, { n: number; [metric: string]: number | { p50: number; p95: number } }>;
   thresholds: null | Record<string, boolean>;
   preliminaryThresholdsMet: boolean; automaticPromotion: false; scope: string;
@@ -22,4 +23,4 @@ export function peakConcurrentJobs(jobs: unknown[]): number;
 export function jobsFromPayload(payload: unknown): unknown[];
 export function summarizeActionsRun(run: unknown, jobs: unknown): RunSummary;
 export function summarizeSample(sample: unknown): SampleSummary;
-export function compareSamples(samples: SampleSummary[]): BenchmarkComparison[];
+export function compareSamples(samples: SampleSummary[], comparison?: { control?: number; candidate?: number }): BenchmarkComparison[];
