@@ -221,7 +221,8 @@ describe("RLS replay inventory: basename-only candidate", () => {
 
   it("preserves exact grep matching for CRLF, no final newline and binary inventory", () => {
     for (const included of ["20200101000000_included.sql\r\n", "20200101000000_included.sql", "20200101000000_included.sql\0\n"]) {
-      runPair({ files: { "supabase/schema/squash/included.txt": included } });
+      const result = runPair({ files: { "supabase/schema/squash/included.txt": included } });
+      expect(result.status).toBe(0);
     }
   });
 
