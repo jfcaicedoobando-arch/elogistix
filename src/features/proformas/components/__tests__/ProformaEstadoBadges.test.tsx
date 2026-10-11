@@ -3,6 +3,28 @@ import { render, screen } from "@testing-library/react";
 import { EstadoBadges } from "../ProformaEstadoBadges";
 
 describe("EstadoBadges (V-11)", () => {
+  it.each(["pendiente", "aceptada", "rechazada"] as const)(
+    "prioriza Cancelada frente a respuesta %s y facturas históricas",
+    (estadoCliente) => {
+      render(<EstadoBadges estadoProforma="cancelada" estadoCliente={estadoCliente}
+        facturas={[{ estado: "Emitida" }]} aceptadaPor="manual:operador@example.test" />);
+      expect(screen.getByText("Cancelada")).toBeTruthy();
+      expect(screen.getByText("Facturación histórica: Facturada")).toBeTruthy();
+      expect(screen.queryByText("Pendiente cliente")).toBeNull();
+      expect(screen.queryByText("Rechazada por cliente")).toBeNull();
+      expect(screen.queryByText("Aceptada")).toBeNull();
+      if (estadoCliente === "aceptada") expect(screen.getByText("Aceptación manual")).toBeTruthy();
+    },
+  );
+
+  it("mantiene la conversión histórica a borrador separada de la cancelación", () => {
+    render(<EstadoBadges estadoProforma="cancelada" estadoCliente="aceptada"
+      facturas={[{ estado: "Borrador" }]} requiereAutorizacionProforma={false} />);
+    expect(screen.getByText("Cancelada")).toBeTruthy();
+    expect(screen.getByText("Facturación histórica: Convertida a borrador")).toBeTruthy();
+    expect(screen.queryByText("Aprobada internamente")).toBeNull();
+  });
+
   it("distingue aprobación interna de una respuesta pendiente del cliente", () => {
     render(
       <EstadoBadges

@@ -15,13 +15,15 @@
  *   1 pendiente   → esperando al cliente
  *   2 aceptada    → cliente ya aceptó, lista para convertir a factura
  *   3 facturada   → ya se convirtió a factura (borrador o emitida), cerrada
+ *   4 cancelada   → documento histórico terminal, sin acciones pendientes
  */
 
 export type EstadoUnificadoProforma =
   | "pendiente"
   | "aceptada"
   | "rechazada"
-  | "facturada";
+  | "facturada"
+  | "cancelada";
 
 /** Forma mínima requerida — cualquier proforma con estos dos campos sirve. */
 export interface ProformaEstadoInput {
@@ -38,6 +40,8 @@ export interface ProformaEstadoInput {
 }
 
 export function getEstadoUnificado(p: ProformaEstadoInput): EstadoUnificadoProforma {
+  // La cancelación es terminal incluso con una respuesta o vínculo histórico.
+  if (p.estado_proforma === "cancelada") return "cancelada";
   if (p.estado_proforma === "facturada" || p.factura_id) return "facturada";
   const ec = p.estado_cliente ?? "pendiente";
   if (ec === "rechazada") return "rechazada";
@@ -50,6 +54,7 @@ const RANK: Record<EstadoUnificadoProforma, number> = {
   pendiente: 1,
   aceptada: 2,
   facturada: 3,
+  cancelada: 4,
 };
 
 export function rankEstadoUnificado(p: ProformaEstadoInput): number {
@@ -61,6 +66,7 @@ export const ESTADOS_UNIFICADOS: EstadoUnificadoProforma[] = [
   "aceptada",
   "rechazada",
   "facturada",
+  "cancelada",
 ];
 
 export const LABEL_ESTADO_UNIFICADO: Record<EstadoUnificadoProforma, string> = {
@@ -74,6 +80,7 @@ export const LABEL_ESTADO_UNIFICADO: Record<EstadoUnificadoProforma, string> = {
   // "Convertida". Las filas siguen distinguiendo borrador / por timbrar /
   // emitida vía `etiquetaProformaConvertida`.
   facturada: "Convertida",
+  cancelada: "Cancelada",
 };
 
 export function etiquetaEstadoUnificado(p: ProformaEstadoInput): string {

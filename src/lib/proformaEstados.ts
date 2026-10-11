@@ -15,6 +15,8 @@ const PASOS_PROFORMA_INTERNA: PasoDocumento[] = [
 ];
 
 export interface EstadoProformaInput {
+  /** Estado documental persistido; la cancelación prevalece sobre la respuesta y conversión. */
+  estadoProforma?: string | null;
   /** Estado de autorización externa o aprobación interna de la proforma. */
   estadoCliente: "pendiente" | "aceptada" | "rechazada";
   /** false when this proforma follows internal approval instead of client authorization. */
@@ -66,6 +68,10 @@ function resumenProformaCliente(input: EstadoProformaInput): EstadoDocumentoResu
 }
 
 export function resumenProforma(input: EstadoProformaInput): EstadoDocumentoResumen {
+  if (input.estadoProforma === "cancelada") {
+    const pasos = input.requiereAutorizacion === false ? PASOS_PROFORMA_INTERNA : PASOS_PROFORMA;
+    return resumen(pasos, -1, "Cancelada");
+  }
   return input.requiereAutorizacion === false
     ? resumenProformaInterna(input)
     : resumenProformaCliente(input);

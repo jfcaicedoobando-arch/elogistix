@@ -4,7 +4,7 @@
  *
  * Filtros soportados (homologados al patrón de `/embarques`):
  *   - `search` texto libre sobre número, expediente, cliente y folio externo
- *   - `filtroEstado` unificado: todas | pendiente | aceptada | rechazada | facturada
+ *   - `filtroEstado` unificado: todas | pendiente | aceptada | rechazada | facturada | cancelada
  *   - `filtroCliente` id del cliente
  *   - `filtroOperador` email operador
  *   - `fechaDesde` / `fechaHasta` rango sobre `fecha_emision` (ISO YYYY-MM-DD)
@@ -76,6 +76,7 @@ export function useTabProformasState(
       aceptada: base.filter((p) => getEstadoUnificado(p) === "aceptada").length,
       rechazada: base.filter((p) => getEstadoUnificado(p) === "rechazada").length,
       facturada: base.filter((p) => getEstadoUnificado(p) === "facturada").length,
+      cancelada: base.filter((p) => getEstadoUnificado(p) === "cancelada").length,
     }),
     [base],
   );

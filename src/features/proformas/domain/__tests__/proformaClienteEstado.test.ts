@@ -16,6 +16,9 @@ describe("proformaClienteEstado", () => {
 
   it("resolveProformaTimelineFields normaliza todos los campos y default a pendiente", () => {
     const raw = {
+      estado_proforma: "cancelada",
+      factura_id: "factura-historica",
+      factura_secundaria_id: "factura-secundaria",
       estado_cliente: "aceptada",
       aceptada_por: "op@x.com",
       enviada_at: "2026-01-01",
@@ -26,6 +29,9 @@ describe("proformaClienteEstado", () => {
     } as unknown as ProformaDetalleFull;
     const t = resolveProformaTimelineFields(raw);
     expect(t).toEqual({
+      estadoProforma: "cancelada",
+      facturaId: "factura-historica",
+      facturaSecundariaId: "factura-secundaria",
       estadoCliente: "aceptada",
       aceptadaPor: "op@x.com",
       enviadaAt: "2026-01-01",
@@ -38,6 +44,9 @@ describe("proformaClienteEstado", () => {
 
   it("resolveProformaTimelineFields sin campos extra devuelve nulls y pendiente", () => {
     const t = resolveProformaTimelineFields({} as ProformaDetalleFull);
+    expect(t.estadoProforma).toBeNull();
+    expect(t.facturaId).toBeNull();
+    expect(t.facturaSecundariaId).toBeNull();
     expect(t.estadoCliente).toBe("pendiente");
     expect(t.aceptadaPor).toBeNull();
     expect(t.enviadaAt).toBeNull();

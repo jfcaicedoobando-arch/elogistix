@@ -61,6 +61,7 @@ export function ProformaDetalleHeader({
   const facturasCiclo = facturas ?? [];
   const emitida = contarFacturasEmitidas(facturasCiclo) > 0;
   const resumen = resumenProforma({
+    estadoProforma,
     estadoCliente,
     enviadaAt,
     facturada,
