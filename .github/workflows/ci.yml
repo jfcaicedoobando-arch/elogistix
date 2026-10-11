@@ -1,10 +1,10 @@
 name: CI
 
-# DEFAULT 8 SHARDS por decisión explícita (2026-10-11); manual 5/8 y ensayo 10 disponibles.
+# DEFAULT 8 SHARDS por decisión explícita (2026-10-11); manual 5/8 y ensayos 10/14 disponibles.
 # El detector valida la matriz, su max-parallel y todos sus consumidores.
 # Benchmark comparable y presupuesto compartido: docs/ci-shard-benchmark.md
 #
-# Son 5 definiciones de job en YAML que se expanden a 12 jobs reales por defecto (14 con 10 shards):
+# Son 5 definiciones de job en YAML que se expanden a 12 jobs reales por defecto (14 con 10 y 18 con 14 shards):
 #   1. detector        → sólo checkout + diff robusto; expone frontend/edge/database.
 #   2. lint            → ESLint (0 warnings). Corre EN PARALELO con checks y shards.
 #   3. checks          → typecheck, guards DB condicionales, build, Deno condicional.
@@ -30,9 +30,9 @@ on:
   workflow_dispatch:
     inputs:
       vitest_shards:
-        description: "Native shards; automatic PR/push uses 8; 10 is experimental"
+        description: "Native shards; automatic PR/push uses 8; 10/14 are experimental"
         type: choice
-        options: ["5", "8", "10"]
+        options: ["5", "8", "10", "14"]
         default: "8"
       vitest_max_parallel:
         description: "Per-matrix concurrency (blank = shard count; 3 = shared-load experiment)"

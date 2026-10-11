@@ -1,4 +1,4 @@
-# Experimentos controlados: 5/8 y ensayo 8/10
+# Experimentos controlados: 5/8 y ensayos 8/10 y 10/14
 
 Estado al **2026-10-11**: **ocho es el valor automático**, por solicitud explícita.
 Se conservan dos workers, forks, aislamiento, catálogo, reporter y gate de
@@ -11,7 +11,7 @@ no como evidencia completada ni autorización para ejecutarla.
 ## Contrato de configuración
 
 `scripts/ci/vitest-shard-plan.mjs` genera la matriz nativa completa, el total y
-`max-parallel`. Sólo admite 5, 8 y 10; rechaza cero, fracciones, entradas arbitrarias
+`max-parallel`. Sólo admite 5, 8, 10 y 14; rechaza cero, fracciones, entradas arbitrarias
 y un paralelismo mayor que el total. Sólo `workflow_dispatch` puede cambiar
 los valores mediante `vitest_shards` y `vitest_max_parallel`. PR/push conservan
 8/8. Un valor vacío de max-parallel usa el total seleccionado.
@@ -26,6 +26,51 @@ retries/coverage/blobs en el gate normal.
 El contrato tiene dos partes que se integran juntas: los scripts/guards de
 PR2 y su overlay sobre `.github/workflows/ci.yml` y `workflowsCiGates.test.ts`
 después de PR1. No basta añadir un input sin conectar todas las referencias.
+
+## Ensayo de tiempo 10/14 (manual; default intacto)
+
+Catorce queda disponible sólo para ensayo manual. El default automático y del input
+sigue en ocho; workers=2, forks, aislamiento y permisos no cambian. No activa
+sondas OS/RSS ni despliega o modifica producto/backend.
+
+Aplicar el mismo preflight descrito para 8/10 antes de **cada** dispatch:
+- Catorce implica 18 jobs totales (N + 4), con pico estructural de 16 (N + 2).
+- De los 20 slots compartidos quedan 4 como máximo para carga externa. Con
+  reserva de 2, admitir como máximo 2 jobs externos observados, incluidos todos
+  los workflows/repositorios accesibles. Registrar visibilidad parcial.
+- Verificar `assessCapacity({plans:[{count:14}],otherJobs:2+externos+reserva})`;
+  es una estimación, no un mutex ni garantía de capacidad global.
+
+Esperar checks ordinarios verdes del cambio y fijar el mismo SHA/ref posterior
+para 10/10 y después 14/14. Esperar estado terminal y evidencia exacta de diez
+antes de lanzar catorce; nunca solapar ambos ni mover el ref entre corridas.
+El grupo `ci-${ref}` también puede cancelar un PR/push/manual del mismo ref.
+Registrar carga externa y cachés antes y durante cada corrida. Los dispatch
+sólo ejecutan CI; no añaden companions para forzar carga.
+
+Smoke reproducible, misma fixture de 40 archivos/40 casos, con reparto desigual
+2–3 archivos por shard en catorce y cuatro en diez:
+
+```sh
+CI_SMOKE_OUTPUT_DIR=reports/shard-smoke node scripts/ci/test-evidence-smoke.mjs 10 14
+```
+
+El gate exige los catorce artifacts, cobertura exacta/disjunta y provenance por
+SHA/run/attempt. Faltar, duplicar, omitir casos o fallar el shard catorce debe
+rechazarse. Descubrimiento local y smoke no sustituyen la suite real en Actions.
+
+El analizador ya consume las cuentas permitidas del plan. Seleccionar el par
+explícito en el manifest con muestras reales y `expectedWorkflows: ["CI"]`:
+
+```json
+"comparison": {"control": 10, "candidate": 14}
+```
+
+Conservar SHA, ref, runtime/imagen, lockfile, caché y carga comparables; separar
+cohortes incompatibles. Comparar latencia total de CI, shard lento, checks,
+espera por job y runner segundos. Una pareja es exploratoria; no demuestra
+mejora sostenida ni autoriza promover catorce. Si checks domina, más shards puede
+no reducir CI. El contraste implícito del analizador sigue siendo 5/8.
 
 ## Ensayo de tiempo 8/10 (manual; default intacto)
 

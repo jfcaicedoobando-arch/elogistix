@@ -88,11 +88,11 @@ describe("CI execution gate: exact union, never count-only", () => {
   it("accepts complete disjoint successful shards", () => {
     expect(validateEvidence(fixtureCatalog, [makeReport(1), makeReport(2)], 2)).toMatchObject({ files: 2, shards: 2, cases: { passed: 2 } });
   });
-  it.each([8, 10])("requires all %i reports, including the final shard, with an exact disjoint union", (count) => {
+  it.each([8, 10, 14])("requires all %i reports, including the final shard, with an exact disjoint union", (count) => {
     const shardEntries = Array.from({ length: 40 }, (_, index) => ({ path: `src/shard-${index}.test.ts`, lane: "vitest-normal" }));
     const shardCatalog = { ...fixtureCatalog, entries: shardEntries, treeDigest: hash(JSON.stringify(shardEntries)) };
     const reports = Array.from({ length: count }, (_, index) => {
-      const selected = shardEntries.slice(index * (40 / count), (index + 1) * (40 / count)).map(({ path }) => ({ path, project: "node" }));
+      const selected = shardEntries.filter((_, entryIndex) => entryIndex % count === index).map(({ path }) => ({ path, project: "node" }));
       return {
         ...makeReport(1), treeDigest: shardCatalog.treeDigest, shard: { index: index + 1, total: count },
         discovered: shardEntries.map(({ path }) => ({ path, project: "node" })), selected,
