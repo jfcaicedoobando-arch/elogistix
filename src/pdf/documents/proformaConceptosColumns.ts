@@ -1,4 +1,4 @@
-import type { ConceptoVentaLite } from "@/features/proformas/domain/proforma";
+import type { ConceptoVentaLite } from "@/features/proformas/domain";
 import type { Tables } from "@/integrations/supabase/types";
 import { calcularIVA, resolverTasaConcepto, subtotalLinea, sumarMontos } from "@/lib/financial/financialUtils";
 import { formatCurrency } from "@/lib/formatters";

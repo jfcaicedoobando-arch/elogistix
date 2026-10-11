@@ -1,5 +1,5 @@
 import { Document, Page, Text, View } from "@react-pdf/renderer";
-import { calcularTotalesProforma } from "@/features/proformas/domain/proforma";
+import { calcularTotalesProforma } from "@/features/proformas/domain";
 import { subtotalLinea, TASA_IVA } from "@/lib/financial/financialUtils";
 import { AVISO_IVA_POR_CONFIRMAR, hayLineasIvaPorConfirmar } from "@/lib/financial/lineasPorConfirmarIva";
 import { hayIvaEfectivo, tasaEfectivaFila } from "./proformaConceptosColumns";

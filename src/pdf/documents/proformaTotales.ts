@@ -1,5 +1,5 @@
-import { calcularTotalesProformaConRespaldo } from "@/features/proformas/domain/proformaListado";
-import type { ConceptoVentaLite } from "@/features/proformas/domain/proforma";
+import { calcularTotalesProformaConRespaldo } from "@/features/proformas/domain";
+import type { ConceptoVentaLite } from "@/features/proformas/domain";
 import type { TotalesMoneda } from "../components/TotalesBox";
 import type { ProformaRow } from "./proformaShared";
 
