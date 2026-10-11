@@ -1,9 +1,12 @@
 # Experimento controlado: 5 frente a 8 shards
 
-Estado: instrumentación y controles. **Cinco sigue siendo el valor automático.**
-No hay todavía una medición GitHub Actions 5/8 del mismo SHA que permita
-promover ocho. Este cambio no aumenta workers, modifica permisos ni despliega.
-Depende del catálogo, reporter y gate de completitud de PR1.
+Estado al **2026-10-11**: **ocho es el valor automático**, por solicitud explícita.
+Se conservan dos workers, forks, aislamiento, catálogo, reporter y gate de
+completitud. No hay un benchmark 5/8 validado que demuestre menor latencia o
+consumo. El piloto de memoria se omitió y no se considera aprobado; este cambio
+no lo activa, no incorpora sondas OS ni modifica permisos o despliegues.
+El procedimiento siguiente queda como referencia para una medición futura,
+no como evidencia completada ni autorización para ejecutarla.
 
 ## Contrato de configuración
 
@@ -11,7 +14,7 @@ Depende del catálogo, reporter y gate de completitud de PR1.
 `max-parallel`. Sólo admite 5 y 8; rechaza cero, fracciones, entradas arbitrarias
 y un paralelismo mayor que el total. Sólo `workflow_dispatch` puede cambiar
 los valores mediante `vitest_shards` y `vitest_max_parallel`. PR/push conservan
-5/5. Un valor vacío de max-parallel usa el total seleccionado.
+8/8. Un valor vacío de max-parallel usa el total seleccionado.
 
 Los outputs del detector alimentan simultáneamente el nombre de cada shard,
 el comando `--shard=i/n`, `CI_TEST_SHARD`, `CI_TEST_MAX_PARALLEL`, los artifacts
@@ -176,7 +179,8 @@ memoria, estabilidad, ventana concurrente y que el conjunto declarado incluya
 todos los checks aplicables. Rechazos/fallos se investigan, no se eliminan de la
 conclusión. Si RLS domina, informar mejora de CI separada del tiempo conjunto.
 
-Sólo después se cambia el default en otro diff revisado. Escoger el menor número
+El default actual cambió por decisión explícita, sin acreditar esos umbrales.
+Para una futura decisión basada en rendimiento, escoger el menor número
 de shards dentro del 5% de la mejor opción validada. Si aumenta consumo por
 encima del umbral, hace falta una decisión explícita. Rollback operativo:
 volver a count=5 y max-parallel=5 conservando reporter, artifacts y agregador.

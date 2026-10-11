@@ -88,6 +88,27 @@ describe("CI execution gate: exact union, never count-only", () => {
   it("accepts complete disjoint successful shards", () => {
     expect(validateEvidence(fixtureCatalog, [makeReport(1), makeReport(2)], 2)).toMatchObject({ files: 2, shards: 2, cases: { passed: 2 } });
   });
+  it("requires all eight reports with an exact disjoint union, including the eighth shard", () => {
+    const eightEntries = Array.from({ length: 16 }, (_, index) => ({ path: `src/eight-${index}.test.ts`, lane: "vitest-normal" }));
+    const eightCatalog = { ...fixtureCatalog, entries: eightEntries, treeDigest: hash(JSON.stringify(eightEntries)) };
+    const reports = Array.from({ length: 8 }, (_, index) => {
+      const selected = eightEntries.slice(index * 2, index * 2 + 2).map(({ path }) => ({ path, project: "node" }));
+      return {
+        ...makeReport(1), treeDigest: eightCatalog.treeDigest, shard: { index: index + 1, total: 8 },
+        discovered: eightEntries.map(({ path }) => ({ path, project: "node" })), selected,
+        files: selected.map(file => ({ ...makeReport(1).files[0], ...file })),
+      };
+    });
+    expect(validateEvidence(eightCatalog, reports, 8)).toMatchObject({ files: 16, shards: 8, cases: { passed: 16 } });
+    expect(() => validateEvidence(eightCatalog, reports.slice(0, 7), 8)).toThrow(/Expected 8 reports/);
+    const duplicate = structuredClone(reports);
+    duplicate[7].selected = duplicate[0].selected;
+    duplicate[7].files = duplicate[0].files;
+    expect(() => validateEvidence(eightCatalog, duplicate, 8)).toThrow(/duplicate actual path/);
+    const missing = structuredClone(reports);
+    missing[7].selected.pop(); missing[7].files.pop();
+    expect(() => validateEvidence(eightCatalog, missing, 8)).toThrow(/missing/);
+  });
   it("rejects absent reports, duplicate shards and changed SHA/catalog", () => {
     expect(() => validateEvidence(fixtureCatalog, [makeReport(1)], 2)).toThrow(/Expected/);
     expect(() => validateEvidence(fixtureCatalog, [makeReport(1), makeReport(1)], 2)).toThrow(/duplicate/);
