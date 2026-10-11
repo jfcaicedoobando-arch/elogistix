@@ -5,7 +5,7 @@ import { resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
 
 export const DEFAULT_SHARD_COUNT = 8;
-export const ALLOWED_SHARD_COUNTS = Object.freeze([5, 8, 10]);
+export const ALLOWED_SHARD_COUNTS = Object.freeze([5, 8, 10, 14]);
 export const ACCOUNT_JOB_BUDGET = 20;
 
 function integer(value, name, fallback) {

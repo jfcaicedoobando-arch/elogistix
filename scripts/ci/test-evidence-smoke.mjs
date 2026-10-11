@@ -16,7 +16,7 @@ const originalCwd = process.cwd();
 const counts = process.argv.slice(2);
 const plans = counts.length ? counts.map(count => createShardPlan({ count })) : [createShardPlan()];
 if (new Set(plans.map(plan => plan.count)).size !== plans.length) throw new Error('Duplicate smoke shard count');
-// Same source fixture and cases for every supported partition (5, 8 and 10).
+// Same source fixture and cases for every supported partition (5, 8, 10 and 14).
 const fileCount = 40;
 const require = createRequire(import.meta.url);
 const cli = path.join(path.dirname(require.resolve('vitest/package.json')), 'vitest.mjs');
@@ -64,7 +64,10 @@ try {
     const summary = verifyEvidence(directory, plan.count);
     if (summary.files !== fileCount || summary.cases.passed !== fileCount) throw new Error('Synthetic union is incomplete');
     const reports = plan.matrix.shard.map(index => JSON.parse(fs.readFileSync(`${directory}/vitest-shard-${index}-of-${plan.count}.json`, 'utf8')));
-    if (reports.some(report => report.discovered.length !== fileCount || report.selected.length !== fileCount / plan.count || report.files.length !== fileCount / plan.count)) throw new Error('Pre/post-shard event contract changed');
+    if (reports.some((report, index) => {
+      const expected = Math.floor(fileCount / plan.count) + (index < fileCount % plan.count ? 1 : 0);
+      return report.discovered.length !== fileCount || report.selected.length !== expected || report.files.length !== expected;
+    })) throw new Error('Pre/post-shard event contract changed');
     if (output) {
       fs.cpSync(directory, path.join(output, String(plan.count), 'evidence'), { recursive: true });
       writeJson(path.join(output, String(plan.count), 'summary.json'), { ...summary, counts: buildCatalog().counts });
