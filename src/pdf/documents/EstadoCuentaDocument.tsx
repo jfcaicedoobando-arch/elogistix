@@ -149,8 +149,12 @@ export function EstadoCuentaDocument({ cliente, rows, totalesPorMoneda, emisor, 
           <Text style={styles.emptyState}>No hay facturas pendientes.</Text>
         ) : (
           <View>
-            {totalesPorMoneda.map((t) => (
-              <KpisMoneda key={`kpi-${t.moneda}`} tot={t} parcial={alcance?.parcial === true} />
+            {totalesPorMoneda.map((t, i) => (
+              // Reserve the table heading and first ordinary row after the
+              // last currency summary, avoiding a heading alone at the cutoff.
+              <View key={`kpi-${t.moneda}`} minPresenceAhead={i === totalesPorMoneda.length - 1 ? 96 : 0}>
+                <KpisMoneda tot={t} parcial={alcance?.parcial === true} />
+              </View>
             ))}
             <DataTable columns={cols} rows={rows} cellStyleForRow={acentoVencida} />
             {totalesPorMoneda.map((t, i) => (

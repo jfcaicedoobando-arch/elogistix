@@ -1,11 +1,12 @@
 # Vitest: shards, workers y mediciones
 
-Configuración revisada el **2026-10-10**: Vite 8 / Vitest 5 / Router 8.
+Configuración revisada el **2026-10-11**: Vite 8 / Vitest 5 / Router 8.
 Fuente: `ci.yml`, `vitest.config.ts`, `vitest.shared.ts`.
 
 ## Configuración vigente
 
-- Cinco shards, `max-parallel: 5`, sin coverage/retry/blobs en CI principal.
+- Ocho shards, `max-parallel: 8`, sin coverage/retry/blobs en CI principal.
+- Manual permite 5/8/10/14; diez y catorce son ensayos de tiempo y no cambian el default.
 - Proyectos node/jsdom con `extends: false` y opciones explícitas.
 - `pool: forks`, aislamiento por archivo; límite `MAX_WORKERS=2` en CI.
 - Heap de workers: 8192 MB CI, 4096 MB local; no es reserva de RAM.
@@ -14,16 +15,36 @@ Fuente: `ci.yml`, `vitest.config.ts`, `vitest.shared.ts`.
 - `clearMocks: false` explícito conserva la semántica de mocks de esta suite.
 
 No deducir “cuatro forks activos” ni RSS multiplicando proyectos por workers:
-la concurrencia efectiva se mide. Cinco runners reducen latencia pero pueden
-aumentar minutos totales facturados.
+la concurrencia efectiva se mide. Más runners pueden aumentar el consumo total;
+no hay una comparación validada que acredite ahorro o menor latencia con ocho.
 
 ## Experimento controlado 5/8
 
 El [procedimiento reproducible](ci-shard-benchmark.md) añade configuración manual,
 análisis de metadatos Actions y comprobación de evidencia completa por archivo.
-El default permanece en cinco hasta validar latencia del conjunto, consumo,
-estabilidad y presión dentro de los 20 jobs compartidos. Todavía no hay un
-resultado comparativo 5/8 del mismo SHA que autorice promover ocho.
+El default cambió de cinco a ocho por solicitud explícita el 2026-10-11,
+conservando dos workers. El ensayo de memoria se omitió, no se dio por aprobado.
+No se incorporan el piloto de PR232/PR238 ni sondas OS. Siguen sin validar la
+comparación de latencia, consumo, estabilidad y presión de 5/8 dentro de los
+20 jobs compartidos. La decisión no implica una mejora medida.
+
+## Ensayo manual 10/14
+
+El [procedimiento 10/14](ci-shard-benchmark.md#ensayo-de-tiempo-1014-manual-default-intacto)
+conserva el mismo SHA/ref y ejecución secuencial. Catorce implica 18 jobs totales
+y pico estructural de 16; con presupuesto compartido de 20 y reserva de 2,
+quedan como máximo 2 slots externos. No cambia ocho automático ni demuestra
+una mejora sostenida con una sola pareja.
+
+## Ensayo manual 8/10
+
+El [preflight y procedimiento 8/10](ci-shard-benchmark.md#ensayo-de-tiempo-810-manual-default-intacto)
+conserva el mismo SHA/ref y dos workers. CI con diez son 14 jobs totales y un
+pico estructural de 12; verificar el presupuesto compartido de 20 antes de
+cada dispatch, incluyendo carga externa. Correr ocho y diez secuencialmente,
+exigir unión exacta por archivos/casos y comparar tiempo total, shard lento,
+checks, espera y runner segundos. No añade sondas OS/RSS ni presume velocidad.
+Una pareja sólo es evidencia exploratoria y no autoriza promover el default.
 
 ## Medir antes de ajustar
 
@@ -39,7 +60,8 @@ paso, no del job completo):
 En 38017661959 los shards tardaron 286/165/322/307/282 s: 1,362 segundos
 sumados sólo en Vitest. Son commits distintos, no un benchmark controlado.
 El shard lento cambia entre ejecuciones; no justifica todavía un repartidor
-personalizado ni aumentar workers. Se conservan cinco shards/dos workers.
+personalizado ni aumentar workers. En ese repaso se conservaron cinco shards/dos workers;
+la decisión posterior de ocho no transforma estas muestras en un benchmark 5/8.
 
 Mantenimiento de workflows: actionlint ahora se ejecuta dentro del detector de
 CI para cambios de `.github`, del detector y del script de lint (también en

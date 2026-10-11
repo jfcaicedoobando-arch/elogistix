@@ -1,25 +1,22 @@
 name: CI
 
-# DEFAULT 5 SHARDS; EXPERIMENTO MANUAL 5/8 SIN PROMOCIÓN AUTOMÁTICA.
+# DEFAULT 8 SHARDS por decisión explícita (2026-10-11); manual 5/8 y ensayos 10/14 disponibles.
 # El detector valida la matriz, su max-parallel y todos sus consumidores.
 # Benchmark comparable y presupuesto compartido: docs/ci-shard-benchmark.md
 #
-# Son 5 definiciones de job en YAML que se expanden a 9 jobs reales:
+# Son 5 definiciones de job en YAML que se expanden a 12 jobs reales por defecto (14 con 10 y 18 con 14 shards):
 #   1. detector        → sólo checkout + diff robusto; expone frontend/edge/database.
 #   2. lint            → ESLint (0 warnings). Corre EN PARALELO con checks y shards.
 #   3. checks          → typecheck, guards DB condicionales, build, Deno condicional.
-#   4. tests (matrix)  → Vitest shards 1..5 (sin coverage, retries ni blobs).
+#   4. tests (matrix)  → Vitest shards 1..8 (sin coverage, retries ni blobs).
 #   5. ci-success      → agregador "CI Success (aggregator)", nombre conservado por
 #                        compatibilidad con los checks previos (este repo no tiene
 #                        branch protection ni rulesets configurados).
 #
-# Shards/workers: 5 shards × maxWorkers=2. Medición real en run 35464373548
-# (3 m 08 s de pared) vs run 35462835847 con 3 shards (4 m 13 s): −65 s (~26 %),
-# a costa de más tiempo total de runners. En octubre ESLint bajó a 6–11 s y
-# Vitest pasó a dominar (shard más lento 303–325 s). NO ajustar sin medir
-# tiempo total y costo/recursos; falta un ensayo controlado comparable antes de
-# fijarlo. Procedimiento, criterios e historial en docs/ci-vitest-shards.md
-# (herramienta: scripts/bench-vitest-shards.sh).
+# Shards/workers: 8 shards × maxWorkers=2. Se conserva forks/aislamiento.
+# Cambio solicitado, sin benchmark 5/8 validado ni promesa de ahorro o velocidad.
+# No activa el piloto de memoria ni sondas OS. Procedimiento e historial:
+# docs/ci-vitest-shards.md (herramienta: scripts/bench-vitest-shards.sh).
 
 #
 # El workflow SIEMPRE arranca (sin paths-ignore) para que el check agregador
@@ -33,10 +30,10 @@ on:
   workflow_dispatch:
     inputs:
       vitest_shards:
-        description: "Native shard experiment; automatic PR/push stays at 5"
+        description: "Native shards; automatic PR/push uses 8; 10/14 are experimental"
         type: choice
-        options: ["5", "8"]
-        default: "5"
+        options: ["5", "8", "10", "14"]
+        default: "8"
       vitest_max_parallel:
         description: "Per-matrix concurrency (blank = shard count; 3 = shared-load experiment)"
         type: string

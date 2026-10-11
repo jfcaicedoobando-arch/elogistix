@@ -17,6 +17,7 @@ import { buildEstadoResultados } from "@/features/profit/domain/estadoResultados
 import type { ResumenVsReal } from "@/features/presupuesto/services";
 import type { SnapshotEjecutivo } from "@/features/dashboardEjecutivo/services";
 import { inspectPdf } from "./inspectPdf";
+import { pdfWordBounds } from "./inspectPdfLayout";
 import { emisor } from "./fixtures";
 
 const hoy = new Date("2026-10-06T12:00:00");
@@ -118,6 +119,12 @@ describe("Sistema visual compartido de reportes: renderer real", () => {
     expect(pdf.pages).toBeGreaterThan(1);
     for (const text of ["Pago final 01", "Pago final 65", "DEVOLUCIONES (MXN):", "MXN 0.03", "PAGOS INCLUIDOS:", "65"]) expect(pdf.text).toContain(text);
     expect(pdf.text).toContain(`Página ${pdf.pages} de ${pdf.pages}`);
+    const words = pdfWordBounds("diseno-libro-pagos-largo");
+    const lastRow = words.filter(word => word.text === "65").find(word => word.xMin > 300 && word.xMin < 390);
+    const totals = words.find(word => word.text === "DEVOLUCIONES");
+    expect(lastRow).toBeDefined();
+    expect(totals).toBeDefined();
+    expect(totals?.page).toBe(lastRow?.page);
   });
 
   it("mantiene alcance y aviso provisional en presupuesto vacío filtrado", async () => {

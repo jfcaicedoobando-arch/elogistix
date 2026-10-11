@@ -8,16 +8,22 @@ import { createRequire } from 'node:module';
 import { fileURLToPath } from 'node:url';
 import { buildCatalog, writeJson } from './test-catalog.mjs';
 import { verifyEvidence } from './verify-test-evidence.mjs';
+import { createShardPlan } from './vitest-shard-plan.mjs';
 
 const source = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
 const root = fs.mkdtempSync(path.join(os.tmpdir(), 'ci-vitest-shard-contract-'));
 const originalCwd = process.cwd();
+const counts = process.argv.slice(2);
+const plans = counts.length ? counts.map(count => createShardPlan({ count })) : [createShardPlan()];
+if (new Set(plans.map(plan => plan.count)).size !== plans.length) throw new Error('Duplicate smoke shard count');
+// Same source fixture and cases for every supported partition (5, 8, 10 and 14).
+const fileCount = 40;
 const require = createRequire(import.meta.url);
 const cli = path.join(path.dirname(require.resolve('vitest/package.json')), 'vitest.mjs');
 const output = process.env.CI_SMOKE_OUTPUT_DIR ? path.resolve(process.env.CI_SMOKE_OUTPUT_DIR) : null;
 const put = (name, value) => { fs.mkdirSync(path.dirname(path.join(root, name)), { recursive: true }); fs.writeFileSync(path.join(root, name), value); };
 const githubContext = new Map(['GITHUB_SHA', 'GITHUB_RUN_ID', 'GITHUB_RUN_ATTEMPT', 'GITHUB_EVENT_NAME'].map(name => [name, process.env[name]]));
-const env = { ...process.env, CI: 'true', CI_EVIDENCE_DIR: 'reports/evidence', CI_TEST_MAX_PARALLEL: '2', CI_CACHE_HIT: 'false' };
+const env = { ...process.env, CI: 'true', CI_CACHE_HIT: 'false' };
 for (const name of ['GITHUB_SHA', 'GITHUB_RUN_ID', 'GITHUB_RUN_ATTEMPT', 'GITHUB_EVENT_NAME', 'CI_TEST_SHARD']) delete env[name];
 try {
   put('.gitignore', 'node_modules\nreports\n');
@@ -31,29 +37,46 @@ try {
     'tests/pdf/carteraPagination.test.tsx', 'src/demo.perf.ts',
     'e2e/specs/demo.spec.ts', 'e2e/visual/audit119-126/specs/demo.spec.ts', 'e2e/visual/specs/shared-ui.spec.ts',
   ]) put(name, '// Catalog-only synthetic source; never executed\n');
-  for (let index = 1; index <= 4; index++) put(`src/case${index}.test.ts`, `import { it, expect } from 'vitest'; it('synthetic ${index}', () => expect(${index}).toBe(${index}));\n`);
+  for (let index = 1; index <= fileCount; index++) put(`src/case${index}.test.ts`, `import { it, expect } from 'vitest'; it('synthetic ${index}', () => expect(${index}).toBe(${index}));\n`);
   fs.symlinkSync(path.join(source, 'node_modules'), path.join(root, 'node_modules'), 'dir');
   const reporter = path.join(source, 'scripts/ci/vitest-evidence-reporter.ts');
   put('vitest.config.mjs', `import { defineConfig } from 'vitest/config'; export default defineConfig({test:{maxWorkers:2,reporters:[${JSON.stringify(reporter)}],projects:[{extends:false,test:{name:'node',environment:'node',include:['src/*.test.ts'],pool:'forks',isolate:true,maxWorkers:2}}]}});\n`);
   const git = args => execFileSync('git', args, { cwd: root, encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] });
   git(['init', '-q']); git(['add', '.']); git(['-c', 'user.name=CI fixture', '-c', 'user.email=ci-fixture@example.invalid', 'commit', '-qm', 'Synthetic test fixture']);
-  for (let index = 1; index <= 2; index++) {
-    const result = spawnSync(process.execPath, [cli, 'run', '--shard=' + index + '/2'], { cwd: root, env: { ...env, CI_TEST_SHARD: index + '/2' }, encoding: 'utf8' });
-    if (output) { fs.mkdirSync(output, { recursive: true }); fs.writeFileSync(path.join(output, `shard-${index}.log`), result.stdout + result.stderr); }
-    if (result.status !== 0) throw new Error(`Synthetic shard ${index} failed (${result.status}): ${result.stdout}${result.stderr}`);
-  }
   process.chdir(root);
   for (const name of githubContext.keys()) delete process.env[name];
-  // verifyEvidence derives the current fixture catalog, rather than trusting a generated count.
-  const summary = verifyEvidence('reports/evidence', 2);
-  if (summary.files !== 4 || summary.cases.passed !== 4) throw new Error('Synthetic union is incomplete');
-  const reports = [1, 2].map(index => JSON.parse(fs.readFileSync(`reports/evidence/vitest-shard-${index}-of-2.json`, 'utf8')));
-  if (reports.some(report => report.discovered.length !== 4 || report.selected.length !== 2 || report.files.length !== 2)) throw new Error('Pre/post-shard event contract changed');
-  if (output) {
-    fs.cpSync('reports/evidence', path.join(output, 'evidence'), { recursive: true });
-    writeJson(path.join(output, 'summary.json'), { ...summary, counts: buildCatalog().counts });
+  const summaries = [];
+  for (const plan of plans) {
+    const directory = `reports/evidence-${plan.count}`;
+    for (const index of plan.matrix.shard) {
+      const result = spawnSync(process.execPath, [cli, 'run', '--shard=' + index + '/' + plan.count], {
+        cwd: root,
+        env: { ...env, CI_EVIDENCE_DIR: directory, CI_TEST_MAX_PARALLEL: String(plan.maxParallel), CI_TEST_SHARD: index + '/' + plan.count },
+        encoding: 'utf8',
+      });
+      if (output) {
+        fs.mkdirSync(path.join(output, String(plan.count)), { recursive: true });
+        fs.writeFileSync(path.join(output, String(plan.count), `shard-${index}.log`), result.stdout + result.stderr);
+      }
+      if (result.status !== 0) throw new Error(`Synthetic shard ${index}/${plan.count} failed (${result.status}): ${result.stdout}${result.stderr}`);
+    }
+    // Derive the current fixture catalog rather than trusting a generated count.
+    const summary = verifyEvidence(directory, plan.count);
+    if (summary.files !== fileCount || summary.cases.passed !== fileCount) throw new Error('Synthetic union is incomplete');
+    const reports = plan.matrix.shard.map(index => JSON.parse(fs.readFileSync(`${directory}/vitest-shard-${index}-of-${plan.count}.json`, 'utf8')));
+    if (reports.some((report, index) => {
+      const expected = Math.floor(fileCount / plan.count) + (index < fileCount % plan.count ? 1 : 0);
+      return report.discovered.length !== fileCount || report.selected.length !== expected || report.files.length !== expected;
+    })) throw new Error('Pre/post-shard event contract changed');
+    if (output) {
+      fs.cpSync(directory, path.join(output, String(plan.count), 'evidence'), { recursive: true });
+      writeJson(path.join(output, String(plan.count), 'summary.json'), { ...summary, counts: buildCatalog().counts });
+    }
+    summaries.push(summary);
   }
-  console.log(JSON.stringify(summary));
+  if (summaries.some(summary => summary.sha !== summaries[0].sha || summary.treeDigest !== summaries[0].treeDigest || JSON.stringify(summary.cases) !== JSON.stringify(summaries[0].cases))) throw new Error('Smoke configurations did not execute the same source and cases');
+  if (output) writeJson(path.join(output, 'summary.json'), summaries);
+  console.log(JSON.stringify(summaries));
 } finally {
   process.chdir(originalCwd);
   for (const [name, value] of githubContext) {

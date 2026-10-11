@@ -88,6 +88,38 @@ describe("CI execution gate: exact union, never count-only", () => {
   it("accepts complete disjoint successful shards", () => {
     expect(validateEvidence(fixtureCatalog, [makeReport(1), makeReport(2)], 2)).toMatchObject({ files: 2, shards: 2, cases: { passed: 2 } });
   });
+  it.each([8, 10, 14])("requires all %i reports, including the final shard, with an exact disjoint union", (count) => {
+    const shardEntries = Array.from({ length: 40 }, (_, index) => ({ path: `src/shard-${index}.test.ts`, lane: "vitest-normal" }));
+    const shardCatalog = { ...fixtureCatalog, entries: shardEntries, treeDigest: hash(JSON.stringify(shardEntries)) };
+    const reports = Array.from({ length: count }, (_, index) => {
+      const selected = shardEntries.filter((_, entryIndex) => entryIndex % count === index).map(({ path }) => ({ path, project: "node" }));
+      return {
+        ...makeReport(1), treeDigest: shardCatalog.treeDigest, shard: { index: index + 1, total: count },
+        discovered: shardEntries.map(({ path }) => ({ path, project: "node" })), selected,
+        files: selected.map(file => ({ ...makeReport(1).files[0], ...file })),
+      };
+    });
+    expect(validateEvidence(shardCatalog, reports, count)).toMatchObject({ files: 40, shards: count, cases: { passed: 40 } });
+    expect(() => validateEvidence(shardCatalog, reports.slice(0, count - 1), count)).toThrow(/Expected/);
+    const duplicate = structuredClone(reports);
+    duplicate[count - 1].selected = duplicate[0].selected;
+    duplicate[count - 1].files = duplicate[0].files;
+    expect(() => validateEvidence(shardCatalog, duplicate, count)).toThrow(/duplicate actual path/);
+    const missing = structuredClone(reports);
+    missing[count - 1].selected.pop(); missing[count - 1].files.pop();
+    expect(() => validateEvidence(shardCatalog, missing, count)).toThrow(/missing/);
+    for (const change of ['failed', 'skipped', 'wrong-total', 'wrong-sha', 'wrong-run']) {
+      const altered = structuredClone(reports);
+      const last = altered[count - 1];
+      if (change === 'failed') last.status = 'failed';
+      if (change === 'skipped') { last.files[0].cases.passed = 0; last.files[0].cases.skipped = 1; }
+      if (change === 'wrong-total') last.shard.total = count - 1;
+      if (change === 'wrong-sha') last.sha = 'b'.repeat(40);
+      if (change === 'wrong-run') Object.assign(last, { run: { id: 'other-run', attempt: '1', event: 'workflow_dispatch' } });
+      expect(() => validateEvidence(shardCatalog, altered, count)).toThrow();
+    }
+
+  });
   it("rejects absent reports, duplicate shards and changed SHA/catalog", () => {
     expect(() => validateEvidence(fixtureCatalog, [makeReport(1)], 2)).toThrow(/Expected/);
     expect(() => validateEvidence(fixtureCatalog, [makeReport(1), makeReport(1)], 2)).toThrow(/duplicate/);
