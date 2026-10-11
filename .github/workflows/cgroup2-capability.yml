@@ -1,0 +1,700 @@
+name: Cgroup v2 read-only capability
+
+on:
+  pull_request:
+    types: [opened]
+    branches: [main]
+    paths:
+      - .github/workflows/cgroup2-capability.yml
+      - scripts/ci/probe-cgroup2-capability.py
+      - tests/test_probe_cgroup2_capability.py
+      - docs/cgroup2-capability-probe.md
+
+permissions:
+  contents: read
+
+jobs:
+  probe:
+    if: >-
+      github.event_name == 'pull_request' &&
+      github.repository == 'jfcaicedoobando-arch/elogistix' &&
+      github.event.pull_request.head.repo.full_name == 'jfcaicedoobando-arch/elogistix' &&
+      github.event.pull_request.head.ref == 'ci/probe-cgroup2-capability'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 3
+    steps:
+      - name: Observe existing cgroup v2 capability
+        timeout-minutes: 1
+        shell: bash
+        run: |
+          /usr/bin/python3 -I -B - <<'PY'
+          #!/usr/bin/env python3
+          """Observe cgroup-v2 interfaces without testing write authority or isolation.
+
+          Only fixed system files, the current membership's visible cgroup ancestors and
+          one non-activating D-Bus ownership query are read. No paths or foreign PIDs leave
+          the probe. Apparent permissions and user.delegate are observational evidence.
+          """
+          import ctypes
+          import errno
+          import json
+          import os
+          import re
+          import selectors
+          import signal
+          import stat
+          import subprocess
+          import sys
+          import time
+
+          MAX_GROUPS = 8
+          MAX_COMPONENTS = 128
+          MEMBERSHIP_LIMIT = 4096
+          MOUNTINFO_LIMIT = 128 * 1024
+          FILE_LIMIT = 4096
+          DEADLINE_SECONDS = 20
+          MANAGER_SECONDS = 2
+          IO_STATUSES = frozenset(("ok", "absent", "denied", "unsupported", "invalid",
+                                   "oversize", "timeout", "error", "changed"))
+          CONTROLLERS = frozenset(("cpu", "cpuset", "io", "memory", "pids", "hugetlb",
+                                   "rdma", "misc", "dmem"))
+          CGROUP_TYPES = frozenset(("domain", "domain threaded", "domain invalid", "threaded"))
+          SYSTEM_FILES = {"/proc/self/cgroup": MEMBERSHIP_LIMIT,
+                          "/proc/self/mountinfo": MOUNTINFO_LIMIT,
+                          "/etc/os-release": FILE_LIMIT}
+          CONTENT_FILES = frozenset(("cgroup.controllers", "cgroup.subtree_control",
+                                     "cgroup.type", "memory.peak"))
+          METADATA_FILES = frozenset(("cgroup.procs", "cgroup.threads", "cgroup.subtree_control"))
+
+
+          class ProbeError(Exception):
+              def __init__(self, code):
+                  self.code = code if code in IO_STATUSES else "error"
+                  super().__init__(self.code)
+
+
+          def _error_code(error):
+              if isinstance(error, ProbeError):
+                  return error.code
+              if isinstance(error, (NotImplementedError, AttributeError)):
+                  return "unsupported"
+              if isinstance(error, OSError):
+                  if error.errno in (errno.ENOENT, errno.ENODATA):
+                      return "absent"
+                  if error.errno in (errno.EACCES, errno.EPERM):
+                      return "denied"
+                  if error.errno in (errno.ELOOP, errno.ENOTDIR):
+                      return "invalid"
+                  if error.errno in (errno.ENOSYS, errno.EOPNOTSUPP):
+                      return "unsupported"
+              return "error"
+
+
+          def _unsafe_character(char):
+              return ord(char) < 32 or 127 <= ord(char) <= 159 or char in "\u2028\u2029"
+
+
+          def _record_lines(text):
+              if any(_unsafe_character(char) and char != "\n" for char in text):
+                  raise ProbeError("invalid")
+              lines = text.split("\n")
+              if lines and lines[-1] == "":
+                  lines.pop()
+              if any(not line for line in lines):
+                  raise ProbeError("invalid")
+              return lines
+
+
+          def _components(path):
+              if not isinstance(path, str) or not path.startswith("/"):
+                  raise ProbeError("invalid")
+              if any(_unsafe_character(char) for char in path) or " (deleted)" in path:
+                  raise ProbeError("invalid")
+              components = () if path == "/" else tuple(path[1:].split("/"))
+              if len(components) > MAX_COMPONENTS:
+                  raise ProbeError("oversize")
+              if any(part in ("", ".", "..") for part in components):
+                  raise ProbeError("invalid")
+              return components
+
+
+          def _bounded_text(text, limit):
+              if not isinstance(text, str):
+                  raise ProbeError("invalid")
+              try:
+                  size = len(text.encode("utf-8"))
+              except UnicodeError:
+                  raise ProbeError("invalid") from None
+              if size > limit:
+                  raise ProbeError("oversize")
+              return text
+
+
+          def parse_membership(text):
+              _bounded_text(text, MEMBERSHIP_LIMIT)
+              unified = []
+              for line in _record_lines(text):
+                  match = re.fullmatch(r"(0|[1-9][0-9]*):([^:]*):(/.*)", line)
+                  if not match:
+                      raise ProbeError("invalid")
+                  hierarchy, controllers, path = match.groups()
+                  _components(path)
+                  if hierarchy == "0":
+                      if controllers:
+                          raise ProbeError("invalid")
+                      unified.append(path)
+                  elif not re.fullmatch(r"[A-Za-z0-9_=.-]+(?:,[A-Za-z0-9_=.-]+)*", controllers):
+                      raise ProbeError("invalid")
+              if len(unified) != 1:
+                  raise ProbeError("invalid" if unified else "absent")
+              return _components(unified[0])
+
+
+          def _mount_field(field):
+              # mountinfo escapes only these four characters; reject unknown escapes.
+              escapes = {"040": " ", "011": "\t", "012": "\n", "134": "\\"}
+              pieces = []; index = 0
+              while index < len(field):
+                  if field[index] != "\\":
+                      pieces.append(field[index]); index += 1
+                      continue
+                  token = field[index + 1:index + 4]
+                  if token not in escapes:
+                      raise ProbeError("invalid")
+                  pieces.append(escapes[token]); index += 4
+              return "".join(pieces)
+
+
+          def parse_mountinfo(text):
+              _bounded_text(text, MOUNTINFO_LIMIT)
+              candidates = []
+              for line in _record_lines(text):
+                  fields = line.split(" ")
+                  if "-" not in fields:
+                      raise ProbeError("invalid")
+                  separator = fields.index("-")
+                  if separator < 6 or len(fields) < separator + 4:
+                      raise ProbeError("invalid")
+                  mountpoint = _mount_field(fields[4])
+                  if mountpoint != "/sys/fs/cgroup":
+                      continue
+                  if fields[separator + 1] != "cgroup2":
+                      raise ProbeError("unsupported")
+                  root = _components(_mount_field(fields[3]))
+                  mount_options = set(fields[5].split(","))
+                  super_options = set(fields[separator + 3].split(","))
+                  candidates.append({"root": root, "readOnly": "ro" in mount_options or "ro" in super_options,
+                                     "nsDelegate": "nsdelegate" in super_options})
+              if len(candidates) != 1:
+                  raise ProbeError("invalid" if candidates else "absent")
+              return candidates[0]
+
+
+          def _empty_metadata(status="unsupported"):
+              return {"status": status, "modeOctal": None, "ownerMatchesEuid": None,
+                      "readable": None, "writable": None, "searchable": None}
+
+
+          class NativeIO:
+              """Fixed-path read-only implementation; constructed without POSIX effects."""
+              def __init__(self):
+                  self.deadline = None
+                  self._pinned_self = None
+                  self._pinned_parts = None
+
+              def close(self):
+                  if self._pinned_self is not None:
+                      os.close(self._pinned_self)
+                      self._pinned_self = None
+                      self._pinned_parts = None
+
+              def now(self):
+                  return time.monotonic()
+
+              def _guard(self):
+                  if self.deadline is not None and self.now() >= self.deadline:
+                      raise ProbeError("timeout")
+
+              def identity(self):
+                  return os.getuid(), os.geteuid()
+
+              def kernel_release(self):
+                  return os.uname().release
+
+              def _flags(self, directory=False):
+                  if not all(hasattr(os, name) for name in ("O_NOFOLLOW", "O_CLOEXEC", "O_DIRECTORY")):
+                      raise ProbeError("unsupported")
+                  return os.O_RDONLY | os.O_NOFOLLOW | os.O_CLOEXEC | (os.O_DIRECTORY if directory else os.O_NONBLOCK)
+
+              def _open_directory(self, components, prefix=("sys", "fs", "cgroup")):
+                  self._guard()
+                  if not isinstance(components, tuple) or len(components) > MAX_COMPONENTS:
+                      raise ProbeError("invalid")
+                  if any(not isinstance(part, str) or part in ("", ".", "..") or "/" in part
+                         or any(_unsafe_character(char) for char in part) for part in components):
+                      raise ProbeError("invalid")
+                  flags = self._flags(True)
+                  descriptor = os.open("/", flags)
+                  try:
+                      for component in prefix + components:
+                          self._guard()
+                          child = os.open(component, flags, dir_fd=descriptor)
+                          os.close(descriptor); descriptor = child
+                      return descriptor
+                  except BaseException:
+                      os.close(descriptor)
+                      raise
+
+              def _group_directory(self, components):
+                  self._guard()
+                  if self._pinned_self is not None and components == self._pinned_parts:
+                      return os.dup(self._pinned_self)
+                  return self._open_directory(components)
+
+              def _read_fd(self, descriptor, limit):
+                  self._guard()
+                  if not stat.S_ISREG(os.fstat(descriptor).st_mode):
+                      raise ProbeError("invalid")
+                  data = bytearray()
+                  while len(data) <= limit:
+                      self._guard()
+                      chunk = os.read(descriptor, limit + 1 - len(data))
+                      if not chunk:
+                          break
+                      data.extend(chunk)
+                  if len(data) > limit:
+                      raise ProbeError("oversize")
+                  try:
+                      return bytes(data).decode("utf-8", "strict")
+                  except UnicodeError:
+                      raise ProbeError("invalid") from None
+
+              def read_system_file(self, path, limit):
+                  if path not in SYSTEM_FILES or limit != SYSTEM_FILES[path]:
+                      raise ProbeError("invalid")
+                  self._guard()
+                  try:
+                      descriptor = os.open(path, self._flags())
+                  except OSError as error:
+                      # Ubuntu's fixed os-release alias is the only permitted symlink.
+                      if path != "/etc/os-release" or error.errno != errno.ELOOP:
+                          raise
+                      if os.readlink(path) not in ("../usr/lib/os-release", "/usr/lib/os-release"):
+                          raise ProbeError("invalid") from None
+                      directory = self._open_directory((), ("usr", "lib"))
+                      try:
+                          descriptor = os.open("os-release", self._flags(), dir_fd=directory)
+                      finally:
+                          os.close(directory)
+                  try:
+                      return self._read_fd(descriptor, limit)
+                  finally:
+                      os.close(descriptor)
+
+              def read_cgroup_file(self, components, name, limit):
+                  if name not in CONTENT_FILES or limit != FILE_LIMIT:
+                      raise ProbeError("invalid")
+                  directory = self._group_directory(components)
+                  try:
+                      descriptor = os.open(name, self._flags(), dir_fd=directory)
+                      try:
+                          return self._read_fd(descriptor, limit)
+                      finally:
+                          os.close(descriptor)
+                  finally:
+                      os.close(directory)
+
+              def group_identity(self, components):
+                  directory = self._open_directory(components)
+                  try:
+                      record = os.fstat(directory)
+                      if self._pinned_self is None:
+                          self._pinned_self = directory
+                          self._pinned_parts = components
+                          directory = None
+                      return record.st_dev, record.st_ino
+                  finally:
+                      if directory is not None:
+                          os.close(directory)
+
+              def metadata(self, components, name=None):
+                  if name is not None and name not in METADATA_FILES:
+                      raise ProbeError("invalid")
+                  directory = self._group_directory(components)
+                  try:
+                      entry = "." if name is None else name
+                      record = os.stat(entry, dir_fd=directory, follow_symlinks=False)
+                      if (stat.S_ISLNK(record.st_mode) or (name is None and not stat.S_ISDIR(record.st_mode))
+                              or (name is not None and not stat.S_ISREG(record.st_mode))):
+                          raise ProbeError("invalid")
+                      result = _empty_metadata("ok")
+                      result["modeOctal"] = format(stat.S_IMODE(record.st_mode), "04o")
+                      result["ownerMatchesEuid"] = record.st_uid == os.geteuid()
+                      if os.access not in os.supports_effective_ids or os.access not in os.supports_dir_fd:
+                          result["status"] = "unsupported"
+                          return result
+                      result["readable"] = os.access(entry, os.R_OK, dir_fd=directory, effective_ids=True, follow_symlinks=False)
+                      result["writable"] = os.access(entry, os.W_OK, dir_fd=directory, effective_ids=True, follow_symlinks=False)
+                      result["searchable"] = (os.access(entry, os.X_OK, dir_fd=directory, effective_ids=True, follow_symlinks=False)
+                                               if name is None else None)
+                      return result
+                  finally:
+                      os.close(directory)
+
+              def delegate_marker(self, components):
+                  directory = self._group_directory(components)
+                  try:
+                      value = self._read_delegate_xattr(directory)
+                      return {"status": "ok" if value == b"1" else "invalid", "value": "1" if value == b"1" else None}
+                  except Exception as error:
+                      return {"status": _error_code(error), "value": None}
+                  finally:
+                      os.close(directory)
+
+              def _read_delegate_xattr(self, descriptor):
+                  self._guard()
+                  library = ctypes.CDLL(None, use_errno=True)
+                  function = library.fgetxattr
+                  function.argtypes = [ctypes.c_int, ctypes.c_char_p, ctypes.c_void_p, ctypes.c_size_t]
+                  function.restype = ctypes.c_ssize_t
+                  buffer = ctypes.create_string_buffer(2)
+                  size = function(descriptor, b"user.delegate", buffer, 2)
+                  if size < 0:
+                      code = ctypes.get_errno()
+                      if code == errno.ERANGE:
+                          raise ProbeError("oversize")
+                      raise OSError(code, "")
+                  return buffer.raw[:size] if size <= 2 else b""
+
+              def user_manager(self, euid):
+                  if not isinstance(euid, int) or isinstance(euid, bool) or not 0 <= euid <= 4294967295:
+                      return {"status": "unsupported", "nameOwned": None}
+                  directory = None
+                  try:
+                      self._guard()
+                      tool = os.stat("/usr/bin/busctl", follow_symlinks=False)
+                      if not stat.S_ISREG(tool.st_mode):
+                          raise ProbeError("invalid")
+                      directory = self._open_directory((str(euid),), ("run", "user"))
+                      if os.fstat(directory).st_uid != euid:
+                          raise ProbeError("denied")
+                      bus = os.stat("bus", dir_fd=directory, follow_symlinks=False)
+                      if not stat.S_ISSOCK(bus.st_mode):
+                          raise ProbeError("invalid")
+                      if bus.st_uid != euid:
+                          raise ProbeError("denied")
+                  except Exception as error:
+                      code = _error_code(error)
+                      return {"status": "unavailable" if code == "absent" else code, "nameOwned": None}
+                  finally:
+                      if directory is not None:
+                          os.close(directory)
+                  return self._run_busctl("unix:path=/run/user/" + str(euid) + "/bus")
+
+              def _run_busctl(self, address):
+                  if not re.fullmatch(r"unix:path=/run/user/[0-9]{1,10}/bus", address):
+                      raise ProbeError("invalid")
+                  self._guard()
+                  deadline = self.now() + MANAGER_SECONDS
+                  if self.deadline is not None:
+                      deadline = min(deadline, self.deadline)
+                  process = None; selector = None
+                  try:
+                      process = subprocess.Popen([
+                          "/usr/bin/busctl", "--address=" + address, "--auto-start=no",
+                          "--allow-interactive-authorization=no", "--timeout=2s", "--no-pager",
+                          "call", "org.freedesktop.DBus", "/org/freedesktop/DBus",
+                          "org.freedesktop.DBus", "NameHasOwner", "s", "org.freedesktop.systemd1",
+                      ], stdin=subprocess.DEVNULL, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL,
+                          shell=False, env={"PATH": "/usr/bin:/bin", "LC_ALL": "C"}, close_fds=True)
+                      selector = selectors.DefaultSelector()
+                      selector.register(process.stdout, selectors.EVENT_READ)
+                      output = bytearray()
+                      while True:
+                          self._guard()
+                          remaining = deadline - self.now()
+                          if remaining <= 0:
+                              raise ProbeError("timeout")
+                          ready = selector.select(remaining)
+                          if not ready:
+                              raise ProbeError("timeout")
+                          chunk = os.read(process.stdout.fileno(), FILE_LIMIT + 1 - len(output))
+                          if not chunk:
+                              break
+                          output.extend(chunk)
+                          if len(output) > FILE_LIMIT:
+                              raise ProbeError("oversize")
+                      remaining = deadline - self.now()
+                      if remaining <= 0:
+                          raise ProbeError("timeout")
+                      code = process.wait(timeout=remaining)
+                      if code != 0:
+                          raise ProbeError("error")
+                      reply = bytes(output)
+                      if reply not in (b"b true", b"b true\n", b"b false", b"b false\n"):
+                          raise ProbeError("invalid")
+                      return {"status": "ok", "nameOwned": reply.startswith(b"b true")}
+                  except Exception as error:
+                      return {"status": "timeout" if isinstance(error, subprocess.TimeoutExpired) else _error_code(error), "nameOwned": None}
+                  finally:
+                      if selector is not None:
+                          selector.close()
+                      if process is not None:
+                          if process.poll() is None:
+                              process.kill()
+                              cleanup = 0.05 if self.deadline is None else max(0, min(0.05, self.deadline - self.now()))
+                              if cleanup > 0:
+                                  try:
+                                      process.wait(timeout=cleanup)
+                                  except Exception:
+                                      pass
+                          if process.stdout is not None:
+                              process.stdout.close()
+
+
+          def _empty_report():
+              return {
+                  "schemaVersion": 1, "probe": "cgroup2-capability-read-only", "status": "unavailable",
+                  "host": {"kernelRelease": None, "osId": None, "osVersionId": None,
+                           "pythonVersion": ".".join(map(str, sys.version_info[:3])), "imageOS": None, "imageVersion": None},
+                  "identity": {"uid": None, "euid": None},
+                  "membership": {"status": "unsupported", "depth": None, "stableAfterProbe": None},
+                  "mount": {"status": "unsupported", "filesystemType": None, "readOnly": None,
+                            "nsDelegate": None, "visibleRootDepth": None},
+                  "groups": [], "memoryPeak": {"exists": None, "readStatus": "unsupported", "numericValid": None},
+                  "userManager": {"status": "unsupported", "nameOwned": None},
+                  "assessment": {"writeAuthority": "not_tested", "isolation": "not_established",
+                                 "delegation": "not_established_read_only"},
+                  "limits": {"maxGroups": MAX_GROUPS, "truncated": False, "deadlineSeconds": DEADLINE_SECONDS},
+              }
+
+
+          def _safe_metadata(value):
+              result = _empty_metadata()
+              if not isinstance(value, dict):
+                  return _empty_metadata("invalid")
+              result["status"] = value.get("status") if value.get("status") in IO_STATUSES else "invalid"
+              mode = value.get("modeOctal")
+              result["modeOctal"] = mode if isinstance(mode, str) and re.fullmatch(r"[0-7]{4}", mode) else None
+              for name in ("ownerMatchesEuid", "readable", "writable", "searchable"):
+                  result[name] = value.get(name) if isinstance(value.get(name), bool) else None
+              return result
+
+
+          def _controller_values(text):
+              _bounded_text(text, FILE_LIMIT)
+              tokens = text.split()
+              return {"status": "ok", "values": sorted(set(tokens) & CONTROLLERS),
+                      "unknownPresent": any(token not in CONTROLLERS for token in tokens)}
+
+
+          def collect_probe(io=None, getenv=None):
+              io = NativeIO() if io is None else io
+              getenv = os.getenv if getenv is None else getenv
+              report = _empty_report()
+              deadline = io.now() + DEADLINE_SECONDS
+              if isinstance(io, NativeIO):
+                  io.deadline = deadline
+              partial = False
+
+              def guard():
+                  if io.now() >= deadline:
+                      raise ProbeError("timeout")
+
+              def read_system(path):
+                  guard()
+                  return _bounded_text(io.read_system_file(path, SYSTEM_FILES[path]), SYSTEM_FILES[path])
+
+              def read_cgroup(parts, name):
+                  guard()
+                  return _bounded_text(io.read_cgroup_file(parts, name, FILE_LIMIT), FILE_LIMIT)
+
+              def metadata(parts, name=None):
+                  nonlocal partial
+                  try:
+                      guard(); result = _safe_metadata(io.metadata(parts, name))
+                  except Exception as error:
+                      result = _empty_metadata(_error_code(error))
+                  if result["status"] != "ok":
+                      partial = True
+                  return result
+
+              def controllers(parts, name):
+                  nonlocal partial
+                  try:
+                      return _controller_values(read_cgroup(parts, name))
+                  except Exception as error:
+                      partial = True
+                      return {"status": _error_code(error), "values": [], "unknownPresent": None}
+
+              try:
+                  try:
+                      uid, euid = io.identity()
+                      for key, value in (("uid", uid), ("euid", euid)):
+                          if isinstance(value, int) and not isinstance(value, bool) and 0 <= value <= 4294967295:
+                              report["identity"][key] = value
+                          else:
+                              partial = True
+                  except Exception:
+                      partial = True
+                  try:
+                      release = io.kernel_release()
+                      if isinstance(release, str) and len(release) <= 128 and re.fullmatch(r"[0-9]+(?:\.[0-9]+){1,3}(?:-[0-9]+)?(?:-(?:generic|azure|aws|gcp|oracle|lowlatency))?", release):
+                          report["host"]["kernelRelease"] = release
+                      else:
+                          partial = True
+                  except Exception:
+                      partial = True
+                  for key, variable, expression in (("imageOS", "ImageOS", r"ubuntu24"),
+                                                     ("imageVersion", "ImageVersion", r"[0-9]+(?:\.[0-9]+)*")):
+                      value = getenv(variable)
+                      if isinstance(value, str) and len(value) <= 64 and re.fullmatch(expression, value):
+                          report["host"][key] = value
+                  try:
+                      release_fields = {}
+                      for line in read_system("/etc/os-release").splitlines():
+                          if line.startswith("ID=") or line.startswith("VERSION_ID="):
+                              name, value = line.split("=", 1)
+                              if name in release_fields:
+                                  raise ProbeError("invalid")
+                              if len(value) >= 2 and value[0] == value[-1] and value[0] in "\"'":
+                                  value = value[1:-1]
+                              release_fields[name] = value
+                      if release_fields.get("ID") == "ubuntu":
+                          report["host"]["osId"] = "ubuntu"
+                      version = release_fields.get("VERSION_ID", "")
+                      if len(version) <= 64 and re.fullmatch(r"[0-9]+(?:\.[0-9]+)*", version):
+                          report["host"]["osVersionId"] = version
+                      if report["host"]["osId"] is None or report["host"]["osVersionId"] is None:
+                          partial = True
+                  except Exception:
+                      partial = True
+                  membership_text = read_system("/proc/self/cgroup")
+                  try:
+                      membership = parse_membership(membership_text)
+                      report["membership"] = {"status": "ok", "depth": len(membership), "stableAfterProbe": None}
+                  except Exception as error:
+                      report["membership"]["status"] = _error_code(error)
+                      return report
+                  mount_text = read_system("/proc/self/mountinfo")
+                  try:
+                      mount = parse_mountinfo(mount_text)
+                      root = mount["root"]
+                      if membership[:len(root)] != root:
+                          raise ProbeError("invalid")
+                      own = membership[len(root):]
+                      guard(); first_identity = io.group_identity(own)
+                      if not isinstance(first_identity, tuple) or len(first_identity) != 2 or not all(isinstance(value, int) for value in first_identity):
+                          raise ProbeError("invalid")
+                      report["mount"] = {"status": "ok", "filesystemType": "cgroup2", "readOnly": mount["readOnly"],
+                                         "nsDelegate": mount["nsDelegate"], "visibleRootDepth": len(root)}
+                  except Exception as error:
+                      report["mount"]["status"] = _error_code(error)
+                      return report
+                  report["status"] = "observed"
+                  report["limits"]["truncated"] = len(own) + 1 > MAX_GROUPS
+                  if report["limits"]["truncated"]:
+                      partial = True
+                  for level in range(min(len(own) + 1, MAX_GROUPS)):
+                      guard()
+                      parts = own[:len(own) - level]
+                      group = {"label": "self" if level == 0 else "parent-" + str(level),
+                               "directory": metadata(parts), "files": {name: metadata(parts, name) for name in sorted(METADATA_FILES)},
+                               "controllers": controllers(parts, "cgroup.controllers"),
+                               "subtreeControl": controllers(parts, "cgroup.subtree_control")}
+                      try:
+                          value = read_cgroup(parts, "cgroup.type").strip()
+                          group["type"] = {"status": "ok" if value in CGROUP_TYPES else "invalid", "value": value if value in CGROUP_TYPES else None}
+                      except Exception as error:
+                          group["type"] = {"status": _error_code(error), "value": None}
+                      if group["type"]["status"] != "ok":
+                          partial = True
+                      try:
+                          guard(); marker = io.delegate_marker(parts)
+                          marker_status = marker.get("status") if isinstance(marker, dict) and marker.get("status") in IO_STATUSES else "invalid"
+                          marker_value = "1" if isinstance(marker, dict) and marker_status == "ok" and marker.get("value") == "1" else None
+                          if marker_status == "ok" and marker_value is None:
+                              marker_status = "invalid"
+                          group["delegationMarker"] = {"status": marker_status, "value": marker_value}
+                      except Exception as error:
+                          group["delegationMarker"] = {"status": _error_code(error), "value": None}
+                      if group["delegationMarker"]["status"] not in ("ok", "absent", "unsupported"):
+                          partial = True
+                      report["groups"].append(group)
+                  try:
+                      value = read_cgroup(own, "memory.peak")
+                      valid = re.fullmatch(r"[0-9]+\n?", value, flags=re.ASCII) is not None
+                      report["memoryPeak"] = {"exists": True, "readStatus": "ok" if valid else "invalid", "numericValid": valid}
+                      if not valid:
+                          partial = True
+                  except Exception as error:
+                      code = _error_code(error)
+                      report["memoryPeak"] = {"exists": False if code == "absent" else None, "readStatus": code, "numericValid": None}
+                      if code != "absent":
+                          partial = True
+                  try:
+                      guard(); manager = io.user_manager(report["identity"]["euid"])
+                      code = manager.get("status") if isinstance(manager, dict) and manager.get("status") in IO_STATUSES | {"unavailable"} else "invalid"
+                      owned = manager.get("nameOwned") if isinstance(manager, dict) and code == "ok" and isinstance(manager.get("nameOwned"), bool) else None
+                      report["userManager"] = {"status": code, "nameOwned": owned}
+                      if code not in ("ok", "unavailable", "unsupported") or (code == "ok" and owned is None):
+                          partial = True
+                  except Exception as error:
+                      partial = True
+                      report["userManager"] = {"status": _error_code(error), "nameOwned": None}
+                  try:
+                      final_membership = read_system("/proc/self/cgroup")
+                      final_mount = read_system("/proc/self/mountinfo")
+                      guard(); final_identity = io.group_identity(own)
+                      stable = final_membership == membership_text and final_mount == mount_text and final_identity == first_identity
+                      report["membership"]["stableAfterProbe"] = stable
+                      if not stable:
+                          raise ProbeError("changed")
+                  except Exception as error:
+                      partial = True
+                      code = _error_code(error)
+                      report["membership"] = {"status": code, "depth": None, "stableAfterProbe": False if code == "changed" else None}
+                      report["mount"] = {"status": code, "filesystemType": None, "readOnly": None, "nsDelegate": None, "visibleRootDepth": None}
+                      report["groups"] = []
+                      report["memoryPeak"] = {"exists": None, "readStatus": code, "numericValid": None}
+                  guard()
+                  report["status"] = "partial" if partial else "observed"
+              except Exception as error:
+                  # No arbitrary exception text or untrusted IO fields enter the report.
+                  code = _error_code(error)
+                  report["status"] = "partial" if report["mount"]["status"] == "ok" else "unavailable"
+                  report["membership"] = {"status": code, "depth": None, "stableAfterProbe": None}
+                  report["groups"] = []
+                  report["memoryPeak"] = {"exists": None, "readStatus": code, "numericValid": None}
+                  report["mount"] = {"status": code, "filesystemType": None, "readOnly": None, "nsDelegate": None, "visibleRootDepth": None}
+              finally:
+                  if isinstance(io, NativeIO):
+                      io.close()
+              return report
+
+
+          def main():
+              report = _empty_report()
+              previous_handler = None
+              def expire(_signum, _frame):
+                  raise ProbeError("timeout")
+              try:
+                  if len(sys.argv) != 1 or sys.platform != "linux":
+                      print(json.dumps(report, separators=(",", ":"), allow_nan=False))
+                      return 0
+                  previous_handler = signal.signal(signal.SIGALRM, expire)
+                  signal.alarm(DEADLINE_SECONDS)
+                  report = collect_probe()
+              except Exception:
+                  report = _empty_report()
+              finally:
+                  if previous_handler is not None:
+                      signal.alarm(0)
+                      signal.signal(signal.SIGALRM, previous_handler)
+              print(json.dumps(report, separators=(",", ":"), allow_nan=False))
+              return 0
+
+
+          if __name__ == "__main__":
+              raise SystemExit(main())
+          PY
