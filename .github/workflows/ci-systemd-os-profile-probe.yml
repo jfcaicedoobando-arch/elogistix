@@ -1,0 +1,50 @@
+name: Systemd pilot OS facts (blocked review proposal)
+
+# NOT ACTIVE. Review source R, trigger job W and the new branch first.
+on:
+  create:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-systemd-os-profile-probe
+  cancel-in-progress: false
+
+jobs:
+  probe:
+    if: >-
+      false &&
+      github.repository == 'jfcaicedoobando-arch/elogistix' &&
+      github.event_name == 'create' &&
+      github.event.ref_type == 'branch' &&
+      github.event.ref == 'PENDING_COORDINATOR_OS_PROBE_BRANCH' &&
+      github.ref == 'refs/heads/PENDING_COORDINATOR_OS_PROBE_BRANCH' &&
+      github.run_attempt == '1'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 3
+    steps:
+      - name: Check out only the immutable reviewed probe source
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          ref: PENDING_REVIEWED_OS_PROBE_SOURCE_R
+          persist-credentials: false
+          fetch-depth: 1
+      - name: Unconditional review closure
+        shell: bash
+        run: |
+          printf '%s\n' 'BLOCKED: OS probe bytes, branch and commit still need explicit review.'
+          exit 3
+      - name: Observe OS facts as the existing normal runner user
+        shell: bash
+        run: |
+          /usr/bin/python3 -I -S -B scripts/ci/probe-systemd-pilot-os.py > pilot-os-facts.json
+      - name: Retain facts and failures from this single attempt
+        if: ${{ always() }}
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: pilot-os-facts-${{ github.run_id }}-${{ github.run_attempt }}
+          path: pilot-os-facts.json
+          if-no-files-found: warn
+          retention-days: 7
+          include-hidden-files: false
