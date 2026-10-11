@@ -26,9 +26,9 @@ function makeSample(count: number, id = count) {
 }
 
 describe('native shard plan', () => {
-  it('retains five by default and generates all eight without duplicates', () => {
-    expect(createShardPlan()).toEqual({ count: 5, maxParallel: 5, matrix: { shard: [1, 2, 3, 4, 5] } });
-    expect(createShardPlan({ count: '8' }).matrix.shard).toEqual([1, 2, 3, 4, 5, 6, 7, 8]);
+  it('uses eight by default and retains an explicit five-shard fallback', () => {
+    expect(createShardPlan()).toEqual({ count: 8, maxParallel: 8, matrix: { shard: [1, 2, 3, 4, 5, 6, 7, 8] } });
+    expect(createShardPlan({ count: '5' })).toEqual({ count: 5, maxParallel: 5, matrix: { shard: [1, 2, 3, 4, 5] } });
   });
   it.each(['0', '-1', '6', '10', '12', '8; echo unsafe', ' 8', '08', '8.0', 'NaN'])('rejects unreviewed/invalid count %s', (count) => {
     expect(() => createShardPlan({ count })).toThrow();
@@ -36,9 +36,13 @@ describe('native shard plan', () => {
   it.each(['0', '-1', '9', '3.5', ' 3'])('rejects invalid max-parallel %s', (maxParallel) => {
     expect(() => createShardPlan({ count: 8, maxParallel })).toThrow();
   });
-  it('dispatch can cap the matrix but PR/push overrides cannot promote eight', () => {
+  it('dispatch can select five or cap eight, while automatic events retain eight', () => {
+    expect(planFromEnvironment({ GITHUB_EVENT_NAME: 'workflow_dispatch' })).toEqual(createShardPlan());
+    expect(planFromEnvironment({ GITHUB_EVENT_NAME: 'workflow_dispatch', VITEST_SHARD_COUNT: '5' }).count).toBe(5);
     expect(planFromEnvironment({ GITHUB_EVENT_NAME: 'workflow_dispatch', VITEST_SHARD_COUNT: '8', VITEST_MAX_PARALLEL: '3' }).maxParallel).toBe(3);
-    expect(planFromEnvironment({ GITHUB_EVENT_NAME: 'pull_request', VITEST_SHARD_COUNT: '8' }).count).toBe(5);
+    for (const event of ['pull_request', 'push']) {
+      expect(planFromEnvironment({ GITHUB_EVENT_NAME: event, VITEST_SHARD_COUNT: '5', VITEST_MAX_PARALLEL: '3' })).toEqual(createShardPlan());
+    }
   });
   it('accounts for other runs/workflows explicitly and never claims a global max-parallel', () => {
     expect(assessCapacity({ plans: [{ count: 8 }, { count: 8 }], otherJobs: 6 })).toMatchObject({ total: 22, budget: 20, fits: false });
@@ -119,9 +123,9 @@ describe('comparable 5/8 evidence', () => {
       expect(compareSamples([baseline, summarizeSample(sample)])).toHaveLength(2);
     }
   });
-  it('rejects missing/duplicate coordinates, duplicate files and skipped/missing Actions shards', () => {
+  it.each([5, 8])('rejects incomplete or duplicate evidence with %i shards', (count) => {
     for (const change of ['missing-report', 'duplicate-report', 'duplicate-file', 'missing-job', 'skipped-job']) {
-      const sample = makeSample(5);
+      const sample = makeSample(count);
       if (change === 'missing-report') sample.reports.pop();
       if (change === 'duplicate-report') sample.reports[0] = sample.reports[1];
       if (change === 'duplicate-file') sample.reports[0].files.push(sample.reports[1].files[0]);
