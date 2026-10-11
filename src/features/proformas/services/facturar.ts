@@ -142,6 +142,9 @@ export async function marcarProformaFacturada(params: MarcarFacturadaParams): Pr
     .is("deleted_at", null)
     .single();
   if (errProf) throw errProf;
+  if (proforma.estado_proforma === "cancelada") {
+    throw new Error("LC_PROFORMA_CANCELADA: crea una nueva proforma para refacturar.");
+  }
 
   // Idempotencia: si ya fue facturada, salir sin tocar nada.
   if (proforma.factura_id) return;

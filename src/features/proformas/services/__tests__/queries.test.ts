@@ -25,6 +25,16 @@ import { totalesListadoProforma } from "@/features/proformas/domain/proformaList
 import { proformaFixture } from "@/features/facturacion/components/__tests__/fixtures/proforma";
 
 describe("proformas queries", () => {
+  it("excluye canceladas de la selección operativa y mantiene el detalle histórico", async () => {
+    mock.setTableResult("proformas", { data: [], error: null });
+    await fetchProformasPendientes("org");
+    expect(mock.tableCalls[0].opArgs).toContainEqual(["estado_proforma", "cancelada"]);
+    mock.tableCalls.length = 0;
+    mock.setTableResult("proformas", { data: { id: "hist", estado_proforma: "cancelada" }, error: null });
+    expect(await fetchProformaPorId("hist")).toMatchObject({ id: "hist", estado_proforma: "cancelada" });
+    expect(mock.tableCalls[0].opArgs.some(([column, value]) => column === "estado_proforma" && value === "cancelada")).toBe(false);
+  });
+
   beforeEach(() => {
     mock.resetResults();
     mock.tableCalls.length = 0;

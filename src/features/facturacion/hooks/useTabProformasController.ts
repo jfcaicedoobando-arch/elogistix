@@ -14,6 +14,7 @@ import { totalesListadoProforma } from "@/features/proformas/domain";
 
 function isConvertible(p: ProformaConFactura): boolean {
   if ((p.estado_proforma ?? "pendiente") === "facturada") return false;
+  if (p.estado_proforma === "cancelada") return false;
   // C25 (v13.823.380) — Una proforma FUENTE ya consolidada repuntó sus
   // conceptos a la proforma consolidada: convertirla emitiría una factura sin
   // líneas. El servidor también lo rechaza (`LC_PROFORMA_FUENTE_CONSOLIDADA`).

@@ -77,6 +77,19 @@ BEGIN
     RAISE EXCEPTION 'Las proformas deben pertenecer a un solo cliente';
   END IF;
 
+  SELECT * INTO v_first FROM public.proformas
+    WHERE id = ANY(p_proforma_ids) ORDER BY created_at ASC LIMIT 1;
+
+  v_org := v_first.organization_id;
+
+  IF NOT public.has_role(auth.uid(), 'super_admin'::app_role) AND v_org IS DISTINCT FROM v_caller_org THEN
+    RAISE EXCEPTION 'No puedes convertir proformas de otra organización';
+  END IF;
+
+  IF EXISTS (SELECT 1 FROM public.proformas WHERE id = ANY(p_proforma_ids) AND estado_proforma = 'cancelada') THEN
+    RAISE EXCEPTION 'LC_PROFORMA_CANCELADA: crea una nueva proforma para refacturar' USING ERRCODE='P0001';
+  END IF;
+
   IF EXISTS (
     SELECT 1 FROM public.proformas
     WHERE id = ANY(p_proforma_ids) AND estado_proforma = 'facturada'
@@ -131,15 +144,6 @@ BEGIN
   END IF;
 
 
-
-  SELECT * INTO v_first FROM public.proformas
-    WHERE id = ANY(p_proforma_ids) ORDER BY created_at ASC LIMIT 1;
-
-  v_org := v_first.organization_id;
-
-  IF NOT public.has_role(auth.uid(), 'super_admin'::app_role) AND v_org IS DISTINCT FROM v_caller_org THEN
-    RAISE EXCEPTION 'No puedes convertir proformas de otra organización';
-  END IF;
 
   SELECT * INTO v_cliente FROM public.clientes WHERE id = v_first.cliente_id;
   IF v_cliente IS NULL THEN RAISE EXCEPTION 'Cliente no encontrado'; END IF;

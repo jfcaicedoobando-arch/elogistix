@@ -127,6 +127,7 @@ export async function aprobarProformas(proformaIds: string[]): Promise<void> {
     .in("id", proformaIds)
     // v13.321.6 — nunca aprobar proformas en papelera.
     .is("deleted_at", null)
+    .neq("estado_proforma", "cancelada")
     .select("id");
   if (error) throw error;
   const updated = data?.length ?? 0;

@@ -49,14 +49,16 @@ async function asegurarToken(
   if (vigente) return { token: tokenActual!, expira: expiraActual! };
   const nuevoToken = crypto.randomUUID();
   const nuevaExp = new Date(ahora + diasVigencia * 24 * 60 * 60 * 1000).toISOString();
-  const { error } = await admin
+  const { data, error } = await admin
     .from('proformas')
     .update({ token_publico: nuevoToken, token_expira_at: nuevaExp })
-    .eq('id', proformaId);
+    .eq('id', proformaId).is('deleted_at', null).neq('estado_proforma', 'cancelada')
+    .select('id').maybeSingle();
   if (error) {
     await captureEdgeException(error, { fn: 'enviar-proforma-email', extra: { phase: 'token' } });
     return { error: error.message };
   }
+  if (!data) return { error: 'LC_PROFORMA_CANCELADA: proforma no disponible para envío' };
   return { token: nuevoToken, expira: nuevaExp };
 }
 
@@ -71,6 +73,10 @@ interface EnvioContexto {
 async function enviarDestinatario(ctx: EnvioContexto, r: Recipient): Promise<EnvioResultado> {
   const idem = `proforma-${ctx.proformaId}-${ctx.timestamp}-${r.email}`;
   const admin = createClient(ctx.url, ctx.service);
+  const prof = await cargarProforma(admin, ctx.proformaId);
+  if (!prof || prof.estado_proforma === 'cancelada') {
+    return { email: r.email, tipo: r.tipo, ok: false, error: 'LC_PROFORMA_CANCELADA: proforma no disponible para envío' };
+  }
   const envio = await enviarEmailPlantilla(admin, {
     templateName: 'proforma-enviada',
     recipientEmail: r.email,
@@ -141,6 +147,7 @@ interface ProformaRow {
   id: string; numero: string | null; cliente_nombre: string | null; expediente: string | null;
   total_usd: number | null; total_mxn: number | null; organization_id: string;
   token_publico: string | null; token_expira_at: string | null;
+  estado_proforma: string;
 }
 
 /** Moneda a mostrar: USD si la proforma trae importe en USD; si no, MXN. */
@@ -196,9 +203,8 @@ async function registrarEnvio(admin: SupabaseClient, params: RegistrarEnvioParam
 async function cargarProforma(admin: SupabaseClient, proformaId: string): Promise<ProformaRow | null> {
   const { data, error } = await admin
     .from('proformas')
-    .select('id, numero, cliente_nombre, expediente, total_usd, total_mxn, organization_id, token_publico, token_expira_at')
-    .eq('id', proformaId)
-    .maybeSingle();
+    .select('id, numero, cliente_nombre, expediente, total_usd, total_mxn, organization_id, token_publico, token_expira_at, estado_proforma')
+    .eq('id', proformaId).is('deleted_at', null).maybeSingle();
   if (error || !data) return null;
   return data as unknown as ProformaRow;
 }
@@ -207,9 +213,7 @@ async function usuarioTieneAcceso(admin: SupabaseClient, orgId: string, userId: 
   const { data } = await admin
     .from('organization_members')
     .select('id')
-    .eq('organization_id', orgId)
-    .eq('user_id', userId)
-    .maybeSingle();
+    .eq('organization_id', orgId).eq('user_id', userId).maybeSingle();
   return !!data;
 }
 
@@ -258,10 +262,12 @@ Deno.serve(wrapEdgeHandler('enviar-proforma-email', async (req) => {
     return jsonResponse(cors, { error: 'No tienes acceso a esta proforma' }, 403);
   }
 
-  const tokenResult = await asegurarToken(
-    admin, entrada.proformaId, prof.token_publico, prof.token_expira_at, entrada.diasVigencia,
-  );
-  if ('error' in tokenResult) return jsonResponse(cors, { error: 'No se pudo generar token', detail: tokenResult.error }, 500);
+  if (prof.estado_proforma === 'cancelada') {
+    return jsonResponse(cors, { error: 'LC_PROFORMA_CANCELADA: crea una nueva proforma para enviar al cliente.' }, 409);
+  }
+
+  const tokenResult = await asegurarToken(admin, entrada.proformaId, prof.token_publico, prof.token_expira_at, entrada.diasVigencia);
+  if ('error' in tokenResult) return jsonResponse(cors, { error: tokenResult.error }, tokenResult.error.startsWith('LC_PROFORMA_CANCELADA') ? 409 : 500);
   const { token, expira: tokenExpira } = tokenResult;
 
   const enlacePortal = `${APP_URL}/portal/proformas/${token}`;
@@ -292,7 +298,6 @@ Deno.serve(wrapEdgeHandler('enviar-proforma-email', async (req) => {
     estado,
     envio_id: envioId,
     enlace_portal: enlacePortal,
-    token_expira_at: tokenExpira,
-    resultados,
+    token_expira_at: tokenExpira, resultados,
   });
 }));

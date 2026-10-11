@@ -21,14 +21,16 @@ export function computarFlags(
   canResponderProformaManual: boolean,
 ) {
   const facturada = (proforma.estado_proforma ?? "pendiente") === "facturada";
+  const cancelada = proforma.estado_proforma === "cancelada";
   const estadoCliente = readEstadoCliente(proforma);
   const clienteAcepto = estadoCliente === "aceptada";
   return {
     facturada,
+    cancelada,
     puedeConvertir:
-      clienteAcepto && !facturada && !proforma.factura_id && canEmitirFactura,
+      clienteAcepto && !facturada && !cancelada && !proforma.factura_id && canEmitirFactura,
     puedeResponder:
-      !facturada && estadoCliente === "pendiente" && canResponderProformaManual,
-    mostrarHint: !clienteAcepto && !facturada,
+      !facturada && !cancelada && estadoCliente === "pendiente" && canResponderProformaManual,
+    mostrarHint: !clienteAcepto && !facturada && !cancelada,
   };
 }

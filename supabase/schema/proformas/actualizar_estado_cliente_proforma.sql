@@ -15,7 +15,7 @@ BEGIN
   IF p_respuesta NOT IN ('aceptada','rechazada','pendiente') THEN
     RAISE EXCEPTION 'Respuesta inválida.';
   END IF;
-  SELECT * INTO v_proforma FROM public.proformas WHERE id = p_proforma_id;
+  SELECT * INTO v_proforma FROM public.proformas WHERE id = p_proforma_id FOR UPDATE;
   IF NOT FOUND THEN RAISE EXCEPTION 'Proforma no encontrada.'; END IF;
   IF v_proforma.deleted_at IS NOT NULL THEN
     RAISE EXCEPTION 'Esta proforma está en la papelera; restáurala antes de cambiar su estado.';
@@ -33,6 +33,9 @@ BEGIN
   ) OR public.has_role(auth.uid(), 'super_admin'::app_role) INTO v_is_authorized;
   IF NOT v_is_authorized THEN
     RAISE EXCEPTION 'No tienes permisos para cambiar el estado del cliente en esta proforma.';
+  END IF;
+  IF v_proforma.estado_proforma = 'cancelada' THEN
+    RAISE EXCEPTION 'LC_PROFORMA_CANCELADA: crea una nueva proforma para continuar' USING ERRCODE='P0001';
   END IF;
   v_motivo := NULLIF(trim(p_motivo), '');
   IF p_respuesta = 'rechazada' AND v_motivo IS NULL THEN

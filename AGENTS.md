@@ -1,5 +1,7 @@
 # Decisiones técnicas
 
+- Proformas canceladas son terminales para envío, respuesta, consolidación y facturación; las consultas del histórico siguen disponibles. Los guards de RPC y triggers conservan tenant/roles/ACL y permiten refacturar mediante una nueva proforma. Why: liberar conceptos no permite reactivar el documento histórico.
+
 - Pricing requests persist the optional weight unit in `unidad_medida`, using one shared unit catalog for form and detail. Why: units survive draft editing without changing historical weights or dimensions.
 
 - Manual CRM opportunity creation uses `crm_crear_oportunidad_con_empresa` with SECURITY INVOKER; the selected company is carried through quick/full forms but never sent as an opportunity column. Why: opportunity and same-organization company link must commit atomically without changing historical records or bypassing RLS.

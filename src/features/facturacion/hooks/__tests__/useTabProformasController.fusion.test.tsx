@@ -63,6 +63,12 @@ function seleccionar(ids: string[], data: unknown[]) {
 beforeEach(() => { vi.clearAllMocks(); });
 
 describe("C25 · fusión de proformas", () => {
+  it("cancelada aceptada no es convertible ni seleccionable para fusión", () => {
+    const cancelada = proforma({ id: "p2", estado_proforma: "cancelada" });
+    const result = seleccionar(["p2"], [proforma(), cancelada]);
+    expect(result.current.isConvertible(cancelada as never)).toBe(false);
+    expect(result.current.selectedProformas).toHaveLength(0);
+  });
   it("una proforma fuente ya consolidada no es convertible ni seleccionable", () => {
     const fuente = proforma({ id: "p2", estado_revision: "consolidada" });
     const result = seleccionar(["p2"], [proforma(), fuente]);

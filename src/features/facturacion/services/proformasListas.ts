@@ -35,6 +35,7 @@ export async function fetchProformasListas(orgId: string): Promise<FilaProformaL
     .eq("organization_id", orgId)
     .eq("estado_cliente", "aceptada")
     .neq("estado_proforma", "facturada")
+    .neq("estado_proforma", "cancelada")
     .is("factura_id", null)
     .is("deleted_at", null)
     .order("created_at", { ascending: false })
@@ -50,6 +51,7 @@ export async function fetchProformasListasCount(orgId: string): Promise<number> 
     .eq("organization_id", orgId)
     .eq("estado_cliente", "aceptada")
     .neq("estado_proforma", "facturada")
+    .neq("estado_proforma", "cancelada")
     .is("factura_id", null)
     .is("deleted_at", null);
   if (error) throw error;

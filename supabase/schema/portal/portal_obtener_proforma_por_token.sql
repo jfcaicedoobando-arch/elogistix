@@ -44,7 +44,13 @@ BEGIN
   SELECT * INTO v_proforma FROM public.proformas WHERE token_publico = p_token;
   IF NOT FOUND THEN RETURN jsonb_build_object('error','token_invalido'); END IF;
 
-  IF v_proforma.token_expira_at IS NOT NULL AND v_proforma.token_expira_at < now() THEN
+  IF v_proforma.deleted_at IS NOT NULL THEN
+    RETURN jsonb_build_object('error','token_invalido');
+  END IF;
+
+  IF v_proforma.estado_proforma = 'cancelada' THEN
+    v_estado_link := 'cancelada';
+  ELSIF v_proforma.token_expira_at IS NOT NULL AND v_proforma.token_expira_at < now() THEN
     v_estado_link := 'expirado';
   ELSIF v_proforma.estado_cliente <> 'pendiente' THEN
     v_estado_link := 'respondida';

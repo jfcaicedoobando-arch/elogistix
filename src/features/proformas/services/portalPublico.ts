@@ -6,7 +6,7 @@
 import { supabase } from "@/integrations/supabase/client";
 import type { TipoIvaSat } from "@/lib/financial/tipoIvaSat";
 
-export type EstadoLink = "activo" | "expirado" | "respondida";
+export type EstadoLink = "activo" | "expirado" | "respondida" | "cancelada";
 
 export interface PortalProformaConcepto {
   id: string;

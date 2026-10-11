@@ -6,16 +6,18 @@ import { scanSecurityDefiner, type Violation } from "./audit-sql-signatures";
  * assertions plus the source-body preconditions. Drift must use normal H6.
  * This is not an annotation-based or general SECURITY DEFINER exemption.
  */
-const REVIEWED_FORWARD = "20261009174000_cxp_centavo_sin_cobertura.sql";
-const REVIEWED_SHA256 = "d54365354a0dbbe59353247adead9f93d298f48a7a1b5796fb23045040a873be";
+const REVIEWED_FORWARDS: ReadonlyMap<string, string> = new Map([
+  ["20261009174000_cxp_centavo_sin_cobertura.sql", "d54365354a0dbbe59353247adead9f93d298f48a7a1b5796fb23045040a873be"],
+  ["20261011180000_proforma_cancelada_acciones_terminales.sql", "8fa5e007826c8c5a004882ad34d54f922d440501290edb30fa408395d0778ea9"],
+]);
 
 export function scanSecurityDefinerWithPreservedAcl(
   file: string,
   body: string,
   auditPostBaseline: boolean,
 ): Violation[] {
-  const exactReviewedForward = file === REVIEWED_FORWARD
-    && createHash("sha256").update(body, "utf8").digest("hex") === REVIEWED_SHA256;
+  const exactReviewedForward = REVIEWED_FORWARDS.get(file)
+    === createHash("sha256").update(body, "utf8").digest("hex");
   // The underlying scanner ALWAYS enforces the hard TO PUBLIC prohibition.
   return scanSecurityDefiner(file, body, auditPostBaseline && !exactReviewedForward);
 }

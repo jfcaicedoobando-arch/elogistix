@@ -32,6 +32,12 @@ BEGIN
   IF v_proforma.token_expira_at IS NOT NULL AND v_proforma.token_expira_at < now() THEN
     RAISE EXCEPTION 'El enlace ha expirado. Solicita uno nuevo a tu ejecutivo.';
   END IF;
+  IF v_proforma.deleted_at IS NOT NULL THEN
+    RAISE EXCEPTION 'LC_PROFORMA_ELIMINADA: la proforma fue eliminada' USING ERRCODE='P0001';
+  END IF;
+  IF v_proforma.estado_proforma = 'cancelada' THEN
+    RAISE EXCEPTION 'LC_PROFORMA_CANCELADA: crea una nueva proforma para continuar' USING ERRCODE='P0001';
+  END IF;
   IF v_proforma.estado_cliente <> 'pendiente' THEN
     RAISE EXCEPTION 'Esta proforma ya fue respondida (%).', v_proforma.estado_cliente;
   END IF;

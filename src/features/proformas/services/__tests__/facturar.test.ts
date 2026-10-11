@@ -27,6 +27,16 @@ beforeEach(() => {
 });
 
 describe("marcarProformaFacturada", () => {
+  it.each([null, "factura-historica"])("rechaza cancelada antes de idempotencia o efectos (%s)", async (factura_id) => {
+    mock.setTableResult("proformas", { data: proformaRow({ estado_proforma: "cancelada", factura_id }), error: null });
+    mock.setTableResult("facturas", { data: [{ id: "f1" }], error: null });
+    await expect(marcarProformaFacturada({
+      proformaId: "prof-1", folioFacturaExterna: "F-CANCELADA", fechaFacturacion: "2026-10-11",
+      pdfFile: new File(["synthetic"], "fixture.pdf"),
+    })).rejects.toThrow("LC_PROFORMA_CANCELADA");
+    expect(mock.tableCalls.some((c) => c.ops.includes("insert") || c.ops.includes("update"))).toBe(false);
+  });
+
   it("calcula fecha_vencimiento = fechaFacturacion + dias_credito (UTC-safe)", async () => {
     mock.setTableResult("proformas", { data: proformaRow({ dias_credito: 30 }), error: null });
     mock.setTableResult("facturas", { data: [{ id: "f1" }], error: null });

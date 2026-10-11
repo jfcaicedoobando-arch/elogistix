@@ -6336,7 +6336,7 @@ DECLARE
   v_p public.proformas%ROWTYPE;
   v_email text;
 BEGIN
-  SELECT * INTO v_p FROM public.proformas WHERE id = p_proforma_id;
+  SELECT * INTO v_p FROM public.proformas WHERE id = p_proforma_id FOR UPDATE;
   IF NOT FOUND THEN
     RAISE EXCEPTION 'LC_PROFORMA_NO_ENCONTRADA: la proforma no existe' USING ERRCODE='P0002';
   END IF;
@@ -6345,6 +6345,9 @@ BEGIN
   END IF;
   IF NOT EXISTS (SELECT 1 FROM organization_members WHERE organization_id=v_p.organization_id AND user_id=auth.uid()) THEN
     RAISE EXCEPTION 'LC_NO_AUTORIZADO: no perteneces a la organización de esta proforma' USING ERRCODE='42501';
+  END IF;
+  IF v_p.estado_proforma = 'cancelada' THEN
+    RAISE EXCEPTION 'LC_PROFORMA_CANCELADA: crea una nueva proforma para continuar' USING ERRCODE='P0001';
   END IF;
   IF public.cliente_requiere_autorizacion(v_p.cliente_id, 'proforma') THEN
     RAISE EXCEPTION 'LC_PROFORMA_REQUIERE_AUTORIZACION: este cliente sí requiere autorización de proformas' USING ERRCODE='P0001';
@@ -7071,7 +7074,7 @@ BEGIN
   IF p_respuesta NOT IN ('aceptada','rechazada','pendiente') THEN
     RAISE EXCEPTION 'Respuesta inválida.';
   END IF;
-  SELECT * INTO v_proforma FROM public.proformas WHERE id = p_proforma_id;
+  SELECT * INTO v_proforma FROM public.proformas WHERE id = p_proforma_id FOR UPDATE;
   IF NOT FOUND THEN RAISE EXCEPTION 'Proforma no encontrada.'; END IF;
   IF v_proforma.deleted_at IS NOT NULL THEN
     RAISE EXCEPTION 'Esta proforma está en la papelera; restáurala antes de cambiar su estado.';
@@ -7089,6 +7092,9 @@ BEGIN
   ) OR public.has_role(auth.uid(), 'super_admin'::app_role) INTO v_is_authorized;
   IF NOT v_is_authorized THEN
     RAISE EXCEPTION 'No tienes permisos para cambiar el estado del cliente en esta proforma.';
+  END IF;
+  IF v_proforma.estado_proforma = 'cancelada' THEN
+    RAISE EXCEPTION 'LC_PROFORMA_CANCELADA: crea una nueva proforma para continuar' USING ERRCODE='P0001';
   END IF;
   v_motivo := NULLIF(trim(p_motivo), '');
   IF p_respuesta = 'rechazada' AND v_motivo IS NULL THEN
@@ -12874,11 +12880,19 @@ BEGIN
   IF p_proforma_ids IS NULL OR array_length(p_proforma_ids, 1) IS NULL OR array_length(p_proforma_ids, 1) < 2 THEN
     RAISE EXCEPTION 'Selecciona al menos 2 proformas para consolidar';
   END IF;
+  PERFORM 1 FROM public.proformas
+  WHERE id = ANY(p_proforma_ids) AND organization_id = v_org_efectiva FOR UPDATE;
   SELECT count(*) INTO v_count
   FROM public.proformas
   WHERE id = ANY(p_proforma_ids) AND organization_id = v_org_efectiva;
   IF v_count <> array_length(p_proforma_ids, 1) THEN
     RAISE EXCEPTION 'Una o más proformas no existen o no pertenecen a la organización';
+  END IF;
+  IF EXISTS (SELECT 1 FROM public.proformas WHERE id = ANY(p_proforma_ids) AND estado_proforma = 'cancelada') THEN
+    RAISE EXCEPTION 'LC_PROFORMA_CANCELADA: no se puede consolidar una proforma cancelada' USING ERRCODE='P0001';
+  END IF;
+  IF EXISTS (SELECT 1 FROM public.proformas WHERE id = ANY(p_proforma_ids) AND deleted_at IS NOT NULL) THEN
+    RAISE EXCEPTION 'LC_PROFORMA_ELIMINADA: no se puede consolidar una proforma eliminada' USING ERRCODE='P0001';
   END IF;
   -- Ola 3: la consolidación no puede cruzar embarques.
   IF EXISTS (
@@ -13342,6 +13356,15 @@ BEGIN
   IF v_distinct_cli <> 1 THEN
     RAISE EXCEPTION 'Las proformas deben pertenecer a un solo cliente';
   END IF;
+  SELECT * INTO v_first FROM public.proformas
+    WHERE id = ANY(p_proforma_ids) ORDER BY created_at ASC LIMIT 1;
+  v_org := v_first.organization_id;
+  IF NOT public.has_role(auth.uid(), 'super_admin'::app_role) AND v_org IS DISTINCT FROM v_caller_org THEN
+    RAISE EXCEPTION 'No puedes convertir proformas de otra organización';
+  END IF;
+  IF EXISTS (SELECT 1 FROM public.proformas WHERE id = ANY(p_proforma_ids) AND estado_proforma = 'cancelada') THEN
+    RAISE EXCEPTION 'LC_PROFORMA_CANCELADA: crea una nueva proforma para refacturar' USING ERRCODE='P0001';
+  END IF;
   IF EXISTS (
     SELECT 1 FROM public.proformas
     WHERE id = ANY(p_proforma_ids) AND estado_proforma = 'facturada'
@@ -13389,12 +13412,6 @@ BEGIN
     IF COALESCE(v_distinct_dias, 1) > 1 THEN
       RAISE EXCEPTION 'LC_PROFORMA_DIAS_CREDITO_DISTINTOS: las proformas tienen plazos de crédito distintos; iguala el plazo o indica el plazo de la factura' USING ERRCODE='P0001';
     END IF;
-  END IF;
-  SELECT * INTO v_first FROM public.proformas
-    WHERE id = ANY(p_proforma_ids) ORDER BY created_at ASC LIMIT 1;
-  v_org := v_first.organization_id;
-  IF NOT public.has_role(auth.uid(), 'super_admin'::app_role) AND v_org IS DISTINCT FROM v_caller_org THEN
-    RAISE EXCEPTION 'No puedes convertir proformas de otra organización';
   END IF;
   SELECT * INTO v_cliente FROM public.clientes WHERE id = v_first.cliente_id;
   IF v_cliente IS NULL THEN RAISE EXCEPTION 'Cliente no encontrado'; END IF;
@@ -20619,6 +20636,29 @@ CREATE FUNCTION public.enforce_proforma_aceptada_before_factura() RETURNS trigge
     SET search_path TO 'public'
     AS $$
 BEGIN
+  -- Terminal sólo para acciones; conserva notas, papelera e histórico.
+  IF OLD.estado_proforma = 'cancelada' AND (
+      NEW.estado_proforma IS DISTINCT FROM OLD.estado_proforma
+      OR NEW.estado_cliente IS DISTINCT FROM OLD.estado_cliente
+      OR NEW.estado_revision IS DISTINCT FROM OLD.estado_revision
+      OR NEW.estado_aprobacion IS DISTINCT FROM OLD.estado_aprobacion
+      OR NEW.factura_id IS DISTINCT FROM OLD.factura_id
+      OR NEW.factura_secundaria_id IS DISTINCT FROM OLD.factura_secundaria_id
+      OR NEW.folio_factura_externa IS DISTINCT FROM OLD.folio_factura_externa
+      OR NEW.fecha_facturacion IS DISTINCT FROM OLD.fecha_facturacion
+      OR NEW.aceptada_at IS DISTINCT FROM OLD.aceptada_at
+      OR NEW.rechazada_at IS DISTINCT FROM OLD.rechazada_at
+      OR NEW.aceptada_por IS DISTINCT FROM OLD.aceptada_por
+      OR NEW.motivo_rechazo IS DISTINCT FROM OLD.motivo_rechazo
+      OR NEW.token_publico IS DISTINCT FROM OLD.token_publico
+      OR NEW.token_expira_at IS DISTINCT FROM OLD.token_expira_at
+      OR NEW.enviada_at IS DISTINCT FROM OLD.enviada_at
+      OR NEW.enviada_por IS DISTINCT FROM OLD.enviada_por
+      OR NEW.ultimo_envio_email IS DISTINCT FROM OLD.ultimo_envio_email
+      OR NEW.consolidada_en IS DISTINCT FROM OLD.consolidada_en
+  ) THEN
+    RAISE EXCEPTION 'LC_PROFORMA_CANCELADA: no se puede reactivar el histórico cancelado' USING ERRCODE='P0001';
+  END IF;
   IF (OLD.factura_id IS NULL AND NEW.factura_id IS NOT NULL)
      OR (COALESCE(OLD.estado_proforma,'') <> 'facturada' AND NEW.estado_proforma = 'facturada') THEN
     IF COALESCE(NEW.estado_cliente,'pendiente') <> 'aceptada' THEN
@@ -26122,7 +26162,12 @@ BEGIN
   IF p_token IS NULL THEN RETURN NULL; END IF;
   SELECT * INTO v_proforma FROM public.proformas WHERE token_publico = p_token;
   IF NOT FOUND THEN RETURN jsonb_build_object('error','token_invalido'); END IF;
-  IF v_proforma.token_expira_at IS NOT NULL AND v_proforma.token_expira_at < now() THEN
+  IF v_proforma.deleted_at IS NOT NULL THEN
+    RETURN jsonb_build_object('error','token_invalido');
+  END IF;
+  IF v_proforma.estado_proforma = 'cancelada' THEN
+    v_estado_link := 'cancelada';
+  ELSIF v_proforma.token_expira_at IS NOT NULL AND v_proforma.token_expira_at < now() THEN
     v_estado_link := 'expirado';
   ELSIF v_proforma.estado_cliente <> 'pendiente' THEN
     v_estado_link := 'respondida';
@@ -26329,6 +26374,12 @@ BEGIN
   IF v_proforma.token_expira_at IS NOT NULL AND v_proforma.token_expira_at < now() THEN
     RAISE EXCEPTION 'El enlace ha expirado. Solicita uno nuevo a tu ejecutivo.';
   END IF;
+  IF v_proforma.deleted_at IS NOT NULL THEN
+    RAISE EXCEPTION 'LC_PROFORMA_ELIMINADA: la proforma fue eliminada' USING ERRCODE='P0001';
+  END IF;
+  IF v_proforma.estado_proforma = 'cancelada' THEN
+    RAISE EXCEPTION 'LC_PROFORMA_CANCELADA: crea una nueva proforma para continuar' USING ERRCODE='P0001';
+  END IF;
   IF v_proforma.estado_cliente <> 'pendiente' THEN
     RAISE EXCEPTION 'Esta proforma ya fue respondida (%).', v_proforma.estado_cliente;
   END IF;
@@ -26418,8 +26469,14 @@ BEGIN
     RAISE EXCEPTION 'Respuesta inválida. Debe ser aceptada o rechazada.';
   END IF;
   SELECT * INTO v_proforma FROM public.proformas
-   WHERE id = p_proforma_id AND cliente_id IN (SELECT current_user_client_ids());
+   WHERE id = p_proforma_id AND cliente_id IN (SELECT current_user_client_ids()) FOR UPDATE;
   IF NOT FOUND THEN RAISE EXCEPTION 'Proforma no encontrada o no tienes acceso.'; END IF;
+  IF v_proforma.deleted_at IS NOT NULL THEN
+    RAISE EXCEPTION 'LC_PROFORMA_ELIMINADA: la proforma fue eliminada' USING ERRCODE='P0001';
+  END IF;
+  IF v_proforma.estado_proforma = 'cancelada' THEN
+    RAISE EXCEPTION 'LC_PROFORMA_CANCELADA: crea una nueva proforma para continuar' USING ERRCODE='P0001';
+  END IF;
   IF v_proforma.estado_cliente <> 'pendiente' THEN
     RAISE EXCEPTION 'Esta proforma ya fue respondida (estado: %).', v_proforma.estado_cliente;
   END IF;
@@ -33736,9 +33793,29 @@ CREATE FUNCTION public.tg_facturas_link_proforma() RETURNS trigger
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
     AS $$
+DECLARE
+  v_estado_proforma text;
 BEGIN
   IF NEW.proforma_id IS NOT NULL AND NEW.deleted_at IS NULL
      AND NEW.estado NOT IN ('Cancelada'::estado_factura,'Sustituida'::estado_factura) THEN
+    -- Lock de proforma: mismo orden lógico que cancelar/convertir.
+    SELECT estado_proforma INTO v_estado_proforma FROM public.proformas
+    WHERE id = NEW.proforma_id AND organization_id = NEW.organization_id FOR UPDATE;
+    IF v_estado_proforma = 'cancelada' THEN
+      IF TG_OP = 'INSERT' THEN
+        RAISE EXCEPTION 'LC_PROFORMA_CANCELADA: no se puede facturar una proforma cancelada' USING ERRCODE='P0001';
+      ELSIF NEW.proforma_id IS DISTINCT FROM OLD.proforma_id
+         OR OLD.deleted_at IS NOT NULL
+         OR OLD.estado IN ('Cancelada'::estado_factura,'Sustituida'::estado_factura) THEN
+        RAISE EXCEPTION 'LC_PROFORMA_CANCELADA: no se puede reactivar la factura de una proforma cancelada' USING ERRCODE='P0001';
+      END IF;
+      IF OLD.estado IN ('Borrador'::estado_factura,'Por timbrar'::estado_factura)
+         AND NEW.estado IS DISTINCT FROM OLD.estado THEN
+        RAISE EXCEPTION 'LC_PROFORMA_CANCELADA: no se puede emitir un borrador del histórico cancelado' USING ERRCODE='P0001';
+      END IF;
+      -- Facturas históricas existentes conservan su vínculo sin reactivar proforma.
+      RETURN NEW;
+    END IF;
     UPDATE public.proformas
        SET factura_id = NEW.id
      WHERE id = NEW.proforma_id
