@@ -13,6 +13,33 @@ const p = (overrides: Partial<ProformaConFactura> = {}): ProformaConFactura => (
 } as ProformaConFactura);
 
 describe("useTabProformasState", () => {
+  it("separa canceladas de pendientes, aprobadas y convertidas sin perder el histórico", () => {
+    const canceladas = ["pendiente", "aceptada", "rechazada"].map((estado_cliente, i) => p({
+      id: `cancelada-${i}`, numero: `PRO-C-${i}`, estado_proforma: "cancelada",
+      estado_cliente, factura_id: i === 1 ? "factura-historica" : null,
+    }));
+    const proformas = [
+      ...canceladas,
+      p({ id: "aprobada", estado_cliente: "aceptada" }),
+      p({ id: "convertida", estado_cliente: "aceptada", factura_id: "f1" }),
+      p({ id: "pendiente", estado_cliente: "pendiente" }),
+    ];
+    const { result } = renderHook(() => useTabProformasState(proformas, undefined, "aceptada"));
+    expect(result.current.filtered.map((row) => row.id)).toEqual(["aprobada"]);
+    expect(result.current.counts).toEqual({ todas: 6, pendiente: 1, aceptada: 1, rechazada: 0, facturada: 1, cancelada: 3 });
+    act(() => { result.current.setPage(2); });
+    act(() => { result.current.setFiltroEstado("cancelada"); });
+    expect(result.current.page).toBe(0);
+    expect(result.current.filtered).toEqual(canceladas);
+    expect(result.current.filtered[1].factura_id).toBe("factura-historica");
+    act(() => { result.current.setSearch("PRO-C-1"); });
+    expect(result.current.counts).toEqual({ todas: 1, pendiente: 0, aceptada: 0, rechazada: 0, facturada: 0, cancelada: 1 });
+    expect(result.current.paginated.map((row) => row.id)).toEqual(["cancelada-1"]);
+    act(() => { result.current.clearAll(); });
+    expect(result.current.filtroEstado).toBe("todas");
+    expect(result.current.filtered.map((row) => row.id)).toEqual(["cancelada-1"]);
+  });
+
   it("filtra por search sobre cliente_nombre", () => {
     const proformas = [p(), p({ id: "p2", numero: "P-002", cliente_nombre: "Beta Corp", expediente: "EXP-002" })];
     const { result } = renderHook(() => useTabProformasState(proformas));

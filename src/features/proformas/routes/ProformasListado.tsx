@@ -14,13 +14,11 @@ import { PageHeader } from "@/components/shared/PageHeader";
 import { TabProformas } from "@/features/facturacion/components/TabProformas";
 import type { FiltroEstadoProforma } from "@/features/facturacion/hooks";
 import { useDocumentTitle } from "@/hooks/shared";
+import { ESTADOS_UNIFICADOS } from "@/lib/domain/estadoUnificado";
 
 const ESTADOS_VALIDOS: FiltroEstadoProforma[] = [
   "todas",
-  "pendiente",
-  "aceptada",
-  "rechazada",
-  "facturada",
+  ...ESTADOS_UNIFICADOS,
 ];
 
 function parseEstado(valor: string | null): FiltroEstadoProforma {

@@ -21,6 +21,9 @@ type ExtraFields = {
 export type EstadoClienteProforma = "pendiente" | "aceptada" | "rechazada";
 
 export interface ProformaTimelineFields {
+  estadoProforma: string | null;
+  facturaId: string | null;
+  facturaSecundariaId: string | null;
   estadoCliente: EstadoClienteProforma;
   aceptadaPor: string | null;
   enviadaAt: string | null;
@@ -38,6 +41,9 @@ export function resolveProformaTimelineFields(proforma: ProformaDetalleFull): Pr
   // SAFE-CAST: única frontera; ver ExtraFields arriba.
   const extra = proforma as unknown as ExtraFields;
   return {
+    estadoProforma: proforma.estado_proforma ?? null,
+    facturaId: proforma.factura_id ?? null,
+    facturaSecundariaId: proforma.factura_secundaria_id ?? null,
     estadoCliente: resolveEstadoCliente(extra.estado_cliente),
     aceptadaPor: extra.aceptada_por ?? null,
     enviadaAt: extra.enviada_at ?? null,

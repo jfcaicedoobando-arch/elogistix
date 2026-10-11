@@ -56,6 +56,9 @@ function BadgeCiclo({
   requiereAutorizacionProforma: boolean;
   facturas: FacturaCicloLite[];
 }) {
+  if (estadoProforma === "cancelada") {
+    return <Badge variant="destructive">Cancelada</Badge>;
+  }
   if (estadoProforma === "facturada") {
     // B9: distinguir "convertida a borrador" de una factura fiscal emitida.
     const label = etiquetaProformaConvertida(facturas);
@@ -106,6 +109,9 @@ export function EstadoBadges({
         facturas={facturas}
       />
       {mostrarOrigen && <BadgeOrigenAceptacion origen={origen} />}
+      {estadoProforma === "cancelada" && facturas.length > 0 && (
+        <Badge variant="outline">Facturación histórica: {etiquetaProformaConvertida(facturas)}</Badge>
+      )}
     </div>
   );
 }

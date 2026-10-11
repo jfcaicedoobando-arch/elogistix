@@ -1,7 +1,7 @@
 /**
  * Timeline vertical de la proforma: emitida → enviada → aceptada/rechazada →
- * facturada. Los hitos sin fecha se muestran apagados y la línea conectora
- * indica el avance. Recibe los campos ya normalizados por
+ * facturada. En canceladas conserva los hitos acreditados y señala los que
+ * ya no se realizarán. Recibe los campos ya normalizados por
  * `resolveProformaTimelineFields` para mantener este componente sin casts.
  */
 import { Check, Send, FileCheck2, X, FileSpreadsheet } from "lucide-react";
@@ -38,21 +38,33 @@ interface Hito {
   fecha: string | null;
   actor?: string | null;
   nota?: string | null;
+  realizado?: boolean;
   tone: "default" | "success" | "danger";
+}
+
+function hitosRespuesta(t: ProformaTimelineFields, cancelada: boolean): Hito[] {
+  const aceptada: Hito = {
+    key: "aceptada", label: "Aceptada", icon: Check, fecha: t.aceptadaAt, actor: t.aceptadaPor,
+    realizado: !!t.aceptadaAt || (cancelada && t.estadoCliente === "aceptada"), tone: "success",
+  };
+  const rechazada = !!t.rechazadaAt || (cancelada && t.estadoCliente === "rechazada");
+  if (!rechazada) return [aceptada];
+  const rechazo: Hito = {
+    key: "rechazada", label: "Rechazada", icon: X, fecha: t.rechazadaAt, realizado: true, tone: "danger",
+  };
+  return cancelada && aceptada.realizado ? [aceptada, rechazo] : [rechazo];
 }
 
 function buildHitos(
   fechaEmision: string,
   operador: string | null | undefined,
   t: ProformaTimelineFields,
-  notaEnvios: string | null,
+  envios: { nota: string | null; enviado: boolean },
   facturas: FacturaCicloLite[],
 ): Hito[] {
-  const rechazada = !!t.rechazadaAt;
-  const hitoFinal: Hito = rechazada
-    ? { key: "rechazada", label: "Rechazada", icon: X, fecha: t.rechazadaAt, tone: "danger" }
-    : { key: "aceptada", label: "Aceptada", icon: Check, fecha: t.aceptadaAt, actor: t.aceptadaPor, tone: "success" };
-  return [
+  const cancelada = t.estadoProforma === "cancelada";
+  const conversionHistorica = cancelada && (!!t.facturaId || !!t.facturaSecundariaId || facturas.length > 0);
+  const hitos: Hito[] = [
     { key: "emitida", label: "Emitida", icon: FileSpreadsheet, fecha: fechaEmision, actor: operador, tone: "default" },
     {
       key: "enviada",
@@ -60,18 +72,22 @@ function buildHitos(
       icon: Send,
       fecha: t.enviadaAt,
       actor: t.enviadaPor,
-      nota: notaEnvios,
+      nota: envios.nota,
+      realizado: !!t.enviadaAt || (cancelada && envios.enviado),
       tone: "default",
     },
-    hitoFinal,
+    ...hitosRespuesta(t, cancelada),
     {
       key: "facturada",
-      label: etiquetaProformaConvertida(facturas),
+      label: conversionHistorica && facturas.length === 0 ? "Convertida a factura" : etiquetaProformaConvertida(facturas),
       icon: FileCheck2,
       fecha: t.fechaFacturacion,
+      realizado: !!t.fechaFacturacion || conversionHistorica,
       tone: "success",
     },
   ];
+  if (cancelada) hitos.push({ key: "cancelada", label: "Cancelada", icon: X, fecha: null, realizado: true, tone: "danger" });
+  return hitos;
 }
 
 function toneClass(done: boolean, tone: Hito["tone"]): string {
@@ -85,15 +101,19 @@ export function TimelineProforma({ fechaEmision, operador, timeline, envios, fac
   const resumen = resumirEnvios(envios);
   const notaEnvios =
     resumen.total > 1 ? `${resumen.total} envíos · último ${formatDate(resumen.ultimoAt ?? "")}` : null;
-  const hitos = buildHitos(fechaEmision, operador, timeline, notaEnvios, facturas);
-  const activos = hitos.filter((h) => h.fecha).length;
+  const cancelada = timeline.estadoProforma === "cancelada";
+  const hitos = buildHitos(fechaEmision, operador, timeline, {
+    nota: notaEnvios,
+    enviado: envios?.some((envio) => envio.estado === "enviado") ?? false,
+  }, facturas);
+  const activos = hitos.filter((h) => h.realizado || h.fecha).length;
   if (activos === 0) return null;
 
   const lista = (
     <ol className="space-y-0">
 
           {hitos.map((h, i) => {
-            const done = !!h.fecha;
+            const done = h.realizado ?? !!h.fecha;
             const Icon = h.icon;
             const bg = toneClass(done, h.tone);
             const esUltimo = i === hitos.length - 1;
@@ -113,7 +133,7 @@ export function TimelineProforma({ fechaEmision, operador, timeline, envios, fac
                 <div className={`min-w-0 ${esUltimo ? "pb-0" : "pb-4"}`}>
                   <p className="text-body font-medium">{h.label}</p>
                   <p className={`text-body-sm ${done ? "text-foreground" : "text-muted-foreground"}`}>
-                    {done && h.fecha ? formatDate(h.fecha) : "Pendiente"}
+                    {h.fecha ? formatDate(h.fecha) : done ? "Fecha no registrada" : cancelada ? "No realizado" : "Pendiente"}
                   </p>
                   {done && h.actor && (
                     <Hint label={h.actor}>

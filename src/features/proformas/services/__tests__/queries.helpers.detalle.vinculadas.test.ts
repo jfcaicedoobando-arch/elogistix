@@ -78,3 +78,23 @@ describe("mergeProformaDetalle · facturas vinculadas (D6)", () => {
     expect(r.facturas_asociadas[0]).not.toHaveProperty("created_at");
   });
 });
+
+describe("documentos históricos de una proforma cancelada", () => {
+  it("conserva facturas primaria y secundaria, sus estados y documentos", () => {
+    const r = mergeProformaDetalle({
+      id: "p-cancelada", estado_proforma: "cancelada", estado_cliente: "aceptada",
+      factura_id: "MXN1", factura_secundaria_id: "USD1",
+      facturas_asociadas: [],
+      factura_vinculada: doc("MXN1", "MXN", { estado: "Cancelada" }),
+      factura_vinculada_secundaria: doc("USD1", "USD", { estado: "Borrador" }),
+    });
+    expect(r.estado_proforma).toBe("cancelada");
+    expect(r.estado_cliente).toBe("aceptada");
+    expect(r.factura_id).toBe("MXN1");
+    expect(r.factura_secundaria_id).toBe("USD1");
+    expect(r.facturas_asociadas.map((f) => [f.id, f.estado, f.factura_pdf_url, f.factura_xml_url])).toEqual([
+      ["MXN1", "Cancelada", "https://pdf/MXN1", "https://xml/MXN1"],
+      ["USD1", "Borrador", "https://pdf/USD1", "https://xml/USD1"],
+    ]);
+  });
+});
