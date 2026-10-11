@@ -30,3 +30,50 @@ describe("exact reviewed ACL-preserving forward", () => {
       .toContainEqual(expect.objectContaining({ check: "H6", detail: expect.stringContaining("TO PUBLIC (prohibido)") }));
   });
 });
+
+const proformaFile = "20261011180000_proforma_cancelada_acciones_terminales.sql";
+const proformaBody = readFileSync(resolve("supabase/migrations", proformaFile), "utf8");
+
+describe("reconstructed r1 exact cancelled-proforma catalog", () => {
+  it("permits only the reviewed pair while ordinary H6 retains sixteen findings", () => {
+    expect(scanSecurityDefiner(proformaFile, proformaBody, true)).toHaveLength(16);
+    expect(scanSecurityDefinerWithPreservedAcl(proformaFile, proformaBody, true)).toEqual([]);
+  });
+  it("rejects different names and cross-use of the older reviewed pair", () => {
+    for (const name of ["20261011180100_other.sql", file]) {
+      expect(scanSecurityDefinerWithPreservedAcl(name, proformaBody, true)).toHaveLength(16);
+    }
+    expect(scanSecurityDefinerWithPreservedAcl(proformaFile, body, true)).toHaveLength(4);
+  });
+  it.each([
+    ["bytes", (s: string) => s + "\n-- changed\n"],
+    ["catalog omitted", (s: string) => s.replace(/DO \$catalog\$[\s\S]*?\$catalog\$;/, "")],
+    ["owner omitted", (s: string) => s.replace("pg_get_userbyid(p.proowner)<>'postgres'", "false")],
+    ["owner changed", (s: string) => s.replace("pg_get_userbyid(p.proowner)<>'postgres'", "pg_get_userbyid(p.proowner)<>'authenticated'")],
+    ["definer omitted", (s: string) => s.replace("p.prosecdef IS DISTINCT FROM expected.security_definer", "false")],
+    ["definer changed", (s: string) => s.replace("('public.aceptar_proforma_sin_autorizacion(uuid)', true,", "('public.aceptar_proforma_sin_autorizacion(uuid)', false,")],
+    ["search path omitted", (s: string) => s.replace("p.proconfig IS DISTINCT FROM ARRAY['search_path=public']::text[]", "false")],
+    ["null ACL allowed", (s: string) => s.replace("p.proacl IS NULL", "false")],
+    ["ACL superset allowed", (s: string) => s.replace("p.proacl @> expected.acl AND p.proacl <@ expected.acl", "p.proacl @> expected.acl")],
+    ["ACL subset allowed", (s: string) => s.replace("p.proacl @> expected.acl AND p.proacl <@ expected.acl", "p.proacl <@ expected.acl")],
+    ["ACL changed", (s: string) => s.replace("'{postgres=X/postgres,authenticated=X/postgres,service_role=X/postgres}'::aclitem[]", "'{postgres=X/postgres,authenticated=X/postgres,anon=X/postgres,service_role=X/postgres}'::aclitem[]")],
+    ["source marker changed", (s: string) => s.replace("PROFORMA_CANCELADA_PRECONDITION", "CHANGED_PRECONDITION")],
+    ["source preconditions omitted", (s: string) => s.replace(/DO \$preconditions\$[\s\S]*?\$preconditions\$;/, "")],
+    ["postcondition omitted", (s: string) => s.replace(/DO \$metadata\$[\s\S]*?\$metadata\$;/, "")],
+  ] as const)("restores H6 when %s", (_name, mutate) => {
+    const changed = mutate(proformaBody);
+    expect(changed).not.toBe(proformaBody);
+    expect(scanSecurityDefinerWithPreservedAcl(proformaFile, changed, true)).toHaveLength(16);
+  });
+  it.each([true, false])("retains PUBLIC prohibition at baseline flag %s", (flag) => {
+    const changed = proformaBody + "\nGRANT EXECUTE ON FUNCTION public.aceptar_proforma_sin_autorizacion(uuid) TO PUBLIC;\n";
+    expect(scanSecurityDefinerWithPreservedAcl(proformaFile, changed, flag))
+      .toContainEqual(expect.objectContaining({ check: "H6", detail: expect.stringContaining("TO PUBLIC (prohibido)") }));
+  });
+  it("covers exactly nine signatures, including eight definers and the historical invoker", () => {
+    const catalog = proformaBody.match(/DO \$catalog\$([\s\S]*?)\$catalog\$;/)?.[1] ?? "";
+    expect(catalog.match(/\('public\./g)).toHaveLength(9);
+    expect(catalog.match(/, true, '/g)).toHaveLength(8);
+    expect(catalog).toContain("('public.enforce_proforma_aceptada_before_factura()', false,");
+  });
+});

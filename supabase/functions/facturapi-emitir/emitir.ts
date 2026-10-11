@@ -18,6 +18,7 @@ import { FACTURA_COLUMNS, type Claim, type FacturaRow, type EmitirInput } from "
 import { resultadoUsoCfdi } from "./resultadoUsoCfdi.ts";
 import { createInvoiceInFacturapi } from './crear.ts';
 import { parseInvoiceResult, persistirFacturaTimbrada } from './persistencia.ts';
+import { validarProformasVigentes } from './proformasVigentes.ts';
 
 export { hoyMx, realinearFechaEmision } from "./fechaEmision.ts";
 export type { Claim, FacturaRow } from "./types.ts";
@@ -86,6 +87,7 @@ export async function validarFacturaTimbrable(
   userId: string,
 ): Promise<Response | null> {
   return validarEstadoTimbrable(factura)
+    ?? (await validarProformasVigentes(supabase, factura))
     ?? validarTipoCambio(factura)
     ?? validarTotalPositivo(factura)
     ?? (await validarLimiteCredito(supabase, factura, userId));
@@ -129,6 +131,8 @@ export async function resolverSustitucion(supabase: SupabaseClient, factura: Fac
 
 export async function emitirYActualizar(input: EmitirInput): Promise<Response> {
   const { supabase, apiKey, ctx, factura, facturaId } = input;
+  const bloqueo = await validarProformasVigentes(supabase, factura);
+  if (bloqueo) { await input.claim.release(); return bloqueo; }
   const payload = buildFacturapiPayload(ctx);
 
   const invoice = await createInvoiceInFacturapi(input, payload);

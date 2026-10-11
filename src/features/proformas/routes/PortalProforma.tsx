@@ -43,6 +43,17 @@ function ContenidoPortal({ state }: { state: PortalState }) {
     );
   }
 
+  if (data?.estado_link === "cancelada") {
+    return (
+      <AvisoAccionable
+        icon={<AlertTriangle className="h-5 w-5" />}
+        titulo="Esta proforma fue cancelada"
+        descripcion="Solicita a tu ejecutivo una nueva proforma para continuar."
+        pasos={COPY_PASOS.enlaceInvalido}
+      />
+    );
+  }
+
   if (data?.proforma && data.estado_link === "expirado") {
     return (
       <AvisoAccionable

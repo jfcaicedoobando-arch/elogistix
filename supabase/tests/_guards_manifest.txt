@@ -257,3 +257,4 @@ supabase/tests/insurance_trash_restore.sql
 supabase/tests/selector148_enabled_gate.sql
 supabase/tests/audit147_comparador_moneda_tramo.sql
 supabase/tests/pricing_subtotal_moneda_canonica.sql
+supabase/tests/proforma_cancelada_acciones.sql

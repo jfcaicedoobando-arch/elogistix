@@ -31,10 +31,7 @@ import { resolverDiasCredito } from "@/features/proformas/domain/proformaDetalle
 import { useClienteAutorizacion } from "@/features/cliente/hooks/useClienteAutorizacion";
 import { useAprobarProformaInterna } from "@/features/proformas/hooks/useAprobarProformaInterna";
 import { BadgeClienteDeCasa } from "@/components/shared/BadgeClienteDeCasa";
-import {
-  computarFlags,
-  readEstadoCliente,
-} from "@/features/proformas/components/accionesProformaFlags";
+import { computarFlags } from "@/features/proformas/components/accionesProformaFlags";
 
 interface Props {
   proforma: ProformaDetalleFull;
@@ -53,13 +50,14 @@ export function AccionesProforma({ proforma, downloadingId, onDescargar }: Props
   const { autorizacion } = useClienteAutorizacion(proforma.cliente_id ?? null);
   const { aprobar: aprobarInterna, isPending: aprobando } = useAprobarProformaInterna();
 
-  const { facturada, puedeConvertir, puedeResponder, mostrarHint } = computarFlags(
+  const { facturada, cancelada, puedeConvertir, puedeResponder, mostrarHint } = computarFlags(
     proforma,
     canEmitirFactura,
     canResponderProformaManual,
   );
 
-  const ejecutarConversion = () =>
+  const ejecutarConversion = () => {
+    if (!puedeConvertir) return;
     convertir({
       proformaIds: [proforma.id],
       organizationId: proforma.organization_id,
@@ -68,8 +66,10 @@ export function AccionesProforma({ proforma, downloadingId, onDescargar }: Props
         proforma.cliente_full?.dias_credito,
       ).dias ?? 0,
     });
+  };
 
   const onConvertir = async () => {
+    if (!puedeConvertir) return;
     if (!proforma.cliente_id) {
       ejecutarConversion();
       return;
@@ -92,7 +92,7 @@ export function AccionesProforma({ proforma, downloadingId, onDescargar }: Props
   };
 
   const onConfirmarExceso = async () => {
-    if (!creditoAlerta || !proforma.cliente_id) return;
+    if (!puedeConvertir || !creditoAlerta || !proforma.cliente_id) return;
     await registrarExcesoCredito({
       clienteId: proforma.cliente_id,
       clienteNombre: proforma.cliente_nombre,
@@ -109,9 +109,7 @@ export function AccionesProforma({ proforma, downloadingId, onDescargar }: Props
   // "respuesta del cliente", porque no hay respuesta que registrar).
   const puedeAprobarInterna =
     !autorizacion.requiereAutorizacionProforma &&
-    !facturada &&
-    readEstadoCliente(proforma) === "pendiente" &&
-    canResponderProformaManual;
+    puedeResponder;
 
   const primary = buildPrimaryItem({
     puedeConvertir,
@@ -128,7 +126,7 @@ export function AccionesProforma({ proforma, downloadingId, onDescargar }: Props
     puedeAprobarInterna,
     puedeResponder: puedeResponder && !puedeAprobarInterna,
     // VF-20: el vendedor (sólo lectura) no ve la acción de envío.
-    puedeEnviar: canEditarProforma,
+    puedeEnviar: canEditarProforma && !cancelada,
     onDescargar,
     onEnviar: () => setEnviarOpen(true),
     onAceptarManual: () => setManualOpen("aceptada"),
@@ -162,23 +160,27 @@ export function AccionesProforma({ proforma, downloadingId, onDescargar }: Props
               : "No hace falta esperar respuesta del cliente. Pide a un administrador o gerente que la apruebe internamente para continuar."}
         </p>
       )}
-      <EnviarProformaDialog open={enviarOpen} onOpenChange={setEnviarOpen} proforma={proforma} />
-      {manualOpen && (
-        <RespuestaClienteManualDialog
-          open={!!manualOpen}
-          onOpenChange={(o) => { if (!o) setManualOpen(null); }}
-          proformaId={proforma.id}
-          numero={proforma.numero ?? ""}
-          modo={manualOpen}
-        />
+      {!cancelada && (
+        <>
+          <EnviarProformaDialog open={enviarOpen} onOpenChange={setEnviarOpen} proforma={proforma} />
+          {manualOpen && (
+            <RespuestaClienteManualDialog
+              open={!!manualOpen}
+              onOpenChange={(o) => { if (!o) setManualOpen(null); }}
+              proformaId={proforma.id}
+              numero={proforma.numero ?? ""}
+              modo={manualOpen}
+            />
+          )}
+          <AlertaLimiteCreditoDialog
+            resultado={creditoAlerta}
+            clienteNombre={proforma.cliente_nombre}
+            montoNuevaFactura={Number(proforma.total_mxn ?? 0)}
+            onOpenChange={(o) => { if (!o) setCreditoAlerta(null); }}
+            onConfirm={onConfirmarExceso}
+          />
+        </>
       )}
-      <AlertaLimiteCreditoDialog
-        resultado={creditoAlerta}
-        clienteNombre={proforma.cliente_nombre}
-        montoNuevaFactura={Number(proforma.total_mxn ?? 0)}
-        onOpenChange={(o) => { if (!o) setCreditoAlerta(null); }}
-        onConfirm={onConfirmarExceso}
-      />
     </div>
   );
 }

@@ -34,11 +34,19 @@ BEGIN
   IF p_proforma_ids IS NULL OR array_length(p_proforma_ids, 1) IS NULL OR array_length(p_proforma_ids, 1) < 2 THEN
     RAISE EXCEPTION 'Selecciona al menos 2 proformas para consolidar';
   END IF;
+  PERFORM 1 FROM public.proformas
+  WHERE id = ANY(p_proforma_ids) AND organization_id = v_org_efectiva FOR UPDATE;
   SELECT count(*) INTO v_count
   FROM public.proformas
   WHERE id = ANY(p_proforma_ids) AND organization_id = v_org_efectiva;
   IF v_count <> array_length(p_proforma_ids, 1) THEN
     RAISE EXCEPTION 'Una o más proformas no existen o no pertenecen a la organización';
+  END IF;
+  IF EXISTS (SELECT 1 FROM public.proformas WHERE id = ANY(p_proforma_ids) AND estado_proforma = 'cancelada') THEN
+    RAISE EXCEPTION 'LC_PROFORMA_CANCELADA: no se puede consolidar una proforma cancelada' USING ERRCODE='P0001';
+  END IF;
+  IF EXISTS (SELECT 1 FROM public.proformas WHERE id = ANY(p_proforma_ids) AND deleted_at IS NOT NULL) THEN
+    RAISE EXCEPTION 'LC_PROFORMA_ELIMINADA: no se puede consolidar una proforma eliminada' USING ERRCODE='P0001';
   END IF;
   -- Ola 3: la consolidación no puede cruzar embarques.
   IF EXISTS (

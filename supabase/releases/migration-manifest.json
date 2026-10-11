@@ -54276,7 +54276,8 @@
       "20261010004500_fix_crm_quote_concepts_sync.sql",
       "20261010015800_pricing_cliente_linaje.sql",
       "20261010015900_pricing_incoterms_fas_dpu.sql",
-      "20261010163000_pricing_subtotal_moneda_canonica.sql"
+      "20261010163000_pricing_subtotal_moneda_canonica.sql",
+      "20261011180000_proforma_cancelada_acciones_terminales.sql"
     ]
   }
 }

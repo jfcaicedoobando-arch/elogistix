@@ -17,6 +17,7 @@ export interface FacturaRow {
   cliente_id: string;
   rfc_cliente?: string | null;
   organization_id: string;
+  proforma_id?: string | null;
   facturapi_id?: string | null;
   sustituye_a?: string | null;
   embarque_id?: string | null;
@@ -34,7 +35,7 @@ export interface FacturaRow {
  * devuelvan EXACTAMENTE la misma forma de fila.
  */
 export const FACTURA_COLUMNS =
-  "id, numero, serie, estado, moneda, fecha_emision, tipo_cambio, uso_cfdi, forma_pago, metodo_pago, cliente_id, rfc_cliente, organization_id, facturapi_id, sustituye_a, embarque_id, expediente, referencia_bl, subtotal, iva, total";
+  "id, numero, serie, estado, moneda, fecha_emision, tipo_cambio, uso_cfdi, forma_pago, metodo_pago, cliente_id, rfc_cliente, organization_id, proforma_id, facturapi_id, sustituye_a, embarque_id, expediente, referencia_bl, subtotal, iva, total";
 
 export interface Claim { claimTag: string; claimAt: string; release: () => Promise<void> }
 
