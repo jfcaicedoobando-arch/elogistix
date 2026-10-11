@@ -89,9 +89,13 @@ Esto no cambia el CLI del workflow ni agrega otro pipeline. Ver
 | `e2e.yml` | Sólo manual | Playwright/provisioning/staging |
 | `post-deploy-smoke.yml` | Sólo manual | Smoke del destino seleccionado |
 | `isolated-ui-audit.yml` | PR por rutas de UI/configuración, manual | 28 casos sintéticos sin backend |
-| `pricing-rpc-bounded.yml` | PR por rutas del harness, manual | Baseline congelado y candidato CRM |
-| `pricing-rpc-authenticated.yml` | PR por rutas del harness, manual | Roles autenticados y compatibilidad |
+| `pricing-rpc-authenticated.yml` | PR por rutas del harness, manual | Baseline congelado y 53 assertions: 32 CRM + 21 de roles/compatibilidad |
 | `test-diagnostics.yml` | Sólo manual | Diagnósticos PDF/visuales |
+
+El workflow Pricing autenticado consolida la ejecución: conserva el baseline de
+27 avisos y el candidato de 53, además de los contratos y mocks de ambos runners.
+Se retiró el YAML redundante `pricing-rpc-bounded.yml`; sus paquetes congelados
+y evidencia histórica se conservan.
 
 Consultar filtros exactos en YAML. E2E contiene mutadores; smoke tampoco
 debe suponerse read-only. Confirmar destino/efectos antes del dispatch.

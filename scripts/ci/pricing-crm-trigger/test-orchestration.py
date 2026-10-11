@@ -117,9 +117,9 @@ class OrchestrationTests(unittest.TestCase):
                 root = Path(tmp)
                 shutil.copytree(ROOT / 'scripts/ci/pricing-rpc-bounded', root / 'scripts/ci/pricing-rpc-bounded')
                 shutil.copytree(PLAN, root / 'scripts/ci/pricing-crm-trigger')
-                workflow = root / '.github/workflows/pricing-rpc-bounded.yml'
+                workflow = root / '.github/workflows/pricing-rpc-authenticated.yml'
                 workflow.parent.mkdir(parents=True)
-                shutil.copyfile(ROOT / '.github/workflows/pricing-rpc-bounded.yml', workflow)
+                shutil.copyfile(ROOT / '.github/workflows/pricing-rpc-authenticated.yml', workflow)
                 fake_bin = root / 'fake-bin'
                 fake_bin.mkdir()
                 fake = fake_bin / 'docker'

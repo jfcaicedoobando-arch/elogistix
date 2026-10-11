@@ -12,6 +12,9 @@ REVIEWED = PLAN.parent / 'pricing-crm-trigger'
 REVIEWED_HEAD = '1f67a47e2ba6d95475a2ebf513ecbd0e8d65a4e2'
 PUBLICATION_BASE = '820a2a99c799cb4f3136a0b4b9f3ddf794cd3638'
 REVIEWED_BUILDER_HASH = 'd3154291e5041dcac8fbf197380486518a9f640b3f294a9fb52fed23eb8d54ce'
+REVIEWED_MANIFEST_HASH = '7182b7124940250b4605c003b397a71fc26a0a6dc6fe95d9e25622cabd832205'
+MAINTENANCE_BASE = '5761aa3a75a9b39ac1fdce06a8a9ca4d6fb0cdbe'
+MAINTAINED_FILES = frozenset(('README.md', 'tests.py', 'test-orchestration.py', 'SHA256SUMS'))
 BUNDLE = PLAN.parent / 'pricing-rpc-bounded'
 IMAGE = 'postgres@sha256:66b6a97eac1771fc78bd201b918b4253859f436c6913aeede97bd5366cce89ae'
 FROZEN_HEAD = 'd1e94d2d45195e21a55b4d40970a8f0275d4a2af'
@@ -19,7 +22,7 @@ MIGRATION_HASH = '25548288f0ca87b0cd458de65a0a5aa1ababd09e6be2e7f25763bf75540a1c
 BUILDER_HASH = '90ce4239feade8687950b83b88fa2e4265612e36d29b17b2d9a1888b1fedeca7'
 
 
-def verify_manifest(directory, manifest, excluded=()):
+def read_manifest(manifest):
     if manifest.is_symlink() or not manifest.is_file():
         raise ValueError('Missing or symlinked manifest')
     entries = {}
@@ -28,7 +31,14 @@ def verify_manifest(directory, manifest, excluded=()):
         if not match or match[2] in entries:
             raise ValueError('Malformed or duplicate hash entry')
         entries[match[2]] = match[1]
-    if not entries or set(entries) != {p.name for p in directory.iterdir()} - set(excluded):
+    if not entries:
+        raise ValueError('Empty hash manifest')
+    return entries
+
+
+def verify_manifest(directory, manifest, excluded=()):
+    entries = read_manifest(manifest)
+    if set(entries) != {p.name for p in directory.iterdir()} - set(excluded):
         raise ValueError('Unexpected or missing manifest input')
     for name, digest in entries.items():
         path = directory / name
@@ -37,9 +47,25 @@ def verify_manifest(directory, manifest, excluded=()):
     return entries
 
 
+def verify_reviewed():
+    # The original approved snapshot remains immutable. Only workflow-facing
+    # maintenance is recorded separately; it must never repin the SQL baseline.
+    original_manifest = PLAN / 'reviewed-SHA256SUMS'
+    reviewed = read_manifest(original_manifest)
+    if hashlib.sha256(original_manifest.read_bytes()).hexdigest() != REVIEWED_MANIFEST_HASH:
+        raise ValueError('Original reviewed manifest changed')
+    maintained = verify_manifest(REVIEWED, PLAN / 'maintained-reviewed-SHA256SUMS')
+    if set(maintained) != set(reviewed):
+        raise ValueError('Reviewed package file inventory changed')
+    changed = {name for name in reviewed if reviewed[name] != maintained[name]}
+    if changed != MAINTAINED_FILES:
+        raise ValueError('Maintenance changed files outside the exact workflow-only scope')
+    return reviewed, maintained
+
+
 def verify_inputs():
     frozen = verify_manifest(BUNDLE, PLAN / 'frozen-SHA256SUMS')
-    reviewed = verify_manifest(REVIEWED, PLAN / 'reviewed-SHA256SUMS')
+    reviewed, maintained = verify_reviewed()
     candidate = verify_manifest(PLAN, PLAN / 'SHA256SUMS', ('SHA256SUMS',))
     if (candidate['candidate-migration.sql'] != MIGRATION_HASH
             or candidate['build-overlay.py'] != BUILDER_HASH
@@ -70,7 +96,9 @@ def verify_inputs():
         raise ValueError('Frozen load/revoke or final ACL contract was changed')
     return {'status': 'verified', 'frozen_head': FROZEN_HEAD, 'frozen_files': frozen,
             'reviewed_head': REVIEWED_HEAD, 'publication_base': PUBLICATION_BASE,
-            'reviewed_files': reviewed, 'candidate_files': candidate, 'image': IMAGE, 'sql_executed': False}
+            'reviewed_files': reviewed, 'maintained_reviewed_files': maintained,
+            'maintenance_base': MAINTENANCE_BASE, 'maintenance_changed_files': sorted(MAINTAINED_FILES),
+            'candidate_files': candidate, 'image': IMAGE, 'sql_executed': False}
 
 
 if __name__ == '__main__':

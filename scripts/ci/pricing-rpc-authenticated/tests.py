@@ -5,10 +5,12 @@ import importlib.util
 import json
 import os
 from pathlib import Path
+import shutil
 import subprocess
 import sys
 import tempfile
 import unittest
+from unittest.mock import patch
 
 sys.dont_write_bytecode = True
 PLAN = Path(__file__).resolve().parent
@@ -263,6 +265,8 @@ class ContractTests(unittest.TestCase):
         self.assertEqual(result['candidate_files']['build-overlay.py'], I.BUILDER_HASH)
         self.assertEqual(len(result['frozen_files']), 14)
         self.assertEqual(len(result['reviewed_files']), 19)
+        self.assertEqual(len(result['maintained_reviewed_files']), 19)
+        self.assertEqual(result['maintenance_changed_files'], sorted(I.MAINTAINED_FILES))
         self.assertEqual(result['candidate_files']['reviewed-build-overlay.py'], I.REVIEWED_BUILDER_HASH)
 
     def test_16_overlay_and_l04_unchanged(self):
@@ -479,6 +483,73 @@ class ContractTests(unittest.TestCase):
             shortened = [n for n in notices if n != message]
             with self.assertRaises(ValueError):
                 E.validate_assertions(assertion_log(shortened, 'candidate'), notices, 'candidate', 0)
+
+    def test_33_consolidated_workflow_preserves_all_packages(self):
+        workflows = PLAN.parents[2] / '.github/workflows'
+        self.assertFalse((workflows / 'pricing-rpc-bounded.yml').exists())
+        workflow = (workflows / 'pricing-rpc-authenticated.yml').read_text()
+        for package in ('pricing-rpc-bounded', 'pricing-crm-trigger', 'pricing-rpc-authenticated'):
+            self.assertIn("'scripts/ci/" + package + "/**'", workflow)
+        for package in ('pricing-crm-trigger', 'pricing-rpc-authenticated'):
+            self.assertIn('python3 -B scripts/ci/' + package + '/test-orchestration.py', workflow)
+        self.assertEqual(workflow.count('bash scripts/ci/pricing-rpc-authenticated/run-ci.sh'), 1)
+        self.assertNotIn('bash scripts/ci/pricing-crm-trigger/run-ci.sh', workflow)
+        self.assertEqual(len(self.notices['baseline']), 27)
+        self.assertEqual(len(self.notices['candidate']), 53)
+
+    def test_34_historical_manifest_and_maintenance_scope_fail_closed(self):
+        with tempfile.TemporaryDirectory(prefix='pricing-provenance-', dir=PLAN.parents[2]) as tmp:
+            root = Path(tmp)
+            current = root / 'authenticated'
+            reviewed = root / 'reviewed'
+            shutil.copytree(PLAN, current)
+            shutil.copytree(I.REVIEWED, reviewed)
+            with patch.object(I, 'PLAN', current), patch.object(I, 'REVIEWED', reviewed):
+                original, maintained = I.verify_reviewed()
+                self.assertEqual({name for name in original if original[name] != maintained[name]}, I.MAINTAINED_FILES)
+                manifest = current / 'reviewed-SHA256SUMS'
+                saved = manifest.read_bytes()
+                try:
+                    manifest.write_bytes(saved.replace(b'1464e959', b'2464e959', 1))
+                    with self.assertRaisesRegex(ValueError, 'Original reviewed manifest changed'):
+                        I.verify_reviewed()
+                finally:
+                    manifest.write_bytes(saved)
+                # A fresh maintenance hash cannot bless a change to reviewed SQL.
+                sql = reviewed / 'candidate-migration.sql'
+                sql.write_bytes(sql.read_bytes() + b'-- forbidden drift\n')
+                import hashlib
+                maintenance = current / 'maintained-reviewed-SHA256SUMS'
+                maintenance.write_text(maintenance.read_text().replace(
+                    maintained[sql.name], hashlib.sha256(sql.read_bytes()).hexdigest()))
+                with self.assertRaisesRegex(ValueError, 'exact workflow-only scope'):
+                    I.verify_reviewed()
+
+    def test_35_either_preflight_failure_stops_runtime_and_preserves_log(self):
+        workflow = (PLAN.parents[2] / '.github/workflows/pricing-rpc-authenticated.yml').read_text()
+        run = workflow.split('        run: |\n', 1)[1].split('      - name:', 1)[0]
+        commands = '\n'.join(line[10:] for line in run.splitlines())
+        for failing in ('pricing-crm-trigger', 'pricing-rpc-authenticated'):
+            with self.subTest(failing=failing), tempfile.TemporaryDirectory(prefix='pricing-preflight-', dir=PLAN.parents[2]) as tmp:
+                root = Path(tmp)
+                fake_bin = root / 'fake-bin'
+                fake_bin.mkdir()
+                python = fake_bin / 'python3'
+                python.write_text('#!/bin/sh\nprintf "mock %s\\n" "$2"\ncase "$2" in *"$FAIL_PACKAGE/test-orchestration.py") exit 42;; esac\n')
+                python.chmod(0o700)
+                runtime = root / 'scripts/ci/pricing-rpc-authenticated/run-ci.sh'
+                runtime.parent.mkdir(parents=True)
+                runtime.write_text('#!/bin/sh\ntouch runtime-incorrectly-started\n')
+                env = dict(os.environ, PATH=str(fake_bin) + ':' + os.environ['PATH'], FAIL_PACKAGE=failing)
+                result = subprocess.run(['/bin/bash', '-e', '-o', 'pipefail', '-c', commands],
+                                        cwd=root, env=env, capture_output=True, text=True)
+                self.assertEqual(result.returncode, 42, result.stderr)
+                lines = (root / 'pricing-auth-preflight.log').read_text().splitlines()
+                expected = ['mock scripts/ci/pricing-crm-trigger/test-orchestration.py']
+                if failing == 'pricing-rpc-authenticated':
+                    expected.append('mock scripts/ci/pricing-rpc-authenticated/test-orchestration.py')
+                self.assertEqual(lines, expected)
+                self.assertFalse((root / 'runtime-incorrectly-started').exists())
 
 
 
