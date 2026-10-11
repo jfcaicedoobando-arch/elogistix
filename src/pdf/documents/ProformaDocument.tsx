@@ -24,12 +24,15 @@ interface Props {
   emisor?: EmisorInfo;
 }
 
+function TituloConceptos({ porContenedor }: { porContenedor: boolean }) {
+  return <Text style={[styles.h3, { marginTop: 10, marginBottom: 6 }]} minPresenceAhead={porContenedor ? 200 : 140}>
+    {porContenedor ? "Conceptos por Contenedor" : "Conceptos"}
+  </Text>;
+}
+
 export function ProformaDocument({ proforma, embarque, conceptos, cliente, tasaIva = TASA_IVA, emisor }: Props) {
   const usd = conceptos.filter((c) => c.moneda === "USD");
   const mxn = conceptos.filter((c) => c.moneda === "MXN");
-  // Subtítulo de moneda sólo cuando conviven USD y MXN.
-  const multiMoneda = usd.length > 0 && mxn.length > 0;
-
   // B-4: detectar si la proforma cubre N contenedores reales para activar el agrupamiento.
   const idsUnicos = new Set(
     conceptos.map((c) => c.embarque_contenedores?.id).filter((x): x is string => Boolean(x)),
@@ -58,22 +61,26 @@ export function ProformaDocument({ proforma, embarque, conceptos, cliente, tasaI
     });
   }
 
+  // Subtítulo de moneda sólo cuando conviven USD y MXN.
+  const multiMoneda = bloquesTotales.length > 1;
+  const tituloConceptos = <TituloConceptos porContenedor={multiContenedor} />;
+
+  const cierreConceptos = <>
+    {hayPorConfirmar ? <Text style={[styles.notice, { marginTop: 6 }]}>{AVISO_IVA_POR_CONFIRMAR}</Text> : null}
+    <TotalesBox bloques={bloquesTotales} />
+  </>;
 
   return (
     <Document title={`${proforma.numero} - Proforma`} author={emisor?.organizacionNombre || emisor?.razonSocial || "Empresa"}>
       <Page size="LETTER" style={styles.page}>
         <ProformaHeader proforma={proforma} cliente={cliente ?? null} embarque={embarque} esConsolidada={false} emisor={emisor} />
-        {/*
-          El título nunca queda huérfano (minPresenceAhead propio) y los bloques
-          de conceptos fluyen libremente: no se envuelve todo en un contenedor
-          con minPresenceAhead grande, que provocaba saltos de página completos.
-        */}
-        <Text style={[styles.h3, { marginTop: 10, marginBottom: 6 }]} minPresenceAhead={140}>
-          {multiContenedor ? "Conceptos por Contenedor" : "Conceptos"}
-        </Text>
+        {/* Sections keep only height-bounded groups together. Oversized
+            descriptions must remain free to flow across pages. */}
         <SeccionMonedaPdf
           grupos={grupos}
           moneda="USD"
+          encabezado={tituloConceptos}
+          afterLastRow={mxn.length === 0 ? cierreConceptos : undefined}
           tasaIva={tasaIva}
           multiContenedor={multiContenedor}
           mostrarSubtituloMoneda={multiMoneda}
@@ -81,22 +88,18 @@ export function ProformaDocument({ proforma, embarque, conceptos, cliente, tasaI
         <SeccionMonedaPdf
           grupos={grupos}
           moneda="MXN"
+          encabezado={usd.length === 0 ? tituloConceptos : undefined}
+          afterLastRow={cierreConceptos}
           tasaIva={tasaIva}
           multiContenedor={multiContenedor}
           mostrarSubtituloMoneda={multiMoneda}
         />
 
-        {conceptos.length === 0 ? <Text style={styles.emptyState}>Sin conceptos para mostrar.</Text> : null}
-
-        {/* P1 · Auditoría IVA: si algún renglón sigue sin clasificar, el total
-            impreso es estimado y se dice explícitamente. */}
-        {hayPorConfirmar ? (
-          <Text style={[styles.notice, { marginTop: 6 }]}>{AVISO_IVA_POR_CONFIRMAR}</Text>
-        ) : null}
-
-        {/* La caja de totales es indivisible (wrap=false) y sólo salta de
-            página si realmente no cabe completa. */}
-        <TotalesBox bloques={bloquesTotales} />
+        {bloquesTotales.length === 0 ? <>
+          {tituloConceptos}
+          {conceptos.length === 0 ? <Text style={styles.emptyState}>Sin conceptos para mostrar.</Text> : null}
+          {cierreConceptos}
+        </> : null}
         <NotasSection notas={proforma.notas} />
 
 

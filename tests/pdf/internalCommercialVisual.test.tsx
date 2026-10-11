@@ -6,6 +6,7 @@ import { ProformaDocument } from "@/pdf/documents/ProformaDocument";
 import { ProformaConsolidadaDocument } from "@/pdf/documents/ProformaConsolidadaDocument";
 import { EstadoCuentaDocument } from "@/pdf/documents/EstadoCuentaDocument";
 import { inspectPdf } from "./inspectPdf";
+import { pdfWordBounds } from "./inspectPdfLayout";
 import { concepto, cotizacion, embarque, proforma } from "./fixtures";
 
 const emisor = { razonSocial: "Logística de ejemplo", subtitulo: "Muestra visual · Datos sintéticos", contacto: "operaciones@example.test" };
@@ -76,6 +77,15 @@ describe("diseño comercial: renderer real y datos sintéticos", () => {
       conceptos={[concepto(1, { descripcion: `Referencia ${identificador}` })]} emisor={emisor} />);
     expect(pdf.rawText.replace(/\s/g, "")).toContain(identificador);
     expect(pdf.text).toContain("MXN 1,160.00");
+    const words = pdfWordBounds("diseno-proforma-identificador-largo");
+    const heading = words.find(word => word.text === "Conceptos");
+    const first = words.find(word => word.text === "Referencia");
+    const totals = words.find(word => word.text === "Subtotal");
+    expect(heading).toBeDefined();
+    expect(first).toBeDefined();
+    expect(totals).toBeDefined();
+    expect(heading?.page).toBe(first?.page);
+    expect(totals?.page).toBe(first?.page);
   });
 
 });

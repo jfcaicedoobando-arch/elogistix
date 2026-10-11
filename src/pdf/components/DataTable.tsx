@@ -31,6 +31,8 @@ interface Props<T> {
   cellStyleForRow?: (row: T, colKey: string) => Style | undefined;
   /** Keep a following summary with the final data row, never on its own page. */
   afterLastRow?: ReactNode;
+  /** Opt-in fallback for rows whose content cannot safely fit on one page. */
+  allowRowWrap?: (row: T) => boolean;
 }
 
 /**
@@ -39,15 +41,15 @@ interface Props<T> {
  * la legibilidad.
  *
  * Tipografía defensiva (12.61.9):
- * - Cada fila y su nota se mantienen juntas (`wrap={false}`); los Text
- *   internos sí permiten varias líneas. La fila completa salta de página
- *   cuando no cabe, sin separar la descripción de sus importes.
+ * - Por defecto cada fila y su nota se mantienen juntas; los Text internos
+ *   permiten varias líneas. Un consumidor puede habilitar allowRowWrap para
+ *   contenido que excede un presupuesto acotado y debe continuar sin recortes.
  * - Las columnas numéricas (`cellNum`, `cellNumWide`, `cellQty`) usan
  *   `flexGrow: 0` + `flexShrink: 0` en `styles.ts` → ancho INVIOLABLE: nunca
  *   serán empujadas ni comprimidas por una celda `cellDesc` con texto largo.
  * - `cellDesc` usa `minWidth: 0` para garantizar wrap real en flex.
  */
-export function DataTable<T>({ columns, rows, headerTextStyle, renderSubrow, cellStyleForRow, afterLastRow }: Props<T>) {
+export function DataTable<T>({ columns, rows, headerTextStyle, renderSubrow, cellStyleForRow, afterLastRow, allowRowWrap }: Props<T>) {
   return (
     <View style={styles.table}>
       {/*
@@ -68,9 +70,9 @@ export function DataTable<T>({ columns, rows, headerTextStyle, renderSubrow, cel
         const subrow = renderSubrow?.(row);
         const rowStyle = i % 2 === 1 ? styles.tableRowZebra : styles.tableRow;
         return (
-          // v13.823.77: la fila (con su nota) no se parte entre páginas; antes
-          // la descripción quedaba en una hoja y los importes en la siguiente.
-          <View key={i} wrap={false}>
+          // Ordinary rows remain indivisible; explicit oversized-row fallback
+          // allows description, subrow and closing content to flow safely.
+          <View key={i} wrap={allowRowWrap?.(row) ?? false}>
             <View style={rowStyle}>
               {columns.map((col) => (
                 <Text key={col.key} style={[styles.td, ...flat(col.cellStyle), ...flat(cellStyleForRow?.(row, col.key))]}

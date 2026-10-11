@@ -2,13 +2,14 @@
  * PDF del libro maestro de pagos (Tesorería → Pagos).
  * Lista de cobros de clientes, pagos a proveedores y anticipos del periodo.
  */
-import { Document, Page, Text } from "@react-pdf/renderer";
+import { Document, Page, Text, View } from "@react-pdf/renderer";
 import { styles } from "@/pdf/theme/styles";
 import { ReportHeader } from "@/pdf/components/ReportHeader";
 import type { EmisorInfo } from "@/pdf/components/BrandHeader";
 import { ReportSummary } from "@/pdf/components/ReportSummary";
 import { Footer } from "@/pdf/components/Footer";
 import { DataTable, type PdfColumn } from "@/pdf/components/DataTable";
+import { textRowBudget } from "@/pdf/text/rowLayoutBudget";
 
 /** Fila ya formateada (contrato local del PDF, sin depender del feature). */
 export interface FilaLibroPagosExport {
@@ -59,7 +60,26 @@ const cols: PdfColumn<FilaLibroPagosExport>[] = [
   { key: "estado", title: "Conciliación", cellStyle: COL_ESTADO, render: (r) => r.estado },
 ];
 
+function paymentRowCanFlow(row: FilaLibroPagosExport): boolean {
+  // At most 180pt for an indivisible row leaves room for the two-row summary
+  // and repeated headings within the 516pt landscape content area.
+  return Object.values(row).some(value => textRowBudget(value, 3) > 180);
+}
+
 export function LibroPagosDocument({ resumen, filas, emisor }: Props) {
+  const summaryCanFlow = [resumen.cobrado, resumen.pagado, resumen.devuelto ?? "—", resumen.neto, resumen.conteo]
+    .some(value => textRowBudget(value, 12) > 66);
+  const resumenFinal = (
+    <View wrap={summaryCanFlow}>
+    <ReportSummary columns={3} items={[
+      { label: "Total cobrado (MXN):", value: resumen.cobrado },
+      { label: "Total pagado (MXN):", value: resumen.pagado },
+      { label: "Devoluciones (MXN):", value: resumen.devuelto ?? "—" },
+      { label: "Neto (MXN):", value: resumen.neto },
+      { label: "Pagos incluidos:", value: resumen.conteo },
+    ]} />
+    </View>
+  );
   return (
     <Document title="Libro de pagos" author={emisor?.organizacionNombre || emisor?.razonSocial || "Libre Carga"}>
       <Page size="LETTER" orientation="landscape" style={styles.page}>
@@ -81,20 +101,15 @@ export function LibroPagosDocument({ resumen, filas, emisor }: Props) {
         ]} />
 
         {filas.length === 0 ? (
-          <Text style={styles.emptyState}>
-            No hay pagos registrados en el periodo seleccionado.
-          </Text>
+          <>
+            <Text style={styles.emptyState}>
+              No hay pagos registrados en el periodo seleccionado.
+            </Text>
+            {resumenFinal}
+          </>
         ) : (
-          <DataTable columns={cols} rows={filas} />
+          <DataTable columns={cols} rows={filas} allowRowWrap={paymentRowCanFlow} afterLastRow={resumenFinal} />
         )}
-
-        <ReportSummary columns={3} items={[
-          { label: "Total cobrado (MXN):", value: resumen.cobrado },
-          { label: "Total pagado (MXN):", value: resumen.pagado },
-          { label: "Devoluciones (MXN):", value: resumen.devuelto ?? "—" },
-          { label: "Neto (MXN):", value: resumen.neto },
-          { label: "Pagos incluidos:", value: resumen.conteo },
-        ]} />
 
         <Footer emisor={emisor} empresaNombre={emisor?.razonSocial} />
       </Page>
