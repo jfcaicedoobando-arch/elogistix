@@ -16,6 +16,25 @@ const leer = (rel: string): string =>
 const ci = leer(".github/workflows/ci.yml");
 const e2e = leer(".github/workflows/e2e.yml");
 
+describe("ci.yml - reporte comprimido informativo de Vite", () => {
+  it("lo desactiva sólo en el paso Build y conserva ANALYZE=false", () => {
+    const build = ci.match(
+      / {6}- name: Build \(sin ANALYZE\)\n([\s\S]*?)(?=\n {6}- name:)/,
+    )?.[1] ?? "";
+    expect(build).toContain("if: needs.detector.outputs.frontend == 'true'");
+    expect(build).toMatch(
+      /env:\n {10}ANALYZE: "false"\n {10}CI_REPORT_COMPRESSED_SIZE: "false"\n {8}run: bun run build/,
+    );
+    expect(ci.match(/CI_REPORT_COMPRESSED_SIZE/g)).toHaveLength(1);
+  });
+
+  it("Vite conserva el reporte por defecto y sólo false explícito lo desactiva", () => {
+    expect(leer("vite.config.ts")).toMatch(
+      /reportCompressedSize:\s*process\.env\.CI_REPORT_COMPRESSED_SIZE !== "false"/,
+    );
+  });
+});
+
 describe("ci.yml · bundle size gate", () => {
   it("ejecuta scripts/check-bundle-size.sh", () => {
     expect(ci).toContain("bash scripts/check-bundle-size.sh");
