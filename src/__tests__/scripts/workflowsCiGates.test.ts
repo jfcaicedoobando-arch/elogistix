@@ -130,11 +130,11 @@ describe("docs de shards", () => {
     expect(ci).toContain("if: always()");
   });
 
-  it("usa ocho shards por defecto y conserva dos workers con aislamiento", () => {
+  it("usa catorce shards por defecto y conserva dos workers con aislamiento", () => {
     const input = ci.match(/ {6}vitest_shards:\n([\s\S]*?)(?=\n {6}vitest_max_parallel:)/)?.[1] ?? "";
     expect(input).toContain('options: ["5", "8", "10", "14"]');
-    expect(input).toContain('default: "8"');
-    expect(leer("scripts/ci/vitest-shard-plan.mjs")).toContain("DEFAULT_SHARD_COUNT = 8");
+    expect(input).toContain('default: "14"');
+    expect(leer("scripts/ci/vitest-shard-plan.mjs")).toContain("DEFAULT_SHARD_COUNT = 14");
     const shared = leer("vitest.shared.ts");
     expect(shared).toContain("MAX_WORKERS = process.env.CI ? 2 : LOCAL_FORKS");
     expect(shared).toContain('pool: "forks"');

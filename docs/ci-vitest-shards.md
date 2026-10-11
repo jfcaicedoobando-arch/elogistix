@@ -5,8 +5,8 @@ Fuente: `ci.yml`, `vitest.config.ts`, `vitest.shared.ts`.
 
 ## Configuración vigente
 
-- Ocho shards, `max-parallel: 8`, sin coverage/retry/blobs en CI principal.
-- Manual permite 5/8/10/14; diez y catorce son ensayos de tiempo y no cambian el default.
+- Catorce shards, `max-parallel: 14`, sin coverage/retry/blobs en CI principal.
+- Manual permite 5/8/10/14; PR/push y el input manual usan catorce por defecto.
 - Proyectos node/jsdom con `extends: false` y opciones explícitas.
 - `pool: forks`, aislamiento por archivo; límite `MAX_WORKERS=2` en CI.
 - Heap de workers: 8192 MB CI, 4096 MB local; no es reserva de RAM.
@@ -16,7 +16,7 @@ Fuente: `ci.yml`, `vitest.config.ts`, `vitest.shared.ts`.
 
 No deducir “cuatro forks activos” ni RSS multiplicando proyectos por workers:
 la concurrencia efectiva se mide. Más runners pueden aumentar el consumo total;
-no hay una comparación validada que acredite ahorro o menor latencia con ocho.
+no hay una comparación validada que acredite ahorro o menor latencia sostenida con catorce.
 
 ## Experimento controlado 5/8
 
@@ -28,13 +28,18 @@ No se incorporan el piloto de PR232/PR238 ni sondas OS. Siguen sin validar la
 comparación de latencia, consumo, estabilidad y presión de 5/8 dentro de los
 20 jobs compartidos. La decisión no implica una mejora medida.
 
-## Ensayo manual 10/14
+## Decisión de catorce y ensayo manual 10/14
 
 El [procedimiento 10/14](ci-shard-benchmark.md#ensayo-de-tiempo-1014-manual-default-intacto)
 conserva el mismo SHA/ref y ejecución secuencial. Catorce implica 18 jobs totales
 y pico estructural de 16; con presupuesto compartido de 20 y reserva de 2,
-quedan como máximo 2 slots externos. No cambia ocho automático ni demuestra
-una mejora sostenida con una sola pareja.
+quedan como máximo 2 slots externos. El default sube de ocho a catorce por
+solicitud explícita del usuario el 2026-10-11, no por validación estadística.
+Una pareja no demuestra estabilidad ni mejora sostenida. El analizador conserva
+el mínimo de diez muestras por configuración y sus gates; no se rebaja para
+justificar esta decisión. Dos CI completos pueden exceder los 20 slots: la
+matriz no reserva capacidad global y otros workflows/repositorios pueden
+introducir colas. Conservar ese efecto en las mediciones, sin eludir gates.
 
 ## Ensayo manual 8/10
 
