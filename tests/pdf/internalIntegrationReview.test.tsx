@@ -151,7 +151,7 @@ describe("Linux integration: row identity, currency and geometry in real PDFs", 
       { marker: "ROWCOMPACTAFTER", description: "ROWCOMPACTAFTER", container: "LINUXBOXA", currency: "USD", quantity: 4, unit: 333.39 },
       { marker: "ROWNEXTBOX", description: "ROWNEXTBOX", container: "LINUXBOXB", currency: "USD", quantity: 5, unit: 444.41 },
       { marker: "ROWNEXTCURRENCY", description: "ROWNEXTCURRENCY", container: "LINUXBOXB", currency: "MXN", quantity: 6, unit: 555.53 },
-    ];
+    ] as const;
     const conceptos = specs.map((row, i) => concepto(i + 1, {
       descripcion: row.description, cantidad: row.quantity, precio_unitario: row.unit, total: row.quantity * row.unit,
       moneda: row.currency, aplica_iva: false, tasa_iva_aplicada: 0, tipo_iva: "no_objeto",
