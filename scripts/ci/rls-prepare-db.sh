@@ -117,7 +117,13 @@ omitidas_datos=0
 # declaran. Sólo se agregan migraciones SIN DDL.
 DATA_ONLY="supabase/schema/squash/data-only.txt"
 for f in $(printf '%s\n' supabase/migrations/*.sql | LC_ALL=C sort); do
-  base="$(basename "$f")"
+  # Avoid one subprocess per ordinary migration. Keep basename for any token
+  # outside the existing glob shape, preserving legacy word-splitting/errors.
+  if [[ "$f" == supabase/migrations/*.sql ]]; then
+    base="${f##*/}"
+  else
+    base="$(basename "$f")"
+  fi
   # El corte por timestamp no basta: hay migraciones creadas DESPUÉS del squash
   # con timestamp anterior al corte. La fuente de verdad es el inventario de
   # archivos incluidos en el squash.
