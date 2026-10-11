@@ -14,7 +14,14 @@ PR head `1f67a47e2ba6d95475a2ebf513ecbd0e8d65a4e2`, merged in
 
 `frozen-SHA256SUMS` pins all fourteen bounded files. `reviewed-SHA256SUMS` pins
 all nineteen original paired-runner files, including its own hash manifest.
-`verify-inputs.py` checks both original directories without altering them. This
+`reviewed-SHA256SUMS` is still the immutable original snapshot, pinned by its
+SHA-256 in `verify-inputs.py`; it is never regenerated to disguise maintenance.
+`maintained-reviewed-SHA256SUMS` separately pins the current paired-runner files
+after workflow consolidation from main `5761aa3a75a9b39ac1fdce06a8a9ca4d6fb0cdbe`.
+The verifier requires exactly four changed files: `README.md`, `tests.py`,
+`test-orchestration.py` and their `SHA256SUMS`. Every other reviewed file must
+still match the original digest. Evidence reports original and maintained
+files separately, with the maintenance base and changed-file list. This
 layer copies the original trigger migration, wizard/repeated-save snippets,
 load/revoke and final ACL SQL byte-for-byte; the input verifier enforces that
 identity. `reviewed-build-overlay.py` is the exact original builder, independently
@@ -77,11 +84,14 @@ production drift or multi-session concurrency.
 
 ## Isolation and execution
 
-Only the new `pricing-rpc-authenticated.yml` workflow invokes this layer. It has
+The consolidated `pricing-rpc-authenticated.yml` workflow invokes this layer.
+The redundant `pricing-rpc-bounded.yml` workflow has been removed: its 32
+candidate assertions are preserved here, plus 21 authenticated/compatibility
+assertions. The original packages and historical artifacts remain available. It has
 pull-request/path and manual triggers, read-only contents permission, no saved
 checkout credentials, no deployment environment and no secret references. The
-workflow first captures mocked orchestration preflight output with pipefail,
-then runs the actual isolated wrapper, and uploads preflight/runtime evidence
+workflow first captures both packages' mocked orchestration preflight output
+with pipefail (including their static tests), then runs the actual isolated wrapper, and uploads preflight/runtime evidence
 even on failure.
 
 The wrapper uses the same pinned official PostgreSQL 17 image, network none,

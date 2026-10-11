@@ -11,8 +11,12 @@ migration path describes the proposed forward fix, not an installed migration.
 Every file in `../pricing-rpc-bounded` is byte-for-byte frozen at PR #220 head
 `d1e94d2d45195e21a55b4d40970a8f0275d4a2af`, including the original scripts,
 provenance, notice contract and `SHA256SUMS`. `frozen-SHA256SUMS` additionally
-pins all fourteen files. The original workflow is replaced to run this separate
-contract; the frozen bundle itself is not changed or run directly.
+pins all fourteen files. The frozen bundle itself is not changed or run directly.
+The former `pricing-rpc-bounded.yml` workflow has been retired: the active
+`pricing-rpc-authenticated.yml` workflow preserves this baseline and every
+candidate assertion while adding authenticated-role and compatibility coverage.
+It runs both packages' static/orchestration contracts before one 27/53 SQL pair.
+This original 27/32 runner remains available as a regression fixture.
 
 Reviewed migration SHA-256:
 `25548288f0ca87b0cd458de65a0a5aa1ababd09e6be2e7f25763bf75540a1c74`.
@@ -53,9 +57,11 @@ another arm is created. The wrapper never converts an arbitrary exit 3 to green.
 
 ## Isolation and execution
 
-Only GitHub Actions can invoke `bash scripts/ci/pricing-crm-trigger/run-ci.sh`.
-The workflow has pull-request/path-filter and manual triggers only, read-only
-contents permission and nonpersisted checkout credentials. No deployment trigger,
+Only GitHub Actions can invoke `bash scripts/ci/pricing-crm-trigger/run-ci.sh`
+with real Docker. The consolidated workflow runs it only through the fake-Docker
+contract; actual SQL uses the authenticated superset runner. That workflow has
+pull-request/path-filter and manual triggers only, read-only contents permission
+and nonpersisted checkout credentials. No deployment trigger,
 production connection option, secret or arbitrary SQL input is accepted.
 
 Both arms use the existing repository-pinned official image:
@@ -84,11 +90,18 @@ GitHub disposable runner as the final boundary. Do not report such a run as pass
 `pricing-crm-trigger-evidence/` holds exact checkout commit/image, frozen/candidate
 hash manifests, deterministic overlays, both SQL logs, migration output,
 PostgreSQL client/server versions, checked Docker isolation/state, disposal results and the
-aggregate summary. The workflow first tees orchestration-preflight stdout/stderr
-into `pricing-crm-preflight.log`, outside the runtime evidence directory, with
-explicit pipefail. It uploads that log plus the runtime directory even on failure
-for 14 days, including when preflight fails before runtime creates its directory. It does not upload PGDATA or credentials. Artifact upload is a required
-job step; a local aggregate summary alone does not establish upload success.
+aggregate summary when this original wrapper runs. The consolidated workflow
+tees both packages' mocked orchestration output into `pricing-auth-preflight.log`
+with explicit pipefail, then uploads that log and `pricing-rpc-authenticated-evidence/`
+even on failure, for 14 days. It does not upload PGDATA or credentials. Artifact
+upload is a required job step; a local summary alone does not prove upload success.
+Previously produced artifacts are historical evidence and are not rewritten.
+
+The authenticated package preserves `reviewed-SHA256SUMS` as the original
+19-file snapshot. Its separate `maintained-reviewed-SHA256SUMS` records this
+package after workflow consolidation. Only this README, the two workflow-facing
+Python test files and their `SHA256SUMS` changed; SQL, builders, overlay contracts,
+runners and original frozen inputs retain the reviewed bytes.
 
 Run without a database or Docker:
 

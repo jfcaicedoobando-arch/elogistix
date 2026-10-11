@@ -328,11 +328,12 @@ class ContractTests(unittest.TestCase):
             self.assertNotIn(forbidden, host + arm)
 
     def test_21_workflow_is_ci_only(self):
-        workflow = (PLAN.parents[2] / '.github/workflows/pricing-rpc-bounded.yml').read_text()
+        workflow = (PLAN.parents[2] / '.github/workflows/pricing-rpc-authenticated.yml').read_text()
         for required in ('pull_request:', 'workflow_dispatch:', 'contents: read', 'persist-credentials: false',
-                         'if: always()', 'if-no-files-found: error', 'scripts/ci/pricing-crm-trigger/run-ci.sh',
-                         'set -o pipefail', '2>&1 | tee pricing-crm-preflight.log',
-                         'path: |\n            pricing-crm-preflight.log\n            pricing-crm-trigger-evidence/'):
+                         'if: always()', 'if-no-files-found: error', 'scripts/ci/pricing-rpc-authenticated/run-ci.sh',
+                         'scripts/ci/pricing-crm-trigger/test-orchestration.py',
+                         'set -o pipefail', '2>&1 | tee pricing-auth-preflight.log',
+                         'path: |\n            pricing-auth-preflight.log\n            pricing-rpc-authenticated-evidence/'):
             self.assertIn(required, workflow)
         for forbidden in ('push:', 'pull_request_target:', 'secrets.', 'continue-on-error:', 'supabase', 'environment:'):
             self.assertNotIn(forbidden, workflow)
@@ -353,7 +354,7 @@ class ContractTests(unittest.TestCase):
 
 
     def test_24_failed_preflight_keeps_artifact_log(self):
-        workflow = (PLAN.parents[2] / '.github/workflows/pricing-rpc-bounded.yml').read_text()
+        workflow = (PLAN.parents[2] / '.github/workflows/pricing-rpc-authenticated.yml').read_text()
         run = workflow.split('        run: |\n', 1)[1].split('      - name:', 1)[0]
         commands = '\n'.join(line[10:] for line in run.splitlines())
         with tempfile.TemporaryDirectory(prefix='crm-preflight-test-', dir=PLAN.parents[2]) as temp:
@@ -363,17 +364,17 @@ class ContractTests(unittest.TestCase):
             python = fake_bin / 'python3'
             python.write_text('#!/bin/sh\nprintf "mock preflight stdout\\n"\nprintf "mock preflight failure\\n" >&2\nexit 42\n')
             python.chmod(0o700)
-            runtime = root / 'scripts/ci/pricing-crm-trigger/run-ci.sh'
+            runtime = root / 'scripts/ci/pricing-rpc-authenticated/run-ci.sh'
             runtime.parent.mkdir(parents=True)
             runtime.write_text('#!/bin/sh\ntouch runtime-incorrectly-started\n')
             env = dict(os.environ, PATH=str(fake_bin) + ':' + os.environ['PATH'])
             result = subprocess.run(['/bin/bash', '-e', '-o', 'pipefail', '-c', commands],
                                     cwd=root, env=env, capture_output=True, text=True)
             self.assertEqual(result.returncode, 42)
-            self.assertEqual((root / 'pricing-crm-preflight.log').read_text(),
+            self.assertEqual((root / 'pricing-auth-preflight.log').read_text(),
                              'mock preflight stdout\nmock preflight failure\n')
             self.assertFalse((root / 'runtime-incorrectly-started').exists())
-            self.assertFalse((root / 'pricing-crm-trigger-evidence').exists())
+            self.assertFalse((root / 'pricing-rpc-authenticated-evidence').exists())
 
 
 if __name__ == '__main__':
