@@ -8,7 +8,7 @@ import { scanSecurityDefiner, type Violation } from "./audit-sql-signatures";
  */
 const REVIEWED_FORWARDS: ReadonlyMap<string, string> = new Map([
   ["20261009174000_cxp_centavo_sin_cobertura.sql", "d54365354a0dbbe59353247adead9f93d298f48a7a1b5796fb23045040a873be"],
-  ["20261011180000_proforma_cancelada_acciones_terminales.sql", "6bb7e0e039aa9057d541f53cc8f8b4d857948a225414fce1e65456b580e358f2"],
+  ["20261011180000_proforma_cancelada_acciones_terminales.sql", "8fa5e007826c8c5a004882ad34d54f922d440501290edb30fa408395d0778ea9"],
 ]);
 
 export function scanSecurityDefinerWithPreservedAcl(

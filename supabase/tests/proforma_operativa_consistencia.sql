@@ -134,7 +134,15 @@ BEGIN
     UPDATE public.proformas SET estado_proforma = 'cancelada' WHERE id = v_p;
     PERFORM pg_temp.assert_proforma(current_setting('app.bypass_cierre', true) IS NOT DISTINCT FROM v_guc,
       'cancellation preserves caller bypass value: ' || v_guc);
-    UPDATE public.proformas SET estado_proforma = 'pendiente' WHERE id = v_p;
+    -- Cancelled rows are terminal. Continue the next case with a new
+    -- accepted/approved fixture instead of resurrecting the historical row.
+    PERFORM pg_temp.assert_proforma((SELECT estado_proforma = 'cancelada' FROM public.proformas WHERE id = v_p),
+      'cancelled GUC fixture remains terminal: ' || v_guc);
+    v_p := gen_random_uuid();
+    INSERT INTO public.proformas(id, organization_id, embarque_id, cliente_id, cliente_nombre,
+      expediente, numero, estado_aprobacion, estado_cliente)
+    VALUES (v_p, v_org, v_e, v_cli, 'Synthetic proforma client', 'ELPCA90001',
+      'TEST-PROFORMA-GUC-' || v_p::text, 'aprobada', 'aceptada');
     PERFORM public.recompute_embarque_tiene_proforma(v_e);
     PERFORM public.liberar_conceptos_de_proforma(v_other);
     PERFORM pg_temp.assert_proforma(current_setting('app.bypass_cierre', true) IS NOT DISTINCT FROM v_guc,
@@ -195,7 +203,15 @@ BEGIN
   PERFORM pg_temp.assert_proforma_flag(v_e, true, 'accepted consolidated result');
   UPDATE public.proformas SET estado_proforma = 'cancelada' WHERE id = v_result;
   PERFORM pg_temp.assert_proforma_flag(v_e, false, 'cancelled consolidated result excludes both legacy markers');
-  UPDATE public.proformas SET estado_proforma = 'pendiente', deleted_at = clock_timestamp() WHERE id = v_result;
+  -- Deletion/restoration is a separate valid result; the cancelled result
+  -- and its archived sources retain their historical identities.
+  v_result := gen_random_uuid();
+  INSERT INTO public.proformas(id, organization_id, embarque_id, cliente_id, cliente_nombre,
+    expediente, numero, estado_aprobacion, es_consolidada, proformas_origen)
+  VALUES (v_result, v_org, v_e, v_cli, 'Synthetic proforma client', 'ELPCA90001',
+    'TEST-PROFORMA-CONSOLIDATED-DELETE', 'aprobada', true, ARRAY[v_original1, v_original2]);
+  PERFORM pg_temp.assert_proforma_flag(v_e, true, 'new consolidated deletion fixture is operative');
+  UPDATE public.proformas SET deleted_at = clock_timestamp() WHERE id = v_result;
   PERFORM pg_temp.assert_proforma_flag(v_e, false, 'deleted consolidated result excludes originals');
   PERFORM pg_temp.assert_proforma(NOT EXISTS (
     SELECT 1 FROM public.proformas p WHERE id IN (v_original1, v_original2)
@@ -229,6 +245,7 @@ DECLARE
   v_org uuid := gen_random_uuid(); v_cli uuid := gen_random_uuid(); v_uid uuid := gen_random_uuid();
   v_e uuid := gen_random_uuid(); v_p uuid := gen_random_uuid(); v_cv uuid := gen_random_uuid();
   v_unlinked uuid := gen_random_uuid(); v_snapshot jsonb; v_p_snapshot jsonb;
+  v_next uuid := gen_random_uuid(); v_next_cv uuid := gen_random_uuid(); v_cancelled_p uuid;
   v_portal uuid := gen_random_uuid(); v_token uuid := gen_random_uuid(); v_portal_cv uuid := gen_random_uuid();
   v_error text; v_sql text;
 BEGIN
@@ -248,6 +265,14 @@ BEGIN
   INSERT INTO public.conceptos_venta(id, organization_id, embarque_id, proforma_id, descripcion, estado_facturacion)
   VALUES (v_cv, v_org, v_e, v_p, 'Approved service', 'en_proforma'),
          (v_unlinked, v_org, v_e, NULL, 'Unlinked service', 'pendiente');
+  -- Prepare the independent continuation before closure. Rejected fixtures
+  -- are nonoperative until a normal accepted response activates them.
+  INSERT INTO public.proformas(id, organization_id, embarque_id, cliente_id, cliente_nombre,
+    expediente, numero, estado_aprobacion, estado_cliente)
+  VALUES (v_next, v_org, v_e, v_cli, 'Synthetic closure client', 'ELPCC90003',
+    'TEST-PROFORMA-CLOSED-NEXT', 'aprobada', 'rechazada');
+  INSERT INTO public.conceptos_venta(id, organization_id, embarque_id, proforma_id, descripcion, estado_facturacion)
+  VALUES (v_next_cv, v_org, v_e, v_next, 'Next closure service', 'en_proforma');
   INSERT INTO public.proformas(id, organization_id, embarque_id, cliente_id, cliente_nombre,
     expediente, numero, estado_aprobacion, estado_cliente, token_publico, token_expira_at)
   VALUES (v_portal, v_org, v_e, v_cli, 'Synthetic closure client', 'ELPCC90003',
@@ -271,13 +296,18 @@ BEGIN
     'derived return from facturada propagates on closed shipment');
   UPDATE public.proformas SET estado_proforma = 'cancelada' WHERE id = v_p;
   PERFORM pg_temp.assert_proforma_flag(v_e, false, 'closed shipment flag can clear');
-  UPDATE public.proformas SET estado_proforma = 'pendiente' WHERE id = v_p;
+  v_cancelled_p := v_p;
+  UPDATE public.proformas SET estado_cliente = 'aceptada' WHERE id = v_next;
+  v_p := v_next;
+  v_cv := v_next_cv;
   PERFORM pg_temp.assert_proforma_flag(v_e, true, 'closed shipment flag can become true');
+  PERFORM pg_temp.assert_proforma((SELECT estado_proforma = 'cancelada' FROM public.proformas WHERE id = v_cancelled_p),
+    'closed historical proforma stays cancelled when another proforma becomes operative');
   PERFORM public.recompute_embarque_tiene_proforma(v_e);
   PERFORM pg_temp.assert_proforma(current_setting('app.bypass_cierre', true) = 'off', 'flag maintenance restores bypass');
   PERFORM pg_temp.assert_proforma((SELECT cerrado_snapshot = v_snapshot AND estado::text = 'Cerrado'
     FROM public.embarques WHERE id = v_e), 'derived maintenance preserves closure snapshot/state');
-  PERFORM pg_temp.assert_proforma((SELECT snapshot_emision = v_p_snapshot FROM public.proformas WHERE id = v_p),
+  PERFORM pg_temp.assert_proforma((SELECT snapshot_emision = v_p_snapshot FROM public.proformas WHERE id = v_cancelled_p),
     'derived updates preserve invoiced proforma snapshot');
 
   PERFORM public.actualizar_estado_cliente_proforma(v_p, 'rechazada', 'Synthetic valid manual rejection');

@@ -2,7 +2,8 @@
 -- Sólo reemisiones completas, sin backfill, GRANT/REVOKE, roles, RLS ni versión.
 -- H6 requiere revisión explícita de preservación de ACL antes de integración.
 BEGIN;
--- Reconstruction r1: fail on reviewed catalog drift without rewriting ACL.
+-- Accept only reviewed catalog profiles, without rewriting any ACL.
+-- Hosted trigger differs only by explicit service_role EXECUTE; no other superset is allowed.
 DO $catalog$
 BEGIN
   IF EXISTS (
@@ -22,7 +23,14 @@ BEGIN
       OR p.prosecdef IS DISTINCT FROM expected.security_definer
       OR p.proconfig IS DISTINCT FROM ARRAY['search_path=public']::text[]
       OR p.proacl IS NULL
-      OR NOT (p.proacl @> expected.acl AND p.proacl <@ expected.acl)
+      OR NOT (
+        (p.proacl @> expected.acl AND p.proacl <@ expected.acl)
+        OR (
+          expected.signature = 'public.enforce_proforma_aceptada_before_factura()'
+          AND p.proacl @> '{=X/postgres,postgres=X/postgres,authenticated=X/postgres,service_role=X/postgres}'::aclitem[]
+          AND p.proacl <@ '{=X/postgres,postgres=X/postgres,authenticated=X/postgres,service_role=X/postgres}'::aclitem[]
+        )
+      )
   ) THEN
     RAISE EXCEPTION 'PROFORMA_CANCELADA_CATALOG: owner, ACL, security o search_path inesperado';
   END IF;
@@ -30,6 +38,8 @@ END $catalog$;
 CREATE TEMP TABLE proforma_cancelada_metadata ON COMMIT DROP AS
 SELECT p.oid, p.proowner, p.proacl, p.prosecdef, p.proconfig, p.prorettype, p.proargtypes
 FROM pg_proc p WHERE p.oid IN (to_regprocedure('public.actualizar_estado_cliente_proforma(uuid,text,text)'),to_regprocedure('public.aceptar_proforma_sin_autorizacion(uuid)'),to_regprocedure('public.portal_responder_por_token(uuid,text,text)'),to_regprocedure('public.portal_responder_proforma(uuid,text,text)'),to_regprocedure('public.portal_obtener_proforma_por_token(uuid)'),to_regprocedure('public.convertir_proformas_a_factura(uuid[],uuid,text,text,text,integer,text,uuid)'),to_regprocedure('public.consolidar_proformas(uuid,uuid,text,text,text,text,integer,uuid,uuid[],numeric,uuid)'),to_regprocedure('public.enforce_proforma_aceptada_before_factura()'),to_regprocedure('public.tg_facturas_link_proforma()'));
+-- Portal historical hash e227680fb6411452fd5cb9e76569271e is the exact
+-- 20260901001100_fix4_n2_portal_proforma_dual.sql body (before three IVA keys).
 DO $preconditions$
 BEGIN
   IF EXISTS (SELECT 1 FROM (VALUES
@@ -37,7 +47,7 @@ BEGIN
     ('public.aceptar_proforma_sin_autorizacion(uuid)',ARRAY['0cf68ea6af69a06fbf48862c8c10cd97','41acd4ab7f44c12583ccc839c4adaa59']::text[]),
     ('public.portal_responder_por_token(uuid,text,text)',ARRAY['dcb1be5d4200ba1b04a60f872fc87903']::text[]),
     ('public.portal_responder_proforma(uuid,text,text)',ARRAY['63c6115450141e0b35484e15be9cc16c','af29cbfafaa52091226eda48093bbe67']::text[]),
-    ('public.portal_obtener_proforma_por_token(uuid)',ARRAY['25ba9161d88024aa5f2fd264e23fbead','f482966df0eea4e2fb76c7ca7556d309']::text[]),
+    ('public.portal_obtener_proforma_por_token(uuid)',ARRAY['25ba9161d88024aa5f2fd264e23fbead','f482966df0eea4e2fb76c7ca7556d309','e227680fb6411452fd5cb9e76569271e']::text[]),
     ('public.convertir_proformas_a_factura(uuid[],uuid,text,text,text,integer,text,uuid)',ARRAY['2a214d577eb545ce47d9719ef6f5cdae','7115fa88a7e0a120d27a4a472e535236','aa69f15ed4144558b9e65056befd6707']::text[]),
     ('public.consolidar_proformas(uuid,uuid,text,text,text,text,integer,uuid,uuid[],numeric,uuid)',ARRAY['be1be413cfa975274adf55957f70834c']::text[]),
     ('public.enforce_proforma_aceptada_before_factura()',ARRAY['0b957944151354e2d1eb67467f3882b0']::text[]),
