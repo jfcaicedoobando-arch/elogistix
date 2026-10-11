@@ -96,6 +96,8 @@ export default defineConfig(({ mode }) => {
     },
   },
   build: {
+    // CI usa su gate gzip; omitir sólo el reporte informativo de Vite.
+    reportCompressedSize: process.env.CI_REPORT_COMPRESSED_SIZE !== "false",
     // 'hidden' genera .map sin agregar // sourceMappingURL en los .js, así los
     // browsers no los descargan aunque queden en dist. El plugin de Sentry los
     // sube y luego los borra (filesToDeleteAfterUpload).

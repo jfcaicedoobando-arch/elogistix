@@ -187,6 +187,7 @@ jobs:
         if: needs.detector.outputs.frontend == 'true'
         env:
           ANALYZE: "false"
+          CI_REPORT_COMPRESSED_SIZE: "false"
         run: bun run build
 
       # Bundle-size gate (P1 auditoría): el script ya existía pero NINGÚN
