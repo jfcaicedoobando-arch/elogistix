@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { ProformaDocument } from "@/pdf/documents/ProformaDocument";
+import type { EmbarqueLite } from "@/pdf/documents/proformaShared";
 import { inspectPdf } from "./inspectPdf";
 import { pdfWordBounds } from "./inspectPdfLayout";
 import { concepto, embarque, proforma } from "./fixtures";
@@ -10,7 +11,7 @@ const corta = { ...proforma, numero: "PRO-PAGINACION-0012", fecha_emision: "2026
   operador: "operaciones@example.test", dias_credito: null, notas,
   subtotal_usd: 0, iva_usd: 0, total_usd: 0,
   subtotal_mxn: 3066.66, iva_mxn: 490.6656, total_mxn: 3557.3256 };
-const viaje = { ...embarque, modo: "Terrestre", tipo: "Nacional", incoterm: "N/A",
+const viaje: EmbarqueLite = { ...embarque, modo: "Terrestre", tipo: "Nacional", incoterm: "N/A",
   puerto_origen: null, puerto_destino: null, ciudad_origen: "Santa Catarina, Nuevo León",
   ciudad_destino: "Apodaca, Nuevo León", descripcion_mercancia: "12 tarimas de piezas de acero para planta industrial en Apodaca" };
 const cliente = { nombre: "Cliente industrial de prueba", rfc: "XAXX010101000",
@@ -107,8 +108,9 @@ describe("PDF real: cierre de proforma con notas", () => {
 
   it("grupo en el presupuesto límite, dos monedas y avisos permanecen dentro de la página", async () => {
     const name = "proforma-notas-limite";
+    // NaN represents an unknown numeric VAT rate and preserves the estimated-VAT path.
     const rows = [concepto(1, { moneda: "USD", aplica_iva: false, tasa_iva_aplicada: 0, tipo_iva: "no_objeto", descripcion: "CargoUSD", embarque_contenedores: { id: "a", numero_contenedor: "DEMO0000001", tipo_contenedor: "40HC" } }),
-      concepto(2, { descripcion: Array.from({ length: 19 }, (_, i) => `Línea${i + 1}`).join("\n"), tipo_iva: null, tasa_iva_aplicada: null, embarque_contenedores: { id: "b", numero_contenedor: "DEMO0000002", tipo_contenedor: "40HC" } })];
+      concepto(2, { descripcion: Array.from({ length: 19 }, (_, i) => `Línea${i + 1}`).join("\n"), tipo_iva: null, tasa_iva_aplicada: Number.NaN, embarque_contenedores: { id: "b", numero_contenedor: "DEMO0000002", tipo_contenedor: "40HC" } })];
     const notes = "WWWW entrega de mercancía con coordinación documental y revisión de condiciones operativas para evitar demoras. Confirmar disponibilidad de recepción antes del traslado al almacén.";
     const pdf = await inspectPdf(name, <ProformaDocument proforma={{ ...corta, notas: notes }} embarque={viaje} conceptos={rows} emisor={emisor} />);
     expect(pdf.text).toContain("Línea19");

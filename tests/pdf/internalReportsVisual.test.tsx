@@ -1,4 +1,3 @@
-import type { ReactElement } from "react";
 import { describe, expect, it } from "vitest";
 import { EstadoCuentaProveedorDocument } from "@/pdf/documents/EstadoCuentaProveedorDocument";
 import { EstadoCuentaBancarioDocument } from "@/pdf/documents/EstadoCuentaBancarioDocument";
@@ -56,7 +55,7 @@ const pago: FilaLibroPagosExport = {
 };
 const resumenPagos = { periodo: "01/10/2026 - 06/10/2026", cobrado: "MXN 1,234,567.89", pagado: "MXN 161,883.33", devuelto: "MXN 0.03", neto: "MXN 1,072,684.56", conteo: "1" };
 const rentabilidadKpis = { total_venta_usd: 1234567.89, total_costo_usd: 234567.89, total_profit_usd: 1000000, margen_promedio: 81 };
-const casos: Array<{ name: string; document: ReactElement; expected: string[] }> = [
+const casos: Array<{ name: string; document: Parameters<typeof inspectPdf>[1]; expected: string[] }> = [
   { name: "proveedor", document: <EstadoCuentaProveedorDocument proveedorNombre="Proveedor de Querétaro" rfc="AAA010101AAA" desde="2026-10-01" hasta="2026-10-06" emisor={emisor}
     movimientos={[{ fecha: "2026-10-06", tipo: "Factura", folio: "FP-última", expediente: "EXP-01", referencia: "Última referencia", moneda: "USD", cargo: "8750.45", abono: "0", saldo: "8750.45" }]}
     aging={[{ moneda: "USD", etiqueta: "31–60 días", saldo: "8750.45" }]}
