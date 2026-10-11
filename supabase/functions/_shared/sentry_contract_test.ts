@@ -1,6 +1,4 @@
 import { assert, assertEquals, assertRejects, assertStrictEquals } from "https://deno.land/std@0.224.0/assert/mod.ts";
-import { createTransport } from "npm:@sentry/core@11.4.0";
-import { context, propagation, trace } from "npm:@opentelemetry/api@1.9.1";
 import { captureEdgeException, captureEdgeMessage, wrapEdgeHandler, withCronMonitor } from "./sentry.ts";
 import { getEdgeScope } from "./sentryRequestScope.ts";
 import { loadSentryEdge } from "./sentryRuntime.ts";
@@ -21,82 +19,17 @@ Deno.test("No DSN: preserve responses and exceptions without telemetry", async (
   }
 });
 
-interface Payload {
-  message?: string;
-  stacktrace?: unknown;
-  exception?: { values?: Array<{ type?: string; value?: string; stacktrace?: {
-    frames?: Array<{ filename?: string; function?: string; lineno?: number; colno?: number }>;
-  } }> };
-  tags?: Record<string, string>;
-  user?: { id?: string };
-  contexts?: { trace?: { trace_id?: string; span_id?: string; data?: Record<string, unknown> } };
-  type?: string;
-  transaction?: string;
-  spans?: Array<{ description?: string; data?: Record<string, unknown>; parent_span_id?: string;
-    links?: Array<{ attributes?: Record<string, unknown> }> }>;
-  status?: string;
-  check_in_id?: string;
-  monitor_slug?: string;
-  sdk?: { version?: string };
-}
-
-function payloads(envelopes: string[]): Payload[] {
-  return envelopes.flatMap((text) => text.split("\n").filter((line) => line.startsWith("{"))
-    .flatMap((line) => { try { return [JSON.parse(line) as Payload]; } catch { return []; } }));
-}
-
-function deferred() {
-  let resolve!: () => void;
-  const promise = new Promise<void>((done) => { resolve = done; });
-  return { promise, resolve };
-}
+import { assertConcurrentReports, createSentryContractHarness, deferred, payloads } from "./sentryContractHarness.ts";
 
 // No --allow-net is needed. Use Sentry's actual envelope/buffer transport with
 // an in-memory request executor; never replace fetch, Deno.serve, or OTEL APIs.
 Deno.test("SDK 11.4.0: offline real SDK contracts", async (t) => {
-  const envKeys = ["SENTRY_DSN_EDGE", "SENTRY_RELEASE_EDGE", "SENTRY_CRON_MONITOR_SLUG"] as const;
-  const previous = envKeys.map((key) => Deno.env.get(key));
-  const fetchOriginal = globalThis.fetch;
-  const serveOriginal = Deno.serve;
-  const tracerProvider = trace.getTracerProvider();
-  const activeContext = context.active();
-  const propagationFields = propagation.fields();
-  const otelGlobal = Reflect.get(globalThis, Symbol.for("opentelemetry.js.api.1"));
-  const envelopes: string[] = [];
-  const delivered: string[] = [];
-  let transportCount = 0;
-  let flushCount = 0;
-  let heldSend: { entered: ReturnType<typeof deferred>; release: ReturnType<typeof deferred> } | undefined;
-  const transport: NonNullable<Parameters<typeof loadSentryEdge>[0]> = (options) => {
-    transportCount++;
-    const buffered = createTransport(options, ({ body }) => {
-      const text = typeof body === "string" ? body : new TextDecoder().decode(body);
-      envelopes.push(text);
-      const held = heldSend;
-      heldSend = undefined;
-      held?.entered.resolve();
-      return (held?.release.promise ?? Promise.resolve()).then(() => {
-        delivered.push(text);
-        return { statusCode: 200 };
-      });
-    });
-    return {
-      send: buffered.send,
-      flush(timeout) { flushCount++; return buffered.flush(timeout); },
-    };
-  };
-  Deno.env.set("SENTRY_DSN_EDGE", "https://mock@mock.invalid/1");
-  Deno.env.set("SENTRY_RELEASE_EDGE", "mock-contract");
-  Deno.env.set("SENTRY_CRON_MONITOR_SLUG", "mock-cron");
-  const first = loadSentryEdge(transport);
-  const second = loadSentryEdge(transport);
-  assertStrictEquals(first, second);
-  const sdk = await first;
-  assert(sdk);
+  const harness = await createSentryContractHarness();
+  const { sdk, delivered } = harness;
   try {
     await t.step("init/version/singleton, restrictive collection, no runtime or OTEL patching", () => {
       assertEquals(sdk.SDK_VERSION, "11.4.0");
-      assertEquals(transportCount, 1);
+      assertEquals(harness.transportCount, 1);
       assertStrictEquals(sdk.getClient(), sdk.getCurrentScope().getClient());
       const options = sdk.getClient<InstanceType<typeof sdk.DenoClient>>()!.getOptions();
       assertEquals(options.enableOpenTelemetrySetup, false);
@@ -110,12 +43,7 @@ Deno.test("SDK 11.4.0: offline real SDK contracts", async (t) => {
         genAI: { inputs: false, outputs: false }, databaseQueryData: false, queues: false,
         stackFrameVariables: false, frameContextLines: 0, graphQL: { document: false, variables: false },
       });
-      assertStrictEquals(globalThis.fetch, fetchOriginal);
-      assertStrictEquals(Deno.serve, serveOriginal);
-      assertStrictEquals(trace.getTracerProvider(), tracerProvider);
-      assertStrictEquals(context.active(), activeContext);
-      assertEquals(propagation.fields(), propagationFields);
-      assertStrictEquals(Reflect.get(globalThis, Symbol.for("opentelemetry.js.api.1")), otelGlobal);
+      harness.assertRuntimeUnchanged();
       // Deterministic test sampling only; production remains at 0.1.
       options.tracesSampleRate = 1;
     });
@@ -170,21 +98,8 @@ Deno.test("SDK 11.4.0: offline real SDK contracts", async (t) => {
       } }))));
       const events = payloads(delivered);
       for (const name of ["alpha", "beta"] as const) {
-        const event = events.find((item) => item.message?.startsWith(`${name}:`));
-        const transaction = events.find((item) => item.type === "transaction" && item.transaction === name);
-        assert(event && transaction, `missing ${name} report/transaction`);
-        assertEquals(event.tags?.fn, name);
-        assertEquals(event.tags?.request_id, name);
-        assertEquals(event.tags?.organization_id, organizations[name]);
-        assertEquals(event.user?.id, users[name]);
-        assertEquals(event.contexts?.trace?.trace_id, traces[name]);
-        assertEquals(transaction.tags?.fn, name);
-        assertEquals(transaction.tags?.request_id, name);
-        assertEquals(transaction.contexts?.trace?.trace_id, traces[name]);
-        const child = transaction.spans?.find((span) => span.description === `${name}-child`);
-        assert(child, `missing ${name} child span`);
-        assertEquals(child.parent_span_id, transaction.contexts?.trace?.span_id);
-        assertEquals(child.data?.accessToken, "[REDACTED]");
+        assertConcurrentReports(events, { name, traceId: traces[name], userId: users[name],
+          organizationId: organizations[name] });
       }
       assertEquals(getEdgeScope(), undefined);
       await captureEdgeMessage("outside-request", "info", { fn: "outside" });
@@ -232,7 +147,7 @@ Deno.test("SDK 11.4.0: offline real SDK contracts", async (t) => {
 
     await t.step("flush waits for actual buffered delivery and honors its timeout", async () => {
       const hold = { entered: deferred(), release: deferred() };
-      heldSend = hold;
+      harness.holdNextSend(hold);
       // The SDK unrefs drain timers; a memory executor has no socket to keep
       // Deno's loop alive while we test the bounded timeout.
       const keepAlive = setTimeout(() => undefined, 1000);
@@ -263,7 +178,7 @@ Deno.test("SDK 11.4.0: offline real SDK contracts", async (t) => {
       assertEquals(payloads(delivered).filter((p) => p.monitor_slug).length, beforeDisabled);
       for (const terminal of ["ok", "error", "throw"] as const) {
         const before = delivered.length;
-        const beforeFlush = flushCount;
+        const beforeFlush = harness.flushCount;
         const wrapped = withCronMonitor("cron", "mock-cron", () => {
           if (terminal === "throw") throw new Error("MOCK_BUG");
           return new Response("cron-response", { status: terminal === "ok" ? 202 : 503 });
@@ -275,7 +190,7 @@ Deno.test("SDK 11.4.0: offline real SDK contracts", async (t) => {
           assertEquals(response.status, terminal === "ok" ? 202 : 503);
           assertEquals(await response.text(), "cron-response");
         }
-        assert(flushCount > beforeFlush);
+        assert(harness.flushCount > beforeFlush);
         const checkins = payloads(delivered.slice(before)).filter((p) => p.monitor_slug === "mock-cron");
         assertEquals(checkins.length, 2, "both check-ins must be delivered before return/rethrow");
         assertEquals(checkins[0].status, "in_progress");
@@ -283,15 +198,8 @@ Deno.test("SDK 11.4.0: offline real SDK contracts", async (t) => {
         assertEquals(checkins[1].check_in_id, checkins[0].check_in_id);
       }
     });
-    assertStrictEquals(globalThis.fetch, fetchOriginal);
-    assertStrictEquals(Deno.serve, serveOriginal);
-    assertStrictEquals(trace.getTracerProvider(), tracerProvider);
+    harness.assertRuntimeUnchanged();
   } finally {
-    await sdk.close(2000);
-    envKeys.forEach((key, index) => {
-      const value = previous[index];
-      if (value === undefined) Deno.env.delete(key);
-      else Deno.env.set(key, value);
-    });
+    await harness.close();
   }
 });
