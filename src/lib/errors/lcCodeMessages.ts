@@ -28,6 +28,8 @@ export const LC_CODE_MESSAGES: Record<string, string> = {
   ...LC_CODE_MESSAGES_CRM,
   ...LC_CODE_MESSAGES_CLIENTES,
   ...LC_CODE_MESSAGES_PORTAL,
+  LC_PROFORMA_CANCELADA:
+    "Esta proforma está cancelada. Crea una nueva proforma para continuar; el histórico se conserva.",
   LC_ANTICIPO_APLICACION_INCONSISTENTE:
     "No se pudo confirmar la aplicación del anticipo. Revisa el vínculo entre factura, pago y anticipo antes de continuar.",
   LC_ANTICIPO_MOVIMIENTO_INCONSISTENTE:

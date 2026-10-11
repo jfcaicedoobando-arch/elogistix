@@ -3,6 +3,7 @@ import { usoCfdiDesdeXml, resolverUsoCfdiEfectivo } from "../_shared/usoCfdiEfec
 import { respaldarXmlTimbrado } from "../_shared/respaldarXmlTimbrado.ts";
 import { parseInvoiceResult, persistirFacturaTimbrada } from "./persistencia.ts";
 import { emitirYActualizar } from "./emitir.ts";
+import { validarProformasVigentes } from "./proformasVigentes.ts";
 import { promoverFactura } from "../facturapi-recuperar-claim/promoverFactura.ts";
 
 const uuid = "12345678-1234-1234-1234-123456789ABC";
@@ -16,11 +17,25 @@ function fakeDb() {
     update(p: Record<string, unknown>) { patch = p; matched = true; return chain; },
     eq(k: string, v: unknown) { if (state[k] !== v) matched = false; return chain; },
     select() { return chain; },
-    async maybeSingle() { if (!matched) return { data: null, error: null }; Object.assign(state, patch); return { data: { id: "f1" }, error: null }; },
-    async insert(row: Record<string, unknown>) { events.push(row); return { error: null }; },
+    maybeSingle() { if (!matched) return Promise.resolve({ data: null, error: null }); Object.assign(state, patch); return Promise.resolve({ data: { id: "f1" }, error: null }); },
+    insert(row: Record<string, unknown>) { events.push(row); return Promise.resolve({ error: null }); },
   };
+  const tables: Record<string, Array<Record<string, unknown>>> = { conceptos_factura: [], proformas: [] };
+  function selectRows(rows: Array<Record<string, unknown>>) {
+    let filtered = rows;
+    const query = {
+      select() { return query; },
+      eq(key: string, value: unknown) { filtered = filtered.filter((row) => row[key] === value); return query; },
+      is(key: string, value: null | boolean) { filtered = filtered.filter((row) => row[key] === value); return query; },
+      in(key: string, values: unknown[]) { filtered = filtered.filter((row) => values.includes(row[key])); return query; },
+      then(resolve: (result: { data: Array<Record<string, unknown>>; error: null }) => unknown) {
+        return Promise.resolve({ data: filtered, error: null }).then(resolve);
+      },
+    };
+    return query;
+  }
   const storage = { from: () => ({ upload: () => Promise.resolve({ data: null, error: null }) }) };
-  return { client: { from: () => chain, storage }, state, events };
+  return { client: { from: (table: string) => table in tables ? selectRows(tables[table]) : chain, storage }, state, events, tables };
 }
 const factura = { id: "f1", cliente_id: "c1", organization_id: "org1", uso_cfdi: "G03", serie: "A", numero: "BORRADOR-1", facturapi_id: "PENDING:1", facturapi_claim_at: null };
 const invoice = { id: "remote1", uuid, use: "G03", series: "A", folio_number: 1 };
@@ -99,4 +114,23 @@ Deno.test("emisión exitosa con XML distinto informa ambos usos sin reintento; s
       assertEquals((enviados[0] as { idempotency_key: string }).idempotency_key, "PENDING:1");
     }
   } finally { globalThis.fetch = originalFetch; }
+});
+
+Deno.test("mock de orígenes: aplica empresa, factura y deleted_at sin ocultar proformas canceladas", async () => {
+  const db = fakeDb();
+  db.tables.conceptos_factura.push(
+    { factura_id: "f1", organization_id: "otra", deleted_at: null, proforma_id_origen: "p1" },
+    { factura_id: "otra", organization_id: "org1", deleted_at: null, proforma_id_origen: "p1" },
+    { factura_id: "f1", organization_id: "org1", deleted_at: "2026-10-11", proforma_id_origen: "p1" },
+  );
+  db.tables.proformas.push({ id: "p1", organization_id: "org1", deleted_at: null, estado_proforma: "cancelada" });
+  assertEquals(await validarProformasVigentes(db.client as never, factura as never), null);
+  db.tables.conceptos_factura.push({ factura_id: "f1", organization_id: "org1", deleted_at: null, proforma_id_origen: "p1" });
+  const cancelada = await validarProformasVigentes(db.client as never, factura as never);
+  assertEquals(cancelada?.status, 409);
+  assertEquals((await cancelada!.json()).error, "LC_PROFORMA_CANCELADA");
+  db.tables.proformas[0].deleted_at = "2026-10-11";
+  const eliminada = await validarProformasVigentes(db.client as never, factura as never);
+  assertEquals(eliminada?.status, 409);
+  assertEquals((await eliminada!.json()).error, "proforma_no_disponible");
 });
