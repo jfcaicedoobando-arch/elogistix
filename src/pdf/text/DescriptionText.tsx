@@ -10,19 +10,19 @@ import { INTER_ADVANCES, INTER_UNITS_PER_EM } from "./interAdvanceWidths";
 const BREAK_STYLE = { fontSize: 0.001 };
 const graphemes = new Intl.Segmenter("es", { granularity: "grapheme" });
 
-function width(text: string): number {
+function width(text: string, fontSize: number): number {
   return Array.from(text).reduce((sum, char) => {
     const advance = INTER_ADVANCES[char.codePointAt(0)!];
-    return sum + (advance != null ? advance / INTER_UNITS_PER_EM : /\p{Mark}/u.test(char) ? 0 : 1.3) * 9;
+    return sum + (advance != null ? advance / INTER_UNITS_PER_EM : /\p{Mark}/u.test(char) ? 0 : 1.3) * fontSize;
   }, 0);
 }
 
-function pieces(word: string, maxWidth: number): string[] {
-  if (width(word) <= maxWidth) return [word];
+function pieces(word: string, maxWidth: number, fontSize: number): string[] {
+  if (width(word, fontSize) <= maxWidth) return [word];
   const result: string[] = [];
   let part = "";
   for (const { segment } of graphemes.segment(word)) {
-    if (part && width(part + segment) > maxWidth * 0.9) {
+    if (part && width(part + segment, fontSize) > maxWidth * 0.9) {
       // Prefer a boundary already present in an identifier; retain its characters.
       const boundary = Math.max(part.lastIndexOf("-"), part.lastIndexOf("/"), part.lastIndexOf("_")) + 1;
       if (boundary >= part.length / 2) {
@@ -39,9 +39,10 @@ function pieces(word: string, maxWidth: number): string[] {
   return result;
 }
 
-export function DescriptionText({ text, maxWidth = 100 }: { text: string; maxWidth?: number }) {
+/** fontSize measures inherited glyphs; it never changes the rendered font. */
+export function DescriptionText({ text, maxWidth = 100, fontSize = 9 }: { text: string; maxWidth?: number; fontSize?: number }) {
   return <>{text.split(/(\s+)/u).map((word, index) => (
-    <Fragment key={index}>{pieces(word, maxWidth).map((part, i) => (
+    <Fragment key={index}>{pieces(word, maxWidth, fontSize).map((part, i) => (
       <Fragment key={i}>{i > 0 ? <Text style={BREAK_STYLE}> </Text> : null}{part}</Fragment>
     ))}</Fragment>
   ))}</>;

@@ -19,6 +19,8 @@ export interface TotalesMoneda {
 interface Props {
   bloques: TotalesMoneda[];
   nota?: string;
+  /** Use the full column when the caller already reserves the card's width. */
+  fullWidth?: boolean;
 }
 
 function Bloque({ b }: { b: TotalesMoneda }) {
@@ -53,12 +55,12 @@ function Bloque({ b }: { b: TotalesMoneda }) {
   );
 }
 
-export function TotalesBox({ bloques, nota }: Props) {
+export function TotalesBox({ bloques, nota, fullWidth = false }: Props) {
   const validos = bloques.filter((b) => b.subtotal !== 0 || b.iva !== 0 || b.total !== 0);
   if (validos.length === 0) return null;
   return (
     <View style={{ marginTop: 10, flexDirection: "row", justifyContent: "flex-end" }} wrap={false}>
-      <View style={{ width: "55%", borderWidth: 1, borderColor: COLORS.borderStrong, borderRadius: 6, overflow: "hidden" }}>
+      <View style={{ width: fullWidth ? "100%" : "55%", borderWidth: 1, borderColor: COLORS.borderStrong, borderRadius: 6, overflow: "hidden" }}>
         {validos.map((b, i) => (
           <View key={b.moneda} style={i > 0 ? { borderTopWidth: 1, borderTopColor: COLORS.primary } : undefined}>
             <Bloque b={b} />

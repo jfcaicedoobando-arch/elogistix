@@ -1,4 +1,5 @@
-import { Document, Page, Text } from "@react-pdf/renderer";
+import { Document, Page, Text, View } from "@react-pdf/renderer";
+import { notasParaCliente } from "@/lib/domain/notasVisibilidad";
 import { TASA_IVA } from "@/lib/financial/financialUtils";
 import {
   AVISO_IVA_POR_CONFIRMAR,
@@ -7,7 +8,8 @@ import {
 import { styles } from "../theme/styles";
 import { Footer } from "../components/Footer";
 import { TotalesBox } from "../components/TotalesBox";
-import { NotasSection } from "../components/NotasSection";
+import { NotasInicio, NotasContinuacion } from "../components/NotasSection";
+import { splitNotas } from "../components/notasSplit";
 
 import { ProformaHeader } from "./ProformaHeader";
 import type { EmisorInfo } from "../components/BrandHeader";
@@ -43,6 +45,8 @@ export function ProformaDocument({ proforma, embarque, conceptos, cliente, tasaI
   const hayPorConfirmar = hayLineasIvaPorConfirmar(conceptos.filter((c) => tasaEfectivaFila(c, tasaIva) > 0), tasaIva);
 
   const { bloques, nota } = totalesProformaPdf(proforma, conceptos, tasaIva);
+  const { head, rest } = splitNotas(notasParaCliente(proforma.notas));
+  const hayTotales = bloques.some((b) => b.subtotal !== 0 || b.iva !== 0 || b.total !== 0);
   // Subtítulo de moneda sólo cuando conviven USD y MXN.
   const multiMoneda = usd.length > 0 && mxn.length > 0;
   const tituloConceptos = <TituloConceptos porContenedor={multiContenedor} />;
@@ -50,7 +54,16 @@ export function ProformaDocument({ proforma, embarque, conceptos, cliente, tasaI
   const cierreConceptos = <>
     {hayPorConfirmar ? <Text style={[styles.notice, { marginTop: 6 }]}>{AVISO_IVA_POR_CONFIRMAR}</Text> : null}
     {nota ? <Text style={styles.notice}>{nota}</Text> : null}
-    <TotalesBox bloques={bloques} />
+    {/* Keep only the bounded notes opening with the final row and totals.
+        The remaining notes stay outside the indivisible table closing row.
+        Both columns keep their existing font sizes and the card's 55% width. */}
+    {head && hayTotales ? <View style={{ flexDirection: "row" }} wrap={false}>
+      <View style={{ width: "45%", paddingRight: 12 }}><NotasInicio texto={head} compacta /></View>
+      <View style={{ width: "55%" }}><TotalesBox bloques={bloques} fullWidth /></View>
+    </View> : <>
+      <TotalesBox bloques={bloques} />
+      <NotasInicio texto={head} />
+    </>}
   </>;
 
   return (
@@ -83,7 +96,7 @@ export function ProformaDocument({ proforma, embarque, conceptos, cliente, tasaI
           <Text style={styles.emptyState}>Sin conceptos para mostrar.</Text>
           {cierreConceptos}
         </> : null}
-        <NotasSection notas={proforma.notas} />
+        <NotasContinuacion texto={rest} separada />
 
 
         <Footer emisor={emisor} empresaNombre={emisor?.razonSocial} />

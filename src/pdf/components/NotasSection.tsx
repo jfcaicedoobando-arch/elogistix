@@ -12,9 +12,37 @@ import { Text, View } from "@react-pdf/renderer";
 import { notasParaCliente } from "@/lib/domain/notasVisibilidad";
 import { styles } from "../theme/styles";
 import { splitNotas } from "./notasSplit";
+import { DescriptionText } from "../text/DescriptionText";
+
+const keepNoteToken = (word: string) => [word];
+// Compose equivalent Unicode glyphs for Inter's PDF font subset. The stored
+// note remains unchanged; layout-only breaks add neither hyphens nor clipping.
 
 interface Props {
   notas?: string | null;
+}
+
+/** Bounded opening shared with the compact proforma closing row. */
+export function NotasInicio({ texto, continua = false, compacta = false }: { texto: string; continua?: boolean; compacta?: boolean }) {
+  if (!texto) return null;
+  return <View wrap={false}>
+    <Text style={[styles.h3, { marginTop: 10, marginBottom: 6 }, compacta ? { marginBottom: 4, paddingBottom: 2 } : {}]}>Notas</Text>
+    <View style={[styles.notesBox, compacta ? { marginTop: 0, padding: 6 } : {}, continua ? { marginBottom: 0, paddingBottom: 0 } : {}]}>
+      <Text hyphenationCallback={compacta ? keepNoteToken : undefined}>
+        {compacta ? <DescriptionText text={texto.normalize("NFC")} maxWidth={200} fontSize={10} /> : texto}
+      </Text>
+    </View>
+  </View>;
+}
+
+/** Remaining notes can flow freely; a column opening uses a separate box. */
+export function NotasContinuacion({ texto, separada = false }: { texto: string; separada?: boolean }) {
+  if (!texto) return null;
+  return <View style={[styles.notesBox, separada ? {} : { marginTop: 0, paddingTop: 0 }]}>
+    <Text hyphenationCallback={separada ? keepNoteToken : undefined}>
+      {separada ? <DescriptionText text={texto.normalize("NFC")} maxWidth={500} fontSize={10} /> : texto}
+    </Text>
+  </View>;
 }
 
 export function NotasSection({ notas }: Props) {
@@ -29,17 +57,8 @@ export function NotasSection({ notas }: Props) {
 
   return (
     <View>
-      <View wrap={false}>
-        <Text style={[styles.h3, { marginTop: 10, marginBottom: 6 }]}>Notas</Text>
-        <View style={[styles.notesBox, hayResto ? { marginBottom: 0, paddingBottom: 0 } : {}]}>
-          <Text>{head}</Text>
-        </View>
-      </View>
-      {hayResto ? (
-        <View style={[styles.notesBox, { marginTop: 0, paddingTop: 0 }]}>
-          <Text>{rest}</Text>
-        </View>
-      ) : null}
+      <NotasInicio texto={head} continua={hayResto} />
+      <NotasContinuacion texto={rest} />
     </View>
   );
 }
