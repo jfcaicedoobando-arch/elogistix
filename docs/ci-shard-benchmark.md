@@ -1,9 +1,11 @@
 # Experimentos controlados: 5/8 y ensayos 8/10 y 10/14
 
-Estado al **2026-10-11**: **ocho es el valor automático**, por solicitud explícita.
+Estado al **2026-10-11**: **catorce es el valor automático**, por solicitud explícita.
 Se conservan dos workers, forks, aislamiento, catálogo, reporter y gate de
-completitud. No hay un benchmark 5/8 validado que demuestre menor latencia o
-consumo. El piloto de memoria se omitió y no se considera aprobado; este cambio
+completitud. No hay evidencia repetida que demuestre estabilidad, menor latencia sostenida
+o consumo con catorce. La decisión del usuario no equivale a un benchmark
+validado: una sola pareja es exploratoria. El analizador mantiene el mínimo
+de diez muestras por configuración y todos sus gates. El piloto de memoria se omitió y no se considera aprobado; este cambio
 no lo activa, no incorpora sondas OS ni modifica permisos o despliegues.
 El procedimiento siguiente queda como referencia para una medición futura,
 no como evidencia completada ni autorización para ejecutarla.
@@ -14,7 +16,7 @@ no como evidencia completada ni autorización para ejecutarla.
 `max-parallel`. Sólo admite 5, 8, 10 y 14; rechaza cero, fracciones, entradas arbitrarias
 y un paralelismo mayor que el total. Sólo `workflow_dispatch` puede cambiar
 los valores mediante `vitest_shards` y `vitest_max_parallel`. PR/push conservan
-8/8. Un valor vacío de max-parallel usa el total seleccionado.
+14/14. Un valor vacío de max-parallel usa el total seleccionado.
 
 Los outputs del detector alimentan simultáneamente el nombre de cada shard,
 el comando `--shard=i/n`, `CI_TEST_SHARD`, `CI_TEST_MAX_PARALLEL`, los artifacts
@@ -29,8 +31,15 @@ después de PR1. No basta añadir un input sin conectar todas las referencias.
 
 ## Ensayo de tiempo 10/14 (manual; default intacto)
 
-Catorce queda disponible sólo para ensayo manual. El default automático y del input
-sigue en ocho; workers=2, forks, aislamiento y permisos no cambian. No activa
+El título conserva el enlace histórico: el ensayo no altera el default. La
+decisión posterior del usuario sí lo cambia a catorce, sin declarar probado
+ningún resultado estadístico. El pico estructural de 16 deja cuatro slots de
+20; con reserva de dos, sólo dos externos. No es un límite global: dos CI
+completos solapados pueden exceder el presupuesto y provocar cola.
+
+Catorce es ahora el default automático y del input por decisión explícita del
+usuario (2026-10-11). El ensayo controlado sigue siendo manual; workers=2,
+forks, aislamiento y permisos no cambian. No activa
 sondas OS/RSS ni despliega o modifica producto/backend.
 
 Aplicar el mismo preflight descrito para 8/10 antes de **cada** dispatch:
@@ -69,13 +78,13 @@ explícito en el manifest con muestras reales y `expectedWorkflows: ["CI"]`:
 Conservar SHA, ref, runtime/imagen, lockfile, caché y carga comparables; separar
 cohortes incompatibles. Comparar latencia total de CI, shard lento, checks,
 espera por job y runner segundos. Una pareja es exploratoria; no demuestra
-mejora sostenida ni autoriza promover catorce. Si checks domina, más shards puede
+mejora sostenida; la promoción solicitada por el usuario no prueba estabilidad. Si checks domina, más shards puede
 no reducir CI. El contraste implícito del analizador sigue siendo 5/8.
 
 ## Ensayo de tiempo 8/10 (manual; default intacto)
 
-Diez está disponible únicamente como opción manual experimental. PR/push y el
-input predeterminado conservan ocho; workers=2, forks y aislamiento no cambian.
+Diez está disponible como opción manual experimental. PR/push y el
+input predeterminado usan catorce; workers=2, forks y aislamiento no cambian.
 No se añade workflow, sensor de RSS, sonda OS ni paso de producto/backend.
 La validación local de descubrimiento o una pareja de corridas no demuestra
 una mejora sostenida; no promover diez automáticamente.

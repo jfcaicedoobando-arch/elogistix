@@ -30,8 +30,8 @@ export default defineConfig({
     // El pool y sus límites viven en COMMON_TEST (por proyecto).
     // Se conserva `maxWorkers` también en la raíz para que el límite global de
     // procesos concurrentes entre proyectos sea el mismo que antes.
-    // CI usa ocho shards por decisión explícita y conserva dos workers.
-    // Sin benchmark 5/8 validado; no inferir ahorro (docs/ci-vitest-shards.md).
+    // CI usa catorce shards por decisión explícita y conserva dos workers.
+    // Sin estabilidad ni mejora sostenida validadas; no inferir ahorro (docs/ci-vitest-shards.md).
     maxWorkers: MAX_WORKERS,
 
 

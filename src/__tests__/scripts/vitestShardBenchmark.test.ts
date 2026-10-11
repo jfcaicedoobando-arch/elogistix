@@ -26,8 +26,8 @@ function makeSample(count: number, id = count) {
 }
 
 describe('native shard plan', () => {
-  it('uses eight by default and retains an explicit five-shard fallback', () => {
-    expect(createShardPlan()).toEqual({ count: 8, maxParallel: 8, matrix: { shard: [1, 2, 3, 4, 5, 6, 7, 8] } });
+  it('uses fourteen by default and retains an explicit five-shard fallback', () => {
+    expect(createShardPlan()).toEqual({ count: 14, maxParallel: 14, matrix: { shard: Array.from({ length: 14 }, (_, i) => i + 1) } });
     expect(createShardPlan({ count: '5' })).toEqual({ count: 5, maxParallel: 5, matrix: { shard: [1, 2, 3, 4, 5] } });
   });
   it.each(['0', '-1', '6', '9', '11', '12', '13', '15', '8; echo unsafe', ' 8', '08', '8.0', 'NaN'])('rejects unreviewed/invalid count %s', (count) => {
@@ -36,7 +36,7 @@ describe('native shard plan', () => {
   it.each(['0', '-1', '9', '3.5', ' 3'])('rejects invalid max-parallel %s', (maxParallel) => {
     expect(() => createShardPlan({ count: 8, maxParallel })).toThrow();
   });
-  it('dispatch can select five, eight, ten or fourteen, while automatic events retain eight', () => {
+  it('dispatch can select five, eight, ten or fourteen, while automatic events retain fourteen', () => {
     expect(planFromEnvironment({ GITHUB_EVENT_NAME: 'workflow_dispatch' })).toEqual(createShardPlan());
     for (const count of ['5', '8', '10', '14']) {
       expect(planFromEnvironment({ GITHUB_EVENT_NAME: 'workflow_dispatch', VITEST_SHARD_COUNT: count }).count).toBe(Number(count));
@@ -49,7 +49,7 @@ describe('native shard plan', () => {
     expect(() => createShardPlan({ count: 10, maxParallel: 11 })).toThrow();
     expect(planFromEnvironment({ GITHUB_EVENT_NAME: 'workflow_dispatch', VITEST_SHARD_COUNT: '8', VITEST_MAX_PARALLEL: '3' }).maxParallel).toBe(3);
     for (const event of ['pull_request', 'push']) {
-      for (const count of ['5', '10', '14', 'invalid']) {
+      for (const count of ['5', '8', '10', '14', 'invalid']) {
         expect(planFromEnvironment({ GITHUB_EVENT_NAME: event, VITEST_SHARD_COUNT: count, VITEST_MAX_PARALLEL: '3' })).toEqual(createShardPlan());
       }
     }
@@ -62,7 +62,7 @@ describe('native shard plan', () => {
     expect(assessCapacity({ plans: [{ count: 10 }], otherJobs: 2 })).toMatchObject({ total: 12, headroom: 8, fits: true });
     expect(assessCapacity({ plans: [{ count: 10 }], otherJobs: 2 + 8 })).toMatchObject({ total: 20, headroom: 0, fits: true });
     expect(assessCapacity({ plans: [{ count: 10 }], otherJobs: 2 + 9 }).fits).toBe(false);
-    expect(assessCapacity({ plans: [{ count: 14 }], otherJobs: 2 })).toMatchObject({ total: 16, headroom: 4, fits: true });
+    expect(assessCapacity({ plans: [{}], otherJobs: 2 })).toMatchObject({ total: 16, headroom: 4, fits: true });
     expect(assessCapacity({ plans: [{ count: 14 }], otherJobs: 2 + 2 + 2 })).toMatchObject({ total: 20, headroom: 0, fits: true });
     expect(assessCapacity({ plans: [{ count: 14 }], otherJobs: 2 + 3 + 2 }).fits).toBe(false);
     expect(assessCapacity({ plans: [{ count: 10 }, { count: 14 }], otherJobs: 4 }).fits).toBe(false);
