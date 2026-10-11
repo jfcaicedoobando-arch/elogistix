@@ -39,7 +39,7 @@ describe("identidad de PDFs comerciales", () => {
 
   it.each([false, true])("proforma consolidada=%s conserva la org persistida y los campos fiscales", async (consolidada) => {
     await generarPdfProforma({
-      proforma: { ...proforma, es_consolidada: consolidada }, embarque, conceptos: [],
+      proforma: { ...proforma, es_consolidada: consolidada }, embarque, conceptos: [], tasaIva: 0.08,
       // SAFE-CAST: basta una fila para seleccionar el Document consolidado mockeado.
       conceptosConsolidados: consolidada ? [{ id: "concepto-a" } as NonNullable<Parameters<typeof generarPdfProforma>[0]["conceptosConsolidados"]>[number]] : [],
     });
@@ -47,6 +47,18 @@ describe("identidad de PDFs comerciales", () => {
     const [document, filename] = mocks.download.mock.calls[0];
     expect(document.props.emisor).toEqual(emisor);
     expect(filename).toContain("Comercial_Sintetica_P-1-proforma");
+    expect(document.props.tasaIva).toBe(0.08);
+  });
+
+  it.each([undefined, []])("conserva consolidada sin snapshot (%s), con respaldo y tasa recibida", async (conceptosConsolidados) => {
+    await generarPdfProforma({
+      proforma: { ...proforma, es_consolidada: true }, embarque, conceptos: [],
+      conceptosConsolidados, tasaIva: 0.08,
+    });
+    const [document, filename] = mocks.download.mock.calls[0];
+    expect(document.props.conceptosConsolidados).toEqual([]);
+    expect(document.props.tasaIva).toBe(0.08);
+    expect(filename).toBe("Comercial_Sintetica_P-1-proforma-consolidada");
   });
 
   it("propaga rechazo de identidad cruzada sin descargar", async () => {

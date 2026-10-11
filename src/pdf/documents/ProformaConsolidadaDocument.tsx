@@ -1,4 +1,9 @@
 import { Document, Page, Text, View } from "@react-pdf/renderer";
+import { calcularTotalesProforma } from "@/features/proformas/domain/proforma";
+import { subtotalLinea, TASA_IVA } from "@/lib/financial/financialUtils";
+import { AVISO_IVA_POR_CONFIRMAR, hayLineasIvaPorConfirmar } from "@/lib/financial/lineasPorConfirmarIva";
+import { hayIvaEfectivo, tasaEfectivaFila } from "./proformaConceptosColumns";
+import { totalesProformaPdf } from "./proformaTotales";
 import type { Tables } from "@/integrations/supabase/types";
 
 import { formatCurrency } from "@/lib/formatters";
@@ -45,7 +50,14 @@ function agrupar(items: ConceptoConsolidado[]): Grupo[] {
   return Array.from(map.values());
 }
 
-function columnas(moneda: "USD" | "MXN", hayIva: boolean): PdfColumn<ConceptoConsolidado>[] {
+function totalesFila(fila: ConceptoConsolidado, tasaIva: number) {
+  const totales = calcularTotalesProforma([fila], tasaIva);
+  return fila.moneda === "USD"
+    ? { iva: totales.iva_usd, total: totales.total_usd }
+    : { iva: totales.iva_mxn, total: totales.total_mxn };
+}
+
+function columnas(moneda: "USD" | "MXN", hayIva: boolean, tasaIva: number): PdfColumn<ConceptoConsolidado>[] {
   const base: PdfColumn<ConceptoConsolidado>[] = [
     { key: "descripcion", title: "Descripción", hyphenate: false, cellStyle: styles.cellDesc,
       render: (r) => formatearDescripcionConcepto(r.descripcion) },
@@ -53,21 +65,21 @@ function columnas(moneda: "USD" | "MXN", hayIva: boolean): PdfColumn<ConceptoCon
     { key: "precio", title: "P. Unit.", cellStyle: styles.cellNum,
       render: (r) => formatCurrency(Number(r.precio_unitario), moneda) },
     { key: "importe", title: "Importe", cellStyle: styles.cellNum,
-      render: (r) => formatCurrency(Number(r.cantidad) * Number(r.precio_unitario), moneda) },
+      render: (r) => formatCurrency(subtotalLinea(Number(r.cantidad), Number(r.precio_unitario)), moneda) },
   ];
   if (!hayIva) return base;
   return [
     ...base,
     { key: "iva", title: "IVA", cellStyle: styles.cellNum,
-      render: (r) => r.aplica_iva ? formatCurrency(Number(r.iva), moneda) : "—" },
+      render: (r) => tasaEfectivaFila(r, tasaIva) > 0 ? formatCurrency(totalesFila(r, tasaIva).iva, moneda) : "—" },
     { key: "total", title: "Total", cellStyle: styles.cellNum,
-      render: (r) => formatCurrency(Number(r.total), moneda) },
+      render: (r) => formatCurrency(totalesFila(r, tasaIva).total, moneda) },
   ];
 }
 
 function SeccionMoneda({
-  grupos, moneda, conceptos,
-}: { grupos: Grupo[]; moneda: "USD" | "MXN"; conceptos: ConceptoConsolidado[] }) {
+  grupos, moneda, conceptos, tasaIva,
+}: { grupos: Grupo[]; moneda: "USD" | "MXN"; conceptos: ConceptoConsolidado[]; tasaIva: number }) {
   const haySeccion = conceptos.some((c) => c.moneda === moneda);
   if (!haySeccion) return null;
   return (
@@ -76,10 +88,11 @@ function SeccionMoneda({
       {grupos.map((g) => {
         const items = g.items.filter((i) => i.moneda === moneda);
         if (items.length === 0) return null;
-        const hayIva = items.some((i) => i.aplica_iva);
-        // R183-PDF-01: `items.total` ya incluye IVA, así que este renglón es el
-        // total del grupo, no un subtotal. Se rotula acorde sin re-gravar nada.
-        const totalGrupo = items.reduce((s, i) => s + Number(i.total), 0);
+        const hayIva = hayIvaEfectivo(items, tasaIva);
+        // El snapshot puede guardar `total` como base sin IVA. Igual que en UI,
+        // el total visible se deriva de sus cantidades/precios/tratamientos.
+        const totalesGrupo = calcularTotalesProforma(items, tasaIva);
+        const totalGrupo = moneda === "USD" ? totalesGrupo.total_usd : totalesGrupo.total_mxn;
         return (
           // wrap (default) permite que tablas largas (20+ conceptos) salten de
           // página manteniendo el `tableHeader fixed` de DataTable repetido y
@@ -88,7 +101,7 @@ function SeccionMoneda({
             <Text style={styles.containerBlock}>
               Contenedor: {g.contenedor}{g.tipo ? `  ·  ${g.tipo}` : ""}
             </Text>
-            <DataTable columns={columnas(moneda, hayIva)} rows={items} />
+            <DataTable columns={columnas(moneda, hayIva, tasaIva)} rows={items} />
             <Text style={[styles.subtotalLine, { textAlign: "right", marginTop: 2 }]}>
               Total del contenedor {moneda}: {formatCurrency(totalGrupo, moneda)}
             </Text>
@@ -115,32 +128,12 @@ export function ProformaConsolidadaDocument({
   embarque,
   cliente,
   conceptosConsolidados,
+  tasaIva = TASA_IVA,
   emisor,
 }: Props) {
   const grupos = agrupar(conceptosConsolidados);
-  const hayUSD = conceptosConsolidados.some((c) => c.moneda === "USD");
-  const hayMXN = conceptosConsolidados.some((c) => c.moneda === "MXN");
-
-  // R179-01/PDF-B: etiqueta neutra "IVA <moneda>"; las filas pueden tributar a
-  // 0/8/16% y la tasa global no describe la mezcla.
-  const bloquesTotales = [];
-  if (hayUSD) {
-    bloquesTotales.push({
-      moneda: "USD" as const,
-      subtotal: Number(proforma.subtotal_usd),
-      iva: Number(proforma.iva_usd),
-      total: Number(proforma.total_usd),
-    });
-  }
-  if (hayMXN) {
-    bloquesTotales.push({
-      moneda: "MXN" as const,
-      subtotal: Number(proforma.subtotal_mxn),
-      iva: Number(proforma.iva_mxn),
-      total: Number(proforma.total_mxn),
-    });
-  }
-
+  const { bloques, nota } = totalesProformaPdf(proforma, conceptosConsolidados, tasaIva);
+  const hayPorConfirmar = hayLineasIvaPorConfirmar(conceptosConsolidados.filter((c) => tasaEfectivaFila(c, tasaIva) > 0), tasaIva);
 
   return (
     <Document title={`${proforma.numero} - Proforma Consolidada`} author={emisor?.organizacionNombre || emisor?.razonSocial || "Empresa"}>
@@ -148,12 +141,14 @@ export function ProformaConsolidadaDocument({
         <ProformaHeader proforma={proforma} cliente={cliente ?? null} embarque={embarque} esConsolidada={true} emisor={emisor} />
         <View minPresenceAhead={140}>
           <Text style={styles.h3}>Conceptos por Contenedor</Text>
-          <SeccionMoneda grupos={grupos} moneda="USD" conceptos={conceptosConsolidados} />
-          <SeccionMoneda grupos={grupos} moneda="MXN" conceptos={conceptosConsolidados} />
+          <SeccionMoneda grupos={grupos} moneda="USD" conceptos={conceptosConsolidados} tasaIva={tasaIva} />
+          <SeccionMoneda grupos={grupos} moneda="MXN" conceptos={conceptosConsolidados} tasaIva={tasaIva} />
         </View>
 
         {conceptosConsolidados.length === 0 ? <Text style={styles.emptyState}>Sin conceptos para mostrar.</Text> : null}
-        <TotalesBox bloques={bloquesTotales} />
+        {nota ? <Text style={styles.notice}>{nota}</Text> : null}
+        {hayPorConfirmar ? <Text style={styles.notice}>{AVISO_IVA_POR_CONFIRMAR}</Text> : null}
+        <TotalesBox bloques={bloques} />
 
         <NotasSection notas={proforma.notas} />
 

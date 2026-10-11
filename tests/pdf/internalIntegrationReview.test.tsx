@@ -158,8 +158,8 @@ describe("Linux integration: row identity, currency and geometry in real PDFs", 
       contenedor_id: row.container,
       embarque_contenedores: { id: row.container, numero_contenedor: row.container, tipo_contenedor: "40HC" },
     }));
-    // Stored totals are deliberately discriminating: the presentation must
-    // print its supplied summary, not silently replace it with row arithmetic.
+    // Deliberately divergent stored totals: presentation follows the same
+    // per-currency BL-12 row calculation as detail/list/CSV, without mutation.
     const stored = { ...proforma, subtotal_usd: 9876.54, iva_usd: 0, total_usd: 9876.54, subtotal_mxn: 8765.43, iva_mxn: 0, total_mxn: 8765.43, notas: "" };
     const before = JSON.stringify({ conceptos, stored });
     const name = "linux-integracion-proforma-alta-intermedia";
@@ -246,21 +246,24 @@ describe("Linux integration: row identity, currency and geometry in real PDFs", 
       expect(currencies[1].xMin).toBeGreaterThanOrEqual(503 - geometryEpsilon);
       expect(numeric[1].xMax).toBeLessThanOrEqual(571 + geometryEpsilon);
     }
-    const storedSubtotals = words.filter(word => word.text === "Subtotal" && lineAt(words, word).length === 3);
-    expect(storedSubtotals).toHaveLength(2);
-    for (const [currency, value] of [["USD", 9876.54], ["MXN", 8765.43]] as const) {
-      const matches = words.filter(word => word.text === amount(value));
-      expect(matches).toHaveLength(2); // One supplied subtotal and one supplied total.
+    const summarySubtotals = words.filter(word => word.text === "Subtotal" && lineAt(words, word).length === 3);
+    expect(summarySubtotals).toHaveLength(2);
+    const summaryWords = words.filter(word => word.page === summarySubtotals[0].page && word.yMin >= summarySubtotals[0].yMin - 2);
+    for (const [currency, value] of [["USD", 4444.68], ["MXN", 3333.18]] as const) {
+      const matches = summaryWords.filter(word => word.text === amount(value));
+      expect(matches).toHaveLength(2); // One per-currency subtotal and one total.
       for (const match of matches) {
         expect(match.page).toBe(final.page);
         expect(match.yMin).toBeGreaterThan(final.yMax);
         expect(lineAt(words, match).filter(word => currencyToken.test(word.text)).map(word => word.text)).toEqual([currency]);
       }
     }
+    expect(pdf.text).not.toContain("9,876.54");
+    expect(pdf.text).not.toContain("8,765.43");
     const expectedAmounts = [
       ...specs.flatMap(row => [row.unit, row.quantity * row.unit]),
       ...expectedGroups.map(group => group.subtotal),
-      9876.54, 9876.54, 8765.43, 8765.43,
+      4444.68, 4444.68, 3333.18, 3333.18,
     ].map(amount).sort();
     expect(words.filter(word => moneyToken.test(word.text)).map(word => word.text).sort()).toEqual(expectedAmounts);
     for (const [index, word] of descriptionWords.entries()) {
