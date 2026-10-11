@@ -13,7 +13,8 @@ import { ProformaHeader } from "./ProformaHeader";
 import type { EmisorInfo } from "../components/BrandHeader";
 import type { ClienteLite, EmbarqueLite, ProformaRow } from "./proformaShared";
 import { SeccionMonedaPdf } from "./ProformaConceptosSection";
-import { agruparPorContenedor, type ConceptoVenta } from "./proformaConceptosColumns";
+import { agruparPorContenedor, tasaEfectivaFila, type ConceptoVenta } from "./proformaConceptosColumns";
+import { totalesProformaPdf } from "./proformaTotales";
 
 interface Props {
   proforma: ProformaRow;
@@ -39,35 +40,17 @@ export function ProformaDocument({ proforma, embarque, conceptos, cliente, tasaI
   );
   const multiContenedor = idsUnicos.size >= 2;
   const grupos = agruparPorContenedor(conceptos);
-  const hayPorConfirmar = hayLineasIvaPorConfirmar(conceptos, tasaIva);
+  const hayPorConfirmar = hayLineasIvaPorConfirmar(conceptos.filter((c) => tasaEfectivaFila(c, tasaIva) > 0), tasaIva);
 
-  // R179-01/PDF-B: etiqueta neutra "IVA <moneda>". No se rotula la tasa global
-  // porque las filas pueden tributar a 0/8/16% y mezclarse en una misma moneda.
-  const bloquesTotales = [];
-  if (usd.length > 0) {
-    bloquesTotales.push({
-      moneda: "USD" as const,
-      subtotal: Number(proforma.subtotal_usd),
-      iva: Number(proforma.iva_usd),
-      total: Number(proforma.total_usd),
-    });
-  }
-  if (mxn.length > 0) {
-    bloquesTotales.push({
-      moneda: "MXN" as const,
-      subtotal: Number(proforma.subtotal_mxn),
-      iva: Number(proforma.iva_mxn),
-      total: Number(proforma.total_mxn),
-    });
-  }
-
+  const { bloques, nota } = totalesProformaPdf(proforma, conceptos, tasaIva);
   // Subtítulo de moneda sólo cuando conviven USD y MXN.
-  const multiMoneda = bloquesTotales.length > 1;
+  const multiMoneda = usd.length > 0 && mxn.length > 0;
   const tituloConceptos = <TituloConceptos porContenedor={multiContenedor} />;
 
   const cierreConceptos = <>
     {hayPorConfirmar ? <Text style={[styles.notice, { marginTop: 6 }]}>{AVISO_IVA_POR_CONFIRMAR}</Text> : null}
-    <TotalesBox bloques={bloquesTotales} />
+    {nota ? <Text style={styles.notice}>{nota}</Text> : null}
+    <TotalesBox bloques={bloques} />
   </>;
 
   return (
@@ -95,9 +78,9 @@ export function ProformaDocument({ proforma, embarque, conceptos, cliente, tasaI
           mostrarSubtituloMoneda={multiMoneda}
         />
 
-        {bloquesTotales.length === 0 ? <>
+        {conceptos.length === 0 ? <>
           {tituloConceptos}
-          {conceptos.length === 0 ? <Text style={styles.emptyState}>Sin conceptos para mostrar.</Text> : null}
+          <Text style={styles.emptyState}>Sin conceptos para mostrar.</Text>
           {cierreConceptos}
         </> : null}
         <NotasSection notas={proforma.notas} />

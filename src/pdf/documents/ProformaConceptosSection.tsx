@@ -1,5 +1,6 @@
 import { Fragment, type ReactNode } from "react";
 import { Text, View } from "@react-pdf/renderer";
+import { sumarSubtotales } from "@/lib/financial/financialUtils";
 import { formatCurrency } from "@/lib/formatters";
 import { styles } from "../theme/styles";
 import { DataTable } from "../components/DataTable";
@@ -57,10 +58,9 @@ export function SeccionMonedaPdf({
         // v13.823.345: ambas monedas miran la TASA efectiva. Antes MXN forzaba
         // hayIva=true y una proforma 100% exenta imprimía columnas IVA/Total.
         const hayIva = hayIvaEfectivo(g.items, tasaIva);
-        const sub = g.items.reduce(
-          (s, i) => s + Number(i.cantidad) * Number(i.precio_unitario),
-          0,
-        );
+        const sub = sumarSubtotales(g.items, (i) => ({
+          cantidad: Number(i.cantidad), precioUnitario: Number(i.precio_unitario),
+        }));
         const cierre = index === filtrados.length - 1 ? afterLastRow : undefined;
         const cols = moneda === "USD" ? columnasUSD(tasaIva, hayIva) : columnasMXN(tasaIva, hayIva);
         const cierreGrupo = <>

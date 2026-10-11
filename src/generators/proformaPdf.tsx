@@ -31,11 +31,7 @@ export async function generarPdfProforma(params: GenerarPdfProformaParams): Prom
   const { proforma, embarque, cliente, tasaIva = TASA_IVA } = params;
   const emisor = await cargarEmisorDocumento(proforma.organization_id);
   const orgSlug = slugifyOrg(emisor.organizacionNombre || emisor.razonSocial);
-  if (
-    params.proforma.es_consolidada &&
-    params.conceptosConsolidados &&
-    params.conceptosConsolidados.length > 0
-  ) {
+  if (proforma.es_consolidada) {
     const { ProformaConsolidadaDocument } = await import("@/pdf/documents/ProformaConsolidadaDocument");
     scope.assertCurrent();
     await descargarPdf(
@@ -43,7 +39,8 @@ export async function generarPdfProforma(params: GenerarPdfProformaParams): Prom
         proforma={proforma}
         embarque={embarque}
         cliente={cliente}
-        conceptosConsolidados={params.conceptosConsolidados}
+        conceptosConsolidados={params.conceptosConsolidados ?? []}
+        tasaIva={tasaIva}
         emisor={emisor}
       />,
       `${orgSlug}_${proforma.numero}-proforma-consolidada`,

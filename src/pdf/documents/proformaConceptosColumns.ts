@@ -1,5 +1,6 @@
+import type { ConceptoVentaLite } from "@/features/proformas/domain";
 import type { Tables } from "@/integrations/supabase/types";
-import { calcularIVA, resolverTasaConcepto } from "@/lib/financial/financialUtils";
+import { calcularIVA, resolverTasaConcepto, subtotalLinea, sumarMontos } from "@/lib/financial/financialUtils";
 import { formatCurrency } from "@/lib/formatters";
 import { styles } from "../theme/styles";
 import { type PdfColumn } from "../components/DataTable";
@@ -20,7 +21,7 @@ export type ConceptoVenta = Tables<"conceptos_venta"> & {
  * traiga `tasa_iva_aplicada` heredada del default de la columna. No se toca el
  * resolver global para no afectar a sus otros consumidores.
  */
-export function tasaEfectivaFila(r: ConceptoVenta, tasaIva: number): number {
+export function tasaEfectivaFila(r: ConceptoVentaLite, tasaIva: number): number {
   if (r.aplica_iva === false) return 0;
   return resolverTasaConcepto(r, tasaIva);
 }
@@ -30,13 +31,13 @@ export function tasaEfectivaFila(r: ConceptoVenta, tasaIva: number): number {
  * `aplica_iva`: una fila con `aplica_iva=true` y `tasa_iva_aplicada=0` no
  * genera IVA y no debe abrir las columnas IVA/Total del PDF.
  */
-export function hayIvaEfectivo(items: ConceptoVenta[], tasaIva: number): boolean {
+export function hayIvaEfectivo(items: ConceptoVentaLite[], tasaIva: number): boolean {
   return items.some((r) => tasaEfectivaFila(r, tasaIva) > 0);
 }
 
 /** IVA de la fila según su tratamiento fiscal guardado. */
 function ivaFila(r: ConceptoVenta, tasaIva: number): number {
-  const importe = Number(r.cantidad) * Number(r.precio_unitario);
+  const importe = subtotalLinea(Number(r.cantidad), Number(r.precio_unitario));
   return calcularIVA(importe, tasaEfectivaFila(r, tasaIva));
 }
 
@@ -50,7 +51,7 @@ function columnasBase(moneda: "USD" | "MXN"): PdfColumn<ConceptoVenta>[] {
     { key: "precio", title: "P. Unit.", cellStyle: styles.cellMoney,
       render: (r) => formatCurrency(Number(r.precio_unitario), moneda) },
     { key: "importe", title: "Importe", cellStyle: styles.cellMoney,
-      render: (r) => formatCurrency(Number(r.cantidad) * Number(r.precio_unitario), moneda) },
+      render: (r) => formatCurrency(subtotalLinea(Number(r.cantidad), Number(r.precio_unitario)), moneda) },
   ];
 }
 
@@ -63,8 +64,8 @@ function columnasIva(moneda: "USD" | "MXN", tasaIva: number): PdfColumn<Concepto
         : "—" },
     { key: "total", title: "Total", cellStyle: styles.cellMoney,
       render: (r) => {
-        const importe = Number(r.cantidad) * Number(r.precio_unitario);
-        return formatCurrency(importe + ivaFila(r, tasaIva), moneda);
+        const importe = subtotalLinea(Number(r.cantidad), Number(r.precio_unitario));
+        return formatCurrency(sumarMontos([importe, ivaFila(r, tasaIva)]), moneda);
       } },
   ];
 }
