@@ -4,7 +4,7 @@ import { createHash } from 'node:crypto';
 import { readFileSync, readdirSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
-import { createShardPlan } from './vitest-shard-plan.mjs';
+import { ALLOWED_SHARD_COUNTS, createShardPlan } from './vitest-shard-plan.mjs';
 
 const hash = (value) => createHash('sha256').update(JSON.stringify(value)).digest('hex');
 const invariant = (condition, message) => { if (!condition) throw new Error(message); };
@@ -190,7 +190,9 @@ export function summarizeSample({ label, shardCount, maxParallel, loadClass, exp
   };
 }
 
-export function compareSamples(samples) {
+export function compareSamples(samples, { control = 5, candidate = 8 } = {}) {
+  createShardPlan({ count: control }); createShardPlan({ count: candidate });
+  invariant(Number.isSafeInteger(control) && Number.isSafeInteger(candidate) && control !== candidate, 'Comparison requires distinct numeric shard counts');
   invariant(samples.length > 0, 'No valid samples');
   const labels = new Set();
   const runIds = new Set();
@@ -201,7 +203,7 @@ export function compareSamples(samples) {
   const groups = Map.groupBy(samples, (sample) => sample.comparisonKey);
   return [...groups.values()].map((group) => {
     const configurations = {};
-    for (const count of [5, 8]) {
+    for (const count of ALLOWED_SHARD_COUNTS) {
       const selected = group.filter((sample) => sample.shardCount === count);
       if (!selected.length) continue;
       const stats = { n: selected.length };
@@ -210,16 +212,16 @@ export function compareSamples(samples) {
       }
       configurations[count] = stats;
     }
-    const five = configurations[5]; const eight = configurations[8];
-    const thresholds = five && eight ? {
-      minimumTenPerConfiguration: five.n >= 10 && eight.n >= 10,
-      ciP50Improves15Percent: eight.ciLatencySeconds.p50 <= five.ciLatencySeconds.p50 * 0.85,
-      checkSetP95Within5Percent: eight.checkSetLatencySeconds.p95 <= five.checkSetLatencySeconds.p95 * 1.05,
-      runnerSecondsP50Within10Percent: eight.runnerSeconds.p50 <= five.runnerSeconds.p50 * 1.1,
-      jobCreatedToStartP95Within10Seconds: eight.createdToStartP95Seconds.p95 <= five.createdToStartP95Seconds.p95 + 10,
+    const baseline = configurations[control]; const trial = configurations[candidate];
+    const thresholds = baseline && trial ? {
+      minimumTenPerConfiguration: baseline.n >= 10 && trial.n >= 10,
+      ciP50Improves15Percent: trial.ciLatencySeconds.p50 <= baseline.ciLatencySeconds.p50 * 0.85,
+      checkSetP95Within5Percent: trial.checkSetLatencySeconds.p95 <= baseline.checkSetLatencySeconds.p95 * 1.05,
+      runnerSecondsP50Within10Percent: trial.runnerSeconds.p50 <= baseline.runnerSeconds.p50 * 1.1,
+      jobCreatedToStartP95Within10Seconds: trial.createdToStartP95Seconds.p95 <= baseline.createdToStartP95Seconds.p95 + 10,
     } : null;
     return {
-      context: group[0].comparisonContext, configurations, thresholds,
+      context: group[0].comparisonContext, comparison: { control, candidate }, configurations, thresholds,
       preliminaryThresholdsMet: thresholds !== null && Object.values(thresholds).every(Boolean),
       // Measurement never changes the CI default, approves more consumption, or
       // establishes account-wide capacity/coverage of undeclared workflows.
@@ -246,7 +248,7 @@ async function main(manifestPath) {
       results.push(summarizeSample({ ...sample, reports, runs: sample.runs.map((entry) => ({ run: read(entry.run), jobs: read(entry.jobs) })) }));
     } catch (error) { rejected.push({ label: sample.label, reason: error.message }); }
   }
-  console.log(JSON.stringify({ schemaVersion: 1, source: 'GitHub Actions evidence', samples: results, rejected, comparisons: results.length ? compareSamples(results) : [], caveats: [
+  console.log(JSON.stringify({ schemaVersion: 1, source: 'GitHub Actions evidence', samples: results, rejected, comparisons: results.length ? compareSamples(results, manifest.comparison) : [], caveats: [
     'created_to_start includes scheduling and matrix admission; it is not pure runner queue.',
     'Runner seconds are measured occupancy, not billed minutes or money.',
     'A node_modules miss does not prove a cold Bun download cache.',

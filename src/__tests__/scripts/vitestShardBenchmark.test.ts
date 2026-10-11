@@ -30,24 +30,35 @@ describe('native shard plan', () => {
     expect(createShardPlan()).toEqual({ count: 8, maxParallel: 8, matrix: { shard: [1, 2, 3, 4, 5, 6, 7, 8] } });
     expect(createShardPlan({ count: '5' })).toEqual({ count: 5, maxParallel: 5, matrix: { shard: [1, 2, 3, 4, 5] } });
   });
-  it.each(['0', '-1', '6', '10', '12', '8; echo unsafe', ' 8', '08', '8.0', 'NaN'])('rejects unreviewed/invalid count %s', (count) => {
+  it.each(['0', '-1', '6', '9', '11', '12', '8; echo unsafe', ' 8', '08', '8.0', 'NaN'])('rejects unreviewed/invalid count %s', (count) => {
     expect(() => createShardPlan({ count })).toThrow();
   });
   it.each(['0', '-1', '9', '3.5', ' 3'])('rejects invalid max-parallel %s', (maxParallel) => {
     expect(() => createShardPlan({ count: 8, maxParallel })).toThrow();
   });
-  it('dispatch can select five or cap eight, while automatic events retain eight', () => {
+  it('dispatch can select five, eight or ten, while automatic events retain eight', () => {
     expect(planFromEnvironment({ GITHUB_EVENT_NAME: 'workflow_dispatch' })).toEqual(createShardPlan());
-    expect(planFromEnvironment({ GITHUB_EVENT_NAME: 'workflow_dispatch', VITEST_SHARD_COUNT: '5' }).count).toBe(5);
+    for (const count of ['5', '8', '10']) {
+      expect(planFromEnvironment({ GITHUB_EVENT_NAME: 'workflow_dispatch', VITEST_SHARD_COUNT: count }).count).toBe(Number(count));
+    }
+    expect(createShardPlan({ count: 10 }).matrix.shard).toEqual([1, 2, 3, 4, 5, 6, 7, 8, 9, 10]);
+    expect(createShardPlan({ count: 10, maxParallel: 3 }).maxParallel).toBe(3);
+    expect(() => createShardPlan({ count: 10, maxParallel: 11 })).toThrow();
     expect(planFromEnvironment({ GITHUB_EVENT_NAME: 'workflow_dispatch', VITEST_SHARD_COUNT: '8', VITEST_MAX_PARALLEL: '3' }).maxParallel).toBe(3);
     for (const event of ['pull_request', 'push']) {
-      expect(planFromEnvironment({ GITHUB_EVENT_NAME: event, VITEST_SHARD_COUNT: '5', VITEST_MAX_PARALLEL: '3' })).toEqual(createShardPlan());
+      for (const count of ['5', '10', 'invalid']) {
+        expect(planFromEnvironment({ GITHUB_EVENT_NAME: event, VITEST_SHARD_COUNT: count, VITEST_MAX_PARALLEL: '3' })).toEqual(createShardPlan());
+      }
     }
   });
   it('accounts for other runs/workflows explicitly and never claims a global max-parallel', () => {
     expect(assessCapacity({ plans: [{ count: 8 }, { count: 8 }], otherJobs: 6 })).toMatchObject({ total: 22, budget: 20, fits: false });
     expect(assessCapacity({ plans: [{ count: 8, maxParallel: 3 }, { count: 8, maxParallel: 3 }], otherJobs: 14 })).toMatchObject({ total: 20, fits: true, headroom: 0 });
     expect(() => assessCapacity({ plans: [{ count: 8 }], otherJobs: -1 })).toThrow();
+    // A full CI matrix overlaps only lint and checks, not detector/aggregator.
+    expect(assessCapacity({ plans: [{ count: 10 }], otherJobs: 2 })).toMatchObject({ total: 12, headroom: 8, fits: true });
+    expect(assessCapacity({ plans: [{ count: 10 }], otherJobs: 2 + 8 })).toMatchObject({ total: 20, headroom: 0, fits: true });
+    expect(assessCapacity({ plans: [{ count: 10 }], otherJobs: 2 + 9 }).fits).toBe(false);
   });
 });
 
@@ -91,7 +102,7 @@ describe('Actions measurement, separate from local diagnostics', () => {
   });
 });
 
-describe('comparable 5/8 evidence', () => {
+describe('comparable 5/8/10 evidence', () => {
   it('matches the complete per-file case contract across native partitions', () => {
     const five = summarizeSample(makeSample(5));
     const eight = summarizeSample(makeSample(8));
@@ -103,6 +114,23 @@ describe('comparable 5/8 evidence', () => {
     expect(result.thresholds?.minimumTenPerConfiguration).toBe(false);
     expect(result.automaticPromotion).toBe(false);
     expect(result.scope).toBe('CI-only');
+  });
+  it('compares ten with eight only when explicitly selected, without claiming a validated sample', () => {
+    const eight = summarizeSample(makeSample(8));
+    const ten = summarizeSample(makeSample(10));
+    expect(ten.fileCount).toBe(eight.fileCount);
+    expect(ten.cases).toBe(eight.cases);
+    expect(ten.comparisonKey).toBe(eight.comparisonKey);
+    const [result] = compareSamples([eight, ten], { control: 8, candidate: 10 });
+    expect(result.comparison).toEqual({ control: 8, candidate: 10 });
+    expect(result.configurations[8].n).toBe(1);
+    expect(result.configurations[10].n).toBe(1);
+    expect(result.thresholds?.minimumTenPerConfiguration).toBe(false);
+    expect(result.preliminaryThresholdsMet).toBe(false);
+    expect(result.automaticPromotion).toBe(false);
+    expect(compareSamples([eight, ten])[0].thresholds).toBeNull();
+    expect(() => compareSamples([eight, ten], { control: 8, candidate: 8 })).toThrow(/distinct/);
+    expect(() => compareSamples([eight, ten], { control: 8, candidate: 12 })).toThrow(/Supported/);
   });
   it('does not pool different SHAs, cache classes, load classes, runner images or bounded-parallelism experiments', () => {
     const baseline = summarizeSample(makeSample(5));
@@ -123,7 +151,7 @@ describe('comparable 5/8 evidence', () => {
       expect(compareSamples([baseline, summarizeSample(sample)])).toHaveLength(2);
     }
   });
-  it.each([5, 8])('rejects incomplete or duplicate evidence with %i shards', (count) => {
+  it.each([5, 8, 10])('rejects incomplete or duplicate evidence with %i shards', (count) => {
     for (const change of ['missing-report', 'duplicate-report', 'duplicate-file', 'missing-job', 'skipped-job']) {
       const sample = makeSample(count);
       if (change === 'missing-report') sample.reports.pop();

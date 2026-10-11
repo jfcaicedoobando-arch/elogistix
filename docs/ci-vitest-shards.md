@@ -6,6 +6,7 @@ Fuente: `ci.yml`, `vitest.config.ts`, `vitest.shared.ts`.
 ## Configuración vigente
 
 - Ocho shards, `max-parallel: 8`, sin coverage/retry/blobs en CI principal.
+- Manual permite 5/8/10; diez es un ensayo de tiempo y no cambia el default.
 - Proyectos node/jsdom con `extends: false` y opciones explícitas.
 - `pool: forks`, aislamiento por archivo; límite `MAX_WORKERS=2` en CI.
 - Heap de workers: 8192 MB CI, 4096 MB local; no es reserva de RAM.
@@ -26,6 +27,16 @@ conservando dos workers. El ensayo de memoria se omitió, no se dio por aprobado
 No se incorporan el piloto de PR232/PR238 ni sondas OS. Siguen sin validar la
 comparación de latencia, consumo, estabilidad y presión de 5/8 dentro de los
 20 jobs compartidos. La decisión no implica una mejora medida.
+
+## Ensayo manual 8/10
+
+El [preflight y procedimiento 8/10](ci-shard-benchmark.md#ensayo-de-tiempo-810-manual-default-intacto)
+conserva el mismo SHA/ref y dos workers. CI con diez son 14 jobs totales y un
+pico estructural de 12; verificar el presupuesto compartido de 20 antes de
+cada dispatch, incluyendo carga externa. Correr ocho y diez secuencialmente,
+exigir unión exacta por archivos/casos y comparar tiempo total, shard lento,
+checks, espera y runner segundos. No añade sondas OS/RSS ni presume velocidad.
+Una pareja sólo es evidencia exploratoria y no autoriza promover el default.
 
 ## Medir antes de ajustar
 

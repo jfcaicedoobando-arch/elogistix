@@ -88,26 +88,37 @@ describe("CI execution gate: exact union, never count-only", () => {
   it("accepts complete disjoint successful shards", () => {
     expect(validateEvidence(fixtureCatalog, [makeReport(1), makeReport(2)], 2)).toMatchObject({ files: 2, shards: 2, cases: { passed: 2 } });
   });
-  it("requires all eight reports with an exact disjoint union, including the eighth shard", () => {
-    const eightEntries = Array.from({ length: 16 }, (_, index) => ({ path: `src/eight-${index}.test.ts`, lane: "vitest-normal" }));
-    const eightCatalog = { ...fixtureCatalog, entries: eightEntries, treeDigest: hash(JSON.stringify(eightEntries)) };
-    const reports = Array.from({ length: 8 }, (_, index) => {
-      const selected = eightEntries.slice(index * 2, index * 2 + 2).map(({ path }) => ({ path, project: "node" }));
+  it.each([8, 10])("requires all %i reports, including the final shard, with an exact disjoint union", (count) => {
+    const shardEntries = Array.from({ length: 40 }, (_, index) => ({ path: `src/shard-${index}.test.ts`, lane: "vitest-normal" }));
+    const shardCatalog = { ...fixtureCatalog, entries: shardEntries, treeDigest: hash(JSON.stringify(shardEntries)) };
+    const reports = Array.from({ length: count }, (_, index) => {
+      const selected = shardEntries.slice(index * (40 / count), (index + 1) * (40 / count)).map(({ path }) => ({ path, project: "node" }));
       return {
-        ...makeReport(1), treeDigest: eightCatalog.treeDigest, shard: { index: index + 1, total: 8 },
-        discovered: eightEntries.map(({ path }) => ({ path, project: "node" })), selected,
+        ...makeReport(1), treeDigest: shardCatalog.treeDigest, shard: { index: index + 1, total: count },
+        discovered: shardEntries.map(({ path }) => ({ path, project: "node" })), selected,
         files: selected.map(file => ({ ...makeReport(1).files[0], ...file })),
       };
     });
-    expect(validateEvidence(eightCatalog, reports, 8)).toMatchObject({ files: 16, shards: 8, cases: { passed: 16 } });
-    expect(() => validateEvidence(eightCatalog, reports.slice(0, 7), 8)).toThrow(/Expected 8 reports/);
+    expect(validateEvidence(shardCatalog, reports, count)).toMatchObject({ files: 40, shards: count, cases: { passed: 40 } });
+    expect(() => validateEvidence(shardCatalog, reports.slice(0, count - 1), count)).toThrow(/Expected/);
     const duplicate = structuredClone(reports);
-    duplicate[7].selected = duplicate[0].selected;
-    duplicate[7].files = duplicate[0].files;
-    expect(() => validateEvidence(eightCatalog, duplicate, 8)).toThrow(/duplicate actual path/);
+    duplicate[count - 1].selected = duplicate[0].selected;
+    duplicate[count - 1].files = duplicate[0].files;
+    expect(() => validateEvidence(shardCatalog, duplicate, count)).toThrow(/duplicate actual path/);
     const missing = structuredClone(reports);
-    missing[7].selected.pop(); missing[7].files.pop();
-    expect(() => validateEvidence(eightCatalog, missing, 8)).toThrow(/missing/);
+    missing[count - 1].selected.pop(); missing[count - 1].files.pop();
+    expect(() => validateEvidence(shardCatalog, missing, count)).toThrow(/missing/);
+    for (const change of ['failed', 'skipped', 'wrong-total', 'wrong-sha', 'wrong-run']) {
+      const altered = structuredClone(reports);
+      const last = altered[count - 1];
+      if (change === 'failed') last.status = 'failed';
+      if (change === 'skipped') { last.files[0].cases.passed = 0; last.files[0].cases.skipped = 1; }
+      if (change === 'wrong-total') last.shard.total = count - 1;
+      if (change === 'wrong-sha') last.sha = 'b'.repeat(40);
+      if (change === 'wrong-run') Object.assign(last, { run: { id: 'other-run', attempt: '1', event: 'workflow_dispatch' } });
+      expect(() => validateEvidence(shardCatalog, altered, count)).toThrow();
+    }
+
   });
   it("rejects absent reports, duplicate shards and changed SHA/catalog", () => {
     expect(() => validateEvidence(fixtureCatalog, [makeReport(1)], 2)).toThrow(/Expected/);
