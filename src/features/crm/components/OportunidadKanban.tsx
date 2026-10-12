@@ -105,7 +105,7 @@ export default function OportunidadKanban({ etapas, oportunidades, onMover, onCl
       )}
       {isFetching && !isError && (
         <p role="status" className="text-body-sm text-muted-foreground">
-          {proximasMap ? "Actualizando próximas actividades..." : "Cargando próximas actividades..."}
+          {proximasMap ? "Actualizando próximas actividades…" : "Cargando próximas actividades…"}
         </p>
       )}
       {huerfanas.length > 0 && (
