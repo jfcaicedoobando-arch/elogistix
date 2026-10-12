@@ -66,7 +66,7 @@ describe("PDF real: notas sin espacios no invaden la tarjeta de totales", () => 
       expect(JSON.stringify(input)).toBe(before);
       const body = assertNotesGeometry(name, notes);
       if (label === "w40") {
-        expect(pdf.pages).toBe(1);
+        expect(pdf.pages).toBe(2);
         expect(new Set(body.map(w => w.yMin.toFixed(2))).size).toBeGreaterThan(1);
       }
       if (label === "corte-grapheme") {

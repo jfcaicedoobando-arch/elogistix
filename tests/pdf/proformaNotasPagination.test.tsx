@@ -48,11 +48,11 @@ function assertClosing(name: string, lastMarker: string) {
 }
 
 describe("PDF real: cierre de proforma con notas", () => {
-  it("dos conceptos y notas breves caben en una página sin cambiar importes ni campos", async () => {
+  it("dos conceptos y notas breves comparten la segunda página sin cambiar importes ni campos", async () => {
     const name = "proforma-notas-corta";
     const before = JSON.stringify({ corta, viaje, filas });
     const pdf = await inspectPdf(name, <ProformaDocument proforma={corta} embarque={viaje} cliente={cliente} conceptos={filas} emisor={emisor} />);
-    expect(pdf.pages).toBe(1);
+    expect(pdf.pages).toBe(2);
     const text = textMoney(pdf.text);
     for (const value of ["Subtotal MXN 3,066.66 IVA MXN 490.66 Total MXN 3,557.32", "XAXX010101000", "Santa Catarina", "Apodaca", "Transferencia electrónica", notas]) expect(text).toContain(value);
     expect(text).not.toContain("3,557.33");
@@ -123,7 +123,7 @@ describe("PDF real: cierre de proforma con notas", () => {
     it(`sin notas visibles (${notes === null ? "vacías" : "internas"}) no agrega un cierre vacío`, async () => {
       const name = notes === null ? "proforma-notas-vacias" : "proforma-notas-internas";
       const pdf = await inspectPdf(name, <ProformaDocument proforma={{ ...corta, notas: notes }} embarque={viaje} conceptos={filas} emisor={emisor} />);
-      expect(pdf.pages).toBe(1);
+      expect(pdf.pages).toBe(2);
       expect(pdf.text).not.toContain("Notas");
       expect(pdf.text).not.toContain("Ocultar");
       assertBounds(name);

@@ -70,33 +70,35 @@ export function ProformaDocument({ proforma, embarque, conceptos, cliente, tasaI
     <Document title={`${proforma.numero} - Proforma`} author={emisor?.organizacionNombre || emisor?.razonSocial || "Empresa"}>
       <Page size="LETTER" style={styles.page}>
         <ProformaHeader proforma={proforma} cliente={cliente ?? null} embarque={embarque} esConsolidada={false} emisor={emisor} />
-        {/* Sections keep only height-bounded groups together. Oversized
-            descriptions must remain free to flow across pages. */}
-        <SeccionMonedaPdf
-          grupos={grupos}
-          moneda="USD"
-          encabezado={tituloConceptos}
-          afterLastRow={mxn.length === 0 ? cierreConceptos : undefined}
-          tasaIva={tasaIva}
-          multiContenedor={multiContenedor}
-          mostrarSubtituloMoneda={multiMoneda}
-        />
-        <SeccionMonedaPdf
-          grupos={grupos}
-          moneda="MXN"
-          encabezado={usd.length === 0 ? tituloConceptos : undefined}
-          afterLastRow={cierreConceptos}
-          tasaIva={tasaIva}
-          multiContenedor={multiContenedor}
-          mostrarSubtituloMoneda={multiMoneda}
-        />
+        {/* Start concepts on their own sheet; keep this section wrappable so
+            long lists and oversized descriptions can continue safely. */}
+        <View break>
+          <SeccionMonedaPdf
+            grupos={grupos}
+            moneda="USD"
+            encabezado={tituloConceptos}
+            afterLastRow={mxn.length === 0 ? cierreConceptos : undefined}
+            tasaIva={tasaIva}
+            multiContenedor={multiContenedor}
+            mostrarSubtituloMoneda={multiMoneda}
+          />
+          <SeccionMonedaPdf
+            grupos={grupos}
+            moneda="MXN"
+            encabezado={usd.length === 0 ? tituloConceptos : undefined}
+            afterLastRow={cierreConceptos}
+            tasaIva={tasaIva}
+            multiContenedor={multiContenedor}
+            mostrarSubtituloMoneda={multiMoneda}
+          />
 
-        {conceptos.length === 0 ? <>
-          {tituloConceptos}
-          <Text style={styles.emptyState}>Sin conceptos para mostrar.</Text>
-          {cierreConceptos}
-        </> : null}
-        <NotasContinuacion texto={rest} separada />
+          {conceptos.length === 0 ? <>
+            {tituloConceptos}
+            <Text style={styles.emptyState}>Sin conceptos para mostrar.</Text>
+            {cierreConceptos}
+          </> : null}
+          <NotasContinuacion texto={rest} separada />
+        </View>
 
 
         <Footer emisor={emisor} empresaNombre={emisor?.razonSocial} />
