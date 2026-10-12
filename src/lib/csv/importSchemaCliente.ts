@@ -29,12 +29,11 @@ const clienteRowSchema = z.object({
   nombre: z.string().trim().min(1, "Nombre: requerido.").max(200),
   rfc: z.string().trim().max(20).optional(),
   email: z
-    .string()
+    .string({ error: "Correo: requerido." })
     .trim()
-    .max(254)
-    .email("Correo: formato inválido.")
-    .optional()
-    .or(z.literal("")),
+    .min(1, "Correo: requerido.")
+    .max(254, "Correo: máximo 254 caracteres.")
+    .email("Correo: formato inválido."),
   telefono: z.string().trim().max(40).optional(),
   contacto: z.string().trim().max(150).optional(),
   direccion: z.string().trim().max(300).optional(),
@@ -71,7 +70,7 @@ export function mapClienteRows(
     const payload: TablesInsert<"clientes"> = {
       nombre: v.nombre,
       rfc: optional(v.rfc) ?? "",
-      email: optional(v.email ?? undefined) ?? "",
+      email: v.email,
       telefono: optional(v.telefono) ?? "",
       contacto: optional(v.contacto) ?? "",
       direccion: optional(v.direccion) ?? "",

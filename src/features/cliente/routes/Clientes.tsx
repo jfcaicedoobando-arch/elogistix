@@ -159,7 +159,7 @@ export default function Clientes() {
         open={importOpen}
         onOpenChange={setImportOpen}
         title="Importar clientes desde CSV"
-        description="Carga un archivo CSV con clientes. Sólo se insertarán las filas válidas."
+        description="Carga un archivo CSV con clientes. El correo (email) es obligatorio y debe tener un formato válido. Sólo se insertarán las filas válidas."
         templateHeaders={CLIENTE_TEMPLATE_HEADERS}
         templateExampleRow={[
           "Acme S.A. de C.V.", "ACM010101AAA", "contacto@acme.mx",

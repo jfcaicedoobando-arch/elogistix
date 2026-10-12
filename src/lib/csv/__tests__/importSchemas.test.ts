@@ -1,14 +1,15 @@
 import { describe, it, expect } from "vitest";
 import { mapClienteRows, mapProveedorRows } from "../importSchemas";
+import type { Row } from "../importSchemasShared";
 
 describe("mapClienteRows", () => {
   it("valida nombres requeridos y normaliza campos opcionales vacíos", () => {
     const res = mapClienteRows(
       [
         { nombre: "Acme S.A.", rfc: "ABC100101AAA", email: "a@b.com", dias_credito: "30" },
-        { nombre: "", rfc: "X1" },
+        { nombre: "", rfc: "X1", email: "cliente@example.invalid" },
         { nombre: "Beta", email: "no-es-email" },
-        { nombre: "Gamma", dias_credito: "abc" },
+        { nombre: "Gamma", email: "cliente@example.invalid", dias_credito: "abc" },
       ],
       "org-1",
     );
@@ -21,13 +22,23 @@ describe("mapClienteRows", () => {
   });
 
   it("acepta dias_credito vacío como null", () => {
-    const res = mapClienteRows([{ nombre: "X", dias_credito: "" }], null);
+    const res = mapClienteRows([{ nombre: "X", email: "cliente@example.invalid", dias_credito: "" }], null);
     expect(res.valid[0].payload.dias_credito).toBeNull();
     expect(res.valid[0].payload.organization_id).toBeUndefined();
   });
 });
 
 describe("mapProveedorRows", () => {
+  it.each<{ caso: string; fila: Row }>([
+    { caso: "ausente", fila: { nombre: "Proveedor", tipo: "Naviera" } },
+    { caso: "vacío", fila: { nombre: "Proveedor", tipo: "Naviera", email: "" } },
+  ])("conserva el correo $caso permitido para proveedores", ({ fila }) => {
+    const res = mapProveedorRows([fila], null);
+    expect(res.invalid).toHaveLength(0);
+    expect(res.valid).toHaveLength(1);
+    expect(res.valid[0].payload.email).toBe("");
+  });
+
   it("rechaza tipos inválidos y exige nombre", () => {
     const res = mapProveedorRows(
       [
