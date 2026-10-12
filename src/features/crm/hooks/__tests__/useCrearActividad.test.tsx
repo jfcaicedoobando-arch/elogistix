@@ -23,18 +23,6 @@ vi.mock("@/lib/ui/appFeedback", () => ({
   notifyError: vi.fn(),
 }));
 
-vi.mock("@/lib/query", () => ({
-  queryKeys: {
-    crm: {
-      actividades: { all: ["crm", "actividades"] },
-      higiene: { all: ["crm", "higiene"] },
-      kpis: ["crm", "kpis"],
-      dashboardAll: ["crm", "dashboard"],
-      nbaSignalsAll: ["crm", "nba-signals"],
-    },
-  },
-}));
-
 import { useCrearActividad, type ActividadInput } from "../useActividades";
 
 const baseInput: ActividadInput = {
@@ -65,6 +53,7 @@ describe("useCrearActividad invalidación de queries", () => {
       (args) => (args[0] as { queryKey: unknown }).queryKey,
     );
     expect(invalidated).toContainEqual(["crm", "actividades"]);
+    expect(invalidated).toContainEqual(["crm", "proximas-actividades"]);
     expect(invalidated).toContainEqual(["crm", "higiene"]);
     expect(invalidated).toContainEqual(["crm", "kpis"]);
     expect(invalidated).toContainEqual(["crm", "dashboard"]);
