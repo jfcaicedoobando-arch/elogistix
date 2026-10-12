@@ -172,7 +172,7 @@ describe("useBulkImport con el servicio real de clientes y transporte en memoria
     expect(help).not.toHaveTextContent(/200 de 202|filas restantes|no duplicar/i);
   });
 
-  it("conserva el límite de proveedores: fallback 23505 puede guardar una fila sin confirmar progreso", async () => {
+  it("confirma el alta del fallback 23505 antes de fallar en la segunda fila", async () => {
     type ProveedorInsert = TablesInsert<"proveedores">;
     const supplierCreated: ProveedorInsert[] = [];
     let singleWrites = 0;
@@ -215,11 +215,11 @@ describe("useBulkImport con el servicio real de clientes y transporte en memoria
     expect(singleWrites).toBe(2);
     expect(supplierCreated).toHaveLength(1);
     expect(supplierCreated[0].nombre).toBe("PROVEEDOR UNO");
-    expect(onProgress).not.toHaveBeenCalled();
-    expect(onSuccess).not.toHaveBeenCalled();
+    expect(onProgress).toHaveBeenCalledExactlyOnceWith(1);
+    expect(onSuccess).toHaveBeenCalledExactlyOnceWith(1);
     expect(result.current.step).toBe("preview");
-    expect(result.current.parcialCount).toBe(0);
-    expect(result.current.error).toBe("Error al importar. Altas confirmadas en este intento: 0.");
+    expect(result.current.parcialCount).toBe(1);
+    expect(result.current.error).toBe("Error al importar. Altas confirmadas en este intento: 1.");
   });
 });
 

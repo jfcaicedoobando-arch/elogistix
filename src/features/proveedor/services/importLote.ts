@@ -67,15 +67,20 @@ async function insertarLote(
   lote: TablesInsert<"proveedores">[],
   yaInsertados: number,
   total: number,
-): Promise<Proveedor[]> {
+  confirmarAltas: (altas: Proveedor[]) => void,
+): Promise<void> {
   const { data, error } = await supabase.from("proveedores").insert(lote).select();
-  if (!error) return (data ?? []) as Proveedor[];
+  if (!error) {
+    confirmarAltas((data ?? []) as Proveedor[]);
+    return;
+  }
   // 23505 = unique_violation (proveedores_org_rfc_unique): reintento fila a fila
   // para que el error identifique al proveedor duplicado.
   if ((error as { code?: string }).code === "23505") {
-    const creados: Proveedor[] = [];
-    for (const p of lote) creados.push(await insertProveedor(p));
-    return creados;
+    // Cada alta queda confirmada antes de intentar la siguiente. Si ésta
+    // falla, el progreso previo se conserva y el error original se propaga.
+    for (const p of lote) confirmarAltas([await insertProveedor(p)]);
+    return;
   }
   throw new Error(
     `Se importaron ${yaInsertados} de ${total} proveedores; el siguiente lote falló: ${getErrorMessage(error)}`,
@@ -98,10 +103,13 @@ export async function insertProveedoresLote(
   );
 
   const creados: Proveedor[] = [];
+  const confirmarAltas = (altas: Proveedor[]): void => {
+    creados.push(...altas);
+    onProgreso?.(creados.length);
+  };
   for (let i = 0; i < unicos.length; i += IMPORT_LOTE_TAMANO) {
     const lote = unicos.slice(i, i + IMPORT_LOTE_TAMANO);
-    creados.push(...(await insertarLote(lote, creados.length, unicos.length)));
-    onProgreso?.(creados.length);
+    await insertarLote(lote, creados.length, unicos.length, confirmarAltas);
   }
   return { creados, omitidos: omitidos.length };
 }
