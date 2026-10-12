@@ -54,7 +54,7 @@ function coincideContenedor(s: SolicitudBusqueda, tipo: TarifaTarifario["tipo"])
     (c): c is string => !!c,
   );
   const pedido = candidatos.find(
-    (c) => claveCanonicaTipoContenedor({ name: c, code: "" }) !== "raw:",
+    (c) => !claveCanonicaTipoContenedor({ name: c, code: "" }).startsWith("raw:"),
   );
   if (!pedido) return false;
   const clave = claveCanonicaTipoContenedor({ name: pedido, code: "" });
