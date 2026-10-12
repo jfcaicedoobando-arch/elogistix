@@ -70,11 +70,23 @@ describe("Fase D — saldo_factura + NCs en cierre y cobro", () => {
     expect(calcSql).toMatch(/AND NOT public\.pago_rep_anulado\(p\.estado_rep\)/);
   });
 
-  it("_saldo_factura_calc resta notas de crédito aplicadas no borradas", () => {
-    expect(calcSql).toMatch(
-      /FROM public\.factura_notas_credito[\s\S]{0,200}estado = 'Aplicada'/,
+  it("_saldo_factura_calc resta NC Timbrada/Aplicada no borradas de la misma factura", () => {
+    const marker = "CREATE OR REPLACE FUNCTION public._saldo_factura_calc(p_factura_id uuid)";
+    const start = calcSql.indexOf(marker);
+    const opening = calcSql.indexOf("AS $function$", start);
+    const bodyStart = opening + "AS $function$".length;
+    const end = calcSql.indexOf("$function$;", bodyStart);
+    expect(start).toBeGreaterThanOrEqual(0);
+    expect(opening).toBeGreaterThan(start);
+    expect(end).toBeGreaterThan(bodyStart);
+    const calcBody = calcSql.slice(bodyStart, end);
+    expect(calcBody).toContain(
+      "FROM public.factura_notas_credito nc\n" +
+      "  WHERE nc.factura_id = p_factura_id\n" +
+      "    AND nc.deleted_at IS NULL\n" +
+      "    AND nc.estado IN ('Timbrada','Aplicada');",
     );
-    expect(calcSql).toMatch(
+    expect(calcBody).toMatch(
       /RETURN COALESCE\(v_total, 0\) - COALESCE\(v_pagos, 0\) - COALESCE\(v_ncs, 0\);/,
     );
   });
