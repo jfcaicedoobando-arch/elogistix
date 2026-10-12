@@ -12,7 +12,7 @@
  * breve ("Actualizando…") para que el usuario entienda el parpadeo.
  */
 import { reserveChunkReloadAttempt } from "@/lib/browserStorage";
-import { renderBootstrapFallback } from "@/lib/bootstrap/renderBootstrapFallback";
+import { showChunkRecoveryFallback } from "./showChunkRecoveryFallback";
 
 const SIGNATURES = [
   "failed to fetch dynamically imported module",
@@ -106,13 +106,6 @@ function showUpdatingOverlay(): void {
   document.body.append(overlay);
 }
 
-function showManualFallback(): void {
-  renderBootstrapFallback(
-    new Error(
-      "No pudimos cargar la versión más reciente de la aplicación. Usa el botón Recargar para intentarlo de nuevo.",
-    ),
-  );
-}
 
 /**
  * Recarga ante chunk caducado. Máximo MAX_RELOADS recargas automáticas en
@@ -132,7 +125,7 @@ export function tryReloadForChunkError(
   const now = (options.now ?? Date.now)();
   if (!reserveChunkReloadAttempt(now, MAX_RELOADS, RELOAD_WINDOW_MS)) {
     clearPendingRecovery();
-    (options.showFallback ?? showManualFallback)();
+    (options.showFallback ?? showChunkRecoveryFallback)();
     return false;
   }
   reloadPending = true;
@@ -149,7 +142,7 @@ export function tryReloadForChunkError(
     return true;
   } catch {
     clearPendingRecovery();
-    (options.showFallback ?? showManualFallback)();
+    (options.showFallback ?? showChunkRecoveryFallback)();
     return false;
   }
 }
