@@ -6,8 +6,14 @@ import { formatFechaEs } from "@/lib/formatters/dates";
 import type { ProximaActividad } from "@/features/crm/types/actividades";
 import { diffDiasMx } from "@/lib/date/mx";
 
-export function formatProx(prox: ProximaActividad | undefined): string {
-  if (!prox) return "Sin próxima acción";
+export type EstadoProximas = "listo" | "cargando" | "error";
+
+export function formatProx(prox: ProximaActividad | undefined, estado: EstadoProximas = "listo"): string {
+  if (!prox) return {
+    listo: "Sin próxima acción",
+    cargando: "Cargando próxima actividad...",
+    error: "Próxima actividad no disponible",
+  }[estado];
   if (!prox.fecha_programada) return prox.asunto;
   // Calendario de negocio CDMX: sin anclar, un usuario en UTC veía "Hoy"
   // en una actividad de ayer/mañana.

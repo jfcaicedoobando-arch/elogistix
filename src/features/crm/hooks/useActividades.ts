@@ -85,14 +85,17 @@ export function useCrearActividad() {
   const { user } = useAuth();
   return useMutation({
     mutationFn: ({ silencioso, ...input }: ActividadInput) => crearActividad(input, user),
-    onSuccess: (_data, variables) => {
-      qc.invalidateQueries({ queryKey: queryKeys.crm.actividades.all });
-      // La agenda de actividades alimenta Higiene (próxima actividad y SLA).
-      qc.invalidateQueries({ queryKey: queryKeys.crm.higiene.all });
-      qc.invalidateQueries({ queryKey: queryKeys.crm.kpis });
-      // Regresión v13.823.78: al crear una actividad el resumen ejecutivo/Mi día
-      // quedaba stale hasta que venciera su staleTime de 60s.
-      qc.invalidateQueries({ queryKey: queryKeys.crm.dashboardAll });
+    onSuccess: async (_data, variables) => {
+      await Promise.all([
+        qc.invalidateQueries({ queryKey: queryKeys.crm.actividades.all }),
+        qc.invalidateQueries({ queryKey: queryKeys.crm.proximasActividadesAll }),
+        // La agenda de actividades alimenta Higiene (próxima actividad y SLA).
+        qc.invalidateQueries({ queryKey: queryKeys.crm.higiene.all }),
+        qc.invalidateQueries({ queryKey: queryKeys.crm.kpis }),
+        // Regresión v13.823.78: al crear una actividad el resumen ejecutivo/Mi día
+        // quedaba stale hasta que venciera su staleTime de 60s.
+        qc.invalidateQueries({ queryKey: queryKeys.crm.dashboardAll }),
+      ]);
       if (!variables.silencioso) notifySuccess(undefined, { title: "Actividad agregada" });
     },
     onError: (error: Error, variables) => {
@@ -106,11 +109,14 @@ export function useCompletarActividad() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: completarActividad,
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: queryKeys.crm.actividades.all });
-      // La agenda de actividades alimenta Higiene (próxima actividad y SLA).
-      qc.invalidateQueries({ queryKey: queryKeys.crm.higiene.all });
-      qc.invalidateQueries({ queryKey: queryKeys.crm.dashboardAll });
+    onSuccess: async () => {
+      await Promise.all([
+        qc.invalidateQueries({ queryKey: queryKeys.crm.actividades.all }),
+        qc.invalidateQueries({ queryKey: queryKeys.crm.proximasActividadesAll }),
+        // La agenda de actividades alimenta Higiene (próxima actividad y SLA).
+        qc.invalidateQueries({ queryKey: queryKeys.crm.higiene.all }),
+        qc.invalidateQueries({ queryKey: queryKeys.crm.dashboardAll }),
+      ]);
       notifySuccess(undefined, { title: "Actividad completada" });
     },
     onError: (error: Error) => {
@@ -124,11 +130,14 @@ export function usePosponerActividad() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: posponerActividad,
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: queryKeys.crm.actividades.all });
-      // La agenda de actividades alimenta Higiene (próxima actividad y SLA).
-      qc.invalidateQueries({ queryKey: queryKeys.crm.higiene.all });
-      qc.invalidateQueries({ queryKey: queryKeys.crm.dashboardAll });
+    onSuccess: async () => {
+      await Promise.all([
+        qc.invalidateQueries({ queryKey: queryKeys.crm.actividades.all }),
+        qc.invalidateQueries({ queryKey: queryKeys.crm.proximasActividadesAll }),
+        // La agenda de actividades alimenta Higiene (próxima actividad y SLA).
+        qc.invalidateQueries({ queryKey: queryKeys.crm.higiene.all }),
+        qc.invalidateQueries({ queryKey: queryKeys.crm.dashboardAll }),
+      ]);
       notifySuccess(undefined, { title: "Actividad pospuesta" });
     },
     onError: (error: Error) => {
