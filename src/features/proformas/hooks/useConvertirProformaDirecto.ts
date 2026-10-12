@@ -51,7 +51,7 @@ export function useConvertirProformaDirecto() {
         requestId: crypto.randomUUID(),
       });
     },
-    onSuccess: (res) => {
+    onSuccess: async (res) => {
       const monedas = res.map((r) => r.moneda).join(" y ");
       if (res.length > 1) {
         toast({
@@ -65,8 +65,13 @@ export function useConvertirProformaDirecto() {
           description: `Borrador ${r.facturaNumero.startsWith("BORRADOR-") ? "sin folio" : r.facturaNumero} (${r.moneda}) listo. El folio interno se asignará al timbrar.`,
         });
       }
-      qc.invalidateQueries({ queryKey: queryKeys.proformas.all });
-      qc.invalidateQueries({ queryKey: queryKeys.facturas.all });
+      await Promise.all([
+        qc.invalidateQueries({ queryKey: queryKeys.proformas.all }),
+        qc.invalidateQueries({ queryKey: queryKeys.facturas.all }),
+        qc.invalidateQueries({ queryKey: queryKeys.embarques.fullRoot }),
+        qc.invalidateQueries({ queryKey: queryKeys.embarques.conceptosVenta() }),
+        qc.invalidateQueries({ queryKey: queryKeys.facturacion.bandejaPrefix() }),
+      ]);
     },
     onError: (err) =>
       notifyError(undefined, { error: err, title: "Convertir proforma a factura" }),

@@ -15,9 +15,12 @@ export function useAprobarProformaInterna() {
 
   const mutation = useMutation({
     mutationFn: (proformaId: string) => aceptarProformaSinAutorizacion(proformaId),
-    onSuccess: () => {
+    onSuccess: async () => {
       // `proformas.all` cubre listas y detalle; no existe query con root ["proforma"].
-      void qc.invalidateQueries({ queryKey: queryKeys.proformas.all });
+      await Promise.all([
+        qc.invalidateQueries({ queryKey: queryKeys.proformas.all }),
+        qc.invalidateQueries({ queryKey: queryKeys.facturacion.bandejaPrefix() }),
+      ]);
       notifySuccess(undefined, {
         title: "Proforma aprobada internamente",
         description: "El cliente no requiere autorización; ya puedes convertirla a factura.",
