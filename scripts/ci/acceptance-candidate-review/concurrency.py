@@ -102,11 +102,45 @@ SELECT jsonb_build_object('pid',pg_backend_pid(),'session_user',session_user,
 """
 
 
+# This observer never calls a business RPC or changes row values. It acquires
+# no lasting row lock: success requires real contention, an explicitly verified
+# cancel of its own backend, and ROLLBACK. SQLSTATE 57014 alone is not evidence.
+PROBE_HELPERS = r"""
+SET statement_timeout='20s';
+SET lock_timeout='18s';
+SET idle_in_transaction_session_timeout='45s';
+CREATE FUNCTION pg_temp.lock_probe(relation_name text, expected_id uuid)
+RETURNS jsonb LANGUAGE plpgsql SECURITY INVOKER AS $probe$
+DECLARE actual_id uuid; caller text := current_user; subject uuid := auth.uid();
+BEGIN
+ IF caller <> 'authenticated' OR subject IS NULL
+    OR auth.role() IS DISTINCT FROM 'authenticated'
+    OR public.has_role(subject,'super_admin'::public.app_role)
+    OR relation_name NOT IN ('cotizaciones','crm_oportunidades','crm_leads','crm_empresas') THEN
+   RAISE EXCEPTION 'ACCEPTANCE_CONCURRENCY_BAD_PROBE';
+ END IF;
+ BEGIN
+  EXECUTE format('SELECT id FROM public.%I WHERE id=$1 FOR UPDATE',relation_name)
+    INTO actual_id USING expected_id;
+  RETURN jsonb_build_object('acquired',true,'row_id',actual_id,'caller',caller,'subject',subject);
+ EXCEPTION WHEN query_canceled THEN
+  RETURN jsonb_build_object('acquired',false,'cancelled',true,'sqlstate',SQLSTATE,
+      'message',SQLERRM,'row_id',expected_id,'caller',caller,'subject',subject);
+ END;
+END $probe$;
+SELECT jsonb_build_object('pid',pg_backend_pid(),'session_user',session_user,
+                         'current_user',current_user);
+"""
+
+
 class Session:
     """Persistent psql stdin, bounded command acknowledgments, separate logs."""
-    def __init__(self, harness, label):
+    def __init__(self, harness, label, probe_only=False):
         self.h = harness
         self.label = label
+        self.probe_only = probe_only
+        self.application_name = 'acceptance-' + uuid.uuid4().hex
+        self.fixture = None
         self.pending = None
         self.lines = queue.Queue()
         self.closed = False
@@ -128,7 +162,8 @@ class Session:
         ]
         for reader in self.readers:
             reader.start()
-        identity = one_json(self.execute(SESSION_HELPERS), label + ' startup')
+        identity = one_json(self.execute('SET application_name=' + literal(self.application_name) + ';\n'
+                                        + (PROBE_HELPERS if probe_only else SESSION_HELPERS)), label + ' startup')
         require(identity['session_user'] == 'postgres' and identity['current_user'] == 'postgres',
                 'Session must originate inside the owned PostgreSQL fixture runner')
         self.pid = int(identity['pid'])
@@ -178,6 +213,7 @@ class Session:
         return self.finish(seconds)
 
     def begin(self, fixture):
+        self.fixture = dict(fixture)
         self.actor = fixture['manager']
         claims = json.dumps({'sub': self.actor, 'role': 'authenticated',
                              'email': fixture['manager_email']}, separators=(',', ':'))
@@ -198,6 +234,7 @@ class Session:
                 and data['conversion_authorized'] is True, self.label + ': actual role/tenant/legacy hierarchy failed')
 
     def call(self, operation, quote_id, payload=None, asynchronous=False):
+        require(not self.probe_only, 'A row-lock observer cannot call a business RPC')
         sql = "SELECT pg_temp.invoke(" + ','.join((literal(operation), literal(quote_id) + '::uuid',
               literal(json.dumps(payload or {}, separators=(',', ':'))) + '::jsonb')) + ");"
         self.start(sql)
@@ -213,6 +250,7 @@ class Session:
     def end(self, commit=True):
         require(not self.execute('COMMIT;' if commit else 'ROLLBACK;'), self.label + ': transaction command returned rows')
         self.actor = None
+        self.fixture = None
 
     def close(self):
         if self.closed:
@@ -223,7 +261,9 @@ class Session:
             try:
                 # Cleanup is bounded separately and must still run after the
                 # global suite deadline has expired.
-                self.h.context.query('SELECT pg_cancel_backend(' + str(self.pid) + ');',
+                self.h.context.query('SELECT pg_cancel_backend(pid) FROM pg_stat_activity WHERE pid='
+                                     + str(self.pid) + " AND datname='acceptance_concurrency' AND application_name="
+                                     + literal(self.application_name) + ';',
                                      self.label + '-cancel-owned-backend', timeout=5)
             except Exception:
                 pass
@@ -259,6 +299,7 @@ class Harness:
         self.deadline = time.monotonic() + SUITE_SECONDS
         self.sequence = 0
         self.events = []
+        self.row_proofs = {}
         self.sessions = []
         argv = context.psql_argv
         require(isinstance(argv, list) and all(isinstance(a, str) for a in argv), 'argv must be an explicit list')
@@ -313,7 +354,7 @@ class Harness:
             if holder.pid in latest['blockers'] and latest['wait_event_type'] == 'Lock':
                 require(waiter.pending is not None, label + ': waiter did not have an outstanding RPC')
                 if relation:
-                    self.row_held(holder, relation, row_id, label + '-target-row')
+                    self.assert_row_proof(holder, relation, row_id, label + '-target-row')
                 self.events.append({'barrier': label, 'proof': latest})
                 return
             require(waiter.process.poll() is None, label + ': waiter exited instead of blocking')
@@ -321,17 +362,95 @@ class Harness:
             time.sleep(.04)
         raise TimeoutError(label + ': exact blocking PID was not observed: ' + json.dumps(latest))
 
-    def row_held(self, holder, relation, row_id, label):
-        require(relation in ('cotizaciones', 'crm_oportunidades', 'crm_leads', 'crm_empresas'), 'Unexpected lock target')
-        data = one_json(self.query(
-            "SELECT jsonb_build_object('relation'," + literal(relation) + ",'row_id',t.id,'xmax',t.xmax::text,"
-            "'holder'," + str(holder.pid) + ", 'held',EXISTS(SELECT 1 FROM pg_locks l WHERE l.pid=" + str(holder.pid)
-            + " AND l.locktype='transactionid' AND l.transactionid::text=t.xmax::text AND l.granted"
-            " AND l.mode='ExclusiveLock'), 'holder_state',(SELECT state FROM pg_stat_activity WHERE pid="
-            + str(holder.pid) + ")) FROM public." + relation + ' t WHERE id=' + literal(row_id) + '::uuid;', label), label)
-        require(data['held'] is True and data['row_id'] == row_id, label + ': exact row xmax must match holder transaction lock')
+    @staticmethod
+    def valid_identity(data, session):
+        return (data.get('pid') == session.pid
+                and data.get('datname') == 'acceptance_concurrency'
+                and data.get('application_name') == session.application_name)
+
+    def assert_row_proof(self, holder, relation, row_id, label):
+        proof = self.row_proofs.get((holder.pid, relation, row_id))
+        require(proof is not None, label + ': exact row must be probed before starting a queued RPC')
+        current = one_json(self.query(
+            "SELECT jsonb_build_object('pid',a.pid,'datname',a.datname,'application_name',a.application_name,"
+            "'backend_xid',a.backend_xid::text,'state',a.state,'xid_lock',EXISTS(SELECT 1 FROM pg_locks l "
+            "WHERE l.pid=a.pid AND l.locktype='transactionid' AND l.transactionid=a.backend_xid "
+            "AND l.granted AND l.mode='ExclusiveLock')) FROM pg_stat_activity a WHERE a.pid="
+            + str(holder.pid) + ';', label), label)
+        require(self.valid_identity(current, holder)
+                and current['backend_xid'] == proof['holder']['backend_xid']
+                and current['backend_xid'] is not None and current['xid_lock'] is True
+                and current['state'] in ('active', 'idle in transaction'),
+                label + ': row proof does not belong to the same live holder transaction')
+        data = {'row_proof': proof['label'], 'relation': relation, 'row_id': row_id,
+                'holder_transaction': current}
         self.events.append({'barrier': label, 'proof': data})
         return data
+
+    def row_held(self, holder, relation, row_id, label):
+        require(relation in ('cotizaciones', 'crm_oportunidades', 'crm_leads', 'crm_empresas'), 'Unexpected lock target')
+        require(holder.fixture is not None and holder.actor == holder.fixture['manager'],
+                'A lock probe requires the same authenticated manager and tenant as the holder')
+        probe = Session(self, label + '-observer', probe_only=True)
+        try:
+            require(probe.pid != holder.pid, 'Lock observer must have its own backend')
+            probe.begin(holder.fixture)
+            sql = "SELECT pg_temp.lock_probe(" + literal(relation) + ',' + literal(row_id) + '::uuid);'
+            probe.start(sql)
+            end = min(self.deadline, time.monotonic() + BARRIER_SECONDS)
+            latest = None
+            while time.monotonic() < end:
+                latest = one_json(self.query(
+                    "SELECT jsonb_build_object('probe',jsonb_build_object('pid',p.pid,'datname',p.datname,"
+                    "'application_name',p.application_name,'state',p.state,'query',p.query,"
+                    "'wait_event_type',p.wait_event_type,'wait_event',p.wait_event),"
+                    "'holder',jsonb_build_object('pid',h.pid,'datname',h.datname,'application_name',h.application_name,"
+                    "'backend_xid',h.backend_xid::text,'state',h.state),"
+                    "'blockers',pg_blocking_pids(p.pid),'locks',(SELECT coalesce(jsonb_agg(to_jsonb(l)),'[]'::jsonb) "
+                    "FROM pg_locks l WHERE l.pid IN (p.pid,h.pid))) FROM pg_stat_activity p "
+                    "JOIN pg_stat_activity h ON h.pid=" + str(holder.pid) + ' WHERE p.pid=' + str(probe.pid) + ';',
+                    label + '-observe'), label)
+                require(self.valid_identity(latest['probe'], probe)
+                        and self.valid_identity(latest['holder'], holder), label + ': observer/holder identity mismatch')
+                p, h = latest['probe'], latest['holder']
+                if (latest['blockers'] == [holder.pid] and p['state'] == 'active'
+                        and p['wait_event_type'] == 'Lock' and p['wait_event'] == 'transactionid'):
+                    require(p['query'].strip() == sql and h['backend_xid'] is not None
+                            and h['state'] in ('active', 'idle in transaction'), label + ': unexpected blocked SQL/holder transaction')
+                    waiting = [l for l in latest['locks'] if l['pid'] == probe.pid
+                               and l['locktype'] == 'transactionid' and not l['granted'] and l['mode'] == 'ShareLock']
+                    owned = [l for l in latest['locks'] if l['pid'] == holder.pid
+                             and l['locktype'] == 'transactionid' and l['granted'] and l['mode'] == 'ExclusiveLock']
+                    require(any(w['transactionid'] == own['transactionid'] for w in waiting for own in owned)
+                            and any(own['transactionid'] == h['backend_xid'] for own in owned),
+                            label + ': waiting XID must match exact holder lock and live top-level transaction')
+                    break
+                require(probe.process.poll() is None, label + ': observer exited before lock proof')
+                require(not (p['query'].strip() == sql and p['state'] == 'idle in transaction'),
+                        label + ': observer acquired row instead of blocking on the intended holder')
+                time.sleep(.04)
+            else:
+                raise TimeoutError(label + ': exact row observer was not blocked by holder: ' + json.dumps(latest))
+            cancelled = one_json(self.query(
+                "SELECT jsonb_build_object('cancelled',pg_cancel_backend(pid)) FROM pg_stat_activity WHERE pid="
+                + str(probe.pid) + " AND datname='acceptance_concurrency' AND application_name="
+                + literal(probe.application_name) + " AND state='active' AND btrim(query)=" + literal(sql) + ';',
+                label + '-cancel-owned-observer'), label)
+            require(cancelled.get('cancelled') is True, label + ': exact owned observer cancellation failed')
+            result = one_json(probe.finish(), label + ' observer cancelled')
+            require(result.get('acquired') is False and result.get('cancelled') is True
+                    and result.get('sqlstate') == '57014'
+                    and result.get('message') == 'canceling statement due to user request'
+                    and result.get('row_id') == row_id and result.get('caller') == 'authenticated'
+                    and result.get('subject') == holder.actor, label + ': observer must report the verified cancellation')
+            probe.end(False)
+            proof = {'label': label, 'relation': relation, 'row_id': row_id, **latest,
+                     'cancellation': cancelled, 'observer_result': result, 'observer_rollback': True}
+            self.row_proofs[(holder.pid, relation, row_id)] = proof
+            self.events.append({'barrier': label, 'proof': proof})
+            return proof
+        finally:
+            self.close_pair((probe,))
 
     def pair(self, label):
         a = Session(self, label + '-a')
@@ -590,6 +709,7 @@ def case_same_quote_convert(h):
         original_seal = seal(accepted, f['quote'])
         a.begin(f)
         first = success(a.call('convert', f['quote'], payload(f)), False, 'convert', f)
+        h.row_held(a, 'cotizaciones', f['quote'], name + '-conversion-row-held')
         b.begin(f)
         b.call('convert', f['quote'], payload(f), asynchronous=True)
         h.wait_blocked(b, a, name + '-second-conversion-blocked', 'cotizaciones', f['quote'])
@@ -616,6 +736,7 @@ def case_sister_during_conversion(h, rollback):
         held = one_json(b.execute("SELECT jsonb_build_object('id',id) FROM public.cotizaciones WHERE id="
                                   + literal(f['sister']) + '::uuid FOR UPDATE;'), name + '-sister-lock')
         require(held['id'] == f['sister'], 'Authenticated sister row lock must return the intended row')
+        h.row_held(b, 'cotizaciones', f['sister'], name + '-sister-row-held')
         a.begin(f)
         a.call('convert', f['quote'], payload(f), asynchronous=True)
         h.wait_blocked(a, b, name + '-conversion-blocked-on-sister', 'cotizaciones', f['sister'])
@@ -653,6 +774,7 @@ def case_accept_retry_during_conversion(h):
         accepted = accept_committed(h, a, f, name + '-accepted')
         a.begin(f)
         success(a.call('convert', f['quote'], payload(f)), False, 'convert', f)
+        h.row_held(a, 'cotizaciones', f['quote'], name + '-conversion-row-held')
         b.begin(f)
         b.call('accept', f['quote'], asynchronous=True)
         h.wait_blocked(b, a, name + '-accept-retry-blocked', 'cotizaciones', f['quote'])
@@ -682,6 +804,7 @@ def case_shared_lead_conversion(h):
         require(row(accepted, 'crm_leads', f['lead'])['estado'] == 'Calificado', 'Shared-lead precondition')
         a.begin(f)
         success(a.call('convert', f['quote'], payload(f)), False, 'convert', f)
+        h.row_held(a, 'crm_leads', f['lead'], name + '-shared-lead-held')
         b.begin(f)
         b.call('accept', f['quote_two'], asynchronous=True)
         h.wait_blocked(b, a, name + '-accept-waits-on-shared-lead', 'crm_leads', f['lead'])
@@ -718,7 +841,8 @@ def run_concurrency(context):
               'tracked_tables': list(TABLES) + ['user_roles', 'auth.users'],
               'limits': {'command_seconds': COMMAND_SECONDS, 'barrier_seconds': BARRIER_SECONDS,
                          'suite_seconds': SUITE_SECONDS, 'business_sessions_per_case': 2,
-                         'observer': 'separate read-only catalog/row queries; setup seeding is privileged'}}
+                         'transient_lock_observers_at_once': 1,
+                         'observer': 'read-only catalog queries plus one authenticated exact-row FOR UPDATE probe, verified own-PID cancellation and unconditional rollback; no business RPC or row mutation; setup seeding is privileged'}}
     h.out.joinpath('result.json').write_text(json.dumps(status, indent=2) + '\n')
     runners = (
         case_same_quote_accept,

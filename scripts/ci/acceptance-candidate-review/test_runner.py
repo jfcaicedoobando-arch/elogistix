@@ -4,6 +4,7 @@ import ast
 import importlib.util
 import json
 import re
+import sys
 import tempfile
 import unittest
 from pathlib import Path
@@ -89,6 +90,27 @@ class HarnessStaticChecks(unittest.TestCase):
             with self.assertRaises((RuntimeError, ValueError)):
                 runner.strip_acceptance_definition(invalid)
 
+    def test_real_pg179_dollar_tag_and_exact_boundary(self):
+        header = ('CREATE FUNCTION public.aceptar_cotizacion_version(p_cotizacion_id uuid) RETURNS jsonb\n'
+                  "    LANGUAGE plpgsql SECURITY DEFINER\n    SET search_path TO 'public'\n    AS ")
+        suffix = '\nCREATE TABLE public.real_table(id uuid);\n'
+        for tag in ('$$', '$_$', '$pg_dump_17$'):
+            base = header + tag + '\nBEGIN RETURN 1; END;\n' + tag + ';' + suffix
+            candidate = base.replace('RETURN 1', 'RETURN 2')
+            self.assertEqual(runner.strip_acceptance_definition(base), runner.strip_acceptance_definition(candidate))
+            self.assertTrue(runner.strip_acceptance_definition(base).endswith(suffix))
+            self.assertNotEqual(runner.strip_acceptance_definition(base),
+                                runner.strip_acceptance_definition(candidate.replace('real_table(id uuid)', 'real_table(id text)')))
+        nested = header + "$_$\nBEGIN RAISE NOTICE $$inner$$; END;\n$_$;" + suffix
+        self.assertTrue(runner.strip_acceptance_definition(nested).endswith(suffix))
+        for malformed in (header + '$_$body$$;' + suffix,
+                          header + '$_$body' + suffix + '$_$;',
+                          header + '$_$BEGIN -- AS $$\nRETURN 1; END;\n$$;' + suffix,
+                          header + '$_$body$_$\nALTER TABLE public.keep ENABLE ROW LEVEL SECURITY;\n$_$;' + suffix,
+                          header + '$9invalid$body$9invalid$;' + suffix):
+            with self.assertRaises(RuntimeError):
+                runner.strip_acceptance_definition(malformed)
+
     def test_no_auth_or_business_success_bypass(self):
         for name in ('neutral-cases.sql', 'preconditions.sql', 'semantic-cases.sql'):
             content = (HERE / name).read_text()
@@ -97,6 +119,17 @@ class HarnessStaticChecks(unittest.TestCase):
         sql = (HERE / 'neutral-cases.sql').read_text()
         self.assertIn('ok IS DISTINCT FROM true', sql)
         self.assertTrue(sql.rstrip().endswith('ROLLBACK;'))
+
+
+def load_tests(loader, tests, pattern):
+    # The existing Actions command invokes this file directly. Include the
+    # separate observer unit checks explicitly; these are never SQL case PASS.
+    probe_spec = importlib.util.spec_from_file_location('acceptance_lock_probe_tests', HERE / 'test_lock_probe.py')
+    probe_tests = importlib.util.module_from_spec(probe_spec)
+    sys.modules[probe_spec.name] = probe_tests
+    probe_spec.loader.exec_module(probe_tests)
+    tests.addTests(loader.loadTestsFromModule(probe_tests))
+    return tests
 
 
 if __name__ == '__main__':

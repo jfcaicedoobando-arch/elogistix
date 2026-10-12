@@ -78,15 +78,21 @@ def assert_candidate_delta(before, after, contract):
 
 
 def strip_acceptance_definition(text):
-    # pg_dump 17.x emits exactly one complete CREATE FUNCTION block. The
-    # accepted function has a $$ body and no other dollar terminator. Fail closed
-    # if its dump representation differs; never use a broad regex replacement.
+    # pg_dump chooses a collision-free dollar tag (17.9 uses $_$ here).
+    # Capture that tag and require its exact backreference. Never consume a
+    # following top-level CREATE if a delimiter is absent or malformed.
     prefix = 'CREATE FUNCTION public.aceptar_cotizacion_version(p_cotizacion_id uuid) RETURNS jsonb\n'
     require(text.count(prefix) == 1, 'One dumped acceptance definition required')
     start = text.index(prefix)
-    body_start = text.index('AS $$', start) + len('AS $$')
-    end = text.index('$$;', body_start) + len('$$;')
-    require(text.find('\nCREATE ', start + 1, body_start) < 0, 'Unexpected dump function shape')
+    opening = re.match(re.escape(prefix)
+        + r'(?:(?!\nCREATE |\bAS\b).)*\bAS[ \t]+(?P<delimiter>\$(?:[A-Za-z_][A-Za-z0-9_]*)?\$)',
+        text[start:], re.S)
+    require(opening is not None, 'Unexpected dump function header or dollar tag')
+    delimiter_start = start + opening.start('delimiter')
+    definition = re.match(r'(?P<delimiter>' + re.escape(opening['delimiter'])
+        + r')(?:(?!(?P=delimiter)|\nCREATE ).)*(?P=delimiter);', text[delimiter_start:], re.S)
+    require(definition is not None, 'Unexpected dump function shape or unterminated dollar tag')
+    end = delimiter_start + definition.end()
     return text[:start] + '<REVIEWED_ACCEPTANCE_FUNCTION>' + text[end:]
 
 

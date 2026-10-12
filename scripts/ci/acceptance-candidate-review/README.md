@@ -85,7 +85,9 @@ fallback exists.
   whole-suite rollback checks. The full explicit inventory lives in the contract
   and coverage file; zero/missing/duplicate/reordered markers are failures.
 - Eight two-session cases use actual authenticated sessions, real row locks and
-  observed blocking PID or row-xmax/transaction-lock evidence. NOWAIT's explicit
+  observed blocking PID and authenticated exact-row probe evidence. At most one
+  transient lock observer is added to the two persistent business sessions;
+  its exact PID/query is cancelled and rolled back after proving contention. NOWAIT's explicit
   55P03/LC_COTIZACION_EN_PROCESO is followed by rollback/retry and final invariants;
   deadlocks, unrelated timeouts, transport failures and raw uniqueness failures
   cannot pass as intended business outcomes.
@@ -119,6 +121,7 @@ Local static checks only:
 
     python3 scripts/ci/acceptance-candidate-review/run.py --static-only
     python3 scripts/ci/acceptance-candidate-review/test_runner.py
+    python3 scripts/ci/acceptance-candidate-review/test_lock_probe.py
 
 Gated Actions only:
 

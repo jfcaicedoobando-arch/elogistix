@@ -117,18 +117,41 @@ network connection or another database.
 
 ## Deterministic barriers and evidence
 
-There are exactly two persistent business sessions per case; catalog/row
-observation uses the parent's additional query connections. This is a real
-PostgreSQL interleaving test, not a thread-only or SQL-string simulation.
+There are exactly two persistent business sessions per case. Read-only catalog
+observation uses the parent's additional query connections. At most one third,
+transient row-lock observer runs at a time. It uses the same authenticated
+manager, JWT subject and tenant as the holder, executes no business RPC and
+changes no row values. It is explicitly cancelled and rolled back before
+continuing. This is a real PostgreSQL interleaving test, not a thread-only or
+SQL-string simulation.
 
 - Blocking success requires the exact expected holder PID in
   `pg_blocking_pids(waiter)` and `wait_event_type='Lock'`. It is never inferred
   from elapsed time or an unfinished Python process.
-- The held-row proof reads the exact fixture row's visible `xmax` and requires a
-  granted ExclusiveLock for that transaction ID owned by the expected backend.
-  In these isolated fixtures the row has a single owning transaction. A
-  MultiXact or a changed lock pattern that cannot meet this proof fails closed;
-  it is not silently treated as sufficient evidence.
+- Held-row proof uses a transient authenticated `SELECT ... FOR UPDATE` on the
+  exact allowlisted table and fixture UUID. The observer must be active in
+  `acceptance_concurrency` with its unique application_name, waiting on
+  `Lock/transactionid`; its sole blocking PID must be the expected holder.
+  Its waiting ShareLock must match a granted transactionid ExclusiveLock of
+  that holder, whose own top-level transaction lock must also remain present.
+  Observer and holder PID/database/application_name and exact observer SQL are
+  recorded. This does not equate tuple xmax with a live XID lock: PostgreSQL
+  releases a completed subtransaction's XID lock while retaining its parent
+  transaction and row locks.
+- After observing contention, only that exact observer PID, database,
+  application_name and still-active query may be cancelled. It must report
+  SQLSTATE 57014 with the explicit user-cancellation message, then complete
+  ROLLBACK. A timeout, acquired/missing row, wrong blocker, unrelated SQL,
+  failed cancellation or changed identity fails closed. Cleanup of that owned
+  session also runs unconditionally on every exception. Failure-path cancellation
+  of any session filters its exact PID, database and unique application_name;
+  no bare-PID cancellation fallback is permitted.
+- Probe a row before starting the second business RPC on it, so the observer
+  cannot queue behind that RPC's own tuple lock. The later business-blocking
+  assertion separately observes its exact holder PID and verifies the earlier
+  row proof still belongs to the same holder backend_xid, database,
+  application_name and live top-level XID lock. A transaction boundary or
+  recycled backend invalidates the proof.
 - NOWAIT races use that held-row barrier before invoking the contender and assert
   the exact domain error. They do not classify every `55P03` as acceptable.
 - Psql completion requires a per-command unique marker, with bounded deadlines.
@@ -137,7 +160,9 @@ PostgreSQL interleaving test, not a thread-only or SQL-string simulation.
 - Limits: 20-second PostgreSQL statement timeout; 18-second lock timeout;
   45-second idle-in-transaction timeout; 25-second command acknowledgment;
   12-second barrier observation; 240-second total suite deadline. Cleanup has
-  its own bounded wait/cancel and only targets owned session PIDs.
+  its own bounded wait/cancel and only targets owned session PIDs. Row observers
+  share these same bounds, and their SQL, identities, raw pg_locks, cancellation
+  result and completed rollback are preserved in the ordinary evidence.
 - Poll backoff sleeps merely avoid a busy loop. Every success requires observed
   lock evidence and the expected completed RPC responses.
 
@@ -163,6 +188,15 @@ Sequence advancement is intentionally not asserted transactional.
 limits, completed cases, and barrier evidence. Per-session SQL/stdout/stderr and
 per-observer SQL plus parent logs provide failure diagnosis. The module returns
 only after all eight cases pass; exceptions must propagate to a failing CI.
+
+## Static regression checks
+
+Run `python3 scripts/ci/acceptance-candidate-review/test_lock_probe.py`.
+These offline unit checks reject mismatched PID/database/application_name,
+missing or wrong XID locks, wrong SQL, missing holder XID, an uncontended row,
+failed cancellation and reuse across transactions. They verify unconditional
+observer cleanup, no business RPC in the probe and the unchanged eight-case
+inventory. They do not count as PostgreSQL runtime cases.
 
 ## Accurate remaining limitations
 

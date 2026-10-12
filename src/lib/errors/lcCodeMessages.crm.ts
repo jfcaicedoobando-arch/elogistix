@@ -139,6 +139,8 @@ export const LC_CODE_MESSAGES_CRM: Record<string, string> = {
     "La cotización pertenece a otra organización; no puede vincularse a este embarque.",
 
   // v13.823.57 · autoridad única cotización terminal → oportunidad ganada.
+  LC_COTIZACION_EN_PROCESO:
+    "La oportunidad está en otra operación. Espera un momento y vuelve a intentar aceptar la cotización.",
   LC_COTIZACION_GANADORA_EXISTE:
     "Esta oportunidad ya tiene una cotización ganadora. Recarga la pantalla: sólo una cotización puede quedar aceptada o en operación por oportunidad.",
   // v13.823.58 · la cotización ya está aceptada pero su enlace con la
