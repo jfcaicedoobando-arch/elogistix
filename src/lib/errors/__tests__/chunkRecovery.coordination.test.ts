@@ -62,7 +62,8 @@ describe("chunk recovery across independent handlers", () => {
       expect(reload).toHaveBeenCalledTimes(attempt <= 2 ? 1 : 0);
     }
     expect(JSON.parse(sessionStorage.getItem(KEY)!).count).toBe(2);
-    expect(document.getElementById("root")!.textContent).toContain("Recargar");
+    expect(document.querySelector("#root input")?.getAttribute("value")).toBe("unsaved");
+    expect(document.getElementById("chunk-recovery-notice")!.textContent).toContain("Recargar");
     vi.setSystemTime(130_000);
     vi.resetModules();
     expect((await load()).tryReloadForChunkError(vi.fn())).toBe(true);
