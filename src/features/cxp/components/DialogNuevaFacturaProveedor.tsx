@@ -142,8 +142,7 @@ function DialogNuevaFacturaProveedorForm({
         footer={footer}
         // YG-04: con captura en curso, cerrar por X/Escape/clic exterior pide confirmación.
         isDirty={hayCaptura}
-        busy={ctl.isPending || isNavigating}
-        suppressDiscardConfirmation={isNavigating}
+        busy={{ active: ctl.isPending || isNavigating, suppressDiscardConfirmation: isNavigating }}
         stepper={{ step: pasos.paso, totalSteps: pasos.totalPasos, labels: [...pasos.etiquetas] }}
         headerAside={
           <TotalesChipDesglose

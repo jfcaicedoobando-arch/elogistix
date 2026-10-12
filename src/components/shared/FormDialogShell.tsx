@@ -24,6 +24,11 @@ import { FormDialogHeaderBlock } from "./FormDialogHeaderBlock";
 
 
 type Size = keyof typeof dialogSize;
+export type FormDialogBusyState = {
+  active: boolean;
+  /** Otra guarda de salida tiene prioridad y consume el aviso de descarte local. */
+  suppressDiscardConfirmation?: boolean;
+};
 
 interface Props {
   open: boolean;
@@ -64,9 +69,7 @@ interface Props {
    * (ESC, clic fuera, botón X) y el contenido se marca `aria-busy`. Evita que
    * el usuario crea que canceló algo que sigue ejecutándose.
    */
-  busy?: boolean;
-  /** Otra guarda de salida tiene prioridad y consume el aviso de descarte local. */
-  suppressDiscardConfirmation?: boolean;
+  busy?: boolean | FormDialogBusyState;
   children: ReactNode;
 }
 
@@ -88,10 +91,11 @@ export function FormDialogShell({
   stickyBottom,
   bodyClassName,
   isDirty = false,
-  busy = false,
-  suppressDiscardConfirmation = false,
+  busy: busyState = false,
   children,
 }: Props) {
+  const busy = typeof busyState === "boolean" ? busyState : busyState.active;
+  const suppressDiscardConfirmation = typeof busyState === "boolean" ? false : Boolean(busyState.suppressDiscardConfirmation);
   const enfocar = autoFocusFirstField ?? Boolean(formId);
   const bodyRef = useAutoFocusPrimerCampo(open, enfocar);
   const bodyClass = cn("flex-1 overflow-y-auto px-6 py-5 space-y-5", bodyClassName);

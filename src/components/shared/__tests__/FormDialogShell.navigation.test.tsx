@@ -30,7 +30,9 @@ function CaptureFixture({
       description="Datos del formulario"
       isDirty={Boolean(folio)}
       footer={<FormDialogCancelarBoton onCancelar={onCancelar} />}
-      {...gates}
+      busy={gates.suppressDiscardConfirmation === undefined ? gates.busy : {
+        active: gates.busy ?? false, suppressDiscardConfirmation: gates.suppressDiscardConfirmation,
+      }}
     >
       <label htmlFor="folio-protegido">Folio</label>
       <input id="folio-protegido" value={folio} onChange={(event) => setFolio(event.target.value)} />
@@ -182,5 +184,39 @@ describe("FormDialogShell: comportamiento predeterminado sin supresión", () => 
     expect(screen.queryByRole("alertdialog")).not.toBeInTheDocument();
     expect(fixture.onOpenChange).toHaveBeenCalledExactlyOnceWith(false);
     expect(fixture.onCancelar).not.toHaveBeenCalled();
+  });
+});
+
+describe("FormDialogShell: objeto busy normalizado", () => {
+  it.each(closeRequests)("active=false permite %s sin captura", (request) => {
+    const fixture = mount({ busy: false, suppressDiscardConfirmation: false });
+    expect(screen.getByLabelText("Folio").closest('[role="dialog"]')).toHaveAttribute("aria-busy", "false");
+    requestClose(request);
+    expect(fixture.onOpenChange).toHaveBeenCalledExactlyOnceWith(false);
+    expect(screen.queryByRole("alertdialog")).not.toBeInTheDocument();
+  });
+
+  it.each(closeRequests)("active=false conserva el aviso y captura en %s", (request) => {
+    const fixture = mount({ busy: false, suppressDiscardConfirmation: false });
+    capture();
+    requestClose(request);
+    fixture.setGates({ busy: false, suppressDiscardConfirmation: false });
+    expect(screen.getAllByRole("alertdialog")).toHaveLength(1);
+    fireEvent.click(screen.getByRole("button", { name: "Seguir capturando" }));
+    expectPreserved();
+    expect(fixture.onOpenChange).not.toHaveBeenCalled();
+    requestClose(request);
+    discard();
+    expect(fixture.onOpenChange).toHaveBeenCalledExactlyOnceWith(false);
+  });
+
+  it.each(closeRequests)("active=true bloquea %s sin activar supresión", (request) => {
+    const fixture = mount({ busy: true, suppressDiscardConfirmation: false });
+    capture();
+    requestClose(request);
+    expect(screen.getByLabelText("Folio").closest('[role="dialog"]')).toHaveAttribute("aria-busy", "true");
+    expect(fixture.onOpenChange).not.toHaveBeenCalled();
+    expect(screen.queryByRole("alertdialog")).not.toBeInTheDocument();
+    expectPreserved();
   });
 });
