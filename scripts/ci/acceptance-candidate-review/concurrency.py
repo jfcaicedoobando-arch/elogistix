@@ -122,7 +122,7 @@ BEGIN
  BEGIN
   EXECUTE format('SELECT id FROM public.%I WHERE id=$1 FOR UPDATE',relation_name)
     INTO actual_id USING expected_id;
-  RETURN jsonb_build_object('acquired',true,'row_id',actual_id,'caller',caller,'subject',subject);
+  RETURN jsonb_build_object('acquired',actual_id IS NOT NULL,'row_id',actual_id,'caller',caller,'subject',subject);
  EXCEPTION WHEN query_canceled THEN
   RETURN jsonb_build_object('acquired',false,'cancelled',true,'sqlstate',SQLSTATE,
       'message',SQLERRM,'row_id',expected_id,'caller',caller,'subject',subject);
@@ -212,11 +212,14 @@ class Session:
         self.start(sql)
         return self.finish(seconds)
 
-    def begin(self, fixture):
+    def begin(self, fixture, probe_actor=None):
+        require(probe_actor is None or (self.probe_only and probe_actor == 'seller'),
+                'Only a non-RPC observer may select the fixture seller')
         self.fixture = dict(fixture)
-        self.actor = fixture['manager']
+        self.actor = fixture['seller' if probe_actor == 'seller' else 'manager']
+        required_role = 'vendedor' if probe_actor == 'seller' else 'gerente_operaciones' 
         claims = json.dumps({'sub': self.actor, 'role': 'authenticated',
-                             'email': fixture['manager_email']}, separators=(',', ':'))
+                             'email': self.actor + '@test.invalid'}, separators=(',', ':'))
         data = one_json(self.execute("BEGIN ISOLATION LEVEL READ COMMITTED;\n"
             "SET LOCAL ROLE authenticated;\n"
             "DO $claims$ BEGIN PERFORM set_config('request.jwt.claims'," + literal(claims) + ",true); END $claims$;\n"
@@ -224,6 +227,7 @@ class Session:
             "'auth_role',auth.role(),'org_scope',public.org_scope(),'member',public.is_org_member(" + literal(fixture['org']) + "::uuid),"
             "'tenant_scope',public.rls_tenant_scope_ok(" + literal(fixture['org']) + "::uuid),"
             "'global_admin',public.has_role(auth.uid(),'super_admin'::public.app_role),"
+            "'actor_has_role',public.has_role(auth.uid()," + literal(required_role) + "::public.app_role),"
             "'conversion_authorized',public.has_any_role_in_org(auth.uid(),"
             "ARRAY['admin','admin_org','operador','contador','super_admin']::public.app_role[],"
             + literal(fixture['org']) + "::uuid));"), self.label + ' actor')
@@ -231,7 +235,10 @@ class Session:
                 and data['subject'] == self.actor and data['auth_role'] == 'authenticated'
                 and data['org_scope'] == fixture['org'] and data['member'] is True
                 and data['tenant_scope'] is True and data['global_admin'] is False
-                and data['conversion_authorized'] is True, self.label + ': actual role/tenant/legacy hierarchy failed')
+                and data['actor_has_role'] is True
+                and (probe_actor == 'seller' or data['conversion_authorized'] is True),
+                self.label + ': actual role/tenant/legacy hierarchy failed')
+        self.auth_context = data
 
     def call(self, operation, quote_id, payload=None, asynchronous=False):
         require(not self.probe_only, 'A row-lock observer cannot call a business RPC')
@@ -387,14 +394,31 @@ class Harness:
         self.events.append({'barrier': label, 'proof': data})
         return data
 
+    @staticmethod
+    def validate_probe_owner(data, fixture):
+        require(data.get('id') == fixture['lead'] and data.get('organization_id') == fixture['org']
+                and data.get('vendedor_id') == fixture['seller'] and data.get('caller') == 'authenticated'
+                and data.get('subject') == fixture['seller'],
+                'Lead observer must read the exact same-tenant lead owned by the fixture seller under RLS')
+
     def row_held(self, holder, relation, row_id, label):
         require(relation in ('cotizaciones', 'crm_oportunidades', 'crm_leads', 'crm_empresas'), 'Unexpected lock target')
         require(holder.fixture is not None and holder.actor == holder.fixture['manager'],
                 'A lock probe requires the same authenticated manager and tenant as the holder')
+        require(relation != 'crm_leads' or row_id == holder.fixture['lead'],
+                'Seller observer is restricted to the exact fixture lead')
+        probe_actor = 'seller' if relation == 'crm_leads' else None
         probe = Session(self, label + '-observer', probe_only=True)
         try:
             require(probe.pid != holder.pid, 'Lock observer must have its own backend')
-            probe.begin(holder.fixture)
+            probe.begin(holder.fixture, probe_actor=probe_actor)
+            ownership = None
+            if relation == 'crm_leads':
+                ownership = one_json(probe.execute(
+                    "SELECT jsonb_build_object('id',id,'organization_id',organization_id,'vendedor_id',vendedor_id,"
+                    "'caller',current_user,'subject',auth.uid()) FROM public.crm_leads WHERE id="
+                    + literal(row_id) + '::uuid;'), label + '-owner-preflight')
+                self.validate_probe_owner(ownership, holder.fixture)
             sql = "SELECT pg_temp.lock_probe(" + literal(relation) + ',' + literal(row_id) + '::uuid);'
             probe.start(sql)
             end = min(self.deadline, time.monotonic() + BARRIER_SECONDS)
@@ -427,7 +451,7 @@ class Harness:
                     break
                 require(probe.process.poll() is None, label + ': observer exited before lock proof')
                 require(not (p['query'].strip() == sql and p['state'] == 'idle in transaction'),
-                        label + ': observer acquired row instead of blocking on the intended holder')
+                        label + ': observer completed without blocking on the intended holder; row may be invisible or absent')
                 time.sleep(.04)
             else:
                 raise TimeoutError(label + ': exact row observer was not blocked by holder: ' + json.dumps(latest))
@@ -442,10 +466,11 @@ class Harness:
                     and result.get('sqlstate') == '57014'
                     and result.get('message') == 'canceling statement due to user request'
                     and result.get('row_id') == row_id and result.get('caller') == 'authenticated'
-                    and result.get('subject') == holder.actor, label + ': observer must report the verified cancellation')
+                    and result.get('subject') == probe.actor, label + ': observer must report the verified cancellation')
             probe.end(False)
             proof = {'label': label, 'relation': relation, 'row_id': row_id, **latest,
-                     'cancellation': cancelled, 'observer_result': result, 'observer_rollback': True}
+                     'cancellation': cancelled, 'observer_result': result, 'observer_rollback': True,
+                     'probe_auth': probe.auth_context, 'lead_owner_preflight': ownership}
             self.row_proofs[(holder.pid, relation, row_id)] = proof
             self.events.append({'barrier': label, 'proof': proof})
             return proof
@@ -842,7 +867,7 @@ def run_concurrency(context):
               'limits': {'command_seconds': COMMAND_SECONDS, 'barrier_seconds': BARRIER_SECONDS,
                          'suite_seconds': SUITE_SECONDS, 'business_sessions_per_case': 2,
                          'transient_lock_observers_at_once': 1,
-                         'observer': 'read-only catalog queries plus one authenticated exact-row FOR UPDATE probe, verified own-PID cancellation and unconditional rollback; no business RPC or row mutation; setup seeding is privileged'}}
+                         'observer': 'read-only catalog queries plus one authenticated exact-row FOR UPDATE probe (fixture seller owner only for crm_leads, manager otherwise), verified own-PID cancellation and unconditional rollback; no business RPC or row mutation; setup seeding is privileged'}}
     h.out.joinpath('result.json').write_text(json.dumps(status, indent=2) + '\n')
     runners = (
         case_same_quote_accept,

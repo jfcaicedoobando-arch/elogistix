@@ -31,9 +31,13 @@ class FakeSession:
         self.ended = []
         self.closed = False
         self.instances.append(self)
-    def begin(self, fixture):
+    def begin(self, fixture, probe_actor=None):
         self.fixture = fixture
-        self.actor = fixture['manager']
+        self.actor = fixture['seller' if probe_actor == 'seller' else 'manager']
+        self.auth_context = {'subject': self.actor, 'caller': 'authenticated', 'org_scope': fixture.get('org')}
+    def execute(self, sql):
+        return [json.dumps({'id': self.fixture['lead'], 'organization_id': self.fixture['org'],
+                            'vendedor_id': self.fixture['seller'], 'caller': 'authenticated', 'subject': self.actor})]
     def start(self, sql):
         self.pending = sql
     def finish(self):
@@ -41,7 +45,7 @@ class FakeSession:
             return [json.dumps(self.result_override)]
         return [json.dumps({'acquired': False, 'cancelled': True, 'sqlstate': '57014',
                            'message': 'canceling statement due to user request',
-                           'row_id': 'row-1', 'caller': 'authenticated', 'subject': 'manager-1'})]
+                           'row_id': 'row-1', 'caller': 'authenticated', 'subject': self.actor})]
     def end(self, commit=True):
         self.ended.append(commit)
 
@@ -57,7 +61,7 @@ class LockProofUnitTests(unittest.TestCase):
         self.h.closed = []
         self.h.close_pair = lambda pair: self.h.closed.extend(pair)
         self.holder = SimpleNamespace(pid=101, application_name='holder-app',
-                                      fixture={'manager': 'manager-1'}, actor='manager-1')
+                                      fixture={'manager': 'manager-1', 'seller': 'seller-1', 'lead': 'row-1', 'org': 'org-1'}, actor='manager-1')
         self.observation = {
             'probe': {'pid': 202, 'datname': 'acceptance_concurrency', 'application_name': 'observer-app',
                       'state': 'active', 'query': "SELECT pg_temp.lock_probe('cotizaciones','row-1'::uuid);",
@@ -114,7 +118,7 @@ class LockProofUnitTests(unittest.TestCase):
     def test_uncontended_row_is_not_a_lock_proof(self):
         self.observation['probe']['state'] = 'idle in transaction'
         self.observation['blockers'] = []
-        with self.assertRaisesRegex(RuntimeError, 'acquired row instead of blocking'):
+        with self.assertRaisesRegex(RuntimeError, 'completed without blocking'):
             self.run_probe()
         self.assertEqual(self.h.closed, FakeSession.instances)
         self.assertFalse(self.h.row_proofs)
@@ -174,6 +178,61 @@ class LockProofUnitTests(unittest.TestCase):
         s = m.Session.__new__(m.Session); s.probe_only = True
         with self.assertRaisesRegex(RuntimeError, 'cannot call a business RPC'):
             s.call('accept', 'row-1')
+
+    def test_lead_observer_uses_verified_owner_and_other_tables_keep_manager(self):
+        self.observation['probe']['query'] = "SELECT pg_temp.lock_probe('crm_leads','row-1'::uuid);"
+        with patch.object(m, 'Session', FakeSession):
+            proof = self.h.row_held(self.holder, 'crm_leads', 'row-1', 'lead')
+        self.assertEqual(proof['probe_auth']['subject'], 'seller-1')
+        self.assertEqual(proof['lead_owner_preflight']['vendedor_id'], 'seller-1')
+        self.assertEqual(proof['holder']['pid'], self.holder.pid)
+        with patch.object(m, 'Session', FakeSession):
+            with self.assertRaisesRegex(RuntimeError, 'exact fixture lead'):
+                self.h.row_held(self.holder, 'crm_leads', 'other-lead', 'wrong-lead')
+        self.observation['probe']['query'] = "SELECT pg_temp.lock_probe('cotizaciones','row-1'::uuid);"
+        proof = self.run_probe()
+        self.assertEqual(proof['probe_auth']['subject'], 'manager-1')
+        self.assertIsNone(proof['lead_owner_preflight'])
+
+    def test_lead_owner_preflight_rejects_actor_tenant_owner_or_row_mismatch(self):
+        valid = {'id': 'row-1', 'organization_id': 'org-1', 'vendedor_id': 'seller-1',
+                 'caller': 'authenticated', 'subject': 'seller-1'}
+        m.Harness.validate_probe_owner(valid, self.holder.fixture)
+        for field, value in [('id', None), ('id', 'other'), ('organization_id', 'other-tenant'),
+                             ('vendedor_id', 'other-owner'), ('caller', 'postgres'), ('subject', 'manager-1')]:
+            with self.subTest(field=field):
+                with self.assertRaisesRegex(RuntimeError, 'exact same-tenant lead owned'):
+                    m.Harness.validate_probe_owner(dict(valid, **{field: value}), self.holder.fixture)
+
+    def test_seller_may_start_only_non_rpc_probe_without_conversion_permission(self):
+        fixture = {'manager': 'manager-1', 'seller': 'seller-1', 'org': 'org-1'}
+        s = m.Session.__new__(m.Session); s.probe_only = True; s.pid = 1; s.label = 'seller'
+        data = {'pid': 1, 'caller': 'authenticated', 'subject': 'seller-1', 'auth_role': 'authenticated',
+                'org_scope': 'org-1', 'member': True, 'tenant_scope': True, 'global_admin': False,
+                'conversion_authorized': False, 'actor_has_role': True}
+        s.execute = lambda sql: [json.dumps(data)]
+        s.begin(fixture, probe_actor='seller')
+        self.assertEqual(s.actor, 'seller-1')
+        self.assertFalse(s.auth_context['conversion_authorized'])
+        with self.assertRaisesRegex(RuntimeError, 'cannot call a business RPC'): s.call('convert', 'row-1')
+        for key, value in [('caller', 'postgres'), ('subject', 'manager-1'), ('org_scope', 'other'),
+                           ('member', False), ('tenant_scope', False), ('global_admin', True), ('actor_has_role', False)]:
+            original = data[key]; data[key] = value
+            with self.assertRaisesRegex(RuntimeError, 'actual role/tenant'):
+                s.begin(fixture, probe_actor='seller')
+            data[key] = original
+        s.probe_only = False
+        with self.assertRaisesRegex(RuntimeError, 'Only a non-RPC observer'):
+            s.begin(fixture, probe_actor='seller')
+        s.probe_only = True
+        with self.assertRaisesRegex(RuntimeError, 'Only a non-RPC observer'):
+            s.begin(fixture, probe_actor='unrecognized')
+        data['subject'] = 'manager-1'
+        with self.assertRaisesRegex(RuntimeError, 'actual role/tenant'):
+            s.begin(fixture)
+        data['conversion_authorized'] = True
+        s.begin(fixture)
+        self.assertEqual(s.actor, 'manager-1')
 
     def test_case_inventory_unchanged_and_python_parses(self):
         ast.parse((HERE / 'concurrency.py').read_text())

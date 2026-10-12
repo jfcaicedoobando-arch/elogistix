@@ -87,7 +87,10 @@ fallback exists.
 - Eight two-session cases use actual authenticated sessions, real row locks and
   observed blocking PID and authenticated exact-row probe evidence. At most one
   transient lock observer is added to the two persistent business sessions;
-  its exact PID/query is cancelled and rolled back after proving contention. NOWAIT's explicit
+  its exact PID/query is cancelled and rolled back after proving contention.
+  Only the exact fixture lead is probed by its existing authenticated seller
+  owner, with tenant/ownership checked through real RLS; both RPC actors remain
+  the original manager. Other row probes use that manager. NOWAIT's explicit
   55P03/LC_COTIZACION_EN_PROCESO is followed by rollback/retry and final invariants;
   deadlocks, unrelated timeouts, transport failures and raw uniqueness failures
   cannot pass as intended business outcomes.

@@ -119,9 +119,20 @@ network connection or another database.
 
 There are exactly two persistent business sessions per case. Read-only catalog
 observation uses the parent's additional query connections. At most one third,
-transient row-lock observer runs at a time. It uses the same authenticated
-manager, JWT subject and tenant as the holder, executes no business RPC and
-changes no row values. It is explicitly cancelled and rolled back before
+transient row-lock observer runs at a time. For quotes, opportunities and
+companies it uses the same authenticated manager and tenant as the holder.
+Only the exact fixture crm_leads row uses its already-seeded vendedor owner:
+that actor has the real owner SELECT/UPDATE RLS policy, unlike the manager's
+read-only lead access. Before the lock probe, a non-locking query under that
+seller's actual authenticated session must return the exact lead ID, same
+organization_id, vendedor_id=seller, current_user=authenticated and auth.uid()
+equal to that seller. Invisible/missing/wrong-owner rows fail closed. The
+session must also prove membership, tenant scope, its real vendedor role and
+absence of super_admin; it is not required to have conversion permission
+because it cannot call any business RPC. Both persistent business actors keep
+the original gerente_operaciones identity and conversion authorization check.
+No new membership, extra role, privilege, policy or owner change is made. Every
+observer executes no business RPC and changes no row values. It is explicitly cancelled and rolled back before
 continuing. This is a real PostgreSQL interleaving test, not a thread-only or
 SQL-string simulation.
 
@@ -195,8 +206,9 @@ Run `python3 scripts/ci/acceptance-candidate-review/test_lock_probe.py`.
 These offline unit checks reject mismatched PID/database/application_name,
 missing or wrong XID locks, wrong SQL, missing holder XID, an uncontended row,
 failed cancellation and reuse across transactions. They verify unconditional
-observer cleanup, no business RPC in the probe and the unchanged eight-case
-inventory. They do not count as PostgreSQL runtime cases.
+observer cleanup, no business RPC in the probe, the exact fixture-lead-only
+seller selection, same-tenant ownership/actor checks, retained manager RPC
+authorization, and the unchanged eight-case inventory. They do not count as PostgreSQL runtime cases.
 
 ## Accurate remaining limitations
 
