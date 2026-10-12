@@ -14,9 +14,8 @@ type Step = "upload" | "preview" | "committing" | "done";
 interface UseBulkImportArgs<T> {
   mapRows: (rows: Record<string, string>[]) => ImportPreview<T>;
   /**
-   * L3 (Ola E2 · B): recibe `reportarProgreso` para informar cuántas filas
-   * quedaron guardadas. Si un lote falla a la mitad, el usuario ve el corte
-   * exacto en vez de un "error" opaco que lo hace re-subir todo el archivo.
+   * Recibe `reportarProgreso` para informar las altas confirmadas por el
+   * servicio. Este conteo no identifica posiciones dentro del CSV.
    */
   onCommit: (
     payloads: T[],
@@ -104,23 +103,9 @@ export function useBulkImport<T>({ mapRows, onCommit, onSuccess }: UseBulkImport
       onSuccess?.(creados);
     } catch (e) {
       const detalle = e instanceof Error ? e.message : "Error al importar.";
-      // L3: además del corte parcial, decimos EXACTAMENTE en qué fila del CSV
-      // se atoró. Analogía: no basta decir "se imprimieron 40 hojas", hay que
-      // decir "se atoró en la hoja 41" para volver a meter sólo esas.
-      const pendientes = preview.valid.slice(guardados);
-      const primeraFallida = pendientes[0]?.rowNumber;
-      const ultimaFallida = pendientes[pendientes.length - 1]?.rowNumber;
-      const rango =
-        primeraFallida === undefined
-          ? ""
-          : primeraFallida === ultimaFallida
-            ? ` Falta la fila ${primeraFallida} del archivo.`
-            : ` Faltan las filas ${primeraFallida} a ${ultimaFallida} del archivo.`;
-      setError(
-        guardados > 0
-          ? `${detalle} Se guardaron ${guardados} de ${preview.valid.length} registros.${rango}`
-          : `${detalle}${rango}`,
-      );
+      // El servicio puede omitir duplicados antes de guardar: las altas
+      // confirmadas no son un índice ni un rango de filas del archivo.
+      setError(`${detalle} Altas confirmadas en este intento: ${guardados}.`);
       setParcialCount(guardados);
       if (guardados > 0) onSuccess?.(guardados);
       setStep("preview");

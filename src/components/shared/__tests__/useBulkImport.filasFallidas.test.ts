@@ -3,10 +3,9 @@ import { act, renderHook } from "@testing-library/react";
 import { useBulkImport } from "../useBulkImport";
 
 /**
- * L3 — cuando la importación masiva se corta a la mitad, el mensaje debe decir
- * exactamente qué filas del CSV faltaron, no sólo un conteo.
+ * Un conteo de altas confirmadas no permite inferir las filas pendientes.
  */
-describe("useBulkImport · detalle de filas fallidas (L3)", () => {
+describe("useBulkImport · altas confirmadas", () => {
   const preview = {
     valid: [
       { rowNumber: 2, payload: { a: 1 } },
@@ -16,7 +15,7 @@ describe("useBulkImport · detalle de filas fallidas (L3)", () => {
     invalid: [],
   };
 
-  it("nombra el rango de filas que no se guardaron", async () => {
+  it("informa sólo el conteo confirmado del intento", async () => {
     const { result } = renderHook(() =>
       useBulkImport<{ a: number }>({
         mapRows: () => preview,
@@ -36,8 +35,7 @@ describe("useBulkImport · detalle de filas fallidas (L3)", () => {
       await result.current.handleCommit();
     });
 
-    expect(result.current.error).toContain("Se guardaron 1 de 3");
-    expect(result.current.error).toContain("filas 3 a 4");
+    expect(result.current.error).toBe("Falló el lote. Altas confirmadas en este intento: 1.");
     expect(result.current.parcialCount).toBe(1);
   });
 });

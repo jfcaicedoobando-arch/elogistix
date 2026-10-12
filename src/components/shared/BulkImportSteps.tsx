@@ -122,8 +122,9 @@ export function PreviewStep<T>({ fileName, preview, error, parcialCount = 0 }: P
       {parcialCount > 0 && (
         <Alert>
           <AlertDescription>
-            Ya se guardaron {parcialCount} de {valid.length} registros. Vuelve a
-            cargar un archivo con las filas restantes para no duplicar.
+            Altas confirmadas en este intento: {parcialCount}. Puedes reintentar
+            con el mismo archivo; se omitirán los duplicados detectados por RFC
+            o razón social.
           </AlertDescription>
         </Alert>
       )}
