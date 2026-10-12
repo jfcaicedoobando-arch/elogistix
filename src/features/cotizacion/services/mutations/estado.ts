@@ -1,6 +1,7 @@
 import { supabase } from "@/integrations/supabase/client";
 import { registrarActividad } from "@/services/bitacora/registrar";
 import type { TablesInsert } from "@/integrations/supabase/types";
+import { aceptarCotizacionVersion } from "@/features/cotizacion/services/versionado";
 
 /**
  * Estados válidos del enum `estado_cotizacion` en la base de datos.
@@ -36,6 +37,15 @@ export async function updateEstadoCotizacion(
     throw new Error(
       `Estado de cotización inválido: "${estado}". Valores permitidos: ${ESTADOS_COTIZACION_VALIDOS.join(", ")}`,
     );
+  }
+  if (estado === "Aceptada") {
+    if (embarqueId !== undefined) {
+      throw new Error("Acepta la cotización antes de vincular el embarque.");
+    }
+    // La RPC valida permisos/SoD/vigencia y sella la versión en una transacción.
+    // También registra la aceptación; en reintentos no duplicamos la bitácora.
+    await aceptarCotizacionVersion(id);
+    return;
   }
   const update: Partial<TablesInsert<"cotizaciones">> = {
     estado: estado as TablesInsert<"cotizaciones">["estado"],

@@ -62,3 +62,15 @@ describe("visibilidadAcciones — estado En operación sin embarque", () => {
     expect(vis.mostrarFaltaVenta).toBe(true);
   });
 });
+
+describe("visibilidadAcciones — Aceptar antes de Convertir", () => {
+  const prospecto = { ...base, esProspecto: true, puedeAltaCliente: true, tieneOportunidad: true, tieneEmbarquesVinculados: false };
+  it.each(["Borrador", "Solicitada", "Enviada"])("no adelanta conversión en %s", (estado) => {
+    expect(visibilidadAcciones({ ...prospecto, estado }).mostrarConvertirCliente).toBe(false);
+  });
+  it("ofrece conversión sólo después de aceptar sin adelantar embarque", () => {
+    const acciones = visibilidadAcciones(prospecto);
+    expect(acciones.mostrarConvertirCliente).toBe(true);
+    expect(acciones.mostrarCrearEmbarque).toBe(false);
+  });
+});

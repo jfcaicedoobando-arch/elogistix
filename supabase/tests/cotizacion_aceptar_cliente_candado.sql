@@ -5,7 +5,8 @@
 -- ANTES del camino idempotente:
 --
 --   * prospecto sin oportunidad ligada → LC_COT_SIN_OPORTUNIDAD
---   * cotización transaccional sin cliente → LC_COT_SIN_CLIENTE
+--   * cotización transaccional sin cliente fuera del prospecto CRM → LC_COT_SIN_CLIENTE
+--   * prospecto CRM enviado coherente → excepción estrecha Aceptar → Convertir
 --   * informativa (tarifario) → exenta
 --
 -- Antes, el camino idempotente (estado ya Aceptada/En operación) sólo revisaba la
@@ -39,8 +40,33 @@ BEGIN
   IF d !~ 'v_cliente_id IS NULL' THEN
     RAISE EXCEPTION 'REGRESION: falta la validación explícita de cliente_id NULL';
   END IF;
+  IF position('IF v_cliente_id IS NULL AND NOT v_prospecto_sin_cliente THEN' in d) = 0
+     OR position('AND COALESCE(v_es_prospecto, false)' in d) = 0
+     OR position('AND COALESCE(v_tipo_documento, ''transaccional'') = ''transaccional''' in d) = 0 THEN
+    RAISE EXCEPTION 'REGRESION: se eliminó el candado general o se amplió la excepción de prospecto';
+  END IF;
+  IF position('IF NOT v_reintento_prospecto AND v_estado_actual IS DISTINCT FROM ''Enviada'' THEN' in d) = 0
+     OR position('v_origen := ''aceptacion_prospecto_crm''' in d) = 0 THEN
+    RAISE EXCEPTION 'REGRESION: la primera aceptación del prospecto debe exigir Enviada y no ser cliente de casa';
+  END IF;
+  IF position('v_etapa.tipo::text IS DISTINCT FROM ''ganada''' in d) = 0
+     OR position('v_aceptada_en IS NULL OR v_aceptada_por IS NULL' in d) = 0
+     OR position('v_version_aceptada IS DISTINCT FROM v_version' in d) = 0 THEN
+    RAISE EXCEPTION 'REGRESION: retry de prospecto requiere etapa ganada y sello íntegro existente';
+  END IF;
   IF d !~ 'v_tipo_documento, ''transaccional''\) <> ''informativa''' THEN
     RAISE EXCEPTION 'REGRESION: las informativas deben seguir exentas del candado';
+  END IF;
+
+  IF position('IF NOT FOUND OR v_vinculo.organization_id IS DISTINCT FROM v_org THEN' in d) = 0
+     OR position('IF NOT FOUND OR v_vinculo.organization_id IS DISTINCT FROM v_org OR v_empresa.cliente_id IS NOT NULL THEN' in d) <> 0
+     OR position('WHERE id = v_vinculo.empresa_id AND organization_id = v_org AND deleted_at IS NULL' in d) = 0 THEN
+    RAISE EXCEPTION 'REGRESION: el vínculo M:N admite empresa cliente accesoria conservando tenant/ID/borrado';
+  END IF;
+  IF position('WHERE lead_origen_id = v_lead.id FOR SHARE' in d) = 0
+     OR position('v_empresa.organization_id IS DISTINCT FROM v_org OR v_empresa.deleted_at IS NOT NULL' in d) = 0
+     OR position('OR v_empresa.cliente_id IS NOT NULL THEN' in d) = 0 THEN
+    RAISE EXCEPTION 'REGRESION: el linaje principal no admite empresa convertida, eliminada ni de otro tenant';
   END IF;
 
   v_pos_cliente := position('LC_COT_SIN_CLIENTE' in d);
@@ -74,7 +100,7 @@ BEGIN
     RAISE EXCEPTION 'REGRESION: se perdió la segregación de funciones al aceptar';
   END IF;
 
-  RAISE NOTICE 'OK · aceptar_cotizacion_version exige cliente (y oportunidad en prospectos) también en reintentos';
+  RAISE NOTICE 'OK · candado general conservado y excepción CRM Enviada/retry coherente acotada';
 END
 $aceptar$;
 
