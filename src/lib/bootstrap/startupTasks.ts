@@ -44,7 +44,7 @@ export function syncAppVersion(deps: VersionSyncDeps = {}): boolean {
 export interface ChunkRecoveryDeps {
   target?: Pick<Window, "addEventListener">;
   isChunkError?: (error: unknown) => boolean;
-  recover?: () => boolean;
+  recover?: (error?: unknown) => boolean;
 }
 
 /**
@@ -56,12 +56,8 @@ export interface ChunkRecoveryDeps {
 export function registerChunkRecoveryListeners(deps: ChunkRecoveryDeps = {}): void {
   const target = deps.target ?? window;
   const esChunk = deps.isChunkError ?? isDynamicImportError;
-  const recuperar = deps.recover ?? tryReloadForChunkError;
-  const recoverError = (error: unknown): boolean => {
-    const recovering = recuperar();
-    if (recovering && error instanceof Error) Object.assign(error, { expected: true });
-    return recovering;
-  };
+  const recoverError = deps.recover ?? ((error: unknown) =>
+    tryReloadForChunkError(undefined, { error }));
 
   // Sin preventDefault: si se previene, Vite resuelve el import() con
   // `undefined` y el código que desestructura truena (JAVASCRIPT-REACT-74).
@@ -80,3 +76,4 @@ export function registerChunkRecoveryListeners(deps: ChunkRecoveryDeps = {}): vo
     if (recoverError(event.error ?? event.message)) event.preventDefault();
   });
 }
+

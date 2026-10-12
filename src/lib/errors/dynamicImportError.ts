@@ -1,9 +1,9 @@
 /**
  * Detección de errores transitorios de carga de chunks dinámicos (Vite / React.lazy).
  *
- * Estos errores aparecen cuando una pestaña tiene cacheado un bundle viejo y
- * el servidor ya sirvió uno nuevo con otro hash. La app se auto-recupera con
- * un reload, así que se filtran de Sentry y se manejan globalmente.
+ * Pueden aparecer cuando una pestaña conserva un bundle viejo, por un fallo
+ * de red u otras causas de carga. Durante una recuperación pendiente se
+ * marcan temporalmente como esperados; los fallos persistentes se reportan.
  *
  * Recuperación con guarda anti-bucle: se permiten hasta MAX_RELOADS recargas
  * automáticas dentro de RELOAD_WINDOW_MS; si el error persiste, se muestra el
@@ -11,10 +11,7 @@
  * recargando en automático. Antes de cada recarga se muestra un overlay
  * breve ("Actualizando…") para que el usuario entienda el parpadeo.
  */
-import {
-  getChunkReloadHistory,
-  saveChunkReloadHistory,
-} from "@/lib/browserStorage";
+import { reserveChunkReloadAttempt } from "@/lib/browserStorage";
 import { renderBootstrapFallback } from "@/lib/bootstrap/renderBootstrapFallback";
 
 const SIGNATURES = [
@@ -54,21 +51,40 @@ export function isDynamicImportError(error: unknown): boolean {
 }
 
 export interface ChunkReloadOptions {
+  error?: unknown;
   now?: () => number;
   delayMs?: number;
   showOverlay?: () => void;
   showFallback?: () => void;
 }
 
-/** Registra el intento y devuelve cuántos van dentro de la ventana activa. */
-function registerAttempt(now: number): number {
-  const prev = getChunkReloadHistory();
-  const dentroDeVentana = prev !== null && now - prev.first < RELOAD_WINDOW_MS;
-  const next = dentroDeVentana
-    ? { count: prev.count + 1, first: prev.first }
-    : { count: 1, first: now };
-  saveChunkReloadHistory(next);
-  return next.count;
+let reloadPending = false;
+const pendingErrors = new Map<Error, PropertyDescriptor | undefined>();
+
+function isExplicitlyUnexpected(error: unknown): boolean {
+  const intent = error as { expected?: unknown; cause?: { expected?: unknown } } | undefined;
+  return intent?.expected === false || intent?.cause?.expected === false;
+}
+
+function markPendingError(error: unknown): void {
+  if (!(error instanceof Error) || pendingErrors.has(error)) return;
+  try {
+    const descriptor = Object.getOwnPropertyDescriptor(error, "expected");
+    Object.assign(error, { expected: true });
+    pendingErrors.set(error, descriptor);
+  } catch { /* Un error congelado sigue siendo recuperable. */ }
+}
+
+function clearPendingRecovery(): void {
+  reloadPending = false;
+  document.getElementById(OVERLAY_ID)?.remove();
+  for (const [error, descriptor] of pendingErrors) {
+    try {
+      if (descriptor) Object.defineProperty(error, "expected", descriptor);
+      else delete (error as Error & { expected?: boolean }).expected;
+    } catch { /* No bloquear la navegación por un error congelado después. */ }
+  }
+  pendingErrors.clear();
 }
 
 /** Overlay mínimo (DOM plano, tokens semánticos) previo a la recarga. */
@@ -101,21 +117,39 @@ function showManualFallback(): void {
 /**
  * Recarga ante chunk caducado. Máximo MAX_RELOADS recargas automáticas en
  * RELOAD_WINDOW_MS; al exceder el límite muestra un fallback con botón
- * "Recargar" manual. Devuelve true si programó una recarga.
+ * "Recargar" manual. Devuelve true si una recarga está pendiente (propia o compartida).
  */
 export function tryReloadForChunkError(
   reloadPage?: () => void,
   options: ChunkReloadOptions = {},
 ): boolean {
   if (typeof window === "undefined") return false;
+  if (isExplicitlyUnexpected(options.error)) return false;
+  if (reloadPending) {
+    markPendingError(options.error);
+    return true;
+  }
   const now = (options.now ?? Date.now)();
-  const intentos = registerAttempt(now);
-  if (intentos > MAX_RELOADS) {
+  if (!reserveChunkReloadAttempt(now, MAX_RELOADS, RELOAD_WINDOW_MS)) {
+    clearPendingRecovery();
     (options.showFallback ?? showManualFallback)();
     return false;
   }
-  (options.showOverlay ?? showUpdatingOverlay)();
-  const reload = reloadPage ?? (() => window.location.reload());
-  window.setTimeout(reload, options.delayMs ?? RELOAD_DELAY_MS);
-  return true;
+  reloadPending = true;
+  markPendingError(options.error);
+  try {
+    (options.showOverlay ?? showUpdatingOverlay)();
+    const reload = reloadPage ?? (() => window.location.reload());
+    window.setTimeout(() => {
+      // beforeunload puede cancelar la navegación: no dejar un overlay ni
+      // errores silenciados en el documento que conserva el formulario.
+      clearPendingRecovery();
+      reload();
+    }, options.delayMs ?? RELOAD_DELAY_MS);
+    return true;
+  } catch {
+    clearPendingRecovery();
+    (options.showFallback ?? showManualFallback)();
+    return false;
+  }
 }

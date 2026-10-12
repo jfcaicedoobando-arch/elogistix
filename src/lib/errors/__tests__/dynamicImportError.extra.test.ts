@@ -1,10 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 
 
-vi.mock("@/lib/browserStorage", () => ({
-  getChunkReloadHistory: vi.fn(() => null),
-  saveChunkReloadHistory: vi.fn(),
-}));
 
 import {
   isDynamicImportErrorMessage,
@@ -101,8 +97,7 @@ describe("dynamicImportError · tryReloadForChunkError", () => {
 
   beforeEach(() => {
     vi.useFakeTimers();
-    vi.mocked(getChunkReloadHistory).mockReturnValue(null);
-    vi.mocked(saveChunkReloadHistory).mockReset();
+    sessionStorage.clear();
     // No mutamos `window.location.reload`: en jsdom `Location.reload` no es
     // configurable y redefinirlo falla antes de escribir el reporte blob.
     reloadSpy = vi.fn<() => void>();
@@ -121,23 +116,23 @@ describe("dynamicImportError · tryReloadForChunkError", () => {
     const result = tryReloadForChunkError(reloadSpy, { ...opts(), delayMs: 1000, now: () => 1_000 });
     expect(result).toBe(true);
     expect(overlaySpy).toHaveBeenCalledOnce();
-    expect(saveChunkReloadHistory).toHaveBeenCalledWith({ count: 1, first: 1_000 });
+    expect(getChunkReloadHistory()).toEqual({ count: 1, first: 1_000 });
     expect(reloadSpy).not.toHaveBeenCalled();
     vi.advanceTimersByTime(1_000);
     expect(reloadSpy).toHaveBeenCalledOnce();
   });
 
   it("segundo fallo dentro de la ventana: vuelve a recargar", () => {
-    vi.mocked(getChunkReloadHistory).mockReturnValue({ count: 1, first: 1_000 });
+    saveChunkReloadHistory({ count: 1, first: 1_000 });
     const result = tryReloadForChunkError(reloadSpy, { ...opts(), now: () => 60_000 });
     expect(result).toBe(true);
-    expect(saveChunkReloadHistory).toHaveBeenCalledWith({ count: 2, first: 1_000 });
+    expect(getChunkReloadHistory()).toEqual({ count: 2, first: 1_000 });
     vi.runAllTimers();
     expect(reloadSpy).toHaveBeenCalledOnce();
   });
 
   it("tercer fallo dentro de la ventana: NO recarga, muestra fallback manual", () => {
-    vi.mocked(getChunkReloadHistory).mockReturnValue({ count: 2, first: 1_000 });
+    saveChunkReloadHistory({ count: 2, first: 1_000 });
     const result = tryReloadForChunkError(reloadSpy, { ...opts(), now: () => 90_000 });
     expect(result).toBe(false);
     expect(fallbackSpy).toHaveBeenCalledOnce();
@@ -147,11 +142,12 @@ describe("dynamicImportError · tryReloadForChunkError", () => {
   });
 
   it("fallo fuera de la ventana (más de 2 min): reinicia el contador y recarga", () => {
-    vi.mocked(getChunkReloadHistory).mockReturnValue({ count: 2, first: 1_000 });
+    saveChunkReloadHistory({ count: 2, first: 1_000 });
     const result = tryReloadForChunkError(reloadSpy, { ...opts(), now: () => 500_000 });
     expect(result).toBe(true);
-    expect(saveChunkReloadHistory).toHaveBeenCalledWith({ count: 1, first: 500_000 });
+    expect(getChunkReloadHistory()).toEqual({ count: 1, first: 500_000 });
     vi.runAllTimers();
     expect(reloadSpy).toHaveBeenCalledOnce();
   });
 });
+
