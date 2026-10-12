@@ -55,7 +55,12 @@ export function RespuestaClienteManualDialog({
           ? `Proforma ${numero} marcada como aceptada`
           : `Proforma ${numero} marcada como rechazada`,
       });
-      await qc.invalidateQueries({ queryKey: queryKeys.proformas.all });
+      await Promise.all([
+        qc.invalidateQueries({ queryKey: queryKeys.proformas.all }),
+        qc.invalidateQueries({ queryKey: queryKeys.facturacion.bandejaPrefix() }),
+        qc.invalidateQueries({ queryKey: queryKeys.embarques.fullRoot }),
+        qc.invalidateQueries({ queryKey: queryKeys.embarques.conceptosVenta() }),
+      ]);
       onOpenChange(false);
       setMotivo("");
     } catch (e) {
