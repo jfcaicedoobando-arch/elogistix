@@ -4,11 +4,12 @@
  * mexicana) además de la captura manual existente.
  */
 import { baseNcProveedor } from "@/lib/financial/baseNcProveedor";
-import { useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { format } from "date-fns";
 import { FileMinus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { FormDialogShell } from "@/components/shared/FormDialogShell";
+import { FormDialogCancelarBoton } from "@/components/shared/FormDialogCancelarBoton";
 import { Kpi } from "./DialogDetallePagosProveedor.parts";
 import { formatCurrency } from "@/lib/formatters";
 import { useCrearNotaCredito } from "@/features/cxp/hooks/useNotasCreditoProveedor";
@@ -33,10 +34,26 @@ interface Props {
   monedaFactura: MonedaNC;
   saldoFactura: number;
 }
+interface CapturaNc {
+  mode: "manual" | "cfdi";
+  folio: string; fecha: string; monto: string; subtotal: string; tipoCambio: string; descripcion: string;
+  moneda: MonedaNC; motivo: MotivoNC;
+  parsedCfdi: CfdiParsedResponse | null; uuidFiscal: string | null;
+  xml: File | null; pdf: File | null;
+}
+function capturaNcVacia(moneda: MonedaNC): CapturaNc {
+  return {
+    mode: "manual", folio: "", fecha: format(new Date(), "yyyy-MM-dd"), monto: "", subtotal: "",
+    moneda, tipoCambio: "", motivo: "Bonificacion", descripcion: "",
+    parsedCfdi: null, uuidFiscal: null, xml: null, pdf: null,
+  };
+}
 export function DialogNotaCreditoProveedor({ open, onOpenChange, facturaId, monedaFactura, saldoFactura }: Props) {
+  const [capturaInicial, setCapturaInicial] = useState(() => capturaNcVacia(monedaFactura));
+  const inicializadoRef = useRef(false);
   const [mode, setMode] = useState<"manual" | "cfdi">("manual");
   const [folio, setFolio] = useState("");
-  const [fecha, setFecha] = useState(format(new Date(), "yyyy-MM-dd"));
+  const [fecha, setFecha] = useState(capturaInicial.fecha);
   const [monto, setMonto] = useState("");
   const [subtotal, setSubtotal] = useState("");
   const [moneda, setMoneda] = useState<MonedaNC>(monedaFactura);
@@ -55,12 +72,21 @@ export function DialogNotaCreditoProveedor({ open, onOpenChange, facturaId, mone
   const montoEnFactura = montoNcEnMonedaFactura(montoNum, moneda, monedaFactura, conversion.tipoCambio);
   const excede = montoEnFactura !== null && montoEnFactura > saldoFactura + 0.01;
   const valido = baseValida && origenNcValido(mode, parsedCfdi, facturaId, cfdiFiles.xml) && Boolean(folio.trim()) && Boolean(fecha) && Number.isFinite(montoNum) && montoNum > 0 && montoEnFactura !== null && !excede && conversion.disponible;
-  const isDirty =
-    [subtotal, folio, monto, descripcion].some((value) => value.trim() !== "") || parsedCfdi !== null;
-  const reset = () => {
+  const capturaActual: CapturaNc = {
+    mode, folio, fecha, monto, subtotal, moneda, tipoCambio, motivo, descripcion,
+    parsedCfdi, uuidFiscal, xml: cfdiFiles.xml, pdf: cfdiFiles.pdf,
+  };
+  // Los objetos CFDI y File se comparan por referencia, sin serializarlos.
+  // Antes de procesar, la selección local de XML/PDF queda protegida por mode="cfdi".
+  const isDirty = Object.entries(capturaActual).some(
+    ([campo, valor]) => !Object.is(valor, capturaInicial[campo as keyof CapturaNc]),
+  );
+  const reset = useCallback(() => {
+    const inicial = capturaNcVacia(monedaFactura);
+    setCapturaInicial(inicial);
     setMode("manual");
     setFolio("");
-    setFecha(format(new Date(), "yyyy-MM-dd"));
+    setFecha(inicial.fecha);
     setMonto("");
     setSubtotal("");
     setMoneda(monedaFactura);
@@ -70,7 +96,13 @@ export function DialogNotaCreditoProveedor({ open, onOpenChange, facturaId, mone
     setParsedCfdi(null);
     setCfdiFiles({ xml: null, pdf: null });
     setUuidFiscal(null);
-  };
+  }, [monedaFactura]);
+  useEffect(() => {
+    if (!open) { inicializadoRef.current = false; return; }
+    if (inicializadoRef.current) return;
+    inicializadoRef.current = true;
+    reset();
+  }, [open, reset]);
   const handleOpenChange = (o: boolean) => {
     onOpenChange(o);
     if (!o) reset();
@@ -136,7 +168,7 @@ export function DialogNotaCreditoProveedor({ open, onOpenChange, facturaId, mone
   ] ?? "—";
   const footer = (
     <>
-      <Button variant="outline" onClick={() => onOpenChange(false)}>Cancelar</Button>
+      <FormDialogCancelarBoton onCancelar={() => handleOpenChange(false)} disabled={crear.isPending} />
       <Button disabled={!valido || crear.isPending} onClick={onSubmit}>
         {crear.isPending ? "Guardando…" : "Registrar"}
       </Button>
@@ -152,6 +184,7 @@ export function DialogNotaCreditoProveedor({ open, onOpenChange, facturaId, mone
       size="lg"
       footer={footer}
       isDirty={isDirty}
+      busy={crear.isPending}
     >
       <div className="grid grid-cols-3 gap-2.5 -mt-1">
         <Kpi

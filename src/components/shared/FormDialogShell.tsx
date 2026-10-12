@@ -11,7 +11,7 @@
  * No introduce nuevos tokens de color: usa `bg-primary/10`, `text-primary`, `border`.
  */
 import type { LucideIcon } from "lucide-react";
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import type { FormEvent, ReactNode } from "react";
 import { cn } from "@/lib/utils";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
@@ -65,6 +65,8 @@ interface Props {
    * el usuario crea que canceló algo que sigue ejecutándose.
    */
   busy?: boolean;
+  /** Otra guarda de salida tiene prioridad y consume el aviso de descarte local. */
+  suppressDiscardConfirmation?: boolean;
   children: ReactNode;
 }
 
@@ -87,6 +89,7 @@ export function FormDialogShell({
   bodyClassName,
   isDirty = false,
   busy = false,
+  suppressDiscardConfirmation = false,
   children,
 }: Props) {
   const enfocar = autoFocusFirstField ?? Boolean(formId);
@@ -94,16 +97,20 @@ export function FormDialogShell({
   const bodyClass = cn("flex-1 overflow-y-auto px-6 py-5 space-y-5", bodyClassName);
   const [confirmarDescartar, setConfirmarDescartar] = useState(false);
 
+  useEffect(() => {
+    if (suppressDiscardConfirmation) setConfirmarDescartar(false);
+  }, [suppressDiscardConfirmation]);
+
   const handleOpenChange = useCallback(
     (next: boolean) => {
-      if (!next && busy) return;
+      if (!next && (busy || suppressDiscardConfirmation)) return;
       if (!next && isDirty) {
         setConfirmarDescartar(true);
         return;
       }
       onOpenChange(next);
     },
-    [busy, isDirty, onOpenChange],
+    [busy, suppressDiscardConfirmation, isDirty, onOpenChange],
   );
 
   const cerrarGuardado = useCallback(() => handleOpenChange(false), [handleOpenChange]);
@@ -165,7 +172,7 @@ export function FormDialogShell({
         </FormDialogCloseContext.Provider>
 
 
-        <ConfirmActionDialog
+        {!suppressDiscardConfirmation && <ConfirmActionDialog
           open={confirmarDescartar}
           onOpenChange={setConfirmarDescartar}
           title="¿Descartar los cambios?"
@@ -175,9 +182,10 @@ export function FormDialogShell({
           variant="destructive"
           onConfirm={() => {
             setConfirmarDescartar(false);
+            if (busy || suppressDiscardConfirmation) return;
             onOpenChange(false);
           }}
-        />
+        />}
       </DialogContent>
     </Dialog>
 
