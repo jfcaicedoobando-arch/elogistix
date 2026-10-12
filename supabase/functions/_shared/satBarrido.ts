@@ -87,6 +87,7 @@ export async function cargarFacturas(
       "id, uuid_fiscal, rfc_proveedor, total, folio_interno, folio_proveedor, proveedor_nombre, estado, proveedores!inner(origen_proveedor)",
     )
     .eq("organization_id", orgId)
+    .is("deleted_at", null)
     .not("uuid_fiscal", "is", null)
     .neq("proveedores.origen_proveedor", "Extranjero")
     .order("created_at", { ascending: false })
@@ -112,6 +113,7 @@ export async function cargarFacturasPorAntiguedadVerificacion(
       "id, uuid_fiscal, rfc_proveedor, total, folio_interno, folio_proveedor, proveedor_nombre, estado, uuid_verificado_fecha, proveedores!inner(origen_proveedor)",
     )
     .eq("organization_id", orgId)
+    .is("deleted_at", null)
     .not("uuid_fiscal", "is", null)
     .neq("proveedores.origen_proveedor", "Extranjero")
     .in("estado", ["Vigente", "Pagada"])
