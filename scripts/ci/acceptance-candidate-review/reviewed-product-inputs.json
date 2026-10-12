@@ -1,0 +1,62 @@
+[
+  {
+    "path": "src/features/cotizacion/hooks/useAceptarCotizacion.ts",
+    "bytes": 3966,
+    "sha256": "4eee64d19298a2c8b80308a71bc4f0f451596a2d04a9ef2d7a112646a1b412bb"
+  },
+  {
+    "path": "src/features/cotizacion/services/mutations/estado.ts",
+    "bytes": 2969,
+    "sha256": "9579b930f6691d8560419122ca450902e83afd10f21d2ff865afa7c974c290f6"
+  },
+  {
+    "path": "src/features/cotizacion/services/mutations/__tests__/estado.test.ts",
+    "bytes": 4516,
+    "sha256": "0a99053cf4b6bb5cbe492a97d54b772764ca9f062cd6e77bde92e78fce74db59"
+  },
+  {
+    "path": "src/features/cotizacion/services/__tests__/aceptarCotizacionClienteSql.test.ts",
+    "bytes": 6885,
+    "sha256": "e6e5362e7d93854a1073aedcd489110426a959e27c2e497146e8f24fbe41d968"
+  },
+  {
+    "path": "src/features/cotizacion/domain/__tests__/cotizacionDetalleAccionesVisibilidad.test.ts",
+    "bytes": 3185,
+    "sha256": "5eb684a9afb5ab0b156ae8a10e5ffb683c02bbfbc8ff23af017846a8d94a9c44"
+  },
+  {
+    "path": "supabase/schema/cotizaciones/aceptar_cotizacion_version.sql",
+    "bytes": 14548,
+    "sha256": "cc2d39e7ed1c1999b7ce95a7199209ab204689f4acf11d9091f5e62094c0093d"
+  },
+  {
+    "path": "supabase/tests/cotizacion_aceptar_cliente_candado.sql",
+    "bytes": 6063,
+    "sha256": "187964658e68e9eb20603a18a1351c98fb041f6cd313fe891284217cd9033c84"
+  },
+  {
+    "path": "supabase/releases/migration-manifest.json",
+    "bytes": 3490718,
+    "sha256": "4b929c5c9aa86d13db5b66bde095aa9370c940563575f9f2325fb7b25d15a6fb"
+  },
+  {
+    "path": "src/features/cotizacion/hooks/__tests__/aceptacionInterna.integration.test.tsx",
+    "bytes": 15649,
+    "sha256": "97391356a513f74be9a16cf22371bd185d43303f200a901a80859616306620b2"
+  },
+  {
+    "path": "supabase/migrations/20261012160000_aceptacion_prospectos_crm.sql",
+    "bytes": 14548,
+    "sha256": "cc2d39e7ed1c1999b7ce95a7199209ab204689f4acf11d9091f5e62094c0093d"
+  },
+  {
+    "path": "scripts/ci/aceptacion-prospectos/assertions.sql",
+    "bytes": 10856,
+    "sha256": "4d8600d7537b4f66e12bcb8d96630283e87821d33cb1e8bb8d133f6e09f3f0e5"
+  },
+  {
+    "path": "scripts/ci/aceptacion-prospectos/README.txt",
+    "bytes": 3682,
+    "sha256": "a17b2a932b6a5d9ff254d9c5ef545066bf411f66af906ddb3dd83ff247b857df"
+  }
+]

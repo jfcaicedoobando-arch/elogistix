@@ -16,11 +16,13 @@ import { updateEstadoCotizacion, ESTADOS_COTIZACION_VALIDOS } from "../estado";
 import { assertUpdatePayload, assertEq, findTableCall } from "@/test/helpers/assertMutation";
 
 beforeEach(() => {
+  mock.resetResults();
   mock.tableCalls.length = 0;
+  mock.rpcCalls.length = 0;
 });
 
 describe("updateEstadoCotizacion", () => {
-  it.each(ESTADOS_COTIZACION_VALIDOS)("happy path: acepta estado válido %s", async (estado) => {
+  it.each(ESTADOS_COTIZACION_VALIDOS.filter((estado) => estado !== "Aceptada"))("happy path: acepta estado válido %s", async (estado) => {
     mock.setTableResult("cotizaciones", { data: { id: "cot-1" }, error: null });
     await expect(updateEstadoCotizacion("cot-1", estado)).resolves.toBeUndefined();
     const call = findTableCall(mock, "cotizaciones");
@@ -30,7 +32,7 @@ describe("updateEstadoCotizacion", () => {
 
   it("propaga error de Supabase al cambiar estado", async () => {
     mock.setTableResult("cotizaciones", { data: null, error: { message: "row not found" } });
-    await expect(updateEstadoCotizacion("cot-x", "Aceptada")).rejects.toThrow();
+    await expect(updateEstadoCotizacion("cot-x", "Enviada")).rejects.toThrow();
   });
 
   it("rechaza estado inválido SIN tocar la BD", async () => {
@@ -58,7 +60,7 @@ describe("updateEstadoCotizacion", () => {
   // v13.814.0 (hallazgo 1): 0 filas afectadas = RLS o cotización inexistente.
   it("lanza cuando el UPDATE afecta 0 filas", async () => {
     mock.setTableResult("cotizaciones", { data: null, error: null });
-    await expect(updateEstadoCotizacion("cot-1", "Aceptada")).rejects.toThrow(
+    await expect(updateEstadoCotizacion("cot-1", "Enviada")).rejects.toThrow(
       /no tienes permiso o la cotización ya no existe/i,
     );
   });
@@ -70,5 +72,34 @@ describe("updateEstadoCotizacion", () => {
       estado: "Borrador",
       embarque_id: null,
     });
+  });
+
+  it.each([false, true])("Aceptada usa sólo la RPC canónica (sin_cambios=%s)", async (sinCambios) => {
+    mock.setRpcResult("aceptar_cotizacion_version", {
+      data: { version_aceptada: 4, sin_cambios: sinCambios, origen_aceptacion: "interna_cliente_de_casa" },
+      error: null,
+    });
+    await expect(updateEstadoCotizacion("cot-1", "Aceptada")).resolves.toBeUndefined();
+    expect(mock.rpcCalls).toEqual([{ fn: "aceptar_cotizacion_version", args: { p_cotizacion_id: "cot-1" } }]);
+    expect(mock.tableCalls).toEqual([]);
+  });
+
+  it.each([
+    ["42501", "LC_NO_AUTORIZADO"],
+    ["42501", "LC_SOD_VIOLATION"],
+    ["P0001", "LC_COT_VENCIDA"],
+    ["P0001", "LC_COTIZACION_ACEPTACION_INCONSISTENTE"],
+    ["55P03", "LC_COTIZACION_EN_PROCESO"],
+  ])("no hace UPDATE ni bitácora alternativa ante %s/%s", async (code, message) => {
+    mock.setRpcResult("aceptar_cotizacion_version", { data: null, error: { code, message } });
+    await expect(updateEstadoCotizacion("cot-1", "Aceptada")).rejects.toThrow(message);
+    expect(mock.rpcCalls).toHaveLength(1);
+    expect(mock.tableCalls).toEqual([]);
+  });
+
+  it.each(["emb-123", null])("Aceptada rechaza un vínculo de embarque combinado (%s) antes de escribir", async (embarqueId) => {
+    await expect(updateEstadoCotizacion("cot-1", "Aceptada", embarqueId)).rejects.toThrow(/embarque/i);
+    expect(mock.rpcCalls).toEqual([]);
+    expect(mock.tableCalls).toEqual([]);
   });
 });

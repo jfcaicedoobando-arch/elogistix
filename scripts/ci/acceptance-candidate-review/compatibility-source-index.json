@@ -1,0 +1,61 @@
+{
+  "source_base": "becc073819df29dfc4bf4619e1deb5be92c0a4be",
+  "purpose": "compatibility baseline dump only, never strict behavioral test preparation",
+  "files": [
+    {
+      "path": "scripts/db/schema-snapshot.sh",
+      "git_blob_sha": "45b726ffb089f751e853d60b15a38423987157d1",
+      "bytes": 3385
+    },
+    {
+      "path": "supabase/tests/rls/_ci_post_migrate.sql",
+      "git_blob_sha": "5d78c52d079e28402a33a82c1c42eb6c55370c98",
+      "bytes": 10262
+    },
+    {
+      "path": "supabase/tests/rls/_ci_check_service_role_only.sql",
+      "git_blob_sha": "f469a27f314ad90d1c79057db3f5a68e4b0e2a46",
+      "bytes": 3522
+    },
+    {
+      "path": "supabase/tests/rls/_ci_service_role_only.sql",
+      "git_blob_sha": "f2b691d3f0093b676d2f4263803886b198e0372e",
+      "bytes": 10164
+    },
+    {
+      "path": "supabase/tests/rls/_ci_check_pricing_lineage_acl.sql",
+      "git_blob_sha": "b1f810816e5141e3a00e20baa269792d455e9a64",
+      "bytes": 1915
+    },
+    {
+      "path": "supabase/tests/rls/_ci_selector148_capture_acl.sql",
+      "git_blob_sha": "7cd557c7c7f9033c3011287bb9bb5abf9f1afa65",
+      "bytes": 1606
+    },
+    {
+      "path": "supabase/tests/rls/_ci_selector148_restore_acl.sql",
+      "git_blob_sha": "51f6347749f035b5c0b43e162894e009d9564b6b",
+      "bytes": 923
+    },
+    {
+      "path": "supabase/tests/_catalogo_columnas_internas.sql",
+      "git_blob_sha": "a8455af02e95b416fe9adbf64b175ec9fbf5c3e7",
+      "bytes": 1349
+    },
+    {
+      "path": "supabase/tests/rls/_ci_verify_rls.sql",
+      "git_blob_sha": "c682e677530e7a6023af365b945fd27c1efb3e9f",
+      "bytes": 2440
+    },
+    {
+      "path": "supabase/tests/rls/_ci_exempt_tables.sql",
+      "git_blob_sha": "3853db911534920d929edd4a8ca7176323abf2cd",
+      "bytes": 2756
+    },
+    {
+      "path": "scripts/db/integrity-guard.sql",
+      "git_blob_sha": "acd2384aa9ba4c09117d9713f13c4c30126533d8",
+      "bytes": 8485
+    }
+  ]
+}
