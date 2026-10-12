@@ -3,8 +3,7 @@ import { isDynamicImportError, tryReloadForChunkError } from "@/lib/errors/dynam
 import { renderBootstrapFallback } from "./renderBootstrapFallback";
 
 function report(error: unknown, info: { componentStack?: string | null }, source: string): void {
-  if (isDynamicImportError(error) && tryReloadForChunkError()) {
-    if (error instanceof Error) Object.assign(error, { expected: true });
+  if (isDynamicImportError(error) && tryReloadForChunkError(undefined, { error })) {
     return;
   }
   void captureExceptionOnce(error, {
@@ -26,3 +25,4 @@ export const reactErrorHandlers = {
     report(error, info, "react-root-recoverable");
   },
 };
+

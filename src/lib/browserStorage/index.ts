@@ -118,6 +118,40 @@ export function saveChunkReloadHistory(history: ChunkReloadHistory): void {
   safeSessionStorage.setItem(STORAGE_KEYS.chunkErrorReload, JSON.stringify(history));
 }
 
+function parseReloadHistory(raw: string | null): ChunkReloadHistory | null {
+  if (!raw) return null;
+  const parsed: unknown = JSON.parse(raw);
+  if (parsed === "1" || parsed === 1) return null; // formato legacy
+  if (!parsed || typeof parsed !== "object" || !("count" in parsed) || !("first" in parsed)) {
+    throw new Error("Invalid chunk reload history");
+  }
+  const { count, first } = parsed;
+  if (typeof count !== "number" || !Number.isSafeInteger(count) || count < 0 ||
+      typeof first !== "number" || !Number.isFinite(first)) {
+    throw new Error("Invalid chunk reload history");
+  }
+  return { count, first };
+}
+
+/** Reserva durable antes de recargar: sin storage fiable no hay recuperación automática. */
+export function reserveChunkReloadAttempt(now: number, max: number, windowMs: number): boolean {
+  const storage = rawStorage("session");
+  if (!storage || !Number.isFinite(now)) return false;
+  try {
+    const raw = storage.getItem(STORAGE_KEYS.chunkErrorReload);
+    const previous = parseReloadHistory(raw);
+    // Un reloj que retrocede tampoco debe renovar el presupuesto.
+    const active = previous !== null && now - previous.first < windowMs;
+    if (active && previous.count >= max) return false;
+    const next = active ? { count: previous.count + 1, first: previous.first } : { count: 1, first: now };
+    const serialized = JSON.stringify(next);
+    storage.setItem(STORAGE_KEYS.chunkErrorReload, serialized);
+    return storage.getItem(STORAGE_KEYS.chunkErrorReload) === serialized;
+  } catch {
+    return false;
+  }
+}
+
 export function clearPersistedQueryCache(): void {
   safeLocalStorage.removeItem(STORAGE_KEYS.queryCache);
 }
@@ -129,3 +163,4 @@ export function getStoredAppVersion(): string | null {
 export function setStoredAppVersion(version: string): void {
   safeLocalStorage.setItem(STORAGE_KEYS.appVersion, version);
 }
+

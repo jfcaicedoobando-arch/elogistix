@@ -52,8 +52,7 @@ export class ErrorBoundary extends React.Component<Props, State> {
   }
 
   componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
-    if (isDynamicImportError(error) && tryReloadForChunkError()) {
-      Object.assign(error, { expected: true });
+    if (isDynamicImportError(error) && tryReloadForChunkError(undefined, { error })) {
       return;
     }
 
@@ -97,7 +96,7 @@ export class ErrorBoundary extends React.Component<Props, State> {
   }
 
   handleReset = () => {
-    if (isDynamicImportError(this.state.error) && tryReloadForChunkError()) {
+    if (isDynamicImportError(this.state.error) && tryReloadForChunkError(undefined, { error: this.state.error })) {
       return;
     }
     this.setState({
@@ -133,3 +132,4 @@ export class ErrorBoundary extends React.Component<Props, State> {
     );
   }
 }
+
