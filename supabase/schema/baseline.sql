@@ -14784,13 +14784,13 @@ BEGIN
     END IF;
     -- Legacy sin IDs: sólo UN/LOCODE exacto y ÚNICO. Nunca por nombre/fragmento.
     IF v_puerto_o_id IS NULL AND v_origen_code IS NOT NULL THEN
-      SELECT max(p.id) INTO v_puerto_o_id
+      SELECT (array_agg(p.id))[1] INTO v_puerto_o_id
         FROM public.puertos p
        WHERE upper(btrim(p.code)) = upper(btrim(v_origen_code))
       HAVING count(*) = 1;
     END IF;
     IF v_puerto_d_id IS NULL AND v_destino_code IS NOT NULL THEN
-      SELECT max(p.id) INTO v_puerto_d_id
+      SELECT (array_agg(p.id))[1] INTO v_puerto_d_id
         FROM public.puertos p
        WHERE upper(btrim(p.code)) = upper(btrim(v_destino_code))
       HAVING count(*) = 1;
