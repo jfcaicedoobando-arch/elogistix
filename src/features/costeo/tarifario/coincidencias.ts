@@ -47,8 +47,16 @@ function partesContenedor(campo: string) {
 }
 
 function coincideContenedor(s: SolicitudBusqueda, tipo: TarifaTarifario["tipo"]): boolean {
-  const pedido = s.tipo_carga?.trim() || s.container_size?.trim();
-  if (!pedido || !tipo) return false;
+  if (!tipo) return false;
+  // Solicitudes viejas guardaban "Type" como texto libre ("FCL", "HC"): si no
+  // se reconoce, se recurre al container_size guardado en lugar de descartar.
+  const candidatos = [s.tipo_carga?.trim(), s.container_size?.trim()].filter(
+    (c): c is string => !!c,
+  );
+  const pedido = candidatos.find(
+    (c) => claveCanonicaTipoContenedor({ name: c, code: "" }) !== "raw:",
+  );
+  if (!pedido) return false;
   const clave = claveCanonicaTipoContenedor({ name: pedido, code: "" });
   const codigo = partesContenedor(tipo.code);
   const nombre = partesContenedor(tipo.name ?? "");
