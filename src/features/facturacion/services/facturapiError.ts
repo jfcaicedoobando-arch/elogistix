@@ -4,6 +4,7 @@
  */
 
 import { interpretarErrorFacturapi } from "@/lib/errors/facturapiError";
+import { diagnosticoResumenRep } from "./repResumenDiagnostico";
 
 export interface ValidationIssue { field: string; message: string }
 
@@ -126,5 +127,7 @@ export function toReadableError(
     err.codigoSat = sat.codigo;
     err.detallesSat = sat.detalles;
   }
+  const resumenRep = diagnosticoResumenRep(body);
+  if (resumenRep) err.detallesSat = { ...err.detallesSat, resumenRep };
   return err;
 }
