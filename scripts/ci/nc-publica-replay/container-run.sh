@@ -3,28 +3,59 @@
 set -euo pipefail
 MODE=${1:-}
 [[ $# == 1 && ( $MODE == minimal || $MODE == full ) ]] || exit 2
-[[ $(id -un) == postgres && -d /repo && -d /evidence ]] || { echo 'Wrong container boundary' >&2; exit 1; }
+[[ $(id -un) == postgres && -d /repo && -d /evidence && ! -L /evidence ]] || { echo 'Wrong container boundary' >&2; exit 1; }
+NC_CONTAINER_UID=$(id -u)
 PG_BIN=/usr/lib/postgresql/17/bin
 PORT=5432
 WORK=$(mktemp -d /tmp/nc-publica-review.XXXXXX)
 DATA=''
 WORK_REPO=''
+make_evidence_readable() {
+  # The host requires a fresh evidence directory for this exact container.
+  # Only this UID's new regular artifacts gain read/traverse bits. Never follow
+  # symlinks, cross mounts, chmod the bind root or touch runner-owned files.
+  NC_PERMISSIONS_STATUS=0
+  if ! find -P /evidence -xdev -mindepth 1 -uid "$NC_CONTAINER_UID" -type d \
+    -exec chmod a+rx -- {} +; then
+    NC_PERMISSIONS_STATUS=1
+  fi
+  if ! find -P /evidence -xdev -mindepth 1 -uid "$NC_CONTAINER_UID" -type f \
+    -exec chmod a+r -- {} +; then
+    NC_PERMISSIONS_STATUS=1
+  fi
+  if [[ $NC_PERMISSIONS_STATUS != 0 ]]; then
+    echo 'Container evidence readability was not confirmed' >&2
+  fi
+  return "$NC_PERMISSIONS_STATUS"
+}
 cleanup() {
   NC_EXIT_CODE=$?
   trap - EXIT
   if [[ -n $DATA && -f $DATA/postmaster.pid ]]; then
     if ! "$PG_BIN/pg_ctl" -D "$DATA" -m fast -w stop >> /evidence/postgres-control.log 2>&1; then
       echo 'Disposable PostgreSQL shutdown was not confirmed' >&2
-      NC_EXIT_CODE=1
+      if [[ $NC_EXIT_CODE == 0 ]]; then NC_EXIT_CODE=1; fi
     fi
   fi
   if [[ -n $WORK_REPO ]]; then
-    mkdir -p /evidence/local-verify-logs
-    shopt -s nullglob
-    for log in "$WORK_REPO"/.db-verify-logs/[0-9]*-*; do
-      [[ -d $log ]] && cp -R -- "$log" /evidence/local-verify-logs/
-    done
+    if mkdir -p /evidence/local-verify-logs; then
+      shopt -s nullglob
+      for log in "$WORK_REPO"/.db-verify-logs/[0-9]*-*; do
+        if [[ -d $log && ! -L $log ]]; then
+          if ! cp -R -- "$log" /evidence/local-verify-logs/; then
+            echo 'Disposable replay log copy was not confirmed' >&2
+            if [[ $NC_EXIT_CODE == 0 ]]; then NC_EXIT_CODE=1; fi
+          fi
+        fi
+      done
+    else
+      echo 'Disposable replay log directory was not created' >&2
+      if [[ $NC_EXIT_CODE == 0 ]]; then NC_EXIT_CODE=1; fi
+    fi
   fi
+  # Run after shutdown and log copy on every EXIT, including SQL/copy errors.
+  # Preserve the failing status; readability failure also prevents a green run.
+  if ! make_evidence_readable && [[ $NC_EXIT_CODE == 0 ]]; then NC_EXIT_CODE=1; fi
   exit "$NC_EXIT_CODE"
 }
 trap cleanup EXIT
