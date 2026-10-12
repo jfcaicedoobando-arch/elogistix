@@ -54277,7 +54277,8 @@
       "20261010015800_pricing_cliente_linaje.sql",
       "20261010015900_pricing_incoterms_fas_dpu.sql",
       "20261010163000_pricing_subtotal_moneda_canonica.sql",
-      "20261011180000_proforma_cancelada_acciones_terminales.sql"
+      "20261011180000_proforma_cancelada_acciones_terminales.sql",
+      "20261012010000_nc_publica_paridad_replay.sql"
     ]
   }
 }
