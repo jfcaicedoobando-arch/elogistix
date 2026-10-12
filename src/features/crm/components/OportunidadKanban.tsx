@@ -9,6 +9,7 @@ import {
 } from "@dnd-kit/core";
 import { AlertCircle } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { ErrorStateInline } from "@/components/empty/ErrorStateInline";
 import { useProximasActividades, type ProximaActividad } from "@/features/crm/hooks";
 import { useAvanceCriterios } from "@/features/crm/hooks/useCriteriosEtapa";
 import ColumnaEtapa from "./kanban/ColumnaEtapa";
@@ -58,7 +59,8 @@ export default function OportunidadKanban({ etapas, oportunidades, onMover, onCl
   const puedeMoverOp = (op: CrmOportunidadRow) => (puedeMover ? puedeMover(op) : true);
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 6 } }));
   const ids = useMemo(() => oportunidades.map((o) => o.id), [oportunidades]);
-  const { data: proximasMap } = useProximasActividades("oportunidad", ids);
+  const { data: proximasMap, isPending, isFetching, isError, isPlaceholderData, refetch } = useProximasActividades("oportunidad", ids);
+  const estadoProximas = isError ? "error" : isPending || isFetching || isPlaceholderData ? "cargando" : "listo";
   const { data: avanceMap } = useAvanceCriterios(ids);
 
   const { porEtapa, huerfanas } = useMemo(() => {
@@ -91,6 +93,21 @@ export default function OportunidadKanban({ etapas, oportunidades, onMover, onCl
     // ni la primera tarjeta completa; se compactan las separaciones de arriba.
     <div className="space-y-2">
       <PipelineResumen oportunidades={oportunidades} etapas={etapas} />
+      {isError && (
+        <ErrorStateInline
+          title="No se pudieron cargar las próximas actividades"
+          message={proximasMap
+            ? "Se conservan las últimas actividades disponibles. Reintenta para confirmar las próximas acciones."
+            : "Reintenta para consultar las próximas acciones."}
+          onRetry={() => { void refetch(); }}
+          retrying={isFetching}
+        />
+      )}
+      {isFetching && !isError && (
+        <p role="status" className="text-body-sm text-muted-foreground">
+          {proximasMap ? "Actualizando próximas actividades..." : "Cargando próximas actividades..."}
+        </p>
+      )}
       {huerfanas.length > 0 && (
         <Alert variant="warning">
           <AlertCircle className="h-4 w-4" aria-hidden />
@@ -123,6 +140,7 @@ export default function OportunidadKanban({ etapas, oportunidades, onMover, onCl
                 ops={huerfanas}
                 onClickCard={onClickCard}
                 proximasMap={proximas}
+                estadoProximas={estadoProximas}
                 avanceMap={avanceMap ?? new Map()}
                 puedeArrastrar={puedeMoverOp}
               />
@@ -134,6 +152,7 @@ export default function OportunidadKanban({ etapas, oportunidades, onMover, onCl
                 ops={porEtapa.get(e.id) ?? []}
                 onClickCard={onClickCard}
                 proximasMap={proximas}
+                estadoProximas={estadoProximas}
                 avanceMap={avanceMap ?? new Map()}
                 onNuevo={onNuevo}
                 puedeArrastrar={puedeMoverOp}

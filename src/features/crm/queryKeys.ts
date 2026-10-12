@@ -30,6 +30,7 @@ export const crm = {
   leaderboard: ['crm', 'leaderboard-vendedores'] as const,
   forecast: (desde: string, hasta: string) => ['crm', 'forecast', desde, hasta] as const,
   cliente360: (clienteId: string) => ['crm', 'cliente-360', clienteId] as const,
+  proximasActividadesAll: ['crm', 'proximas-actividades'] as const,
   proximasActividades: (entidadTipo: string, ids: string[]) =>
     ['crm', 'proximas-actividades', entidadTipo, ids] as const,
   cotizacionesSinRespuesta: (diasUmbral: number, limit: number, uid?: string) =>
