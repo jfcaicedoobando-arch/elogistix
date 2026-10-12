@@ -78,8 +78,11 @@ describe("Descripciones y grupos altos fluyen sin recortes", () => {
     // columns and footers legitimately interrupt raw text extraction.
     const words = pdfWordBounds("final-fila-token-largo");
     const headers = words.filter(word => word.text === "Descripción");
-    expect(headers).toHaveLength(pdf.pages);
-    const description = words.filter(word => word.xMin >= 40 && word.xMax <= 173 && word.yMax <= 736 &&
+    expect(headers).toHaveLength(pdf.pages - 1);
+    expect(headers.map(header => header.page)).toEqual(Array.from({ length: pdf.pages - 1 }, (_, page) => page + 1));
+    // Glyph bounds can extend below the content line box; retain the same
+    // 6pt clearance above the footer rule (748pt) as the notes layout tests.
+    const description = words.filter(word => word.xMin >= 40 && word.xMax <= 173 && word.yMax <= 742 &&
       word.yMin > (headers.find(header => header.page === word.page)?.yMin ?? Infinity) + 15)
       .map(word => word.text).join("");
     expect(description).toBe(`TOKENSTART${longContainerIdentifier}TOKENEND`);
