@@ -11,7 +11,7 @@ import {
   verificarResumenProveedor,
   type ResumenRemoto,
 } from "./resumenProveedor.ts";
-import type { PagoContext } from "./helpers.ts";
+import { buildRepPayload, equivalenciaDelCobro, type PagoContext } from "./helpers.ts";
 
 function ctxBase(over: Partial<PagoContext["documento_relacionado"]> = {}, pago: Partial<PagoContext> = {}): PagoContext {
   return {
@@ -161,4 +161,78 @@ Deno.test("calculo local usa la misma aritmetica del payload (mezcla 16% + no ob
   assertEquals(local.amount, 5480);
   assertEquals(local.taxes.length, 1);
   assertEquals(local.taxes[0].rate, 0.16);
+});
+
+/** Amounts/UUID come from the parent's captured XML/bitacora; recipient,
+ * remote invoice ID and second-payment valuation are offline fixture values.
+ * This does not emulate or claim the provider's private ledger algorithm. */
+function contextoSf437186(parcialidad: 1 | 2): PagoContext {
+  return ctxBase({
+    uuid: "6D58F9A0-FD58-4B88-A817-9BF1926C2623", moneda_dr: "USD", tipo_cambio_dr: 18.4163,
+    num_parcialidad: parcialidad, imp_saldo_ant: parcialidad === 1 ? 2 : 1,
+    imp_pagado: 1, imp_saldo_insoluto: parcialidad === 1 ? 1 : 0,
+    tasa_iva: 0, factor_iva: "Tasa", objeto_imp_dr: "02",
+    grupos_iva: [{ tasa: 0, factor: "Tasa", importe: 2 }], subtotal_factura: 2, total_factura: 2,
+  }, {
+    fecha_pago: "2026-10-11", moneda: parcialidad === 1 ? "MXN" : "USD",
+    tipo_cambio: parcialidad === 1 ? 20 : 18.4163, monto: parcialidad === 1 ? 20 : 1,
+  });
+}
+
+Deno.test("SF437186: first REP payload matches documented USD1/MXN20 contract and captured P12 XML", () => {
+  const ctx = contextoSf437186(1);
+  const payment = buildRepPayload(ctx).complements[0].data[0];
+  const dr = payment.related_documents[0];
+  assertEquals(payment.currency, "MXN");
+  assertEquals(payment.exchange, undefined);
+  assertEquals(dr.uuid, "6D58F9A0-FD58-4B88-A817-9BF1926C2623");
+  assertEquals(dr.currency, "USD");
+  assertEquals(dr.installment, 1);
+  assertEquals(dr.amount, 1);
+  assertEquals(dr.last_balance, 2);
+  assertEquals(dr.exchange, 0.05);
+  assertEquals(equivalenciaDelCobro(ctx), 0.05);
+  // API amount is in DR currency; amount/exchange derives MXN20 received.
+  assertEquals(dr.amount / dr.exchange!, 20);
+  assertEquals(dr.last_balance - dr.amount, 1);
+  assertEquals(dr.taxes, [{ type: "IVA", rate: 0, factor: "Tasa", withholding: false, base: 1 }]);
+});
+
+Deno.test("SF437186: captured provider balance1.95 preserves the guard, exact diagnostics and payment state", async () => {
+  const ctx = contextoSf437186(2);
+  const recorded = {
+    amount: 1, currency: "USD", installment: 2, last_balance: 1.95, total: 2,
+    taxes: [{ type: "IVA" as const, factor: "Tasa", rate: 0, base: 1, withholding: false }],
+  };
+  const requests: Array<{ id: string; amount: number }> = [];
+  const tables: string[] = [];
+  const rows: Array<Record<string, unknown>> = [];
+  let creates = 0;
+  const result = await verificarResumenProveedor({
+    ctx, facturaFacturapiId: "offline-invoice-id", pagoId: "45352851-5470-4fe6-bd6a-847c9f9c64b1",
+    organizationId: "offline-org", usuarioId: "offline-user", json,
+    facturapi: { invoices: {
+      paymentSummary: async (id: string, params: { amount: number }) => {
+        requests.push({ id, amount: params.amount }); return recorded;
+      },
+      create: async () => { creates += 1; throw new Error("No fiscal emission in this regression"); },
+    } },
+    supabase: { from: (table: string) => {
+      tables.push(table);
+      return { insert: async (row: Record<string, unknown>) => { rows.push(row); return { error: null }; } };
+    } } as unknown as Parameters<typeof verificarResumenProveedor>[0]["supabase"],
+  });
+  assertEquals(requests, [{ id: "offline-invoice-id", amount: 1 }]);
+  assertEquals(result?.status, 422);
+  const body = await result!.json();
+  const divergencias = ["Saldo anterior: local 1.00 vs proveedor 1.95", "Saldo insoluto: local 0.00 vs proveedor 0.95"];
+  assertEquals(body.error, COD_REP_RESUMEN_DIVERGENTE);
+  assertEquals(body.divergencias, divergencias);
+  assertEquals(body.local, { installment: 2, last_balance: 1, amount: 1, taxes: [{ type: "IVA", rate: 0, base: 1, withholding: false }] });
+  assertEquals(body.proveedor.last_balance, 1.95);
+  assertEquals(tables, ["bitacora_actividad"]);
+  assertEquals(rows.length, 1);
+  assertEquals(rows[0].accion, "facturapi_rep_resumen_divergente");
+  assertEquals(rows[0].detalles, { moneda: "USD", divergencias, local: body.local, proveedor: recorded });
+  assertEquals(creates, 0);
 });
