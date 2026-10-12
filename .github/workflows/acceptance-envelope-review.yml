@@ -1,0 +1,45 @@
+name: Acceptance atomic envelope PG17.6 evidence
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+    branches: [main]
+    paths:
+      - '.github/workflows/acceptance-envelope-review.yml'
+      - 'scripts/ci/acceptance-envelope-review/**'
+permissions:
+  contents: read
+concurrency:
+  group: acceptance-envelope-${{ github.event.pull_request.number }}-${{ github.event.pull_request.head.sha }}
+  cancel-in-progress: false
+jobs:
+  isolated:
+    if: >-
+      github.repository == 'jfcaicedoobando-arch/elogistix' &&
+      github.event.pull_request.base.repo.full_name == 'jfcaicedoobando-arch/elogistix' &&
+      github.event.pull_request.head.repo.full_name == 'jfcaicedoobando-arch/elogistix' &&
+      github.event.pull_request.base.ref == 'main' &&
+      github.event.pull_request.head.ref == 'test/acceptance-envelope-pg176-20261012'
+    name: Atomic acceptance envelope PG17.6
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    env:
+      REVIEW_COMMIT: ${{ github.event.pull_request.head.sha }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          repository: jfcaicedoobando-arch/elogistix
+          ref: ${{ github.event.pull_request.head.sha }}
+          fetch-depth: 1
+          persist-credentials: false
+      - name: Static evidence runner controls
+        run: python3 scripts/ci/acceptance-envelope-review/test_runner.py
+      - name: Exact atomic envelope and failure injection in owned offline PostgreSQL
+        run: python3 scripts/ci/acceptance-envelope-review/run.py
+      - name: Preserve reproducible envelope evidence
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: acceptance-envelope-pg17.6-${{ github.event.pull_request.head.sha }}-${{ github.run_attempt }}
+          path: reports/acceptance-envelope-review/
+          if-no-files-found: error
+          retention-days: 14
