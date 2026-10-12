@@ -18,7 +18,7 @@
  *   const { guardDialog } = useDirtyGuard(open && isDirty);
  *   // …en el JSX: {guardDialog}
  */
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router";
 import { ConfirmActionDialog } from "@/components/shared/dialogs/ConfirmActionDialog";
 import { useDirtyHistoryGuard } from "./useDirtyHistoryGuard";
@@ -42,6 +42,8 @@ export function useDirtyGuard(isDirty: boolean, guardHistory = false) {
   const [destino, setDestino] = useState<string | null>(null);
   // RFE-05: salida programática en espera de confirmación (no pasa por un <a>).
   const [accionPendiente, setAccionPendiente] = useState<(() => void) | null>(null);
+  const pendingExitRef = useRef(false);
+  useEffect(() => () => { pendingExitRef.current = false; }, []);
 
   // 1) Cierre o recarga de la pestaña: diálogo nativo del navegador.
   useEffect(() => {
@@ -62,6 +64,7 @@ export function useDirtyGuard(isDirty: boolean, guardHistory = false) {
       if (!href) return;
       e.preventDefault();
       e.stopPropagation();
+      pendingExitRef.current = true;
       setDestino(href);
     };
     document.addEventListener("click", onClick, true);
@@ -71,19 +74,11 @@ export function useDirtyGuard(isDirty: boolean, guardHistory = false) {
   // Si el formulario deja de estar sucio, no dejamos el diálogo abierto.
   useEffect(() => {
     if (!isDirty) {
+      pendingExitRef.current = false;
       setDestino(null);
       setAccionPendiente(null);
     }
   }, [isDirty]);
-
-  const confirmar = useCallback(() => {
-    const href = destino;
-    const accion = accionPendiente;
-    setDestino(null);
-    setAccionPendiente(null);
-    if (accion) accion();
-    else if (href) navigate(href);
-  }, [destino, accionPendiente, navigate]);
 
   /**
    * RFE-05 — Envuelve una salida programática: con el formulario sucio muestra
@@ -96,18 +91,41 @@ export function useDirtyGuard(isDirty: boolean, guardHistory = false) {
         accion();
         return;
       }
+      pendingExitRef.current = true;
       setAccionPendiente(() => accion);
     },
     [isDirty],
   );
 
-  useDirtyHistoryGuard(isDirty && guardHistory, confirmarSalida);
+  const { isRestoring, isRestoringNow } = useDirtyHistoryGuard(isDirty && guardHistory, confirmarSalida);
+  const confirmar = useCallback(() => {
+    // Un POP repetido puede estar restaurándose antes del siguiente render;
+    // el aviso anterior no debe ejecutar su delta ni cancelar esa restauración.
+    if (isRestoringNow()) return;
+    const href = destino;
+    const accion = accionPendiente;
+    pendingExitRef.current = false;
+    setDestino(null);
+    setAccionPendiente(null);
+    if (accion) accion();
+    else if (href) navigate(href);
+  }, [destino, accionPendiente, navigate, isRestoringNow]);
+  // Estable para que los callbacks del shell ya montados consulten el estado
+  // actual, incluso antes del render que muestra el aviso de navegación.
+  const isCloseBlocked = useCallback(
+    () => pendingExitRef.current || isRestoringNow(),
+    [isRestoringNow],
+  );
 
+  const isConfirming = destino !== null || accionPendiente !== null;
   const guardDialog = (
     <ConfirmActionDialog
-      open={destino !== null || accionPendiente !== null}
+      open={isConfirming}
+      isPending={isRestoring}
       onOpenChange={(open) => {
         if (!open) {
+          if (isRestoringNow()) return;
+          pendingExitRef.current = false;
           setDestino(null);
           setAccionPendiente(null);
         }
@@ -121,5 +139,6 @@ export function useDirtyGuard(isDirty: boolean, guardHistory = false) {
     />
   );
 
-  return { guardDialog, confirmarSalida };
+  return { guardDialog, confirmarSalida, isConfirming,
+    isNavigating: isRestoring || isConfirming, isCloseBlocked };
 }

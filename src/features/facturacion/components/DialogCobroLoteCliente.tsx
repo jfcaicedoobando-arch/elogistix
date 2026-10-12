@@ -6,6 +6,7 @@
  */
 import { Layers } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { FormDialogCancelarBoton } from "@/components/shared/FormDialogCancelarBoton";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { FormDialogShell } from "@/components/shared/FormDialogShell";
@@ -42,9 +43,7 @@ export function DialogCobroLoteCliente(p: Props) {
 
   const footer = (
     <>
-      <Button variant="outline" onClick={() => p.onOpenChange(false)} disabled={s.guardando}>
-        Cancelar
-      </Button>
+      <FormDialogCancelarBoton onCancelar={() => p.onOpenChange(false)} disabled={s.guardando} />
       <Hint label={s.error ?? undefined}>
         <Button onClick={s.submit} disabled={!!s.error} loading={s.guardando}>
           {s.guardando ? "Guardando…" : "Aplicar cobro en lote"}
@@ -56,7 +55,9 @@ export function DialogCobroLoteCliente(p: Props) {
   return (
     <FormDialogShell
       open={p.open}
-      onOpenChange={p.onOpenChange}
+      onOpenChange={(open) => { if (open || !s.guardando) p.onOpenChange(open); }}
+      isDirty={s.isDirty}
+      busy={s.guardando}
       icon={Layers}
       title="Cobro en lote de cliente"
       description={`Un solo depósito de ${p.clienteNombre} repartido entre ${p.facturas.length} facturas en ${p.moneda}.`}
@@ -71,74 +72,78 @@ export function DialogCobroLoteCliente(p: Props) {
         </div>
       }
       stickyBottom={
-        <DialogCobroLoteResumen
-          facturas={p.facturas}
-          renglones={s.renglones}
-          moneda={p.moneda}
-          recibido={s.totalNum}
-          totalRepartido={s.totalRepartido}
-          sinAsignar={s.sinAsignar}
-          error={s.error}
-          repRequeridos={s.repRequeridos}
-          onAsignarSobrante={s.asignarSobrante}
-        />
-      }
-      footer={footer}
-    >
-      <DialogCobroLoteDatos
-        moneda={p.moneda}
-        fecha={s.fecha}
-        onFecha={s.setFecha}
-        total={s.total}
-        onTotal={s.recalcular}
-        saldoTotal={s.saldoTotal}
-        tcDof={s.tcDof}
-        formaPago={s.formaPago}
-        onFormaPago={s.setFormaPago}
-        cuentaId={s.cuentaId}
-        onCuentaId={s.setCuentaId}
-        cuentasMoneda={s.cuentasMoneda}
-        referencia={s.referencia}
-        onReferencia={s.setReferencia}
-      />
-
-      <FormDialogSection
-        flat
-        title="Reparto entre facturas"
-        description="Se aplica primero lo que vence antes. Puedes ajustar cada importe o usar los atajos."
-      >
-        <div className="space-y-3">
-          <DialogCobroLoteAcciones
-            onFifo={s.repartirFifoAhora}
-            onLiquidarTodo={s.liquidarTodo}
-            onLimpiar={s.limpiarReparto}
-            disabled={s.guardando}
-          />
-          <DialogCobroLoteRenglones
+        <fieldset disabled={s.guardando} className="min-w-0">
+          <DialogCobroLoteResumen
             facturas={p.facturas}
             renglones={s.renglones}
             moneda={p.moneda}
-            erroresRenglon={s.erroresRenglon}
-            idsConRep={s.idsConRep}
-            onMontoChange={s.setMonto}
-            onAsignarSaldo={s.asignarSaldo}
+            recibido={s.totalNum}
+            totalRepartido={s.totalRepartido}
+            sinAsignar={s.sinAsignar}
+            error={s.error}
+            repRequeridos={s.repRequeridos}
+            onAsignarSobrante={s.asignarSobrante}
           />
-        </div>
-      </FormDialogSection>
+        </fieldset>
+      }
+      footer={footer}
+    >
+      <fieldset disabled={s.guardando} className="min-w-0 space-y-4">
+        <DialogCobroLoteDatos
+          moneda={p.moneda}
+          fecha={s.fecha}
+          onFecha={s.setFecha}
+          total={s.total}
+          onTotal={s.recalcular}
+          saldoTotal={s.saldoTotal}
+          tcDof={s.tcDof}
+          formaPago={s.formaPago}
+          onFormaPago={s.setFormaPago}
+          cuentaId={s.cuentaId}
+          onCuentaId={s.setCuentaId}
+          cuentasMoneda={s.cuentasMoneda}
+          referencia={s.referencia}
+          onReferencia={s.setReferencia}
+        />
+
+        <FormDialogSection
+          flat
+          title="Reparto entre facturas"
+          description="Se aplica primero lo que vence antes. Puedes ajustar cada importe o usar los atajos."
+        >
+          <div className="space-y-3">
+            <DialogCobroLoteAcciones
+              onFifo={s.repartirFifoAhora}
+              onLiquidarTodo={s.liquidarTodo}
+              onLimpiar={s.limpiarReparto}
+              disabled={s.guardando}
+            />
+            <DialogCobroLoteRenglones
+              facturas={p.facturas}
+              renglones={s.renglones}
+              moneda={p.moneda}
+              erroresRenglon={s.erroresRenglon}
+              idsConRep={s.idsConRep}
+              onMontoChange={s.setMonto}
+              onAsignarSaldo={s.asignarSaldo}
+            />
+          </div>
+        </FormDialogSection>
 
 
-      <FormDialogSection flat>
-        <div className="space-y-1.5">
-          <Label htmlFor="cobro-lote-notas">Notas</Label>
-          <Textarea
-            id="cobro-lote-notas"
-            value={s.notas}
-            onChange={(e) => s.setNotas(e.target.value)}
-            rows={2}
-            placeholder="Observaciones del depósito (opcional)"
-          />
-        </div>
-      </FormDialogSection>
+        <FormDialogSection flat>
+          <div className="space-y-1.5">
+            <Label htmlFor="cobro-lote-notas">Notas</Label>
+            <Textarea
+              id="cobro-lote-notas"
+              value={s.notas}
+              onChange={(e) => s.setNotas(e.target.value)}
+              rows={2}
+              placeholder="Observaciones del depósito (opcional)"
+            />
+          </div>
+        </FormDialogSection>
+      </fieldset>
     </FormDialogShell>
   );
 }
