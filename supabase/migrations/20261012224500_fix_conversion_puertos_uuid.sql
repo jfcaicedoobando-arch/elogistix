@@ -453,3 +453,7 @@ BEGIN
   RETURN v_embarque_id;
 END;
 $function$;
+
+-- Reafirma la ACL existente: el core sigue privado a service_role.
+REVOKE ALL ON FUNCTION public.crear_embarque_borrador_core(uuid) FROM PUBLIC, anon, authenticated;
+GRANT EXECUTE ON FUNCTION public.crear_embarque_borrador_core(uuid) TO service_role;
