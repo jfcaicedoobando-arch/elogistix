@@ -47,7 +47,11 @@ function partesContenedor(campo: string) {
 }
 
 function coincideContenedor(s: SolicitudBusqueda, tipo: TarifaTarifario["tipo"]): boolean {
-  const pedido = s.tipo_carga?.trim() || s.container_size?.trim();
+  const tipoCarga = s.tipo_carga?.trim();
+  // FCL legacy describe el modo de carga; el tipo completo conserva su prioridad.
+  const pedido = !tipoCarga || norm(tipoCarga) === "fcl"
+    ? s.container_size?.trim()
+    : tipoCarga;
   if (!pedido || !tipo) return false;
   const clave = claveCanonicaTipoContenedor({ name: pedido, code: "" });
   const codigo = partesContenedor(tipo.code);

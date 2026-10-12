@@ -4,15 +4,15 @@
  * mexicana) además de la captura manual existente.
  */
 import { baseNcProveedor } from "@/lib/financial/baseNcProveedor";
-import { useState } from "react";
-import { format } from "date-fns";
 import { FileMinus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { FormDialogShell } from "@/components/shared/FormDialogShell";
+import { FormDialogCancelarBoton } from "@/components/shared/FormDialogCancelarBoton";
 import { Kpi } from "./DialogDetallePagosProveedor.parts";
 import { formatCurrency } from "@/lib/formatters";
 import { useCrearNotaCredito } from "@/features/cxp/hooks/useNotasCreditoProveedor";
 import { useNcProveedorTipoCambio } from "@/features/cxp/hooks/useNcProveedorTipoCambio";
+import { useNotaCreditoProveedorCaptura } from "@/features/cxp/hooks/useNotaCreditoProveedorCaptura";
 import { useOrgFilter } from "@/hooks/shared";
 import { subirArchivosNcProveedor } from "@/features/cxp/services";
 import { NuevaNotaCreditoFormFields } from "./NuevaNotaCreditoFormFields";
@@ -22,7 +22,6 @@ import { construirNcProveedorPayload } from "./ncProveedorPayload";
 import { NcProveedorAvisos } from "./NcProveedorAvisos";
 import { notifyError } from "@/lib/ui/appFeedback";
 import type {
-  MotivoNotaCreditoProveedor as MotivoNC,
   MonedaNotaCreditoProveedor as MonedaNC,
 } from "@/features/cxp/types";
 import type { CfdiParsedResponse } from "@/features/cxp/services";
@@ -34,18 +33,11 @@ interface Props {
   saldoFactura: number;
 }
 export function DialogNotaCreditoProveedor({ open, onOpenChange, facturaId, monedaFactura, saldoFactura }: Props) {
-  const [mode, setMode] = useState<"manual" | "cfdi">("manual");
-  const [folio, setFolio] = useState("");
-  const [fecha, setFecha] = useState(format(new Date(), "yyyy-MM-dd"));
-  const [monto, setMonto] = useState("");
-  const [subtotal, setSubtotal] = useState("");
-  const [moneda, setMoneda] = useState<MonedaNC>(monedaFactura);
-  const [tipoCambio, setTipoCambio] = useState(""); // MXN por 1 unidad extranjera
-  const [motivo, setMotivo] = useState<MotivoNC>("Bonificacion");
-  const [descripcion, setDescripcion] = useState("");
-  const [parsedCfdi, setParsedCfdi] = useState<CfdiParsedResponse | null>(null);
-  const [cfdiFiles, setCfdiFiles] = useState<{ xml: File | null; pdf: File | null }>({ xml: null, pdf: null });
-  const [uuidFiscal, setUuidFiscal] = useState<string | null>(null);
+  const {
+    mode, setMode, folio, setFolio, fecha, setFecha, monto, setMonto, subtotal, setSubtotal,
+    moneda, setMoneda, tipoCambio, setTipoCambio, motivo, setMotivo, descripcion, setDescripcion,
+    parsedCfdi, setParsedCfdi, cfdiFiles, setCfdiFiles, uuidFiscal, setUuidFiscal, isDirty, reset,
+  } = useNotaCreditoProveedorCaptura(open, monedaFactura);
   const crear = useCrearNotaCredito(facturaId);
   const { organizationId } = useOrgFilter();
   const montoNum = Number(monto);
@@ -55,22 +47,6 @@ export function DialogNotaCreditoProveedor({ open, onOpenChange, facturaId, mone
   const montoEnFactura = montoNcEnMonedaFactura(montoNum, moneda, monedaFactura, conversion.tipoCambio);
   const excede = montoEnFactura !== null && montoEnFactura > saldoFactura + 0.01;
   const valido = baseValida && origenNcValido(mode, parsedCfdi, facturaId, cfdiFiles.xml) && Boolean(folio.trim()) && Boolean(fecha) && Number.isFinite(montoNum) && montoNum > 0 && montoEnFactura !== null && !excede && conversion.disponible;
-  const isDirty =
-    [subtotal, folio, monto, descripcion].some((value) => value.trim() !== "") || parsedCfdi !== null;
-  const reset = () => {
-    setMode("manual");
-    setFolio("");
-    setFecha(format(new Date(), "yyyy-MM-dd"));
-    setMonto("");
-    setSubtotal("");
-    setMoneda(monedaFactura);
-    setTipoCambio("");
-    setMotivo("Bonificacion");
-    setDescripcion("");
-    setParsedCfdi(null);
-    setCfdiFiles({ xml: null, pdf: null });
-    setUuidFiscal(null);
-  };
   const handleOpenChange = (o: boolean) => {
     onOpenChange(o);
     if (!o) reset();
@@ -136,7 +112,7 @@ export function DialogNotaCreditoProveedor({ open, onOpenChange, facturaId, mone
   ] ?? "—";
   const footer = (
     <>
-      <Button variant="outline" onClick={() => onOpenChange(false)}>Cancelar</Button>
+      <FormDialogCancelarBoton onCancelar={() => handleOpenChange(false)} disabled={crear.isPending} />
       <Button disabled={!valido || crear.isPending} onClick={onSubmit}>
         {crear.isPending ? "Guardando…" : "Registrar"}
       </Button>
@@ -152,6 +128,7 @@ export function DialogNotaCreditoProveedor({ open, onOpenChange, facturaId, mone
       size="lg"
       footer={footer}
       isDirty={isDirty}
+      busy={crear.isPending}
     >
       <div className="grid grid-cols-3 gap-2.5 -mt-1">
         <Kpi
