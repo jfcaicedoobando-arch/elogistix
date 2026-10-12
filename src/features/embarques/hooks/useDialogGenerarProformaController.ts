@@ -132,6 +132,11 @@ export function useDialogGenerarProformaController(
 
   const handleConfirmar = async (embarqueOverride?: EmbarqueRow) => {
     try {
+      // undefined indica consulta pendiente/fallida, no un plazo Contado.
+      // Una proforma guardada puede reintentar su PDF sin releer el crédito.
+      if (!generacion.creada && diasCreditoDefault === undefined) {
+        throw new ProformaValidationError("Aún no se cargaron los días de crédito del cliente. Espera o vuelve a abrir el diálogo antes de generar.");
+      }
       const completada = await generacion.ejecutar({
         embarque: embarqueOverride ?? embarque,
         conceptosSeleccionados, seleccionados,
@@ -191,3 +196,4 @@ export function useDialogGenerarProformaController(
     totalSeleccionados: seleccionados.size,
   };
 }
+
