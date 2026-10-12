@@ -35,9 +35,12 @@ describe("compatibilidad comercial del contenedor de Pricing", () => {
     { tipo_carga: "  ", container_size: "" },
     { tipo_carga: "40", container_size: null },
     { tipo_carga: "40'", container_size: "40HC" },
-    { tipo_carga: "desconocido", container_size: "40HC" },
   ])("no convierte un tipo ausente o incompleto en comodín: %j", (campos) => {
     expect(ids(campos)).toEqual([]);
+  });
+  it("un Type libre irreconocible de solicitudes viejas cede al container_size guardado", () => {
+    expect(ids({ tipo_carga: "FCL", container_size: "40HC" })).toEqual(["40HC", "40HQ"]);
+    expect(ids({ tipo_carga: "desconocido", container_size: "40HC" })).toEqual(["40HC", "40HQ"]);
   });
   it("mantiene distintos tamaños y categorías y acepta aliases de Dry", () => {
     expect(ids({ tipo_carga: "20' Dry (Standard)" }, [...tarifas, tarifa("20DV")])).toEqual(["20GP", "20DV"]);
