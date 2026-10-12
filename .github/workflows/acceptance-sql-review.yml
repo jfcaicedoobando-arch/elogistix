@@ -1,0 +1,48 @@
+name: Acceptance SQL PostgreSQL 17.6 diagnostic
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+    branches: [main]
+    paths:
+      - '.github/workflows/acceptance-sql-review.yml'
+      - 'scripts/ci/acceptance-review/**'
+permissions:
+  contents: read
+concurrency:
+  group: acceptance-sql-review-${{ github.event.pull_request.number }}-${{ github.event.pull_request.head.sha }}
+  cancel-in-progress: false
+jobs:
+  baseline-diagnostic:
+    if: >-
+      github.repository == 'jfcaicedoobando-arch/elogistix' &&
+      github.event.pull_request.base.repo.full_name == 'jfcaicedoobando-arch/elogistix' &&
+      github.event.pull_request.head.repo.full_name == 'jfcaicedoobando-arch/elogistix' &&
+      github.event.pull_request.base.ref == 'main' &&
+      github.event.pull_request.head.ref == 'test/acceptance-sql-pg176-20261012' &&
+      github.event.pull_request.base.sha == 'b355e978bd2fa8adda3195218d32cc61bfbfcc98'
+    name: Baseline diagnostic only (candidate blocked)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    env:
+      REVIEW_COMMIT: ${{ github.event.pull_request.head.sha }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1, as in existing CI
+        with:
+          repository: jfcaicedoobando-arch/elogistix
+          ref: ${{ github.event.pull_request.head.sha }}
+          fetch-depth: 1
+          persist-credentials: false
+      - name: Static candidate-harness checks
+        run: |
+          python3 scripts/ci/acceptance-review/run.py --static-only
+          python3 scripts/ci/acceptance-review/test_runner.py
+      - name: Real baseline functions in owned offline PostgreSQL 17.6
+        run: python3 scripts/ci/acceptance-review/run.py --characterize-baseline
+      - name: Preserve diagnostic evidence
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1, as in existing CI
+        with:
+          name: acceptance-pg176-baseline-${{ github.event.pull_request.head.sha }}-${{ github.run_attempt }}
+          path: reports/acceptance-review/
+          if-no-files-found: error
+          retention-days: 14
