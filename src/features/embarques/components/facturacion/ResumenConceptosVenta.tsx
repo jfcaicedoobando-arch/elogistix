@@ -18,6 +18,7 @@ import { tratamientoIvaPendiente } from "@/lib/financial/etiquetaTratamientoFila
 
 import { esConceptoElegibleProforma } from "@/features/embarques/domain/conceptoElegibleProforma";
 import { sumarConceptosVentaPorMoneda } from "./resumenConceptosVenta.helpers";
+import { detalleConceptosEnFactura, esEstadoEnFactura } from "./estadoConceptoFactura";
 
 type ConceptoVenta = Tables<"conceptos_venta">;
 
@@ -50,7 +51,7 @@ export function ResumenConceptosVenta({
     [conceptos, estadoDe]
   );
   const conceptosFacturados = useMemo(
-    () => conceptos.filter(c => estadoDe(c.id) === "facturado"),
+    () => conceptos.filter(c => esEstadoEnFactura(estadoDe(c.id))),
     [conceptos, estadoDe]
   );
 
@@ -168,6 +169,7 @@ export function ResumenConceptosVenta({
               pendientesCount={conceptosPendientes.length}
               enProformaCount={conceptosEnProforma.length}
               facturadosCount={conceptosFacturados.length}
+              detalleEnFactura={detalleConceptosEnFactura(conceptosFacturados.map(c => estadoDe(c.id)), true)}
               gruposConIva={gruposConIva}
               ivaPendienteCount={conceptosPendientes.filter(tratamientoIvaPendiente).length}
             />

@@ -21,6 +21,7 @@ interface Props {
   pendientesCount: number;
   enProformaCount: number;
   facturadosCount: number;
+  detalleEnFactura?: string;
   ivaPendienteCount?: number;
   gruposConIva: {
     pendiente: boolean;
@@ -69,7 +70,7 @@ function ColumnaTotal({ titulo, count, total, cardClass, badgeClass, icon, empty
 }
 
 export function ResumenConceptosVentaTotales({
-  totales, pendientesCount, enProformaCount, facturadosCount, gruposConIva, ivaPendienteCount = 0,
+  totales, pendientesCount, enProformaCount, facturadosCount, gruposConIva, ivaPendienteCount = 0, detalleEnFactura,
 }: Props) {
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-3 p-4 border-t bg-muted/30">
@@ -104,7 +105,7 @@ export function ResumenConceptosVentaTotales({
         icon={<CheckCircle2 className="h-4 w-4 text-success" />}
         emptyText="Sin conceptos vinculados a factura"
         incluyeIva={gruposConIva.facturado}
-        alcance={gruposConIva.facturado ? "Borrador o emitida · IVA incluido" : "Borrador o emitida"}
+        alcance={`${detalleEnFactura || "Borrador o emitida"}${gruposConIva.facturado ? " · IVA incluido" : ""}`}
       />
     </div>
   );
