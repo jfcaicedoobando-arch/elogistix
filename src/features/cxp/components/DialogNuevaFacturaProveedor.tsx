@@ -77,14 +77,14 @@ function DialogNuevaFacturaProveedorForm({
   const { sub, iva, ieps, ret } = derivarMontos(ctl.values);
   const moneda = ctl.values.moneda;
 
-  // FE-11: si ya hay captura, avisamos antes de navegar o cerrar la pestaña.
+  // FE-11: incluye Atrás/Adelante sin desmontar la captura antes de confirmar.
   const hayCaptura = hayCapturaFactura({
     provId: ctl.values.provId,
     folio: ctl.values.folio,
     subtotal: sub,
     conceptos: conceptosConDatos(ctl.conceptosManuales.conceptos),
   });
-  const { guardDialog } = useDirtyGuard(open && hayCaptura && !ctl.isPending);
+  const { guardDialog, isNavigating, isCloseBlocked } = useDirtyGuard(open && hayCaptura && !ctl.isPending, true);
 
   // R170-10 + P2-IVA: el IVA por partida se lee de la misma fuente que el
   // cuadre (CFDI > conceptos manuales), no sólo del CFDI.
@@ -130,7 +130,7 @@ function DialogNuevaFacturaProveedorForm({
     {guardDialog}
     <FormDialogShell
         open={open}
-        onOpenChange={(o) => { if (!o) { ctl.reset(); } onOpenChange(o); }}
+        onOpenChange={(o) => { if (!o) { if (isCloseBlocked()) return; ctl.reset(); } onOpenChange(o); }}
         icon={FileSpreadsheet}
         title="Capturar factura de proveedor"
         description={
@@ -142,6 +142,7 @@ function DialogNuevaFacturaProveedorForm({
         footer={footer}
         // YG-04: con captura en curso, cerrar por X/Escape/clic exterior pide confirmación.
         isDirty={hayCaptura}
+        busy={{ active: ctl.isPending || isNavigating, suppressDiscardConfirmation: isNavigating }}
         stepper={{ step: pasos.paso, totalSteps: pasos.totalPasos, labels: [...pasos.etiquetas] }}
         headerAside={
           <TotalesChipDesglose

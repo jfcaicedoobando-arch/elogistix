@@ -58,6 +58,12 @@ export function usePagoClienteLoteState(a: Args) {
   const [cuentaId, setCuentaId] = useState("");
   const [notas, setNotas] = useState("");
   const [renglones, setRenglones] = useState<RenglonCobro[]>([]);
+  // El FIFO precargado no es captura; comparar contra esta apertura evita
+  // avisos vacíos y conserva la referencia aunque cambie la lista por refetch.
+  const capturaInicial = useRef<string | null>(null);
+  // La preparación previa también forma parte del envío y debe bloquear cierre.
+  const envioEnCurso = useRef(false);
+  const [preparando, setPreparando] = useState(false);
   // Ola 11 · RNF-01: una llave por apertura del diálogo; los reintentos del
   // mismo submit (timeout ambiguo, doble clic) la reutilizan y la RPC los
   // deduplica server-side.
@@ -76,13 +82,17 @@ export function usePagoClienteLoteState(a: Args) {
     }
     if (inicializadoRef.current) return;
     inicializadoRef.current = true;
-    setFecha(todayLocalISO());
-    setTotal(String(saldoTotal));
+    const fechaInicial = todayLocalISO();
+    const totalInicial = String(saldoTotal);
+    const repartoInicial = repartirFifo(a.facturas, saldoTotal).renglones;
+    capturaInicial.current = JSON.stringify([fechaInicial, totalInicial, "03", "", "", "", repartoInicial]);
+    setFecha(fechaInicial);
+    setTotal(totalInicial);
     setFormaPago("03");
     setReferencia("");
     setCuentaId("");
     setNotas("");
-    setRenglones(repartirFifo(a.facturas, saldoTotal).renglones);
+    setRenglones(repartoInicial);
     setRequestId(crypto.randomUUID());
   }, [a.open, a.facturas, saldoTotal]);
 
@@ -137,7 +147,9 @@ export function usePagoClienteLoteState(a: Args) {
 
 
   const submit = async () => {
-    if (error || !abiertoRef.current) return;
+    if (error || !abiertoRef.current || envioEnCurso.current || registrar.isPending) return;
+    envioEnCurso.current = true;
+    setPreparando(true);
     const aplicadas = renglones.filter((r) => r.monto > 0).map((r) => r.factura_id);
     try {
       const facturasConRep = await obtenerFacturasConRep(aplicadas);
@@ -164,6 +176,9 @@ export function usePagoClienteLoteState(a: Args) {
       // de promesa no manejado y el diálogo queda abierto para reintentar
       // (la RPC deduplica por request_id — RNF-01).
       return;
+    } finally {
+      envioEnCurso.current = false;
+      setPreparando(false);
     }
     a.onOpenChange(false);
     a.onDone();
@@ -176,7 +191,9 @@ export function usePagoClienteLoteState(a: Args) {
     error, erroresRenglon, sinAsignar, totalRepartido, repRequeridos,
     recalcular, setMonto, repartirFifoAhora, liquidarTodo, limpiarReparto,
     asignarSobrante, asignarSaldo, submit,
-    guardando: registrar.isPending,
+    isDirty: capturaInicial.current !== null && capturaInicial.current !==
+      JSON.stringify([fecha, total, formaPago, referencia, cuentaId, notas, renglones]),
+    guardando: preparando || registrar.isPending,
   };
 
 }

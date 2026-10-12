@@ -29,12 +29,38 @@ describe("compatibilidad comercial del contenedor de Pricing", () => {
   it.each([null, undefined, "", "  "])("sólo recurre al tipo legacy si tipo_carga es %s", (tipo_carga) => {
     expect(ids({ tipo_carga, container_size: "40HC" })).toEqual(["40HC", "40HQ"]);
   });
+  it.each(["FCL", "  fcl  "])("recupera solicitudes antiguas %s con tipo legacy completo", (tipo_carga) => {
+    expect(ids({ tipo_carga, container_size: "40HC" })).toEqual(["40HC", "40HQ"]);
+  });
+  it.each([null, undefined, "", "  "])("FCL sin tipo legacy %s no es un comodín", (container_size) => {
+    expect(ids({ tipo_carga: "FCL", container_size })).toEqual([]);
+  });
+  it.each(["40", "40′", "desconocido", "???"])("FCL conserva la validación del tipo legacy %s", (container_size) => {
+    expect(ids({ tipo_carga: "FCL", container_size })).toEqual([]);
+  });
+  it.each(["40GP", "40HC"])("HC parcial no toma tamaño ni categoría de %s", (container_size) => {
+    expect(ids({ tipo_carga: "HC", container_size })).toEqual([]);
+  });
+  it("LCL explícito conserva su identidad frente a un legacy FCL", () => {
+    expect(ids({ tipo_carga: "LCL", container_size: "40HC" })).toEqual([]);
+    expect(ids({ tipo_carga: "LCL", container_size: "40HC" }, [...tarifas, tarifa("LCL")])).toEqual(["LCL"]);
+  });
+  it("conserva un tipo personalizado aunque exista un legacy completo", () => {
+    expect(ids({ tipo_carga: "Especial A", container_size: "40HC" },
+      [...tarifas, tarifa("A", { tipo: { code: "A", name: "Especial A" } })])).toEqual(["A"]);
+  });
+  it("un tipo completo 40HC prevalece sobre legacy 20GP", () => {
+    expect(ids({ tipo_carga: "40HC", container_size: "20GP" })).toEqual(["40HC", "40HQ"]);
+  });
   it.each([
     { tipo_carga: null, container_size: null },
     { tipo_carga: undefined, container_size: undefined },
     { tipo_carga: "  ", container_size: "" },
+    { tipo_carga: "", container_size: "" },
+    { tipo_carga: "  ", container_size: "  " },
     { tipo_carga: "40", container_size: null },
     { tipo_carga: "40'", container_size: "40HC" },
+    { tipo_carga: "40′", container_size: "40HC" },
     { tipo_carga: "desconocido", container_size: "40HC" },
   ])("no convierte un tipo ausente o incompleto en comodín: %j", (campos) => {
     expect(ids(campos)).toEqual([]);
@@ -57,6 +83,24 @@ describe("compatibilidad comercial del contenedor de Pricing", () => {
       tarifa("40GP", { tipo: { code: "40GP", name: "40' High Cube" } })])).toEqual([]);
     expect(ids({ tipo_carga: "???" }, [tarifa("???")])).toEqual([]);
     expect(ids({ tipo_carga: "A" }, [tarifa("A", { tipo: { code: "A", name: "Especial A" } })])).toEqual([]);
+  });
+  it("FCL con legacy no acepta tarifas con nombre y código contradictorios ni sin tipo", () => {
+    expect(ids({ tipo_carga: "FCL", container_size: "40HC" }, [
+      tarifa("20GP", { tipo: { code: "20GP", name: "40' High Cube" } }),
+      tarifa("40GP", { tipo: { code: "40GP", name: "40' High Cube" } }),
+      tarifa("sin tipo", { tipo: null }),
+    ])).toEqual([]);
+  });
+  it("FCL con legacy conserva servicio, ruta y vigencia", () => {
+    const campos = { tipo_carga: "FCL", container_size: "40HC" };
+    expect(ids({ ...campos, servicio: "aereo" })).toEqual([]);
+    expect(ids({ ...campos, fecha_tentativa_carga: "2026-11-01" })).toEqual([]);
+    expect(ids(campos, [
+      tarifa("40HC"),
+      tarifa("40HC", { id: "vencida", vigente_hasta: "2026-10-07" }),
+      tarifa("40HC", { id: "futura", vigente_desde: "2026-10-20" }),
+      tarifa("40HC", { id: "otra ruta", ruta: { origen: { name: "Busan" }, destino: { name: "Manzanillo" } } }),
+    ])).toEqual(["40HC"]);
   });
   it.each([
     ["20HC", "20'", "40HC"],
