@@ -259,3 +259,6 @@ supabase/tests/audit147_comparador_moneda_tramo.sql
 supabase/tests/pricing_subtotal_moneda_canonica.sql
 supabase/tests/proforma_cancelada_acciones.sql
 supabase/tests/nc_publica_paridad_replay.sql
+
+# UUID aggregate regression: execute actual legacy conversion lookups on temp fixtures.
+supabase/tests/cotizacion_conversion_puertos_uuid.sql
