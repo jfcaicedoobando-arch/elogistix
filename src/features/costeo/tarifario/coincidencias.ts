@@ -47,8 +47,21 @@ function partesContenedor(campo: string) {
 }
 
 function coincideContenedor(s: SolicitudBusqueda, tipo: TarifaTarifario["tipo"]): boolean {
-  const pedido = s.tipo_carga?.trim() || s.container_size?.trim();
-  if (!pedido || !tipo) return false;
+  if (!tipo) return false;
+  // Solicitudes viejas guardaban "Type" como texto libre ("FCL", "HC"): si no
+  // se reconoce, se recurre al container_size guardado en lugar de descartar.
+  let pedido = s.tipo_carga?.trim() || s.container_size?.trim();
+  // Sólo se recurre al container_size cuando el Type es texto libre sin
+  // tamaño ni categoría reconocibles ("FCL"); un tipo parcial ("40'") se
+  // respeta estricto.
+  if (
+    pedido && s.tipo_carga?.trim() && s.container_size?.trim() &&
+    claveCanonicaTipoContenedor({ name: s.tipo_carga.trim(), code: "" }).startsWith("raw:") &&
+    !partesContenedor(s.tipo_carga.trim()).tamano
+  ) {
+    pedido = s.container_size.trim();
+  }
+  if (!pedido) return false;
   const clave = claveCanonicaTipoContenedor({ name: pedido, code: "" });
   const codigo = partesContenedor(tipo.code);
   const nombre = partesContenedor(tipo.name ?? "");
