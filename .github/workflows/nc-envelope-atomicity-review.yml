@@ -1,0 +1,46 @@
+name: NC envelope atomicity review (PR)
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+    branches: [main]
+    paths:
+      - '.github/workflows/nc-envelope-atomicity-review.yml'
+      - 'scripts/ci/nc-envelope-atomicity/**'
+permissions:
+  contents: read
+concurrency:
+  group: nc-envelope-atomicity-${{ github.event.pull_request.number }}-${{ github.event.pull_request.head.sha }}
+  cancel-in-progress: false
+jobs:
+  atomicity:
+    if: >-
+      github.repository == 'jfcaicedoobando-arch/elogistix' &&
+      github.event.pull_request.base.repo.full_name == 'jfcaicedoobando-arch/elogistix' &&
+      github.event.pull_request.head.repo.full_name == 'jfcaicedoobando-arch/elogistix' &&
+      github.event.pull_request.base.ref == 'main' &&
+      github.event.pull_request.head.ref == 'test/nc-envelope-atomicity-pg176-20261012'
+    name: NC envelope PostgreSQL 17.6 atomicity
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    env:
+      REVIEW_COMMIT: ${{ github.event.pull_request.head.sha }}
+    steps:
+      - name: Require exact reviewed commit
+        shell: bash
+        run: '[[ "$REVIEW_COMMIT" =~ ^[0-9a-f]{40}$ ]]'
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          repository: jfcaicedoobando-arch/elogistix
+          ref: ${{ github.event.pull_request.head.sha }}
+          fetch-depth: 1
+          persist-credentials: false
+      - name: Test exact envelope in owned offline PostgreSQL 17.6
+        run: python3 scripts/ci/nc-envelope-atomicity/run.py
+      - name: Preserve independent atomicity evidence
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: nc-envelope-pg176-${{ github.event.pull_request.head.sha }}-${{ github.run_attempt }}
+          path: reports/nc-envelope-atomicity/
+          if-no-files-found: error
+          retention-days: 14
