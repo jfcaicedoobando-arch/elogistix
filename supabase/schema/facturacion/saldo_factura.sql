@@ -87,7 +87,7 @@ BEGIN
   FROM public.factura_notas_credito nc
   WHERE nc.factura_id = p_factura_id
     AND nc.deleted_at IS NULL
-    AND nc.estado = 'Aplicada';
+    AND nc.estado IN ('Timbrada','Aplicada');
 
   RETURN COALESCE(v_total, 0) - COALESCE(v_pagos, 0) - COALESCE(v_ncs, 0);
 END;
