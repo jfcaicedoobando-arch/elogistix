@@ -51,11 +51,13 @@ function coincideContenedor(s: SolicitudBusqueda, tipo: TarifaTarifario["tipo"])
   // Solicitudes viejas guardaban "Type" como texto libre ("FCL", "HC"): si no
   // se reconoce, se recurre al container_size guardado en lugar de descartar.
   let pedido = s.tipo_carga?.trim() || s.container_size?.trim();
-  // Sólo se recurre al container_size cuando el Type es texto libre no
-  // reconocible; un tipo parcial reconocible ("40'") se respeta estricto.
+  // Sólo se recurre al container_size cuando el Type es texto libre sin
+  // tamaño ni categoría reconocibles ("FCL"); un tipo parcial ("40'") se
+  // respeta estricto.
   if (
     pedido && s.tipo_carga?.trim() && s.container_size?.trim() &&
-    claveCanonicaTipoContenedor({ name: s.tipo_carga.trim(), code: "" }).startsWith("raw:")
+    claveCanonicaTipoContenedor({ name: s.tipo_carga.trim(), code: "" }).startsWith("raw:") &&
+    !partesContenedor(s.tipo_carga.trim()).tamano
   ) {
     pedido = s.container_size.trim();
   }
