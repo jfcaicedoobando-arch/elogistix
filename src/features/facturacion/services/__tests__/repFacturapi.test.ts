@@ -4,6 +4,7 @@ const { invoke } = vi.hoisted(() => ({ invoke: vi.fn() }));
 vi.mock("@/integrations/supabase/client", () => ({ supabase: { functions: { invoke } } }));
 
 import { emitirRep, cancelarRep, esRepYaTimbrado } from "../repFacturapi";
+import { extractErrorDetails } from "@/lib/ui/errorDetailsExtract";
 
 /** Simula lo que hace `supabase.functions.invoke` con status ≠ 2xx. */
 function httpError(status: number, body: unknown) {
@@ -131,5 +132,22 @@ describe("repFacturapi service", () => {
       error: httpError(409, { error: "ya_cancelado", message: "El REP ya estaba cancelado." }),
     });
     await expect(cancelarRep("p1", "02")).rejects.toThrow("El REP ya estaba cancelado.");
+  });
+
+  it.each(["http", "data"])("emitirRep conserva diagnóstico REP desde %s sin reintentar", async (source) => {
+    // Synthetic provider balance, not a claim about the real Sandbox response.
+    const body = { error: "rep_resumen_divergente", message: "El saldo no coincide", moneda: "USD", tolerancia: 0.01,
+      divergencias: ["Saldo anterior: local 1.00 vs proveedor 0.90"],
+      local: { installment: 2, last_balance: 1, amount: 1, taxes: [] },
+      proveedor: { installment: 2, last_balance: 0.9, amount: 1, currency: "USD", taxes: [] } };
+    invoke.mockResolvedValueOnce(source === "http"
+      ? { data: null, error: httpError(422, body) }
+      : { data: body, error: null });
+    const error = await emitirRep("p1").catch((value: unknown) => value);
+    expect((error as Error).message).toBe(body.message);
+    expect(extractErrorDetails(error).detallesSat?.resumenRep).toEqual({
+      moneda: body.moneda, tolerancia: body.tolerancia, divergencias: body.divergencias, local: body.local, proveedor: body.proveedor,
+    });
+    expect(invoke).toHaveBeenCalledTimes(1);
   });
 });
