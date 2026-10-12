@@ -1,26 +1,22 @@
 /**
- * Badge tri-estado para conceptos de venta en el tab Facturación.
- *
- * Desde v13.213.47 `conceptos_venta.estado_facturacion` es tri-valor real en BD
- * (`pendiente` | `en_proforma` | `facturado`), sincronizado automáticamente por
- * el trigger `trg_sync_conceptos_venta_facturado` sobre `proformas`. Ya no
- * hay que cruzar con `proformas.estado_proforma` en presentación.
+ * Estado visual de conceptos: la bandera persistida reserva el concepto,
+ * mientras la factura vinculada distingue preparación, emisión y terminales.
  */
 import { CheckCircle2, Clock, FileText } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import type { Tables } from "@/types/db";
+import { estadoFacturaConcepto, type EstadoConcepto, type FacturaConcepto, type ProformaConcepto } from "./estadoConceptoFactura";
+export type { EstadoConcepto } from "./estadoConceptoFactura";
 
 /**
  * v13.823.366 — `pendiente_confirmar`: el embarque sigue en Borrador, así que
  * el concepto todavía no puede pasar a proforma. Es señal de presentación: en
  * BD `estado_facturacion` sigue siendo `pendiente`.
  */
-export type EstadoConcepto = "pendiente" | "pendiente_confirmar" | "en_proforma" | "facturado";
-
 type ConceptoVenta = Tables<"conceptos_venta">;
 
 /**
- * Mapa `conceptoId → estado tri-valor` leído directo de BD.
+ * Mapa `conceptoId → estado visual`, sin cambiar reserva ni elegibilidad.
  *
  * v13.823.336 — fuente única de verdad: si el embarque no tiene ninguna
  * proforma viva, un concepto marcado `en_proforma` (bandera huérfana de una
@@ -33,11 +29,13 @@ export function calcularEstadosConceptos(
   hayProformas = true,
   /** `false` si el embarque sigue en Borrador (no puede generar proformas). */
   embarqueConfirmado = true,
+  facturas: FacturaConcepto[] = [],
+  proformas: ProformaConcepto[] = [],
 ): Map<string, EstadoConcepto> {
   const mapa = new Map<string, EstadoConcepto>();
   for (const c of conceptos) {
     const ef = c.estado_facturacion;
-    if (ef === "facturado") mapa.set(c.id, "facturado");
+    if (ef === "facturado") mapa.set(c.id, estadoFacturaConcepto(c, facturas, proformas));
     else if (ef === "en_proforma" && hayProformas) mapa.set(c.id, "en_proforma");
     else mapa.set(c.id, embarqueConfirmado ? "pendiente" : "pendiente_confirmar");
   }
@@ -52,7 +50,19 @@ export function EstadoConceptoBadge({ estado }: BadgeProps) {
   if (estado === "facturado") {
     return (
       <Badge variant="success">
-        <CheckCircle2 className="h-3 w-3 mr-1" /> Facturado
+        <CheckCircle2 className="h-3 w-3 mr-1" /> Emitido
+      </Badge>
+    );
+  }
+  const etiquetasFactura: Partial<Record<EstadoConcepto, string>> = {
+    en_borrador: "En borrador", por_timbrar: "Por timbrar", en_factura: "En factura",
+    factura_cancelada: "Factura cancelada", factura_sustituida: "Factura sustituida",
+  };
+  const etiquetaFactura = etiquetasFactura[estado];
+  if (etiquetaFactura) {
+    return (
+      <Badge variant="outline">
+        <FileText className="h-3 w-3 mr-1" /> {etiquetaFactura}
       </Badge>
     );
   }

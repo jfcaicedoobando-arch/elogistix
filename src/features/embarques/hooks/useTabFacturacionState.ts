@@ -19,10 +19,11 @@ import { calcularEstadosConceptos } from "@/features/embarques/components/factur
 import type { FiltroContenedor } from "@/features/embarques/domain/conceptosPorContenedor";
 import { esConceptoElegibleProforma } from "@/features/embarques/domain/conceptoElegibleProforma";
 import type { Tables } from "@/types/db";
+import type { FacturaConcepto } from "@/features/embarques/components/facturacion/estadoConceptoFactura";
 
 type EmbarqueRow = Tables<"embarques">;
 
-export function useTabFacturacionState(embarque: EmbarqueRow, canEditProp: boolean) {
+export function useTabFacturacionState(embarque: EmbarqueRow, canEditProp: boolean, facturas: FacturaConcepto[] = []) {
   const embarqueCerrado = embarque.estado === "Cerrado";
   // v13.823.145 — Un embarque en Borrador todavía no está confirmado: no debe
   // poder generar ni aprobar proformas (antes la UI advertía pero lo permitía).
@@ -39,12 +40,12 @@ export function useTabFacturacionState(embarque: EmbarqueRow, canEditProp: boole
   const [proformaAEliminar, setProformaAEliminar] = useState<{ id: string; numero: string } | null>(null);
   const { registerRef } = useFocusSection();
 
-  // Mapa concepto.id → estado tri-valor (pendiente | en_proforma | facturado).
+  // Estado visual de la factura; el criterio de reserva de abajo no cambia.
   const estadosConceptos = useMemo(
     // v13.823.366 — En Borrador no hay disponibilidad real: los conceptos se
     // presentan como "Pendiente de confirmar" (sin tocar BD).
-    () => calcularEstadosConceptos(conceptos, proformas.length > 0, !embarqueBorrador),
-    [conceptos, proformas.length, embarqueBorrador],
+    () => calcularEstadosConceptos(conceptos, proformas.length > 0, !embarqueBorrador, facturas, proformas),
+    [conceptos, proformas, embarqueBorrador, facturas],
   );
 
   // R179-02: criterio único de elegibilidad (espejo del candado del RPC):

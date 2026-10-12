@@ -9,6 +9,8 @@ import { cn } from "@/lib/utils";
 interface Props {
   conceptosCount: number;
   facturadosCount: number;
+  /** Conceptos reservados por factura que aún no cuentan como emitidos. */
+  conceptosEnFacturaDetalle?: string;
   proformasCount: number;
   /** Proformas convertidas (estado comercial 'facturada'), emitidas o no. */
   proformasConvertidasCount: number;
@@ -125,7 +127,7 @@ function detalleProformas(total: number, convertidas: number, emitidas: number):
 }
 
 export function FlujoFacturacionStepper({
-  conceptosCount, facturadosCount,
+  conceptosCount, facturadosCount, conceptosEnFacturaDetalle,
   proformasCount, proformasConvertidasCount, proformasEmitidasCount,
   facturasCount, facturasEmitidasCount,
 }: Props) {
@@ -133,11 +135,12 @@ export function FlujoFacturacionStepper({
   const e2 = estadoProformas(proformasCount, proformasEmitidasCount);
   const e3 = estadoFacturas(facturasCount, facturasEmitidasCount);
 
-  const det1 = conceptosCount === 0
+  const detConceptos = conceptosCount === 0
     ? "Sin conceptos"
     : facturadosCount === conceptosCount
-      ? `${conceptosCount} facturado${conceptosCount === 1 ? "" : "s"}`
-      : `${facturadosCount} / ${conceptosCount} facturados`;
+      ? `${conceptosCount} emitido${conceptosCount === 1 ? "" : "s"}`
+      : `${facturadosCount} / ${conceptosCount} emitidos`;
+  const det1 = conceptosEnFacturaDetalle ? `${detConceptos} · ${conceptosEnFacturaDetalle}` : detConceptos;
 
   const det2 = detalleProformas(proformasCount, proformasConvertidasCount, proformasEmitidasCount);
 

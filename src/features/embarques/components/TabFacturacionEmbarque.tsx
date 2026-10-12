@@ -14,6 +14,7 @@ import { usePermissions } from "@/hooks/shared";
 import { useClienteAutorizacion } from "@/features/cliente/hooks/useClienteAutorizacion";
 import { contarFacturasEmitidas, facturaEmitida } from "@/lib/domain/etiquetaCicloProforma";
 import type { Tables } from "@/types/db";
+import { detalleConceptosEnFactura } from "./facturacion/estadoConceptoFactura";
 
 type EmbarqueRow = Tables<'embarques'>;
 
@@ -45,7 +46,7 @@ export function TabFacturacionEmbarque({ facturas, canEdit: canEditProp, embarqu
   // sólo lectura, sin perder sus permisos de costos ni documentos.
   const { canEditarProforma } = usePermissions();
   const { autorizacion } = useClienteAutorizacion(embarque.cliente_id);
-  const s = useTabFacturacionState(embarque, canEditProp && canEditarProforma);
+  const s = useTabFacturacionState(embarque, canEditProp && canEditarProforma, facturas);
   const {
     embarqueCerrado, embarqueBorrador, canEdit, tasaIva, conceptos, contenedores, proformas,
     estadosConceptos, conceptosElegibles, conceptosHuerfanos, borradorVacio,
@@ -112,6 +113,7 @@ export function TabFacturacionEmbarque({ facturas, canEdit: canEditProp, embarqu
       <FlujoFacturacionStepper
         conceptosCount={conceptos.length}
         facturadosCount={Array.from(estadosConceptos.values()).filter(e => e === "facturado").length}
+        conceptosEnFacturaDetalle={detalleConceptosEnFactura(Array.from(estadosConceptos.values()))}
         proformasCount={proformas.length}
         proformasConvertidasCount={proformas.filter(p => p.estado_proforma === "facturada").length}
         proformasEmitidasCount={proformasEmitidasCount}

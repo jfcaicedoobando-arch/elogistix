@@ -38,9 +38,9 @@ describe("calcularEstadosConceptos", () => {
     expect(mapa.get("c1")).toBe("pendiente");
   });
 
-  it("nunca degrada un concepto ya facturado", () => {
+  it("sin datos de factura conserva la reserva sin afirmar emisión", () => {
     const mapa = calcularEstadosConceptos([concepto("c1", "facturado")], false);
-    expect(mapa.get("c1")).toBe("facturado");
+    expect(mapa.get("c1")).toBe("en_factura");
   });
 });
 
