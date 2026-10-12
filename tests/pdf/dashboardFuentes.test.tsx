@@ -9,13 +9,18 @@ import { inspectPdf } from "./inspectPdf";
 
 function snapshot(fuente: SnapshotEjecutivo["fuente"]): SnapshotEjecutivo {
   const hoy = new Date(2026, 9, 4, 12);
+  const presupuesto: SnapshotEjecutivo["presupuesto"] = {
+    periodo: "2026-10", filas: [], total_presupuesto_mxn: 0, total_real_mxn: 0,
+    variacion_neta_mxn: 0, categorias_en_exceso: 0, top_exceso: [],
+    gastos_sin_tc_count: 0, real_truncado: false,
+  };
   const base = {
     periodo: "2026-10", fuente,
     vencimientos: calcularVencimientosEjecutivos({ cobranza: [], cxp: [], hoy }),
     eerrPeriodo: buildEstadoResultados([], [], []), eerr12m: [],
     tesoreria: calcularResumenTesoreria({ cuentas: [], cobranza: [], cxp: [], hoy, tipoCambioUsd: 18.5, tipoCambioFecha: "2026-10-02" }),
     flujo: calcularFlujoProyectado({ cuentas: [], cobranza: [], cxp: [], liquidaciones: [], hoy, dias: 28 }),
-    presupuesto: { periodo: "2026-10", filas: [], total_presupuesto_mxn: 0, total_real_mxn: 0, variacion_neta_mxn: 0, categorias_en_exceso: 0, top_exceso: [] },
+    presupuesto,
     tipoCambioUsd: 18.5, tcEsFallback: false,
   };
   return { ...base, generadoEn: "2026-10-04T18:00:00Z", kpis: calcularKPIsEjecutivos(base, 0), topDeudores: [], topAcreedores: [], alertas: [] };

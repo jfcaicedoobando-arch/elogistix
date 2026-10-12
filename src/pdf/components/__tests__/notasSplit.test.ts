@@ -2,6 +2,13 @@ import { describe, it, expect } from "vitest";
 import { splitNotas } from "../notasSplit";
 
 describe("splitNotas (R188-PDF-01)", () => {
+  it("no separa una letra de su marca combinante en el límite del inicio", () => {
+    const texto = "x".repeat(179) + "e\u0301" + "y".repeat(40);
+    const { head, rest } = splitNotas(texto);
+    expect(head).toBe("x".repeat(179));
+    expect(rest).toBe("e\u0301" + "y".repeat(40));
+    expect(head + rest).toBe(texto);
+  });
   it("mantiene notas cortas en un solo trozo", () => {
     const { head, rest } = splitNotas("Precios sujetos a cambio sin previo aviso.");
     expect(head).toBe("Precios sujetos a cambio sin previo aviso.");

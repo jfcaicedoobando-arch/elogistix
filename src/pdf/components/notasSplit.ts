@@ -14,6 +14,7 @@
 const MAX_HEAD = 180;
 /** Máximo de renglones del trozo que viaja junto al título. */
 const MAX_HEAD_LINEAS = 3;
+const graphemes = new Intl.Segmenter("es", { granularity: "grapheme" });
 
 export interface NotasPartes {
   /** Primer trozo, indivisible junto al título. */
@@ -38,12 +39,14 @@ function limitePorLineas(texto: string): number {
   return texto.length;
 }
 
-/** Evita cortar en medio de un par surrogate (emoji, etc.). */
+/** Preserve whole graphemes, including surrogate pairs and combining marks. */
 function ajustarUnicode(texto: string, corte: number): number {
   if (corte <= 0 || corte >= texto.length) return corte;
-  const anterior = texto.charCodeAt(corte - 1);
-  const esAltoSurrogate = anterior >= 0xd800 && anterior <= 0xdbff;
-  return esAltoSurrogate ? corte - 1 : corte;
+  for (const { index, segment } of graphemes.segment(texto)) {
+    const end = index + segment.length;
+    if (end >= corte) return end === corte ? corte : index > 0 ? index : end;
+  }
+  return corte;
 }
 
 export function splitNotas(notas: string): NotasPartes {
