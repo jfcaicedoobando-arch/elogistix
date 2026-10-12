@@ -14,7 +14,7 @@ import { estadoMeta, semaforoCriterios, type AvanceCriterios } from "@/features/
 import {
   CriteriosRow, MetaRow, ProximaRow,
 } from "@/features/crm/components/kanban/OportunidadCard.parts";
-import { formatProx } from "@/features/crm/domain/proximaActividadLabel";
+import { formatProx, type EstadoProximas } from "@/features/crm/domain/proximaActividadLabel";
 import type { ProximaActividad } from "@/features/crm/hooks";
 import type { CrmOportunidadRow } from "@/features/crm/hooks";
 
@@ -22,6 +22,7 @@ interface Props {
   op: CrmOportunidadRow;
   onClick: () => void;
   proxima?: ProximaActividad;
+  estadoProximas?: EstadoProximas;
   avance?: AvanceCriterios;
   esCerrada: boolean;
   /**
@@ -63,7 +64,7 @@ function derivarDatosTarjeta(
   };
 }
 
-export default function OportunidadCard({ op, onClick, proxima, avance, esCerrada, arrastrable = true }: Props) {
+export default function OportunidadCard({ op, onClick, proxima, estadoProximas = "listo", avance, esCerrada, arrastrable = true }: Props) {
   const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
     id: op.id,
     disabled: !arrastrable,
@@ -123,7 +124,10 @@ export default function OportunidadCard({ op, onClick, proxima, avance, esCerrad
           />
         ) : null}
 
-        <ProximaRow texto={formatProx(proxima)} vencida={vencida} />
+        <ProximaRow
+          texto={formatProx(proxima, estadoProximas)}
+          vencida={vencida}
+        />
       </CardContent>
     </Card>
   );

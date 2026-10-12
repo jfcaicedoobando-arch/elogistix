@@ -16,15 +16,16 @@ import { esConflictoConcurrencia } from "@/lib/errors/concurrencia";
 export function useMoverEtapaConAutomatizacion() {
   const qc = useQueryClient();
   const { user } = useAuth();
-  const refrescar = () => {
-    qc.invalidateQueries({ queryKey: queryKeys.crm.oportunidades.all });
-    qc.invalidateQueries({ queryKey: queryKeys.crm.actividades.all });
-    qc.invalidateQueries({ queryKey: queryKeys.crm.higiene.all });
-    qc.invalidateQueries({ queryKey: queryKeys.crm.notificaciones.all });
-    qc.invalidateQueries({ queryKey: queryKeys.crm.dashboardAll });
+  const refrescar = () => Promise.all([
+    qc.invalidateQueries({ queryKey: queryKeys.crm.oportunidades.all }),
+    qc.invalidateQueries({ queryKey: queryKeys.crm.actividades.all }),
+    qc.invalidateQueries({ queryKey: queryKeys.crm.proximasActividadesAll }),
+    qc.invalidateQueries({ queryKey: queryKeys.crm.higiene.all }),
+    qc.invalidateQueries({ queryKey: queryKeys.crm.notificaciones.all }),
+    qc.invalidateQueries({ queryKey: queryKeys.crm.dashboardAll }),
     // v13.823.94: "Qué hacer ahora" (NBA) leía señales de hasta 60s.
-    qc.invalidateQueries({ queryKey: queryKeys.crm.nbaSignalsAll });
-  };
+    qc.invalidateQueries({ queryKey: queryKeys.crm.nbaSignalsAll }),
+  ]);
   return useMutation({
     mutationFn: async (params: {
       id: string; etapa_id: string; probabilidad?: number;
@@ -61,10 +62,10 @@ export function useMoverEtapaConAutomatizacion() {
       return { id: params.id, updated_at: updatedAt, automatizacionesOk };
     },
     onSuccess: refrescar,
-    onError: (error: Error) => {
+    onError: async (error: Error) => {
       // Hallazgo 14: si el UPDATE no afectó filas por conflicto, refrescamos
       // igual para que el usuario vea la versión vigente en vez de la suya.
-      if (esConflictoConcurrencia(error)) refrescar();
+      if (esConflictoConcurrencia(error)) await refrescar();
       notifyError(undefined, { title: "No se pudo mover etapa", description: getErrorMessage(error), error, method: "MOVE_ETAPA_OPORTUNIDAD" });
     },
   });

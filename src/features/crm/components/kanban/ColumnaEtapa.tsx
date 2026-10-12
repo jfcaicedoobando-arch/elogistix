@@ -13,6 +13,7 @@ import { Button } from "@/components/ui/button";
 import { formatCurrencyCompact } from "@/lib/formatters";
 import { totalesEtapa, type AvanceCriterios, type TotalesEtapaMoneda } from "@/features/crm/domain/criterios";
 import { colorAcentoEtapa } from "@/features/crm/lib/etapaColores";
+import type { EstadoProximas } from "@/features/crm/domain/proximaActividadLabel";
 import OportunidadCard from "./OportunidadCard";
 import type { ProximaActividad } from "@/features/crm/hooks";
 import type { CrmOportunidadRow, CrmEtapaRow } from "@/features/crm/hooks";
@@ -31,6 +32,7 @@ interface Props {
   ops: CrmOportunidadRow[];
   onClickCard: (id: string) => void;
   proximasMap: Map<string, ProximaActividad>;
+  estadoProximas?: EstadoProximas;
   avanceMap: Map<string, AvanceCriterios>;
   /** CTA del estado vacío (E-11). Recibe el id de ESTA etapa para prefijarla
       en el formulario; sin esto la oportunidad nacía en otra columna. */
@@ -39,7 +41,7 @@ interface Props {
   puedeArrastrar?: (op: CrmOportunidadRow) => boolean;
 }
 
-export default function ColumnaEtapa({ etapa, ops, onClickCard, proximasMap, avanceMap, onNuevo, puedeArrastrar }: Props) {
+export default function ColumnaEtapa({ etapa, ops, onClickCard, proximasMap, estadoProximas = "listo", avanceMap, onNuevo, puedeArrastrar }: Props) {
   const { setNodeRef, isOver } = useDroppable({ id: etapa.id });
   const [visibles, setVisibles] = useState(LIMITE_ETAPA_INICIAL);
   const totales = totalesEtapa(ops);
@@ -77,6 +79,7 @@ export default function ColumnaEtapa({ etapa, ops, onClickCard, proximasMap, ava
             op={op}
             onClick={() => onClickCard(op.id)}
             proxima={proximasMap.get(op.id)}
+            estadoProximas={estadoProximas}
             avance={avanceMap.get(op.id)}
             esCerrada={esCerrada}
             arrastrable={puedeArrastrar ? puedeArrastrar(op) : true}
