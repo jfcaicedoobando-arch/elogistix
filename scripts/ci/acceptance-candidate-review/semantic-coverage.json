@@ -1,0 +1,661 @@
+{
+  "status": "candidate_not_executed_by_author",
+  "expected_marker_count": 115,
+  "markers": [
+    {
+      "marker": "unmodified_converter_and_downstream_guards",
+      "description": "Exact supplied baseline prosrc hashes for original converter, CRM triggers, shipment wrapper/core and manual invoice RPC"
+    },
+    {
+      "marker": "strict_authenticated_fixtures",
+      "description": "FK-intact users, modern roles, exact membership mirror and tenant/hierarchy checks"
+    },
+    {
+      "marker": "auth_missing_subject_acceptance",
+      "description": "auth_missing_subject_acceptance",
+      "sqlstate": "42501",
+      "domain_error": "LC_NO_AUTORIZADO"
+    },
+    {
+      "marker": "auth_missing_subject_conversion",
+      "description": "auth_missing_subject_conversion",
+      "sqlstate": "42501",
+      "domain_error": "LC_SESION_REQUERIDA"
+    },
+    {
+      "marker": "auth_nonmember_acceptance",
+      "description": "auth_nonmember_acceptance",
+      "sqlstate": "42501",
+      "domain_error": "LC_NO_AUTORIZADO"
+    },
+    {
+      "marker": "auth_role_denied_acceptance",
+      "description": "auth_role_denied_acceptance",
+      "sqlstate": "42501",
+      "domain_error": "LC_NO_AUTORIZADO"
+    },
+    {
+      "marker": "tenant_other_org_acceptance",
+      "description": "tenant_other_org_acceptance",
+      "sqlstate": "42501",
+      "domain_error": "LC_NO_AUTORIZADO"
+    },
+    {
+      "marker": "tenant_other_org_conversion",
+      "description": "tenant_other_org_conversion",
+      "sqlstate": "42501",
+      "domain_error": "LC_ORG_AJENA"
+    },
+    {
+      "marker": "tenant_superadmin_active_other_org",
+      "description": "Active tenant B rejects prospect A even for global super_admin; ordinary dual-membership is prohibited by baseline UNIQUE(user_id)",
+      "sqlstate": "42501",
+      "domain_error": "LC_NO_AUTORIZADO"
+    },
+    {
+      "marker": "creator_sod_acceptance",
+      "description": "creator_sod_acceptance",
+      "sqlstate": "42501",
+      "domain_error": "LC_SOD_VIOLATION"
+    },
+    {
+      "marker": "conversion_seller_denied_before_acceptance",
+      "description": "conversion_seller_denied_before_acceptance",
+      "sqlstate": "42501",
+      "domain_error": "LC_CLIENTE_SIN_PERMISO"
+    },
+    {
+      "marker": "conversion_requires_accepted",
+      "description": "conversion_requires_accepted",
+      "sqlstate": "P0001",
+      "domain_error": "LC_COTIZACION_ESTADO_INVALIDO"
+    },
+    {
+      "marker": "nonprospect_missing_client",
+      "description": "nonprospect_missing_client",
+      "sqlstate": "P0001",
+      "domain_error": "LC_COT_SIN_CLIENTE"
+    },
+    {
+      "marker": "internal_house_acceptance",
+      "description": "House client accepts without CRM at version 3"
+    },
+    {
+      "marker": "internal_house_retry",
+      "description": "House retry changes no captured row"
+    },
+    {
+      "marker": "prospect_acceptance_without_company",
+      "description": "Enviada prospect wins CRM, precise seal, no client; lead Pendiente de alta; no optional company invented"
+    },
+    {
+      "marker": "prospect_retry_pending_registration",
+      "description": "Prospect retry accepts canonical won/Pendiente de alta state without duplicates"
+    },
+    {
+      "marker": "accepted_seller_retry_still_denied",
+      "description": "accepted_seller_retry_still_denied",
+      "sqlstate": "42501",
+      "domain_error": "LC_SOD_VIOLATION"
+    },
+    {
+      "marker": "accepted_cross_tenant_retry_still_denied",
+      "description": "accepted_cross_tenant_retry_still_denied",
+      "sqlstate": "42501",
+      "domain_error": "LC_NO_AUTORIZADO"
+    },
+    {
+      "marker": "shipment_before_conversion_rejected",
+      "description": "Verified real shipment wrapper/core reject accepted prospect without client; no shipment created",
+      "sqlstate": "P0001",
+      "domain_error": "LC_COT_SIN_CLIENTE"
+    },
+    {
+      "marker": "accepted_amount_immutable",
+      "description": "accepted_amount_immutable",
+      "sqlstate": "P0001",
+      "domain_error": "LC_COTIZACION_INMUTABLE"
+    },
+    {
+      "marker": "fiscal_missing_contacto",
+      "description": "Original converter rejects missing contacto; exact missing-field list; real RFC payload",
+      "sqlstate": "P0001",
+      "domain_error": "LC_CLIENTE_FISCAL_INCOMPLETO"
+    },
+    {
+      "marker": "fiscal_missing_email",
+      "description": "Original converter rejects missing email; exact missing-field list; real RFC payload",
+      "sqlstate": "P0001",
+      "domain_error": "LC_CLIENTE_FISCAL_INCOMPLETO"
+    },
+    {
+      "marker": "fiscal_missing_telefono",
+      "description": "Original converter rejects missing telefono; exact missing-field list; real RFC payload",
+      "sqlstate": "P0001",
+      "domain_error": "LC_CLIENTE_FISCAL_INCOMPLETO"
+    },
+    {
+      "marker": "fiscal_missing_rfc",
+      "description": "Original converter rejects missing rfc; exact missing-field list; real RFC payload",
+      "sqlstate": "P0001",
+      "domain_error": "LC_CLIENTE_FISCAL_INCOMPLETO"
+    },
+    {
+      "marker": "fiscal_missing_cp",
+      "description": "Original converter rejects missing cp; exact missing-field list; real RFC payload",
+      "sqlstate": "P0001",
+      "domain_error": "LC_CLIENTE_FISCAL_INCOMPLETO"
+    },
+    {
+      "marker": "fiscal_missing_regimen_fiscal",
+      "description": "Original converter rejects missing regimen_fiscal; exact missing-field list; real RFC payload",
+      "sqlstate": "P0001",
+      "domain_error": "LC_CLIENTE_FISCAL_INCOMPLETO"
+    },
+    {
+      "marker": "fiscal_missing_uso_cfdi_default",
+      "description": "Original converter rejects missing uso_cfdi_default; exact missing-field list; real RFC payload",
+      "sqlstate": "P0001",
+      "domain_error": "LC_CLIENTE_FISCAL_INCOMPLETO"
+    },
+    {
+      "marker": "fiscal_missing_forma_pago_default",
+      "description": "Original converter rejects missing forma_pago_default; exact missing-field list; real RFC payload",
+      "sqlstate": "P0001",
+      "domain_error": "LC_CLIENTE_FISCAL_INCOMPLETO"
+    },
+    {
+      "marker": "fiscal_missing_metodo_pago_default",
+      "description": "Original converter rejects missing metodo_pago_default; exact missing-field list; real RFC payload",
+      "sqlstate": "P0001",
+      "domain_error": "LC_CLIENTE_FISCAL_INCOMPLETO"
+    },
+    {
+      "marker": "fiscal_missing_direccion",
+      "description": "Original converter rejects missing direccion; exact missing-field list; real RFC payload",
+      "sqlstate": "P0001",
+      "domain_error": "LC_CLIENTE_FISCAL_INCOMPLETO"
+    },
+    {
+      "marker": "fiscal_missing_nombre",
+      "description": "fiscal_missing_nombre",
+      "sqlstate": "P0001",
+      "domain_error": "LC_CLIENTE_SIN_NOMBRE"
+    },
+    {
+      "marker": "fiscal_null_contacto",
+      "description": "Original converter rejects null contacto; exact missing-field list; real RFC payload",
+      "sqlstate": "P0001",
+      "domain_error": "LC_CLIENTE_FISCAL_INCOMPLETO"
+    },
+    {
+      "marker": "fiscal_null_email",
+      "description": "Original converter rejects null email; exact missing-field list; real RFC payload",
+      "sqlstate": "P0001",
+      "domain_error": "LC_CLIENTE_FISCAL_INCOMPLETO"
+    },
+    {
+      "marker": "fiscal_null_telefono",
+      "description": "Original converter rejects null telefono; exact missing-field list; real RFC payload",
+      "sqlstate": "P0001",
+      "domain_error": "LC_CLIENTE_FISCAL_INCOMPLETO"
+    },
+    {
+      "marker": "fiscal_null_rfc",
+      "description": "Original converter rejects null rfc; exact missing-field list; real RFC payload",
+      "sqlstate": "P0001",
+      "domain_error": "LC_CLIENTE_FISCAL_INCOMPLETO"
+    },
+    {
+      "marker": "fiscal_null_cp",
+      "description": "Original converter rejects null cp; exact missing-field list; real RFC payload",
+      "sqlstate": "P0001",
+      "domain_error": "LC_CLIENTE_FISCAL_INCOMPLETO"
+    },
+    {
+      "marker": "fiscal_null_regimen_fiscal",
+      "description": "Original converter rejects null regimen_fiscal; exact missing-field list; real RFC payload",
+      "sqlstate": "P0001",
+      "domain_error": "LC_CLIENTE_FISCAL_INCOMPLETO"
+    },
+    {
+      "marker": "fiscal_null_uso_cfdi_default",
+      "description": "Original converter rejects null uso_cfdi_default; exact missing-field list; real RFC payload",
+      "sqlstate": "P0001",
+      "domain_error": "LC_CLIENTE_FISCAL_INCOMPLETO"
+    },
+    {
+      "marker": "fiscal_null_forma_pago_default",
+      "description": "Original converter rejects null forma_pago_default; exact missing-field list; real RFC payload",
+      "sqlstate": "P0001",
+      "domain_error": "LC_CLIENTE_FISCAL_INCOMPLETO"
+    },
+    {
+      "marker": "fiscal_null_metodo_pago_default",
+      "description": "Original converter rejects null metodo_pago_default; exact missing-field list; real RFC payload",
+      "sqlstate": "P0001",
+      "domain_error": "LC_CLIENTE_FISCAL_INCOMPLETO"
+    },
+    {
+      "marker": "fiscal_null_direccion",
+      "description": "Original converter rejects null direccion; exact missing-field list; real RFC payload",
+      "sqlstate": "P0001",
+      "domain_error": "LC_CLIENTE_FISCAL_INCOMPLETO"
+    },
+    {
+      "marker": "fiscal_null_nombre",
+      "description": "fiscal_null_nombre",
+      "sqlstate": "P0001",
+      "domain_error": "LC_CLIENTE_SIN_NOMBRE"
+    },
+    {
+      "marker": "fiscal_blank_contacto",
+      "description": "Original converter rejects blank contacto; exact missing-field list; real RFC payload",
+      "sqlstate": "P0001",
+      "domain_error": "LC_CLIENTE_FISCAL_INCOMPLETO"
+    },
+    {
+      "marker": "fiscal_blank_email",
+      "description": "Original converter rejects blank email; exact missing-field list; real RFC payload",
+      "sqlstate": "P0001",
+      "domain_error": "LC_CLIENTE_FISCAL_INCOMPLETO"
+    },
+    {
+      "marker": "fiscal_blank_telefono",
+      "description": "Original converter rejects blank telefono; exact missing-field list; real RFC payload",
+      "sqlstate": "P0001",
+      "domain_error": "LC_CLIENTE_FISCAL_INCOMPLETO"
+    },
+    {
+      "marker": "fiscal_blank_rfc",
+      "description": "Original converter rejects blank rfc; exact missing-field list; real RFC payload",
+      "sqlstate": "P0001",
+      "domain_error": "LC_CLIENTE_FISCAL_INCOMPLETO"
+    },
+    {
+      "marker": "fiscal_blank_cp",
+      "description": "Original converter rejects blank cp; exact missing-field list; real RFC payload",
+      "sqlstate": "P0001",
+      "domain_error": "LC_CLIENTE_FISCAL_INCOMPLETO"
+    },
+    {
+      "marker": "fiscal_blank_regimen_fiscal",
+      "description": "Original converter rejects blank regimen_fiscal; exact missing-field list; real RFC payload",
+      "sqlstate": "P0001",
+      "domain_error": "LC_CLIENTE_FISCAL_INCOMPLETO"
+    },
+    {
+      "marker": "fiscal_blank_uso_cfdi_default",
+      "description": "Original converter rejects blank uso_cfdi_default; exact missing-field list; real RFC payload",
+      "sqlstate": "P0001",
+      "domain_error": "LC_CLIENTE_FISCAL_INCOMPLETO"
+    },
+    {
+      "marker": "fiscal_blank_forma_pago_default",
+      "description": "Original converter rejects blank forma_pago_default; exact missing-field list; real RFC payload",
+      "sqlstate": "P0001",
+      "domain_error": "LC_CLIENTE_FISCAL_INCOMPLETO"
+    },
+    {
+      "marker": "fiscal_blank_metodo_pago_default",
+      "description": "Original converter rejects blank metodo_pago_default; exact missing-field list; real RFC payload",
+      "sqlstate": "P0001",
+      "domain_error": "LC_CLIENTE_FISCAL_INCOMPLETO"
+    },
+    {
+      "marker": "fiscal_blank_direccion",
+      "description": "Original converter rejects blank direccion; exact missing-field list; real RFC payload",
+      "sqlstate": "P0001",
+      "domain_error": "LC_CLIENTE_FISCAL_INCOMPLETO"
+    },
+    {
+      "marker": "fiscal_blank_nombre",
+      "description": "fiscal_blank_nombre",
+      "sqlstate": "P0001",
+      "domain_error": "LC_CLIENTE_SIN_NOMBRE"
+    },
+    {
+      "marker": "conversion_real_rfc_normalization",
+      "description": "Original converter normalizes every supplied field and preserves exact seal"
+    },
+    {
+      "marker": "conversion_retry_exact_rows",
+      "description": "Coherent conversion retry writes no rows and creates no duplicate audits"
+    },
+    {
+      "marker": "post_conversion_accept_retry_origin_characterized",
+      "description": "Response origin changes to autorizacion_cliente while prospect audit and original seal remain unchanged"
+    },
+    {
+      "marker": "conversion_retry_seller_denied",
+      "description": "conversion_retry_seller_denied",
+      "sqlstate": "42501",
+      "domain_error": "LC_CLIENTE_SIN_PERMISO"
+    },
+    {
+      "marker": "conversion_retry_cross_tenant_denied",
+      "description": "conversion_retry_cross_tenant_denied",
+      "sqlstate": "42501",
+      "domain_error": "LC_ORG_AJENA"
+    },
+    {
+      "marker": "optional_lead_company_acceptance",
+      "description": "Optional lead lineage accepts without inventing clients"
+    },
+    {
+      "marker": "optional_lead_company_conversion",
+      "description": "Original converter: lead-origin company becomes Cliente; no company cliente_id population; generic RFC/address characterization"
+    },
+    {
+      "marker": "optional_link_company_acceptance",
+      "description": "Optional link lineage accepts without inventing clients"
+    },
+    {
+      "marker": "optional_link_company_conversion",
+      "description": "Original converter: M:N-only company remains Prospecto; no company cliente_id population; generic RFC/address characterization"
+    },
+    {
+      "marker": "optional_both_company_acceptance",
+      "description": "Optional both lineage accepts without inventing clients"
+    },
+    {
+      "marker": "optional_both_company_conversion",
+      "description": "Original converter: lead-origin company becomes Cliente; no company cliente_id population; generic RFC/address characterization"
+    },
+    {
+      "marker": "real_rfc_reuse_identity_history",
+      "description": "Same-tenant normalized live RFC reuse, canonical name; historical sisters by opportunity only, no same-name collision"
+    },
+    {
+      "marker": "prospect_state_borrador",
+      "description": "prospect_state_borrador",
+      "sqlstate": "P0001",
+      "domain_error": "LC_COTIZACION_ESTADO_INVALIDO"
+    },
+    {
+      "marker": "prospect_state_solicitada",
+      "description": "prospect_state_solicitada",
+      "sqlstate": "P0001",
+      "domain_error": "LC_COTIZACION_ESTADO_INVALIDO"
+    },
+    {
+      "marker": "prospect_state_rechazada",
+      "description": "prospect_state_rechazada",
+      "sqlstate": "P0001",
+      "domain_error": "LC_COTIZACION_ESTADO_INVALIDO"
+    },
+    {
+      "marker": "prospect_state_vencida",
+      "description": "prospect_state_vencida",
+      "sqlstate": "P0001",
+      "domain_error": "LC_COTIZACION_ESTADO_INVALIDO"
+    },
+    {
+      "marker": "prospect_state_archivada",
+      "description": "prospect_state_archivada",
+      "sqlstate": "P0001",
+      "domain_error": "LC_COTIZACION_ESTADO_INVALIDO"
+    },
+    {
+      "marker": "prospect_expired_acceptance",
+      "description": "prospect_expired_acceptance",
+      "sqlstate": "P0001",
+      "domain_error": "LC_COT_VENCIDA"
+    },
+    {
+      "marker": "currency_mismatch_rollback",
+      "description": "currency_mismatch_rollback",
+      "sqlstate": "P0001",
+      "domain_error": "LC_MONEDA_INCOMPATIBLE"
+    },
+    {
+      "marker": "lost_opportunity_requires_reopen",
+      "description": "lost_opportunity_requires_reopen",
+      "sqlstate": "P0001",
+      "domain_error": "LC_OPORTUNIDAD_PERDIDA_REQUIERE_REAPERTURA"
+    },
+    {
+      "marker": "opportunity_deleted_rejected",
+      "description": "opportunity_deleted_rejected",
+      "sqlstate": "P0001",
+      "domain_error": "LC_COTIZACION_ACEPTACION_INCONSISTENTE"
+    },
+    {
+      "marker": "lead_deleted_rejected",
+      "description": "lead_deleted_rejected",
+      "sqlstate": "P0001",
+      "domain_error": "LC_COTIZACION_ACEPTACION_INCONSISTENTE"
+    },
+    {
+      "marker": "lead_conflicting_conversion_rejected",
+      "description": "lead_conflicting_conversion_rejected",
+      "sqlstate": "P0001",
+      "domain_error": "LC_COTIZACION_ACEPTACION_INCONSISTENTE"
+    },
+    {
+      "marker": "lead_already_client_rejected",
+      "description": "lead_already_client_rejected",
+      "sqlstate": "P0001",
+      "domain_error": "LC_COTIZACION_ACEPTACION_INCONSISTENTE"
+    },
+    {
+      "marker": "lead_unqualified_rejected",
+      "description": "lead_unqualified_rejected",
+      "sqlstate": "P0001",
+      "domain_error": "LC_COTIZACION_ACEPTACION_INCONSISTENTE"
+    },
+    {
+      "marker": "opportunity_already_client_rejected",
+      "description": "opportunity_already_client_rejected",
+      "sqlstate": "P0001",
+      "domain_error": "LC_COTIZACION_ACEPTACION_INCONSISTENTE"
+    },
+    {
+      "marker": "preexisting_seal_rejected",
+      "description": "preexisting_seal_rejected",
+      "sqlstate": "P0001",
+      "domain_error": "LC_COTIZACION_ACEPTACION_INCONSISTENTE"
+    },
+    {
+      "marker": "company_link_deleted_rejected",
+      "description": "company_link_deleted; real optional-lineage rejection, including converted actual source",
+      "sqlstate": "P0001",
+      "domain_error": "LC_COTIZACION_ACEPTACION_INCONSISTENTE"
+    },
+    {
+      "marker": "company_lead_deleted_rejected",
+      "description": "company_lead_deleted; real optional-lineage rejection, including converted actual source",
+      "sqlstate": "P0001",
+      "domain_error": "LC_COTIZACION_ACEPTACION_INCONSISTENTE"
+    },
+    {
+      "marker": "company_link_cross_org_rejected",
+      "description": "company_link_cross_org; real optional-lineage rejection, including converted actual source",
+      "sqlstate": "P0001",
+      "domain_error": "LC_COTIZACION_ACEPTACION_INCONSISTENTE"
+    },
+    {
+      "marker": "company_lead_cross_org_rejected",
+      "description": "company_lead_cross_org; real optional-lineage rejection, including converted actual source",
+      "sqlstate": "P0001",
+      "domain_error": "LC_COTIZACION_ACEPTACION_INCONSISTENTE"
+    },
+    {
+      "marker": "company_link_row_cross_org_rejected",
+      "description": "company_link_row_cross_org; real optional-lineage rejection, including converted actual source",
+      "sqlstate": "P0001",
+      "domain_error": "LC_COTIZACION_ACEPTACION_INCONSISTENTE"
+    },
+    {
+      "marker": "company_lead_existing_client_rejected",
+      "description": "company_lead_existing_client; real optional-lineage rejection, including converted actual source",
+      "sqlstate": "P0001",
+      "domain_error": "LC_COTIZACION_ACEPTACION_INCONSISTENTE"
+    },
+    {
+      "marker": "company_origin_and_link_existing_client_rejected",
+      "description": "company_origin_and_link_existing_client; real optional-lineage rejection, including converted actual source",
+      "sqlstate": "P0001",
+      "domain_error": "LC_COTIZACION_ACEPTACION_INCONSISTENTE"
+    },
+    {
+      "marker": "accessory_mn_existing_client_acceptance",
+      "description": "Corrected candidate accepts M:N accessory already Cliente with another lead origin; source stays Prospecto and accessory row unchanged"
+    },
+    {
+      "marker": "accessory_mn_existing_client_conversion",
+      "description": "Original conversion keeps accessory client and company row unchanged while advancing source company to Cliente"
+    },
+    {
+      "marker": "second_prospect_winner_rollback",
+      "description": "second_prospect_winner_rollback",
+      "sqlstate": "P0001",
+      "domain_error": "LC_COTIZACION_GANADORA_EXISTE"
+    },
+    {
+      "marker": "retry_version_mismatch",
+      "description": "retry_version_mismatch",
+      "sqlstate": "P0001",
+      "domain_error": "LC_COTIZACION_ACEPTACION_INCONSISTENTE"
+    },
+    {
+      "marker": "retry_missing_version_seal",
+      "description": "retry_missing_version_seal",
+      "sqlstate": "P0001",
+      "domain_error": "LC_COTIZACION_ACEPTACION_INCONSISTENTE"
+    },
+    {
+      "marker": "retry_missing_timestamp_seal",
+      "description": "retry_missing_timestamp_seal",
+      "sqlstate": "P0001",
+      "domain_error": "LC_COTIZACION_ACEPTACION_INCONSISTENTE"
+    },
+    {
+      "marker": "retry_missing_actor_seal",
+      "description": "retry_missing_actor_seal",
+      "sqlstate": "P0001",
+      "domain_error": "LC_COTIZACION_ACEPTACION_INCONSISTENTE"
+    },
+    {
+      "marker": "accepted_retry_after_expiry",
+      "description": "Expiry blocks first acceptance but does not invalidate coherent idempotent retry"
+    },
+    {
+      "marker": "late_trigger_no_won_stage_rollback",
+      "description": "Real CRM trigger fails after acceptance UPDATE begins; full organization snapshots verify no quote seal/audit/CRM leakage",
+      "sqlstate": "P0001",
+      "domain_error": "LC_CRM_SIN_ETAPA_GANADA"
+    },
+    {
+      "marker": "prospect_without_crm_rejected",
+      "description": "prospect_without_crm_rejected",
+      "sqlstate": "P0001",
+      "domain_error": "LC_COT_SIN_OPORTUNIDAD"
+    },
+    {
+      "marker": "prospect_without_amount_rejected",
+      "description": "prospect_without_amount_rejected",
+      "sqlstate": "P0001",
+      "domain_error": "LC_COT_IMPORTE_REQUERIDO"
+    },
+    {
+      "marker": "quote_not_found_rejected",
+      "description": "quote_not_found_rejected",
+      "sqlstate": "P0002",
+      "domain_error": "Cotizaci\u00f3n no encontrada"
+    },
+    {
+      "marker": "quote_soft_deleted_rejected",
+      "description": "quote_soft_deleted_rejected",
+      "sqlstate": "P0002",
+      "domain_error": "Cotizaci\u00f3n no encontrada"
+    },
+    {
+      "marker": "stage_inactive_rejected",
+      "description": "stage_inactive_rejected",
+      "sqlstate": "P0001",
+      "domain_error": "LC_COTIZACION_ACEPTACION_INCONSISTENTE"
+    },
+    {
+      "marker": "stage_deleted_rejected",
+      "description": "stage_deleted_rejected",
+      "sqlstate": "P0001",
+      "domain_error": "LC_COTIZACION_ACEPTACION_INCONSISTENTE"
+    },
+    {
+      "marker": "stage_cross_tenant_rejected",
+      "description": "stage_cross_tenant_rejected",
+      "sqlstate": "P0001",
+      "domain_error": "LC_COTIZACION_ACEPTACION_INCONSISTENTE"
+    },
+    {
+      "marker": "retry_missing_winner",
+      "description": "retry_missing_winner",
+      "sqlstate": "P0001",
+      "domain_error": "LC_COTIZACION_ACEPTACION_INCONSISTENTE"
+    },
+    {
+      "marker": "retry_other_winner",
+      "description": "retry_other_winner",
+      "sqlstate": "P0001",
+      "domain_error": "LC_COTIZACION_GANADORA_EXISTE"
+    },
+    {
+      "marker": "retry_requires_won_stage",
+      "description": "retry_requires_won_stage",
+      "sqlstate": "P0001",
+      "domain_error": "LC_COTIZACION_ACEPTACION_INCONSISTENTE"
+    },
+    {
+      "marker": "conversion_duplicate_email_rollback",
+      "description": "Real client insert trigger rejects duplicate email after all fiscal checks; no client/CRM/quote/audit partial conversion",
+      "sqlstate": "23505",
+      "domain_error": "LC_EMAIL_DUPLICADO"
+    },
+    {
+      "marker": "rfc_reuse_is_tenant_scoped",
+      "description": "Real RFC in other organization creates own client instead of linking foreign client"
+    },
+    {
+      "marker": "post_conversion_house_policy_retry_origin",
+      "description": "Real RFC reuse of authorization=false client changes retry origin to interna_cliente_de_casa; original prospect audit, seal, winner, amount and notice preserved"
+    },
+    {
+      "marker": "calificado_source_original_behavior",
+      "description": "Candidate accepts Calificado lead; original advancement leaves Calificado rather than Pendiente de alta; original conversion still reaches Convertido"
+    },
+    {
+      "marker": "opportunity_moved_cross_tenant_rejected",
+      "description": "opportunity_moved_cross_tenant_rejected",
+      "sqlstate": "P0001",
+      "domain_error": "LC_COTIZACION_ACEPTACION_INCONSISTENTE"
+    },
+    {
+      "marker": "assertion_null_and_false_fail_closed",
+      "description": "Assertion helper demonstrably rejects false and SQL NULL"
+    },
+    {
+      "marker": "fiscal_capture_wrong_tenant",
+      "description": "Actual manual-invoice RPC tenant precondition only; no PAC, issuance or fiscal acceptance claim",
+      "sqlstate": "42501",
+      "domain_error": "La captura no pertenece a la organizaci\u00f3n activa."
+    },
+    {
+      "marker": "fiscal_capture_no_concepts",
+      "description": "Actual manual-invoice RPC empty-concept guard only; no PAC or invoice issuance",
+      "sqlstate": "22023",
+      "domain_error": "Debe haber al menos un concepto."
+    }
+  ],
+  "snapshot_scope": "Every public base/partitioned table with UUID organization_id for both fixture tenants, plus organizations; all columns and soft-deleted rows; no global tables or external effects",
+  "uncovered_limits": [
+    "Actual multi-session locking/deadlock, concurrent acceptance/conversion and RFC races require external harness.",
+    "Ordinary dual-tenant membership fixture is prohibited by organization_members_user_id_unique; global-admin active tenant mismatch separately covered.",
+    "Missing M:N company target cannot be seeded with live FK intact; absence of any company links is a positive supported case.",
+    "Missing opportunity stage/lead physical FK targets cannot be seeded directly without violating FK; soft-deleted targets covered.",
+    "PAC, CFDI issuance, payment, REP, real fiscal activity and production deployment are not exercised.",
+    "Requires corrected candidate allowing live same-tenant M:N accessory with existing client; old 095aaade migration is expected to fail this regression.",
+    "Original converter only changes company estado_crm via lead_origen_id; M:N-only company stays Prospecto and no company cliente_id is assigned.",
+    "Full organization row snapshots are not a global database or sequence snapshot; parent should capture baseline catalog and rows before/after transaction."
+  ]
+}

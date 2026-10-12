@@ -16,7 +16,7 @@ import {
   fetchMonedaOportunidad,
   alinearMonedaOportunidad,
 } from "@/features/crm/services/monedaOportunidad";
-import { notifySuccess, notifyError } from "@/lib/ui/appFeedback";
+import { notifyError } from "@/lib/ui/appFeedback";
 
 export interface AceptarCotizacionInput {
   oportunidadId: string | null;
@@ -86,12 +86,7 @@ export function useAceptarCotizacion({
       }
       await aplicarEstado("Aceptada");
       setOpen(false);
-      if (oportunidadId) {
-        notifySuccess(undefined, {
-          title: "Cotización aceptada",
-          description: "La oportunidad quedó cerrada como Ganada con el monto de esta cotización.",
-        });
-      }
+      // El éxito lo notifica la mutación, también cuando hay oportunidad CRM.
     } catch {
       // El toast de error lo emite la mutación / el normalizador de errores.
     } finally {
