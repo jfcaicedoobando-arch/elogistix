@@ -11,6 +11,8 @@ import { KpiStrip } from "@/components/shared/KpiStrip";
 import type { KPIsEjecutivos } from "@/features/dashboardEjecutivo/services";
 import { formatNumber } from "@/lib/formatters";
 
+import { runwayIncompleto, eficienciaIncompleta } from "./kpiValuacion";
+
 interface Props {
   kpis: KPIsEjecutivos;
 }
@@ -50,33 +52,35 @@ function runwayValue(n: number | null): string {
 }
 
 export function BandaKPIsEficiencia({ kpis }: Props) {
+  const parcial = eficienciaIncompleta(kpis);
+  const runwayParcial = runwayIncompleto(kpis);
   return (
     <KpiStrip desktopCols={3}>
       <KpiCard
         label="DSO — Días de cobro"
-        value={fmtDias(kpis.dso_dias)}
-        delta={kpis.dso_dias == null ? "Sin ingresos en el periodo" : "CxC 30d ÷ ingresos × 30"}
-        deltaVariant={dsoVariant(kpis.dso_dias)}
+        value={parcial ? "No disponible" : fmtDias(kpis.dso_dias)}
+        delta={parcial ? "Valuación incompleta" : kpis.dso_dias == null ? "Sin ingresos en el periodo" : "CxC 30d ÷ ingresos × 30"}
+        deltaVariant={parcial ? "neutral" : dsoVariant(kpis.dso_dias)}
         icon={Clock}
       />
       <KpiCard
         label="DPO — Días de pago"
-        value={fmtDias(kpis.dpo_dias)}
-        delta={kpis.dpo_dias == null ? "Sin costos en el periodo" : "CxP 30d ÷ costos × 30"}
-        deltaVariant={dpoVariant(kpis.dpo_dias)}
+        value={parcial ? "No disponible" : fmtDias(kpis.dpo_dias)}
+        delta={parcial ? "Valuación incompleta" : kpis.dpo_dias == null ? "Sin costos en el periodo" : "CxP 30d ÷ costos × 30"}
+        deltaVariant={parcial ? "neutral" : dpoVariant(kpis.dpo_dias)}
         icon={Hourglass}
       />
       <KpiCard
         label="Runway financiero"
-        value={runwayValue(kpis.runway_meses)}
+        value={runwayParcial ? "No disponible" : runwayValue(kpis.runway_meses)}
         delta={
-          kpis.runway_meses == null
+          runwayParcial ? "Valuación incompleta" : kpis.runway_meses == null
             ? "Utilidad ≥ 0 en el mes"
             : kpis.runway_meses === 0
               ? (kpis.saldo_bancos_mxn < 0 ? "Saldo bancario negativo" : "Saldo bancario en cero")
               : "Bancos ÷ (costos − ingresos)"
         }
-        deltaVariant={runwayVariant(kpis.runway_meses)}
+        deltaVariant={runwayParcial ? "neutral" : runwayVariant(kpis.runway_meses)}
         icon={Waves}
       />
     </KpiStrip>

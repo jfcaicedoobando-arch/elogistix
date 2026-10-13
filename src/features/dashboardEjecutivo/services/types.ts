@@ -22,6 +22,14 @@ import type { PuntoEERR } from "../types/eerr";
 export type { PuntoEERR } from "../types/eerr";
 
 export interface KPIsEjecutivos {
+  /** Flags opcionales para snapshots históricos; el agregador siempre los emite. */
+  saldo_bancos_incompleto?: boolean;
+  cartera_vencida_incompleta?: boolean;
+  cxp_7dias_incompleto?: boolean;
+  presupuesto_incompleto?: boolean;
+  eerr_incompleto?: boolean;
+  flujo_incompleto?: boolean;
+  tiene_presupuesto?: boolean;
   ingresos_mxn: number;
   /** %Δ ingresos vs. mes anterior. `null` cuando el mes previo tiene ingresos = 0 (sin comparable). */
   ingresos_delta_pct: number | null;

@@ -148,6 +148,14 @@ describe("calcularAlertas", () => {
     expect(r.some((a) => a.id === "presupuesto-exceso-categoria")).toBe(true);
   });
 
+  it("advierte real incompleto sin declarar una categoría excedida con NC excluidas", () => {
+    const p = presupuesto([{ categoria_id: "c1", categoria_nombre: "Operativo", presupuesto_mxn: 100, real_mxn: 150, variacion_mxn: 50, cumplimiento_pct: 150 }]);
+    p.gastos_sin_tc_count = 1;
+    const result = calcularAlertas({ flujo: flujo(0), tesoreria: tesoreria(), presupuesto: p });
+    expect(result.some((a) => a.id === "presupuesto-real-incompleto")).toBe(true);
+    expect(result.some((a) => a.id === "presupuesto-exceso-categoria")).toBe(false);
+  });
+
   it("acepta umbral personalizado de cartera", () => {
     const r = calcularAlertas({
       flujo: flujo(0),

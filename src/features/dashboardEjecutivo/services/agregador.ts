@@ -74,13 +74,14 @@ async function fetchTendencia12m(
       return data ?? [];
     }),
   );
-  const porYearMes = new Map<string, { ingresos: number; costos: number; sinBase: number }>();
+  const porYearMes = new Map<string, { ingresos: number; costos: number; sinBase: number; valuacion?: PuntoEERR["valuacion"] }>();
   years.forEach((y, i) => {
-    for (const row of results[i] as Array<{ mes: number; ingresos_mxn: number | string; costos_mxn: number | string; notas_proveedor_sin_base_count?: number }>) {
+    for (const row of results[i] as Array<{ mes: number; ingresos_mxn: number | string; costos_mxn: number | string; notas_proveedor_sin_base_count?: number; valuacion?: PuntoEERR["valuacion"] }>) {
       porYearMes.set(`${y}-${String(row.mes).padStart(2, "0")}`, {
         ingresos: Number(row.ingresos_mxn) || 0,
         costos: Number(row.costos_mxn) || 0,
         sinBase: row.notas_proveedor_sin_base_count ?? 0,
+        valuacion: row.valuacion,
       });
     }
   });
@@ -91,6 +92,8 @@ async function fetchTendencia12m(
       ingresos: v.ingresos,
       costos: v.costos,
       utilidad: v.ingresos - v.costos,
+      ...(v.valuacion ? { valuacion: v.valuacion } : {}),
+      ...(fuente === "embarques" && !v.valuacion ? { valuacion_no_verificada: true } : {}),
       ...(v.sinBase ? { notas_proveedor_sin_base_count: v.sinBase } : {}),
     };
   });
@@ -164,6 +167,7 @@ export async function fetchDashboardEjecutivo(
   const base = { periodo, fuente, vencimientos, eerrPeriodo, eerr12m, tesoreria, flujo, presupuesto, tipoCambioUsd, tcEsFallback };
   const kpis = calcularKPIsEjecutivos(base, eerrPrev.totalIngresos.total, eerrPrev);
   const alertas = calcularAlertas({ flujo, tesoreria, presupuesto });
+  if (kpis.eerr_incompleto) alertas.unshift({ id: "eerr-valuacion-incompleta", severidad: "warning", titulo: "EERR parcial", descripcion: "Conceptos sin TC excluidos de ingresos o costos. Utilidad parcial; margen y ratios no disponibles.", url: "/profit/estado-resultados" });
   const sinBase = Math.max(eerrPeriodo.notas_proveedor_sin_base?.length ?? 0, eerrPrev.notas_proveedor_sin_base?.length ?? 0, presupuesto.notas_proveedor_sin_base_count ?? 0, eerr12m.reduce((s, p) => s + (p.notas_proveedor_sin_base_count ?? 0), 0));
   if (sinBase) alertas.unshift({ id: "nc-proveedor-sin-base", severidad: "warning", titulo: "Resultados provisionales", descripcion: avisoNcProveedorSinBase(sinBase), url: "/profit/estado-resultados" });
 

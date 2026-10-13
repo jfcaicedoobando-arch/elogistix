@@ -8,6 +8,8 @@ import type {
 import type { FlujoProyectado } from "@/features/tesoreria/services";
 import type { ResumenTesoreria } from "@/features/tesoreria/services";
 import type { ResumenVsReal } from "@/features/presupuesto/services";
+import { alertasValuacion, presupuestoIncompleto } from "./alertasValuacion";
+import { completitudEjecutiva, ratiosDisponibles, sinVariacionesIncompletas } from "./completitud";
 import { formatCurrency } from "@/lib/formatters";
 import { presupuestoVsRealHref } from "@/features/presupuesto";
 
@@ -21,7 +23,7 @@ export interface AlertasInput {
 const UMBRAL_CARTERA_DEFAULT = 50_000;
 
 export function calcularAlertas(input: AlertasInput): AlertaEjecutiva[] {
-  const alertas: AlertaEjecutiva[] = [];
+  const alertas: AlertaEjecutiva[] = alertasValuacion(input);
   const umbral = input.umbralCarteraVencida ?? UMBRAL_CARTERA_DEFAULT;
 
   // Saldo bancario proyectado < 0 en próximas semanas
@@ -75,7 +77,7 @@ export function calcularAlertas(input: AlertasInput): AlertaEjecutiva[] {
   // el mismo filtro con lógica potencialmente desincronizada.
   const fueraDePresupuestoCount = input.presupuesto.categorias_en_exceso;
   const topExceso = input.presupuesto.top_exceso;
-  if (fueraDePresupuestoCount > 0 && topExceso.length > 0) {
+  if (!presupuestoIncompleto(input.presupuesto) && fueraDePresupuestoCount > 0 && topExceso.length > 0) {
     const peor = topExceso[0];
     const critico = fueraDePresupuestoCount >= 3 || peor.cumplimiento_pct >= 200;
     alertas.push({
@@ -99,9 +101,11 @@ export function calcularKPIsEjecutivos(
   eerrPrevio?: SnapshotEjecutivo["eerrPeriodo"],
 ): SnapshotEjecutivo["kpis"] {
   const eerr = snapshot.eerrPeriodo;
+  const completitud = completitudEjecutiva(snapshot);
+  const { eerr_incompleto: eerrIncompleto, saldo_bancos_incompleto: bancosIncompletos, flujo_incompleto: flujoIncompleto } = completitud;
   const ingresos = eerr.totalIngresos.total;
   const utilidad = eerr.utilidad.total;
-  const margen = ingresos > 0 ? (utilidad / ingresos) * 100 : 0;
+  const margen = ingresos !== 0 ? (utilidad / ingresos) * 100 : 0;
 
   // Fase I fix #2: `null` cuando el mes previo tiene ingresos = 0 — antes
   // devolvíamos `0` y la UI mostraba "Sin cambio" indistinguible de "no había
@@ -150,19 +154,22 @@ export function calcularKPIsEjecutivos(
   const cxc30d = snapshot.tesoreria.flujo.por_cobrar_total_mxn;
   const cxp30d = snapshot.tesoreria.flujo.por_pagar_total_mxn;
   const costos = eerr.totalCostos.total;
-  const dsoDias: number | null = ingresos > 0 ? (cxc30d / ingresos) * 30 : null;
-  const dpoDias: number | null = costos > 0 ? (cxp30d / costos) * 30 : null;
+  const ratiosCompletos = ratiosDisponibles(eerrIncompleto, flujoIncompleto);
+  const dsoDias: number | null = ratiosCompletos && ingresos > 0 ? (cxc30d / ingresos) * 30 : null;
+  const dpoDias: number | null = ratiosCompletos && costos > 0 ? (cxp30d / costos) * 30 : null;
   const burnMensual = costos - ingresos;
   // C4 fix (v13.300.49): si `saldoBancos <= 0` la empresa ya está sin caja
   // → devolvemos `0` (la UI muestra "Saldo bancario negativo"). Antes el
   // resultado era `null` (mismo mensaje que "sin burn"), engañosamente
   // tranquilizador.
   let runwayMeses: number | null;
-  if (burnMensual <= 0) runwayMeses = null; // sin burn (utilidad ≥ 0)
+  if (bancosIncompletos || eerrIncompleto) runwayMeses = null;
+  else if (burnMensual <= 0) runwayMeses = null; // sin burn (utilidad ≥ 0)
   else if (saldoBancos <= 0) runwayMeses = 0; // caja agotada
   else runwayMeses = saldoBancos / burnMensual;
 
-  return {
+  return sinVariacionesIncompletas({
+    ...completitud,
     ingresos_mxn: ingresos,
     ingresos_delta_pct: ingresosDelta,
     utilidad_mxn: utilidad,
@@ -178,5 +185,5 @@ export function calcularKPIsEjecutivos(
     dso_dias: dsoDias,
     dpo_dias: dpoDias,
     runway_meses: runwayMeses,
-  };
+  }, eerr, eerrPrevio);
 }

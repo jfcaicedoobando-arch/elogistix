@@ -21,7 +21,7 @@ describe("ventanas de vencimiento del dashboard (79/81)", () => {
     ] });
     expect(res.fechaReferencia).toBe("2026-10-04");
     expect(res.cobranzaMayor30).toMatchObject({ total_mxn: 58, count: 1 });
-    expect(res.cobranzaMayor30.top).toEqual([{ nombre: "31 días", saldo: 58, moneda: "MXN", dias: 31 }]);
+    expect(res.cobranzaMayor30.top).toEqual([{ nombre: "31 días", saldo: 58, moneda: "MXN", dias: 31, saldo_mxn: 58, tipo_cambio: 1 }]);
   });
 
   it("ancla la ventana al día de negocio de México cuando UTC ya cambió de día", () => {
@@ -69,6 +69,6 @@ describe("ventanas de vencimiento del dashboard (79/81)", () => {
     expect(res.cobranzaMayor30.total_mxn).toBe(200);
     expect(res.cxpProximos7.total_mxn).toBe(200);
     expect(res.cxpProximos7.excluido_por_moneda).toEqual({ EUR: 20 });
-    expect(res.cxpProximos7.top).toContainEqual({ nombre: "EUR", saldo: 20, moneda: "EUR", dias: -1 });
+    expect(res.cxpProximos7.sin_valuar).toContainEqual({ nombre: "EUR", saldo: 20, moneda: "EUR", dias: -1, saldo_mxn: null, tipo_cambio: null });
   });
 });

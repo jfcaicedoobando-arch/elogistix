@@ -1,3 +1,4 @@
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { ChartTooltip } from "@/components/shared/ChartTooltip";
 import { CHART_TICK, CHART_LEGEND_STYLE } from "@/lib/chartTokens";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
@@ -21,7 +22,12 @@ export function GraficoEERR12m({ data }: Props) {
         <CardTitle>EERR últimos 12 meses</CardTitle>
       </CardHeader>
       <CardContent>
-        {data.length < 2 ? (
+        {data.some((punto) => punto.valuacion_no_verificada) && (
+          <Alert variant="warning"><AlertDescription>Valuación histórica no verificada. Cifras conocidas de referencia; no confirman totales completos.</AlertDescription></Alert>
+        )}
+        {data.some((punto) => punto.valuacion?.completa === false) ? (
+          <Alert variant="warning"><AlertDescription>Valuación incompleta: tendencia y proyección no disponibles hasta completar los tipos de cambio.</AlertDescription></Alert>
+        ) : data.length < 2 ? (
           <EmptyStateInline icon={LineChartIcon} message="No hay suficientes datos para graficar la tendencia." hint="Se necesitan al menos 2 periodos." />
         ) : (
         <div className="h-64">

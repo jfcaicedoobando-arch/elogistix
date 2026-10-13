@@ -5,10 +5,19 @@ import { esCxcVencida } from "@/lib/domain/vencimiento";
 import { aMxn } from "@/lib/financial/convertir";
 import { roundMoney } from "@/lib/financial/financialUtils";
 
+/** Nominal original y valuación con el TC de saldos del snapshot. */
+export interface TopVencimiento extends TopItem {
+  saldo_mxn?: number | null;
+  tipo_cambio?: number | null;
+}
+
 export interface ResumenVencimientos {
   total_mxn: number;
   count: number;
-  top: TopItem[];
+  top: TopVencimiento[];
+  /** El Top sólo ordena saldos valuados; los desconocidos se conservan aparte. */
+  sin_valuar?: TopVencimiento[];
+  ranking_completo?: boolean;
   excluido_por_moneda: Record<string, number>;
 }
 
@@ -27,7 +36,7 @@ interface SaldoVencimiento {
 }
 
 function resumir(rows: SaldoVencimiento[], tasas: TasasCambio): ResumenVencimientos {
-  const grupos = new Map<string, TopItem>();
+  const grupos = new Map<string, TopVencimiento>();
   const nombres = new Set<string>();
   const excluido_por_moneda: Record<string, number> = {};
   let total_mxn = 0;
@@ -43,11 +52,16 @@ function resumir(rows: SaldoVencimiento[], tasas: TasasCambio): ResumenVencimien
     grupos.set(key, {
       nombre: row.nombre, moneda, saldo: (prev?.saldo ?? 0) + row.saldo,
       dias: Math.max(prev?.dias ?? row.dias, row.dias),
+      saldo_mxn: conversion.completo ? (prev?.saldo_mxn ?? 0) + conversion.monto : null,
+      tipo_cambio: conversion.completo ? (moneda === "MXN" ? 1 : tc) : null,
     });
   }
   return {
     total_mxn: roundMoney(total_mxn), count: nombres.size, excluido_por_moneda,
-    top: [...grupos.values()].sort((a, b) => b.saldo - a.saldo).slice(0, 5),
+    top: [...grupos.values()].filter((item) => item.saldo_mxn != null)
+      .sort((a, b) => (b.saldo_mxn ?? 0) - (a.saldo_mxn ?? 0)).slice(0, 5),
+    sin_valuar: [...grupos.values()].filter((item) => item.saldo_mxn == null),
+    ranking_completo: Object.keys(excluido_por_moneda).length === 0,
   };
 }
 

@@ -21,6 +21,7 @@ import { Footer } from "@/pdf/components/Footer";
 import { DataTable, type PdfColumn } from "@/pdf/components/DataTable";
 import type { SnapshotEjecutivo } from "@/features/dashboardEjecutivo/services";
 import type { ResumenCuenta, TopItem } from "@/features/tesoreria/services";
+import { importeEjecutivo } from "@/features/dashboardEjecutivo/components/kpiValuacion";
 import type { AlertaEjecutiva } from "@/features/dashboardEjecutivo/services";
 
 interface Props {
@@ -70,10 +71,10 @@ export function ReporteEjecutivoDocument({ snapshot, emisor }: Props) {
         </ReportHeader>
 
         <ReportSummary columns={4} items={[
-          { label: "Ingresos", value: formatCurrency(kpis.ingresos_mxn, "MXN") },
-          { label: "Utilidad", value: formatCurrency(kpis.utilidad_mxn, "MXN") },
-          { label: "Margen", value: `${kpis.margen_pct.toFixed(1)}%` },
-          { label: "Bancos", value: formatCurrency(kpis.saldo_bancos_mxn, "MXN") },
+          { label: "Ingresos", value: importeEjecutivo(kpis.ingresos_mxn, kpis.eerr_incompleto) },
+          { label: "Utilidad", value: importeEjecutivo(kpis.utilidad_mxn, kpis.eerr_incompleto) },
+          { label: "Margen", value: kpis.eerr_incompleto ? "No disponible" : kpis.ingresos_mxn === 0 ? "No calculable" : `${kpis.margen_pct.toFixed(1)}%` },
+          { label: "Bancos", value: importeEjecutivo(kpis.saldo_bancos_mxn, kpis.saldo_bancos_incompleto) },
         ]} />
 
         <Text minPresenceAhead={70} style={[styles.h3, { marginTop: 12 }]}>Saldos bancarios</Text>
