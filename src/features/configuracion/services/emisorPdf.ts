@@ -50,7 +50,13 @@ export async function fetchEmisorReporte(organizationId: string | null): Promise
   return undefined;
 }
 
-/** Resuelve la identidad persistida cuando el DTO del reporte conserva sólo el ID. */
+/**
+ * Comprueba pertenencia persistida ID/org para un DTO ya disponible, incluso
+ * si la entidad está dada de baja lógica y RLS aún permite leer su identidad.
+ * Sólo identifica el PDF: no habilita operaciones ni recupera datos borrados.
+ * El emisor es actual/cacheado, no una réplica a fecha de emisión.
+ * Contrato y límites: docs/historical-read-contracts.md.
+ */
 export async function fetchEmisorEntidad(
   tabla: "proveedores" | "cuentas_bancarias" | "proveedor_facturas",
   entidadId: string,
@@ -60,6 +66,7 @@ export async function fetchEmisorEntidad(
     throw new Error("No se pudo identificar la organización del documento.");
   }
   const { data, error } = await supabase.from(tabla)
+    // SOFT-DELETE-OK: pertenencia ID/org para DTO, no vigencia; docs/historical-read-contracts.md.
     .select("id, organization_id")
     .eq("id", entidadId)
     .eq("organization_id", scope.organizationId)

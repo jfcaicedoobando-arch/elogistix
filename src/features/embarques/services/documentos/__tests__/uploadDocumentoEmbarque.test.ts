@@ -44,6 +44,7 @@ vi.mock("@/integrations/supabase/client", () => {
       if (mode === "update") state.updateEqCalls.push(v);
       return builder;
     }),
+    is: vi.fn(() => builder),
     maybeSingle: vi.fn(() => Promise.resolve(state.selectResult)),
   };
   return {

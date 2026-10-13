@@ -5,6 +5,7 @@
  * Reglas de negocio y validaciones viven en `proveedorFacturas.update.reglas.ts`.
  */
 import { supabase } from "@/integrations/supabase/client";
+import { captureAuthOperationScope } from "@/lib/auth/authOperationScope";
 import { primeraFila } from "@/lib/supabase/primeraFila";
 import { conflictoConcurrenciaError } from "@/lib/errors/concurrencia";
 import { registrarActividad } from "@/services/bitacora/registrar";
@@ -38,14 +39,29 @@ const FACTURA_EDIT_SELECT = `
 
 /** Carga una factura de proveedor con los campos que el form de edición necesita. */
 export async function fetchFacturaParaEdicion(id: string): Promise<FacturaParaEdicion | null> {
-  const { data, error } = await supabase
+  const scope = captureAuthOperationScope();
+  let query = supabase
     .from("proveedor_facturas")
     .select(FACTURA_EDIT_SELECT)
-    .eq("id", id)
-    .maybeSingle();
+    .eq("id", id).is("deleted_at", null);
+  if (scope.organizationId) query = query.eq("organization_id", scope.organizationId);
+  const { data, error } = await query.maybeSingle();
+  scope.assertCurrent();
   if (error) throw error;
   // SAFE-CAST: select acotado al subset declarado en FacturaParaEdicion.
   return (data as FacturaParaEdicion | null) ?? null;
+}
+
+async function leerFacturaActualViva(id: string, scope: ReturnType<typeof captureAuthOperationScope>) {
+  let read = supabase.from("proveedor_facturas")
+    .select("id, proveedor_id, estado_aprobacion, folio_proveedor, fecha_emision, moneda, tipo_cambio_usd, subtotal, iva, ieps, retenciones")
+    .eq("id", id).is("deleted_at", null);
+  if (scope.organizationId) read = read.eq("organization_id", scope.organizationId);
+  const { data: actual, error } = await read.single();
+  scope.assertCurrent();
+  if (error) throw error;
+  if (!actual) throw Object.assign(new Error("La factura de proveedor ya no existe o fue eliminada."), { code: "NOT_FOUND" });
+  return actual;
 }
 
 export async function actualizarFacturaProveedor(
@@ -58,19 +74,16 @@ export async function actualizarFacturaProveedor(
    */
   expectedUpdatedAt?: string | null,
 ): Promise<ProveedorFacturaRow> {
+  const scope = captureAuthOperationScope();
   // 1) Lee factura actual: necesitamos proveedor_id y estado_aprobacion.
-  const { data: actual, error: errActual } = await supabase
-    .from("proveedor_facturas")
-    .select("id, proveedor_id, estado_aprobacion, folio_proveedor, fecha_emision, moneda, tipo_cambio_usd, subtotal, iva, ieps, retenciones")
-    .eq("id", id)
-    .single();
-  if (errActual) throw errActual;
+  const actual = await leerFacturaActualViva(id, scope);
 
 
   // 2) Duplicado (proveedor + folio + emisión) excluyendo self.
   const dup = await existeFacturaDuplicada(
     actual.proveedor_id, payload.folio_proveedor, payload.fecha_emision, id,
   );
+  scope.assertCurrent();
   if (dup) {
     const err = new Error("Ya existe otra factura con este folio para este proveedor en esta fecha.") as Error & { code?: string };
     err.code = "DUPLICADO";
@@ -81,6 +94,7 @@ export async function actualizarFacturaProveedor(
   const nuevoTotal = calcularTotal(payload);
   if (actual.moneda !== payload.moneda) await validarCambioMonedaSinAplicaciones(id);
   await validarTotalNoMenorAPagado(id, nuevoTotal);
+  scope.assertCurrent();
 
   // 4) ¿Hubo cambio sensible? → re-aprobación si estaba aprobada.
   const forzarReaprobacion =
@@ -112,7 +126,8 @@ export async function actualizarFacturaProveedor(
   let query = supabase
     .from("proveedor_facturas")
     .update(updateBody)
-    .eq("id", id);
+    .eq("id", id).is("deleted_at", null);
+  if (scope.organizationId) query = query.eq("organization_id", scope.organizationId);
   if (expectedUpdatedAt) query = query.eq("updated_at", expectedUpdatedAt);
   const { data: filas, error } = await query.select();
   if (error) throw error;
@@ -122,7 +137,10 @@ export async function actualizarFacturaProveedor(
     throw new Error("No se guardaron los cambios: la factura ya no existe o no tienes permiso.");
   }
 
+  if (!scope.isCurrent()) return data;
   await registrarActividad({
+    authScope: scope,
+    ...(scope.organizationId ? { organizationId: scope.organizationId } : {}),
     modulo: "cxp",
     accion: "editar",
     entidadId: id,

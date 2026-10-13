@@ -8,6 +8,7 @@
  * con `fn='upload_documento_embarque'`.
  */
 import { supabase } from '@/integrations/supabase/client';
+import { captureAuthOperationScope } from '@/lib/auth/authOperationScope';
 import { uploadFile } from '@/services/storage/index';
 import { sanitizeFileName, sanitizeStorageKey } from '@/lib/storage';
 import type { TablesInsert } from '@/integrations/supabase/types';
@@ -46,12 +47,13 @@ async function buildScopedRequestId(embarqueId: string, docId: string, hash: str
 }
 
 /** Sincroniza la fila con el `path` cacheado (ciclo A→B→A). */
-async function resincronizarDesdeCache(docId: string, path: string): Promise<void> {
-  const { data: resynced, error } = await supabase
+async function resincronizarDesdeCache(embarqueId: string, docId: string, path: string, organizationId: string | null): Promise<void> {
+  let query = supabase
     .from('documentos_embarque')
     .update({ archivo: path, estado: 'Recibido' as DocumentoEstado })
-    .eq('id', docId)
-    .select('id');
+    .eq('id', docId).eq('embarque_id', embarqueId).is('deleted_at', null);
+  if (organizationId) query = query.eq('organization_id', organizationId);
+  const { data: resynced, error } = await query.select('id');
   if (error) throw error;
   if (!resynced || resynced.length === 0) {
     throw new Error('No se pudo sincronizar el documento con la respuesta cacheada (sin permisos o el documento ya no existe).');
@@ -62,12 +64,13 @@ async function resincronizarDesdeCache(docId: string, path: string): Promise<voi
  * Commit del documento. Si falla (error o 0 filas) limpia el blob nuevo
  * best-effort y relanza el error ORIGINAL, sin enmascararlo.
  */
-async function commitDocumento(docId: string, path: string): Promise<void> {
-  const { data: updated, error } = await supabase
+async function commitDocumento(embarqueId: string, docId: string, path: string, organizationId: string | null): Promise<void> {
+  let query = supabase
     .from('documentos_embarque')
     .update({ archivo: path, estado: 'Recibido' as DocumentoEstado })
-    .eq('id', docId)
-    .select('id');
+    .eq('id', docId).eq('embarque_id', embarqueId).is('deleted_at', null);
+  if (organizationId) query = query.eq('organization_id', organizationId);
+  const { data: updated, error } = await query.select('id');
   if (error) {
     await limpiarBlobBestEffort(path, 'upload_documento_embarque:commit_fallido');
     throw error;
@@ -82,13 +85,11 @@ async function commitDocumento(docId: string, path: string): Promise<void> {
  * Post-commit best-effort: el commit YA determinó el éxito, así que un fallo
  * de idempotencia o bitácora sólo se observa, nunca se reporta como error.
  */
-async function postCommitBestEffort(
-  requestId: string,
-  embarqueId: string,
-  docId: string,
-  path: string,
-  fileName: string,
-): Promise<void> {
+async function postCommitBestEffort({ requestId, embarqueId, docId, path, fileName, scope }: {
+  requestId: string; embarqueId: string; docId: string; path: string; fileName: string;
+  scope: ReturnType<typeof captureAuthOperationScope>;
+}): Promise<void> {
+  if (!scope.isCurrent()) return;
   try {
     await supabase.rpc('idempotency_store', {
       _key: requestId,
@@ -97,8 +98,11 @@ async function postCommitBestEffort(
   } catch (e) {
     console.warn('[uploadDocumentoEmbarque] no se pudo guardar la respuesta de idempotencia', e);
   }
+  if (!scope.isCurrent()) return;
   try {
     await registrarActividad({
+      authScope: scope,
+      ...(scope.organizationId ? { organizationId: scope.organizationId } : {}),
       modulo: 'documentos',
       accion: 'subir_documento_embarque',
       entidadId: docId,
@@ -115,45 +119,58 @@ export async function uploadDocumentoEmbarque(
   docId: string,
   file: File,
 ): Promise<UploadDocumentoResult> {
+  const scope = captureAuthOperationScope();
   const hash = await sha256Hex(file);
+  scope.assertCurrent();
   const path = `embarques/${sanitizeStorageKey(embarqueId)}/${sanitizeStorageKey(docId)}/${hash.slice(0, 12)}-${sanitizeFileName(file.name)}`;
 
   // 1) Si la fila ya apunta al mismo archivo (mismo contenido), no hacer nada.
-  const { data: actual, error: errSel } = await supabase
+  let read = supabase
     .from('documentos_embarque')
     .select('archivo')
-    .eq('id', docId)
-    .maybeSingle();
+    .eq('id', docId).eq('embarque_id', embarqueId).is('deleted_at', null);
+  if (scope.organizationId) read = read.eq('organization_id', scope.organizationId);
+  const { data: actual, error: errSel } = await read.maybeSingle();
+  scope.assertCurrent();
   if (errSel) throw errSel;
-  if (actual?.archivo === path) {
+  if (!actual) throw Object.assign(new Error('El documento ya no existe o fue eliminado.'), { code: 'NOT_FOUND' });
+  if (actual.archivo === path) {
     return { path, fileName: file.name, cached: true };
   }
 
   // 2) Reclamar idempotencia.
   const requestId = await buildScopedRequestId(embarqueId, docId, hash);
+  scope.assertCurrent();
   const { data: claim } = await supabase.rpc('idempotency_claim', {
     _key: requestId,
     _fn: 'upload_documento_embarque',
   });
+  scope.assertCurrent();
   const parsedClaim = idempotencyClaimSchema.safeParse(claim);
   if (parsedClaim.success && isCachedClaim(parsedClaim.data)) {
     const c = parsedClaim.data;
-    if (c.path !== actual?.archivo) await resincronizarDesdeCache(docId, c.path);
+    if (c.path !== actual.archivo) await resincronizarDesdeCache(embarqueId, docId, c.path, scope.organizationId);
     return { path: c.path, fileName: c.fileName ?? file.name, cached: true };
   }
 
   // 3) Upload y commit de la fila.
   await uploadFile(path, file);
-  const anterior = actual?.archivo ?? null;
-  await commitDocumento(docId, path);
+  try {
+    scope.assertCurrent();
+  } catch (error) {
+    await limpiarBlobBestEffort(path, 'upload_documento_embarque:contexto_cambiado');
+    throw error;
+  }
+  const anterior = actual.archivo ?? null;
+  await commitDocumento(embarqueId, docId, path, scope.organizationId);
 
   // v13.823.47 — reemplazo documental: con el UPDATE ya confirmado, el blob
   // anterior queda huérfano. Se borra best-effort y sólo si difiere del nuevo.
-  if (anterior) {
+  if (scope.isCurrent() && anterior) {
     await limpiarBlobAnteriorTrasReemplazo(anterior, path, 'upload_documento_embarque:reemplazo');
   }
 
-  await postCommitBestEffort(requestId, embarqueId, docId, path, file.name);
+  await postCommitBestEffort({ requestId, embarqueId, docId, path, fileName: file.name, scope });
   return { path, fileName: file.name, cached: false };
 }
 
