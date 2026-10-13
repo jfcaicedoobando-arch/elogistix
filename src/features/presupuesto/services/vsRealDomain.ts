@@ -6,6 +6,8 @@
  * La conversión a MXN de gastos y NCs de proveedor vive en `vsRealGastos.ts`.
  */
 
+import { CATEGORIA_SIN_ASIGNAR } from "./vsRealGastos";
+
 export type { CxpRow, NcCxPRow } from "./vsRealGastos";
 export { agregarGastosCxP, restarNotasCreditoCxP } from "./vsRealGastos";
 
@@ -80,10 +82,10 @@ export function aplicarLiquidacionesComisiones(
   liq: LiqRow[],
 ): void {
   const comisionesCat = cats.find((c) => c.nombre.toLowerCase() === "comisiones");
-  if (!comisionesCat) return;
+  const categoriaId = comisionesCat?.id ?? CATEGORIA_SIN_ASIGNAR;
   const totalLiq = liq.reduce((acc, l) => acc + Number(l.total_mxn), 0);
   if (totalLiq > 0) {
-    realPorCat.set(comisionesCat.id, (realPorCat.get(comisionesCat.id) ?? 0) + totalLiq);
+    realPorCat.set(categoriaId, (realPorCat.get(categoriaId) ?? 0) + totalLiq);
   }
 }
 
@@ -115,7 +117,7 @@ export function construirFilaHuerfanos(
   for (const [catId, monto] of realPorCat) {
     if (!catIds.has(catId)) realHuerfano += monto;
   }
-  if (realHuerfano <= 0) return null;
+  if (realHuerfano === 0) return null;
   return {
     categoria_id: "__huerfanas__",
     categoria_nombre: "Sin categoría / inactivas",
