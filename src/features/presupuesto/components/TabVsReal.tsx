@@ -33,6 +33,8 @@ import { Table, TableHeader, TableBody } from "@/components/ui/table";
 import { DetailTableRow } from "@/components/shared/DetailTable";
 import { ThSort } from "./VsRealSortableHeader";
 import { ordenarFilas, type SortKey, type SortDir } from "./vsRealSort";
+import { AvisoGastoSinPresupuesto } from "./AvisoGastoSinPresupuesto";
+import { esExcepcionVsReal } from "../services/vsRealExcepciones";
 import { AvisoGastosSinTc, VsRealCuerpo } from "./VsRealCuerpo";
 
 export function TabVsReal() {
@@ -56,7 +58,7 @@ export function TabVsReal() {
   const filasVisibles = useMemo(() => {
     if (!data) return [];
     const base = soloExcesos
-      ? data.filas.filter((f) => f.presupuesto_mxn > 0 && f.cumplimiento_pct > 110)
+      ? data.filas.filter(esExcepcionVsReal)
       : data.filas;
     return ordenarFilas(base, sortKey, sortDir);
   }, [data, sortKey, sortDir, soloExcesos]);
@@ -96,7 +98,7 @@ export function TabVsReal() {
         </div>
         <div className="flex items-center gap-2">
           <Switch id="solo-excesos" checked={soloExcesos} onCheckedChange={setSoloExcesos} />
-          <Label htmlFor="solo-excesos">Solo excesos</Label>
+          <Label htmlFor="solo-excesos">Solo excepciones</Label>
         </div>
         <Button loading={generandoPdf} variant="outline" onClick={handlePdf} disabled={!data || generandoPdf}>
           <FileText className="h-4 w-4 mr-2" />
@@ -127,10 +129,11 @@ export function TabVsReal() {
           )}
           {data.gastos_sin_tc_count > 0 && <AvisoGastosSinTc count={data.gastos_sin_tc_count} />}
 
+          <AvisoGastoSinPresupuesto filas={data.filas} />
           {sinPresupuestoGlobal && (
             <Card className="border-dashed">
               <CardContent className="p-3 text-sm text-muted-foreground">
-                No hay presupuesto capturado para {periodo}. Captúralo en la pestaña "Captura" para ver el comparativo.
+                El presupuesto total de {periodo} es cero. Revisa la pestaña "Captura" para distinguir importes cero de capturas pendientes.
               </CardContent>
             </Card>
           )}

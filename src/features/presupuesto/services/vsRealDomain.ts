@@ -14,6 +14,8 @@ export { agregarGastosCxP, restarNotasCreditoCxP } from "./vsRealGastos";
 export interface FilaVsReal {
   categoria_id: string;
   categoria_nombre: string;
+  /** Existe una captura mensual; no implica aprobación del presupuesto. */
+  presupuesto_capturado?: boolean;
   presupuesto_mxn: number;
   real_mxn: number;
   variacion_mxn: number;
@@ -101,6 +103,7 @@ export function construirFila(
   return {
     categoria_id: c.id,
     categoria_nombre: c.nombre,
+    presupuesto_capturado: presupPorCat.has(c.id),
     presupuesto_mxn: presupuesto,
     real_mxn: real,
     variacion_mxn: variacion,

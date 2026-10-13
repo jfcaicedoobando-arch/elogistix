@@ -6,6 +6,7 @@ import { TableCell } from "@/components/ui/table";
 import { DetailTableRow } from "@/components/shared/DetailTable";
 import { formatCurrency } from "@/lib/formatters/numbers";
 import { cn } from "@/lib/utils";
+import { tieneGastoSinPresupuesto, etiquetaGastoSinPresupuesto } from "../services/vsRealExcepciones";
 import type { FilaVsReal } from "@/features/presupuesto/services";
 
 interface Props {
@@ -21,14 +22,16 @@ function tono(pct: number): string {
 
 export function VsRealFila({ fila, striped }: Props) {
   const sinPresup = fila.presupuesto_mxn === 0;
+  const sinBaseConGasto = tieneGastoSinPresupuesto(fila);
   const exceso = !sinPresup && fila.cumplimiento_pct > 110;
-  const varClass = sinPresup ? "text-muted-foreground" : fila.variacion_mxn > 0 ? "text-destructive" : "text-success";
+  const varClass = sinBaseConGasto ? "text-warning" : sinPresup ? "text-muted-foreground" : fila.variacion_mxn > 0 ? "text-destructive" : "text-success";
   const ancho = Math.min(100, Math.max(0, fila.cumplimiento_pct));
   return (
     <DetailTableRow className={cn(striped && "bg-muted/20")}>
       <TableCell className="font-medium">
         <div className="flex items-center gap-2">
           <span>{fila.categoria_nombre}</span>
+          {sinBaseConGasto && <Badge variant="outline" className="text-2xs text-warning">{etiquetaGastoSinPresupuesto(fila)}</Badge>}
           {exceso && <Badge variant="destructive" className="text-2xs">Excede</Badge>}
         </div>
       </TableCell>

@@ -133,6 +133,40 @@ describe("agregador — selección de fuente EERR", () => {
     },
   );
 
+  describe.each(["facturas", "embarques", undefined] as const)("navegación provisional con fuente %s", (fuente) => {
+    it.each(["actual", "previo", "presupuesto", "tendencia"] as const)(
+      "NC sin base en %s conserva advertencia y contexto histórico en ambas alertas",
+      async (origen) => {
+        const eerrConNc = { ...EERR_ZERO, notas_proveedor_sin_base: [{ id: "nc-1" }, { id: "nc-2" }] };
+        const lector = fuente === "facturas" ? stubs.fetchEstadoResultadosDevengado : stubs.fetchEstadoResultadosMes;
+        if (origen === "actual") lector.mockResolvedValueOnce(eerrConNc);
+        if (origen === "previo") lector.mockResolvedValueOnce(EERR_ZERO).mockResolvedValueOnce(eerrConNc);
+        if (origen === "presupuesto") stubs.fetchPresupuestoVsReal.mockResolvedValue({ notas_proveedor_sin_base_count: 2 });
+        if (origen === "tendencia") {
+          const filas = [{ mes: 6, ingresos_mxn: 100, costos_mxn: 25, notas_proveedor_sin_base_count: 2 }];
+          if (fuente === "facturas") stubs.fetchEstadoResultadosDevengadoAnual.mockResolvedValue(filas);
+          else rpcMock.mockResolvedValue({ data: filas, error: null });
+        }
+        stubs.calcularKPIsEjecutivos.mockReturnValue({ eerr_incompleto: true });
+        const result = await fetchDashboardEjecutivo({
+          organizationId: "org-1", periodo: "2026-06", cobranza: [], cxp: [], fuente,
+        });
+        const provisional = result.alertas.find((a) => a.id === "nc-proveedor-sin-base");
+        expect(provisional).toMatchObject({
+          severidad: "warning", titulo: "Resultados provisionales",
+          descripcion: "Reporte provisional: 2 nota(s) de crédito de proveedor sin base sin impuestos quedaron fuera del gasto. Los costos y la utilidad están incompletos; no se infieren impuestos ni se modifican datos históricos.",
+        });
+        const parcial = result.alertas.find((a) => a.id === "eerr-valuacion-incompleta");
+        for (const alerta of [provisional, parcial]) {
+          const destino = new URL(alerta!.url!, "https://example.test");
+          expect(destino.pathname).toBe("/profit/estado-resultados");
+          expect(Object.fromEntries(destino.searchParams)).toEqual({ mes: "2026-06", fuente: fuente ?? "embarques" });
+        }
+        expect(provisional!.url).toBe(parcial!.url);
+      },
+    );
+  });
+
   it("sin fuente explícita, default es 'embarques'", async () => {
     await fetchDashboardEjecutivo({
       organizationId: "org-1", periodo: "2026-06",

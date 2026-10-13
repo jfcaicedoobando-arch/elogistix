@@ -1,5 +1,26 @@
 # Changelog
 
+## [13.824.72] - Unreleased
+
+### Ajustes de la siguiente entrega
+
+- Dashboard: la tarjeta de runway distingue saldo bancario negativo o cero aunque el resultado mensual no tenga pérdida; prioriza la valuación incompleta y aclara el alcance bancario. Conserva las fórmulas de runway, DSO y DPO.
+- Dashboard: el enlace de «Resultados provisionales» conserva el mes activo y la fuente del reporte, igual que «EERR parcial». No atribuye al mes activo el origen de una advertencia que puede proceder de períodos anteriores o de la tendencia.
+- Presupuesto vs Real: distingue gasto positivo con presupuesto cero o sin captura y lo muestra como excepción separada del sobreejercicio mayor al 110%, con el mismo alcance al exportar PDF. Los porcentajes sin base se muestran como no aplicables; conserva los cálculos, netos negativos y categorías sin clasificar.
+- La publicación y la validación GUI de estos tres ajustes siguen pendientes; las pruebas automatizadas no sustituyen esa revisión.
+
+### Trazabilidad del lote anterior (PR #272–#281)
+
+- Documenta el conjunto integrado en `bfe7a0e413b7619c2744764d1099b82a32188939`, identificado en el código como 13.824.71. Esta nueva versión identifica la siguiente entrega; no cambia retroactivamente la identificación del lote previo.
+- Pagos: bloquea el tipo de cambio EUR estimado por fallback y conserva las tasas manuales validadas y referencias USD válidas (#272).
+- Operación: una ETD vencida genera una alerta de salida pendiente; el estado Confirmado no pasa automáticamente a En Tránsito ni crea un zarpe. Dashboard y alertas usan el estado persistido; la reconciliación SQL conserva las reglas de valuación USD ponderada y EUR/DOF (#273, #277).
+- Presupuesto: incluye CxP y liquidaciones sin categoría, conserva saldos negativos de NC huérfanas, excluye facturas rechazadas y NC cuyo padre fue eliminado, y cuenta advertencias de TC/base también sin categoría (#274).
+- Estado de Resultados y Dashboard: señalan valuaciones incompletas, conservan columnas con importes que se compensan y muestran margen no calculable con ingreso cero. El EERR incompleto bloquea exportaciones CSV/PDF; los indicadores propagan esa condición, separan rankings sin valuación y advierten la valuación histórica no verificada. La alerta de EERR parcial conserva mes y fuente al abrir el reporte (#275, #278, #281).
+- Proyección: recorre todas las páginas con orden estable, consulta vínculos por lotes y falla ante errores de una fuente; exige empresa seleccionada y bloquea consultas o exportaciones obsoletas tras cambiar el alcance (#276).
+- Cartera: unifica corte, aging, snapshot y TC con la fecha de negocio CDMX; oculta datos obsoletos durante la recarga y comprueba su vigencia antes de descargar, incluido el render del PDF al cruzar medianoche (#279).
+- Rentabilidad: aplica los roles autorizados de la membresía de la organización activa al RPC, conserva el tratamiento del superadministrador global y la compatibilidad legacy documentada, sin cambiar la consulta financiera (#280).
+- El bump agrega una entrada con las 1,524 migraciones ya inventariadas y conserva las 36 entradas históricas completas. No agrega ni modifica SQL ni reaplica migraciones. La validación de la interfaz publicada y las pruebas pendientes se registran por separado; esta entrada no las declara aprobadas.
+
 ## [13.824.71] - Unreleased
 
 - Pricing/cotización: permite recuperar explícitamente los conceptos de venta desde los costos conservados al editar un borrador vacío. Mantiene sus orígenes estables y no restaura automáticamente renglones que el usuario decidió quitar.

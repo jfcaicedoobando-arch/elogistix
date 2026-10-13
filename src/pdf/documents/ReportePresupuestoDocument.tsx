@@ -11,6 +11,7 @@ import { ReportSummary } from "@/pdf/components/ReportSummary";
 import { ReportContext } from "@/pdf/components/ReportContext";
 import { Footer } from "@/pdf/components/Footer";
 import { DataTable, type PdfColumn } from "@/pdf/components/DataTable";
+import { tieneGastoSinPresupuesto, etiquetaGastoSinPresupuesto } from "@/features/presupuesto/services/vsRealExcepciones";
 import type { ResumenVsReal, FilaVsReal } from "@/features/presupuesto/services";
 
 interface Props {
@@ -21,7 +22,7 @@ interface Props {
 }
 
 const cols: PdfColumn<FilaVsReal>[] = [
-  { key: "cat", title: "Categoría", cellStyle: styles.cellDesc, render: (r) => r.categoria_nombre },
+  { key: "cat", title: "Categoría", cellStyle: styles.cellDesc, render: (r) => tieneGastoSinPresupuesto(r) ? `${r.categoria_nombre} · ${etiquetaGastoSinPresupuesto(r)}` : r.categoria_nombre },
   { key: "pre", title: "Presupuesto", cellStyle: styles.cellNumWide, render: (r) => formatCurrency(r.presupuesto_mxn, "MXN") },
   { key: "real", title: "Real", cellStyle: styles.cellNumWide, render: (r) => formatCurrency(r.real_mxn, "MXN") },
   { key: "var", title: "Variación", cellStyle: styles.cellNumWide, render: (r) => formatCurrency(r.variacion_mxn, "MXN") },
@@ -50,11 +51,11 @@ export function ReportePresupuestoDocument({ resumen, filas = resumen.filas, sol
         <Text minPresenceAhead={70} style={[styles.h3, { marginTop: 12 }]}>Detalle por categoría</Text>
         <ReportContext>
           <Text style={styles.contextText}>
-            {soloExcesos ? "Filtro: Solo excesos (más del 110% del presupuesto)." : "Filtro: Todas las categorías."} Los indicadores superiores corresponden al periodo completo.
+            {soloExcesos ? "Filtro: Solo excepciones (más del 110% o gasto positivo sin presupuesto)." : "Filtro: Todas las categorías."} Los indicadores superiores corresponden al periodo completo.
           </Text>
         </ReportContext>
         {filas.length === 0 ? (
-          <Text style={styles.emptyState}>{soloExcesos ? "Ninguna categoría excede el 110% este mes." : "Sin categorías configuradas."}</Text>
+          <Text style={styles.emptyState}>{soloExcesos ? "Sin categorías con más del 110% ni gasto positivo sin presupuesto este mes." : "Sin categorías configuradas."}</Text>
         ) : (
           <DataTable columns={cols} rows={filas} />
         )}
