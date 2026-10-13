@@ -54281,7 +54281,8 @@
       "20261012010000_nc_publica_paridad_replay.sql",
       "20261012160000_aceptacion_prospectos_crm.sql",
       "20261012224500_fix_conversion_puertos_uuid.sql",
-      "20261012235900_estado_operativo_confirmado.sql"
+      "20261012235900_estado_operativo_confirmado.sql",
+      "20261013003500_profit_role_authorization.sql"
     ]
   }
 }

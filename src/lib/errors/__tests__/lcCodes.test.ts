@@ -40,6 +40,21 @@ describe("lcCodes", () => {
     expect(getErrorMessage({ code: "22023", message: raw })).toBe(friendly);
   });
 
+  it.each([
+    ["LC_PROFIT_ROLE_REQUIRED", "No tienes permisos para consultar Rentabilidad. Contacta a un administrador si necesitas acceso."],
+    ["LC_PROFIT_ORG_REQUIRED", "La empresa seleccionada no está activa. Selecciona una empresa activa para consultar Rentabilidad."],
+    ["LC_PROFIT_MEMBERSHIP_REQUIRED", "No se pudo validar tu acceso a la empresa seleccionada. Contacta a un administrador para revisar tu membresía y el estado de la empresa."],
+  ])("explica %s sin revelar detalles internos", (code, friendly) => {
+    const raw = `${code}: detalle interno`;
+    expect(translateLcCode(raw)).toBe(friendly);
+    expect(getErrorMessage(new Error(raw))).toBe(friendly);
+    // Mantiene la prioridad de permisos SQLSTATE 42501 para PostgREST.
+    const postgrestMessage = getErrorMessage({ code: "42501", message: raw });
+    expect(postgrestMessage).toMatch(/No tienes permisos para realizar esta acción/);
+    expect(postgrestMessage).not.toContain("detalle interno");
+    expect(postgrestMessage).not.toContain(code);
+  });
+
   it("stripLcCode limpia tokens LC_*", () => {
     expect(stripLcCode("LC_FOO_BAR: mensaje humano")).toBe("mensaje humano");
     expect(stripLcCode("sin código")).toBe("sin código");

@@ -26670,9 +26670,69 @@ BEGIN
 END;
 $$;
 CREATE FUNCTION public.profit_por_cliente(_fecha_desde date DEFAULT NULL::date, _fecha_hasta date DEFAULT NULL::date, _modo text DEFAULT NULL::text, _cliente_id uuid DEFAULT NULL::uuid) RETURNS TABLE(cliente_id uuid, cliente_nombre text, total_embarques bigint, venta_usd numeric, costo_usd numeric, venta_mxn numeric, costo_mxn numeric, embarques_sin_tc bigint)
-    LANGUAGE sql STABLE SECURITY DEFINER
+    LANGUAGE plpgsql STABLE SECURITY DEFINER
     SET search_path TO 'public'
     AS $$
+DECLARE
+  v_uid uuid := auth.uid();
+  v_org uuid := public.org_scope();
+  v_global_role text;
+  v_org_role text;
+  v_effective_role text;
+BEGIN
+  -- No new service bypass: the existing no-UID/no-scope call remains empty.
+  IF v_uid IS NULL THEN
+    IF current_setting('role', true) = 'service_role' AND v_org IS NULL THEN
+      RETURN;
+    END IF;
+    RAISE EXCEPTION 'LC_PROFIT_ROLE_REQUIRED' USING ERRCODE = '42501';
+  END IF;
+  -- Exact global role, with the existing get_user_context priority. Do not use
+  -- has_role: its hierarchy must not add roles to this financial allowlist.
+  SELECT ur.role::text INTO v_global_role
+  FROM public.user_roles ur
+  WHERE ur.user_id = v_uid
+  ORDER BY CASE ur.role::text
+    WHEN 'super_admin' THEN 1 WHEN 'admin_org' THEN 2 WHEN 'admin' THEN 3
+    WHEN 'gerente_operaciones' THEN 4 WHEN 'contador' THEN 5 WHEN 'tesorero' THEN 6
+    WHEN 'ejecutivo_pricing' THEN 7 WHEN 'coordinador_logistico' THEN 8
+    WHEN 'operador' THEN 9 WHEN 'vendedor' THEN 10 WHEN 'customer_service' THEN 11
+    WHEN 'viewer' THEN 12 WHEN 'cliente' THEN 13 ELSE 99
+  END, ur.role::text
+  LIMIT 1;
+  IF v_global_role = 'super_admin' THEN
+    -- A platform role is never a cross-tenant financial scope.
+    IF v_org IS NULL THEN
+      RETURN;
+    END IF;
+    IF NOT EXISTS (SELECT 1 FROM public.organizations o
+                   WHERE o.id = v_org AND o.activo IS TRUE) THEN
+      RAISE EXCEPTION 'LC_PROFIT_ORG_REQUIRED' USING ERRCODE = '42501';
+    END IF;
+    v_effective_role := v_global_role;
+  ELSE
+    -- Membership has no active/status column. Present membership in an active
+    -- organization is required; a global role cannot revive a missing member.
+    SELECT om.role::text INTO v_org_role
+    FROM public.organization_members om
+    JOIN public.organizations o ON o.id = om.organization_id
+    WHERE om.user_id = v_uid AND om.organization_id = v_org
+      AND o.activo IS TRUE;
+    IF NOT FOUND THEN
+      RAISE EXCEPTION 'LC_PROFIT_MEMBERSHIP_REQUIRED' USING ERRCODE = '42501';
+    END IF;
+    -- Match UI precedence only inside this tenant. A legacy tenant super_admin
+    -- is not a platform grant; NULL is defensive (role is currently NOT NULL).
+    v_effective_role := COALESCE(NULLIF(v_org_role, 'super_admin'), v_global_role);
+  END IF;
+  IF v_effective_role IS NULL OR NOT (v_effective_role = ANY (ARRAY[
+    'admin', 'admin_org', 'super_admin', 'ejecutivo_pricing', 'contador',
+    'tesorero', 'gerente_operaciones', 'gerente_comercial', 'gerente_visor',
+    'auxiliar_contable'
+  ]::text[])) THEN
+    RAISE EXCEPTION 'LC_PROFIT_ROLE_REQUIRED' USING ERRCODE = '42501';
+  END IF;
+  RETURN QUERY
   WITH base AS (
     SELECT
       e.id,
@@ -26694,12 +26754,12 @@ CREATE FUNCTION public.profit_por_cliente(_fecha_desde date DEFAULT NULL::date, 
       AND (_fecha_hasta IS NULL OR e.eta <= _fecha_hasta)
       AND (_modo IS NULL OR e.modo::text = _modo)
       AND (_cliente_id IS NULL OR e.cliente_id = _cliente_id)
-      AND (e.organization_id = public.org_scope())
+      AND (e.organization_id = v_org)
   ),
   ventas AS (
     SELECT v.embarque_id, SUM(v.venta_mxn) AS venta_mxn,
       COUNT(*) FILTER (WHERE v.venta_mxn IS NULL) AS venta_sin_tc
-    FROM public._venta_facturada_por_embarque(public.org_scope()) v
+    FROM public._venta_facturada_por_embarque(v_org) v
     JOIN base b ON b.id = v.embarque_id
     GROUP BY v.embarque_id
   ),
@@ -26741,6 +26801,7 @@ CREATE FUNCTION public.profit_por_cliente(_fecha_desde date DEFAULT NULL::date, 
     ) AS embarques_sin_tc
   FROM neto n
   GROUP BY n.cliente_id;
+END;
 $$;
 CREATE FUNCTION public.profit_por_embarque() RETURNS TABLE(embarque_id uuid, venta_mxn numeric, costo_mxn numeric, venta_mxn_from_usd numeric, costo_mxn_from_usd numeric, venta_mxn_from_eur numeric, costo_mxn_from_eur numeric, venta_mxn_native numeric, costo_mxn_native numeric, venta_usd numeric, costo_usd numeric, tipo_cambio_usd numeric, tipo_cambio_eur numeric)
     LANGUAGE sql STABLE SECURITY DEFINER
