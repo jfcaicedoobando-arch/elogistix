@@ -167,9 +167,10 @@ export async function fetchDashboardEjecutivo(
   const base = { periodo, fuente, vencimientos, eerrPeriodo, eerr12m, tesoreria, flujo, presupuesto, tipoCambioUsd, tcEsFallback };
   const kpis = calcularKPIsEjecutivos(base, eerrPrev.totalIngresos.total, eerrPrev);
   const alertas = calcularAlertas({ flujo, tesoreria, presupuesto });
-  if (kpis.eerr_incompleto) alertas.unshift({ id: "eerr-valuacion-incompleta", severidad: "warning", titulo: "EERR parcial", descripcion: "Conceptos sin TC excluidos de ingresos o costos. Utilidad parcial; margen y ratios no disponibles.", url: `/profit/estado-resultados?${new URLSearchParams({ mes: periodo, fuente })}` });
+  const eerrUrl = `/profit/estado-resultados?${new URLSearchParams({ mes: periodo, fuente })}`;
+  if (kpis.eerr_incompleto) alertas.unshift({ id: "eerr-valuacion-incompleta", severidad: "warning", titulo: "EERR parcial", descripcion: "Conceptos sin TC excluidos de ingresos o costos. Utilidad parcial; margen y ratios no disponibles.", url: eerrUrl });
   const sinBase = Math.max(eerrPeriodo.notas_proveedor_sin_base?.length ?? 0, eerrPrev.notas_proveedor_sin_base?.length ?? 0, presupuesto.notas_proveedor_sin_base_count ?? 0, eerr12m.reduce((s, p) => s + (p.notas_proveedor_sin_base_count ?? 0), 0));
-  if (sinBase) alertas.unshift({ id: "nc-proveedor-sin-base", severidad: "warning", titulo: "Resultados provisionales", descripcion: avisoNcProveedorSinBase(sinBase), url: "/profit/estado-resultados" });
+  if (sinBase) alertas.unshift({ id: "nc-proveedor-sin-base", severidad: "warning", titulo: "Resultados provisionales", descripcion: avisoNcProveedorSinBase(sinBase), url: eerrUrl });
 
   return {
     ...base,

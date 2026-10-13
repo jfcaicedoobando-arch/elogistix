@@ -18,9 +18,9 @@ beforeEach(() => {
   mocks.emisor.mockResolvedValue({ organizacionNombre: "Marca A", razonSocial: "Empresa", rfc: "" });
   mocks.run.mockImplementation(async (f: () => Promise<unknown>) => f());
 });
-it("exporta exactamente las filas de Solo excesos con indicador de alcance", async () => {
+it("exporta exactamente las filas de Solo excepciones con indicador de alcance", async () => {
   render(<TabVsReal />);
-  fireEvent.click(screen.getByRole("switch", { name: "Solo excesos" }));
+  fireEvent.click(screen.getByRole("switch", { name: "Solo excepciones" }));
   expect(screen.queryByText("Normal")).not.toBeInTheDocument();
   fireEvent.click(screen.getByRole("button", { name: "PDF" }));
   await waitFor(() => expect(mocks.download).toHaveBeenCalledOnce());
@@ -32,8 +32,40 @@ it("el filtro vacío sigue vacío en el PDF y el reporte parcial avisa", async (
   mocks.query.mockReturnValue({ data: { ...resumen, filas: [normal], notas_proveedor_sin_base_count: 1 }, organizationId: "org-a" });
   render(<TabVsReal />);
   expect(screen.getByRole("status")).toHaveTextContent("Reporte provisional");
-  fireEvent.click(screen.getByRole("switch", { name: "Solo excesos" }));
+  fireEvent.click(screen.getByRole("switch", { name: "Solo excepciones" }));
   fireEvent.click(screen.getByRole("button", { name: "PDF" }));
   await waitFor(() => expect(mocks.download).toHaveBeenCalledOnce());
   expect(mocks.download.mock.calls[0][0].props).toMatchObject({ filas: [], soloExcesos: true });
+});
+
+it("EX08: muestra importe y captura, filtra y exporta las mismas excepciones sin ocultar parcialidad", async () => {
+  const sinCaptura = { ...normal, categoria_id: "s", categoria_nombre: "Sin captura", presupuesto_mxn: 0, presupuesto_capturado: false, real_mxn: 250, variacion_mxn: 250, cumplimiento_pct: 0 };
+  const ceroCapturado = { ...sinCaptura, categoria_id: "c", categoria_nombre: "Cero capturado", presupuesto_capturado: true, real_mxn: 50, variacion_mxn: 50 };
+  const negativo = { ...sinCaptura, categoria_id: "nc", categoria_nombre: "Neto negativo", real_mxn: -100, variacion_mxn: -100 };
+  const data = { ...resumen, filas: [normal, exceso, sinCaptura, ceroCapturado, negativo], real_truncado: true };
+  mocks.query.mockReturnValue({ data, organizationId: "org-a" });
+  render(<TabVsReal />);
+  expect(screen.getByRole("status")).toHaveTextContent("300.00");
+  expect(screen.getByText("Gasto sin captura de presupuesto")).toBeInTheDocument();
+  expect(screen.getByText("Gasto con presupuesto cero")).toBeInTheDocument();
+  expect(screen.getByText(/alcanzó el límite/)).toBeInTheDocument();
+  expect(screen.getAllByText("—")).toHaveLength(3);
+  fireEvent.click(screen.getByRole("switch", { name: "Solo excepciones" }));
+  expect(screen.queryByText("Normal")).not.toBeInTheDocument();
+  expect(screen.queryByText("Neto negativo")).not.toBeInTheDocument();
+  expect(screen.getByText("Sin captura")).toBeInTheDocument();
+  expect(screen.getByText("Cero capturado")).toBeInTheDocument();
+  fireEvent.click(screen.getByRole("button", { name: "PDF" }));
+  await waitFor(() => expect(mocks.download).toHaveBeenCalledOnce());
+  expect(mocks.download.mock.calls[0][0].props).toMatchObject({ resumen: data, filas: [sinCaptura, ceroCapturado, exceso], soloExcesos: true });
+  fireEvent.click(screen.getByRole("switch", { name: "Solo excepciones" }));
+  expect(screen.getByText("Neto negativo")).toBeInTheDocument();
+});
+
+it("EX08: presupuesto total cero no afirma que no hubo captura; sin gasto no alerta", () => {
+  mocks.query.mockReturnValue({ data: { ...resumen, total_presupuesto_mxn: 0, filas: [{ ...normal, presupuesto_mxn: 0, presupuesto_capturado: true, real_mxn: 0, cumplimiento_pct: 0 }] } });
+  render(<TabVsReal />);
+  expect(screen.getByText(/El presupuesto total de/)).toBeInTheDocument();
+  expect(screen.queryByText(/No hay presupuesto capturado/)).not.toBeInTheDocument();
+  expect(screen.queryByRole("status")).not.toBeInTheDocument();
 });

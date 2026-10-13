@@ -46,14 +46,35 @@ function runwayVariant(n: number | null): "positive" | "negative" | "neutral" {
 
 function runwayValue(n: number | null): string {
   if (n == null) return "Sin burn";
-  if (n === 0) return "Caja agotada";
+  if (n === 0) return "Bancos sin saldo";
   if (n < 1) return "< 1 mes";
   return `${formatNumber(n, { decimals: 1 })} meses`;
 }
 
+function runwayDisplay(kpis: KPIsEjecutivos) {
+  // La valuación incompleta conserva prioridad; no inferir caja total desde bancos.
+  if (runwayIncompleto(kpis)) {
+    return { value: "No disponible", delta: "Valuación incompleta", deltaVariant: "neutral" as const };
+  }
+  // Un resultado mensual sin pérdida no compensa un saldo bancario no positivo.
+  if (kpis.saldo_bancos_mxn <= 0) {
+    const negativo = kpis.saldo_bancos_mxn < 0;
+    return {
+      value: negativo ? "Bancos en negativo" : "Bancos sin saldo",
+      delta: negativo ? "Saldo bancario negativo" : "Saldo bancario en cero",
+      deltaVariant: "negative" as const,
+    };
+  }
+  return {
+    value: runwayValue(kpis.runway_meses),
+    delta: kpis.runway_meses == null ? "Utilidad ≥ 0 en el mes" : "Bancos ÷ (costos − ingresos)",
+    deltaVariant: runwayVariant(kpis.runway_meses),
+  };
+}
+
 export function BandaKPIsEficiencia({ kpis }: Props) {
   const parcial = eficienciaIncompleta(kpis);
-  const runwayParcial = runwayIncompleto(kpis);
+  const runway = runwayDisplay(kpis);
   return (
     <KpiStrip desktopCols={3}>
       <KpiCard
@@ -71,16 +92,8 @@ export function BandaKPIsEficiencia({ kpis }: Props) {
         icon={Hourglass}
       />
       <KpiCard
-        label="Runway financiero"
-        value={runwayParcial ? "No disponible" : runwayValue(kpis.runway_meses)}
-        delta={
-          runwayParcial ? "Valuación incompleta" : kpis.runway_meses == null
-            ? "Utilidad ≥ 0 en el mes"
-            : kpis.runway_meses === 0
-              ? (kpis.saldo_bancos_mxn < 0 ? "Saldo bancario negativo" : "Saldo bancario en cero")
-              : "Bancos ÷ (costos − ingresos)"
-        }
-        deltaVariant={runwayParcial ? "neutral" : runwayVariant(kpis.runway_meses)}
+        label="Runway · saldo bancario"
+        {...runway}
         icon={Waves}
       />
     </KpiStrip>
