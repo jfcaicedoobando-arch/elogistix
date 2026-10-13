@@ -66,7 +66,7 @@ describe("Cartera — exportaciones completas y estados", () => {
     fireEvent.click(screen.getByRole("button", { name: "Exportar CSV" }));
     expect(mocks.csv).toHaveBeenCalledWith("2026-09-30", [vacio, bloque], dataScope, "FP-000007");
     fireEvent.click(screen.getByRole("button", { name: "Exportar PDF" }));
-    await waitFor(() => expect(mocks.pdf).toHaveBeenCalledWith("2026-09-30", expect.stringContaining("Sin TC DOF disponible"), [vacio, bloque], dataScope, { busqueda: "FP-000007", sigueVigente: expect.any(Function) }));
+    await waitFor(() => expect(mocks.pdf).toHaveBeenCalledWith("2026-09-30", expect.stringContaining("Sin TC DOF disponible"), [vacio, bloque], dataScope, { busqueda: "FP-000007", sigueVigente: expect.any(Function), signal: expect.any(AbortSignal) }));
     await waitFor(() => expect(screen.getByRole("button", { name: "Exportar PDF" })).toBeEnabled());
   });
 
@@ -117,7 +117,7 @@ describe("Cartera: copy EUR coherente con la valuación disponible", () => {
     expect(fila.getAllByText(/2,200\.00/)).toHaveLength(2);
     expect(eur.filas[0]).toMatchObject({ saldo: 100, mxnHistorico: 2200, mxnCorte: 2200, diferencia: 0 });
     fireEvent.click(screen.getByRole("button", { name: "Exportar PDF" }));
-    await waitFor(() => expect(mocks.pdf).toHaveBeenCalledWith("2026-09-30", expect.any(String), [vacio, eur], dataScope, { busqueda: "", sigueVigente: expect.any(Function) }));
+    await waitFor(() => expect(mocks.pdf).toHaveBeenCalledWith("2026-09-30", expect.any(String), [vacio, eur], dataScope, { busqueda: "", sigueVigente: expect.any(Function), signal: expect.any(AbortSignal) }));
   });
 
   it("muestra la revaluación EUR cuando CxC tiene histórico y TC del corte", () => {

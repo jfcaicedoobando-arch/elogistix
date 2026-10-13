@@ -78,21 +78,24 @@ export async function descargarCarteraPdf(
   leyendaTc: string,
   bloques: readonly BloqueCartera[],
   dataScope: CarteraDataScope,
-  opciones: { busqueda?: string; sigueVigente?: () => boolean } = {},
+  opciones: { busqueda?: string; sigueVigente?: () => boolean; signal?: AbortSignal } = {},
 ): Promise<void> {
-  const { busqueda = "", sigueVigente = () => true } = opciones;
+  const { busqueda = "", sigueVigente = () => true, signal } = opciones;
+  // El loader de identidad y toBlob no aceptan señales: se descartan sus
+  // continuaciones, sin afirmar que se interrumpe el trabajo ya iniciado.
+  const cancelado = () => signal?.aborted || !sigueVigente();
   try {
+    if (cancelado()) return;
     assertCarteraScopeCurrent(dataScope);
     assertCorteActual(fechaCorte);
-    if (!sigueVigente()) return;
     const [{ pdf }, { ReporteCarteraDocument }, emisor] = await Promise.all([
       import("@react-pdf/renderer"),
       import("@/pdf/documents/ReporteCarteraDocument"),
       fetchEmisorReporte(dataScope.organizationId),
     ]);
+    if (cancelado()) return;
     assertCarteraScopeCurrent(dataScope);
     assertCorteActual(fechaCorte);
-    if (!sigueVigente()) return;
     const blob = await pdf(
       <ReporteCarteraDocument
         fechaCorte={fechaCorte}
@@ -107,12 +110,13 @@ export async function descargarCarteraPdf(
         }))}
       />,
     ).toBlob();
+    if (cancelado()) return;
     assertCarteraScopeCurrent(dataScope);
     assertCorteActual(fechaCorte);
-    if (!sigueVigente()) return;
     descargarBlob(blob, nombreArchivoCartera(fechaCorte, "pdf", !!busqueda.trim()));
     notifySuccess(undefined, { title: "Cartera descargada en PDF" });
   } catch (error) {
+    if (cancelado()) return;
     notifyError(undefined, {
       title: "No se pudo generar el PDF",
       error,
