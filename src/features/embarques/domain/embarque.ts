@@ -17,35 +17,19 @@ export function calcularEstadoEmbarque(
   estadoActual: string,
   fechaLlegadaReal?: string | null,
 ): string {
-  // v13.303.22 — Allowlist de estados sujetos a auto-cálculo por fechas.
-  // `Llegada` sale del allowlist (estado deprecado). Cualquier otro estado
-  // (Borrador, Cotización, Cancelado, Arribo, En Aduana, Entregado, EIR,
-  // Cerrado) se devuelve tal cual para evitar `LC_TRANSICION_INVALIDA`.
-  const ESTADOS_AUTO_CALCULABLES = new Set(["Confirmado", "En Tránsito"]);
-  if (!ESTADOS_AUTO_CALCULABLES.has(estadoActual)) return estadoActual;
-
-  // Solo calcula automático para importaciones marítimas
+  // Las fechas estimadas no acreditan una salida. Confirmado sólo avanza
+  // por la acción explícita del operador; tampoco retrocedemos un zarpe
+  // registrado cuando se corrige la ETD hacia una fecha futura.
+  if (estadoActual !== "En Tránsito") return estadoActual;
   if (modo !== "Marítimo" || tipo !== "Importación") return estadoActual;
-  if (!etd || !eta) return estadoActual;
+  if (!etd || !eta || !fechaLlegadaReal) return estadoActual;
 
-
-  // Comparar fechas en UTC para coincidir con `current_date` del backend
-  // (Postgres en UTC). Evita desfases por zona horaria del navegador donde
-  // hoy local = ayer UTC y un embarque con ETA "hoy UTC" se contaría como
-  // En Tránsito en el frontend pero como Arribo en el dashboard server-side.
+  // Conserva la sincronización de arribo respaldada por llegada real.
+  // La firma sigue estable para todos los consumidores de estado visual.
   const now = new Date();
   const hoy = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()));
-  const fechaETD = new Date(etd + "T00:00:00Z");
   const fechaETA = new Date(eta + "T00:00:00Z");
-
-  if (hoy < fechaETD) return "Confirmado";
-  if (hoy >= fechaETD && hoy < fechaETA) return "En Tránsito";
-  // v13.214.0 — Solo pasa a "Arribo" cuando el operador captura la fecha de
-  // llegada real. Si el ETA venció sin llegada real capturada, se queda en
-  // "En Tránsito" para forzar la acción manual desde el tab de Tracking.
-  if (hoy >= fechaETA) {
-    return fechaLlegadaReal ? "Arribo" : "En Tránsito";
-  }
+  if (hoy >= fechaETA) return "Arribo";
 
   return estadoActual;
 }

@@ -24,7 +24,9 @@ interface AutoSyncArgs {
 function runAutoSyncEstado(args: AutoSyncArgs) {
   const { embarqueId, modo, tipo, estado, etd, eta, fechaLlegadaReal, usuarioEmail, sync } = args;
   const estadoCalculado = calcularEstadoEmbarque(modo, tipo, etd, eta, estado, fechaLlegadaReal);
-  if (estadoCalculado !== estado) {
+  // Nunca persistir una salida inferida por ETD, incluso si otro consumidor
+  // cambia el calculador. Sólo sincronizar el arribo con evidencia real.
+  if (estado === "En Tránsito" && estadoCalculado === "Arribo" && fechaLlegadaReal) {
     sync({ embarqueId, nuevoEstado: estadoCalculado, usuarioEmail });
   }
 }

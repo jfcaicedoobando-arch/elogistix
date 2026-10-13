@@ -36,12 +36,6 @@ export function faseIdParaEstado(estadoVisual: string): FaseId {
   return "confirmado";
 }
 
-function startOfToday(): Date {
-  const d = new Date();
-  d.setHours(0, 0, 0, 0);
-  return d;
-}
-
 export interface FasesCompletadas {
   cotizacion: boolean;
   transito: boolean;
@@ -59,10 +53,9 @@ export function calcularCompletadas(
   estadoVisual: string,
   esBorrador: boolean,
 ): FasesCompletadas {
-  const etdPasado = !!embarque.etd && new Date(embarque.etd) <= startOfToday();
   return {
     cotizacion: !!embarque.cotizacion_id,
-    transito: ESTADOS_POST_TRANSITO.has(estadoVisual) || (!esBorrador && etdPasado),
+    transito: ESTADOS_POST_TRANSITO.has(estadoVisual),
     arribo: !esBorrador
       && (!!embarque.fecha_llegada_real || ESTADOS_POST_ARRIBO.has(estadoVisual)),
     aduana: ESTADOS_POST_ADUANA.has(estadoVisual),

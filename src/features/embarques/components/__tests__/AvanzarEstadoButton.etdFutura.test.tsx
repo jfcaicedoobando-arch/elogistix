@@ -29,7 +29,7 @@ describe("AvanzarEstadoButton · ETD futura", () => {
     futura.setDate(futura.getDate() + 5);
     const avanzar = renderAvance(formatDateOnlyLocal(futura));
     expect(screen.getByRole("note")).toHaveTextContent(/salida estimada.*fecha futura/i);
-    fireEvent.click(screen.getByRole("button", { name: "Confirmar" }));
+    fireEvent.click(screen.getByRole("button", { name: "Confirmar salida real" }));
     expect(avanzar).toHaveBeenCalledOnce();
   });
 

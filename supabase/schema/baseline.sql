@@ -3420,20 +3420,7 @@ BEGIN
              e.aeropuerto_origen, e.aeropuerto_destino,
              e.ciudad_origen, e.ciudad_destino, e.contenedor, e.created_at,
              e.tipo_cambio_usd, e.tipo_cambio_eur,
-        CASE
-          -- Ola 4 · N10 (guard B-033): preservar Borrador.
-          WHEN e.estado = 'Borrador' THEN 'Borrador'
-          WHEN e.estado::text = 'Cancelado' THEN 'Cancelado'
-          WHEN e.estado IN ('Arribo','En Aduana','Entregado','EIR','Por liquidar','Cerrado') THEN e.estado::text
-          WHEN e.modo = 'Marítimo' AND e.tipo = 'Importación' AND e.etd IS NOT NULL AND e.eta IS NOT NULL THEN
-            CASE
-              WHEN v_hoy < e.etd THEN 'Confirmado'
-              WHEN v_hoy >= e.etd AND v_hoy < e.eta THEN 'En Tránsito'
-              WHEN v_hoy >= e.eta THEN 'Arribo'
-              ELSE e.estado::text
-            END
-          ELSE e.estado::text
-        END AS estado_real
+        e.estado::text AS estado_real
       FROM embarques e
       WHERE e.deleted_at IS NULL              -- FIX C5
         AND (e.organization_id = public.org_scope())
@@ -3653,19 +3640,7 @@ BEGIN
     WITH embarques_base AS (
       SELECT e.id, e.estado::text, e.modo, e.tipo, e.etd, e.eta,
         e.tipo_cambio_eur,
-        CASE
-          WHEN e.estado = 'Borrador' THEN 'Borrador'
-          WHEN e.estado::text = 'Cancelado' THEN 'Cancelado'
-          WHEN e.estado IN ('Arribo','En Aduana','Entregado','EIR','Por liquidar','Cerrado') THEN e.estado::text
-          WHEN e.modo = 'Marítimo' AND e.tipo = 'Importación' AND e.etd IS NOT NULL AND e.eta IS NOT NULL THEN
-            CASE
-              WHEN v_hoy < e.etd THEN 'Confirmado'
-              WHEN v_hoy >= e.etd AND v_hoy < e.eta THEN 'En Tránsito'
-              WHEN v_hoy >= e.eta THEN 'Arribo'
-              ELSE e.estado::text
-            END
-          ELSE e.estado::text
-        END AS estado_real
+        e.estado::text AS estado_real
       FROM embarques e
       WHERE e.deleted_at IS NULL
         AND (e.organization_id = public.org_scope())
@@ -17724,19 +17699,7 @@ BEGIN
              e.ciudad_origen, e.ciudad_destino, e.contenedor, e.created_at,
              e.naviera, e.organization_id,
              e.tipo_cambio_usd, e.tipo_cambio_eur,
-        CASE
-          WHEN e.estado = 'Borrador' THEN 'Borrador'
-          WHEN e.estado = 'Cancelado' THEN 'Cancelado'
-          WHEN e.estado IN ('Arribo','En Aduana','Entregado','EIR','Por liquidar','Cerrado') THEN e.estado::text
-          WHEN e.modo = 'Marítimo' AND e.tipo = 'Importación' AND e.etd IS NOT NULL AND e.eta IS NOT NULL THEN
-            CASE
-              WHEN v_hoy < e.etd THEN 'Confirmado'
-              WHEN v_hoy >= e.etd AND v_hoy < e.eta THEN 'En Tránsito'
-              WHEN v_hoy >= e.eta THEN 'Arribo'
-              ELSE e.estado::text
-            END
-          ELSE e.estado::text
-        END AS estado_real
+        e.estado::text AS estado_real
       FROM embarques e
       WHERE e.deleted_at IS NULL
         AND (e.organization_id = public.org_scope())
@@ -18063,20 +18026,7 @@ BEGIN
            e.puerto_origen, e.puerto_destino,
            e.aeropuerto_origen, e.aeropuerto_destino,
            e.ciudad_origen, e.ciudad_destino, e.contenedor, e.created_at,
-      CASE
-        -- B-033 (v13.320.42): preservar Borrador para que no se cuente como Confirmado.
-        WHEN e.estado = 'Borrador' THEN 'Borrador'
-        WHEN e.estado::text = 'Cancelado' THEN 'Cancelado'
-          WHEN e.estado IN ('Arribo','En Aduana','Entregado','EIR','Por liquidar','Cerrado') THEN e.estado::text
-        WHEN e.modo = 'Marítimo' AND e.tipo = 'Importación' AND e.etd IS NOT NULL AND e.eta IS NOT NULL THEN
-          CASE
-            WHEN v_hoy < e.etd THEN 'Confirmado'
-            WHEN v_hoy >= e.etd AND v_hoy < e.eta THEN 'En Tránsito'
-            WHEN v_hoy >= e.eta THEN 'Arribo'
-            ELSE e.estado::text
-          END
-        ELSE e.estado::text
-      END AS estado_real
+      e.estado::text AS estado_real
     FROM embarques e
     WHERE (e.organization_id = public.org_scope())
       AND e.deleted_at IS NULL
@@ -18284,19 +18234,7 @@ BEGIN
     WITH embarques_base AS (
       SELECT e.id, e.estado::text, e.modo, e.tipo, e.etd, e.eta,
         e.tipo_cambio_eur,
-        CASE
-          WHEN e.estado = 'Borrador' THEN 'Borrador'
-          WHEN e.estado = 'Cancelado' THEN 'Cancelado'
-          WHEN e.estado IN ('Arribo','En Aduana','Entregado','EIR','Por liquidar','Cerrado') THEN e.estado::text
-          WHEN e.modo = 'Marítimo' AND e.tipo = 'Importación' AND e.etd IS NOT NULL AND e.eta IS NOT NULL THEN
-            CASE
-              WHEN v_hoy < e.etd THEN 'Confirmado'
-              WHEN v_hoy >= e.etd AND v_hoy < e.eta THEN 'En Tránsito'
-              WHEN v_hoy >= e.eta THEN 'Arribo'
-              ELSE e.estado::text
-            END
-          ELSE e.estado::text
-        END AS estado_real
+        e.estado::text AS estado_real
       FROM embarques e
       WHERE e.deleted_at IS NULL
         AND (e.organization_id = public.org_scope())
@@ -20351,18 +20289,7 @@ CREATE FUNCTION public.embarques_alertas_ids() RETURNS TABLE(embarque_id uuid, t
     AND e.estado::text NOT IN ('Cancelado','Borrador')
     AND e.eta IS NOT NULL
     AND (current_date - e.eta) >= 7
-    AND CASE
-       WHEN e.estado IN ('Arribo','En Aduana','Entregado','EIR','Por liquidar','Cerrado') THEN e.estado::text
-       WHEN e.modo = 'Marítimo' AND e.tipo = 'Importación'
-            AND e.etd IS NOT NULL AND e.eta IS NOT NULL THEN
-         CASE
-           WHEN current_date < e.etd THEN 'Confirmado'
-           WHEN current_date >= e.etd AND current_date < e.eta THEN 'En Tránsito'
-           WHEN current_date >= e.eta THEN 'Arribo'
-           ELSE e.estado::text
-         END
-       ELSE e.estado::text
-     END = 'Arribo'
+    AND e.estado::text = 'Arribo'
     AND (e.organization_id = public.org_scope())
   UNION ALL
   SELECT DISTINCT e.id, 'garantia'::text
@@ -24605,25 +24532,7 @@ BEGIN
       e.puerto_origen, e.puerto_destino,
       e.aeropuerto_origen, e.aeropuerto_destino,
       e.ciudad_origen, e.ciudad_destino,
-      CASE
-        -- Ola 4 · N10 (guard B-033): preservar Borrador para que no se
-        -- cuente como Confirmado por derivación ETD/ETA.
-        WHEN e.estado = 'Borrador' THEN 'Borrador'
-        -- R221 (ELIMP00353): preservar Cancelado ANTES de derivar por ETD/ETA;
-        -- si no, un cancelado con ETA vencida se volvía 'Arribo' y sobrevivía
-        -- al filtro posterior que pretendía excluirlo.
-        WHEN e.estado = 'Cancelado' THEN 'Cancelado'
-        WHEN e.estado IN ('Arribo','En Aduana','Entregado','EIR','Por liquidar','Cerrado') THEN e.estado::text
-        WHEN e.modo = 'Marítimo' AND e.tipo = 'Importación'
-             AND e.etd IS NOT NULL AND e.eta IS NOT NULL THEN
-          CASE
-            WHEN v_hoy < e.etd THEN 'Confirmado'
-            WHEN v_hoy >= e.etd AND v_hoy < e.eta THEN 'En Tránsito'
-            WHEN v_hoy >= e.eta THEN 'Arribo'
-            ELSE e.estado::text
-          END
-        ELSE e.estado::text
-      END AS estado_real
+      e.estado::text AS estado_real
     FROM embarques e
     WHERE e.deleted_at IS NULL                -- FIX C5
       AND (e.organization_id = public.org_scope())
@@ -32758,18 +32667,7 @@ CREATE FUNCTION public.sidebar_alert_counts() RETURNS TABLE(embarques_demora big
        -- R220: Cancelado/Borrador nunca son demora.
        AND e.estado::text NOT IN ('Cancelado','Borrador')
        AND (current_date - e.eta) >= 7
-       AND CASE
-         WHEN e.estado IN ('Arribo','En Aduana','Entregado','EIR','Por liquidar','Cerrado') THEN e.estado::text
-         WHEN e.modo = 'Marítimo' AND e.tipo = 'Importación'
-              AND e.etd IS NOT NULL AND e.eta IS NOT NULL THEN
-           CASE
-             WHEN current_date < e.etd THEN 'Confirmado'
-             WHEN current_date >= e.etd AND current_date < e.eta THEN 'En Tránsito'
-             WHEN current_date >= e.eta THEN 'Arribo'
-             ELSE e.estado::text
-           END
-         ELSE e.estado::text
-       END = 'Arribo'
+       AND e.estado::text = 'Arribo'
        AND e.organization_id = public.org_scope()
     ) AS embarques_demora,
     (SELECT count(*) FROM facturas f

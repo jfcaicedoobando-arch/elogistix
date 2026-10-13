@@ -42,25 +42,7 @@ BEGIN
       e.puerto_origen, e.puerto_destino,
       e.aeropuerto_origen, e.aeropuerto_destino,
       e.ciudad_origen, e.ciudad_destino,
-      CASE
-        -- Ola 4 · N10 (guard B-033): preservar Borrador para que no se
-        -- cuente como Confirmado por derivación ETD/ETA.
-        WHEN e.estado = 'Borrador' THEN 'Borrador'
-        -- R221 (ELIMP00353): preservar Cancelado ANTES de derivar por ETD/ETA;
-        -- si no, un cancelado con ETA vencida se volvía 'Arribo' y sobrevivía
-        -- al filtro posterior que pretendía excluirlo.
-        WHEN e.estado = 'Cancelado' THEN 'Cancelado'
-        WHEN e.estado IN ('Arribo','En Aduana','Entregado','EIR','Por liquidar','Cerrado') THEN e.estado::text
-        WHEN e.modo = 'Marítimo' AND e.tipo = 'Importación'
-             AND e.etd IS NOT NULL AND e.eta IS NOT NULL THEN
-          CASE
-            WHEN v_hoy < e.etd THEN 'Confirmado'
-            WHEN v_hoy >= e.etd AND v_hoy < e.eta THEN 'En Tránsito'
-            WHEN v_hoy >= e.eta THEN 'Arribo'
-            ELSE e.estado::text
-          END
-        ELSE e.estado::text
-      END AS estado_real
+      e.estado::text AS estado_real
     FROM embarques e
     WHERE e.deleted_at IS NULL                -- FIX C5
       AND (e.organization_id = public.org_scope())

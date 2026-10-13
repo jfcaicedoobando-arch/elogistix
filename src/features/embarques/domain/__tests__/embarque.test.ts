@@ -61,10 +61,10 @@ describe("calcularEstadoEmbarque — allowlist de estados auto-calculables (v13.
     ).toBe("Cancelado");
   });
 
-  it("Confirmado con ETD vencido avanza a En Tránsito", () => {
+  it("Confirmado con ETD vencido espera confirmación de salida", () => {
     expect(
       calcularEstadoEmbarque("Marítimo", "Importación", PASADO, FUTURO, "Confirmado"),
-    ).toBe("En Tránsito");
+    ).toBe("Confirmado");
   });
 
   it("En Tránsito con ETA vencida y sin llegada real se mantiene En Tránsito", () => {
