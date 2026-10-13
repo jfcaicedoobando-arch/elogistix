@@ -17,6 +17,7 @@ import { DatePickerMx } from "@/components/ui/date-picker-mx";
 import { useDocumentTitle } from "@/hooks/shared";
 import { useDiaNegocio } from "@/hooks/shared/useDiaNegocio";
 import { leyendaTcCorte } from "@/features/reportes/cartera/domain/agingCartera";
+import { LEYENDA_VALUACION_EUR } from "@/features/reportes/cartera/domain/carteraLeyendas";
 import { useCarteraAging } from "@/features/reportes/cartera/hooks/useCarteraAging";
 import { CarteraBloque } from "@/features/reportes/cartera/components/CarteraBloque";
 import {
@@ -116,12 +117,7 @@ export default function ReportesCartera() {
             />
           </div>
           <p className="text-xs text-muted-foreground">
-            {leyenda} EUR se valúa al TC EUR/MXN del corte si está disponible.
-            Este reporte no utiliza TC histórico para CxP en EUR; cuando existe TC
-            al corte, ambas columnas MXN usan ese valor y la diferencia es cero.
-            Sin TC al corte se conserva
-            el histórico disponible; sin ninguno, los ceros en MXN no significan
-            que el saldo sea cero.
+            {leyenda} {LEYENDA_VALUACION_EUR}
           </p>
         </CardContent>
       </Card>

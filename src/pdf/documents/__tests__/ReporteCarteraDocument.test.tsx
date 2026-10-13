@@ -64,4 +64,13 @@ describe("ReporteCarteraDocument", () => {
     expect(container).toHaveTextContent("Filtro de búsqueda: FP-000007. Totales sólo de resultados coincidentes.");
     expect(container).not.toHaveTextContent("sin filtro de búsqueda");
   });
+
+  it("incluye la explicación de valuación recibida sin recalcular importes", () => {
+    const leyenda = "EUR se valúa al TC EUR/MXN del corte si está disponible. Sin TC, los ceros en MXN no significan saldo cero.";
+    const { container } = render(
+      <ReporteCarteraDocument fechaCorte="2026-10-12" leyendaTc="TC DOF USD/MXN 18.4163"
+        leyendaValuacion={leyenda} bloques={[]} />,
+    );
+    expect(container).toHaveTextContent(leyenda);
+  });
 });

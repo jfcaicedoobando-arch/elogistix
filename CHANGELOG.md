@@ -1,5 +1,14 @@
 # Changelog
 
+## [13.824.73] - Unreleased
+
+### Cartera PDF: nombres, expedientes y leyenda EUR
+
+- Ajusta los anchos de las columnas y los cortes de texto del detalle para mantener los nombres de clientes/proveedores y los expedientes dentro de sus celdas, incluidos textos largos y reportes de varias páginas.
+- El PDF comparte con la pantalla la leyenda de valuación EUR: usa el TC EUR/MXN del corte cuando está disponible; en CxP no se utiliza TC histórico para EUR. Sin TC al corte se conserva el histórico disponible y, si no existe ninguno, los ceros en MXN no significan que el saldo sea cero. No modifica los cálculos ni los saldos.
+- Agrega cobertura automatizada de límites de celdas, textos largos, paginación y propagación de la leyenda. La publicación y la validación GUI de esta entrega siguen pendientes.
+- Conserva las 37 entradas históricas completas del manifest y agrega 13.824.73 con el mismo inventario de 1,524 migraciones de 13.824.72. No agrega ni modifica SQL ni reaplica migraciones.
+
 ## [13.824.72] - Unreleased
 
 ### Ajustes de la siguiente entrega

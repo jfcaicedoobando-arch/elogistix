@@ -46,6 +46,7 @@ export interface BloqueCarteraPdf {
 interface Props {
   fechaCorte: string;
   leyendaTc: string;
+  leyendaValuacion?: string;
   busqueda?: string;
   bloques: BloqueCarteraPdf[];
   emisor?: EmisorInfo;
@@ -54,7 +55,11 @@ interface Props {
 const money = (valor: string, moneda = "MXN") =>
   formatCurrency(Number(valor) || 0, moneda);
 
-const COL_CORTA = { width: 58, flexGrow: 0, flexShrink: 0 } as const;
+// LETTER horizontal: 792pt - 72pt de márgenes = 720pt. Los anchos incluyen
+// 10pt de padding. Reservar espacio real para ELNAC00030 y el nombre completo;
+// DescriptionText ofrece cortes invisibles para tokens mayores a cada celda.
+const columna = (width: number) => ({ width, flexGrow: 0, flexShrink: 0 });
+const COL_IMPORTE = { ...styles.cellNumWide, ...columna(79) };
 
 const colsTotales: PdfColumn<FilaTotalPdf>[] = [
   { key: "etiqueta", title: "Antigüedad", cellStyle: styles.cellDesc, render: (r) => r.etiqueta },
@@ -65,19 +70,19 @@ const colsTotales: PdfColumn<FilaTotalPdf>[] = [
 ];
 
 const colsFacturas: PdfColumn<FilaFacturaPdf>[] = [
-  { key: "contraparte", title: "Cliente / Proveedor", cellStyle: styles.cellDesc, render: (r) => r.contraparte },
-  { key: "folio", title: "Folio", cellStyle: COL_CORTA, render: (r) => r.folio },
-  { key: "exp", title: "Exp.", cellStyle: COL_CORTA, render: (r) => r.expediente },
-  { key: "venc", title: "Vence", cellStyle: COL_CORTA, render: (r) => r.vencimiento },
-  { key: "dias", title: "Días", cellStyle: styles.cellQty, render: (r) => r.dias },
-  { key: "bucket", title: "Rango", cellStyle: COL_CORTA, render: (r) => r.bucket },
-  { key: "saldo", title: "Saldo", cellStyle: styles.cellNumWide, render: (r) => money(r.saldo, r.moneda) },
-  { key: "hist", title: "MXN\nhistórico", cellStyle: styles.cellNumWide, render: (r) => money(r.mxnHistorico) },
-  { key: "corte", title: "MXN\nal corte", cellStyle: styles.cellNumWide, render: (r) => money(r.mxnCorte) },
-  { key: "dif", title: "Dif.\ncambiaria", cellStyle: styles.cellNumWide, render: (r) => money(r.diferencia) },
+  { key: "contraparte", title: "Cliente / Proveedor", cellStyle: columna(134), hyphenate: false, render: (r) => r.contraparte },
+  { key: "folio", title: "Folio", cellStyle: columna(62), hyphenate: false, render: (r) => r.folio },
+  { key: "exp", title: "Exp.", cellStyle: columna(66), hyphenate: false, render: (r) => r.expediente },
+  { key: "venc", title: "Vence", cellStyle: columna(62), hyphenate: false, render: (r) => r.vencimiento },
+  { key: "dias", title: "Días", cellStyle: { ...styles.cellQty, ...columna(26) }, hyphenate: false, render: (r) => r.dias },
+  { key: "bucket", title: "Rango", cellStyle: columna(54), hyphenate: false, render: (r) => r.bucket },
+  { key: "saldo", title: "Saldo", cellStyle: COL_IMPORTE, render: (r) => money(r.saldo, r.moneda) },
+  { key: "hist", title: "MXN\nhistórico", cellStyle: COL_IMPORTE, render: (r) => money(r.mxnHistorico) },
+  { key: "corte", title: "MXN\nal corte", cellStyle: COL_IMPORTE, render: (r) => money(r.mxnCorte) },
+  { key: "dif", title: "Dif.\ncambiaria", cellStyle: COL_IMPORTE, render: (r) => money(r.diferencia) },
 ];
 
-export function ReporteCarteraDocument({ fechaCorte, leyendaTc, bloques, emisor, busqueda }: Props) {
+export function ReporteCarteraDocument({ fechaCorte, leyendaTc, leyendaValuacion, bloques, emisor, busqueda }: Props) {
   const filtro = busqueda?.trim();
   const empresaNombre = nombreEmisorReporte(emisor);
   return (
@@ -86,6 +91,7 @@ export function ReporteCarteraDocument({ fechaCorte, leyendaTc, bloques, emisor,
         <ReportHeader title="Cartera y antigüedad" emisor={emisor}>
           <Text style={styles.contextText}>Corte: {formatDate(fechaCorte)}</Text>
           <Text style={styles.contextText}>{leyendaTc}</Text>
+          {leyendaValuacion ? <Text style={styles.contextText}>{leyendaValuacion}</Text> : null}
           <Text style={styles.contextText}>
             {filtro ? `Filtro de búsqueda: ${filtro}. Totales sólo de resultados coincidentes.` : "Alcance: cartera con saldo pendiente, sin filtro de búsqueda."}
           </Text>
