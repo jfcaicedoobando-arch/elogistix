@@ -42,7 +42,7 @@ describe("Cartera: un solo corte CDMX para snapshot, TC y antigüedad", () => {
     expect(result.current.isLoading).toBe(true);
     expect(result.current.dataScope).toBeUndefined();
     expect(result.current.cxp.filas).toEqual([]);
-    expect(m.cxp).toHaveBeenLastCalledWith({}, "2026-10-13");
+    expect(m.cxp).toHaveBeenLastCalledWith({}, "2026-10-13", expect.objectContaining({ aborted: false }));
     expect(m.tc).toHaveBeenLastCalledWith("2026-10-13");
     await act(async () => pendiente.resolve(tasa("2026-10-13", 21))); await flush();
     expect(result.current.cxp.filas[0]).toMatchObject({ diasVencido: 31, saldo: 60, mxnCorte: 1260 });

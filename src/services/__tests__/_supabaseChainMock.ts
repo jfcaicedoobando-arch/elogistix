@@ -84,6 +84,7 @@ export function createSupabaseMock() {
     chain.match = passthrough("match");
     chain.order = passthrough("order");
     chain.limit = passthrough("limit");
+    chain.abortSignal = passthrough("abortSignal");
     chain.range = passthrough("range");
     chain.maybeSingle = () => Promise.resolve(res);
     chain.single = () => Promise.resolve(res);

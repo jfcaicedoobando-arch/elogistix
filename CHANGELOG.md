@@ -1,5 +1,15 @@
 # Changelog
 
+## [13.824.79] - Unreleased
+
+### Análisis: paginación por claves y cancelación de lecturas
+
+- Recorre las fuentes de Proyección/Cierre mensual y las cabeceras CxP por claves estables, con cursor compuesto en los vínculos factura/embarque. Rechaza páginas repetidas o que no avanzan y conserva la presentación final por ETA o vencimiento, con desempate por ID y nulos al final.
+- Propaga AbortSignal desde los hooks de Proyección y Cartera hasta páginas, lotes de saldos y lecturas de cobranza. Comprueba la cancelación antes y después del I/O para evitar continuar una carga descartada; conserva la comprobación del ámbito y la organización de Cartera.
+- La paginación por claves evita el desplazamiento propio de offsets ante altas o bajas anteriores al cursor, pero no crea un snapshot transaccional del servidor ni garantiza consistencia estricta entre peticiones. Los cambios concurrentes de filas, filtros o fuentes pueden corresponder a instantes distintos; cancelar HTTP tampoco acredita detener SQL ya iniciado.
+- Conserva los límites existentes: cap de 50,000 en Proyección y rechazo visible del límite de 2,000 en la fuente CxC de Cartera. Añade regresiones de cursores, errores, cancelación y lecturas de volumen. No modifica SQL, fórmulas financieras ni el renderer PDF.
+- Conserva las 43 entradas históricas completas del manifest y agrega 13.824.79 con las mismas 1,525 migraciones de 13.824.78. No agrega ni modifica SQL ni reaplica migraciones.
+
 ## [13.824.78] - Unreleased
 
 ### PDF: rutas nativas y reutilización de fuentes

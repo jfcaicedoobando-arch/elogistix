@@ -9,6 +9,7 @@
  * así que la conversión financiera NO se duplica en TypeScript.
  */
 import { supabase } from "@/integrations/supabase/client";
+import { conAbortSignal } from "@/lib/supabase/paginadoPorClave";
 
 export interface SaldoServidorCxP {
   pagado: number;
@@ -30,15 +31,18 @@ function num(v: number | null | undefined): number {
  */
 export async function fetchSaldosProveedorFacturas(
   ids: string[],
+  signal?: AbortSignal,
 ): Promise<Map<string, SaldoServidorCxP>> {
   const mapa = new Map<string, SaldoServidorCxP>();
   const unicos = [...new Set(ids.filter(Boolean))];
   for (let i = 0; i < unicos.length; i += LOTE_IDS) {
+    signal?.throwIfAborted();
     const trozo = unicos.slice(i, i + LOTE_IDS);
-    const { data, error } = await supabase
+    const { data, error } = await conAbortSignal(supabase
       .from("v_proveedor_facturas_saldo")
       .select("proveedor_factura_id, pagado, notas_credito_aplicadas, saldo")
-      .in("proveedor_factura_id", trozo);
+      .in("proveedor_factura_id", trozo), signal);
+    signal?.throwIfAborted();
     if (error) throw error;
     for (const r of data ?? []) {
       if (!r.proveedor_factura_id) continue;

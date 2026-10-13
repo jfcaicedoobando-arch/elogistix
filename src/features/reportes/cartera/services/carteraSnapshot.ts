@@ -20,23 +20,26 @@ export function assertCarteraScopeCurrent(scope: CarteraDataScope): void {
 }
 
 /** org_scope puede seguir en A mientras el selector local ya muestra B. */
-async function assertServerScope(scope: CarteraDataScope): Promise<void> {
+async function assertServerScope(scope: CarteraDataScope, signal?: AbortSignal): Promise<void> {
+  signal?.throwIfAborted();
   assertCarteraScopeCurrent(scope);
   const organizationId = await getSuperAdminOrg();
+  signal?.throwIfAborted();
   assertCarteraScopeCurrent(scope);
   if (organizationId !== scope.organizationId) {
     throw new Error("La organización del reporte aún no está sincronizada. Intenta de nuevo.");
   }
 }
 
-export async function fetchCarteraSnapshot(scope: CarteraDataScope, diaNegocio: string) {
-  await assertServerScope(scope);
+export async function fetchCarteraSnapshot(scope: CarteraDataScope, diaNegocio: string, signal?: AbortSignal) {
+  await assertServerScope(scope, signal);
+  const abortArgs: [AbortSignal?] = signal ? [signal] : [];
   const [cxc, cxp] = await Promise.all([
-    fetchCobranza({}),
-    fetchFacturasCxP({}, diaNegocio),
+    fetchCobranza({}, ...abortArgs),
+    fetchFacturasCxP({}, diaNegocio, ...abortArgs),
     // Conserva el gate de error remoto de useCobranza; no altera los totales.
-    fetchCobranzaKpis({}),
+    fetchCobranzaKpis({}, ...abortArgs),
   ]);
-  await assertServerScope(scope);
+  await assertServerScope(scope, signal);
   return { cxc, cxp, scope };
 }

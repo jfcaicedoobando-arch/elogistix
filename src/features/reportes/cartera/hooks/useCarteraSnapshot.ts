@@ -14,7 +14,7 @@ export function useCarteraSnapshot(diaNegocio: string) {
   const ready = !loading && isCarteraScopeCurrent(scope);
   const query = useQuery({
     queryKey: carteraKeys.snapshot(scope, diaNegocio),
-    queryFn: async () => ({ ...await fetchCarteraSnapshot(scope, diaNegocio), diaNegocio }),
+    queryFn: async ({ signal }) => ({ ...await fetchCarteraSnapshot(scope, diaNegocio, signal), diaNegocio }),
     placeholderData: undefined,
     enabled: ready,
     staleTime: 30_000,

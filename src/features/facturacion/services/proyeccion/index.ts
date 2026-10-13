@@ -10,15 +10,17 @@ export interface ProyeccionMesParams {
   organizationId: string | null;
   year: number;
   month: number;
+  signal?: AbortSignal;
 }
 
 export async function fetchProyeccionMes({
   organizationId,
   year,
   month,
+  signal,
 }: ProyeccionMesParams): Promise<FilaProyeccion[]> {
   const { desde, hasta } = rangoMes(year, month);
-  const embarques = await fetchEmbarquesMes(organizationId, desde, hasta);
+  const embarques = await fetchEmbarquesMes(organizationId, desde, hasta, signal);
   if (embarques.length === 0) return [];
 
   const ids = embarques.map((e) => e.id);
@@ -26,7 +28,7 @@ export async function fetchProyeccionMes({
     new Set(embarques.map((e) => e.expediente).filter((x): x is string => !!x)),
   );
 
-  const { ventas, pendientes, facturadas, costos, facturas } = await fetchConceptosYFacturas(ids, expedientesUnicos, organizationId);
+  const { ventas, pendientes, facturadas, costos, facturas } = await fetchConceptosYFacturas(ids, expedientesUnicos, organizationId, signal);
   const ventasMap = indexarPorEmbarque(ventas, "total");
   const costosMap = indexarPorEmbarque(costos, "monto");
   const facturadosSet = new Set<string>(

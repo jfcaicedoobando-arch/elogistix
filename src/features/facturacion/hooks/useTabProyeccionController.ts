@@ -79,6 +79,7 @@ export function useTabProyeccionController() {
         organizationId,
         year: mesActual.year,
         month: mesActual.month,
+        signal,
       });
       if (signal.aborted || currentScope.current.scope !== scope || !currentScope.current.ready) {
         throw new Error("La organización o el mes de la proyección cambió.");

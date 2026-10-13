@@ -11,6 +11,7 @@
  */
 import { supabase } from "@/integrations/supabase/client";
 import { fetchInChunks } from "@/lib/supabase/chunkedIn";
+import { conAbortSignal } from "@/lib/supabase/paginadoPorClave";
 
 export interface VentaFacturadaRow {
   embarque_id: string;
@@ -23,11 +24,14 @@ export const DESCRIPCION_VENTA_FACTURADA = "Venta facturada";
 
 export async function fetchVentaFacturadaEmbarques(
   ids: readonly string[],
+  signal?: AbortSignal,
 ): Promise<VentaFacturadaRow[]> {
   return fetchInChunks(ids, async (lote) => {
-    const { data, error } = await supabase.rpc("venta_facturada_embarques", {
+    signal?.throwIfAborted();
+    const { data, error } = await conAbortSignal(supabase.rpc("venta_facturada_embarques", {
       p_embarque_ids: lote,
-    });
+    }), signal);
+    signal?.throwIfAborted();
     if (error) throw error;
     return (data ?? []).map((r) => {
       const conTc = r.venta_mxn !== null && r.venta_mxn !== undefined;
