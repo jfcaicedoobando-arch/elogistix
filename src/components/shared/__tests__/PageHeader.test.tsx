@@ -3,6 +3,13 @@ import { render, screen } from "@testing-library/react";
 import { PageHeader } from "@/components/shared/PageHeader";
 
 describe("<PageHeader />", () => {
+  it("reserva ancho legible al título móvil cuando hay dos exportaciones", () => {
+    render(<PageHeader title="Cartera y antigüedad" actions={<><button>Exportar CSV</button><button>Exportar PDF</button></>} />);
+    const titleGroup = screen.getByRole("heading", { level: 1 }).parentElement;
+    expect(titleGroup).toHaveClass("min-w-[min(100%,200px)]");
+    expect(titleGroup?.parentElement).toHaveClass("flex-wrap");
+  });
+
   it("renderiza title y description como h1 + p", () => {
     render(<PageHeader title="Clientes" description="Gestión de clientes" />);
     const h1 = screen.getByRole("heading", { level: 1 });

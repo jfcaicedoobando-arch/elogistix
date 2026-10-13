@@ -34,6 +34,7 @@ export function CarteraBloque({
   return (
     <section className="space-y-3">
       <SectionHeading
+        className="flex-col md:flex-row"
         actions={
           !sinResumen && <p className="text-xs text-muted-foreground">
             {total.conteo} factura(s) · {formatCurrency(total.mxnCorte, "MXN")} al corte ·

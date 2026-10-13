@@ -30,6 +30,16 @@ beforeEach(() => {
 });
 
 describe("Cartera — exportaciones completas y estados", () => {
+  it("apila títulos y resumen financiero en móvil sin ceder el ancho a las acciones", () => {
+    montar();
+    for (const name of ["Cuentas por cobrar", "Cuentas por pagar"]) {
+      const group = screen.getByRole("heading", { name }).parentElement?.parentElement;
+      expect(group).toHaveClass("flex-col", "md:flex-row");
+    }
+    expect(screen.getAllByText(/dif. cambiaria/)).toHaveLength(2);
+    expect(screen.getByRole("button", { name: "Exportar CSV" }).parentElement).toHaveClass("flex-wrap");
+  });
+
   it("bloquea ambos archivos y oculta valuación provisional mientras carga el TC", () => {
     mocks.hook.mockReturnValue({ ...listo, tcLoading: true, isLoading: true });
     montar();
