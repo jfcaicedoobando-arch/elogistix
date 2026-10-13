@@ -1,5 +1,14 @@
 # Changelog
 
+## [13.824.74] - Unreleased
+
+### Pagos: fallback EUR y captura manual del tipo de cambio
+
+- Evita que enfocar y salir del tipo de cambio, sin editarlo, convierta una estimación fallback EUR en una captura manual. El bloqueo se conserva hasta recibir una referencia EUR fiable o una edición manual válida, incluso cuando el número escrito coincide con el estimado.
+- NumericInput normaliza la presentación al perder foco sin emitir un onChange adicional: las ediciones válidas ya notifican su valor durante la captura. Conserva la normalización de ceros iniciales, fracciones y campos vacíos, los límites de precisión y la sincronización de valores externos.
+- Agrega regresiones del input y del diálogo Registrar pago: foco/blur repetido, entradas rechazadas, edición explícita, referencia EUR posterior, pérdida de EUR en refetch y reinicio de procedencia al usar DOF, borrar, cambiar moneda o reabrir. La publicación y la validación GUI de esta entrega siguen pendientes; las pruebas automatizadas no sustituyen esa revisión.
+- Conserva las 38 entradas históricas completas del manifest y agrega 13.824.74 con el mismo inventario de 1,524 migraciones de 13.824.73. No agrega ni modifica SQL ni reaplica migraciones.
+
 ## [13.824.73] - Unreleased
 
 ### Cartera PDF: nombres, expedientes y leyenda EUR

@@ -67,8 +67,9 @@ const NumericInput = forwardRef<HTMLInputElement, NumericInputProps>(
         onBlur={() => {
           const n = text === "" || text === "." ? 0 : Number(text);
           const normalized = Number.isFinite(n) ? n : 0;
+          // El blur sólo normaliza la presentación: las ediciones válidas ya
+          // notificaron onChange. No promover valores sugeridos a manuales.
           setText(toText(normalized));
-          onChange(normalized);
         }}
         className={cn("h-8 text-right tabular-nums", className)}
       />
