@@ -3,6 +3,7 @@
 import contextlib
 import importlib.util
 import io
+import json
 import os
 from pathlib import Path
 import shutil
@@ -36,6 +37,7 @@ class Fixture(unittest.TestCase):
         self.write(".gitleaks.toml", CONFIG)
         self.base = self.commit()
         self.calls = []
+        self.scanner_report = None
         self.scanner_code = 0
         self.scanner_output = b"INF 1 commits scanned.\nINF scanned ~12 bytes (12 bytes) in 1ms\nINF no leaks found\n"
         self.real_run = subprocess.run
@@ -75,6 +77,8 @@ class Fixture(unittest.TestCase):
             "files": {path: snapshot.blob(source, entry) for path, entry in entries.items()},
             "config": Path(args[args.index("--config") + 1]).read_bytes(),
         })
+        if self.scanner_report is not None:
+            Path(args[args.index("--report-path") + 1]).write_text(json.dumps(self.scanner_report))
         return subprocess.CompletedProcess(args, self.scanner_code, b"", self.scanner_output)
 
     def scanned_files(self):
@@ -225,6 +229,25 @@ class SnapshotTests(Fixture):
         self.assertNotIn(DUMMY.decode(), str(caught.exception))
         self.assertFalse(self.calls[0]["source"].exists())
 
+    def test_findings_fail_closed_with_private_report_cleanup(self):
+        self.write("src/test.ts", DUMMY)
+        self.scanner_report = [{"RuleID": "generic-api-key", "File": "src/test.ts", "StartLine": 1,
+                                "Secret": "do-not-print", "Match": "do-not-print"}]
+        head = self.commit()
+        for code in (2, 7):
+            self.scanner_code = code
+            output = io.StringIO()
+            with patch.object(snapshot.shutil, "which", return_value=self.fake_binary), \
+                 patch.object(snapshot.subprocess, "run", side_effect=self.fake_run), \
+                 contextlib.redirect_stdout(output):
+                with self.assertRaisesRegex(snapshot.CoverageError, f"exit {code}"):
+                    snapshot.scan(self.repo, "pull_request", self.event(head), head)
+            self.assertNotIn("do-not-print", output.getvalue())
+            self.assertEqual("Finding location:" in output.getvalue(), code == 2)
+            self.assertFalse(self.calls[-1]["source"].exists())
+            args = self.calls[-1]["args"]
+            self.assertFalse(Path(args[args.index("--report-path") + 1]).exists())
+
     def test_missing_coverage_summary_fails(self):
         self.write("docs/page.md", b"content\n")
         self.scanner_output = b"no leaks found\n"
@@ -304,7 +327,7 @@ class SnapshotTests(Fixture):
              self.assertRaisesRegex(snapshot.CoverageError, "materialization"):
             snapshot.materialize(self.repo, entries, ["docs/page.md"], destination)
 
-    def test_cli_flags_keep_relative_paths_redaction_and_no_reports(self):
+    def test_cli_flags_keep_relative_paths_redaction_and_private_report(self):
         self.write("src/file.ts", b"content\n")
         self.run_scan(self.commit())
         args = self.calls[0]["args"]
@@ -314,8 +337,59 @@ class SnapshotTests(Fixture):
         self.assertTrue(args[-1].endswith("snapshot.git"))
         self.assertIn("--redact=100", args)
         self.assertNotIn("--verbose", args)
-        self.assertNotIn("--report-path", args)
+        self.assertIn("--report-format=json", args)
+        report = Path(args[args.index("--report-path") + 1])
+        self.assertEqual(report.name, "findings.json")
+        self.assertFalse(report.exists())
         self.assertNotIn("--follow-symlinks", args)
+
+
+class FindingMetadataTests(unittest.TestCase):
+    def setUp(self):
+        self.temp = tempfile.TemporaryDirectory()
+        self.addCleanup(self.temp.cleanup)
+        self.report = Path(self.temp.name) / "findings.json"
+        self.safe = {"RuleID": "generic-api-key", "File": "supabase/schema/baseline.sql", "StartLine": 6628,
+                     "Secret": "do-not-print", "Match": "do-not-print", "Description": "do-not-print"}
+
+    def metadata(self, value, paths=("supabase/schema/baseline.sql",)):
+        self.report.write_text(json.dumps(value))
+        return snapshot.finding_metadata(self.report, paths)
+
+    def test_only_known_bounded_location_is_emitted(self):
+        result = self.metadata([self.safe])
+        self.assertEqual(result, ["Finding location: path=supabase/schema/baseline.sql; rule=generic-api-key; line=6628"])
+        self.assertNotIn("do-not-print", str(result))
+
+    def test_untrusted_metadata_is_suppressed(self):
+        for field, values in {
+            "RuleID": ["unknown", "::error::bad", {}, None],
+            "File": ["other.sql", "../secret", "x\n::error::bad", {}, None],
+            "StartLine": [True, 0, -1, 10_000_001, "6628", {}, None],
+        }.items():
+            for value in values:
+                with self.subTest(field=field, value=value):
+                    self.assertEqual(self.metadata([{**self.safe, field: value}]), [])
+        for path in ("../secret", "x\n::error::bad", "x" * 241, "/absolute", "a//b"):
+            self.assertEqual(self.metadata([{**self.safe, "File": path}], (path,)), [])
+
+    def test_malformed_missing_and_oversized_reports_are_private(self):
+        self.assertEqual(snapshot.finding_metadata(self.report, ()), [])
+        for raw in ("do-not-print", "[" * 2000, " " * 1_048_577):
+            self.report.write_text(raw)
+            self.assertEqual(snapshot.finding_metadata(self.report, ()), [])
+        for value in ({"Secret": "do-not-print"}, None, [None, "do-not-print"]):
+            self.assertEqual(self.metadata(value), [])
+
+    def test_symlink_report_is_rejected(self):
+        target = Path(self.temp.name) / "target"
+        target.write_text(json.dumps([self.safe]))
+        self.report.symlink_to(target)
+        self.assertEqual(snapshot.finding_metadata(self.report, (self.safe["File"],)), [])
+
+    def test_duplicates_and_output_are_bounded(self):
+        self.assertEqual(len(self.metadata([self.safe] * 50)), 1)
+        self.assertEqual(len(self.metadata([{**self.safe, "StartLine": n} for n in range(1, 50)])), 20)
 
 
 @unittest.skipUnless(REAL_BINARY, "Gitleaks not installed locally; real controls are required in CI")

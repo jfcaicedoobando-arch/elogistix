@@ -120,12 +120,13 @@ BEGIN
   PERFORM pg_temp.as_user(fx.admin_a);
   PERFORM pg_temp.cxp_expect_error(format('SELECT public.aprobar_factura_proveedor(%L,true,%L,%L)',
     v_id, 'Gasto administrativo sintético', v_version), '42501', 'Factura no encontrada');
-  -- La misma organización queda cubierta sólo después de sembrar membresía sintética.
+  -- El contador ya miembro de org_b aprueba; no se crea una segunda membresía para org_a.
   PERFORM pg_temp.as_postgres();
-  INSERT INTO public.organization_members(organization_id,user_id,role) VALUES(fx.org_b,fx.admin_a,'contador');
-  PERFORM pg_temp.as_user(fx.admin_a);
+  PERFORM pg_temp.as_user(fx.admin_b);
   v_row := public.aprobar_factura_proveedor(v_id, true, 'Gasto administrativo sintético', v_version);
-  PERFORM pg_temp.cxp_assert(v_row.estado_aprobacion = 'aprobada', 'contador con acceso existente a segunda organización');
+  PERFORM pg_temp.cxp_assert(v_row.estado_aprobacion = 'aprobada'
+    AND v_row.created_by = fx.admin_a AND v_row.aprobada_por = fx.admin_b,
+    'contador miembro de org_b aprueba captura ajena conservando ambos actores');
 
   PERFORM pg_temp.as_postgres();
   v_id := pg_temp.cxp_fixture(fx.org_a, fx.admin_a, false);

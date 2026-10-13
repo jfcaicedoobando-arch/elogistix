@@ -165,6 +165,47 @@ def snapshot_repository(root, entries, paths, source):
     return shadow, head
 
 
+
+def finding_metadata(report, selected_paths):
+    """Return bounded known-rule locations; never copy arbitrary report fields."""
+    # This diagnostic targets the suspected default rule. Other rules stay private.
+    allowed_rules = frozenset(("generic-api-key",))
+    allowed_paths = {
+        path for path in selected_paths
+        if isinstance(path, str) and len(path) <= 240
+        and re.fullmatch(r"[A-Za-z0-9_./-]+", path)
+        and all(part not in ("", ".", "..") for part in path.split("/"))
+    }
+    try:
+        if report.is_symlink():
+            return []
+        with report.open("rb") as source:
+            payload = source.read(1_048_577)
+        if len(payload) > 1_048_576:
+            return []
+        findings = json.loads(payload)
+    except (OSError, ValueError, RecursionError):
+        return []
+    if not isinstance(findings, list):
+        return []
+    locations = set()
+    for item in findings[:10_000]:
+        if not isinstance(item, dict):
+            continue
+        rule, path, line = item.get("RuleID"), item.get("File"), item.get("StartLine")
+        if not isinstance(rule, str) or rule not in allowed_rules:
+            continue
+        if not isinstance(path, str) or path not in allowed_paths:
+            continue
+        if type(line) is not int or not 1 <= line <= 10_000_000:
+            continue
+        locations.add((path, rule, line))
+        if len(locations) == 20:
+            break
+    return [f"Finding location: path={path}; rule={rule}; line={line}"
+            for path, rule, line in sorted(locations)]
+
+
 def scan(repo, event_name, event, github_sha, binary="gitleaks"):
     base, head = endpoints(repo, event_name, event, github_sha)
     entries = tree(repo, head)
@@ -200,20 +241,26 @@ def scan(repo, event_name, event, github_sha, binary="gitleaks"):
         # One root patch gives literal file paths without walking/pruning directories.
         # Plumbing copies exact bytes without clean filters, hooks, signing or credentials.
         shadow, snapshot_head = snapshot_repository(root, entries, paths, source)
+        report = root / "findings.json"
         result = subprocess.run(
             [executable, "git", "--config", str(config),
              "--gitleaks-ignore-path", str(ignore), "--redact=100", "--no-banner",
              "--no-color", "--exit-code=2", "--log-level=info",
+             "--report-format=json", "--report-path", str(report),
              "--log-opts=--root --text --no-ext-diff --no-textconv -1 " + snapshot_head,
              str(shadow)],
             cwd=root, capture_output=True, check=False, env=isolated_git_env(),
         )
-        # Never print captured content, finding lines, paths or scanner errors.
+        # Never print captured output, matches, secrets, descriptions or scanner errors.
+        # The temporary report is never uploaded and is removed on every exit.
         output = result.stdout + result.stderr
         # 8.24.3: "scanned ~30544 bytes (30.54 KB)"; parentheses are human units.
         counts = re.findall(rb"scanned ~(\d+) bytes \([^\r\n()]+\)", output)
         commits = re.findall(rb"\b(\d+) commits scanned\.", output)
         if result.returncode:
+            if result.returncode == 2:
+                for location in finding_metadata(report, paths):
+                    print(location)
             raise CoverageError(f"Snapshot scanner failed (exit {result.returncode}); inspect privately.")
         if len(counts) != 1:
             raise CoverageError("Scanner did not confirm its byte coverage.")
