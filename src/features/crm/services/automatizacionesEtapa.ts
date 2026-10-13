@@ -25,6 +25,7 @@ export async function fetchEtapa(id: string): Promise<EtapaInfo | null> {
     .from("crm_etapas_pipeline")
     .select("id, nombre, tipo, probabilidad_default, crea_tarea_seguimiento, dias_seguimiento")
     .eq("id", id)
+    .is("deleted_at", null)
     .maybeSingle();
   // v13.823.140 — el error deja de convertirse en no-op silencioso: se propaga
   // para que `runAutomatizaciones` avise. `null` sólo significa "no existe".
@@ -38,6 +39,7 @@ export async function fetchOportunidad(id: string): Promise<OportunidadMin | nul
     .from("crm_oportunidades")
     .select("id, nombre, vendedor_id, vendedor_email, cliente_nombre")
     .eq("id", id)
+    .is("deleted_at", null)
     .maybeSingle();
   if (error) throw error;
   if (!data) return null;

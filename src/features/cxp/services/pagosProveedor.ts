@@ -82,9 +82,12 @@ async function resolverOrgFactura(facturaId: string): Promise<string> {
  * este pago nunca se guardó.
  */
 function assertPagoCorresponde(
-  pago: { proveedor_factura_id: string; fecha_pago: string; monto: number; moneda: string },
+  pago: { proveedor_factura_id: string; fecha_pago: string; monto: number; moneda: string; deleted_at?: string | null } | null,
   input: RegistrarPagoProveedorInput,
 ): void {
+  if (!pago || pago.deleted_at) {
+    throw Object.assign(new Error("El pago registrado ya no está disponible o fue eliminado."), { code: "NOT_FOUND" });
+  }
   const coincide =
     pago.proveedor_factura_id === input.proveedor_factura_id &&
     pago.fecha_pago === input.fecha_pago &&
@@ -142,6 +145,7 @@ export async function registrarPagoProveedor(
       "id, organization_id, proveedor_factura_id, fecha_pago, monto, moneda, tipo_cambio_usd, diferencia_cambiaria_mxn, metodo_pago, referencia, cuenta_bancaria_id, notas, created_by, created_at, updated_at, deleted_at, deleted_by",
     )
     .eq("id", resultado.pago_id)
+    .is("deleted_at", null)
     .single();
   if (errPago) throw errPago;
   assertPagoCorresponde(pago, input);
