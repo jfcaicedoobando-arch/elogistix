@@ -58,6 +58,7 @@ async function buscarTraspasoPorClave(
     .from("traspasos_bancarios")
     .select("id, cuenta_origen_id, cuenta_destino_id, fecha, monto_origen, tipo_cambio, comision")
     .eq("client_request_id", clave)
+    .is("deleted_at", null)
     .maybeSingle();
   if (!data) return null;
   const mismoContenido =

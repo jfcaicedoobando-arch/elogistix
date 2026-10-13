@@ -36,6 +36,7 @@ async function leerPagoActual(id: string) {
     .from("pagos_proveedor")
     .select("id, organization_id, monto, moneda, cuenta_bancaria_id, deleted_at, es_anticipo_aplicado, anticipos_aplicaciones!anticipos_aplicaciones_pago_proveedor_id_fkey(id, deleted_at)")
     .eq("id", id)
+    .is("deleted_at", null)
     .maybeSingle();
   if (error) throw error;
   if (!data || data.deleted_at) {

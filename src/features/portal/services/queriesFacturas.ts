@@ -37,7 +37,7 @@ export async function fetchPortalFacturas(clienteIds: string[]) {
     return facturas.map((f) => ({ ...f, embarque_expediente: null as string | null }));
   }
   const embs = await unwrapOr(
-    supabase.from("embarques").select("id, expediente").in("id", embarqueIds),
+    supabase.from("embarques").select("id, expediente").in("id", embarqueIds).is("deleted_at", null),
     [],
   );
   const expById = new Map(embs.map((e) => [e.id, e.expediente]));
@@ -63,6 +63,7 @@ export async function fetchPortalFactura(id: string) {
       .from("embarques")
       .select("expediente")
       .eq("id", data.embarque_id)
+      .is("deleted_at", null)
       .maybeSingle();
     embarque_expediente = emb?.expediente ?? null;
   }

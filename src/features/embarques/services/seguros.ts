@@ -3,6 +3,7 @@
  * CRUD contra `public.seguros_embarque`. RLS aísla por organización.
  */
 import { supabase } from "@/integrations/supabase/client";
+import { captureAuthOperationScope } from "@/lib/auth/authOperationScope";
 import { run, unwrap, unwrapOr } from "@/lib/supabase/response";
 import { registrarBitacoraEmbarque } from "./bitacoraEmbarques";
 import type { Moneda } from "@/types/db";
@@ -133,18 +134,18 @@ export async function fetchSegurosEmbarque(embarqueId: string): Promise<SeguroEm
 }
 
 export async function createSeguroEmbarque(input: SeguroEmbarqueInput): Promise<SeguroEmbarque> {
-  // organization_id se hereda del embarque si no se pasa.
-  let orgId = input.organization_id;
-  if (!orgId) {
-    const emb = await unwrap(
-      supabase
-        .from("embarques")
-        .select("organization_id")
-        .eq("id", input.embarque_id)
-        .maybeSingle(),
-    );
-    if (!emb?.organization_id) throw new Error("Embarque sin organización");
-    orgId = emb.organization_id;
+  const scope = captureAuthOperationScope();
+  // Una organización explícita también exige comprobar el padre vivo.
+  const emb = await unwrap(
+    supabase.from("embarques").select("organization_id")
+      .eq("id", input.embarque_id).is("deleted_at", null).maybeSingle(),
+  );
+  scope.assertCurrent();
+  if (!emb?.organization_id) throw new Error("Embarque sin organización");
+  const orgId = emb.organization_id;
+  if ((input.organization_id && input.organization_id !== orgId)
+      || (scope.organizationId && scope.organizationId !== orgId)) {
+    throw Object.assign(new Error("La organización del seguro no coincide con la del embarque o la organización activa."), { code: "ORG_MISMATCH" });
   }
 
   const data = await unwrap(
@@ -156,7 +157,11 @@ export async function createSeguroEmbarque(input: SeguroEmbarqueInput): Promise<
   );
   // SAFE-CAST: COLUMNS lista explícita mapea 1:1 a SeguroEmbarque.
   const seguro = data as unknown as SeguroEmbarque;
+  // El INSERT ya fue confirmado: no simular un aborto ni registrar con otra sesión.
+  if (!scope.isCurrent()) return seguro;
   await registrarBitacoraEmbarque({
+    organizationId: orgId,
+    authScope: scope,
     accion: "Creó seguro de embarque",
     entidadId: input.embarque_id,
     detalles: { seguroId: seguro.id, aseguradora: input.aseguradora, numeroPoliza: input.numero_poliza, sumaAseguradaUsd: input.suma_asegurada },

@@ -239,3 +239,42 @@ describe("consumos conservadores en control de flujo y métodos", () => {
 it("no omite builders exportados desde un namespace", () => {
   expect(detecta("namespace X { export const q=db.from('clientes').select('id'); }")).toEqual(["clientes"]);
 });
+
+describe("excepciones históricas limitadas a su builder", () => {
+  const cases = [
+    ["export de catálogo", "admin/services/exportOrg.ts", ".from(table)", "clientes"],
+    ["pertenencia para PDF", "configuracion/services/emisorPdf.ts", ".from(tabla)", "proveedores"],
+  ];
+  const sourceFor = (path: string) => readFileSync(new URL(`../../features/${path}`, import.meta.url), "utf8");
+  const withoutMarker = (source: string) => source.replace(/^\s*\/\/ SOFT-DELETE-OK:[^\r\n]*/m, "");
+  function chainFor(path: string, from: string, table: string): string {
+    const source = sourceFor(path);
+    return ventanaConsulta(source, source.indexOf(from)).replace(from, `.from('${table}')`);
+  }
+  const neighbor = (table: string) => `db.from('${table}').select('id')`;
+
+  it.each(cases)("%s declara una excepción y sólo una", (_name, path) => {
+    const source = sourceFor(path);
+    expect(source.match(/SOFT-DELETE-OK:/g)).toHaveLength(1);
+    expect(detecta(source)).toEqual([]);
+  });
+  it.each(cases)("%s vuelve a ser hallazgo sin su marca", (_name, path) => {
+    expect(detecta(withoutMarker(sourceFor(path)))).toEqual(["<tabla dinámica no resuelta>"]);
+  });
+  it.each(cases)("%s no exceptúa al vecino anterior de la misma tabla", (_name, path, from, table) => {
+    const chain = chainFor(path, from, table);
+    expect(detecta(`async function f(){ await ${neighbor(table)}; await ${chain}; }`)).toEqual([table]);
+  });
+  it.each(cases)("%s no exceptúa al vecino posterior de la misma tabla", (_name, path, from, table) => {
+    const chain = chainFor(path, from, table);
+    expect(detecta(`async function f(){ await ${chain}; await ${neighbor(table)}; }`)).toEqual([table]);
+  });
+  it.each(cases)("%s no exceptúa una lectura anidada de la misma tabla", (_name, path, from, table) => {
+    const chain = chainFor(path, from, table);
+    expect(detecta(`async function f(){ await ${chain}.eq('fixture', await ${neighbor(table)}); }`)).toEqual([table]);
+  });
+  it.each(cases)("%s no exceptúa al builder que la contiene", (_name, path, from, table) => {
+    const chain = chainFor(path, from, table);
+    expect(detecta(`async function f(){ await ${neighbor(table)}.eq('fixture', await ${chain}); }`)).toEqual([table]);
+  });
+});

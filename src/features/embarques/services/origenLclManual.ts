@@ -16,6 +16,7 @@ export async function fetchOrigenLclManual(cotizacionId: string): Promise<Origen
     .from("cotizaciones")
     .select("id, folio, lcl_tarifa_wm, lcl_minimo_flete, volumen_m3, peso_kg, proveedores:lcl_consolidador_id(nombre)")
     .eq("id", cotizacionId)
+    .is("deleted_at", null)
     .maybeSingle();
   if (error) throw error;
   if (!data || data.lcl_tarifa_wm == null) return null;

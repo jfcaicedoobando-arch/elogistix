@@ -18,18 +18,15 @@
     "src/features/embarques/services/comisionExclusion.ts::embarques",
     "src/features/embarques/services/documentos/uploadDocumentoEmbarque.ts::documentos_embarque",
     "src/features/embarques/services/embarqueDirectMutations.ts::embarques",
-    "src/features/embarques/services/queries/detalle.ts::embarques",
     "src/features/embarques/services/tarifaInfo.ts::embarques",
     "src/features/embarques/services/tcEmbarqueDof.ts::embarques",
     "src/features/facturacion/estadoCuenta/services/clienteFicha.ts::clientes",
     "src/features/facturacion/services/contactosClienteEnvio.ts::clientes",
-    "src/features/facturacion/services/datosFiscalesCliente.ts::clientes",
     "src/features/facturacion/services/detail.ts::facturas",
     "src/features/facturacion/services/detail.ts::proformas",
     "src/features/facturacion/services/pagos/eliminarPago.ts::pagos_factura",
     "src/features/facturacion/services/recalcularTotalesFactura.ts::facturas",
     "src/features/facturacion/services/refacturacion.ts::facturas",
-    "src/features/facturacion/services/sustitucionEstado.ts::facturas",
-    "src/features/portal/services/queries.ts::embarques"
+    "src/features/facturacion/services/sustitucionEstado.ts::facturas"
   ]
 }

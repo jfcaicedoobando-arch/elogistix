@@ -1,10 +1,10 @@
 /**
- * Servicio: export completo de la organización a CSVs paginados.
- *
- * Lee cada tabla operativa filtrando por `organization_id` (RLS asegura
- * aislamiento; el filtro explícito es defensa-en-profundidad). Pagina en
- * bloques de 1000 filas (límite Supabase). Si una tabla falla con permiso
- * RLS o similar, se registra warning y se continúa (el ZIP no se aborta).
+ * Extracción del catálogo de organización a CSVs paginados.
+ * Conserva filas activas y bajas lógicas visibles por RLS, incluidos sus IDs,
+ * relaciones y marcas de baja; no impone vigencia al catálogo mixto.
+ * Cada página filtra organization_id. Errores suaves conservan lo obtenido
+ * con warning; los duros abortan. No certifica snapshot ni restauración.
+ * Contrato y límites: docs/historical-read-contracts.md.
  */
 import { supabase } from "@/integrations/supabase/client";
 import { toCSV, downloadZip } from "@/lib/io";
@@ -53,8 +53,8 @@ export async function fetchOrganizationExport(
     let warning: string | undefined;
     let aborted = false;
     while (!aborted) {
-      // Cast pragmático: `EXPORT_TABLES` incluye vistas y tablas cuyos tipos
-      // el cliente genérico no puede resolver estáticamente sin explotar el TS.
+      // Cast pragmático para el catálogo cerrado de `EXPORT_TABLES`;
+      // no amplía destinos ni permite saltarse los permisos del servidor.
       // SAFE-CAST: filtrado por `organization_id` + RLS.
       const { data, error } = await (supabase as unknown as {
         from: (t: string) => {
@@ -69,6 +69,7 @@ export async function fetchOrganizationExport(
         };
       })
         .from(table)
+        // SOFT-DELETE-OK: catálogo con bajas visibles; contrato acotado en docs/historical-read-contracts.md.
         .select("*")
         .eq("organization_id", organizationId)
         .range(from, from + PAGE - 1);

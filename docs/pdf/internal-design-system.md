@@ -34,3 +34,11 @@ Run `bun run test:pdf` for the real React-PDF lane, including 15 synthetic docum
 Inspect generated files in `reports/pdf-smoke` using MuPDF or PDFium as well as Poppler before attributing a rendering artifact to the PDF. Check every page for clipped figures, isolated headings, missing last rows and footer numbering. The synthetic fixtures do not access an ERP or contain real company information.
 
 `internalResidual38.test.tsx` also checks Poppler word bounding boxes for complete financial identifiers: raw extraction can include text that is clipped visually. Its layout checks require Poppler, alongside the normal real-renderer lane.
+
+### Entidades dadas de baja e identidad temporal
+
+La verificación ID/organización de `fetchEmisorEntidad` admite una baja lógica
+visible por RLS para representar un DTO ya disponible. No habilita operaciones
+ni reconstruye un emisor congelado a fecha de emisión. Véase el
+[contrato de lectura histórica](../historical-read-contracts.md) para límites,
+proyección mínima, caché, consumidores y pruebas.

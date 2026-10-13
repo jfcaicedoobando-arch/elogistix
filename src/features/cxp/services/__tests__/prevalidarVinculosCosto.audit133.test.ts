@@ -6,9 +6,10 @@ import { prevalidarVinculosCosto } from "../prevalidarVinculosCosto";
 beforeEach(() => {
   mock.monedaCosto = "MXN";
   mock.from.mockImplementation((table: string) => {
-    const query = { select: vi.fn(), eq: vi.fn(), in: vi.fn() };
+    const query = { select: vi.fn(), eq: vi.fn(), is: vi.fn(), in: vi.fn() };
     query.select.mockReturnValue(query);
     query.eq.mockReturnValue(query);
+    query.is.mockReturnValue(query);
     query.in.mockResolvedValue({ data: table === "conceptos_costo"
       ? [{ id: "c1", concepto: "Flete", moneda: mock.monedaCosto, monto: 20.44 }] : [], error: null });
     return query;

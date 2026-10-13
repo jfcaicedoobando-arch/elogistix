@@ -12,7 +12,8 @@ vi.mock("@/integrations/supabase/client", () => ({
     from: () => ({
       select: () => ({
         eq: () => ({
-          maybeSingle: () =>
+          is: () => ({
+            maybeSingle: () =>
             // MNY: el traspaso guardado con esa clave tiene el MISMO contenido
             // que el payload base, así que sí es un reintento legítimo.
             Promise.resolve({
@@ -27,6 +28,7 @@ vi.mock("@/integrations/supabase/client", () => ({
               },
               error: null,
             }),
+          }),
         }),
       }),
     }),
