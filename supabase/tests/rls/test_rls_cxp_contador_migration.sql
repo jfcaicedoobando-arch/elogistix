@@ -28,6 +28,17 @@ BEGIN
   IF md5(v_metadata->>'prosrc') NOT IN ('5f9b32fd2582f79503f00fb309df8bd2', 'c910bfde57c93d5e8a225d221cbe41b1') THEN
     RAISE EXCEPTION 'CXP_AUTOAPROBACION_PREFLIGHT: definición distinta de la revisada';
   END IF;
+  -- ACL conocida: las sentencias explícitas de abajo sólo reafirman permisos existentes.
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_proc p WHERE p.oid = v_oid
+      AND p.proowner = 'postgres'::regrole
+      AND p.prosecdef
+      AND p.proconfig = ARRAY['search_path=public']::text[]
+      AND (SELECT array_agg(a::text ORDER BY a::text) FROM unnest(p.proacl) a)
+        = ARRAY['authenticated=X/postgres','postgres=X/postgres','service_role=X/postgres']::text[]
+  ) THEN
+    RAISE EXCEPTION 'CXP_AUTOAPROBACION_PREFLIGHT: owner, ACL o configuración distinta de la revisada';
+  END IF;
   INSERT INTO pg_temp.cxp_autoaprobacion_20261013195000_before VALUES (v_oid, v_metadata);
 END;
 $preflight$;
@@ -160,6 +171,10 @@ BEGIN
   RETURN v_row;
 END;
 $$;
+
+-- H6: reafirmar la ACL exacta validada arriba; el postcheck prohíbe cualquier cambio.
+REVOKE ALL ON FUNCTION public.aprobar_factura_proveedor(uuid, boolean, text, timestamptz) FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.aprobar_factura_proveedor(uuid, boolean, text, timestamptz) TO authenticated, service_role;
 
 DO $postcheck$
 DECLARE v_before record; v_after jsonb;

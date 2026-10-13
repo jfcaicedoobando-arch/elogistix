@@ -51,10 +51,20 @@ DECLARE
   fx record; v_role text; v_id uuid; v_other uuid; v_version timestamptz;
   v_row public.proveedor_facturas; v_before jsonb; v_payments bigint;
 BEGIN
-  -- Roles autorizados mantienen aprobación propia, actor e historial.
-  FOREACH v_role IN ARRAY ARRAY['contador','admin','admin_org','super_admin'] LOOP
+  -- Roles vigentes mantienen aprobación propia, actor e historial.
+  -- admin es legacy: su exención permanece en la fuente, pero no admite nuevas asignaciones.
+  FOREACH v_role IN ARRAY ARRAY['contador','admin_org','super_admin'] LOOP
     PERFORM pg_temp.as_postgres();
-    SELECT * INTO STRICT fx FROM pg_temp.seed_org_pair('AUTO_' || v_role, v_role);
+    -- super_admin es global; sus membresías conservan un rol organizacional válido.
+    SELECT * INTO STRICT fx FROM pg_temp.seed_org_pair('AUTO_' || v_role,
+      CASE WHEN v_role = 'super_admin' THEN 'admin_org' ELSE v_role END);
+    IF v_role = 'super_admin' THEN
+      UPDATE public.user_roles SET role = 'super_admin'::public.app_role
+        WHERE user_id IN (fx.admin_a, fx.admin_b);
+      PERFORM pg_temp.cxp_assert((SELECT count(*) = 2 FROM public.user_roles
+        WHERE user_id IN (fx.admin_a, fx.admin_b) AND role = 'super_admin'::public.app_role),
+        'fixture de plataforma conserva super_admin global');
+    END IF;
     v_id := pg_temp.cxp_fixture(fx.org_a, fx.admin_a);
     SELECT updated_at INTO STRICT v_version FROM public.proveedor_facturas WHERE id = v_id;
     SELECT count(*) INTO v_payments FROM public.pagos_proveedor WHERE proveedor_factura_id = v_id;
