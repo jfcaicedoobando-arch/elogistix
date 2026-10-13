@@ -21,12 +21,15 @@ export async function obtenerEmbarqueTarifaInfo(
   embarqueId: string,
 ): Promise<EmbarqueTarifaInfo | null> {
   const scope = captureAuthOperationScope();
+  // R221: este detalle requiere un padre vivo; los IDs y el delta de tarifa
+  // siguen siendo el snapshot histórico, sin consultar el catálogo vigente.
   const { data, error } = await supabase
     .from("embarques")
     .select(
       "tarifa_id_original, tarifa_id_aplicada, tarifa_decision, tarifa_revalidada_en",
     )
     .eq("id", embarqueId)
+    .is("deleted_at", null)
     .maybeSingle();
   scope.assertCurrent();
   if (error) throw error;

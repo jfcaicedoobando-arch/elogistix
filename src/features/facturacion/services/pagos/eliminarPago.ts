@@ -46,11 +46,13 @@ export interface EliminarPagoResult {
  */
 export async function eliminarPagoFactura(id: string): Promise<EliminarPagoResult> {
   // Defensa temprana: mensaje en español sin esperar el error de la BD (ahorra
-  // ruido en Sentry). La RPC sigue siendo la fuente de verdad ante carreras.
+  // ruido en Sentry). Sólo examina pagos vivos: un tombstone debe alcanzar
+  // el no-op idempotente de la RPC, que también resuelve ausencia y carreras.
   const { data: pago } = await supabase
     .from("pagos_factura")
     .select("id, factura_id, uuid_rep, rep_cancelado_en")
     .eq("id", id)
+    .is("deleted_at", null)
     .maybeSingle();
   if (pago?.uuid_rep && !pago.rep_cancelado_en) {
     throw new PagoConRepVivoError(pago.uuid_rep);
