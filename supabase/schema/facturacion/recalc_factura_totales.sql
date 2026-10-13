@@ -12,6 +12,15 @@ DECLARE
   v_isr      numeric;
   v_iva_ret  numeric;
 BEGIN
+  -- Keep INVOKER/RLS semantics and the existing no-op for an unavailable parent.
+  -- Serialize against soft deletion before reading or calculating its concepts.
+  PERFORM 1 FROM public.facturas
+  WHERE id = p_factura_id AND deleted_at IS NULL
+  FOR NO KEY UPDATE;
+  IF NOT FOUND THEN
+    RETURN;
+  END IF;
+
   SELECT
     count(*),
     COALESCE(SUM(ROUND(COALESCE(c.cantidad, 1) * COALESCE(c.precio_unitario, 0), 2)), 0),
@@ -39,7 +48,7 @@ BEGIN
            ret_iva = 0,
            total = 0,
            updated_at = now()
-     WHERE id = p_factura_id;
+     WHERE id = p_factura_id AND deleted_at IS NULL;
     RETURN;
   END IF;
 
@@ -50,7 +59,7 @@ BEGIN
          ret_iva    = v_iva_ret,
          total      = v_subtotal + v_iva - v_isr - v_iva_ret,
          updated_at = now()
-   WHERE id = p_factura_id;
+   WHERE id = p_factura_id AND deleted_at IS NULL;
 END;
 $$;
 
