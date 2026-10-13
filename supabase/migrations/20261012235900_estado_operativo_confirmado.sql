@@ -1,4 +1,6 @@
 BEGIN;
+-- Reconciliación antes de aplicación remota: preservar TC documental USD live
+-- y fallback EUR/DOF ya presente en replay; destino único para ambos perfiles.
 -- Sólo perfiles revisados. Un catálogo desconocido aborta sin tocar permisos.
 -- Incluye las huellas origen/destino para permitir reaplicación segura.
 DO $catalog$
@@ -7,11 +9,11 @@ DECLARE
 BEGIN
   IF EXISTS (
     SELECT 1 FROM (VALUES
-      ('public._dashboard_details_calc()', '{postgres=X/postgres,service_role=X/postgres}'::aclitem[], ARRAY['bd27a92367b67f45fbb69a34cf94fae2','b9ed72e9af81cf91af30871213ce181d']::text[]),
-      ('public._dashboard_summary_calc()', '{postgres=X/postgres,service_role=X/postgres}'::aclitem[], ARRAY['f17c4ac8d7a25176f6889d2e75fb870f','f0e0f8f057330a93752376620dbd0233']::text[]),
-      ('public.dashboard_details_datos()', '{postgres=X/postgres,service_role=X/postgres}'::aclitem[], ARRAY['56a6cefe2fd1a34c53414399741cdb1f','af56ff59473b113e4e92da31e792364e']::text[]),
-      ('public.dashboard_stats()', '{postgres=X/postgres,authenticated=X/postgres,service_role=X/postgres}'::aclitem[], ARRAY['deeeae4c4f276d2f1b21a18373769ed1','75ca87a1367d17c4b5f3f1c7e2bd33e0']::text[]),
-      ('public.dashboard_summary_datos()', '{postgres=X/postgres,service_role=X/postgres}'::aclitem[], ARRAY['4b502966f817793971fc6a1aae833fe8','08f19c5e9a821201533503fa9d67c5f2']::text[]),
+      ('public._dashboard_details_calc()', '{postgres=X/postgres,service_role=X/postgres}'::aclitem[], ARRAY['bd27a92367b67f45fbb69a34cf94fae2','cc7e2612921d5ef39ed3966c6d3a6633','b9ed72e9af81cf91af30871213ce181d']::text[]),
+      ('public._dashboard_summary_calc()', '{postgres=X/postgres,service_role=X/postgres}'::aclitem[], ARRAY['f17c4ac8d7a25176f6889d2e75fb870f','2edd0108da173a2dd2a42b7b33284d32','f0e0f8f057330a93752376620dbd0233']::text[]),
+      ('public.dashboard_details_datos()', '{postgres=X/postgres,service_role=X/postgres}'::aclitem[], ARRAY['56a6cefe2fd1a34c53414399741cdb1f','3213c94b2e4c3fdb8821620e2a3c0b8d','af56ff59473b113e4e92da31e792364e','a16302364f75aa628aadbdb6f9aebda4']::text[]),
+      ('public.dashboard_stats()', '{postgres=X/postgres,authenticated=X/postgres,service_role=X/postgres}'::aclitem[], ARRAY['deeeae4c4f276d2f1b21a18373769ed1','41cefd193b94b7a1727f8bd41241f940','75ca87a1367d17c4b5f3f1c7e2bd33e0']::text[]),
+      ('public.dashboard_summary_datos()', '{postgres=X/postgres,service_role=X/postgres}'::aclitem[], ARRAY['4b502966f817793971fc6a1aae833fe8','66972ee170fbac989e7c156e9ba28f07','08f19c5e9a821201533503fa9d67c5f2','834e3ac1463ece0d4356c8e9aab31448']::text[]),
       ('public.embarques_alertas_ids()', '{postgres=X/postgres,authenticated=X/postgres,service_role=X/postgres}'::aclitem[], ARRAY['9ea050c6d8657727265dcae4fac9771b','2053475e512fb3795e31b3890a1e9cad']::text[]),
       ('public.operaciones_stats()', '{postgres=X/postgres,service_role=X/postgres,authenticated=X/postgres}'::aclitem[], ARRAY['153a72ac2a691fa37a439cfdb934731e','e2cbb32c29af95e48f6d4f56244b1834']::text[]),
       ('public.sidebar_alert_counts()', '{postgres=X/postgres,authenticated=X/postgres,service_role=X/postgres}'::aclitem[], ARRAY['2facd59641e72aa89deb51d71e7ad116','d5effa16f9ec089f4a1fae87f213c76c']::text[])
@@ -43,9 +45,6 @@ CREATE OR REPLACE FUNCTION public.dashboard_summary_datos()
  SET search_path TO 'public'
 AS $function$
 DECLARE
-  -- v13.821.3: mismo canon horario que dashboard_details_datos y el resto de
-  -- los periodos fiscales (CDMX). Con `current_date` (UTC) el tablero saltaba
-  -- de mes a las 18:00 hora de México y dejaba de sumar los gastos del día.
   v_hoy date := (now() AT TIME ZONE 'America/Mexico_City')::date;
   v_inicio_mes date := date_trunc('month', v_hoy)::date;
   v_fin_mes date := (date_trunc('month', v_hoy) + interval '1 month' - interval '1 day')::date;
@@ -62,6 +61,24 @@ BEGIN
         AND (e.organization_id = public.org_scope())
     ),
     profit AS (SELECT * FROM profit_por_embarque()),
+    -- AUD-UTIL-MES-TC: TC ponderado de las facturas USD vigentes del embarque.
+    tc_factura AS (
+      SELECT f.embarque_id, sum(f.subtotal * f.tipo_cambio) / NULLIF(sum(f.subtotal), 0) AS tc
+      FROM facturas f
+      WHERE f.deleted_at IS NULL
+        AND f.organization_id = public.org_scope()
+        AND f.moneda::text = 'USD' AND f.tipo_cambio > 1 AND f.subtotal > 0
+        AND f.estado::text NOT IN ('Cancelada','Borrador','Sustituida')
+      GROUP BY f.embarque_id
+    ),
+    profit_fx AS (
+      SELECT p.embarque_id, p.venta_usd, p.costo_usd, p.costo_mxn,
+             p.costo_mxn_from_usd, p.venta_mxn_from_eur, p.costo_mxn_from_eur,
+             p.venta_mxn_native, p.costo_mxn_native,
+             p.venta_usd * COALESCE(tf.tc, p.tipo_cambio_usd) AS venta_mxn_from_usd,
+             p.venta_usd * COALESCE(tf.tc, p.tipo_cambio_usd) + p.venta_mxn_from_eur + p.venta_mxn_native AS venta_mxn
+      FROM profit p LEFT JOIN tc_factura tf ON tf.embarque_id = p.embarque_id
+    ),
     activos AS (SELECT * FROM embarques_base WHERE estado_real NOT IN ('Borrador','EIR','Por liquidar','Cerrado','Cancelado')),
     conteo AS (
       SELECT jsonb_build_object(
@@ -76,9 +93,6 @@ BEGIN
       FROM embarques_base
     ),
     gastos_op_facturas AS (
-      -- AUD-UTIL-MES: base sin IVA (subtotal), igual que la utilidad de embarques.
-      -- FIX BL-11: EUR usa el TC del embarque ligado y, si no hay, el TC DOF
-      -- vigente a fecha_emision (LEFT JOIN LATERAL sobre tipos_cambio_dof).
       SELECT COALESCE(SUM(
         CASE
           WHEN pf.moneda = 'MXN' THEN pf.subtotal
@@ -104,8 +118,6 @@ BEGIN
         AND (pf.organization_id = public.org_scope())
     ),
     gastos_op_sin_tc AS (
-      -- FIX BL-11: mismo fallback DOF — una factura EUR con TC DOF disponible ya
-      -- no cuenta como "sin TC".
       SELECT COUNT(*) AS val
       FROM proveedor_facturas pf
       JOIN presupuesto_categorias pc ON pc.id = pf.categoria_presupuesto_id
@@ -131,10 +143,6 @@ BEGIN
       WHERE periodo = to_char(v_inicio_mes, 'YYYY-MM')
         AND (organization_id = public.org_scope())
     ),
-    -- FIX P1: 'arribos_mes' usaba embarques_base (incluye Borrador), lo que
-    -- inflaba 'Arribos este mes' y la utilidad con embarques aun no confirmados.
-    -- AUD-UTIL-MES (2026-09-30): excluye sólo Borrador/Cancelado. EIR, Por
-    -- liquidar y Cerrado SÍ arribaron en el mes y su utilidad cuenta.
     arribos_mes AS (
       SELECT jsonb_build_object(
         'total', count(*),
@@ -156,7 +164,7 @@ BEGIN
         'gastosOperativosSinTC', COALESCE((SELECT val FROM gastos_op_sin_tc), 0)
       ) AS val
       FROM embarques_base eb
-      LEFT JOIN profit p ON p.embarque_id = eb.id
+      LEFT JOIN profit_fx p ON p.embarque_id = eb.id
       WHERE eb.estado_real NOT IN ('Borrador','Cancelado')
         AND eb.eta IS NOT NULL AND eb.eta >= v_inicio_mes AND eb.eta <= v_fin_mes
     ),
@@ -190,14 +198,11 @@ CREATE OR REPLACE FUNCTION public.dashboard_details_datos()
  SET search_path TO 'public'
 AS $function$
 DECLARE
-  -- Ola 17 · H8-A: el servidor corre en UTC; el tablero debe razonar en hora
-  -- de México o los días de demora se adelantan a partir de las 18:00 CDMX.
   v_hoy date := (now() AT TIME ZONE 'America/Mexico_City')::date;
   v_inicio_mes date := date_trunc('month', v_hoy)::date;
   v_fin_mes date := (date_trunc('month', v_hoy) + interval '1 month' - interval '1 day')::date;
   v_inicio_sig date := (date_trunc('month', v_hoy) + interval '1 month')::date;
   v_fin_sig date := (date_trunc('month', v_hoy) + interval '2 months' - interval '1 day')::date;
-  -- Fallback SÓLO cuando la naviera no tiene condiciones capturadas.
   v_dias_libres_fallback int := 7;
   v_nombre_mes text;
   v_meses text[] := ARRAY['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
@@ -215,16 +220,28 @@ BEGIN
              e.tipo_cambio_usd, e.tipo_cambio_eur,
         e.estado::text AS estado_real
       FROM embarques e
-      WHERE e.deleted_at IS NULL              -- FIX C5
+      WHERE e.deleted_at IS NULL
         AND (e.organization_id = public.org_scope())
     ),
     profit AS (SELECT * FROM profit_por_embarque()),
-    -- Ola 4 · N10 (B-033): Borrador ya no cuenta como activo operativo.
+    tc_factura AS (
+      SELECT f.embarque_id, sum(f.subtotal * f.tipo_cambio) / NULLIF(sum(f.subtotal), 0) AS tc
+      FROM facturas f
+      WHERE f.deleted_at IS NULL
+        AND f.organization_id = public.org_scope()
+        AND f.moneda::text = 'USD' AND f.tipo_cambio > 1 AND f.subtotal > 0
+        AND f.estado::text NOT IN ('Cancelada','Borrador','Sustituida')
+      GROUP BY f.embarque_id
+    ),
+    profit_fx AS (
+      SELECT p.embarque_id, p.venta_usd, p.costo_usd, p.costo_mxn,
+             p.costo_mxn_from_usd, p.venta_mxn_from_eur, p.costo_mxn_from_eur,
+             p.venta_mxn_native, p.costo_mxn_native,
+             p.venta_usd * COALESCE(tf.tc, p.tipo_cambio_usd) AS venta_mxn_from_usd,
+             p.venta_usd * COALESCE(tf.tc, p.tipo_cambio_usd) + p.venta_mxn_from_eur + p.venta_mxn_native AS venta_mxn
+      FROM profit p LEFT JOIN tc_factura tf ON tf.embarque_id = p.embarque_id
+    ),
     activos AS (SELECT * FROM embarques_base WHERE estado_real NOT IN ('Borrador','EIR','Por liquidar','Cerrado','Cancelado')),
-    -- Ola 17 · H8-A: los días de demora se calculan con la MISMA base que
-    -- factura calcular_demoras_embarque: fecha real de descarga (evento o
-    -- contenedor) y días libres reales (override del contenedor → condiciones
-    -- de la naviera → fallback). La ETA sólo se usa como estimación.
     demoras_ctx AS (
       SELECT a.id,
         (SELECT min((ev.fecha AT TIME ZONE 'America/Mexico_City')::date)
@@ -299,12 +316,11 @@ BEGIN
              p.venta_mxn_from_usd, p.costo_mxn_from_usd,
              p.venta_mxn_from_eur, p.costo_mxn_from_eur,
              p.venta_mxn_native, p.costo_mxn_native
-      FROM embarques_base eb LEFT JOIN profit p ON p.embarque_id = eb.id
-      -- AUD-UTIL-MES: mismos estados que arribos_mes del resumen.
+      FROM embarques_base eb LEFT JOIN profit_fx p ON p.embarque_id = eb.id
       WHERE eb.estado_real NOT IN ('Borrador','Cancelado')
         AND eb.eta IS NOT NULL AND eb.eta >= v_inicio_mes AND eb.eta <= v_fin_mes
         AND (COALESCE(p.venta_mxn, 0) > 0 OR COALESCE(p.costo_mxn, 0) > 0)
-      ORDER BY (COALESCE(p.venta_mxn, 0) - COALESCE(p.costo_mxn, 0)) DESC LIMIT 200  -- AUD-UTIL-MES: la vista "Míos" suma esta lista; 30 truncaba el mes
+      ORDER BY (COALESCE(p.venta_mxn, 0) - COALESCE(p.costo_mxn, 0)) DESC LIMIT 200
     ),
     profit_este_mes AS (
       SELECT jsonb_agg(jsonb_build_object(
@@ -344,10 +360,7 @@ BEGIN
              EXISTS (
                SELECT 1 FROM facturas f
                WHERE f.embarque_id = eb.id
-                 AND f.deleted_at IS NULL     -- FIX C5
-                 -- Ola 5 · RG4-2 (N45): 'Sustituida' ya no es CFDI vigente;
-                 -- excluirla del flag "facturado" (la definición vigente
-                 -- sólo excluía Cancelada/Borrador).
+                 AND f.deleted_at IS NULL
                  AND f.estado::text NOT IN ('Cancelada','Borrador','Sustituida')
              ) AS facturado_flag
       FROM activos eb LEFT JOIN profit p ON p.embarque_id = eb.id
@@ -425,7 +438,6 @@ BEGIN
       )::int AS val
       FROM activos
     ),
-    -- v13.303.13 · Listado ligero de EIR para el scope "mis embarques" del chip EIR.
     embarques_eir AS (
       SELECT jsonb_agg(jsonb_build_object(
         'id', eb.id,
