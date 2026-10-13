@@ -65,13 +65,22 @@ function ComparativoDof({ ctx, puedeAlinear }: { ctx: EmbarqueTcContexto; puedeA
   );
 }
 
+function AvisoVerificacionTc({ isError }: { isError: boolean }) {
+  if (!isError) return null;
+  return (
+    <p role="alert" className="text-body-sm text-destructive">
+      No se pudo verificar el tipo de cambio vigente. Vuelve a cargar el embarque antes de alinearlo.
+    </p>
+  );
+}
+
 function PnlTipoCambioContenido({ embarqueId, tcUsd, tcEur, monedas }: Props) {
-  const { data: ctx } = useEmbarqueTcContexto(embarqueId);
+  const { data: ctx, isError, isFetching } = useEmbarqueTcContexto(embarqueId);
   const { canEdit } = usePermissions();
 
   const dofUsd = ctx?.dof?.usdMxn ?? 0;
   const incluyeUsd = monedas.includes("USD");
-  const puedeAlinear = Boolean(incluyeUsd && ctx?.editable && ctx?.fueraDeDof && canEdit && dofUsd > 0);
+  const puedeAlinear = Boolean(!isError && !isFetching && incluyeUsd && ctx?.editable && ctx?.fueraDeDof && canEdit && dofUsd > 0);
   const valores = monedas.map((moneda) => {
     if (moneda === "USD") return `USD ${tc(tcUsd)}`;
     if (moneda === "EUR") return `EUR ${tc(tcEur)}`;
@@ -84,6 +93,7 @@ function PnlTipoCambioContenido({ embarqueId, tcUsd, tcEur, monedas }: Props) {
         Tipos de cambio del embarque: {valores.join(" · ")}
         {ctx ? ` · congelados al capturarlo el ${formatFechaEs(ctx.fechaReferencia)}` : ""}
       </p>
+      <AvisoVerificacionTc isError={isError} />
       {incluyeUsd && ctx && dofUsd > 0 && <ComparativoDof ctx={ctx} puedeAlinear={puedeAlinear} />}
     </div>
   );

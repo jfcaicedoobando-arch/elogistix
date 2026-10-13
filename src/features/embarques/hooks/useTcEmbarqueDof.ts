@@ -24,23 +24,28 @@ export function useAlinearTcEmbarqueDof(embarqueId: string | undefined) {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (fecha: string) => actualizarTcEmbarqueDof(embarqueId as string, fecha),
+    // Una respuesta perdida no prueba que el servidor haya rechazado el cambio.
+    retry: false,
     onSuccess: (res) => {
       notifySuccess(undefined, {
         title: "Tipo de cambio actualizado",
         description: `Ahora usa el DOF (${Number(res.usd_nuevo).toFixed(4)}). El P&L ya se recalculó.`,
       });
-      queryClient.invalidateQueries({ queryKey: queryKeys.embarques.tcContexto(embarqueId) });
-      queryClient.invalidateQueries({ queryKey: queryKeys.embarques.pnlFinanciero(embarqueId) });
-      queryClient.invalidateQueries({ queryKey: queryKeys.embarques.single(embarqueId) });
-      queryClient.invalidateQueries({ queryKey: queryKeys.embarques.full(embarqueId) });
     },
     onError: (error: Error) => {
       notifyError(undefined, {
-        title: "No se pudo actualizar el tipo de cambio",
+        title: "No se pudo confirmar la actualización del tipo de cambio",
         description: getErrorMessage(error),
         error,
         method: "ACTUALIZAR_TC_EMBARQUE_DOF",
       });
     },
+    // También reconciliar tras un error: la escritura pudo concluir sin respuesta válida.
+    onSettled: () => Promise.all([
+      queryClient.invalidateQueries({ queryKey: queryKeys.embarques.tcContexto(embarqueId) }),
+      queryClient.invalidateQueries({ queryKey: queryKeys.embarques.pnlFinanciero(embarqueId) }),
+      queryClient.invalidateQueries({ queryKey: queryKeys.embarques.single(embarqueId) }),
+      queryClient.invalidateQueries({ queryKey: queryKeys.embarques.full(embarqueId) }),
+    ]),
   });
 }

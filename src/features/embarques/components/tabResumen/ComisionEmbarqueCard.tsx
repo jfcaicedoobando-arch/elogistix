@@ -32,10 +32,25 @@ function valorToOverride(valor: string): SinComisionOverride {
 
 export function ComisionEmbarqueCard({ embarqueId }: { embarqueId: string }) {
   const { canEdit } = usePermissions();
-  const { data, isLoading } = useSinComisionEmbarque(embarqueId);
+  const { data, isLoading, isError } = useSinComisionEmbarque(embarqueId);
   const setSinComision = useSetSinComisionEmbarque();
 
-  if (isLoading || !data) return null;
+  if (isLoading) return null;
+  // Una relectura fallida conserva datos en caché: no permitir editar ni
+  // presentar ese resultado antiguo como si se hubiera verificado.
+  if (isError || !data) {
+    return (
+      <Card>
+        <CardContent className="p-4 text-body-sm text-muted-foreground">
+          <p role={isError ? "alert" : "status"}>
+            {isError
+              ? "No se pudo consultar la regla de comisión. Vuelve a intentarlo antes de editar."
+              : "El embarque no está disponible para consultar o editar su regla de comisión."}
+          </p>
+        </CardContent>
+      </Card>
+    );
+  }
 
   const efectivo = data.efectivo;
 

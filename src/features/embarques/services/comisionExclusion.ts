@@ -10,7 +10,7 @@
  * el cálculo de comisiones y la UI usen exactamente la misma regla.
  */
 import { supabase } from "@/integrations/supabase/client";
-import { run, unwrap } from "@/lib/supabase/response";
+import { unwrap } from "@/lib/supabase/response";
 import { registrarBitacoraEmbarque } from "./bitacoraEmbarques";
 
 /** Override del embarque tal cual está guardado (sin resolver la herencia). */
@@ -25,19 +25,23 @@ export interface SinComisionEstado {
 
 export async function fetchSinComisionEmbarque(
   embarqueId: string,
-): Promise<SinComisionEstado> {
-  const [row, efectivo] = await Promise.all([
-    unwrap(
-      supabase
-        .from("embarques")
-        .select("sin_comision")
-        .eq("id", embarqueId)
-        .maybeSingle(),
-    ),
-    unwrap(supabase.rpc("resolver_sin_comision", { p_embarque_id: embarqueId })),
-  ]);
+): Promise<SinComisionEstado | null> {
+  const row = await unwrap(
+    supabase
+      .from("embarques")
+      .select("sin_comision")
+      .eq("id", embarqueId)
+      .is("deleted_at", null)
+      .maybeSingle(),
+  );
+  // Ausencia no equivale a heredar ni a generar comisión. No consultar el
+  // resolver hasta confirmar que el embarque sigue disponible para la UI.
+  if (!row) return null;
+  const efectivo = await unwrap(
+    supabase.rpc("resolver_sin_comision", { p_embarque_id: embarqueId }),
+  );
   return {
-    override: (row?.sin_comision ?? null) as SinComisionOverride,
+    override: row.sin_comision,
     efectivo: Boolean(efectivo),
   };
 }
@@ -46,9 +50,16 @@ export async function setSinComisionEmbarque(
   embarqueId: string,
   valor: SinComisionOverride,
 ): Promise<void> {
-  await run(
-    supabase.from("embarques").update({ sin_comision: valor }).eq("id", embarqueId),
+  const row = await unwrap(
+    supabase
+      .from("embarques")
+      .update({ sin_comision: valor })
+      .eq("id", embarqueId)
+      .is("deleted_at", null)
+      .select("id")
+      .maybeSingle(),
   );
+  if (!row) throw new Error("El embarque no está disponible para actualizar la regla de comisión.");
   await registrarBitacoraEmbarque({
     accion: "actualizar_sin_comision",
     entidadId: embarqueId,
