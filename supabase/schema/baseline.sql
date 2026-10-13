@@ -4809,11 +4809,23 @@ DECLARE
   v_fx numeric;
   v_otras numeric;
 BEGIN
-  IF NEW.deleted_at IS NOT NULL OR NEW.estado = 'Cancelada'
-     OR jsonb_typeof(NEW.conceptos) IS DISTINCT FROM 'array' THEN
+  IF NEW.deleted_at IS NOT NULL OR NEW.estado = 'Cancelada' THEN
     RETURN NEW;
   END IF;
-  SELECT moneda::text AS moneda, tipo_cambio INTO v_f FROM public.facturas WHERE id = NEW.factura_id;
+  -- La relación activa exige padre vigente del mismo tenant, incluso en
+  -- borradores manuales/sin linaje. No modifica la lectura histórica.
+  SELECT moneda::text AS moneda, tipo_cambio INTO v_f
+  FROM public.facturas
+  WHERE id = NEW.factura_id AND organization_id = NEW.organization_id
+    AND deleted_at IS NULL
+  FOR NO KEY UPDATE;
+  IF NOT FOUND THEN
+    RAISE EXCEPTION 'LC_NC_FACTURA_NO_VIVA: la factura no está disponible para una nota de crédito'
+      USING ERRCODE = 'check_violation';
+  END IF;
+  IF jsonb_typeof(NEW.conceptos) IS DISTINCT FROM 'array' THEN
+    RETURN NEW;
+  END IF;
   v_fx := public._nc_factor_moneda_factura(NEW.moneda::text, NEW.tipo_cambio, v_f.moneda, v_f.tipo_cambio);
   FOR r IN
     SELECT lower(btrim(l->>'concepto_factura_id')) AS cfid,
@@ -8552,7 +8564,13 @@ BEGIN
   END IF;
   SELECT estado::text, uuid_fiscal
     INTO v_estado, v_uuid_fiscal
-  FROM public.facturas WHERE id = NEW.factura_id;
+  FROM public.facturas
+  WHERE id = NEW.factura_id AND organization_id = NEW.organization_id
+    AND deleted_at IS NULL;
+  IF NOT FOUND THEN
+    RAISE EXCEPTION 'LC_REP_FACTURA_NO_VIVA: la factura no está disponible para REP'
+      USING ERRCODE = 'check_violation';
+  END IF;
   IF v_uuid_fiscal IS NULL THEN
     RAISE EXCEPTION 'LC_REP_FACTURA_SIN_TIMBRAR: no se puede timbrar REP de una factura sin UUID fiscal'
       USING ERRCODE = 'check_violation';
@@ -18996,7 +19014,9 @@ BEGIN
   IF v_caller IS NULL THEN
     RAISE EXCEPTION 'unauthenticated' USING ERRCODE = '28000';
   END IF;
-  SELECT * INTO v_old FROM public.facturas WHERE id = p_factura_id;
+  SELECT * INTO v_old FROM public.facturas
+  WHERE id = p_factura_id AND deleted_at IS NULL
+  FOR UPDATE;
   IF NOT FOUND THEN
     RAISE EXCEPTION 'factura_not_found' USING ERRCODE = 'P0002';
   END IF;
@@ -38381,7 +38401,7 @@ CREATE TRIGGER trg_nc_no_excede_saldo BEFORE INSERT OR UPDATE ON public.factura_
 CREATE TRIGGER trg_nc_prov_estado_machine BEFORE INSERT OR UPDATE OF estado ON public.proveedor_notas_credito FOR EACH ROW EXECUTE FUNCTION public.enforce_nc_proveedor_estado_transicion();
 CREATE TRIGGER trg_nc_prov_tc_convertible BEFORE INSERT OR UPDATE OF monto, subtotal, moneda, tipo_cambio, tipo_cambio_mxn, fecha, proveedor_factura_id ON public.proveedor_notas_credito FOR EACH ROW EXECUTE FUNCTION public._nc_prov_tc_moneda_convertible();
 CREATE TRIGGER trg_nc_prov_tope_saldo BEFORE INSERT OR UPDATE ON public.proveedor_notas_credito FOR EACH ROW EXECUTE FUNCTION public._assert_nc_prov_no_excede_saldo();
-CREATE TRIGGER trg_nc_validar_linaje_conceptos BEFORE INSERT OR UPDATE OF conceptos, factura_id, moneda, tipo_cambio ON public.factura_notas_credito FOR EACH ROW EXECUTE FUNCTION public._nc_validar_linaje_conceptos();
+CREATE TRIGGER trg_nc_validar_linaje_conceptos BEFORE INSERT OR UPDATE OF conceptos, factura_id, moneda, tipo_cambio, organization_id, deleted_at, estado ON public.factura_notas_credito FOR EACH ROW EXECUTE FUNCTION public._nc_validar_linaje_conceptos();
 CREATE TRIGGER trg_notas_credito_prov_recalcular_estado AFTER INSERT OR DELETE OR UPDATE ON public.proveedor_notas_credito FOR EACH ROW EXECUTE FUNCTION public.tg_recalcular_estado_factura_proveedor();
 CREATE TRIGGER trg_notif_cli_embarque_estado AFTER UPDATE OF estado ON public.embarques FOR EACH ROW EXECUTE FUNCTION public.notif_cli_on_embarque_estado();
 CREATE TRIGGER trg_notif_cliente_validar BEFORE INSERT OR UPDATE OF cliente_id, organization_id, embarque_id, factura_id, url ON public.notificaciones_cliente FOR EACH ROW EXECUTE FUNCTION public._notif_cliente_validar();
@@ -38421,7 +38441,7 @@ CREATE TRIGGER trg_org_proformas_factura_secundaria_id BEFORE INSERT OR UPDATE O
 CREATE TRIGGER trg_org_proveedor_facturas_embarque_id BEFORE INSERT OR UPDATE OF embarque_id, organization_id ON public.proveedor_facturas FOR EACH ROW EXECUTE FUNCTION public._assert_padre_misma_org('embarque_id', 'embarques');
 CREATE TRIGGER trg_org_proveedor_facturas_proveedor_id BEFORE INSERT OR UPDATE OF proveedor_id, organization_id ON public.proveedor_facturas FOR EACH ROW EXECUTE FUNCTION public._assert_padre_misma_org('proveedor_id', 'proveedores');
 CREATE TRIGGER trg_pago_factura_comision_ins AFTER INSERT OR UPDATE ON public.pagos_factura FOR EACH ROW EXECUTE FUNCTION public.trg_pago_factura_comision();
-CREATE TRIGGER trg_pago_factura_rep_viva BEFORE INSERT OR UPDATE OF uuid_rep, estado_rep, facturapi_rep_id ON public.pagos_factura FOR EACH ROW WHEN (((new.uuid_rep IS NOT NULL) OR (new.facturapi_rep_id IS NOT NULL))) EXECUTE FUNCTION public.assert_factura_viva_para_rep();
+CREATE TRIGGER trg_pago_factura_rep_viva BEFORE INSERT OR UPDATE OF uuid_rep, estado_rep, facturapi_rep_id, factura_id, organization_id ON public.pagos_factura FOR EACH ROW WHEN (((new.uuid_rep IS NOT NULL) OR (new.facturapi_rep_id IS NOT NULL))) EXECUTE FUNCTION public.assert_factura_viva_para_rep();
 CREATE TRIGGER trg_pago_no_altera_historia_rep BEFORE INSERT OR DELETE OR UPDATE ON public.pagos_factura FOR EACH ROW EXECUTE FUNCTION public.assert_pago_no_altera_historia_rep();
 CREATE TRIGGER trg_pago_proveedor_factura_viva BEFORE INSERT OR UPDATE ON public.pagos_proveedor FOR EACH ROW WHEN ((new.deleted_at IS NULL)) EXECUTE FUNCTION public.assert_proveedor_factura_viva_para_pago();
 CREATE TRIGGER trg_pago_proveedor_no_provisional BEFORE INSERT ON public.pagos_proveedor FOR EACH ROW EXECUTE FUNCTION public._pago_proveedor_no_provisional();
