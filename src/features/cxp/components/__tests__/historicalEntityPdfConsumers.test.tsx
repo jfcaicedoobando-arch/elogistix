@@ -1,4 +1,4 @@
-import type { ReactElement } from "react";
+import type { ComponentProps, ReactElement } from "react";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { createHistoricalReadMock } from "@/test/helpers/historicalReadMock";
@@ -7,8 +7,11 @@ import { syncActiveOrganizationScope } from "@/lib/auth/authOperationScope";
 import { invalidarEmisorCache } from "@/features/configuracion/services/emisor";
 import { descargarEstadoCuentaPdf, type DatosEstadoCuenta } from "@/features/proveedor/services/estadoCuentaDescargas";
 import { EstadoCuentaExportButtons } from "@/features/tesoreria/routes/_sections/EstadoCuentaExportButtons";
-import { BitacoraTesoreriaExportButtons } from "@/features/cxp/components/BitacoraTesoreriaExportButtons";
-import type { EstadoCuentaBancario, MovimientoEstadoCuenta } from "@/features/tesoreria/domain/estadoCuenta";
+import { BitacoraTesoreriaExportButtons } from "../BitacoraTesoreriaExportButtons";
+// Derive fixture types from the exported route component's existing props.
+// No private cross-feature domain import or expanded production barrel is needed.
+type EstadoCuentaBancario = ComponentProps<typeof EstadoCuentaExportButtons>["estado"];
+type MovimientoEstadoCuenta = ComponentProps<typeof EstadoCuentaExportButtons>["movimientos"][number];
 
 const h = vi.hoisted(() => ({
   current: null as ReturnType<typeof createHistoricalReadMock> | null,
