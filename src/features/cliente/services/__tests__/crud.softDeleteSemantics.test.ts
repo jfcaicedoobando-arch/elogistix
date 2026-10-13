@@ -2,9 +2,13 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { createSimpleFilteredReadMock } from "@/services/__tests__/_simpleFilteredReadMock";
 
 const { db } = vi.hoisted(() => ({ db: { current: null as unknown as ReturnType<typeof createSimpleFilteredReadMock> } }));
-vi.mock("@/integrations/supabase/client", () => ({ supabase: {
-  from: (table: string) => db.current.supabase.from(table),
-} }));
+vi.mock("@/integrations/supabase/client", async () => {
+  const { createSupabaseMock } = await import("@/services/__tests__/_supabaseChainMock");
+  const { supabase } = createSupabaseMock();
+  supabase.from.mockImplementation(table => db.current.supabase.from(table));
+  supabase.rpc.mockImplementation((fn, args) => db.current.supabase.rpc(fn, args));
+  return { supabase };
+});
 vi.mock("@/services/bitacora/registrar", () => ({ registrarActividad: vi.fn() }));
 import { CLIENTE_DETAIL_COLUMNS, fetchCliente, fetchDiasCreditoCliente } from "../crud";
 

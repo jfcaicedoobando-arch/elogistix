@@ -6,7 +6,13 @@ import { createWrapper } from "@/test/utils/queryWrapper";
 import { createSimpleFilteredReadMock } from "@/services/__tests__/_simpleFilteredReadMock";
 
 const state = vi.hoisted(() => ({ db: null as unknown as ReturnType<typeof createSimpleFilteredReadMock>, dialogs: vi.fn() }));
-vi.mock("@/integrations/supabase/client", () => ({ supabase: { from: (table: string) => state.db.supabase.from(table) } }));
+vi.mock("@/integrations/supabase/client", async () => {
+  const { createSupabaseMock } = await import("@/services/__tests__/_supabaseChainMock");
+  const { supabase } = createSupabaseMock();
+  supabase.from.mockImplementation(table => state.db.supabase.from(table));
+  supabase.rpc.mockImplementation((fn, args) => state.db.supabase.rpc(fn, args));
+  return { supabase };
+});
 vi.mock("@/services/bitacora/registrar", () => ({ registrarActividad: vi.fn() }));
 vi.mock("@/features/cliente/hooks", () => ({
   useClienteDetalleController: () => {
