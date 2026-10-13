@@ -83,8 +83,8 @@ hope the above is useful for you`;
   it("expande Base Ports y omite Ensenada cuando viene «/»", () => {
     const { filas, errores } = parsearGolden(correo, ANIO, HOY);
     expect(errores).toEqual([]);
-    // CMA: 9 puertos × 2 destinos; EMC: 9 × 2; WHL: 9 × 3 (incluye Ensenada)
-    expect(filas).toHaveLength(63);
+    // CMA: 8 puertos × 2 destinos; EMC: 8 × 2; WHL: 8 × 3 (incluye Ensenada)
+    expect(filas).toHaveLength(56);
     const cma = filas.find((f) => f.Naviera === "CMDU");
     expect(cma).toMatchObject({
       Agente: "SHENZHEN GOLDEN SHIPPING", "Tarifa 20": 5600, "Tarifa 40": 5900,
