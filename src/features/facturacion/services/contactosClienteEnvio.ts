@@ -40,7 +40,12 @@ export async function fetchContactosClienteEnvio(
       .is("deleted_at", null)
       .not("email", "is", null)
       .order("created_at", { ascending: false }),
-    supabase.from("clientes").select("email").eq("id", clienteId).maybeSingle(),
+    supabase
+      .from("clientes")
+      .select("email")
+      .eq("id", clienteId)
+      .is("deleted_at", null)
+      .maybeSingle(),
   ]);
 
   const contactos: ContactoEnvio[] = (
