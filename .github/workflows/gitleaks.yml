@@ -44,7 +44,8 @@ jobs:
         env:
           REQUIRE_GITLEAKS_BINARY: '1'
         run: |
-          export GITLEAKS_TEST_BINARY="$(command -v gitleaks)"
+          GITLEAKS_TEST_BINARY="$(command -v gitleaks)"
+          export GITLEAKS_TEST_BINARY
           python3 -m unittest discover -s scripts/ci -p test_gitleaks_snapshot.py -v
 
       - name: Scan final changed content
