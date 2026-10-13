@@ -266,3 +266,4 @@ supabase/tests/cotizacion_conversion_puertos_uuid.sql
 supabase/tests/estado_operativo_confirmado.sql
 
 supabase/tests/estado_operativo_preserva_fx.sql
+supabase/tests/profit_role_authorization.sql
