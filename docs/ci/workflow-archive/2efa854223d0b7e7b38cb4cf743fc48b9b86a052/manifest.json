@@ -1,0 +1,23 @@
+{
+  "format": 1,
+  "repository": "jfcaicedoobando-arch/elogistix",
+  "observedAtCommit": "2efa854223d0b7e7b38cb4cf743fc48b9b86a052",
+  "wrappers": [
+    {
+      "originalPath": ".github/workflows/nc-publica-replay-review.yml",
+      "archivePath": "docs/ci/workflow-archive/2efa854223d0b7e7b38cb4cf743fc48b9b86a052/nc-publica-replay-review.yml.txt",
+      "bytes": 5055,
+      "sha256": "f8b28aa60913563b7db0742fd112632a49e7c7418eb37156bbd253b23d741f2a",
+      "gitBlobSha1": "44b0eb120c1d7188548b3e742f3bcb3a8ae6999a",
+      "relatedPullRequest": 258
+    },
+    {
+      "originalPath": ".github/workflows/acceptance-candidate-review.yml",
+      "archivePath": "docs/ci/workflow-archive/2efa854223d0b7e7b38cb4cf743fc48b9b86a052/acceptance-candidate-review.yml.txt",
+      "bytes": 2865,
+      "sha256": "28396c0f292020bc593d153b2e8cc106d85cc74a503e9e326502f833964238e9",
+      "gitBlobSha1": "d23dbcc718ab136bcfe3bf6bfb748953f3c016bf",
+      "relatedPullRequest": 265
+    }
+  ]
+}

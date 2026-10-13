@@ -1,3 +1,4 @@
+import { esFacturaVigenteParaOperar } from "../../domain/facturaVigencia";
 import { FacturaSaldoResidualAlert } from "./FacturaSaldoResidualAlert";
 /**
  * FacturaDetalleBanners — avisos superiores del detalle de factura
@@ -29,6 +30,7 @@ export function FacturaDetalleBanners({ factura, saldoError, onRetrySaldo, saldo
 
   return (
     <>
+      <AvisoFacturaHistorica factura={factura} />
       {saldoError && (
         <ErrorStateInline
           title="No pudimos verificar el saldo de esta factura"
@@ -40,6 +42,7 @@ export function FacturaDetalleBanners({ factura, saldoError, onRetrySaldo, saldo
       {!saldoError && <FacturaSaldoResidualAlert saldo={saldo} pagado={totalPagado}
         estado={factura.estado} metodoPago={factura.metodo_pago} moneda={factura.moneda} />}
       <ClaimPendingBanner
+        soloLectura={!esFacturaVigenteParaOperar(factura)}
         facturaId={factura.id}
         facturapiId={factura.facturapi_id ?? null}
         facturapiClaimAt={factura.facturapi_claim_at ?? null}
@@ -52,5 +55,15 @@ export function FacturaDetalleBanners({ factura, saldoError, onRetrySaldo, saldo
         />
       )}
     </>
+  );
+}
+
+function AvisoFacturaHistorica({ factura }: { factura: FacturaDetalle }) {
+  if (esFacturaVigenteParaOperar(factura)) return null;
+  return (
+    <p role="status" className="text-body text-muted-foreground">
+      {factura.deleted_at ? "Factura dada de baja." : "No se pudo verificar la vigencia de esta factura."}
+      {" "}Consulta histórica disponible; operaciones deshabilitadas.
+    </p>
   );
 }

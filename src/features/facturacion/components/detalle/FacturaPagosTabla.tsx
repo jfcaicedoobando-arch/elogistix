@@ -38,13 +38,14 @@ interface Props {
   facturaId: string;
   moneda: string;
   canEdit: boolean;
+  soloLectura?: boolean;
   onEliminar: (pagoId: string) => void;
   onCancelarRep: (pago: PagoRow) => void;
   onPreviewRep: (id: string, label: string) => void;
 }
 
 export function FacturaPagosTabla({
-  pagos, facturaId, moneda, canEdit, onEliminar, onCancelarRep, onPreviewRep,
+  pagos, facturaId, moneda, canEdit, soloLectura, onEliminar, onCancelarRep, onPreviewRep,
 }: Props) {
   // v13.823.287 — un pago con REP cancelado queda ANULADO: se conserva como
   // antecedente fiscal pero ya no cuenta para el saldo de la factura.
@@ -109,6 +110,7 @@ export function FacturaPagosTabla({
             folioRep={p.folio_rep ?? null}
             cancellationStatus={p.rep_cancellation_status ?? null}
             onPreview={onPreviewRep}
+            soloLectura={soloLectura}
           />
         );
       },
@@ -177,6 +179,7 @@ export function FacturaPagosTabla({
           facturaId={facturaId}
           monedaFactura={moneda}
           canEdit={canEdit}
+          soloLectura={soloLectura}
           onEliminar={onEliminar}
           onCancelarRep={onCancelarRep}
           onPreviewRep={onPreviewRep}

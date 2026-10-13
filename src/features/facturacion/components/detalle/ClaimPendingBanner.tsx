@@ -33,6 +33,7 @@ interface Props {
   facturapiClaimAt: string | null;
   /** Ola 5 · RG4-4: si se provee, recupera el claim de esta NC en vez del de la factura. */
   notaCreditoId?: string;
+  soloLectura?: boolean;
 }
 
 const MENSAJES: Record<RecuperarClaimResponse["outcome"], { titulo: string; tono: "success" | "info" | "error" }> = {
@@ -44,7 +45,7 @@ const MENSAJES: Record<RecuperarClaimResponse["outcome"], { titulo: string; tono
   claim_perdido: { titulo: "La reserva cambió durante la recuperación", tono: "error" },
 };
 
-export function ClaimPendingBanner({ facturaId, facturapiId, facturapiClaimAt, notaCreditoId }: Props) {
+export function ClaimPendingBanner({ facturaId, facturapiId, facturapiClaimAt, notaCreditoId, soloLectura = false }: Props) {
   const [loading, setLoading] = useState(false);
   const qc = useQueryClient();
 
@@ -56,6 +57,7 @@ export function ClaimPendingBanner({ facturaId, facturapiId, facturapiClaimAt, n
   const puedeIntentar = edadMin >= 3;
 
   const onRecuperar = async () => {
+    if (soloLectura) return;
     setLoading(true);
     try {
       const data = esNc
@@ -96,7 +98,7 @@ export function ClaimPendingBanner({ facturaId, facturapiId, facturapiClaimAt, n
           {esNc ? "Esta nota de crédito" : "Esta factura"} quedó reservada hace {edadMin} min sin confirmación de FacturAPI.
           {" "}Verifica si el CFDI se emitió y reconcilia el estado.
         </span>
-        <Hint label={!puedeIntentar ? "Espera al menos 3 minutos desde el intento de timbrado." : undefined}>
+        {!soloLectura && <Hint label={!puedeIntentar ? "Espera al menos 3 minutos desde el intento de timbrado." : undefined}>
           <Button loading={loading}
             size="sm"
             variant="outline"
@@ -106,7 +108,7 @@ export function ClaimPendingBanner({ facturaId, facturapiId, facturapiClaimAt, n
             <RefreshCw className="h-4 w-4 mr-1" />
             Verificar y recuperar
           </Button>
-        </Hint>
+        </Hint>}
       </AlertDescription>
     </Alert>
   );

@@ -5,6 +5,9 @@
  * cuenta en /tesoreria nunca bajaba. Aquí creamos (y damos de baja) el
  * movimiento en `bbva_movimientos` vinculado por `pago_proveedor_id`.
  *
+ * Servicio legado: las altas, ediciones y regeneraciones actuales usan RPCs.
+ * No conectar este escritor a los flujos atómicos.
+ *
  * OJO: el trigger `assert_movimiento_pago_consistente` exige que el movimiento
  * y el pago compartan `organization_id`; siempre usamos la org de la factura.
  */
@@ -16,7 +19,7 @@ import type { Moneda } from "@/types/db";
 /** Resultado del intento de crear el movimiento bancario espejo del pago. */
 export interface ResultadoMovimientoPago {
   ok: boolean;
-  /** Motivo del rechazo (mensaje de la BD) cuando `ok` es falso. */
+  /** Motivo del rechazo (validación o mensaje de la BD) cuando `ok` es falso. */
   error?: string;
 }
 
@@ -63,7 +66,8 @@ export function cargoEnMonedaCuenta(
   monedaCuenta: string | null,
   tipoCambioUsd: number | null,
 ): number | null {
-  if (!monedaCuenta || monedaCuenta === monedaPago) return monto;
+  if (!monedaCuenta?.trim()) return null;
+  if (monedaCuenta === monedaPago) return monto;
   const tc = tipoCambioUsd && tipoCambioUsd > 0 ? tipoCambioUsd : null;
   if (!tc) return null;
   if (monedaPago === "USD" && monedaCuenta === "MXN") return monto * tc;
@@ -75,19 +79,31 @@ export function cargoEnMonedaCuenta(
 export const ERROR_TC_REQUERIDO =
   "El pago y la cuenta bancaria están en monedas distintas: captura el tipo de cambio del pago para registrar el movimiento bancario.";
 
+/** Cuenta no utilizable: nunca confundirla con un tipo de cambio faltante. */
+export const ERROR_CUENTA_NO_DISPONIBLE =
+  "La cuenta bancaria no está disponible para registrar el movimiento. Selecciona una cuenta activa de la organización con moneda definida.";
+
 /**
- * EC-02 — Fail-closed: un error de lectura se propaga en lugar de devolver
- * `null`. Con `null` el cargo se registraba en la moneda del pago aunque la
- * cuenta fuera de otra divisa, descuadrando el saldo bancario.
+ * EC-02 — Sin una cuenta vigente de la organización y su moneda, no se calcula
+ * ni inserta el cargo. RLS puede devolver data:null sin error: eso también es
+ * un rechazo, no una equivalencia 1:1 ni un pago legítimo sin cuenta vía RPC.
  */
-async function monedaDeCuenta(cuentaId: string): Promise<string | null> {
-  const { data, error } = await supabase
-    .from("cuentas_bancarias")
-    .select("moneda")
-    .eq("id", cuentaId)
-    .maybeSingle();
-  if (error) throw error;
-  return data?.moneda ?? null;
+async function monedaDeCuenta(cuentaId: string, organizationId: string): Promise<string> {
+  if (!cuentaId.trim() || !organizationId.trim()) throw new Error(ERROR_CUENTA_NO_DISPONIBLE);
+  try {
+    const { data, error } = await supabase
+      .from("cuentas_bancarias")
+      .select("moneda")
+      .eq("id", cuentaId)
+      .eq("organization_id", organizationId)
+      .eq("activa", true)
+      .is("deleted_at", null)
+      .maybeSingle();
+    if (error || !data?.moneda?.trim()) throw new Error(ERROR_CUENTA_NO_DISPONIBLE);
+    return data.moneda;
+  } catch {
+    throw new Error(ERROR_CUENTA_NO_DISPONIBLE);
+  }
 }
 
 async function describirFactura(facturaId: string): Promise<string> {
@@ -114,11 +130,11 @@ export async function crearMovimientoBancarioPago(
   input: MovimientoPagoInput,
 ): Promise<ResultadoMovimientoPago> {
   let concepto: string;
-  let monedaCuenta: string | null;
+  let monedaCuenta: string;
   try {
     [concepto, monedaCuenta] = await Promise.all([
       describirFactura(input.facturaId),
-      monedaDeCuenta(input.cuentaBancariaId),
+      monedaDeCuenta(input.cuentaBancariaId, input.organizationId),
     ]);
   } catch (e) {
     // EC-02: sin la moneda de la cuenta no se registra nada (fail-closed).

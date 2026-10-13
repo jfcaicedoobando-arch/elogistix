@@ -9,7 +9,7 @@ import type { FlujoProyectado } from "@/features/tesoreria/services";
 import type { ResumenTesoreria } from "@/features/tesoreria/services";
 import type { ResumenVsReal } from "@/features/presupuesto/services";
 import { alertasValuacion, presupuestoIncompleto } from "./alertasValuacion";
-import { completitudEjecutiva, ratiosDisponibles, sinVariacionesIncompletas } from "./completitud";
+import { completitudEjecutiva, sinVariacionesIncompletas } from "./completitud";
 import { formatCurrency } from "@/lib/formatters";
 import { presupuestoVsRealHref } from "@/features/presupuesto";
 
@@ -102,7 +102,6 @@ export function calcularKPIsEjecutivos(
 ): SnapshotEjecutivo["kpis"] {
   const eerr = snapshot.eerrPeriodo;
   const completitud = completitudEjecutiva(snapshot);
-  const { eerr_incompleto: eerrIncompleto, saldo_bancos_incompleto: bancosIncompletos, flujo_incompleto: flujoIncompleto } = completitud;
   const ingresos = eerr.totalIngresos.total;
   const utilidad = eerr.utilidad.total;
   const margen = ingresos !== 0 ? (utilidad / ingresos) * 100 : 0;
@@ -149,25 +148,8 @@ export function calcularKPIsEjecutivos(
   // C2 fix (v13.300.49): usar el conteo ya calculado por el servicio.
   const categoriasEnExceso = snapshot.presupuesto.categorias_en_exceso;
 
-  // A2 fix (v13.300.49): DSO/DPO consideran también la porción USD
-  // (convertida a MXN por el servicio de tesorería).
-  const cxc30d = snapshot.tesoreria.flujo.por_cobrar_total_mxn;
-  const cxp30d = snapshot.tesoreria.flujo.por_pagar_total_mxn;
-  const costos = eerr.totalCostos.total;
-  const ratiosCompletos = ratiosDisponibles(eerrIncompleto, flujoIncompleto);
-  const dsoDias: number | null = ratiosCompletos && ingresos > 0 ? (cxc30d / ingresos) * 30 : null;
-  const dpoDias: number | null = ratiosCompletos && costos > 0 ? (cxp30d / costos) * 30 : null;
-  const burnMensual = costos - ingresos;
-  // C4 fix (v13.300.49): si `saldoBancos <= 0` la empresa ya está sin caja
-  // → devolvemos `0` (la UI muestra "Saldo bancario negativo"). Antes el
-  // resultado era `null` (mismo mensaje que "sin burn"), engañosamente
-  // tranquilizador.
-  let runwayMeses: number | null;
-  if (bancosIncompletos || eerrIncompleto) runwayMeses = null;
-  else if (burnMensual <= 0) runwayMeses = null; // sin burn (utilidad ≥ 0)
-  else if (saldoBancos <= 0) runwayMeses = 0; // caja agotada
-  else runwayMeses = saldoBancos / burnMensual;
-
+  // Current balances/EERR cannot certify historical net credit activity or available cash.
+  // Retain nullable fields for compatibility, never fall back to the old formulas.
   return sinVariacionesIncompletas({
     ...completitud,
     ingresos_mxn: ingresos,
@@ -182,8 +164,8 @@ export function calcularKPIsEjecutivos(
     cxp_7dias_mxn: cxp7d,
     cumplimiento_presupuesto_pct: cumplimiento,
     categorias_en_exceso: categoriasEnExceso,
-    dso_dias: dsoDias,
-    dpo_dias: dpoDias,
-    runway_meses: runwayMeses,
+    dso_dias: null,
+    dpo_dias: null,
+    runway_meses: null,
   }, eerr, eerrPrevio);
 }

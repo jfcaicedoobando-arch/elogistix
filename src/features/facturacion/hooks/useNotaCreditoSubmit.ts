@@ -6,6 +6,7 @@
  * lee el estado del formulario.
  */
 import { useState } from "react";
+import { useFacturaAsyncScope } from "./useFacturaAsyncScope";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/shared";
 import {
@@ -20,6 +21,7 @@ import { logger } from "@/lib/observability/logger";
 
 interface Params {
   facturaId: string;
+  open?: boolean;
   onOpenChange: (o: boolean) => void;
 }
 
@@ -36,14 +38,16 @@ export function useNotaCreditoSubmit(p: Params): NotaCreditoSubmit {
   const { toast } = useToast();
   const qc = useQueryClient();
   const timbrar = useTimbrarNotaCredito(p.facturaId);
-  const [guardando, setGuardando] = useState(false);
+  const { scope, capturar } = useFacturaAsyncScope(p.facturaId, p.open);
+  const [enCurso, setEnCurso] = useState<typeof scope | null>(null);
+  const guardando = enCurso === scope;
 
   const crearMut = useMutation({
     // El input se construye DENTRO de la mutación: si la política lanza (p. ej.
     // TC no disponible) el fallo queda registrado igual que cualquier otro.
-    mutationFn: (construir: () => CrearNotaCreditoInput) => crearNotaCredito(construir()),
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: facturasKeys.notasCredito(p.facturaId) });
+    mutationFn: (v: { construir: () => CrearNotaCreditoInput; facturaId: string }) => crearNotaCredito(v.construir()),
+    onSuccess: (_nota, v) => {
+      qc.invalidateQueries({ queryKey: facturasKeys.notasCredito(v.facturaId) });
       qc.invalidateQueries({ queryKey: facturasKeys.notasCreditoRecientes() });
     },
     onError: (err) => {
@@ -55,13 +59,15 @@ export function useNotaCreditoSubmit(p: Params): NotaCreditoSubmit {
     construirInput: () => CrearNotaCreditoInput,
     timbrarAhora: boolean,
   ): Promise<void> => {
-    setGuardando(true);
+    const vigente = capturar();
+    if (!vigente()) return;
+    setEnCurso(scope);
     try {
       // Fase 1: crear el borrador. Si falla, el modal se queda abierto y NO
       // existe nota; es seguro reintentar.
       let nueva;
       try {
-        nueva = await crearMut.mutateAsync(construirInput);
+        nueva = await crearMut.mutateAsync({ construir: construirInput, facturaId: p.facturaId });
       } catch (err) {
         // YG-05: el usuario nunca ve el código crudo `LC_*` (jerga interna).
         const rawMsg = err instanceof Error ? err.message : String(err ?? "");
@@ -75,6 +81,7 @@ export function useNotaCreditoSubmit(p: Params): NotaCreditoSubmit {
         });
         return;
       }
+      if (!vigente()) return;
       toast({
         title: "Borrador de nota de crédito creado",
         description: timbrarAhora
@@ -97,9 +104,9 @@ export function useNotaCreditoSubmit(p: Params): NotaCreditoSubmit {
           );
         }
       }
-      p.onOpenChange(false);
+      if (vigente()) p.onOpenChange(false);
     } finally {
-      setGuardando(false);
+      if (vigente()) setEnCurso((actual) => actual === scope ? null : actual);
     }
   };
 

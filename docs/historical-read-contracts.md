@@ -1,6 +1,6 @@
-# Contratos de lectura histórica: export de organización e identidad PDF
+# Contratos de lectura histórica e identidad actual
 
-Estos contratos caracterizan el alcance existente de dos lecturas. No cambian
+Estos contratos caracterizan el alcance existente de las lecturas descritas. No cambian
 permisos, RLS, datos, catálogo, DTO ni elegibilidad para operar sobre una entidad.
 Las pruebas usan datos sintéticos; no certifican las políticas desplegadas.
 
@@ -130,3 +130,80 @@ El servidor sintético aplica filtros antes de paginar y proyectar. Representa
 visibilidad limitada, pero no prueba RLS desplegada. Los mocks de descarga no
 certifican renderizado PDF, exactitud monetaria retrospectiva, aislamiento real,
 snapshot concurrente, restauración ni acceso de todos los roles a bajas.
+
+## Referencias del detalle de factura y ficha actual del cliente
+
+Estos tres builders se caracterizan de forma independiente. El contrato sólo
+conserva referencias legibles bajo los permisos/RLS vigentes; no amplía acceso,
+restaura bajas ni habilita operaciones sobre ellas. No se modifica la lectura
+principal de la factura, sus estados, sus flags o su UI.
+
+### Factura sustituta: `detail.ts`, rama `sustituida_por`
+
+- La FK persistida `sustituida_por` decide si se consulta. Sin FK no hay lectura
+  de sustituta; si falta la factura principal no se consulta ningún hijo.
+- Se consulta `facturas` por el ID de la FK, seleccionando únicamente
+  `id, numero, estado`. Una baja lógica visible sigue siendo una referencia
+  válida para representar la relación existente. No se filtra por vigencia.
+- Una respuesta vacía (ausencia o invisibilidad) produce
+  `sustituida_por_ref: null`, conservando `sustituida_por`. No se distingue desde
+  el cliente una fila inexistente de una excluida silenciosamente por RLS.
+- Se conservan los estados devueltos, incluidos `Cancelada` y `Sustituida`;
+  la referencia no normaliza el estado de la factura principal ni su snapshot.
+- Los errores del servidor o transporte se propagan. No equivalen a referencia
+  vacía ni autorizan fallback, búsqueda amplia o acceso privilegiado.
+
+### Proforma de origen: `detail.ts`, rama `proforma_id`
+
+- Sin `proforma_id` no se consulta `proformas`. Con FK se lee sólo `numero`,
+  filtrando por el ID persistido, también cuando la proforma está dada de baja
+  y sigue siendo visible. La relación no se reconstruye por número o cliente.
+- La respuesta es `{ numero }` o `null`; una respuesta vacía conserva
+  `proforma_id`. Los errores se propagan en lugar de ocultarse como ausencia.
+- Las dos referencias son independientes cuando una está ausente. El servicio
+  actual las lee secuencialmente: un error en sustituta aborta antes de consultar
+  proforma; un error de proforma rechaza el detalle ya iniciado.
+
+### Ficha del cliente del estado de cuenta: `clienteFicha.ts`
+
+`fetchClienteFichaEstadoCuenta` obtiene la **identidad actual** legible del
+cliente indicado para el encabezado de pantalla y PDF. Consulta `clientes`
+por ID y sólo selecciona `id, organization_id, nombre, rfc, direccion, ciudad,
+estado, dias_credito, limite_credito_mxn`. Una baja lógica visible no borra esa
+identidad. El servicio no consulta facturas ni reconstruye movimientos.
+
+- Null/undefined en `nombre` conserva el default `""`; los demás campos
+  opcionales conservan `null`. Ceros y cadenas vacías se mantienen.
+- Una fila ausente o invisible rechaza con `Cliente no encontrado`; no produce
+  una ficha vacía ni identidad de otro cliente. Los errores de lectura se
+  propagan sin sustituirlos por ese mensaje de ausencia.
+- Una nueva lectura refleja cambios actuales del cliente. No existe aquí un
+  snapshot fiscal/histórico congelado a fecha de emisión o corte. El hook de
+  pantalla puede reutilizar su caché; este contrato no promete refresco
+  inmediato ni certifica una identidad legal histórica.
+- Este encabezado no modifica el universo operativo de `fetchEstadoCuenta`:
+  mantiene los clientes solicitados, estados activos, `deleted_at IS NULL`,
+  filtros de periodo/moneda y el filtro de saldo existente. Identificar al
+  cliente no reincorpora facturas borradas, canceladas o sustituidas.
+
+### Evidencia y recomendación limitada a cada builder
+
+`detail.historicalReferences.test.ts` y `clienteFicha.historical.test.ts`
+importan los servicios reales. Reutilizan el servidor sintético existente
+`historicalReadMock`, que aplica visibilidad, predicados y proyección. Cubren
+filas vigentes/bajas, columnas y FK exactas, ausencia frente a error, ausencia
+de consultas innecesarias, estados preservados, defaults e identidad actual.
+La visibilidad simulada **no certifica las políticas RLS desplegadas**, el
+acceso de todos los roles, UI, PDF final, aislamiento durante cambios de sesión
+ni operaciones fiscales o financieras.
+
+La evidencia favorece conservar como lectura histórica la referencia puntual
+`facturas`/`sustituida_por` y la referencia puntual `proformas`/`proforma_id`, y
+como lectura de identidad actual la ficha puntual `clientes`/ID. Es una
+recomendación de contrato; no se añaden marcas de excepción ni se reclasifica
+la deuda automáticamente. El análisis estático sigue independiente.
+
+En particular, la clave actual `detail.ts::facturas` agrupa la lectura principal
+con la sustituta. Esta caracterización de la sustituta no permite retirar esa
+clave ni eximir el archivo entero. El contrato operativo completo de la factura
+principal queda fuera de este lote. La baseline y el guard no cambian.

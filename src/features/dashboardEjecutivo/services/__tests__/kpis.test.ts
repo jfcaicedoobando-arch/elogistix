@@ -93,7 +93,7 @@ describe("calcularKPIsEjecutivos · cartera vencida (v13.300.49)", () => {
     expect(kpis.cxp_7dias_mxn).toBe(500);
   });
 
-  it("DSO/DPO usan totales convertidos (MXN + USD*TC)", () => {
+  it("DSO/DPO nunca usan flujos convertidos como actividad histórica a crédito", () => {
     const snap = baseSnapshot({
       tesoreria: {
         cuentas: [],
@@ -114,9 +114,7 @@ describe("calcularKPIsEjecutivos · cartera vencida (v13.300.49)", () => {
       } as never,
     });
     const kpis = calcularKPIsEjecutivos(snap, 0);
-    // ingresos 100k, cxc30d 60k → DSO = 60/100*30 = 18
-    expect(kpis.dso_dias).toBeCloseTo(18, 1);
-    // costos 60k, cxp30d 40k → DPO = 40/60*30 = 20
-    expect(kpis.dpo_dias).toBeCloseTo(20, 1);
+    expect(kpis.dso_dias).toBeNull();
+    expect(kpis.dpo_dias).toBeNull();
   });
 });

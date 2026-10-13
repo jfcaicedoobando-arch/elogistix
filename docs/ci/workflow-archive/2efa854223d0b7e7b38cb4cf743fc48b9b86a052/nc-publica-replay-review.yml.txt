@@ -1,0 +1,111 @@
+name: NC publica replay review (PR)
+
+# Narrow same-repository PR review only; no deployment or remote database.
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+    branches: [main]
+    paths:
+      - '.github/workflows/nc-publica-replay-review.yml'
+      - 'scripts/ci/nc-publica-replay/run.mjs'
+      - 'scripts/ci/nc-publica-replay/verify-minimal.mjs'
+      - 'scripts/ci/nc-publica-replay/container-run.sh'
+      - 'scripts/ci/nc-publica-replay/README.md'
+      - 'scripts/db/nc-publica-replay/prepare.mjs'
+      - 'scripts/db/nc-publica-replay/matrix.sql'
+      - 'scripts/db/nc-publica-replay/run.sh'
+      - 'scripts/db/nc-publica-replay/README.md'
+      - 'supabase/migrations/20261012010000_nc_publica_paridad_replay.sql'
+      - 'supabase/releases/migration-manifest.json'
+      - 'supabase/schema/facturacion/nc_aplicadas_en_moneda_factura.sql'
+      - 'supabase/schema/facturacion/saldo_factura.sql'
+      - 'supabase/tests/_guards_manifest.txt'
+      - 'supabase/tests/nc_publica_paridad_replay.sql'
+      - 'supabase/schema/baseline.sql'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: nc-publica-replay-review-${{ github.event.pull_request.number }}-${{ github.event.pull_request.head.sha }}
+  cancel-in-progress: false
+
+jobs:
+  minimal-replay:
+    if: >-
+      github.repository == 'jfcaicedoobando-arch/elogistix' &&
+      github.event.pull_request.base.repo.full_name == 'jfcaicedoobando-arch/elogistix' &&
+      github.event.pull_request.head.repo.full_name == 'jfcaicedoobando-arch/elogistix' &&
+      github.event.pull_request.base.ref == 'main' &&
+      github.event.pull_request.head.ref == 'fix/nc-replay-canonical-20261012'
+    name: Minimal SQL replay 24 x 2 and metadata
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    env:
+      REVIEW_COMMIT: ${{ github.event.pull_request.head.sha }}
+    steps:
+      - name: Require exact PR head commit
+        shell: bash
+        run: '[[ "$REVIEW_COMMIT" =~ ^[0-9a-f]{40}$ ]]'
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          repository: jfcaicedoobando-arch/elogistix
+          ref: ${{ github.event.pull_request.head.sha }}
+          fetch-depth: 1
+          persist-credentials: false
+      - name: Require checked-out reviewed commit and Node
+        shell: bash
+        run: |
+          [[ "$(git rev-parse HEAD)" == "$REVIEW_COMMIT" ]]
+          node -e 'require("node:assert/strict")(Number(process.versions.node.split(".")[0]) >= 22)'
+      - name: Prepare on host; run real SQL in isolated pinned PostgreSQL
+        # Node/preparer stay on the host. No network or host ports in container.
+        run: node scripts/ci/nc-publica-replay/run.mjs minimal
+      - name: Preserve minimal SQL evidence
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: nc-publica-minimal-${{ github.event.pull_request.head.sha }}-${{ github.run_attempt }}
+          path: reports/nc-publica-replay/minimal/
+          if-no-files-found: error
+          retention-days: 7
+
+  full-replay-baseline:
+    if: >-
+      github.repository == 'jfcaicedoobando-arch/elogistix' &&
+      github.event.pull_request.base.repo.full_name == 'jfcaicedoobando-arch/elogistix' &&
+      github.event.pull_request.head.repo.full_name == 'jfcaicedoobando-arch/elogistix' &&
+      github.event.pull_request.base.ref == 'main' &&
+      github.event.pull_request.head.ref == 'fix/nc-replay-canonical-20261012'
+    name: Official full replay, generated baseline, guards and RLS
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    env:
+      REVIEW_COMMIT: ${{ github.event.pull_request.head.sha }}
+    steps:
+      - name: Require exact PR head commit
+        shell: bash
+        run: '[[ "$REVIEW_COMMIT" =~ ^[0-9a-f]{40}$ ]]'
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          repository: jfcaicedoobando-arch/elogistix
+          ref: ${{ github.event.pull_request.head.sha }}
+          fetch-depth: 1
+          persist-credentials: false
+      - name: Require checked-out reviewed commit and Node
+        shell: bash
+        run: |
+          [[ "$(git rev-parse HEAD)" == "$REVIEW_COMMIT" ]]
+          node -e 'require("node:assert/strict")(Number(process.versions.node.split(".")[0]) >= 22)'
+      - name: Full official local-verify flow in isolated pinned PostgreSQL
+        # Separate fresh container; baseline dump occurs before guard/RLS fixtures.
+        # Generated SQL is an artifact only. No baseline or Git write on host.
+        run: node scripts/ci/nc-publica-replay/run.mjs full
+      - name: Preserve generated baseline, diff and full replay evidence
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: nc-publica-full-${{ github.event.pull_request.head.sha }}-${{ github.run_attempt }}
+          path: reports/nc-publica-replay/full/
+          if-no-files-found: error
+          retention-days: 7

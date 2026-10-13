@@ -8,6 +8,7 @@
  *   3) Regresar y confirmar cancelación motivo 01 con la sustituta timbrada.
  */
 import { useState } from "react";
+import { useFacturaAsyncScope } from "../hooks/useFacturaAsyncScope";
 import { useNavigate } from "react-router";
 import { Replace, ArrowRight, Ban, RotateCw } from "lucide-react";
 import { notifyInfo, notifySuccess } from "@/lib/ui/appFeedback";
@@ -35,7 +36,9 @@ interface Props {
 
 
 export function DialogSustituirFactura({ facturaId, numero, uuidOriginal, open, onOpenChange }: Props) {
-  const [duplicando, setDuplicando] = useState(false);
+  const { scope, capturar } = useFacturaAsyncScope(facturaId ?? undefined, open);
+  const [duplicandoEn, setDuplicandoEn] = useState<typeof scope | null>(null);
+  const duplicando = duplicandoEn === scope;
   const navigate = useNavigate();
   const cancelar = useCancelarFactura();
   const s = useSustitucionState(facturaId, open);
@@ -44,9 +47,11 @@ export function DialogSustituirFactura({ facturaId, numero, uuidOriginal, open, 
 
   const reset = () => { s.setStep("intro"); s.setNuevaId(null); };
 
-  const handleYaSustituida = async () => {
+  const handleYaSustituida = async (vigente: () => boolean) => {
     try {
+      if (!vigente()) return true;
       const [existente] = await listarSustitutas(facturaId);
+      if (!vigente()) return true;
       if (!existente) return false;
       writePersisted(facturaId, existente.id);
       notifyInfo(undefined, { title: "Esta factura ya tiene un borrador sustituto. Te llevamos a él." });
@@ -60,20 +65,24 @@ export function DialogSustituirFactura({ facturaId, numero, uuidOriginal, open, 
   };
 
   const handleDuplicar = async () => {
-    setDuplicando(true);
+    const vigente = capturar();
+    if (!vigente()) return;
+    setDuplicandoEn(scope);
     try {
       const id = await duplicarFacturaParaSustitucion(facturaId);
+      if (!vigente()) return;
       writePersisted(facturaId, id);
       notifySuccess(undefined, { title: "Borrador sustituto creado" });
       onOpenChange(false);
       navigate(`/facturacion/${id}?accion=timbrar`);
     } catch (err) {
+      if (!vigente()) return;
       const msg = (err as Error)?.message ?? "";
-      if (msg.includes("factura_ya_sustituida") && (await handleYaSustituida())) return;
+      if (msg.includes("factura_ya_sustituida") && (await handleYaSustituida(vigente))) return;
       reportCaughtError(err, { feature: "facturacion", op: "duplicar_para_sustitucion" }, { facturaId });
       notifyError(undefined, { title: "No se pudo duplicar", error: err as Error, method: "FEATURES_FACTURACION_DIALOG_SUSTITUIR_1" });
     } finally {
-      setDuplicando(false);
+      if (vigente()) setDuplicandoEn((actual) => actual === scope ? null : actual);
     }
   };
 
@@ -86,9 +95,10 @@ export function DialogSustituirFactura({ facturaId, numero, uuidOriginal, open, 
   const handleReiniciar = () => { clearPersisted(facturaId); reset(); };
 
   const handleCancelarOriginal = () => {
-    if (!s.nuevaId) return;
+    const vigente = capturar();
+    if (!vigente() || !s.nuevaId) return;
     cancelar.mutate({ facturaId, motivo: "01", sustituidaPorFacturaId: s.nuevaId }, {
-      onSuccess: () => { clearPersisted(facturaId); onOpenChange(false); reset(); },
+      onSuccess: () => { if (!vigente()) return; clearPersisted(facturaId); onOpenChange(false); reset(); },
     });
   };
 

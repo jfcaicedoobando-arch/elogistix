@@ -62,6 +62,7 @@ function renderFolio(n: NotaCreditoRow): { texto: string; esBorrador: boolean } 
 interface Props {
   notas: NotaCreditoRow[];
   canEdit: boolean;
+  soloLectura?: boolean;
   uuidFacturaOriginal: string | null;
   timbrando: boolean;
   onTimbrar: (id: string) => void;
@@ -70,7 +71,7 @@ interface Props {
 }
 
 export function FacturaNotasCreditoTable(props: Props) {
-  const { notas, canEdit, uuidFacturaOriginal, timbrando, onTimbrar, onEmail, onCancelar } = props;
+  const { notas, canEdit, soloLectura, uuidFacturaOriginal, timbrando, onTimbrar, onEmail, onCancelar } = props;
   const [previewNc, setPreviewNc] = useState<NotaCreditoRow | null>(null);
 
   const columns: ColumnDef<NotaCreditoRow, unknown>[] = defineColumns<NotaCreditoRow>([
@@ -124,7 +125,7 @@ export function FacturaNotasCreditoTable(props: Props) {
                 </Hint>
                 <FacturaDownloadButton stored={n.pdf_url} kind="pdf" notaCreditoId={n.id} />
                 <FacturaDownloadButton stored={n.xml_url} kind="xml" notaCreditoId={n.id} />
-                <Hint label="Reenviar por email">
+                {!soloLectura && <Hint label="Reenviar por email">
                   <Button
                     variant="outline" size="icon" className="min-h-11 min-w-11 md:h-7 md:w-7 md:min-h-0 md:min-w-0"
                     aria-label="Reenviar por email"
@@ -132,7 +133,7 @@ export function FacturaNotasCreditoTable(props: Props) {
                   >
                     <Mail className="h-3.5 w-3.5" />
                   </Button>
-                </Hint>
+                </Hint>}
               </>
             )}
             {canEdit && puedeTimbrar && (
@@ -176,6 +177,7 @@ export function FacturaNotasCreditoTable(props: Props) {
           <FacturaNotasCreditoMobileCard
             row={row}
             canEdit={canEdit}
+            soloLectura={soloLectura}
             uuidFacturaOriginal={uuidFacturaOriginal}
             timbrando={timbrando}
             onTimbrar={onTimbrar}
