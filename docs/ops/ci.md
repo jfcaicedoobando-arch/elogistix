@@ -1,7 +1,7 @@
 # CI de Libre Carga
 
 Fuente de verdad: `.github/workflows/` y `.github/actions/`.
-Workflows revisados el **2026-10-10**. Esta guía no configura protección de rama.
+Workflows revisados el **2026-10-13**. Esta guía no configura protección de rama.
 
 ## CI principal
 
@@ -14,16 +14,21 @@ El agregador comprueba omisiones válidas, no las presenta como tests pasados.
 | `Detectar áreas` | Clasificación del diff y actionlint cuando cambia su configuración |
 | `ESLint` | Lint `--max-warnings=0`, caché por contenido |
 | `Typecheck · guards DB · build · Deno` | Steps condicionados por área |
-| `Vitest shard 1/5` … `5/5` | Cinco shards de la suite normal |
+| `Vitest shard 1/14` … `14/14` | Catorce shards de la suite normal por defecto |
 | `CI Success (aggregator)` | Éxito/omisión válida de los jobs esperados |
 
-Nueve jobs al expandir la matriz. ESLint, comprobaciones y shards pueden
-correr en paralelo.
+Cinco definiciones de job se expanden a **18 jobs** con 14 shards y todas las
+áreas activas (N + 4: detector, lint, checks, N shards y agregador). El total
+ejecutado depende de las omisiones por área; no es el número de jobs simultáneos.
+ESLint, comprobaciones y shards pueden correr en paralelo. Sólo el dispatch
+manual permite elegir **5/8/10/14** shards; PR/push usan **14**.
+Ver [contrato de shards y paralelismo](../ci-shard-benchmark.md#contrato-de-configuración).
 
 - Frontend: typecheck, build, límites de bundle y sourcemaps.
 - DB: manifiesto, schema, schema-functions, migraciones, replay-mirror y rpc-sync.
 - Edge: Deno **2.9.7 estable fijado**, `*_test.ts` salvo smoke; typecheck habilitado.
-- Vitest: `bun run test -- --shard=N/5`, **sin coverage, retry ni blobs**.
+- Vitest: `bun run test -- --shard=i/N` (i de 1 a N; N = 14 por defecto),
+  **sin coverage, retry ni blobs**.
   Scripts de coverage optativos no describen el CI principal.
 
 Bun **1.4.0** vía `setup-bun`. Cada job tiene instalación/caché propia;
@@ -88,9 +93,17 @@ Esto no cambia el CLI del workflow ni agrega otro pipeline. Ver
 | `codeql.yml` | Lunes 06:00 UTC y manual | JavaScript/TypeScript |
 | `e2e.yml` | Sólo manual | Playwright/provisioning/staging |
 | `post-deploy-smoke.yml` | Sólo manual | Smoke del destino seleccionado |
-| `isolated-ui-audit.yml` | PR por rutas de UI/configuración, manual | 28 casos sintéticos sin backend |
+| `isolated-ui-audit.yml` | PR por rutas de UI/configuración, manual | 32 casos sintéticos sin backend: 20 diálogos/tarjetas + 8 filtros + 4 virtualización (Chromium/Firefox) |
 | `pricing-rpc-authenticated.yml` | PR por rutas del harness, manual | Baseline congelado y 53 assertions: 32 CRM + 21 de roles/compatibilidad |
 | `test-diagnostics.yml` | Sólo manual | Diagnósticos PDF/visuales |
+| `nc-publica-replay-review.yml` | PR a main por rutas; jobs restringidos a revisión histórica | Replay mínimo y completo de NC |
+| `acceptance-candidate-review.yml` | PR a main por rutas; job restringido a revisión histórica | Candidato SQL en PostgreSQL 17.9 y diagnóstico 17.6 |
+
+Los dos workflows de revisión histórica siguen presentes. Sus jobs exigen PR
+del mismo repositorio y las ramas `fix/nc-replay-canonical-20261012` y
+`fix/acceptance-canonical-prospect-20261012`, respectivamente; Acceptance también
+exige la base `b355e978bd2fa8adda3195218d32cc61bfbfcc98`. No son cobertura
+general de cualquier PR. Ver [condiciones de retiro](../ci/workflow-archive/README.md).
 
 El workflow Pricing autenticado consolida la ejecución: conserva el baseline de
 27 avisos y el candidato de 53, además de los contratos y mocks de ambos runners.
@@ -142,7 +155,9 @@ Ver [baseline](baseline-esquema.md) y
 ## Leer un resultado y medir
 
 Verificar SHA de run/PR; un verde anterior no valida código posterior.
-Distinguir success/failure/cancelled/skipped.
+Distinguir success/failure/cancelled/skipped. Un workflow excluido por sus
+filtros no se inicia; un job cuyo `if` no se cumple queda omitido. Ninguno
+acredita ejecución de su suite.
 Docs-only puede pasar detector/agregador con lint/build/Vitest omitidos;
 no significa que esas suites se ejecutaron.
 
