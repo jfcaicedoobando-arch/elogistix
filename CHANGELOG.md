@@ -1,5 +1,16 @@
 # Changelog
 
+## [13.824.77] - Unreleased
+
+### Reportes: encabezados y detalle financiero en móvil
+
+- Ajusta PageHeader para que el título y el icono conserven espacio al compartir ancho con las acciones. En Cartera, permite envolver los botones de exportación y apila los encabezados con sus resúmenes financieros por debajo de 768px, conservando la distribución de escritorio.
+- Añade un detalle desplegable accesible en las tarjetas móviles de Cartera para consultar MXN histórico y diferencia cambiaria, incluidos valores positivos, negativos y cero. Expone importes ya calculados; saldo y MXN al corte permanecen visibles.
+- Da más espacio a las barras del gráfico de Rentabilidad en móvil mediante etiquetas y márgenes más compactos, y añade un detalle con nombres completos e importes sin depender de hover. Mantiene datos, orden, monedas, colores de pérdidas y configuración de escritorio.
+- Fija el título de pestaña de Cierre mensual mediante el hook existente, sin modificar la proyección de facturación ni los proveedores de autenticación.
+- Añade regresiones de encabezados, exportaciones, detalles financieros, gráfico móvil y navegación del título. Las comprobaciones DOM/CSS y de breakpoints no sustituyen la validación GUI después de publicar. No modifica cálculos financieros ni SQL.
+- Conserva las 41 entradas históricas completas del manifest y agrega 13.824.77 con las mismas 1,525 migraciones de 13.824.76. No agrega ni modifica SQL ni reaplica migraciones.
+
 ## [13.824.76] - Unreleased
 
 ### Catálogos: caché por sesión y errores visibles

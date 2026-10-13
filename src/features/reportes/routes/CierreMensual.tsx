@@ -6,8 +6,10 @@
 import { PageHeader } from "@/components/shared/PageHeader";
 import { TabProyeccion } from "@/features/facturacion/components/TabProyeccion";
 import { PageContainer } from "@/components/shared/PageContainer";
+import { useDocumentTitle } from "@/hooks/shared/useDocumentTitle";
 
 export default function CierreMensual() {
+  useDocumentTitle("Cierre mensual");
   return (
     <PageContainer>
       <PageHeader

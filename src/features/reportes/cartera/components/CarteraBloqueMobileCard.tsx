@@ -5,6 +5,7 @@
 import { Badge } from "@/components/ui/badge";
 import { MoneyCell } from "@/components/shared/MoneyCell";
 import { formatCurrency, formatDate } from "@/lib/formatters";
+import { cn } from "@/lib/utils";
 import {
   BUCKET_AGING_LABELS,
   type FilaCartera,
@@ -50,6 +51,23 @@ export function CarteraBloqueMobileCard({ row: f }: Props) {
         <span className="text-muted-foreground">MXN al corte</span>
         <span className="font-medium tabular-nums">{formatCurrency(f.mxnCorte, "MXN")}</span>
       </div>
+      <details>
+        <summary className="min-h-11 cursor-pointer rounded-sm py-2 text-body-sm font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+          Ver detalle de valuación
+        </summary>
+        <dl className="mt-1 space-y-2 text-body-sm">
+          <div className="flex flex-wrap items-baseline justify-between gap-x-3">
+            <dt className="text-muted-foreground">MXN histórico</dt>
+            <dd className="font-medium tabular-nums">{formatCurrency(f.mxnHistorico, "MXN")}</dd>
+          </div>
+          <div className="flex flex-wrap items-baseline justify-between gap-x-3">
+            <dt className="text-muted-foreground">Dif. cambiaria</dt>
+            <dd className={cn("font-medium tabular-nums", f.diferencia > 0 && "text-success", f.diferencia < 0 && "text-destructive")}>
+              {formatCurrency(f.diferencia, "MXN")}
+            </dd>
+          </div>
+        </dl>
+      </details>
     </div>
   );
 }

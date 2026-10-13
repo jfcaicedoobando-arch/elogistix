@@ -69,7 +69,7 @@ export default function ReportesCartera() {
         title="Cartera y antigüedad"
         description="Saldos por cobrar y por pagar con antigüedad y valuación en pesos para uso contable."
         actions={
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             <Button
               variant="outline"
               size="sm"

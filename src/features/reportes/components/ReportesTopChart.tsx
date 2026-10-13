@@ -10,6 +10,7 @@ import { formatCurrency } from "@/lib/formatters";
 import { CHART, CHART_SERIES as CHART_COLORS } from "@/lib/chartTokens";
 import { topChartHeightClass } from "@/features/reportes/domain/topChartHeight";
 import { cn } from "@/lib/utils";
+import { useIsMobile } from "@/hooks/shared/useIsMobile";
 
 
 interface Props {
@@ -18,6 +19,7 @@ interface Props {
 }
 
 export default function ReportesTopChart({ data, isLoading }: Props) {
+  const isMobile = useIsMobile();
   const chartHeightClass = isLoading ? "h-72" : topChartHeightClass(data.length);
   function renderBody() {
     if (isLoading) return <ChartSkeleton height={300} />;
@@ -34,10 +36,10 @@ export default function ReportesTopChart({ data, isLoading }: Props) {
     }
     return (
       <ResponsiveContainer width="100%" height="100%">
-            <BarChart data={data} layout="vertical" margin={{ left: 10, right: 24, top: 5, bottom: 5 }}>
+            <BarChart data={data} layout="vertical" margin={{ left: isMobile ? 0 : 10, right: isMobile ? 8 : 24, top: 5, bottom: 5 }}>
               <XAxis
                 type="number"
-                tickCount={5}
+                tickCount={isMobile ? 3 : 5}
                 domain={([min, max]: readonly [number, number]) => [Math.min(0, min), Math.max(0, max)]}
                 allowDecimals={false}
                 tickFormatter={(v) => formatCurrencyCompact(Number(v) || 0, "USD")}
@@ -46,10 +48,14 @@ export default function ReportesTopChart({ data, isLoading }: Props) {
               <YAxis
                 type="category"
                 dataKey="name"
-                width={210}
+                width={isMobile ? 96 : 210}
                 tick={{ fontSize: 11 }}
-                // VT-19/VF-24: no truncar antes de ~30 chars; hay ancho de sobra.
-                tickFormatter={(v: string) => (v && v.length > 30 ? v.slice(0, 29) + "…" : v)}
+                // En móvil las etiquetas dejan espacio para las barras; el
+                // tooltip y el detalle inferior conservan el nombre completo.
+                tickFormatter={(v: string) => {
+                  const limit = isMobile ? 12 : 30;
+                  return v && v.length > limit ? v.slice(0, limit - 1) + "…" : v;
+                }}
               />
               <Tooltip content={<ChartTooltip formatValue={(v) => formatCurrency(v, "USD")} />} />
               <ReferenceLine x={0} stroke={CHART.border} />
@@ -71,6 +77,23 @@ export default function ReportesTopChart({ data, isLoading }: Props) {
         </CardTitle>
       </CardHeader>
       <CardContent className={cn(chartHeightClass)}>{renderBody()}</CardContent>
+      {isMobile && !isLoading && data.length > 1 && data.some((row) => row.profit !== 0) && (
+        <CardContent className="pt-0">
+          <details>
+            <summary className="min-h-11 cursor-pointer rounded-sm py-2 text-body-sm font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+              Ver nombres e importes
+            </summary>
+            <ul className="space-y-2 text-body-sm">
+              {data.map((row, i) => (
+                <li key={i} className="flex flex-wrap items-baseline justify-between gap-x-3">
+                  <span className="min-w-0 break-words">{row.name}</span>
+                  <span className={cn("font-medium tabular-nums", row.profit < 0 && "text-destructive")}>{formatCurrency(row.profit, "USD")}</span>
+                </li>
+              ))}
+            </ul>
+          </details>
+        </CardContent>
+      )}
     </Card>
   );
 }

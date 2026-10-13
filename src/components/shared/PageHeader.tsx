@@ -62,9 +62,12 @@ export function PageHeader({
           fila envuelve en cualquier ancho y el título puede ocupar dos líneas en
           vez de truncarse; el layout de escritorio ancho no cambia. */}
       <div className="flex flex-row flex-wrap items-start justify-between gap-3 md:flex-col lg:flex-row lg:flex-wrap lg:items-start lg:justify-between">
-        <div className="min-w-0 flex-1 sm:min-w-[200px] lg:min-w-[240px]">
+        {/* El piso móvil obliga a exportaciones anchas a bajar de línea antes
+            de dejar sólo unos píxeles para el título. En contenedores más
+            estrechos que 200px se limita al ancho disponible. */}
+        <div className="min-w-[min(100%,200px)] flex-1 sm:min-w-[200px] lg:min-w-[240px]">
           <h1 className="flex items-center gap-2 text-display font-bold tracking-tight">
-            {icon}
+            {icon ? <span className="shrink-0">{icon}</span> : null}
             <span className="min-w-0 break-words">{title}</span>
           </h1>
           {description ? (
@@ -77,7 +80,7 @@ export function PageHeader({
           // md..lg: fila propia alineada a la derecha. lg+: comparten fila con el
           // título mientras haya espacio; si no, el contenedor padre (`lg:flex-wrap`)
           // las manda a su propia línea completa antes de truncar el título.
-          <div className="flex shrink-0 flex-wrap items-center justify-end gap-2 w-auto md:w-full lg:w-auto lg:justify-end">
+          <div className="flex max-w-full shrink-0 flex-wrap items-center justify-end gap-2 w-auto md:w-full lg:w-auto lg:justify-end">
             {actions}
           </div>
         ) : null}
