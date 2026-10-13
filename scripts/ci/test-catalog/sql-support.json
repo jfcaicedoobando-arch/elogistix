@@ -3,6 +3,7 @@
   "supabase/tests/_catalogo_columnas_internas.sql": "Shared internal-column catalog included by guards",
   "supabase/tests/_decisiones_negocio.sql": "Shared business decisions included by guards",
   "supabase/tests/rls/_ci_bootstrap.sql": "Ephemeral database bootstrap in rls-prepare-db.sh",
+  "supabase/tests/rls/_ci_check_global_catalog_acl.sql": "Effective catalog ACL/policy assertion before and after CI blanket grants; also included by global_catalog_acl guard",
   "supabase/tests/rls/_ci_check_pricing_container_acl.sql": "Pre-forward ACL check in rls-prepare-db.sh",
   "supabase/tests/rls/_ci_check_pricing_lineage_acl.sql": "Pre-forward ACL check in rls-prepare-db.sh",
   "supabase/tests/rls/_ci_check_service_role_only.sql": "Pre-forward ACL check in rls-prepare-db.sh",

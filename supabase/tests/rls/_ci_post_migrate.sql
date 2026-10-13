@@ -1,3 +1,6 @@
+-- Verify the real replay state before any harness grant can mask drift.
+\ir _ci_check_global_catalog_acl.sql
+
 -- Fail before blanket grants if either disabled Pricing lineage function leaked.
 \ir _ci_check_pricing_lineage_acl.sql
 
@@ -48,6 +51,9 @@ GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA public TO authentic
 GRANT ALL ON ALL TABLES IN SCHEMA public TO service_role;
 GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA public TO authenticated, service_role;
 GRANT EXECUTE ON ALL FUNCTIONS IN SCHEMA public TO authenticated, service_role;
+-- The broad CI-only CRUD grant above must not reopen direct DOF writes.
+REVOKE INSERT, UPDATE, DELETE ON public.tipos_cambio_dof FROM authenticated;
+\ir _ci_check_global_catalog_acl.sql
 \ir _ci_selector148_restore_acl.sql
 
 -- ============================================================================
