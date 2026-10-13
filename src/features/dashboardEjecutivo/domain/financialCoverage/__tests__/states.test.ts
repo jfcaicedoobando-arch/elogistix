@@ -52,9 +52,13 @@ describe('source-specific diagnostic state contracts', () => {
       expect(result.observations.find(item => item.queryId === '17-ap-current-balance')?.labels.approval).toBe(change.approval);
     });
   it('preserves a mixed AR/AP batch containing every canonical state group', () => {
-    observed('06-tax-credit-readiness', [
+    const result = observed('06-tax-credit-readiness', [
       ...arStates.map(state => ({ ...creditRow(), state })),
       ...apStates.flatMap(state => approvals.map(approval => ({ ...apCreditRow(), state: `${state}/${approval}` }))),
+    ]);
+    expect(result.observations.filter(item => item.queryId === '06-tax-credit-readiness').map(item => item.labels.side)).toEqual([
+      ...arStates.map(() => 'ar'),
+      ...apStates.flatMap(() => approvals.map(() => 'ap')),
     ]);
   });
   it.each([null, undefined, '', 'Unknown', 'emitida', 'Emitida ', 'Aprobada/aprobada', 'Vigente/Aprobada', 1, {}])(
