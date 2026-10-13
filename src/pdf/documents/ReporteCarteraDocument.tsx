@@ -14,6 +14,7 @@ import type { EmisorInfo } from "@/pdf/components/BrandHeader";
 import { Footer } from "@/pdf/components/Footer";
 import { DataTable, type PdfColumn } from "@/pdf/components/DataTable";
 import { nombreEmisorReporte, reporteHeaderTextStyle } from "./reporteLayout";
+import { carteraPdfPages, carteraRowCanFlow } from "./carteraPagination";
 
 export interface FilaFacturaPdf {
   contraparte: string;
@@ -85,38 +86,39 @@ const colsFacturas: PdfColumn<FilaFacturaPdf>[] = [
 export function ReporteCarteraDocument({ fechaCorte, leyendaTc, leyendaValuacion, bloques, emisor, busqueda }: Props) {
   const filtro = busqueda?.trim();
   const empresaNombre = nombreEmisorReporte(emisor);
+  const pages = carteraPdfPages(bloques);
   return (
     <Document title={`Cartera y antigüedad ${fechaCorte}`} author={empresaNombre ?? "Libre Carga"}>
-      <Page size="LETTER" orientation="landscape" style={styles.page}>
-        <ReportHeader title="Cartera y antigüedad" emisor={emisor}>
+      {pages.map((page, pageIndex) => <Page key={pageIndex} size="LETTER" orientation="landscape" style={styles.page}>
+        {pageIndex === 0 ? <ReportHeader title="Cartera y antigüedad" emisor={emisor}>
           <Text style={styles.contextText}>Corte: {formatDate(fechaCorte)}</Text>
           <Text style={styles.contextText}>{leyendaTc}</Text>
           {leyendaValuacion ? <Text style={styles.contextText}>{leyendaValuacion}</Text> : null}
           <Text style={styles.contextText}>
             {filtro ? `Filtro de búsqueda: ${filtro}. Totales sólo de resultados coincidentes.` : "Alcance: cartera con saldo pendiente, sin filtro de búsqueda."}
           </Text>
-        </ReportHeader>
+        </ReportHeader> : <View style={styles.topBand} fixed />}
 
-        {bloques.map((b) => (
+        {page.map(({ bloque: b, continuation }) => (
           <View key={b.titulo}>
             {/* Five aging buckets plus their total are a bounded summary: move
                 the entire section rather than painting a clipped fixed header. */}
-            <View wrap={false}>
+            {!continuation ? <View wrap={false}>
               <Text style={[styles.h3, { marginTop: 10 }]}>{b.titulo} — Antigüedad</Text>
               <DataTable columns={colsTotales} rows={b.totales} headerTextStyle={reporteHeaderTextStyle} />
-            </View>
+            </View> : null}
 
-            <Text minPresenceAhead={70} style={[styles.h3, { marginTop: 10 }]}>{b.titulo} — Detalle de facturas</Text>
+            <Text minPresenceAhead={70} style={[styles.h3, { marginTop: 10 }]}>{b.titulo} — Detalle de facturas{continuation ? " (continuación)" : ""}</Text>
             {b.facturas.length === 0 ? (
               <Text style={styles.emptyState}>Sin saldos pendientes.</Text>
             ) : (
-              <DataTable columns={colsFacturas} rows={b.facturas} headerTextStyle={reporteHeaderTextStyle} />
+              <DataTable columns={colsFacturas} rows={b.facturas} headerTextStyle={reporteHeaderTextStyle} allowRowWrap={carteraRowCanFlow} />
             )}
           </View>
         ))}
 
         <Footer emisor={emisor} empresaNombre={empresaNombre} />
-      </Page>
+      </Page>)}
     </Document>
   );
 }
