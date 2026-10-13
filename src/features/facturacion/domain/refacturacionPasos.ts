@@ -57,6 +57,8 @@ export interface ContextoPasos {
   original: FacturaRefacturacion | null;
   pagoSeleccionadoId: string | null;
   pagoYaReasignado: boolean;
+  /** Una lectura fallida o en curso invalida incluso los datos en caché. */
+  bloqueoFacturaNueva?: string | null;
   /** Datos fiscales faltantes del nuevo receptor (CFDI 4.0). */
   receptorPendientes?: string[];
   /** Hallazgos de `refacturacion_validar_consistencia` sobre la nueva factura. */
@@ -110,6 +112,7 @@ function bloqueoPaso4(ctx: ContextoPasos): string | null {
 }
 
 function bloqueoPaso5(ctx: ContextoPasos): string | null {
+  if (!facturaNuevaLista(ctx.facturaNueva)) return "La nueva factura debe estar timbrada y vigente.";
   if (ctx.pagoYaReasignado) return null;
   const vivos = pagosConRepVivo(ctx.pagos);
   if (vivos.length > 0) {
@@ -135,6 +138,10 @@ const BLOQUEOS_POR_PASO: Record<number, (ctx: ContextoPasos) => string | null> =
  */
 export function bloqueoPaso(paso: number, ctx: ContextoPasos): string | null {
   if (ctx.bloqueoPermiso) return ctx.bloqueoPermiso;
+  if (paso >= 3 && ctx.bloqueoFacturaNueva) return ctx.bloqueoFacturaNueva;
+  if (paso >= 4 && !facturaNuevaLista(ctx.facturaNueva)) {
+    return "La nueva factura debe estar timbrada y vigente.";
+  }
   return BLOQUEOS_POR_PASO[paso]?.(ctx) ?? null;
 }
 
