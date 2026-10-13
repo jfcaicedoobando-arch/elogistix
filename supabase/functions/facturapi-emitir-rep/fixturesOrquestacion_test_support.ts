@@ -1,5 +1,5 @@
 /** Sólo I/O en memoria para el caso de uso real (sin SDK ni DB remotos). */
-interface Options { summary?: "divergent" | "unavailable"; claimTaken?: boolean; pending?: boolean; persistenceFails?: boolean }
+interface Options { factura?: { deleted_at?: string | null; organization_id?: string }; summary?: "divergent" | "unavailable"; claimTaken?: boolean; pending?: boolean; persistenceFails?: boolean }
 type Row = Record<string, unknown>;
 
 export function fixtureRep(options: Options = {}) {
@@ -14,7 +14,7 @@ export function fixtureRep(options: Options = {}) {
   };
   const tables: Record<string, Row[]> = {
     pagos_factura: [pago], user_roles: [], organization_members: [{ role: "contador" }],
-    facturas: [{ id: "factura-1", cliente_id: "cliente-1", total: 1360, subtotal: 1200, iva: 160,
+    facturas: [{ organization_id: "org-1", deleted_at: null, ...options.factura, id: "factura-1", cliente_id: "cliente-1", total: 1360, subtotal: 1200, iva: 160,
       moneda: "MXN", tipo_cambio: 1, metodo_pago: "PPD", facturapi_id: "factura-remota-1",
       uuid_fiscal: "11111111-2222-4333-8444-555555555555", rfc_cliente: "XAXX010101000" }],
     clientes: [{ id: "cliente-1", nombre: "LOGÍSTICA MONTERREY SA DE CV", rfc: "XAXX010101000", codigo_postal: "64000", regimen_fiscal: "601" }],
@@ -26,6 +26,7 @@ export function fixtureRep(options: Options = {}) {
   };
   function query(table: string) {
     let patch: Row | undefined;
+    const filters: Array<[string, unknown]> = [];
     let inserted = false;
     const resolve = (one = false) => {
       if (patch) {
@@ -38,11 +39,12 @@ export function fixtureRep(options: Options = {}) {
         Object.assign(pago, patch);
         return Promise.resolve({ data: { id: pago.id }, error: null });
       }
-      const rows = tables[table] ?? [];
+      const rows = (tables[table] ?? []).filter(row => table !== "facturas" || filters.every(([key, value]) => row[key] === value));
       return Promise.resolve({ data: inserted ? null : one ? rows[0] ?? null : rows.map(row => ({ ...row })), error: null });
     };
     const q: Record<string, unknown> = {};
     for (const method of ["select", "eq", "is", "not", "order", "limit", "in"]) q[method] = () => q;
+    for (const method of ["eq", "is"]) q[method] = (key: string, value: unknown) => { filters.push([key, value]); return q; };
     q.update = (value: Row) => { patch = value; return q; };
     q.insert = () => { inserted = true; return q; };
     q.maybeSingle = () => resolve(true);

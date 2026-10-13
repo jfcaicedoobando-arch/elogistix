@@ -63,12 +63,15 @@ export interface DatosPagoRep {
 export async function cargarFacturaPpd(
   supabase: SupabaseClient,
   facturaId: string,
+  organizationId: string,
   json: JsonFn,
 ): Promise<Etapa<FacturaRep>> {
   const { data: factura, error: fErr } = await supabase
     .from("facturas")
     .select(COLS_FACTURA)
     .eq("id", facturaId)
+    .eq("organization_id", organizationId)
+    .is("deleted_at", null)
     .maybeSingle();
   if (fErr || !factura) return etapaCorte(json({ error: "factura_not_found", detail: fErr?.message }, 404));
   const f = factura as unknown as FacturaRep;

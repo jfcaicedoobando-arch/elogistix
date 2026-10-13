@@ -52,7 +52,7 @@ export async function emitirRepCasoUso(args: ArgsCasoUsoRep): Promise<Response> 
   const facturapi = sdk.data.client;
 
   // 3) Factura relacionada, tratamiento fiscal autoritativo y datos del pago.
-  const etapaFactura = await cargarFacturaPpd(supabase, pago.factura_id, json);
+  const etapaFactura = await cargarFacturaPpd(supabase, pago.factura_id, pago.organization_id, json);
   if (!etapaFactura.ok) return etapaFactura.response;
   const factura = etapaFactura.valor;
 
