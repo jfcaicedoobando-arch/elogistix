@@ -3,6 +3,7 @@
  * Aísla los efectos de descarga fuera de la pantalla para respetar el
  * límite de tamaño de componentes.
  */
+import { todayLocalISO } from "@/lib/date/today";
 import { descargarBlob } from "@/lib/downloadBlob";
 import { fetchEmisorReporte } from "@/features/configuracion/services/emisorPdf";
 import { assertCarteraScopeCurrent, type CarteraDataScope } from "./carteraSnapshot";
@@ -27,6 +28,12 @@ export interface BloqueCartera {
   total: TotalesCartera;
 }
 
+function assertCorteActual(fechaCorte: string): void {
+  if (fechaCorte !== todayLocalISO()) {
+    throw new Error("Cambió el día del reporte. Espera a que se actualice la cartera y vuelve a exportar.");
+  }
+}
+
 function armarFilas(bloques: readonly BloqueCartera[]): FilaCarteraExport[] {
   return bloques.flatMap((b) => filasCarteraExport(b.titulo, b.filas));
 }
@@ -42,6 +49,7 @@ export function descargarCarteraCsv(fechaCorte: string, bloques: readonly Bloque
   }
   try {
     assertCarteraScopeCurrent(dataScope);
+    assertCorteActual(fechaCorte);
     const csv = carteraACsv(
       detalle,
       bloques.map((b) => ({
@@ -69,17 +77,22 @@ export async function descargarCarteraPdf(
   leyendaTc: string,
   bloques: readonly BloqueCartera[],
   dataScope: CarteraDataScope,
-  busqueda = "",
+  opciones: { busqueda?: string; sigueVigente?: () => boolean } = {},
 ): Promise<void> {
+  const { busqueda = "", sigueVigente = () => true } = opciones;
   try {
     assertCarteraScopeCurrent(dataScope);
-    const [{ descargarPdf }, { ReporteCarteraDocument }, emisor] = await Promise.all([
-      import("@/pdf/render/descargarPdf"),
+    assertCorteActual(fechaCorte);
+    if (!sigueVigente()) return;
+    const [{ pdf }, { ReporteCarteraDocument }, emisor] = await Promise.all([
+      import("@react-pdf/renderer"),
       import("@/pdf/documents/ReporteCarteraDocument"),
       fetchEmisorReporte(dataScope.organizationId),
     ]);
     assertCarteraScopeCurrent(dataScope);
-    await descargarPdf(
+    assertCorteActual(fechaCorte);
+    if (!sigueVigente()) return;
+    const blob = await pdf(
       <ReporteCarteraDocument
         fechaCorte={fechaCorte}
         leyendaTc={leyendaTc}
@@ -91,9 +104,11 @@ export async function descargarCarteraPdf(
           facturas: filasCarteraExport(b.titulo, b.filas),
         }))}
       />,
-      nombreArchivoCartera(fechaCorte, "pdf", !!busqueda.trim()),
-    );
+    ).toBlob();
     assertCarteraScopeCurrent(dataScope);
+    assertCorteActual(fechaCorte);
+    if (!sigueVigente()) return;
+    descargarBlob(blob, nombreArchivoCartera(fechaCorte, "pdf", !!busqueda.trim()));
     notifySuccess(undefined, { title: "Cartera descargada en PDF" });
   } catch (error) {
     notifyError(undefined, {

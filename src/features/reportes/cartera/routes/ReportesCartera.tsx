@@ -5,7 +5,7 @@
  * moneda y doble valuación en pesos (TC histórico de la factura y TC DOF del
  * corte), exportable a CSV y PDF.
  */
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { FileSpreadsheet, FileText, LayoutList } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -15,7 +15,7 @@ import { PageHeader } from "@/components/shared/PageHeader";
 import { PageContainer } from "@/components/shared/PageContainer";
 import { DatePickerMx } from "@/components/ui/date-picker-mx";
 import { useDocumentTitle } from "@/hooks/shared";
-import { todayLocalISO } from "@/lib/date/today";
+import { useDiaNegocio } from "@/hooks/shared/useDiaNegocio";
 import { leyendaTcCorte } from "@/features/reportes/cartera/domain/agingCartera";
 import { useCarteraAging } from "@/features/reportes/cartera/hooks/useCarteraAging";
 import { CarteraBloque } from "@/features/reportes/cartera/components/CarteraBloque";
@@ -30,7 +30,7 @@ export default function ReportesCartera() {
   // cobranza/CxP), así que una fecha de corte pasada mostraría saldos actuales
   // con fecha equivocada. El corte queda fijo en hoy hasta tener saldos
   // históricos por fecha.
-  const [fechaCorte] = useState<string>(() => todayLocalISO());
+  const fechaCorte = useDiaNegocio();
   const [busqueda, setBusqueda] = useState("");
   const [generandoPdf, setGenerandoPdf] = useState(false);
 
@@ -42,11 +42,20 @@ export default function ReportesCartera() {
   const sinDatos = cxc.filas.length === 0 && cxp.filas.length === 0;
   const puedeExportar = !!dataScope && !sinDatos && !isLoading && !isError;
 
+  // La generación asíncrona no puede descargar una selección ya sustituida.
+  const exportActual = useRef({ fechaCorte, bloques, dataScope, puedeExportar, busqueda });
+  exportActual.current = { fechaCorte, bloques, dataScope, puedeExportar, busqueda };
+
   const exportarPdf = async () => {
     if (!puedeExportar || !dataScope || generandoPdf) return;
     setGenerandoPdf(true);
     try {
-      await descargarCarteraPdf(fechaCorte, leyenda, bloques, dataScope, busqueda);
+      await descargarCarteraPdf(fechaCorte, leyenda, bloques, dataScope, { busqueda, sigueVigente: () => {
+        const actual = exportActual.current;
+        return actual.puedeExportar && actual.fechaCorte === fechaCorte
+          && actual.bloques === bloques && actual.dataScope === dataScope
+          && actual.busqueda === busqueda;
+      } });
     } finally {
       setGenerandoPdf(false);
     }
