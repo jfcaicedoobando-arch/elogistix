@@ -26,7 +26,7 @@ describe("DateTimePickerMx · ayuda en pantallas estrechas", () => {
     expect(onChange).not.toHaveBeenCalled();
   });
 
-  it("conserva la ayuda completa al cerrar con Escape y volver a enfocar", async () => {
+  it("DateTime conserva la ayuda completa al cerrar con Escape y volver a enfocar", async () => {
     const onChange = vi.fn();
     render(<><button type="button">Otro campo</button>
       <DateTimePickerMx value="2026-10-13T17:30" onChange={onChange} /></>);
