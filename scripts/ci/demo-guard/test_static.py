@@ -68,6 +68,17 @@ class Contracts(unittest.TestCase):
   self.assertIn("set_config('role','service_role',true)",sql)
   self.assertIn("'DEMO_TEST_UNEXPECTED_CORE'",sql)
   self.assertIn("'DEMO_TEST_UNEXPECTED_DML'",sql)
+ def test_customer_fixture_supplies_nonempty_unique_email(self):
+  # The real _normalizar_email trigger maps the empty default to NULL, while
+  # clientes.email is NOT NULL. Keep the synthetic email UUID-distinct.
+  sql=(HERE/'fixture.sql').read_text()
+  self.assertIn("INSERT INTO public.clientes(id,organization_id,nombre,email)",sql)
+  self.assertIn("'demo-customer-'||customer||'@example.invalid'",sql)
+ def test_shared_fixture_matches_single_session_suite(self):
+  root=HERE.parents[2]
+  def block(sql):return sql.split('DO $fixture$',1)[1].split('$fixture$;',1)[0]
+  self.assertEqual(block((HERE/'fixture.sql').read_text()),
+                   block((root/'supabase/tests/rls/test_rls_demo_seed_tenant_guard.sql').read_text()))
  def test_graph_catalog_discovery(self):
   sql=(HERE/'graph.sql').read_text()
   self.assertIn('WITH RECURSIVE',sql);self.assertIn("fk.contype = 'f'",sql)

@@ -132,7 +132,8 @@ BEGIN
     INSERT INTO public.costeo_cargos_fob_agente(id,organization_id,agente_id,monto) VALUES(f,o,a,20);
     INSERT INTO public.costeo_tarifa_recargos(id,organization_id,tarifa_id,concepto,lado,monto)
       VALUES(s,o,t,'Synthetic surcharge','origen',5);
-    INSERT INTO public.clientes(id,organization_id,nombre) VALUES(customer,o,'Synthetic customer');
+    INSERT INTO public.clientes(id,organization_id,nombre,email)
+      VALUES(customer,o,'Synthetic customer','demo-customer-'||customer||'@example.invalid');
     INSERT INTO public.crm_etapas_pipeline(id,organization_id,nombre) VALUES(stage,o,'Synthetic open stage');
     INSERT INTO public.crm_oportunidades(id,organization_id,nombre,cliente_id,etapa_id)
       VALUES(opportunity,o,'Synthetic opportunity',customer,stage);
