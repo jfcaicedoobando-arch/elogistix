@@ -1,4 +1,5 @@
-import { dateFromDay, epochDay, type Period } from '../financialMetrics/calendar';
+import { calendarMonthBoundsIso } from '@/lib/date/dateOnly';
+import type { Period } from '../financialMetrics/calendar';
 import { METRICS, POLICY_KEYS, type CoverageCause, type CoverageDiagnostic, type CoverageRequest,
   type Metric, type Observation } from './contract';
 import { currencyValue, dateValue, record, type Row } from './parsing';
@@ -41,12 +42,10 @@ function parseRequest(input: unknown): CoverageRequest | null {
 }
 function comparisonPeriods(selectedMonth: string): Period[] {
   const date = new Date(`${selectedMonth}-01T00:00:00.000Z`);
-  date.setUTCMonth(date.getUTCMonth() + 1);
-  let cursor = date.getTime() / 86_400_000 - 1;
   const periods: Period[] = [];
   for (let i = 0; i < 3; i++) {
-    const end = dateFromDay(cursor); const start = `${end.slice(0, 7)}-01`;
-    periods.unshift({ start, end }); cursor = epochDay(start)! - 1;
+    periods.unshift(calendarMonthBoundsIso(date.toISOString().slice(0, 7))!);
+    date.setUTCMonth(date.getUTCMonth() - 1);
   }
   return periods;
 }

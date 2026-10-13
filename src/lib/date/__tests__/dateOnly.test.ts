@@ -1,8 +1,28 @@
 import { describe, it, expect, afterEach, vi } from "vitest";
-import { parseDateOnlyLocal, diasHastaFecha, addDaysIso } from "../dateOnly";
+import { parseDateOnlyLocal, diasHastaFecha, addDaysIso, calendarMonthBoundsIso } from "../dateOnly";
 
 afterEach(() => {
   vi.useRealTimers();
+});
+
+describe("calendarMonthBoundsIso: calendario civil sin zona horaria", () => {
+  it.each([
+    ["0001-01", "0001-01-31"], ["0001-02", "0001-02-28"],
+    ["0004-02", "0004-02-29"], ["0099-12", "0099-12-31"],
+    ["0100-02", "0100-02-28"], ["0400-02", "0400-02-29"],
+    ["1900-02", "1900-02-28"], ["2000-02", "2000-02-29"],
+    ["2100-02", "2100-02-28"], ["2400-02", "2400-02-29"],
+    ["2024-03", "2024-03-31"], ["2024-10", "2024-10-31"],
+    ["2024-11", "2024-11-30"], ["2011-12", "2011-12-31"],
+    ["9999-12", "9999-12-31"],
+  ])("conserva los límites civiles de %s", (month, end) => {
+    expect(calendarMonthBoundsIso(month)).toEqual({ start: `${month}-01`, end });
+  });
+
+  it.each(["", "0000-12", "10000-01", "-0001-01", "2024-00", "2024-13", "2024-1",
+    "24-01", "2024-01-01", "2024-01T00:00:00Z", " 2024-01", "2024-01 "])("rechaza el mes inválido %j", (month) => {
+    expect(calendarMonthBoundsIso(month)).toBeNull();
+  });
 });
 
 describe("parseDateOnlyLocal (B-089)", () => {

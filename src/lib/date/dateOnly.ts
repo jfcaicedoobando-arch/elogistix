@@ -12,6 +12,21 @@
 const DATE_ONLY_RE = /^\d{4}-\d{2}-\d{2}$/;
 
 /**
+ * Límites civiles de un mes gregoriano YYYY-MM, entre 0001 y 9999.
+ * UTC sólo representa componentes civiles: no convierte instantes de negocio
+ * ni cuenta días dividiendo duraciones; no depende de zona local o DST.
+ * El parseo ISO conserva años 0001–0099, a diferencia de new Date(y, m, d).
+ * No cambia el contrato LOCAL de los helpers existentes.
+ */
+export function calendarMonthBoundsIso(month: string): { start: string; end: string } | null {
+  if (!/^\d{4}-(0[1-9]|1[0-2])$/.test(month) || month < "0001-01") return null;
+  const start = `${month}-01`;
+  const last = new Date(`${start}T00:00:00.000Z`);
+  last.setUTCMonth(last.getUTCMonth() + 1, 0);
+  return { start, end: last.toISOString().slice(0, 10) };
+}
+
+/**
  * Parsea un date-only `YYYY-MM-DD` como medianoche LOCAL. Si el string trae
  * hora (ISO completo), delega al parseo nativo.
  */

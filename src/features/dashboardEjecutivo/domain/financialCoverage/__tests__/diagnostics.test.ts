@@ -49,6 +49,24 @@ describe('diagnostic authority boundary', () => {
   });
 });
 describe('currency, period and flow semantics', () => {
+  it.each([
+    ['0001-03', ['0001-01-31', '0001-02-28', '0001-03-31']],
+    ['0004-03', ['0004-01-31', '0004-02-29', '0004-03-31']],
+    ['0100-01', ['0099-11-30', '0099-12-31', '0100-01-31']],
+    ['1900-03', ['1900-01-31', '1900-02-28', '1900-03-31']],
+    ['2000-03', ['2000-01-31', '2000-02-29', '2000-03-31']],
+    ['2100-03', ['2100-01-31', '2100-02-28', '2100-03-31']],
+    ['2400-03', ['2400-01-31', '2400-02-29', '2400-03-31']],
+    ['2024-03', ['2024-01-31', '2024-02-29', '2024-03-31']],
+    ['2024-10', ['2024-08-31', '2024-09-30', '2024-10-31']],
+    ['2024-11', ['2024-09-30', '2024-10-31', '2024-11-30']],
+    ['2011-12', ['2011-10-31', '2011-11-30', '2011-12-31']],
+    ['9999-12', ['9999-10-31', '9999-11-30', '9999-12-31']],
+  ] as const)('preserves three civil months independently of zone and DST: %s', (selectedMonth, ends) => {
+    const result = diagnose({ request: { ...request, asOf: '9999-12-31', selectedMonth }, batches: [] });
+    expect(result.comparisonPeriods).toEqual(ends.map((end) => ({ start: `${end.slice(0, 7)}-01`, end })));
+    expect(result.numericEligible).toBe(false);
+  });
   it('attributes a cross-currency missing NC base to invoice currency', () => {
     const usd = diagnose(input());
     expect(dpoCodes(usd)).toContain('NET_CREDIT_NOTE_BASE_MISSING');
