@@ -102,7 +102,7 @@
     "@tanstack/query-sync-storage-persister": "^5.104.1",
     "@tanstack/react-query": "^5.104.1",
     "@tanstack/react-query-persist-client": "^5.104.1",
-    "@tanstack/react-table": "^8.21.3",
+    "@tanstack/react-table": "^9.2.8",
     "@tanstack/react-virtual": "3.14.14",
     "@testing-library/dom": "^10.4.2",
     "@types/papaparse": "^5.5.2",
