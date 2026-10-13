@@ -1,3 +1,4 @@
+import { setAuthSnapshot } from "@/lib/auth/authSnapshot";
 import { renderHook, waitFor } from "@testing-library/react";
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { createWrapper } from "@/test/utils/queryWrapper";
@@ -21,6 +22,11 @@ const FILA = {
   origen: "automatico",
   updated_at: "2026-07-28T13:05:00Z",
 };
+
+beforeEach(() => {
+  setAuthSnapshot({ userId: "catalog-test", email: null, role: "super_admin", effectiveRole: "super_admin",
+    organizationId: "org-test", organizationName: null });
+});
 
 describe("useTipoCambioDof", () => {
   beforeEach(() => vi.clearAllMocks());

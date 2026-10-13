@@ -1,4 +1,5 @@
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useCatalogQuery } from "@/hooks/shared/useCatalogQuery";
 import { queryKeys } from "@/lib/query";
 import { fetchPlanes, updatePlan, type Plan } from "@/features/admin/services/planes";
 import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
@@ -7,9 +8,12 @@ import { getErrorMessage } from "@/lib/errors";
 export type { Plan };
 
 export function usePlanes() {
-  return useQuery<Plan[]>({
+  return useCatalogQuery<Plan[]>({
     queryKey: queryKeys.planes.all,
-    queryFn: fetchPlanes,
+    queryFn: async (scope) => {
+      const plans = await fetchPlanes();
+      return scope.role === "super_admin" ? plans : plans.filter((plan) => plan.activo);
+    },
     staleTime: 5 * 60 * 1000,
   });
 }

@@ -1,5 +1,6 @@
+import { setAuthSnapshot } from "@/lib/auth/authSnapshot";
 import { renderHook, waitFor } from "@testing-library/react";
-import { describe, it, expect, vi } from "vitest";
+import { describe, it, expect, vi, beforeEach } from "vitest";
 import { usePlanes, useUpdatePlan } from "../usePlanes";
 import { createWrapper } from "@/test/utils/queryWrapper";
 import * as planesService from "@/features/admin/services/planes";
@@ -17,6 +18,11 @@ vi.mock("@/lib/ui/appFeedback", () => ({
   notifySuccess: vi.fn(),
   notifyError: vi.fn(),
 }));
+
+beforeEach(() => {
+  setAuthSnapshot({ userId: "catalog-test", email: null, role: "super_admin", effectiveRole: "super_admin",
+    organizationId: "org-test", organizationName: null });
+});
 
 describe("usePlanes", () => {
   it("fetches planes", async () => {

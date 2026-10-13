@@ -23,6 +23,8 @@ interface DataTableProps<T> {
    *  bloque compacto con "Reintentar" en lugar del empty-state ("Sin
    *  resultados") que confunde al usuario con una carga fallida. */
   isError?: boolean;
+  /** Estado de error específico del dominio; el genérico sigue siendo el default. */
+  errorState?: React.ReactNode;
   onRetry?: () => void;
   emptyMessage?: string;
   emptyHint?: string;
@@ -95,7 +97,7 @@ function mergeDataTableProps<T>(raw: DataTableProps<T>) {
 
 function DataTableInner<T>(rawProps: DataTableProps<T>) {
   const {
-    columns, data, onRetry, emptyHint, emptyIcon, emptyState,
+    columns, data, onRetry, errorState, emptyHint, emptyIcon, emptyState,
     onRowClick, onRowMouseEnter, getRowHref, getRowAriaLabel,
     rowKey, rowClassName, controlledSort, onSortChange, initialSort,
     footer, pagination, className, columnVisibility, onColumnVisibilityChange,
@@ -136,7 +138,7 @@ function DataTableInner<T>(rawProps: DataTableProps<T>) {
   return (
     <div className={className}>
       {isError ? (
-        <ErrorStateInline
+        errorState ?? <ErrorStateInline
           message="No pudimos cargar la información. Revisa tu conexión e intenta de nuevo."
           onRetry={onRetry}
         />
