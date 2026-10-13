@@ -118,6 +118,21 @@ describe("agregador — selección de fuente EERR", () => {
     expect(result.eerr12m.find((p) => p.periodo === "2026-06")?.valuacion_no_verificada).toBeUndefined();
   });
 
+  it.each(["facturas", "embarques", undefined] as const)(
+    "alerta EERR parcial conserva el mes histórico y la fuente %s",
+    async (fuente) => {
+      stubs.calcularKPIsEjecutivos.mockReturnValue({ eerr_incompleto: true });
+      const result = await fetchDashboardEjecutivo({
+        organizationId: "org-1", periodo: "2026-06", cobranza: [], cxp: [], fuente,
+      });
+      const alerta = result.alertas.find((a) => a.id === "eerr-valuacion-incompleta");
+      const destino = new URL(alerta!.url!, "https://example.test");
+      expect(destino.pathname).toBe("/profit/estado-resultados");
+      expect(destino.searchParams.get("mes")).toBe("2026-06");
+      expect(destino.searchParams.get("fuente")).toBe(fuente ?? "embarques");
+    },
+  );
+
   it("sin fuente explícita, default es 'embarques'", async () => {
     await fetchDashboardEjecutivo({
       organizationId: "org-1", periodo: "2026-06",
@@ -127,3 +142,4 @@ describe("agregador — selección de fuente EERR", () => {
     expect(stubs.fetchEstadoResultadosDevengado).not.toHaveBeenCalled();
   });
 });
+
