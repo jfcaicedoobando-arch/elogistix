@@ -64,6 +64,26 @@ describe("predicado del builder exacto, sin texto vecino", () => {
     ["marker dentro de string", `await ${lectura}.eq('nota','SOFT-DELETE-OK: papelera');`],
     ["marker sin motivo", "await db.from('clientes') /* SOFT-DELETE-OK: */ .select('id');"],
     ["marker de consulta posterior", `await ${lectura}; await db.from('facturas') /* SOFT-DELETE-OK: papelera */ .select('id');`],
+    ["marker de consulta anidada", `await ${lectura}.in('id', await db.from('facturas') /* SOFT-DELETE-OK: historial */ .select('id'));`],
+    ["marker final de consulta anidada", `await ${lectura}.in('id', (await db.from('facturas').select('id') // SOFT-DELETE-OK: historial\n));`],
+    ["marker de callback ajeno", `await ${lectura}.in('id', ids.map(id => { /* SOFT-DELETE-OK: otro propósito */ return id; }));`],
+    ["marker antes del argumento", `await ${lectura}.in(/* SOFT-DELETE-OK: argumento */ 'id', []);`],
+    ["marker después del argumento", `await ${lectura}.in('id', [] /* SOFT-DELETE-OK: argumento */);`],
+    ["marker entre argumentos", `await ${lectura}.in('id', /* SOFT-DELETE-OK: argumento */ []);`],
+    ["marker en llamada sin argumentos", "await db.from('clientes').select(/* SOFT-DELETE-OK: argumento */);"],
+    ["marker dentro de from", "await db.from(/* SOFT-DELETE-OK: argumento */ 'clientes').select('id');"],
+    ["marker del cliente factory", "await makeClient(/* SOFT-DELETE-OK: otro propósito */).from('clientes').select('id');"],
+    ["marker del cuerpo del factory", "await (() => { /* SOFT-DELETE-OK: otro propósito */ return db; })().from('clientes').select('id');"],
+    ["marker del nombre calculado", `await ${lectura}[methodName(/* SOFT-DELETE-OK: otro propósito */)]('id', []);`],
+    ["marker del callback del nombre", `await ${lectura}[(() => { /* SOFT-DELETE-OK: otro propósito */ return 'in'; })()]('id', []);`],
+    ["marker de consulta en nombre calculado", `await ${lectura}[(await db.from('facturas') /* SOFT-DELETE-OK: historial */ .select('id'), 'in')]('id', []);`],
+    ["marker de tipo genérico", `await ${lectura}.returns<{ /* SOFT-DELETE-OK: tipo */ id: string }>();`],
+    ["marker antes del tipo", `await ${lectura}.returns</* SOFT-DELETE-OK: tipo */ Row>();`],
+    ["marker después del tipo", `await ${lectura}.returns<Row /* SOFT-DELETE-OK: tipo */>();`],
+    ["marker de cast", `await (${lectura} as { /* SOFT-DELETE-OK: tipo */ id: string });`],
+    ["marker de satisfies", `await (${lectura} satisfies { /* SOFT-DELETE-OK: tipo */ id: string });`],
+    ["marker de tipo entre wrappers", `async function f(){ return ((db.from('clientes') as { /* SOFT-DELETE-OK: tipo */ select: Function }) as Builder).select('id'); }`],
+    ["marker de assertion entre wrappers", `async function f(){ return (<{ /* SOFT-DELETE-OK: tipo */ select: Function }>db.from('clientes')).select('id'); }`],
   ])("detecta %s", (_name, source) => {
     expect(detecta(source)).toEqual(["clientes"]);
   });
@@ -80,10 +100,19 @@ describe("predicado del builder exacto, sin texto vecino", () => {
     ["select separado", "let q=db.from('clientes'); q=q.select('id'); q=q.is('deleted_at',null); await q;"],
     ["excepción intencional local", "await db.from('clientes') // SOFT-DELETE-OK: papelera deliberada\n.select('id');"],
     ["excepción local en bloque", "await db.from('clientes') /* SOFT-DELETE-OK: papelera deliberada */ .select('id');"],
+    ["excepción final local", "await db.from('clientes').select('id'); // SOFT-DELETE-OK: papelera deliberada"],
+    ["excepción junto al from propio", "await db /* SOFT-DELETE-OK: papelera deliberada */ .from('clientes').select('id');"],
+    ["excepción antes de as", `async function f(){ return (${lectura} /* SOFT-DELETE-OK: historial */ as Builder); }`],
+    ["excepción antes de satisfies", `async function f(){ return (${lectura} /* SOFT-DELETE-OK: historial */ satisfies Builder); }`],
+    ["excepción después de wrappers", `async function f(){ return ((${lectura} as Builder)) /* SOFT-DELETE-OK: historial */ .limit(1); }`],
+    ["excepción después de template", "async function f(){ return db.from('clientes').select('id').eq('nota', `${id}`) /* SOFT-DELETE-OK: historial */ .limit(1); }"],
   ])("conserva %s", (_name, source) => expect(detecta(source)).toEqual([]));
 
   it("no transfiere filtro al reemplazar el builder", () => {
     expect(detecta(`let q=${lectura}${filtro}; q=db.from('facturas').select('id'); await q;`)).toEqual(["facturas"]);
+  });
+  it("la excepción exterior no aprueba el builder anidado", () => {
+    expect(detecta("await db.from('facturas') /* SOFT-DELETE-OK: historial */ .select('id').in('cliente_id', await db.from('clientes').select('id'));")).toEqual(["clientes"]);
   });
   it("conserva el origen no filtrado al mantener un alias", () => {
     expect(detecta(`let q=${lectura}; const alias=q; q=db.from('facturas').select('id')${filtro}; await alias; await q;`)).toEqual(["clientes"]);
