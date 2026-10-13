@@ -15,7 +15,7 @@ const shipment: EmbarqueLite = { ...embarque, modo: "Terrestre", tipo: "Nacional
   puerto_origen: null, puerto_destino: null, aeropuerto_origen: null, aeropuerto_destino: null,
   ciudad_origen: "León", ciudad_destino: "Monterrey", bl_house: null, contenedores: [],
   descripcion_mercancia: "Rollos textiles sobre tarima, carga seca" };
-const customer = { nombre: input.cliente_nombre, rfc: null,
+const customer = { nombre: input.cliente_nombre, rfc: "",
   direccion: "DOMICILIO FICTICIO DE PRUEBAS C06; no entrega física", ciudad: "León", estado: "Guanajuato", cp: "37000" };
 const issuer = { organizacionNombre: "Chino Cochino" };
 const rows = [
