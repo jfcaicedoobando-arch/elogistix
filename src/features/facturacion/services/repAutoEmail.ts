@@ -10,6 +10,7 @@ export async function autoEnviarRepPorCorreo(pagoId: string): Promise<void> {
     .from("pagos_factura")
     .select("id, factura_id")
     .eq("id", pagoId)
+    .is("deleted_at", null)
     .maybeSingle();
   if (pagoErr || !pago?.factura_id) return;
 
@@ -17,6 +18,7 @@ export async function autoEnviarRepPorCorreo(pagoId: string): Promise<void> {
     .from("facturas")
     .select("cliente_id")
     .eq("id", pago.factura_id)
+    .is("deleted_at", null)
     .maybeSingle();
   if (factErr || !factura?.cliente_id) return;
 

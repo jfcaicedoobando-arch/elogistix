@@ -22,7 +22,7 @@ export async function resolverFacturaIdsPorBusqueda(search: string): Promise<str
       .is("deleted_at", null)
       .or(orIlike(["folio_interno", "folio_proveedor"], search))
       .limit(CAP_POSTGREST),
-    supabase.from("proveedores").select("id").ilike("nombre", like).limit(CAP_POSTGREST),
+    supabase.from("proveedores").select("id").is("deleted_at", null).ilike("nombre", like).limit(CAP_POSTGREST),
   ]);
   if (facturasRes.error) throw facturasRes.error;
   if (proveedoresRes.error) throw proveedoresRes.error;
