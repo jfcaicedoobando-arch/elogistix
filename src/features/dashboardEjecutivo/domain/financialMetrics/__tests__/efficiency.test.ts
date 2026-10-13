@@ -1,0 +1,30 @@
+import { describe, it, expect } from 'vitest';
+import { calculateEfficiency } from '@/features/dashboardEjecutivo/domain/financialMetrics/efficiency';
+import { closedThreeMonths, daysInclusive, epochDay } from '@/features/dashboardEjecutivo/domain/financialMetrics/calendar';
+import { code, efficiency, value } from './fixtures';
+describe('calendar and closed comparison', () => {
+  it.each([['2026-02-01','2026-02-28',28], ['2024-02-01','2024-02-29',29], ['2026-04-01','2026-04-30',30], ['2026-10-01','2026-10-31',31]])('counts real days %s', (start,end,days) => expect(daysInclusive({start,end})).toBe(days));
+  it.each(['2026-02-30', '2026-13-01', '2026-1-01', '2026-09-01T00:00:00Z', 'bad'])('rejects invalid business date %s', date => expect(epochDay(date)).toBeNull());
+  it('does not divide by 30 in February', () => { const i = efficiency(); i.period = { start:'2026-02-01',end:'2026-02-28' }; i.balances.period=i.period; i.activity.period=i.period; expect(value(calculateEfficiency(i)).days).toBe(14); });
+  it('returns three consecutive closed calendar months across years', () => expect(value(closedThreeMonths({ selectedMonth:'2026-01', businessToday:'2026-02-01',accountingClosedThrough:'2026-01-31' }))).toEqual([{start:'2025-11-01',end:'2025-11-30'},{start:'2025-12-01',end:'2025-12-31'},{start:'2026-01-01',end:'2026-01-31'}]));
+  it('does not call a current month closed', () => expect(code(closedThreeMonths({selectedMonth:'2026-10', businessToday:'2026-10-13',accountingClosedThrough:'2026-10-31'}))).toBe('OPEN_CALENDAR_MONTH'));
+  it('requires accounting closure as well as calendar completion', () => expect(code(closedThreeMonths({selectedMonth:'2026-09',businessToday:'2026-10-13',accountingClosedThrough:null}))).toBe('UNVERIFIED_CLOSE'));
+});
+describe('comparable DSO/DPO', () => {
+  it('labels opening-closing approximation', () => { const r=value(calculateEfficiency(efficiency())); expect(r.days).toBe(15); expect(r.averageBalanceMinor).toBe(50_000); expect(r.methodLabel).toContain('Aproximación'); });
+  it('uses complete daily balances rather than closing balance', () => {const i=efficiency(); i.balances.series={method:'daily-eod', points:Array.from({length:30},(_,n)=>({date:`2026-09-${String(n+1).padStart(2,'0')}`,amountMinor:n<20?100_000:0}))}; const r=value(calculateEfficiency(i)); expect(r.days).toBeCloseTo(20); expect(r.method).toBe('daily-eod');});
+  it('computes DPO using trade payables and purchases/services', () => { const i=efficiency(); i.metric='DPO'; i.balances.side='payables'; i.activity.kind='credit-purchases-services'; expect(value(calculateEfficiency(i)).days).toBe(15); });
+  it('rejects DPO against sales instead of purchases', () => { const i=efficiency(); i.metric='DPO'; expect(code(calculateEfficiency(i))).toBe('POPULATION_MISMATCH'); });
+  it('includes all normalized commercial balance, independent of dates >30d', () => {const i=efficiency(); i.balances.series={method:'opening-closing',openingMinor:150_000,closingMinor:150_000}; expect(value(calculateEfficiency(i)).days).toBe(45);});
+  it.each(['populationPolicyId','taxAllocationPolicyId','fxPolicyId','recognitionPolicyId','currency','organizationId','evidenceId'] as const)('rejects inconsistent %s', key => {const i=efficiency(); i.activity.scope[key]='different'; expect(code(calculateEfficiency(i))).toBe('BASIS_MISMATCH');});
+  it('does not assume missing tax allocation', () => { const i=efficiency(); i.balances.scope.taxAllocationPolicyId=''; expect(code(calculateEfficiency(i))).toBe('INCOMPLETE_DATA'); });
+  it('rejects truncated data', () => {const i=efficiency();i.balances.scope.complete=false;expect(code(calculateEfficiency(i))).toBe('INCOMPLETE_DATA');});
+  it('rejects historical ratio using current balance period', () => { const i=efficiency();i.balances.period={start:'2026-10-01',end:'2026-10-31'};expect(code(calculateEfficiency(i))).toBe('PERIOD_MISMATCH');});
+  it.each([0,-1])('returns N/D for nonpositive activity %s', n=>{const i=efficiency();i.activity.netCreditActivityMinor=n;expect(code(calculateEfficiency(i))).toBe('NONPOSITIVE_ACTIVITY');});
+  it.each([NaN,Infinity,1.1])('rejects invalid activity %s', n=>{const i=efficiency();i.activity.netCreditActivityMinor=n;expect(code(calculateEfficiency(i))).toBe('INVALID_AMOUNT');});
+  it('does not compensate negative balances silently',()=>{const i=efficiency();i.balances.series={method:'opening-closing',openingMinor:-1,closingMinor:50};expect(code(calculateEfficiency(i))).toBe('INVALID_BALANCE');});
+  it('rejects incomplete daily history',()=>{const i=efficiency();i.balances.series={method:'daily-eod',points:[]};expect(code(calculateEfficiency(i))).toBe('HISTORY_GAP');});
+  it('rejects duplicate daily dates even with 30 rows',()=>{const i=efficiency();i.balances.series={method:'daily-eod',points:Array.from({length:30},()=>({date:'2026-09-01',amountMinor:100}))};expect(code(calculateEfficiency(i))).toBe('HISTORY_GAP');});
+  it('zero is valid only for a certified complete zero balance',()=>{const i=efficiency();i.balances.series={method:'opening-closing',openingMinor:0,closingMinor:0};expect(value(calculateEfficiency(i)).days).toBe(0);});
+  it('uses already-normalized net components without applying a tax multiplier',()=>{const i=efficiency();const approvedMockNetAmounts=[10_000,20_000,30_000,40_000];i.balances.series={method:'opening-closing',openingMinor:approvedMockNetAmounts.reduce((a,b)=>a+b,0),closingMinor:0};expect(value(calculateEfficiency(i)).days).toBe(15);});
+});
