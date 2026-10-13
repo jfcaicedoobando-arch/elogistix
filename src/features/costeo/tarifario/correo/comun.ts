@@ -71,8 +71,9 @@ export interface FilaCorreoInput {
 }
 
 export function filaCorreo(f: FilaCorreoInput): FilaCorreo {
+  const origen = ALIAS_PUERTOS[f.origen.trim().toLowerCase()] ?? f.origen;
   return {
-    Origen: f.origen, Destino: f.destino, Agente: f.agente, Naviera: f.naviera,
+    Origen: origen, Destino: f.destino, Agente: f.agente, Naviera: f.naviera,
     "Tarifa 20": f.t20, "Tarifa 40": f.t40,
     "Inicio de la vigencia": f.desde, "Término de la vigencia": f.hasta,
     "Días libres": f.dias, Observaciones: f.obs ?? "",

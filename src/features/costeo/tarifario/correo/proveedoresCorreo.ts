@@ -40,10 +40,24 @@ export const NAVIERA_POR_SIGLA: Record<string, string> = {
   SN: "SNKO",
 };
 
-/** «Base Ports» de Golden: una tarifa por cada puerto de la lista. */
+/**
+ * «Base Ports» de Golden: una tarifa por cada puerto de la lista, con el
+ * nombre exacto del catálogo `puertos`. Zhoushan (CNZOS) no existe en el
+ * catálogo y se omite.
+ */
 export const GOLDEN_BASE_PORTS = [
-  "CNSHA", "CNZOS", "CNSNZ", "CNCAN", "CNXMG", "CNQDG", "CNTXG", "CNDLC", "HKHKG",
+  "Shanghai", "Shenzhen", "Guangzhou", "Xiamen", "Qingdao",
+  "Tianjin (Xingang)", "Dalian", "Hong Kong",
 ] as const;
+
+/** Nombres como los escriben los agentes → nombre exacto del catálogo `puertos`. */
+export const ALIAS_PUERTOS: Record<string, string> = {
+  xingang: "Tianjin (Xingang)",
+  tianjin: "Tianjin (Xingang)",
+  hongkong: "Hong Kong",
+  yantian: "Shenzhen Yantian",
+  shekou: "Shenzhen Shekou",
+};
 
 /** Puertos de origen reconocibles en los correos (nombres tal como escriben). */
 export const PUERTOS_ORIGEN_CORREO = [
