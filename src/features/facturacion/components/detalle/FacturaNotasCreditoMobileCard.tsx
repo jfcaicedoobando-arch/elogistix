@@ -30,6 +30,7 @@ function renderFolio(n: NotaCreditoRow): { texto: string; esBorrador: boolean } 
 interface Props {
   row: NotaCreditoRow;
   canEdit: boolean;
+  soloLectura?: boolean;
   uuidFacturaOriginal: string | null;
   timbrando: boolean;
   onTimbrar: (id: string) => void;
@@ -39,7 +40,7 @@ interface Props {
 }
 
 export function FacturaNotasCreditoMobileCard({
-  row: n, canEdit, uuidFacturaOriginal, timbrando, onTimbrar, onEmail, onCancelar, onPreview,
+  row: n, canEdit, soloLectura, uuidFacturaOriginal, timbrando, onTimbrar, onEmail, onCancelar, onPreview,
 }: Props) {
   const folioRender = renderFolio(n);
   const timbrada = n.estado === "Timbrada" || n.estado === "Aplicada";
@@ -84,7 +85,7 @@ export function FacturaNotasCreditoMobileCard({
             </Hint>
             <FacturaDownloadButton stored={n.pdf_url} kind="pdf" notaCreditoId={n.id} />
             <FacturaDownloadButton stored={n.xml_url} kind="xml" notaCreditoId={n.id} />
-            <Hint label="Reenviar por email">
+            {!soloLectura && <Hint label="Reenviar por email">
               <Button
                 variant="outline" size="icon" className="min-h-11 min-w-11"
                 aria-label="Reenviar por email"
@@ -92,7 +93,7 @@ export function FacturaNotasCreditoMobileCard({
               >
                 <Mail className="h-3.5 w-3.5" />
               </Button>
-            </Hint>
+            </Hint>}
           </>
         )}
         {canEdit && puedeTimbrar && (

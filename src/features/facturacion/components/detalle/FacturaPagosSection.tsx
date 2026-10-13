@@ -37,6 +37,7 @@ interface Props {
   totalFactura: number;
   moneda: string;
   canEdit: boolean;
+  soloLectura?: boolean;
   /** Estado actual de la factura (para detectar inconsistencias contables). */
   estadoFactura?: string;
   /** @deprecated Ahora el botón vive en `FacturaDetalleActionsBar`. */
@@ -44,7 +45,7 @@ interface Props {
 }
 
 export function FacturaPagosSection({
-  facturaId, facturaNumero, totalFactura, moneda, canEdit, estadoFactura,
+  facturaId, facturaNumero, totalFactura, moneda, canEdit, estadoFactura, soloLectura,
 }: Props) {
   const pagosQuery = usePagosFactura(facturaId);
   const notasQuery = useNotasCreditoAplicadas(facturaId);
@@ -89,7 +90,7 @@ export function FacturaPagosSection({
   });
 
   const handleEliminar = async () => {
-    if (!pagoAEliminar) return;
+    if (!canEdit || !pagoAEliminar) return;
     try {
       await eliminar.mutateAsync({ id: pagoAEliminar, facturaId });
       registrarActividad.mutate({
@@ -134,6 +135,7 @@ export function FacturaPagosSection({
               facturaId={facturaId}
               moneda={moneda}
               canEdit={canEdit}
+              soloLectura={soloLectura}
               onEliminar={setPagoAEliminar}
               onCancelarRep={setPagoACancelar}
               onPreviewRep={(id, label) => setPreviewRep({ id, label })}
@@ -185,6 +187,7 @@ export function FacturaPagosSection({
         motivo={repController.motivo}
         onMotivoChange={repController.setMotivo}
         onConfirm={async () => {
+          if (!canEdit) return;
           const res = await repController.confirmar();
           if (res === "accepted") {
             setPagoACancelar(null);

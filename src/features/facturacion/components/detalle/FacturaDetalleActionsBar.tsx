@@ -1,3 +1,4 @@
+import { esFacturaVigenteParaOperar } from "../../domain/facturaVigencia";
 /**
  * FacturaDetalleActionsBar — construye las listas declarativas de acciones
  * (primary / secondary / more / destructive) que consume `DetalleActionBar`.
@@ -29,7 +30,7 @@ function buildSecondary(props: Props, primaryId: string | null): DetalleActionIt
   const mostrarPdf = !!factura.factura_pdf_url || !flags.sinTimbrar;
   const mostrarXml = !!factura.factura_xml_url || !flags.sinTimbrar;
 
-  if (!flags.sinTimbrar && !flags.estaCancelada && primaryId !== "enviar") {
+  if (esFacturaVigenteParaOperar(factura) && !flags.sinTimbrar && !flags.estaCancelada && primaryId !== "enviar") {
     items.push({ id: "enviar", label: "Enviar por email", icon: Mail, onClick: props.onEnviarEmail });
   }
   if (mostrarPdf) {
@@ -57,6 +58,14 @@ function buildSecondary(props: Props, primaryId: string | null): DetalleActionIt
   return items;
 }
 
+function buildHistoricalMore(factura: Props["factura"]): DetalleActionItem[] {
+  if (!factura.sustituida_por) return [];
+  return [{
+    id: "ver-sustituta", label: "Ver factura sustituta", icon: ExternalLink,
+    href: `/facturacion/${factura.sustituida_por}`,
+  }];
+}
+
 function buildMore(
   props: Props,
   primaryId: string | null,
@@ -64,6 +73,7 @@ function buildMore(
 ): DetalleActionItem[] {
   const { factura, flags, acuse, canEdit } = props;
   const items: DetalleActionItem[] = [];
+  if (!esFacturaVigenteParaOperar(factura)) return buildHistoricalMore(factura);
   // B-002 (v13.320.32): si el primary es "Registrar pago" pero hay REP pendiente,
   // el "Timbrar REP" sigue disponible aquí; y viceversa.
   if (canEdit && flags.repPendiente && !flags.estaCancelada && primaryId !== "rep") {
@@ -82,13 +92,7 @@ function buildMore(
       icon: SearchCheck, onClick: props.onConsultar,
     });
   }
-  if (factura.sustituida_por) {
-    items.push({
-      id: "ver-sustituta", label: "Ver factura sustituta", icon: ExternalLink,
-      href: `/facturacion/${factura.sustituida_por}`,
-    });
-  }
-
+  items.push(...buildHistoricalMore(factura));
 
   if (flags.puedeSustituirCfdi) {
     items.push({ id: "sustituir", label: "Sustituir CFDI", icon: Replace, onClick: props.onSustituir });
@@ -121,7 +125,7 @@ export function FacturaDetalleActionsBar(props: Props) {
   const primary = buildPrimary(props);
   const secondary = buildSecondary(props, primary?.id ?? null);
   const more = buildMore(props, primary?.id ?? null, canOperarRefacturacion);
-  const destructive: DetalleActionItem | null = props.puedeEliminarBorrador
+  const destructive: DetalleActionItem | null = esFacturaVigenteParaOperar(props.factura) && props.puedeEliminarBorrador
     ? {
         id: "eliminar-borrador", label: "Eliminar borrador", icon: Trash2,
         onClick: props.onEliminar, loading: props.eliminando,

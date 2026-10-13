@@ -20,11 +20,12 @@ interface Props {
   serieRep: string | null;
   folioRep: number | string | null;
   cancellationStatus?: string | null;
+  soloLectura?: boolean;
   onPreview: (pagoId: string, label: string) => void;
 }
 
 export function PagoRepCell({
-  pagoId, facturaId, estadoRep, serieRep, folioRep, cancellationStatus, onPreview,
+  pagoId, facturaId, estadoRep, serieRep, folioRep, cancellationStatus, onPreview, soloLectura,
 }: Props) {
   const repTimbrado = estadoRep === "Timbrado" && folioRep != null;
   const repCancelado = estadoRep === "Cancelado";
@@ -41,16 +42,16 @@ export function PagoRepCell({
     return (
       <div className="flex items-center gap-1.5">
         <CfdiEstadoBadge tono="borrador">Cancelación en trámite</CfdiEstadoBadge>
-        <Hint label="Actualizar estado ante el SAT">
+        {!soloLectura && <Hint label="Actualizar estado ante el SAT">
           <Button
             variant="outline" size="icon" className="min-h-11 min-w-11 md:h-6 md:w-6 md:min-h-0 md:min-w-0"
             aria-label="Actualizar estado ante el SAT"
             disabled={consultar.isPending}
-            onClick={(e) => { e.stopPropagation(); consultar.mutate(pagoId); }}
+            onClick={(e) => { e.stopPropagation(); if (!soloLectura) consultar.mutate(pagoId); }}
           >
             <RefreshCw className={`h-3 w-3 ${consultar.isPending ? "animate-spin" : ""}`} />
           </Button>
-        </Hint>
+        </Hint>}
       </div>
     );
   }
@@ -81,16 +82,16 @@ export function PagoRepCell({
     return (
       <div className="flex items-center gap-1.5">
         <CfdiEstadoBadge tono="cancelada">REP cancelado</CfdiEstadoBadge>
-        <Hint label="Re-timbrar REP (el cancelado queda archivado como antecedente)">
+        {!soloLectura && <Hint label="Re-timbrar REP (el cancelado queda archivado como antecedente)">
           <Button
             variant="outline" size="icon" className="min-h-11 min-w-11 md:h-6 md:w-6 md:min-h-0 md:min-w-0"
             aria-label="Re-timbrar REP (el cancelado queda archivado como antecedente)"
             disabled={timbrar.isPending}
-            onClick={(e) => { e.stopPropagation(); timbrar.mutate(pagoId); }}
+            onClick={(e) => { e.stopPropagation(); if (!soloLectura) timbrar.mutate(pagoId); }}
           >
             <RotateCw className={`h-3 w-3 ${timbrar.isPending ? "animate-spin" : ""}`} />
           </Button>
-        </Hint>
+        </Hint>}
       </div>
     );
   }
@@ -98,16 +99,16 @@ export function PagoRepCell({
     return (
       <div className="flex items-center gap-1.5">
         <CfdiEstadoBadge tono="borrador">REP con error</CfdiEstadoBadge>
-        <Hint label="Reintentar timbrado del REP">
+        {!soloLectura && <Hint label="Reintentar timbrado del REP">
           <Button
             variant="outline" size="icon" className="min-h-11 min-w-11 md:h-6 md:w-6 md:min-h-0 md:min-w-0"
             aria-label="Reintentar timbrado del REP"
             disabled={timbrar.isPending}
-            onClick={(e) => { e.stopPropagation(); timbrar.mutate(pagoId); }}
+            onClick={(e) => { e.stopPropagation(); if (!soloLectura) timbrar.mutate(pagoId); }}
           >
             <RotateCw className={`h-3 w-3 ${timbrar.isPending ? "animate-spin" : ""}`} />
           </Button>
-        </Hint>
+        </Hint>}
       </div>
     );
   }

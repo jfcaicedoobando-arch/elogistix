@@ -33,10 +33,11 @@ interface Props {
   uuidFacturaOriginal: string | null;
   snapshotEmision: unknown;
   canEdit: boolean;
+  soloLectura?: boolean;
 }
 
 export function FacturaNotasCreditoSeccion(props: Props) {
-  const { facturaId, facturaNumero, fechaFactura, monedaFactura, tipoCambioFactura, saldoFactura, saldoError, uuidFacturaOriginal, snapshotEmision, canEdit } = props;
+  const { facturaId, facturaNumero, fechaFactura, monedaFactura, tipoCambioFactura, saldoFactura, saldoError, uuidFacturaOriginal, snapshotEmision, canEdit, soloLectura } = props;
   const [openCrear, setOpenCrear] = useState(false);
   const [emailNcId, setEmailNcId] = useState<string | null>(null);
   const [cancelarNcId, setCancelarNcId] = useState<string | null>(null);
@@ -109,6 +110,7 @@ export function FacturaNotasCreditoSeccion(props: Props) {
                   key={nc.id}
                   facturaId={facturaId}
                   notaCreditoId={nc.id}
+                  soloLectura={soloLectura}
                   facturapiId={nc.facturapi_id}
                   facturapiClaimAt={nc.facturapi_claim_at}
                 />
@@ -116,9 +118,10 @@ export function FacturaNotasCreditoSeccion(props: Props) {
             <FacturaNotasCreditoTable
               notas={notas}
               canEdit={canEdit}
+              soloLectura={soloLectura}
               uuidFacturaOriginal={uuidFacturaOriginal}
               timbrando={timbrar.isPending}
-              onTimbrar={(id) => timbrar.mutate(id)}
+              onTimbrar={(id) => { if (canEdit) timbrar.mutate(id); }}
               onEmail={setEmailNcId}
               onCancelar={setCancelarNcId}
             />
@@ -127,7 +130,7 @@ export function FacturaNotasCreditoSeccion(props: Props) {
       </CardContent>
 
       <DialogCrearNotaCredito
-        open={openCrear}
+        open={canEdit && openCrear}
         onOpenChange={setOpenCrear}
         facturaId={facturaId}
         facturaNumero={facturaNumero}
@@ -142,18 +145,18 @@ export function FacturaNotasCreditoSeccion(props: Props) {
       />
 
       <DialogEnviarCfdi
-        open={!!emailNcId}
+        open={!soloLectura && !!emailNcId}
         onOpenChange={(o) => !o && setEmailNcId(null)}
         notaCreditoId={emailNcId ?? undefined}
         titulo="Reenviar nota de crédito"
       />
 
       <DialogCancelarNotaCredito
-        open={!!cancelarNcId}
+        open={canEdit && !!cancelarNcId}
         onOpenChange={(o) => !o && setCancelarNcId(null)}
         loading={cancelar.isPending}
         onConfirm={(motivo, sustituyeUuid) => {
-          if (!cancelarNcId) return;
+          if (!canEdit || !cancelarNcId) return;
           cancelar.mutate(
             { notaCreditoId: cancelarNcId, motivo, sustituyeUuid },
             { onSuccess: () => setCancelarNcId(null) },

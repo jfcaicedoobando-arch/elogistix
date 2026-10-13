@@ -1,3 +1,4 @@
+import { esFacturaVigenteParaOperar } from "./facturaVigencia";
 import { tieneSaldoMonetario } from "@/lib/financial/toleranciaPago";
 /**
  * Deriva los flags booleanos que gobiernan la UI del detalle de factura.
@@ -13,6 +14,8 @@ export {
 } from "./facturaCapacidadTimbrado";
 
 export interface FacturaFlagsInput {
+  /** Campo ausente = vigencia desconocida: conservar lectura, bloquear escritura. */
+  deleted_at?: string | null;
   estado?: string | null;
   metodo_pago?: string | null;
   facturapi_id?: string | null;
@@ -179,7 +182,7 @@ function deriveActionFlags(
     esBorrador,
     puedeEditarBorrador,
     puedeEliminarBorrador: puedeEditarBorrador,
-    puedeTimbrarDesdeSistema: sinTimbrar && esCreadaConCapacidadTimbrado(f.fecha_emision),
+    puedeTimbrarDesdeSistema: esFacturaVigenteParaOperar(f) && sinTimbrar && esCreadaConCapacidadTimbrado(f.fecha_emision),
     ...deriveFiscalFlags(f, canEdit, sinTimbrar, estaCancelada),
     puedeRegistrarPago: puedeCobrarse(f, ctx, canRegistrarCobro, estaCancelada),
     repPendiente: (ctx.pagosRepPendientes ?? 0) > 0,
@@ -194,5 +197,6 @@ export function deriveFacturaFlags(
   canRegistrarCobro: boolean = canEdit,
 ): FacturaFlags {
   if (!factura) return EMPTY_FLAGS;
-  return deriveActionFlags(factura, canEdit, ctx, canRegistrarCobro);
+  const vigente = esFacturaVigenteParaOperar(factura);
+  return deriveActionFlags(factura, canEdit && vigente, ctx, canRegistrarCobro && vigente);
 }
