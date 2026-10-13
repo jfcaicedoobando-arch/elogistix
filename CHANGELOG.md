@@ -1,5 +1,15 @@
 # Changelog
 
+## [13.824.80] - Unreleased
+
+### Cartera PDF: paginación acotada por lotes
+
+- Acota la remaquetación del PDF de Cartera mediante lotes lógicos de hasta 100 filas, manteniendo alturas naturales y permitiendo dividir filas excepcionalmente largas. Conserva el orden y los importes, los resúmenes una sola vez, los encabezados de continuación y la numeración global de páginas.
+- En los ensayos de 2,000 filas sintéticas, la generación completó en aproximadamente 29.7–32.1 segundos; la revisión independiente midió unos 977 MiB de RSS máximo y 241 páginas. Son resultados del fixture y entorno probados, no una garantía para cualquier volumen de texto o equipo.
+- Los saltos entre lotes dejan más espacio en blanco y pueden aumentar las páginas; una fila excepcionalmente larga puede continuar en otra página. La memoria sigue creciendo con el documento completo y la exportación de 5,001 filas continúa pendiente.
+- Añade regresiones de particionado, alturas variables, Unicode, multimoneda y conservación del contenido. No cambia fuentes, renderer global, cálculos financieros, CSV ni SQL. La validación de descarga GUI y publicación de esta entrega siguen pendientes.
+- Conserva las 44 entradas históricas completas del manifest y agrega 13.824.80 con las mismas 1,525 migraciones de 13.824.79. No agrega ni modifica SQL ni reaplica migraciones.
+
 ## [13.824.79] - Unreleased
 
 ### Análisis: paginación por claves y cancelación de lecturas
