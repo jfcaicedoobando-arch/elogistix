@@ -1,6 +1,6 @@
 import { supabase } from "@/integrations/supabase/client";
 import { leerTodasLasPaginas } from "@/lib/supabase/paginado";
-import { fetchInChunks } from "@/lib/supabase/chunkedIn";
+import { fetchProjectionInChunks } from "./fetchInChunks";
 import { FACTURA_ESTADOS_VIVOS } from "@/lib/domain/estadosFactura";
 
 const CAMPOS = "id, embarque_id, proforma_id, expediente, factura_pdf_url, moneda, subtotal, tipo_cambio, conceptos_factura(embarque_id, proforma_id_origen, total, deleted_at), factura_embarques(embarque_id, activa)";
@@ -29,25 +29,25 @@ export interface VentaProyectada {
 /** Emission, not a PDF or cached proforma status, establishes coverage. */
 export async function fetchFacturasEmitidasCierre(ids: string[]) {
   const [cabeceras, enlaces, vinculos] = await Promise.all([
-    leerTodasLasPaginas("cierre.emitidas", (ini, fin) => supabase.from("facturas")
-      .select(CAMPOS).in("embarque_id", ids).in("estado", [...FACTURA_ESTADOS_VIVOS])
-      .is("deleted_at", null).order("id").range(ini, fin)),
-    leerTodasLasPaginas("cierre.enlaces", (ini, fin) => supabase.from("conceptos_factura")
-      .select("id, factura_id").in("embarque_id", ids).is("deleted_at", null)
-      .order("id").range(ini, fin)),
-    leerTodasLasPaginas("cierre.vinculos", (ini, fin) => supabase.from("factura_embarques")
-      .select("factura_id, embarque_id").in("embarque_id", ids).eq("activa", true)
-      .order("factura_id").order("embarque_id").range(ini, fin)),
+    fetchProjectionInChunks(ids, (lote) => leerTodasLasPaginas("cierre.emitidas", (ini, fin) => supabase.from("facturas")
+      .select(CAMPOS).in("embarque_id", lote).in("estado", [...FACTURA_ESTADOS_VIVOS])
+      .is("deleted_at", null).order("id").range(ini, fin))),
+    fetchProjectionInChunks(ids, (lote) => leerTodasLasPaginas("cierre.enlaces", (ini, fin) => supabase.from("conceptos_factura")
+      .select("id, factura_id").in("embarque_id", lote).is("deleted_at", null)
+      .order("id").range(ini, fin))),
+    fetchProjectionInChunks(ids, (lote) => leerTodasLasPaginas("cierre.vinculos", (ini, fin) => supabase.from("factura_embarques")
+      .select("factura_id, embarque_id").in("embarque_id", lote).eq("activa", true)
+      .order("factura_id").order("embarque_id").range(ini, fin))),
   ]);
   const directas = new Set(cabeceras.map((f) => f.id));
   const indirectas = [...new Set([...enlaces, ...vinculos].map((c) => c.factura_id))].filter((id) => !directas.has(id));
-  const consolidadas = await fetchInChunks(indirectas, async (lote) => {
-    const { data, error } = await supabase.from("facturas").select(CAMPOS).in("id", lote)
-      .in("estado", [...FACTURA_ESTADOS_VIVOS]).is("deleted_at", null);
-    if (error) throw error;
-    return data ?? [];
-  });
-  return [...cabeceras, ...consolidadas];
+  const consolidadas = await fetchProjectionInChunks(indirectas, (lote) =>
+    leerTodasLasPaginas("cierre.consolidadas", (ini, fin) =>
+      supabase.from("facturas").select(CAMPOS).in("id", lote)
+        .in("estado", [...FACTURA_ESTADOS_VIVOS]).is("deleted_at", null)
+        .order("id").range(ini, fin)),
+  );
+  return [...new Map([...cabeceras, ...consolidadas].map((f) => [f.id, f])).values()];
 }
 
 const clave = (embarque: string, moneda: string | null, proforma: string | null | undefined) =>

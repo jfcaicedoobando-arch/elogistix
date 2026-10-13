@@ -29,12 +29,9 @@ describe("fetchEmbarquesMes", () => {
     expect(eqCalls).toContainEqual(["organization_id", "org-1"]);
   });
 
-  it("sin organizationId aún aplica .neq(estado, Cancelado)", async () => {
-    mockRef.current!.setTableResult("embarques", { data: [], error: null });
-    await fetchEmbarquesMes(null, "2026-07-01", "2026-07-31");
-    const call = mockRef.current!.tableCalls.find((c) => c.table === "embarques");
-    const neqCalls = call!.opArgs.filter((_, i) => call!.ops[i] === "not");
-    expect(neqCalls).toContainEqual(["estado", "in", "(Cotización,Borrador,Cancelado)"]);
+  it("sin organización falla antes de consultar", async () => {
+    await expect(fetchEmbarquesMes(null, "2026-07-01", "2026-07-31")).rejects.toThrow("organización");
+    expect(mockRef.current!.tableCalls).toHaveLength(0);
   });
 });
 

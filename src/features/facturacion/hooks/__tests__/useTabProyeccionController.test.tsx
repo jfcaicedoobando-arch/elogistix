@@ -5,7 +5,7 @@
  */
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import React from "react";
-import { renderHook, act } from "@testing-library/react";
+import { renderHook, act, waitFor } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { MemoryRouter } from "react-router";
 
@@ -19,7 +19,7 @@ vi.mock("@/generators/exportCsv", () => ({
   exportToCsv: (...args: unknown[]) => exportToCsvMock(...args),
 }));
 vi.mock("@/hooks/shared", () => ({
-  useOrgFilter: () => ({ organizationId: "org-1" }),
+  useOrgFilter: () => ({ organizationId: "org-1", orgListo: true }),
 }));
 
 import { useTabProyeccionController } from "../useTabProyeccionController";
@@ -97,6 +97,7 @@ describe("useTabProyeccionController", () => {
     });
     await act(async () => { await Promise.resolve(); });
     rerender();
+    await waitFor(() => expect(result.current.isFetching).toBe(false));
     act(() => result.current.exportarCsv());
     expect(exportToCsvMock).toHaveBeenCalledTimes(1);
     const [filename] = exportToCsvMock.mock.calls[0];
