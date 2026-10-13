@@ -13,9 +13,14 @@ const scheduleCounts = ['documents', 'outstanding_documents', 'scheduled_outstan
   'unknown_due_outstanding', 'unscheduled_outstanding'];
 const fields = (keys: readonly string[], validator: Validator): Record<string, Validator> => Object.fromEntries(keys.map((key) => [key, validator]));
 const identifier: Validator = (value) => typeof value === 'string' && /^[A-Za-z0-9_-]{1,100}$/.test(value);
-const state: Validator = member(['Borrador', 'Pagada', 'Parcialmente pagada', 'Vencida', 'Vigente', 'Cancelada',
-  'Timbrada', 'Aplicada', 'Pendiente', 'Vigente/aprobada', 'Vigente/pendiente', 'Vigente/rechazada',
-  'Pagada/aprobada', 'Pagada/pendiente', 'Pagada/rechazada', 'Cancelada/aprobada', 'Cancelada/pendiente', 'Cancelada/rechazada']);
+// Source enums describe observations only, never operational or numeric eligibility.
+const arState = member(['Borrador', 'Por timbrar', 'Emitida', 'Pagada', 'Vencida', 'Cancelada', 'Parcialmente pagada', 'Sustituida']);
+const apStates = ['Borrador', 'Vigente', 'Pagada', 'Cancelada'];
+const apApprovals = ['pendiente', 'aprobada', 'rechazada'];
+const apState = member(apStates);
+const apApproval = member(apApprovals);
+const apCreditState = member(apStates.flatMap(state => apApprovals.map(approval => `${state}/${approval}`)));
+const supplierNoteState = member(['Borrador', 'Aprobada', 'Aplicada', 'Cancelada']);
 function closeConfig(value: unknown): boolean {
   if (value === null) return true;
   return Array.isArray(value) && value.length <= 2 && value.every((item: unknown) => record(item) && dateValue(item.value));
@@ -57,9 +62,11 @@ export const QUERY_SPECS: Record<QueryId, QuerySpec> = {
       orderedDates(row, 'earliest_movement', 'latest_movement'),
   },
   '06-tax-credit-readiness': {
-    limit: 30, shape: { side: member(['ar', 'ap']), state, ...fields(creditCounts, countValue), ppd: nullableCount, pue: nullableCount },
+    limit: 30, shape: { side: member(['ar', 'ap']), state: (value) => arState(value) || apCreditState(value),
+      ...fields(creditCounts, countValue), ppd: nullableCount, pue: nullableCount },
     counts: creditCounts, dates: [], labels: ['side', 'state'], key: ['side', 'state'],
-    validate: (row) => countsBounded(row, 'documents', creditCounts.slice(1)) && exclusiveCountsBounded(row, 'documents', ['ppd', 'pue']),
+    validate: (row) => (row.side === 'ar' ? arState(row.state) : apCreditState(row.state)) &&
+      countsBounded(row, 'documents', creditCounts.slice(1)) && exclusiveCountsBounded(row, 'documents', ['ppd', 'pue']),
   },
   '10-payment-currency-safe': {
     limit: 80, shape: { side: member(['ar', 'ap']), cash_currency: currencyValue, document_currency: currencyValue,
@@ -75,12 +82,12 @@ export const QUERY_SPECS: Record<QueryId, QuerySpec> = {
     validate: (row) => countsBounded(row, 'pre_october_documents', historyCounts.slice(1, 4)),
   },
   '15-nc-scope-fx': {
-    limit: 30, shape: { note_currency: currencyValue, invoice_currency: currencyValue, state, ...fields(noteCounts, countValue) },
+    limit: 30, shape: { note_currency: currencyValue, invoice_currency: currencyValue, state: supplierNoteState, ...fields(noteCounts, countValue) },
     counts: noteCounts, dates: [], labels: ['state'], key: ['note_currency', 'invoice_currency', 'state'],
     currency: 'invoice_currency', relatedCurrency: 'note_currency', validate: (row) => countsBounded(row, 'notes', noteCounts.slice(1)),
   },
   '17-ap-current-balance': {
-    limit: 30, shape: { currency: currencyValue, state, approval: member(['aprobada', 'pendiente', 'rechazada']),
+    limit: 30, shape: { currency: currencyValue, state: apState, approval: apApproval,
       earliest_schedule: nullableDate, latest_schedule: nullableDate, ...fields(scheduleCounts, countValue) },
     counts: scheduleCounts, dates: ['earliest_schedule', 'latest_schedule'], labels: ['state', 'approval'],
     key: ['currency', 'state', 'approval'], currency: 'currency', validate: validSchedule,

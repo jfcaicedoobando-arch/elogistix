@@ -15,6 +15,7 @@ import { MODOS_COLUMNAS, type EstadoResultados, type FilaER, type TotalER } from
 import { MargenTexto } from "@/components/shared/MargenBadge";
 import { UMBRAL_MARGEN_OPERATIVO } from "@/lib/ui/margen";
 import { fmt } from "./EstadoResultadosTable.helpers";
+import { EstadoResultadosMobile } from "./EstadoResultadosMobile";
 
 const CELL_PAD = DENSITY_CELL[TABLE_DENSITY.embebida];
 
@@ -78,50 +79,6 @@ function EmptyRow({ label }: { label: string }) {
   );
 }
 
-function MobileFilaCard({ label, fila }: { label: string; fila: FilaER | TotalER; emphasis?: boolean }) {
-  return (
-    <div className="border-b py-2 px-3 space-y-1">
-      <div className="text-body-sm font-medium">{label}</div>
-      <div className="grid grid-cols-2 gap-x-2 gap-y-0.5 text-body-sm">
-        {MODOS_COLUMNAS.map((m) => (
-          <div key={m} className="flex justify-between">
-            <span className="text-muted-foreground">{m}</span>
-            <span className="tabular-nums">{fmt(fila.porModo[m])}</span>
-          </div>
-        ))}
-        <div className="col-span-2 flex justify-between border-t pt-1 font-semibold">
-          <span>Total</span>
-          <span className="tabular-nums">{fmt(fila.total)}</span>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function MobileSection({ label, filas, total, totalLabel, totalVariant }: {
-  label: string;
-  filas: FilaER[];
-  total: TotalER;
-  totalLabel: string;
-  totalVariant?: "muted" | "primary";
-}) {
-  const bg = totalVariant === "primary" ? "bg-primary/10" : "bg-muted";
-  return (
-    <div>
-      <div className="bg-primary/5 border-y px-3 py-2 text-body-sm font-bold uppercase tracking-wider text-primary">
-        {label}
-      </div>
-      {filas.length === 0
-        ? <div className="px-3 py-3 text-body-sm text-muted-foreground italic">Sin registros.</div>
-        : filas.map((r) => <MobileFilaCard key={`m-${label}-${r.concepto}`} label={r.concepto} fila={r} />)}
-      <div className={`${bg} font-bold px-3 py-2 flex items-center justify-between text-body-sm`}>
-        <span>{totalLabel}</span>
-        <span className="tabular-nums">{fmt(total.total)}</span>
-      </div>
-    </div>
-  );
-}
-
 export function EstadoResultadosTable({ data }: { data: EstadoResultados }) {
   const incompleta = valuacionIncompleta(data);
   return (
@@ -134,28 +91,9 @@ export function EstadoResultadosTable({ data }: { data: EstadoResultados }) {
           </li>)}
         </ul></details>
       </div>}
-      {/* Mobile (<sm): tarjetas apiladas para que ninguna cifra quede cortada. */}
+      {/* Mobile (<sm): conserva el desglose completo con importes indivisibles. */}
       <div className="sm:hidden">
-        <MobileSection
-          label="Ingresos"
-          filas={data.ingresos}
-          total={data.totalIngresos}
-          totalLabel={incompleta ? "INGRESOS PARCIALES" : "TOTAL INGRESOS"}
-        />
-        <MobileSection
-          label="Costos"
-          filas={data.costos}
-          total={data.totalCostos}
-          totalLabel={incompleta ? "COSTOS PARCIALES" : "TOTAL COSTOS"}
-        />
-        <div className="bg-primary/10 font-bold px-3 py-2.5 flex items-center justify-between border-y">
-          <span>UTILIDAD BRUTA</span>
-          <span className="tabular-nums">{incompleta ? "No disponible" : fmt(data.utilidad.total)}</span>
-        </div>
-        <div className="bg-muted/60 font-semibold px-3 py-2 flex items-center justify-between text-body-sm">
-          <span>Margen %</span>
-          {incompleta ? "No disponible" : data.totalIngresos.total === 0 ? "No calculable" : <MargenTexto pct={data.margen.total} umbrales={UMBRAL_MARGEN_OPERATIVO} />}
-        </div>
+        <EstadoResultadosMobile data={data} incompleta={incompleta} />
       </div>
 
       {/* Desktop / tablet (≥sm): tabla completa con scroll horizontal. */}

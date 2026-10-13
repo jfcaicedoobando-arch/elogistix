@@ -1,6 +1,6 @@
 import { useId, useState } from "react";
 import { Calendar as CalendarIcon, X } from "lucide-react";
-import { es } from "date-fns/locale";
+import { es } from "react-day-picker/locale";
 import { Calendar } from "@/components/ui/calendar";
 import { Input } from "@/components/ui/input";
 import {
@@ -47,6 +47,7 @@ export function DateTimePickerMx({
   disabled = false, errorText, id, avisarInhabil = false,
 }: DateTimePickerMxProps) {
   const autoErrorId = useId();
+  const horaId = `${autoErrorId}-hora`;
   const errorId = id ? `${id}-error` : autoErrorId;
   const avisoId = `${id ?? autoErrorId}-aviso`;
   const [open, setOpen] = useState(false);
@@ -168,8 +169,9 @@ export function DateTimePickerMx({
               className={cn("p-3 pointer-events-auto")}
             />
             <div className="border-t p-3 flex items-center gap-2">
-              <span className="text-body-sm text-muted-foreground">Hora</span>
+              <label htmlFor={horaId} className="text-body-sm text-muted-foreground">Hora</label>
               <Input
+                id={horaId}
                 type="time"
                 value={hora}
                 onChange={(e) => emitirFecha(iso, e.target.value)}

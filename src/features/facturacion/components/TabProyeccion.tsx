@@ -4,7 +4,6 @@ import { Button } from "@/components/ui/button";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
-import { useNavigate } from "react-router";
 import { ResponsiveDataTable } from "@/components/shared/dataTable/ResponsiveDataTable";
 import { EmptyStateInline } from "@/components/empty/EmptyStateInline";
 import { ErrorStateInline } from "@/components/empty/ErrorStateInline";
@@ -18,7 +17,6 @@ import { getErrorMessage } from "@/lib/errors";
 
 export function TabProyeccion() {
   const c = useTabProyeccionController();
-  const navigate = useNavigate();
   const k = c.kpis;
   const filtrado = c.filtroCliente !== "todos" || c.filtroOperador !== "todos" || c.filtroEstado !== "todos";
 
@@ -151,9 +149,7 @@ export function TabProyeccion() {
               rowKey={(g) => g.expediente}
               density={TABLE_DENSITY.listado}
               emptyMessage="Sin resultados con los filtros aplicados"
-              onRowClick={(g) => {
-                if (g.embarqueIds[0]) navigate(`/embarques/${g.embarqueIds[0]}`);
-              }}
+              getRowHref={(g) => g.embarqueIds[0] ? `/embarques/${g.embarqueIds[0]}` : null}
               mobileCard={(g) => <ProyeccionMobileCard grupo={g} />}
             />
           )}
