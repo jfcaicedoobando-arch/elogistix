@@ -4,6 +4,8 @@
  * límite Power-of-10 de 200 líneas. Barrel de services las re-exporta.
  */
 import { supabase } from '@/integrations/supabase/client';
+import { captureAuthOperationScope } from '@/lib/auth/authOperationScope';
+import { registrarActividad } from '@/services/bitacora/registrar';
 import type { TablesInsert } from '@/integrations/supabase/types';
 import { notaSchema, parseOrThrow } from "@/lib/validation/mutationSchemas";
 import { run } from "@/lib/supabase/response";
@@ -22,13 +24,14 @@ type EmbarqueInsert = TablesInsert<'embarques'>;
 async function actualizarEmbarqueVerificado(
   embarqueId: string,
   patch: Partial<EmbarqueInsert>,
+  organizationId?: string | null,
 ): Promise<void> {
-  const { data, error } = await supabase
+  let query = supabase
     .from('embarques')
     .update(patch)
-    .eq('id', embarqueId)
-    .select('id')
-    .maybeSingle();
+    .eq('id', embarqueId).is('deleted_at', null);
+  if (organizationId) query = query.eq('organization_id', organizationId);
+  const { data, error } = await query.select('id').maybeSingle();
   if (error) throw error;
   if (!data) {
     throw new Error(
@@ -73,13 +76,16 @@ export async function actualizarFechaLlegadaRealEmbarque(
   embarqueId: string,
   fechaIso: string,
 ): Promise<void> {
+  const scope = captureAuthOperationScope();
   // v13.814.0 (hallazgo 2): si el pre-select falla o el embarque no existe,
   // antes se ignoraba el error y todas las guardas de negocio se saltaban.
-  const { data: current, error: errorCurrent } = await supabase
+  let read = supabase
     .from('embarques')
     .select('estado, etd, fecha_llegada_real')
-    .eq('id', embarqueId)
-    .maybeSingle();
+    .eq('id', embarqueId).is('deleted_at', null);
+  if (scope.organizationId) read = read.eq('organization_id', scope.organizationId);
+  const { data: current, error: errorCurrent } = await read.maybeSingle();
+  scope.assertCurrent();
   if (errorCurrent) throw errorCurrent;
   if (!current) {
     throw new Error(
@@ -88,29 +94,32 @@ export async function actualizarFechaLlegadaRealEmbarque(
   }
   // Sentry JAVASCRIPT-REACT-6P: estas tres son guardas de negocio que la UI ya
   // explica en un toast; `ReglaNegocioError` evita que se reporten como bugs.
-  if (current?.fecha_llegada_real) {
+  if (current.fecha_llegada_real) {
     throw new ReglaNegocioError("Este embarque ya tiene una fecha de llegada real capturada.");
   }
-  if (current?.estado && !ESTADOS_QUE_ADMITEN_LLEGADA.has(current.estado)) {
+  if (current.estado && !ESTADOS_QUE_ADMITEN_LLEGADA.has(current.estado)) {
     throw new ReglaNegocioError(
       `No se puede marcar llegada real en estado "${current.estado}". Confirma y pon en tránsito el embarque primero.`,
     );
   }
-  if (current?.etd && fechaIso < current.etd) {
+  if (current.etd && fechaIso < current.etd) {
     throw new ReglaNegocioError(
       `La fecha de llegada real (${fechaIso}) no puede ser anterior al ETD (${current.etd}).`,
     );
   }
-  const debeAvanzar = current?.estado
+  const debeAvanzar = current.estado
     ? ESTADOS_QUE_AVANZAN_A_ARRIBO.has(current.estado)
     : false;
   const patch: Partial<EmbarqueInsert> = { fecha_llegada_real: fechaIso };
   if (debeAvanzar) patch.estado = 'Arribo' as EmbarqueInsert['estado'];
-  await actualizarEmbarqueVerificado(embarqueId, patch);
-  await registrarBitacoraEmbarque({
+  await actualizarEmbarqueVerificado(embarqueId, patch, scope.organizationId);
+  if (!scope.isCurrent()) return;
+  await registrarActividad({
+    modulo: 'embarques', authScope: scope,
+    ...(scope.organizationId ? { organizationId: scope.organizationId } : {}),
     accion: "Actualizó fecha de llegada real de embarque",
     entidadId: embarqueId,
-    detalles: { fechaLlegadaReal: fechaIso, estadoAnterior: current?.estado, avanzoAArribo: debeAvanzar },
+    detalles: { fechaLlegadaReal: fechaIso, estadoAnterior: current.estado, avanzoAArribo: debeAvanzar },
   });
 }
 
