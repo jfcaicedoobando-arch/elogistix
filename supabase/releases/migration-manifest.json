@@ -69569,7 +69569,9 @@
       "20261012224500_fix_conversion_puertos_uuid.sql",
       "20261012235900_estado_operativo_confirmado.sql",
       "20261013003500_profit_role_authorization.sql",
-      "20261013040000_global_catalog_permission_hardening.sql"
+      "20261013040000_global_catalog_permission_hardening.sql",
+      "20261013141500_factura_eliminada_guard_hijos.sql",
+      "20261013151000_padres_activos_recalculo_tc.sql"
     ]
   }
 }

@@ -268,3 +268,8 @@ supabase/tests/estado_operativo_confirmado.sql
 supabase/tests/estado_operativo_preserva_fx.sql
 supabase/tests/profit_role_authorization.sql
 supabase/tests/global_catalog_acl.sql
+
+supabase/tests/factura_eliminada_guard_hijos.sql
+
+# Lock active invoice/shipment parents before remaining mutating RPC work.
+supabase/tests/padres_activos_recalculo_tc.sql

@@ -73,3 +73,14 @@ Deno.test("orquestación REP: falla al persistir no libera claim ni vuelve a emi
   assertEquals(r.pago.uuid_rep, null);
   assertEquals(r.patches.some(p => p.facturapi_rep_id === null), false);
 });
+
+for (const factura of [{ deleted_at: "2026-10-01T00:00:00Z" }, { organization_id: "org-ajena" }]) {
+  Deno.test(`orquestación REP: padre no vigente/ajeno ${JSON.stringify(factura)} corta antes del proveedor`, async () => {
+    const r = await execute({ factura });
+    assertEquals(r.response.status, 404);
+    assertEquals(r.body.error, "factura_not_found");
+    assertEquals(r.events, []);
+    assertEquals(r.payloads, []);
+    assertEquals(r.patches, []);
+  });
+}
