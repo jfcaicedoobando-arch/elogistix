@@ -22,6 +22,7 @@ import { useProformaGeneracion } from "./useProformaGeneracion";
 import { tratamientoIvaPendiente } from "@/lib/financial/etiquetaTratamientoFila";
 import { notifyError, notifyWarning } from "@/lib/ui/appFeedback";
 import { useProformaTcRecovery, esErrorTcRequerido } from "./useProformaTcRecovery";
+import { useProformaTcReintento } from "./useProformaTcReintento";
 import {
   calcularTotalesProforma,
   buildInitialProformaState,
@@ -44,7 +45,9 @@ export function useDialogGenerarProformaController(
   const tasaIva = useTasaIVA();
   const crearProforma = useCrearProforma();
   const fetchClienteParaPdfCached = useFetchClienteParaPdf();
-  const { data: diasCreditoDefault } = useDiasCreditoCliente(embarque.cliente_id, open);
+  const { data: diasCreditoDefault, error: errorCredito, isFetching: consultandoCredito } =
+    useDiasCreditoCliente(embarque.cliente_id, open);
+  const creditoDisponible = !errorCredito && !consultandoCredito && diasCreditoDefault !== undefined;
   const { data: contenedores = [] } = useContenedoresEmbarque(embarque.id);
   const tcRecovery = useProformaTcRecovery(embarque.id);
   const generacion = useProformaGeneracion();
@@ -95,7 +98,6 @@ export function useDialogGenerarProformaController(
     });
   }, [open, paso, generacion.isPending, generacion.creada, conceptosVisibles]);
 
-
   const toggle = (id: string) => {
     setSeleccionados((prev) => {
       const next = new Set(prev);
@@ -132,10 +134,10 @@ export function useDialogGenerarProformaController(
 
   const handleConfirmar = async (embarqueOverride?: EmbarqueRow) => {
     try {
-      // undefined indica consulta pendiente/fallida, no un plazo Contado.
+      // Datos cacheados no validan crédito tras un error o durante un refetch.
       // Una proforma guardada puede reintentar su PDF sin releer el crédito.
-      if (!generacion.creada && diasCreditoDefault === undefined) {
-        throw new ProformaValidationError("Aún no se cargaron los días de crédito del cliente. Espera o vuelve a abrir el diálogo antes de generar.");
+      if (!generacion.creada && !creditoDisponible) {
+        throw new ProformaValidationError("No se pudo confirmar el crédito del cliente. Espera una consulta válida o vuelve a abrir el diálogo antes de generar.");
       }
       const completada = await generacion.ejecutar({
         embarque: embarqueOverride ?? embarque,
@@ -171,11 +173,9 @@ export function useDialogGenerarProformaController(
   };
 
   /** Guarda el TC capturado en el embarque y reintenta la generación. */
-  const handleGuardarTcYReintentar = async (tc: number) => {
-    const ok = await tcRecovery.guardarTc(tc);
-    if (!ok) return;
-    await handleConfirmar({ ...embarque, tipo_cambio_usd: tc });
-  };
+  const handleGuardarTcYReintentar = useProformaTcReintento({
+    open, embarque, guardarTc: tcRecovery.guardarTc, confirmar: handleConfirmar,
+  });
 
   return {
     paso, setPaso,

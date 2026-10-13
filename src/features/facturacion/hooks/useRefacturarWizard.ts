@@ -4,6 +4,7 @@
  * etapa. Se separa del componente para respetar el límite de 200 líneas.
  */
 import { useEffect, useMemo, useState } from "react";
+import { bloqueoFacturaNueva } from "@/features/facturacion/domain/refacturacionNuevaVigencia";
 import { useOrgActiva } from "@/hooks/shared/useOrgActiva";
 import { usePermissions } from "@/hooks/shared/usePermissions";
 import { motivoBloqueoRefacturacion } from "@/features/facturacion/domain/refacturacionPermisos";
@@ -107,6 +108,7 @@ export function useRefacturarWizard(facturaId: string | null, open: boolean, onC
     motivo,
     pagos,
     facturaNueva: s.facturaNueva,
+    bloqueoFacturaNueva: bloqueoFacturaNueva(s.estadoFacturaNueva),
     original: s.original,
     pagoSeleccionadoId,
     pagoYaReasignado: yaReasignado,

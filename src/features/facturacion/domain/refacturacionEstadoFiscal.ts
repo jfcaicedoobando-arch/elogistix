@@ -21,6 +21,8 @@ export interface FacturaRefacturacion {
   numero: string;
   estado: string;
   uuid_fiscal: string | null;
+  /** null confirma vigencia; undefined (caché antigua) nunca habilita operaciones. */
+  deleted_at?: string | null;
   /** Estatus del trámite de cancelación ante el SAT (FacturApi). */
   cancellation_status?: string | null;
 }
@@ -43,7 +45,7 @@ export function repsEnVerificacion(pagos: PagoRefacturacion[]): PagoRefacturacio
 
 /** La factura destino ya está timbrada y vigente: admite recibir el pago. */
 export function facturaNuevaLista(factura: FacturaRefacturacion | null): boolean {
-  if (!factura) return false;
+  if (!factura || factura.deleted_at !== null) return false;
   if (!factura.uuid_fiscal) return false;
   return !["Borrador", "Cancelada", "Sustituida"].includes(factura.estado);
 }

@@ -1,9 +1,10 @@
-# Frozen workflow observations: preparation only
+# Frozen workflow observations and explicit NC compatibility
 
-Both workflows remain active in `.github/workflows/`. This package prepares
-historical byte verification; it does not retire a workflow, change an event,
-permission or required check, or run any SQL. The active NC runner still emits
-`format: 1`, reads its active YAML, and does not import the prepared helper.
+Both workflows remain active in `.github/workflows/`. This package supports
+explicit historical byte verification; it does not retire a workflow, change an
+event, permission or required check, or run any SQL. Existing workflow commands
+still select NC `format: 1`, read the active YAML and never load the archive
+helper. The NC runner can separately opt in to archived `format: 2`.
 
 ## Two explicit snapshots
 
@@ -33,7 +34,7 @@ Neither observation certifies that a workflow executed or that a replay passed.
 The related harnesses originated in [PR258](https://github.com/jfcaicedoobando-arch/elogistix/pull/258)
 and [PR265](https://github.com/jfcaicedoobando-arch/elogistix/pull/265).
 
-## Prepared API, not an active runner contract
+## Archive API and explicit runner selection
 
 `collectSourceEvidence(root, mode, snapshot)` requires an absolute caller root,
 `minimal` or `full`, and one of the two exact full snapshot SHAs. There is no
@@ -57,22 +58,49 @@ effects. Its `.d.mts` declaration exists for the existing TypeScript checks.
 The archives/manifests live outside the NC staging roots. Minimal staging still
 lists the same nine inputs. The unchanged full exporter would include the new
 `.mjs` helper and modified harness README bytes, and record their actual hashes;
-`.d.mts` is outside its extension allowlist. No full staging run is performed by
-this preparation, and no `run.json`/`staging.json` artifact is rewritten.
+`.d.mts` is outside its extension allowlist. No real replay is performed by
+this change; synthetic staging tests never rewrite historical `run.json` or
+`staging.json` artifacts.
 
-Existing v1 artifacts retain their original meaning and files. A future switch
-to archived resolution must explicitly change the NC record to v2 and adapt
-known consumers; this package includes no new artifact reader and does not
-claim compatibility for unknown external consumers. `reviewCommit` must remain
-the admitted current checkout SHA, distinct from the archive observation SHA.
+Existing v1 artifacts retain their original meaning and files. The runner's
+unchanged `minimal|full` invocation keeps the v1 shape and source set, including
+active-YAML failure when that file is absent. It does not import the helper.
+Only `minimal|full --archive-snapshot <exact-known-commit>` imports this API and
+emits NC v2 with `sourceBindings`. Missing or modified archives fail before any
+preparer/Docker call, even if the active YAML exists. V2 never opens either active
+wrapper or the archived Acceptance wrapper. It still validates the same Actions
+PR event, repository, head branch and exact checkout. `reviewCommit` stays the
+admitted current checkout SHA, distinct from the archive observation SHA.
+
+The opt-in argument does not rewrite artifacts, activate v2 in either workflow,
+change staging or weaken verification/cleanup. `sources` remains a map of
+SHA256 strings; v2 adds the helper and selected manifest (nine/fifteen entries).
+Every logical key has an explicit physical binding. A reader must preserve both
+maps and must not label archived bytes as an active workflow at `reviewCommit`.
+There is no new generic artifact reader or claimed compatibility for unknown
+external consumers.
+
+Acceptance `run.py` also emits `format: 2`, but its unrelated schema uses
+`head`/`base` and object-valued `sources` containing `sha256`, `bytes` and `use`.
+It does not use this NC helper or `sourceBindings`. Do not convert or dispatch
+records by format number alone. The Acceptance runner and artifacts are unchanged.
 
 ## Verification and remaining gates
 
-Three suites in `src/__tests__/scripts/ncReplaySourceEvidence*.test.ts` run in the
-existing Vitest normal/node lane. Their temporary runtime inputs are labeled
-synthetic and never executed. No workflow, shard count, selector, catalog rule,
-aggregator or audit baseline is added or relaxed. Run them using the existing
-`bun run test -- src/__tests__/scripts/ncReplaySourceEvidence` command.
+Four suites in `src/__tests__/scripts/ncReplaySourceEvidence*.test.ts` and
+`ncReplayRunnerCompatibility.test.ts` run in the existing Vitest normal/node lane.
+Temporary runtime inputs are synthetic and never executed. The runner suite
+evaluates the exact runner in an isolated VM with allowlisted builtin imports
+and mocked Git, preparer, Docker and minimal-verifier boundaries. It proves v1
+shape/defaults, both snapshots/modes without active wrappers, full staging
+parity, no fallback, unchanged admission and failure/cleanup propagation. It
+cannot certify actual PostgreSQL replay or Docker behavior. No workflow, shard
+count, selector, catalog rule, aggregator or audit baseline is added or relaxed.
+Run the four suites with:
+
+```sh
+bun run test -- src/__tests__/scripts/ncReplaySourceEvidence src/__tests__/scripts/ncReplayRunnerCompatibility
+```
 
 Keep both active wrappers until an authorized source confirms effective required
 checks AND workflow rules, consumers have been inventoried/adapted at the final
@@ -84,8 +112,24 @@ existing checks remain unchanged:
 - Acceptance candidate PG17.9 (strict gate and baseline)
 - Acceptance candidate PG17.6 (diagnostic)
 
-Unknown or inaccessible protection settings still block retirement; do not infer
-permission from merged PRs, skipped jobs or incomplete search results. Future
-runner format changes and joint wrapper removal require a separate reviewed,
-atomic change. Reverting this preparation removes only new archive/helper/tests
-and its documentation additions; the original active runner/workflows persist.
+Remaining retirement dependencies are concrete and separate from this option:
+
+1. Obtain effective branch protection AND rulesets/required-workflow rules from
+   an authorized source, including inherited rules. Unknown or inaccessible
+   settings block retirement; merged PRs and skipped jobs do not prove absence.
+2. Inventory artifact readers/downloaders and check-name consumers at the final
+   SHA, including external systems. Confirm each NC reader explicitly supports
+   v1 and the described NC v2, and treats Acceptance independently.
+3. Review a replacement execution route for the four checks above before
+   deleting their producers. NC remains restricted to
+   `fix/nc-replay-canonical-20261012`. Acceptance independently restricts its
+   review branch/base and hash-pinned source/product inventories; this NC option
+   does not make its producer redundant or authorize widening admission.
+4. Switch the intended NC caller explicitly to a reviewed exact archive snapshot
+   and pass required CI on the exact final implementation. Synthetic fixtures
+   prove compatibility only; they are not a passing SQL/replay/Acceptance run.
+5. Retire wrappers only in a separate reviewed atomic change after those gates,
+   preserving archived bytes, manifests, artifact retention and check evidence.
+
+Rollback restores the prior runner and compatibility test/document changes;
+existing active YAML, SQL and historical artifacts are untouched in either case.

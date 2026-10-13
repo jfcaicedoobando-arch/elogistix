@@ -54,6 +54,7 @@ export function classifyFiles(files, guards, sqlSupport) {
         if (lane === 'deno-smoke') mode = 'manual';
       } else if (/^e2e\/specs\/.+\.spec\.ts$/.test(file)) { lane = 'playwright-staging'; mode = 'manual'; }
       else if (/^e2e\/visual\/audit(?:119-126|136-137)\/specs\/[^/]+\.spec\.ts$/.test(file)) lane = 'playwright-isolated';
+      else if (file === 'e2e/visual/virtualization/specs/virtualization.spec.ts') lane = 'playwright-isolated';
       else if (file === 'e2e/visual/specs/shared-ui.spec.ts') { lane = 'playwright-visual'; mode = 'manual'; }
       else throw new Error(`Test has no execution lane: ${file}`);
     }

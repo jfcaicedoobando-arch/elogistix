@@ -2,6 +2,7 @@
  * Router de pasos del asistente de refacturación. Vive aparte para mantener
  * baja la complejidad del diálogo contenedor.
  */
+import { facturaNuevaLista } from "@/features/facturacion/domain/refacturacionPasos";
 import { PasoDiagnostico } from "./PasoDiagnostico";
 import { PasoCancelarRep } from "./PasoCancelarRep";
 import { PasoFacturaNueva } from "./PasoFacturaNueva";
@@ -51,6 +52,7 @@ export function RefacturarPasoActual({ w }: { w: RefacturarWizard }) {
     return (
       <PasoFacturaNueva
         facturaNueva={s.facturaNueva}
+        estadoFacturaNueva={s.estadoFacturaNueva}
         clienteDestinoNombre={w.clienteDestinoNombre}
         duplicando={s.duplicar.isPending}
         consultando={s.facturaNuevaCargando}
@@ -71,7 +73,7 @@ export function RefacturarPasoActual({ w }: { w: RefacturarWizard }) {
         rutaFiscal={w.rutaFiscal}
         cancelando={w.cancelandoFactura}
         onCancelar={w.handleCancelarOriginal}
-        puedeOperar={w.puedeOperar}
+        puedeOperar={puedeCancelarOriginal(w)}
         onRefrescar={s.refrescar}
       />
     );
@@ -92,4 +94,8 @@ export function RefacturarPasoActual({ w }: { w: RefacturarWizard }) {
       yaReasignado={w.yaReasignado}
     />
   );
+}
+
+function puedeCancelarOriginal(w: RefacturarWizard): boolean {
+  return w.puedeOperar && w.s.estadoFacturaNueva === "vigente" && facturaNuevaLista(w.s.facturaNueva);
 }

@@ -91,12 +91,10 @@ it('keeps Acceptance byte verification separate from NC collection', context => 
   expect(Object.keys(collectSourceEvidence(folder, 'minimal', OLD_SNAPSHOT).sources)).toHaveLength(9);
   expect(() => verifyArchivePackage(folder, OLD_SNAPSHOT)).toThrow(/ENOENT/);
 });
-it('keeps the active NC runner on its original v1 path and leaves staging rules unchanged', () => {
+it('keeps NC staging rules independent of the opt-in provenance format', () => {
   const runner = fs.readFileSync(path.join(root, RUNNER_PATH), 'utf8');
-  expect(byteIdentity(Buffer.from(runner)).gitBlobSha1).toBe('0ef04364e0d2852a3b5858cd26ddea81895d39af');
-  expect(runner).toContain('const record = { format: 1,');
-  expect(runner).not.toContain('source-evidence.mjs');
-  expect(runner).not.toContain('sourceBindings');
+  // Behavioral v1/v2 orchestration, including failure paths, is exercised by
+  // ncReplayRunnerCompatibility.test.ts rather than pinning obsolete runner bytes.
   expect(runner).toContain("record.status = exitCode === 0 && removed ? 'pass' : 'fail'");
   const begin = "if (mode === 'minimal') {\n  // Exactly six migration sources";
   const block = runner.slice(runner.indexOf(begin), runner.indexOf('let prepared;'));

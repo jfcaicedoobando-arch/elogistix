@@ -30,7 +30,7 @@ export {
 
 export async function fetchCliente(id: string) {
   return unwrap(
-    supabase.from("clientes").select(CLIENTE_DETAIL_COLUMNS).eq("id", id).single(),
+    supabase.from("clientes").select(CLIENTE_DETAIL_COLUMNS).eq("id", id).is("deleted_at", null).maybeSingle(),
   );
 }
 
@@ -43,9 +43,11 @@ export async function fetchDiasCreditoCliente(
       .from("clientes")
       .select("dias_credito")
       .eq("id", clienteId)
+      .is("deleted_at", null)
       .maybeSingle(),
   );
-  return data?.dias_credito ?? null;
+  if (!data) throw new Error("El cliente no está disponible para generar una proforma.");
+  return data.dias_credito ?? null;
 }
 
 // Exposición de crédito: vive en `./exposicionCredito.ts`; re-export por compat.

@@ -28,6 +28,7 @@ const facturaTimbrada: FacturaRefacturacion = {
   numero: "F1026-RF",
   estado: "Emitida",
   uuid_fiscal: "ABC",
+  deleted_at: null,
 };
 
 function contexto(pagos: PagoRefacturacion[]): ContextoPasos {
