@@ -84,6 +84,7 @@ describe("crearMovimientoBancarioPago legado · cuenta disponible antes del carg
   it("rechaza data:null sin error (inexistente o no visible por RLS)", async () => {
     cuenta = null;
     await expectCuentaNoDisponible();
+    expect(mock.cuenta.maybeSingle).toHaveBeenCalledOnce();
   });
 
   it.each([
@@ -98,6 +99,7 @@ describe("crearMovimientoBancarioPago legado · cuenta disponible antes del carg
   ] satisfies Array<[string, Partial<CuentaFixture>]>)("rechaza cuenta %s sin insertar", async (_caso, cambio) => {
     cuenta = { ...cuenta!, ...cambio };
     await expectCuentaNoDisponible();
+    expect(mock.cuenta.maybeSingle).toHaveBeenCalledOnce();
   });
 
   it.each(["", "   "])("rechaza id de cuenta vacío (%j) antes de consultarla", async (cuentaBancariaId) => {
@@ -113,16 +115,19 @@ describe("crearMovimientoBancarioPago legado · cuenta disponible antes del carg
   it("rechaza error PostgREST incluso si viene acompañado de datos", async () => {
     mock.cuenta.maybeSingle.mockResolvedValue({ data: cuenta, error: { message: "permission denied", code: "42501" } });
     await expectCuentaNoDisponible();
+    expect(mock.cuenta.maybeSingle).toHaveBeenCalledOnce();
   });
 
   it("rechaza una lectura que lanza sin convertirla en error de TC", async () => {
     mock.cuenta.maybeSingle.mockRejectedValue(new Error("network unavailable"));
     await expectCuentaNoDisponible();
+    expect(mock.cuenta.maybeSingle).toHaveBeenCalledOnce();
   });
 
   it("prioriza cuenta no disponible sobre TC ausente", async () => {
     cuenta = null;
     await expectCuentaNoDisponible({ ...INPUT, tipoCambioUsd: null });
+    expect(mock.cuenta.maybeSingle).toHaveBeenCalledOnce();
   });
 
   it("consulta id, organización, activa y deleted_at en la cuenta", async () => {
