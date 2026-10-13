@@ -126,6 +126,9 @@ export default function DashboardEjecutivoPage() {
         </Alert>
       )}
 
+          <Alert variant="info"><AlertDescription>
+            Resultados del mes {data.periodo}. Bancos y cartera al {data.vencimientos.fechaReferencia}; los ratios combinan estas bases.
+          </AlertDescription></Alert>
           <BandaKPIs
             kpis={data.kpis}
             periodo={data.periodo}
@@ -133,6 +136,8 @@ export default function DashboardEjecutivoPage() {
             topDeudores={data.vencimientos.cobranzaMayor30.top}
             topAcreedores={data.vencimientos.cxpProximos7.top}
             presupuesto={data.presupuesto}
+            deudoresSinValuar={data.vencimientos.cobranzaMayor30.sin_valuar}
+            acreedoresSinValuar={data.vencimientos.cxpProximos7.sin_valuar}
           />
           <BandaKPIsEficiencia kpis={data.kpis} />
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-3">

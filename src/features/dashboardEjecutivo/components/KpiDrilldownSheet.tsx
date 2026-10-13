@@ -12,14 +12,17 @@ import { Badge } from "@/components/ui/badge";
 import { formatCurrency } from "@/lib/formatters/numbers";
 import { ExternalLink } from "lucide-react";
 import { useNavigate } from "react-router";
-import type { TopItem } from "@/features/tesoreria/services";
+import type { TopVencimiento } from "../domain/vencimientos";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { formatNumber } from "@/lib/formatters/numbers";
 
 export interface KpiDrilldownProps {
   open: boolean;
   onOpenChange: (v: boolean) => void;
   title: string;
   description: string;
-  items: TopItem[];
+  items: TopVencimiento[];
+  sinValuar?: TopVencimiento[];
   emptyText?: string;
   verTodosHref: string;
   verTodosLabel?: string;
@@ -45,12 +48,14 @@ export function KpiDrilldownSheet({
   title,
   description,
   items,
+  sinValuar = [],
   emptyText = "Sin registros.",
   verTodosHref,
   verTodosLabel = "Ver todos en el módulo",
   diasTone = "vencido",
 }: KpiDrilldownProps) {
   const navigate = useNavigate();
+  const visibles = [...items, ...sinValuar];
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent className="w-full sm:max-w-md overflow-y-auto" data-testid="kpi-drilldown-sheet">
@@ -59,17 +64,30 @@ export function KpiDrilldownSheet({
           <SheetDescription>{description}</SheetDescription>
         </SheetHeader>
 
+        {sinValuar.length > 0 && (
+          <Alert variant="warning">
+            <AlertDescription>
+              Ranking incompleto: primero se muestran hasta 5 saldos valuados en MXN y después todos los saldos sin TC, sin asignarles posición.
+            </AlertDescription>
+          </Alert>
+        )}
         <div className="mt-4 space-y-2">
-          {items.length === 0 ? (
+          {visibles.length === 0 ? (
             <p className="text-body text-muted-foreground py-6 text-center">{emptyText}</p>
           ) : (
             <ul className="divide-y">
-              {items.slice(0, 10).map((it, i) => {
+              {visibles.map((it, i) => {
                 const lbl = labelDias(it.dias);
                 return (
                   <li key={`${it.nombre}-${i}`} className="py-2 flex items-center justify-between gap-2 text-body">
                     <div className="min-w-0">
                       <p className="truncate font-medium">{it.nombre}</p>
+                      {it.saldo_mxn != null && (
+                        <Badge variant="secondary">
+                          {formatCurrency(it.saldo_mxn, "MXN")} · TC saldos {formatNumber(it.tipo_cambio ?? 1, { decimals: 4 })}
+                        </Badge>
+                      )}
+                      {it.saldo_mxn === null && <Badge variant="outline">Sin TC · sin posición</Badge>}
                       {lbl && (
                         <Badge variant={badgeVariant(it.dias, diasTone)} className="mt-0.5 text-label">
                           {lbl}

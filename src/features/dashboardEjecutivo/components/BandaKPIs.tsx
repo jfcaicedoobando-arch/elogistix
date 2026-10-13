@@ -3,9 +3,11 @@ import { useState } from "react";
 import { useNavigate } from "react-router";
 import { DollarSign, TrendingUp, Landmark, AlertTriangle, Receipt, Target } from "lucide-react";
 import { KpiCard } from "@/components/shared/KpiCard";
-import { formatCurrency, formatNumber, formatPercent} from "@/lib/formatters/numbers";
+import { formatNumber, formatPercent} from "@/lib/formatters/numbers";
 import type { KPIsEjecutivos } from "@/features/dashboardEjecutivo/services";
-import type { TopItem } from "@/features/tesoreria/services";
+import type { TopVencimiento } from "../domain/vencimientos";
+import { cumplimientoDisplay, puedeVerExcesos } from "./cumplimientoDisplay";
+import { importeEjecutivo } from "./kpiValuacion";
 import type { ResumenVsReal } from "@/features/presupuesto/services";
 import { KpiStrip } from "@/components/shared/KpiStrip";
 import { KpiDrilldownSheet } from "./KpiDrilldownSheet";
@@ -17,8 +19,10 @@ interface Props {
   periodo: string;
   fuente: FuenteEERR;
   /** Datos para drill-downs (Batch E). Si no se proveen, el KPI navega directo. */
-  topDeudores?: TopItem[];
-  topAcreedores?: TopItem[];
+  topDeudores?: TopVencimiento[];
+  topAcreedores?: TopVencimiento[];
+  deudoresSinValuar?: TopVencimiento[];
+  acreedoresSinValuar?: TopVencimiento[];
   /** Fase J: resumen presupuesto para drilldown de "Cumplim. presupuesto". */
   presupuesto?: ResumenVsReal;
 }
@@ -46,6 +50,8 @@ function formatDelta(pct: number | null): { text: string; variant: "positive" | 
  * comparable (Fase I). Fase I fix #1: umbral EPS_PP evita "+0.0pp" ruidoso.
  */
 function buildUtilidadDelta(kpis: KPIsEjecutivos): string {
+  if (kpis.eerr_incompleto) return "Margen no disponible · valuación incompleta";
+  if (kpis.ingresos_mxn === 0) return "Margen no calculable · ingresos en cero";
   const margen = `Margen ${formatPercent(kpis.margen_pct, 1)}`;
   if (kpis.margen_delta_puntos == null) return `${margen} · sin comparable previo`;
   const puntos = kpis.margen_delta_puntos;
@@ -55,55 +61,38 @@ function buildUtilidadDelta(kpis: KPIsEjecutivos): string {
 }
 
 function utilidadVariant(kpis: KPIsEjecutivos): "positive" | "negative" | "neutral" {
+  if (kpis.eerr_incompleto || kpis.ingresos_mxn === 0) return "neutral";
   if (kpis.margen_delta_puntos != null && Math.abs(kpis.margen_delta_puntos) >= 0.5) {
     return kpis.margen_delta_puntos > 0 ? "positive" : "negative";
   }
   return kpis.margen_pct >= 0 ? "positive" : "negative";
 }
 
-/**
- * Deriva variant + texto para la KPI "Cumplim. presupuesto". Extraído del
- * componente para bajar la complejidad ciclomática (regla ESLint ≤16).
- */
-function buildCumplimientoDisplay(
-  cumplimiento: number,
-  excesos: number,
-): { variant: "positive" | "negative" | "neutral"; delta: string; sinPresupuesto: boolean } {
-  const sinPresupuesto = cumplimiento === 0;
-  if (sinPresupuesto) return { variant: "neutral", delta: "Sin presupuesto capturado", sinPresupuesto };
-  if (excesos > 0) return { variant: "negative", delta: `${excesos} categoría(s) en exceso`, sinPresupuesto };
-  if (cumplimiento > 100) return { variant: "neutral", delta: "Cercano al límite", sinPresupuesto };
-  return { variant: "positive", delta: "En rango", sinPresupuesto };
-}
-
-export function BandaKPIs({ kpis, periodo, fuente, topDeudores, topAcreedores, presupuesto }: Props) {
+export function BandaKPIs({ kpis, periodo, fuente, topDeudores, topAcreedores, presupuesto, deudoresSinValuar, acreedoresSinValuar }: Props) {
   const nav = useNavigate();
   const detalleHref = `/profit/estado-resultados?${new URLSearchParams({ mes: periodo, fuente })}`;
   const [drill, setDrill] = useState<null | "deudores" | "acreedores" | "presupuesto">(null);
   const delta = formatDelta(kpis.ingresos_delta_pct);
-  const cumplimiento = kpis.cumplimiento_presupuesto_pct;
-  const excesos = kpis.categorias_en_exceso ?? 0;
-  const cumpl = buildCumplimientoDisplay(cumplimiento, excesos);
-  const { sinPresupuesto } = cumpl;
+  const cumpl = cumplimientoDisplay(kpis, presupuesto);
 
   const puedeDrillDeudores = Array.isArray(topDeudores);
   const puedeDrillAcreedores = Array.isArray(topAcreedores);
-  const puedeDrillPresupuesto = !!presupuesto && excesos > 0;
+  const puedeDrillPresupuesto = puedeVerExcesos(kpis, presupuesto);
 
   return (
     <>
       <KpiStrip desktopCols={4}>
         <KpiCard
           label="Ingresos del periodo"
-          value={formatCurrency(kpis.ingresos_mxn, "MXN")}
-          delta={delta.text}
-          deltaVariant={delta.variant}
+          value={importeEjecutivo(kpis.ingresos_mxn, kpis.eerr_incompleto)}
+          delta={kpis.eerr_incompleto ? "Valuación incompleta" : delta.text}
+          deltaVariant={kpis.eerr_incompleto ? "neutral" : delta.variant}
           icon={DollarSign}
           onClick={() => nav(detalleHref)}
         />
         <KpiCard
           label="Utilidad operativa"
-          value={formatCurrency(kpis.utilidad_mxn, "MXN")}
+          value={importeEjecutivo(kpis.utilidad_mxn, kpis.eerr_incompleto)}
           delta={buildUtilidadDelta(kpis)}
           deltaVariant={utilidadVariant(kpis)}
           icon={TrendingUp}
@@ -111,27 +100,29 @@ export function BandaKPIs({ kpis, periodo, fuente, topDeudores, topAcreedores, p
         />
         <KpiCard
           label="Saldo en bancos"
-          value={formatCurrency(kpis.saldo_bancos_mxn, "MXN")}
+          value={importeEjecutivo(kpis.saldo_bancos_mxn, kpis.saldo_bancos_incompleto)}
+          delta={kpis.saldo_bancos_incompleto ? "Valuación incompleta · ver saldos nominales" : undefined}
           icon={Landmark}
           onClick={() => nav("/tesoreria")}
         />
         <KpiCard
           label="Cobranza vencida (>30d)"
-          value={formatCurrency(kpis.cartera_vencida_mxn, "MXN")}
-          delta={`${kpis.cartera_vencida_count} cliente(s)`}
-          deltaVariant={kpis.cartera_vencida_mxn > 0 ? "negative" : "neutral"}
+          value={importeEjecutivo(kpis.cartera_vencida_mxn, kpis.cartera_vencida_incompleta)}
+          delta={kpis.cartera_vencida_incompleta ? "Valuación incompleta · ver detalle" : `${kpis.cartera_vencida_count} cliente(s)`}
+          deltaVariant={!kpis.cartera_vencida_incompleta && kpis.cartera_vencida_mxn > 0 ? "negative" : "neutral"}
           icon={AlertTriangle}
           onClick={() => (puedeDrillDeudores ? setDrill("deudores") : nav("/facturacion"))}
         />
         <KpiCard
           label="CxP próx. 7 días"
-          value={formatCurrency(kpis.cxp_7dias_mxn, "MXN")}
+          value={importeEjecutivo(kpis.cxp_7dias_mxn, kpis.cxp_7dias_incompleto)}
+          delta={kpis.cxp_7dias_incompleto ? "Valuación incompleta · ver detalle" : undefined}
           icon={Receipt}
           onClick={() => (puedeDrillAcreedores ? setDrill("acreedores") : nav("/compras/facturas"))}
         />
         <KpiCard
           label="Cumplim. presupuesto"
-          value={sinPresupuesto ? "—" : formatPercent(cumplimiento, 1)}
+          value={cumpl.value}
           delta={cumpl.delta}
           deltaVariant={cumpl.variant}
           icon={Target}
@@ -146,6 +137,7 @@ export function BandaKPIs({ kpis, periodo, fuente, topDeudores, topAcreedores, p
           title="Cobranza vencida (>30d)"
           description="Clientes con facturas vencidas hace más de 30 días."
           items={topDeudores ?? []}
+          sinValuar={deudoresSinValuar}
           emptyText="Sin cartera vencida hace más de 30 días."
           verTodosHref="/facturacion"
           verTodosLabel="Ver cobranza completa"
@@ -159,6 +151,7 @@ export function BandaKPIs({ kpis, periodo, fuente, topDeudores, topAcreedores, p
           title="CxP próximos 7 días"
           description="Facturas de proveedor con saldo que vencen desde hoy hasta dentro de 7 días, inclusive."
           items={topAcreedores ?? []}
+          sinValuar={acreedoresSinValuar}
           emptyText="Sin CxP con vencimiento en los próximos 7 días."
           verTodosHref="/compras/facturas"
           verTodosLabel="Ver cuentas por pagar"

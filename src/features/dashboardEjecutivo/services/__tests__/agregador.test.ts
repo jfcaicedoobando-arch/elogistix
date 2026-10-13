@@ -179,7 +179,7 @@ describe("dashboardEjecutivo/agregador", () => {
       fuente: "embarques",
     });
     const marzo = snap.eerr12m.find((p) => p.periodo === "2025-03");
-    expect(marzo).toEqual({ periodo: "2025-03", ingresos: 1000, costos: 400, utilidad: 600 });
+    expect(marzo).toEqual({ periodo: "2025-03", ingresos: 1000, costos: 400, utilidad: 600, valuacion_no_verificada: true });
     expect(rpcMock).toHaveBeenCalledWith("eerr_resumen_anual", { p_year: 2025, p_fuente: "embarques" });
     expect(fetchEstadoResultadosDevengadoAnual).not.toHaveBeenCalled();
   });

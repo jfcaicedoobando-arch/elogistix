@@ -4,6 +4,7 @@
  *
  * v13.300.33 · Batch F · forecast multi-mes
  */
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { ChartTooltip } from "@/components/shared/ChartTooltip";
 import { CHART_TICK, CHART_LEGEND_STYLE } from "@/lib/chartTokens";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
@@ -38,7 +39,11 @@ export function ForecastMultiMesChart({ historico, mesesAdelante = 3 }: Props) {
         </p>
       </CardHeader>
       <CardContent>
-        {!suficiente ? (
+        {historico.some((punto) => punto.valuacion_no_verificada) ? (
+          <Alert variant="warning"><AlertDescription>Forecast no disponible: valuación histórica no verificada.</AlertDescription></Alert>
+        ) : historico.some((punto) => punto.valuacion?.completa === false) ? (
+          <Alert variant="warning"><AlertDescription>Valuación incompleta: tendencia y proyección no disponibles hasta completar los tipos de cambio.</AlertDescription></Alert>
+        ) : !suficiente ? (
           <EmptyStateInline icon={LineChartIcon} message="No hay suficientes datos para graficar la tendencia." hint="Se requieren al menos 3 meses de historia para proyectar." />
         ) : (
           <div className="h-64">

@@ -97,6 +97,27 @@ describe("agregador — selección de fuente EERR", () => {
     expect(rpcMock).toHaveBeenCalledWith("eerr_resumen_anual", expect.objectContaining({ p_fuente: "embarques" }));
   });
 
+  it("conserva completitud y nominales de cada mes de la tendencia devengada", async () => {
+    const valuacion = { completa: false, conceptos_sin_tc_count: 1, excluidos_sin_tc: [{ embarque_id: "e1", concepto: "Flete", moneda: "USD", nominal: 100, seccion: "costos", modo: "Marítimo" }] };
+    stubs.fetchEstadoResultadosDevengadoAnual.mockResolvedValue([{ mes: 6, ingresos_mxn: 1000, costos_mxn: 0, valuacion }]);
+    const result = await fetchDashboardEjecutivo({organizationId: "org-1", periodo: "2026-06", cobranza: [], cxp: [], fuente: "facturas"});
+    expect(result.eerr12m.find((p) => p.periodo === "2026-06")?.valuacion).toEqual(valuacion);
+  });
+
+  it("RPC operativa sin contrato conserva cifras conocidas y marca incertidumbre, no error", async () => {
+    rpcMock.mockResolvedValue({ data: [{mes: 6, ingresos_mxn: 100, costos_mxn: 25}], error: null });
+    const result = await fetchDashboardEjecutivo({organizationId: "org-1", periodo: "2026-06", cobranza: [], cxp: [], fuente: "embarques"});
+    expect(result.eerr12m.find((p) => p.periodo === "2026-06")).toMatchObject({ingresos:100,costos:25,utilidad:75,valuacion_no_verificada:true});
+    expect(result.eerr12m.find((p) => p.periodo === "2026-06")?.valuacion).toBeUndefined();
+  });
+
+  it("cero verificado no se convierte en valuación desconocida", async () => {
+    rpcMock.mockResolvedValue({ data: [{mes: 6, ingresos_mxn: 0, costos_mxn: 0, valuacion:{completa:true,conceptos_sin_tc_count:0,excluidos_sin_tc:[]}}], error: null });
+    const result = await fetchDashboardEjecutivo({organizationId: "org-1", periodo: "2026-06", cobranza: [], cxp: [], fuente: "embarques"});
+    expect(result.eerr12m.find((p) => p.periodo === "2026-06")?.valuacion?.completa).toBe(true);
+    expect(result.eerr12m.find((p) => p.periodo === "2026-06")?.valuacion_no_verificada).toBeUndefined();
+  });
+
   it("sin fuente explícita, default es 'embarques'", async () => {
     await fetchDashboardEjecutivo({
       organizationId: "org-1", periodo: "2026-06",
