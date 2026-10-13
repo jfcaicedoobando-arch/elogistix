@@ -1,4 +1,7 @@
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, vi } from "vitest";
+
+vi.mock("@/integrations/supabase/client", () => ({ supabase: {} }));
+vi.mock("@/services/bitacora/registrar", () => ({ registrarActividad: vi.fn() }));
 import { cargoEnMonedaCuenta } from "../pagoProveedorMovimiento";
 
 describe("cargoEnMonedaCuenta", () => {
@@ -21,7 +24,12 @@ describe("cargoEnMonedaCuenta", () => {
     expect(cargoEnMonedaCuenta(500, "EUR", "MXN", 17)).toBeNull();
   });
 
-  it("sin moneda de cuenta conserva el monto del pago", () => {
-    expect(cargoEnMonedaCuenta(500, "USD", null, 17)).toBe(500);
+  it.each([null, "", "   "])("sin moneda de cuenta (%j) rechaza la equivalencia 1:1", (monedaCuenta) => {
+    expect(cargoEnMonedaCuenta(500, "USD", monedaCuenta, 17)).toBeNull();
+    expect(cargoEnMonedaCuenta(500, "MXN", monedaCuenta, null)).toBeNull();
+  });
+
+  it.each(["MXN", "USD"])("conserva %s en la misma moneda sin exigir TC", (moneda) => {
+    expect(cargoEnMonedaCuenta(500, moneda, moneda, null)).toBe(500);
   });
 });
