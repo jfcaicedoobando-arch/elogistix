@@ -1,3 +1,4 @@
+import { setAuthSnapshot } from "@/lib/auth/authSnapshot";
 import { renderHook, waitFor, act } from "@testing-library/react";
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { useTiposContenedor, useAdminTiposContenedor } from "../useTiposContenedor";
@@ -11,15 +12,19 @@ vi.mock("@/features/catalogos/services", () => ({
   deleteTipoContenedor: vi.fn().mockResolvedValue({ success: true }),
 }));
 
-vi.mock("@/hooks/shared", async (importOriginal) => ({
-  ...(await importOriginal<typeof import("@/hooks/shared")>()),
-  useToast: vi.fn(() => ({ toast: vi.fn() })),
+vi.mock("@/hooks/shared", async () => ({
+  ...(await vi.importActual<typeof import("@/hooks/shared/useMutationWithFeedback")>("@/hooks/shared/useMutationWithFeedback")),
 }));
 
 vi.mock("@/lib/ui/appFeedback", () => ({
   notifySuccess: vi.fn(),
   notifyError: vi.fn(),
 }));
+
+beforeEach(() => {
+  setAuthSnapshot({ userId: "catalog-test", email: null, role: "super_admin", effectiveRole: "super_admin",
+    organizationId: "org-test", organizationName: null });
+});
 
 describe("useTiposContenedor", () => {
   beforeEach(() => {

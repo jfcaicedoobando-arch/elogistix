@@ -1,3 +1,4 @@
+import { CatalogQueryError } from "@/components/shared/CatalogQueryError";
 import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -18,7 +19,7 @@ import { usePermissions } from "@/hooks/shared";
 const visibleOrg = (n: Naviera) => n.activoOrg ?? n.activo;
 
 export default function TabNavieras() {
-  const { data: navieras = [], isLoading } = useAllNavieras();
+  const { data: navieras = [], isLoading, isError, error, refetch, isFetching } = useAllNavieras();
   const { agregarNaviera, toggleActivo, eliminarNaviera } = useAdminNavieras();
   const { isSuperAdmin } = usePermissions();
   const [busqueda, setBusqueda] = useState("");
@@ -113,13 +114,15 @@ export default function TabNavieras() {
             columns={columns}
             data={filtradas}
             isLoading={isLoading}
+            isError={isError}
+            errorState={<CatalogQueryError error={error} onRetry={() => void refetch()} retrying={isFetching} />}
             emptyMessage="No se encontraron navieras"
             rowKey={(n) => n.id}
             rowClassName={(n) => !visibleOrg(n) ? "opacity-50" : ""}
             density={TABLE_DENSITY.embebida}
           />
         </div>
-        <p className="text-xs text-muted-foreground">{navieras.length} navieras en total · {navieras.filter(visibleOrg).length} visibles en mi empresa</p>
+        {!isLoading && !isError && <p className="text-xs text-muted-foreground">{navieras.length} navieras en total · {navieras.filter(visibleOrg).length} visibles en mi empresa</p>}
       </CardContent>
       <NavieraFormDialog
         open={!!navieraEnEdicion}

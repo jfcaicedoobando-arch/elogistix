@@ -1,4 +1,4 @@
-import { createContext, useCallback, useContext, useEffect, useMemo, useRef, ReactNode } from "react";
+import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useSyncExternalStore, ReactNode } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import type { User } from "@supabase/supabase-js";
 
@@ -10,6 +10,8 @@ import { AuthSessionProvider } from "./auth/AuthSessionContext";
 import { signOutCurrentSession } from "@/lib/auth/signOut";
 import { purgeSessionCache, debePurgarPorCambioDeUsuario } from "@/lib/auth/purgeSessionCache";
 import { clearPersistedQueryCache } from "@/lib/browserStorage";
+import { getSessionCacheGeneration, subscribeSessionCacheGeneration } from "@/lib/auth/sessionCacheRegistry";
+import { removeStaleCatalogQueries } from "@/lib/query/catalogScope";
 
 import { registrarActividad } from "@/services/bitacora";
 import { fromDb } from "@/lib/supabase/cast";
@@ -114,6 +116,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // EC-01: purga del caché de dominio cuando entra un usuario distinto sin
   // que haya habido `signOut` explícito (pestaña compartida).
   const queryClient = useQueryClient();
+  const generation = useSyncExternalStore(
+    subscribeSessionCacheGeneration, getSessionCacheGeneration, getSessionCacheGeneration,
+  );
+  // También purga logout externo/cambio de rol sin consumidores montados.
+  useEffect(() => removeStaleCatalogQueries(queryClient, generation), [queryClient, generation]);
   const prevUserIdRef = useRef<string | null>(null);
   useEffect(() => {
     const currentUserId = user?.id ?? null;

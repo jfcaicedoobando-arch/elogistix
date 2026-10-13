@@ -1,7 +1,8 @@
 /**
  * Hooks del historial de Tipo de Cambio DOF.
  */
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useCatalogQuery } from "@/hooks/shared/useCatalogQuery";
 import {
   fetchHistorialTcDof,
   upsertTcDofManual,
@@ -17,7 +18,7 @@ export const tcDofKeys = {
 };
 
 export function useHistorialTcDof(limite = 60) {
-  return useQuery<TipoCambioDof[]>({
+  return useCatalogQuery<TipoCambioDof[]>({
     queryKey: tcDofKeys.historial(limite),
     queryFn: () => fetchHistorialTcDof(limite),
     staleTime: 15 * 60 * 1000,

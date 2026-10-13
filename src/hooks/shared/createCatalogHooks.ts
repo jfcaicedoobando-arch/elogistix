@@ -10,7 +10,8 @@
  * Analogía: en vez de armar el mismo mueble tres veces con las mismas piezas,
  * tenemos un "kit" y cambiamos sólo las etiquetas.
  */
-import { useQuery, type QueryKey } from "@tanstack/react-query";
+import type { QueryKey } from "@tanstack/react-query";
+import { useCatalogQuery } from "./useCatalogQuery";
 import { useMutationWithFeedback } from "@/hooks/shared";
 import { registrarActividad } from "@/services/bitacora/registrar";
 
@@ -42,14 +43,14 @@ export interface CatalogHooksConfig<TRow, TInsert> {
 
 export function createCatalogHooks<TRow, TInsert>(cfg: CatalogHooksConfig<TRow, TInsert>) {
   const useList = () =>
-    useQuery<TRow[]>({
+    useCatalogQuery<TRow[]>({
       queryKey: cfg.keys.active,
       queryFn: () => cfg.fetch(false),
       staleTime: HALF_HOUR,
     });
 
   const useListAll = () =>
-    useQuery<TRow[]>({
+    useCatalogQuery<TRow[]>({
       queryKey: cfg.keys.all,
       queryFn: () => cfg.fetch(true),
       staleTime: ONE_MINUTE,

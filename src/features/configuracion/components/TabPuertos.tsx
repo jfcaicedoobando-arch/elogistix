@@ -1,3 +1,4 @@
+import { CatalogQueryError } from "@/components/shared/CatalogQueryError";
 import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -18,7 +19,7 @@ type Puerto = { id: string; code: string; name: string; country: string; activo:
 const visibleOrg = (p: Puerto) => p.activoOrg ?? p.activo;
 
 export default function TabPuertos() {
-  const { data: puertos = [], isLoading: puertosLoading } = useAllPuertos();
+  const { data: puertos = [], isLoading: puertosLoading, isError, error, refetch, isFetching } = useAllPuertos();
   const { agregarPuerto, toggleActivo, eliminarPuerto } = useAdminPuertos();
   const { isSuperAdmin } = usePermissions();
   const [puertoBusqueda, setPuertoBusqueda] = useState("");
@@ -104,13 +105,15 @@ export default function TabPuertos() {
             columns={columns}
             data={puertosFiltrados}
             isLoading={puertosLoading}
+            isError={isError}
+            errorState={<CatalogQueryError error={error} onRetry={() => void refetch()} retrying={isFetching} />}
             emptyMessage="No se encontraron puertos"
             rowKey={(p) => p.id}
             rowClassName={(p) => !visibleOrg(p) ? "opacity-50" : ""}
             density={TABLE_DENSITY.embebida}
           />
         </div>
-        <p className="text-xs text-muted-foreground">{puertos.length} puertos en total · {puertos.filter(visibleOrg).length} visibles en mi empresa</p>
+        {!puertosLoading && !isError && <p className="text-xs text-muted-foreground">{puertos.length} puertos en total · {puertos.filter(visibleOrg).length} visibles en mi empresa</p>}
       </CardContent>
       <DoubleConfirmDeleteDialog
         open={!!puertoAEliminar}

@@ -1,3 +1,4 @@
+import { setAuthSnapshot } from "@/lib/auth/authSnapshot";
 import { renderHook, waitFor } from "@testing-library/react";
 import { beforeEach, describe, it, expect, vi } from "vitest";
 import { useNavieras, useAdminNavieras } from "../useNavieras";
@@ -11,9 +12,8 @@ vi.mock("@/features/catalogos/services", () => ({
   deleteNaviera: vi.fn().mockResolvedValue({ success: true }),
 }));
 
-vi.mock("@/hooks/shared", async (importOriginal) => ({
-  ...(await importOriginal<typeof import("@/hooks/shared")>()),
-  useToast: vi.fn(() => ({ toast: vi.fn() })),
+vi.mock("@/hooks/shared", async () => ({
+  ...(await vi.importActual<typeof import("@/hooks/shared/useMutationWithFeedback")>("@/hooks/shared/useMutationWithFeedback")),
 }));
 
 vi.mock("@/lib/ui/appFeedback", () => ({
@@ -23,6 +23,11 @@ vi.mock("@/lib/ui/appFeedback", () => ({
 
 beforeEach(() => {
   vi.clearAllMocks();
+});
+
+beforeEach(() => {
+  setAuthSnapshot({ userId: "catalog-test", email: null, role: "super_admin", effectiveRole: "super_admin",
+    organizationId: "org-test", organizationName: null });
 });
 
 describe("useNavieras", () => {

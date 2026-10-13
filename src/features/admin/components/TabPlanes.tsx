@@ -1,3 +1,4 @@
+import { CatalogQueryError } from "@/components/shared/CatalogQueryError";
 import { useState } from "react";
 import { notifyError } from "@/lib/ui/appFeedback";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -8,7 +9,7 @@ import { planEditSchema } from "./tabPlanesSchema";
 import { buildPlanesColumns } from "./TabPlanesColumns";
 
 export default function TabPlanes() {
-  const { data: planes = [], isLoading } = usePlanes();
+  const { data: planes = [], isLoading, isError, error, refetch, isFetching } = usePlanes();
   const updatePlan = useUpdatePlan();
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editValues, setEditValues] = useState<Partial<Plan>>({});
@@ -67,6 +68,8 @@ export default function TabPlanes() {
           columns={columns}
           data={planes}
           isLoading={isLoading}
+            isError={isError}
+            errorState={<CatalogQueryError error={error} onRetry={() => void refetch()} retrying={isFetching} />}
           emptyMessage="No hay planes configurados"
           rowKey={(p) => p.id}
           density={TABLE_DENSITY.listado}

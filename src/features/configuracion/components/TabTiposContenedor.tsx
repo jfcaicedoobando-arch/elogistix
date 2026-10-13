@@ -1,3 +1,4 @@
+import { CatalogQueryError } from "@/components/shared/CatalogQueryError";
 import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -18,7 +19,7 @@ type TipoContenedor = { id: string; code: string; name: string; activo: boolean;
 const visibleOrg = (t: TipoContenedor) => t.activoOrg ?? t.activo;
 
 export default function TabTiposContenedor() {
-  const { data: tipos = [], isLoading } = useAllTiposContenedor();
+  const { data: tipos = [], isLoading, isError, error, refetch, isFetching } = useAllTiposContenedor();
   const { agregarTipo, toggleActivo, eliminarTipo } = useAdminTiposContenedor();
   const { isSuperAdmin } = usePermissions();
   const [busqueda, setBusqueda] = useState("");
@@ -97,13 +98,15 @@ export default function TabTiposContenedor() {
             columns={columns}
             data={filtrados}
             isLoading={isLoading}
+            isError={isError}
+            errorState={<CatalogQueryError error={error} onRetry={() => void refetch()} retrying={isFetching} />}
             emptyMessage="No se encontraron tipos de contenedor"
             rowKey={(t) => t.id}
             rowClassName={(t) => !visibleOrg(t) ? "opacity-50" : ""}
             density={TABLE_DENSITY.embebida}
           />
         </div>
-        <p className="text-xs text-muted-foreground">{tipos.length} tipos en total · {tipos.filter(visibleOrg).length} visibles en mi empresa</p>
+        {!isLoading && !isError && <p className="text-xs text-muted-foreground">{tipos.length} tipos en total · {tipos.filter(visibleOrg).length} visibles en mi empresa</p>}
       </CardContent>
       <DoubleConfirmDeleteDialog
         open={!!tipoAEliminar}

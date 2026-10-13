@@ -1,5 +1,15 @@
 # Changelog
 
+## [13.824.76] - Unreleased
+
+### Catálogos: caché por sesión y errores visibles
+
+- Aísla los cinco hooks principales de planes, navieras, puertos, tipos de contenedor e historial DOF mediante claves con usuario, organización efectiva, rol y generación de sesión. Descarta respuestas cuyo ámbito cambió y evita reutilizar datos anteriores al cambiar de identidad o contexto. No cambia permisos SQL ni RLS.
+- Las cinco pantallas de administración/configuración distinguen un error de consulta de un catálogo vacío, muestran reintento y ocultan conteos engañosos tras el error. El estado de error de DataTable es opcional y conserva el comportamiento de sus demás consumidores.
+- Conserva los observadores activos, incluidos los deshabilitados, de los tres lectores DOF legacy useTcInicial, useProformaTcRecovery y useTcDofPorFecha: siguen recibiendo respuestas e invalidaciones al convivir con los nuevos hooks. Esos lectores no se migran al nuevo aislamiento ni reciben una garantía adicional de separación por sesión.
+- Añade regresiones de cambios de usuario, organización y rol, respuestas tardías, persistencia, errores de pantalla y convivencia DOF. La revisión enfocada con el runner oficial SWC no sustituye CI remota, publicación ni validación GUI.
+- Conserva las 40 entradas históricas completas del manifest y agrega 13.824.76 con las mismas 1,525 migraciones de 13.824.75. No agrega ni modifica SQL ni reaplica migraciones.
+
 ## [13.824.75] - Unreleased
 
 ### Seguridad: privilegios mínimos de catálogos globales

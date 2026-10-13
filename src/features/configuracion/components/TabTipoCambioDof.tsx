@@ -1,3 +1,4 @@
+import { CatalogQueryError } from "@/components/shared/CatalogQueryError";
 import { useMemo, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -28,7 +29,7 @@ function hoyIso(): string {
 }
 
 export default function TabTipoCambioDof() {
-  const { data: historial = [], isLoading, refetch, isFetching } = useHistorialTcDof(90);
+  const { data: historial = [], isLoading, isError, error, refetch, isFetching } = useHistorialTcDof(90);
   const upsert = useUpsertTcDofManual();
   // Ola 1: `tipos_cambio_dof` es catálogo GLOBAL de la plataforma; la captura
   // manual sólo la permite la RPC a super_admin (LC_TC_DOF_FORBIDDEN).
@@ -92,7 +93,7 @@ export default function TabTipoCambioDof() {
         </div>
       </CardHeader>
       <CardContent className="space-y-4">
-        {ultimo && (
+        {!isError && ultimo && (
           <div className="grid gap-3 sm:grid-cols-3">
             <div className="rounded-md border p-3">
               <p className="text-xs text-muted-foreground">Última publicación</p>
@@ -137,12 +138,14 @@ export default function TabTipoCambioDof() {
             columns={columns}
             data={historial}
             isLoading={isLoading}
+            isError={isError}
+            errorState={<CatalogQueryError error={error} onRetry={() => void refetch()} retrying={isFetching} />}
             emptyMessage="Aún no hay publicaciones registradas"
             rowKey={(t) => t.fecha}
             density={TABLE_DENSITY.embebida}
           />
         </div>
-        <p className="text-xs text-muted-foreground">{historial.length} publicaciones en el historial (últimos 90 días).</p>
+        {!isLoading && !isError && <p className="text-xs text-muted-foreground">{historial.length} publicaciones en el historial (últimos 90 días).</p>}
       </CardContent>
     </Card>
   );
