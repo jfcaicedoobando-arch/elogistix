@@ -14,6 +14,7 @@ export async function fetchContactosCliente(clienteId: string) {
       .from("contactos_cliente")
       .select(CONTACTO_COLUMNS)
       .eq("cliente_id", clienteId)
+      .is("deleted_at", null)
       .order("nombre"),
     [],
   );
