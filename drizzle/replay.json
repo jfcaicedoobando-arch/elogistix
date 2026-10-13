@@ -105,5 +105,12 @@
     "replays": [
       "20261008190000_replay_proveedor_alta_provisional.sql"
     ]
+  },
+  {
+    "file": "0014_demo_seed_limpia_agentes.sql",
+    "sha256": "9176c0041c2095ccfa3f8a31ce5651706e243da8ddd371df1b6f4b2ab1fb3fb0",
+    "replays": [
+      "20261013204000_replay_demo_seed_limpia_agentes.sql"
+    ]
   }
 ]

@@ -28,6 +28,7 @@ on:
       - "scripts/ci/audit54-cxc-runtime-fixtures.py"
       - "scripts/ci/selector148/**"
       - "scripts/ci/cxp-approval/**"
+      - "scripts/ci/demo-guard/**"
       - "scripts/ci/financial49/**"
       - "scripts/ci/receivable155/**"
       - "scripts/ci/pricing-container/**"
@@ -56,6 +57,7 @@ on:
       - "scripts/ci/audit54-cxc-runtime-fixtures.py"
       - "scripts/ci/selector148/**"
       - "scripts/ci/cxp-approval/**"
+      - "scripts/ci/demo-guard/**"
       - "scripts/ci/financial49/**"
       - "scripts/ci/receivable155/**"
       - "scripts/ci/pricing-container/**"
@@ -196,6 +198,26 @@ jobs:
         with:
           name: cxp-approval-concurrency-${{ github.run_attempt }}
           path: reports/cxp-approval-concurrency/
+          if-no-files-found: warn
+          retention-days: 7
+
+      - name: Demo guard — rollback-only two-session races in strict clones
+        timeout-minutes: 8
+        # Must precede all CI broad grants, FK drops, and fixture suites.
+        env:
+          ISOLATED_QA_DB: '1'
+          DEMO_GUARD_DISPOSABLE: '1'
+          DEMO_GUARD_POSTGRES_SERVICE_ID: ${{ job.services.postgres.id }}
+        run: |
+          python3 scripts/ci/demo-guard/test_static.py -v
+          python3 scripts/ci/demo-guard/run-actions.py
+
+      - name: Demo guard concurrency evidence
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: demo-guard-concurrency-${{ github.run_attempt }}
+          path: reports/demo-guard-concurrency/
           if-no-files-found: warn
           retention-days: 7
 
