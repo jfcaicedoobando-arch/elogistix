@@ -1,7 +1,7 @@
 import * as React from "react";
 import { ChevronDown, ChevronLeft, ChevronRight } from "lucide-react";
 import { DayPicker } from "react-day-picker";
-import { es } from "date-fns/locale";
+import { es } from "react-day-picker/locale";
 
 import { cn } from "@/lib/utils";
 import { buttonVariants } from "@/components/ui/button";
@@ -9,9 +9,8 @@ import { buttonVariants } from "@/components/ui/button";
 export type CalendarProps = React.ComponentProps<typeof DayPicker>;
 
 /**
- * FIX 6 (P3): el locale por defecto es es-MX. Sin esto, los calendarios que no
- * lo pasaban explícitamente (p. ej. el wizard de cotización) mostraban los
- * meses y días de la semana en inglés.
+ * El locale oficial de DayPicker incluye fechas y labels ARIA en español.
+ * El de date-fns sólo traduce fechas, dejando navegación y selección en inglés.
  */
 function Calendar({
   className, classNames, showOutsideDays = true, locale = es, ...props

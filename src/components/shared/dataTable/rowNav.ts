@@ -37,6 +37,12 @@ export function handleRowClick(e: MouseEvent, opts: HandleRowClickOpts) {
     window.open(opts.href, "_blank", "noopener,noreferrer");
     return;
   }
+  // El segundo clic de un doble clic no debe agregar otra entrada mientras
+  // el detalle carga. Los clics nuevos (y los asistivos con detail=0) siguen activos.
+  if (e.button === 0 && !e.altKey && e.detail > 1) {
+    e.preventDefault();
+    return;
+  }
   opts.navigate(opts.href);
 }
 

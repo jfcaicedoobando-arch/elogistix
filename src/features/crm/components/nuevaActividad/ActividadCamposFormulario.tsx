@@ -2,6 +2,7 @@
  * Campos principales del formulario de actividad: tipo, fecha, asunto y
  * descripción. Extraído de `NuevaActividadDialog` para mantenerlo compacto.
  */
+import { useId } from "react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -26,6 +27,7 @@ interface Props {
 export default function ActividadCamposFormulario({
   tipo, onTipo, fecha, onFecha, asunto, onAsunto, errorAsunto, desc, onDesc,
 }: Props) {
+  const fechaId = `nueva-actividad-fecha-${useId()}`;
   return (
     <>
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -39,8 +41,8 @@ export default function ActividadCamposFormulario({
           </Select>
         </div>
         <div className="space-y-1">
-          <Label>Fecha programada</Label>
-          <DateTimePickerMx value={fecha} onChange={onFecha} />
+          <Label htmlFor={fechaId}>Fecha programada</Label>
+          <DateTimePickerMx id={fechaId} value={fecha} onChange={onFecha} />
         </div>
       </div>
       <div className="space-y-1">
