@@ -67,7 +67,7 @@ export function DateTimePickerMx({
 
   return (
     <div className={cn(pickerRootClass, className)}>
-      <Hint label={title ?? PICKER_AYUDA_TECLADO}>
+      <Hint label={title ?? PICKER_AYUDA_TECLADO} className="max-w-[min(24rem,calc(100vw-2rem))] whitespace-normal [overflow-wrap:anywhere]">
       <div
         role="group"
         aria-label={title}
