@@ -6,6 +6,7 @@ import { captureAuthDataScope, syncActiveOrganizationScope } from "@/lib/auth/au
 import { setAuthSnapshot } from "@/lib/auth/authSnapshot";
 import { resetSessionCaches } from "@/lib/auth/sessionCacheRegistry";
 import type { ReporteCarteraDocument } from "@/pdf/documents/ReporteCarteraDocument";
+import { LEYENDA_VALUACION_EUR } from "../../domain/carteraLeyendas";
 
 vi.mock("@/features/facturacion/services", () => ({ fetchCobranza: vi.fn(), fetchCobranzaKpis: vi.fn() }));
 vi.mock("@/features/cxp/services", () => ({ fetchFacturasCxP: vi.fn() }));
@@ -47,6 +48,7 @@ describe("Cartera — contrato de descarga filtrada", () => {
     const nombre = mocks.csv.mock.calls[0][1];
     expect(nombre).toBe("cartera-antiguedad-2026-09-30-filtrada.pdf");
     expect(documento.props.busqueda).toBe(" FP-000007 ");
+    expect(documento.props.leyendaValuacion).toBe(LEYENDA_VALUACION_EUR);
     expect(documento.props.emisor?.razonSocial).toBe("Organización sintética SA");
     expect(documento.props.emisor?.organizacionNombre).toBe("Identidad comercial A");
     expect(mocks.emisor).toHaveBeenCalledWith("org-a");

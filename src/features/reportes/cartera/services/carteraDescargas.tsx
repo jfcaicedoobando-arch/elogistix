@@ -6,6 +6,7 @@
 import { todayLocalISO } from "@/lib/date/today";
 import { descargarBlob } from "@/lib/downloadBlob";
 import { fetchEmisorReporte } from "@/features/configuracion/services/emisorPdf";
+import { LEYENDA_VALUACION_EUR } from "../domain/carteraLeyendas";
 import { assertCarteraScopeCurrent, type CarteraDataScope } from "./carteraSnapshot";
 import { notifyError, notifySuccess, notifyWarning } from "@/lib/ui/appFeedback";
 import {
@@ -96,6 +97,7 @@ export async function descargarCarteraPdf(
       <ReporteCarteraDocument
         fechaCorte={fechaCorte}
         leyendaTc={leyendaTc}
+        leyendaValuacion={LEYENDA_VALUACION_EUR}
         busqueda={busqueda}
         emisor={emisor}
         bloques={bloques.map((b) => ({
