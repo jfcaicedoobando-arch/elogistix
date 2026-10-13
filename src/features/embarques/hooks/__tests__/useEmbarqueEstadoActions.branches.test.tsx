@@ -47,6 +47,10 @@ vi.mock("@/features/embarques/hooks/useEmbarques", () => ({
 vi.mock("@/features/embarques/hooks/useEmbarqueQueries", () => ({
   useEmbarqueConceptosVenta: () => ({ data: h.conceptos }),
 }));
+// This hook queries Supabase when an id is present; keep these unit tests local.
+vi.mock("@/features/embarques/hooks/useContenedoresEmbarque", () => ({
+  useContenedoresEmbarque: () => ({ data: [] }),
+}));
 vi.mock("@/features/embarques/hooks/useDocsFaltantesParaEstado", () => ({
   useDocsFaltantesParaEstado: () => h.docs,
   esEstadoBloqueante: () => h.docs.bloqueante,
@@ -193,12 +197,12 @@ describe("useEmbarqueEstadoActions — gate de cierre", () => {
 });
 
 describe("useEmbarqueEstadoActions — sync automático", () => {
-  it("dispara syncEstado cuando el estado calculado difiere del actual", async () => {
+  it("sincroniza sólo arribo respaldado por llegada real", async () => {
     h.perms = { isAdmin: false, canEditFinance: false, canEditOperations: true, isSuperAdmin: false };
-    h.calcEstado.mockReturnValue("En Tránsito");
-    renderH({ estado: "Confirmado" });
+    h.calcEstado.mockReturnValue("Arribo");
+    renderH({ estado: "En Tránsito", fecha_llegada_real: "2026-10-10" });
     await waitFor(() => expect(h.sync).toHaveBeenCalledWith(
-      expect.objectContaining({ embarqueId: "e-1", nuevoEstado: "En Tránsito" }),
+      expect.objectContaining({ embarqueId: "e-1", nuevoEstado: "Arribo" }),
     ));
   });
 
@@ -212,8 +216,8 @@ describe("useEmbarqueEstadoActions — sync automático", () => {
 
   it("NO dispara sync cuando el usuario no tiene permisos (rol contador)", async () => {
     h.perms = { isAdmin: false, canEditFinance: false, canEditOperations: false, isSuperAdmin: false };
-    h.calcEstado.mockReturnValue("En Tránsito");
-    renderH({ estado: "Confirmado" });
+    h.calcEstado.mockReturnValue("Arribo");
+    renderH({ estado: "En Tránsito", fecha_llegada_real: "2026-10-10" });
     await new Promise((r) => setTimeout(r, 0));
     expect(h.sync).not.toHaveBeenCalled();
   });

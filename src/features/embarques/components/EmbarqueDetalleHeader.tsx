@@ -13,6 +13,7 @@ import { useCotizacionFolio } from "@/features/cotizacion/hooks";
 import { useEmbarqueEstadoActions } from "@/features/embarques/hooks/useEmbarqueEstadoActions";
 import type { EmbarqueRow } from "@/features/embarques/hooks";
 import { EstadoDivergenteHint } from "./header/EstadoDivergenteHint";
+import { SalidaPendienteAlert } from "./header/SalidaPendienteAlert";
 import { Hint } from "@/components/shared/Hint";
 
 /**
@@ -143,6 +144,8 @@ export function EmbarqueDetalleHeader({
           />
         }
       />
+
+      <SalidaPendienteAlert estado={embarque.estado} etd={embarque.etd} />
 
       <EmbarqueHeaderDialogs
         siguienteEstado={siguienteEstado}

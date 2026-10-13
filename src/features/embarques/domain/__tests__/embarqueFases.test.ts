@@ -57,7 +57,7 @@ describe("calcularFasesEmbarque", () => {
     expect(fases[8].fecha).toBe(base.updated_at);
   });
 
-  it("marca en_transito como actual con etd pasado y eta futuro (marítimo importación)", () => {
+  it("mantiene tránsito pendiente con ETD pasado hasta confirmar salida", () => {
     // v13.137.36: pin de reloj para que `ayer`/`manana` y cualquier `Date.now()`
     // interno del SUT compartan la misma referencia (evita flake en CI lento o
     // si un test previo dejó timers falsos activos).
@@ -67,7 +67,7 @@ describe("calcularFasesEmbarque", () => {
       const ayer = "2026-06-16";
       const manana = "2026-06-18";
       const fases = calcularFasesEmbarque({ ...base, etd: ayer, eta: manana });
-      expect(fases[2].estado).toBe("actual");
+      expect(fases[2].estado).toBe("pendiente");
     } finally {
       vi.useRealTimers();
     }

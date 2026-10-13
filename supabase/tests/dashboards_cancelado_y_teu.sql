@@ -24,7 +24,7 @@ DECLARE
   v_fn text;
   v_def text;
 BEGIN
-  -- (1) Cancelado se preserva antes de derivar por fechas.
+  -- (1) Todo estado, incluido Cancelado, proviene del estado persistido.
   FOREACH v_fn IN ARRAY ARRAY['dashboard_details_datos', 'dashboard_summary_datos', 'operaciones_stats']
   LOOP
     SELECT pg_get_functiondef(p.oid) INTO v_def
@@ -35,8 +35,8 @@ BEGIN
       RAISE EXCEPTION 'FAIL: no existe public.%', v_fn;
     END IF;
 
-    IF position('WHEN e.estado = ''Cancelado'' THEN ''Cancelado''' IN v_def) = 0 THEN
-      RAISE EXCEPTION 'REGRESIÓN: % ya no preserva el estado Cancelado antes de derivar por ETD/ETA', v_fn;
+    IF position('e.estado::text AS estado_real' IN v_def) = 0 THEN
+      RAISE EXCEPTION 'REGRESIÓN: % ya no usa el estado operativo persistido', v_fn;
     END IF;
   END LOOP;
 

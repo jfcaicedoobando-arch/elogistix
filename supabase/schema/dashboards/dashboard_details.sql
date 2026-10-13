@@ -33,21 +33,7 @@ BEGIN
              e.ciudad_origen, e.ciudad_destino, e.contenedor, e.created_at,
              e.naviera, e.organization_id,
              e.tipo_cambio_usd, e.tipo_cambio_eur,
-        CASE
-          -- Ola 4 · N10 (guard B-033): preservar Borrador.
-          WHEN e.estado = 'Borrador' THEN 'Borrador'
-          -- R221 (ELIMP00353): preservar Cancelado antes de derivar por ETD/ETA.
-          WHEN e.estado = 'Cancelado' THEN 'Cancelado'
-          WHEN e.estado IN ('Arribo','En Aduana','Entregado','EIR','Por liquidar','Cerrado') THEN e.estado::text
-          WHEN e.modo = 'Marítimo' AND e.tipo = 'Importación' AND e.etd IS NOT NULL AND e.eta IS NOT NULL THEN
-            CASE
-              WHEN v_hoy < e.etd THEN 'Confirmado'
-              WHEN v_hoy >= e.etd AND v_hoy < e.eta THEN 'En Tránsito'
-              WHEN v_hoy >= e.eta THEN 'Arribo'
-              ELSE e.estado::text
-            END
-          ELSE e.estado::text
-        END AS estado_real
+        e.estado::text AS estado_real
       FROM embarques e
       WHERE e.deleted_at IS NULL              -- FIX C5
         AND (e.organization_id = public.org_scope())

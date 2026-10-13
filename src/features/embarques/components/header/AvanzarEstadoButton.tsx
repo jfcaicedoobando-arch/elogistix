@@ -138,16 +138,20 @@ export function AvanzarEstadoButton({
       <ConfirmActionDialog
         open={dialogOpen}
         onOpenChange={setDialogOpen}
-        title="Confirmar cambio de estado"
-        confirmLabel="Confirmar"
+        title={siguienteEstado === "En Tránsito" ? "Confirmar salida real" : "Confirmar cambio de estado"}
+        confirmLabel={siguienteEstado === "En Tránsito" ? "Confirmar salida real" : "Confirmar"}
         isPending={avanzandoEstado}
         onConfirm={() => { setDialogOpen(false); onAvanzarEstado(); }}
         description={
           <div className="space-y-2">
-            <p>¿Estás seguro de cambiar el estado de <strong>{actualLabel}</strong> a <strong>{siguienteLabel}</strong>? Esta acción quedará registrada en la bitácora.</p>
+            {siguienteEstado === "En Tránsito" ? (
+              <p>Confirma que el transporte ya salió realmente. Se registrará el estado <strong>{siguienteLabel}</strong> y el evento de salida con tu usuario y la hora de confirmación, y se generará el aviso al cliente.</p>
+            ) : (
+              <p>¿Estás seguro de cambiar el estado de <strong>{actualLabel}</strong> a <strong>{siguienteLabel}</strong>? Esta acción quedará registrada en la bitácora.</p>
+            )}
             {etdFutura && (
               <p role="note" className="rounded-md border border-warning/40 bg-warning/10 p-2 text-foreground">
-                La salida estimada (ETD) es el {formatDate(etd!, "dd/MM/yyyy")}, una fecha futura. Si el transporte ya salió, confirma el avance y actualiza la ETD a la fecha real para evitar datos contradictorios.
+                La salida estimada (ETD) es el {formatDate(etd!, "dd/MM/yyyy")}, una fecha futura. Confirma sólo si ya verificaste la salida real; la ETD seguirá siendo una fecha estimada.
               </p>
             )}
           </div>

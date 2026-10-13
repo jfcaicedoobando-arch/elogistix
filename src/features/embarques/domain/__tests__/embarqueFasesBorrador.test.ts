@@ -47,11 +47,11 @@ describe("fases de un embarque en Borrador", () => {
     expect(porId(base).cotizacion.estado).toBe("completada");
   });
 
-  it("ya confirmado con ETD vencido sí completa Confirmado y En Tránsito", () => {
+  it("ya confirmado con ETD vencido espera confirmación de salida", () => {
     const f = porId({ ...base, estado: "Confirmado" });
-    expect(f.confirmado.estado).toBe("completada");
+    expect(f.confirmado.estado).toBe("actual");
     expect(f.confirmado.label).toBe("Confirmado");
-    expect(f.en_transito.estado).toBe("actual");
+    expect(f.en_transito.estado).toBe("pendiente");
   });
 });
 
@@ -69,6 +69,6 @@ describe("siguiente paso anunciado en la barra compacta", () => {
   it("ya confirmado sí anuncia la fase siguiente de la línea de tiempo", () => {
     const fases = calcularFasesEmbarque({ ...base, estado: "Confirmado" });
     const idx = fases.findIndex((f) => f.estado === "actual");
-    expect(etiquetaSiguientePaso(fases, idx)).toBe("Arribo");
+    expect(etiquetaSiguientePaso(fases, idx)).toBe("En Tránsito");
   });
 });

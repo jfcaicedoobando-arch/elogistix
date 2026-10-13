@@ -24,7 +24,9 @@ export function useAvanzarEstadoEmbarque() {
         nuevoEstado,
         usuarioEmail,
         tipoEvento: tipoEventoParaEstado(nuevoEstado),
-        descripcionEvento: descripcionEventoCambioEstado(nuevoEstado),
+        descripcionEvento: nuevoEstado === "En Tránsito"
+          ? "Salida real confirmada por el operador (hora de confirmación)"
+          : descripcionEventoCambioEstado(nuevoEstado),
         requestId: requestId ?? newRequestId(),
       });
     },

@@ -3420,20 +3420,7 @@ BEGIN
              e.aeropuerto_origen, e.aeropuerto_destino,
              e.ciudad_origen, e.ciudad_destino, e.contenedor, e.created_at,
              e.tipo_cambio_usd, e.tipo_cambio_eur,
-        CASE
-          -- Ola 4 · N10 (guard B-033): preservar Borrador.
-          WHEN e.estado = 'Borrador' THEN 'Borrador'
-          WHEN e.estado::text = 'Cancelado' THEN 'Cancelado'
-          WHEN e.estado IN ('Arribo','En Aduana','Entregado','EIR','Por liquidar','Cerrado') THEN e.estado::text
-          WHEN e.modo = 'Marítimo' AND e.tipo = 'Importación' AND e.etd IS NOT NULL AND e.eta IS NOT NULL THEN
-            CASE
-              WHEN v_hoy < e.etd THEN 'Confirmado'
-              WHEN v_hoy >= e.etd AND v_hoy < e.eta THEN 'En Tránsito'
-              WHEN v_hoy >= e.eta THEN 'Arribo'
-              ELSE e.estado::text
-            END
-          ELSE e.estado::text
-        END AS estado_real
+        e.estado::text AS estado_real
       FROM embarques e
       WHERE e.deleted_at IS NULL              -- FIX C5
         AND (e.organization_id = public.org_scope())
@@ -3653,19 +3640,7 @@ BEGIN
     WITH embarques_base AS (
       SELECT e.id, e.estado::text, e.modo, e.tipo, e.etd, e.eta,
         e.tipo_cambio_eur,
-        CASE
-          WHEN e.estado = 'Borrador' THEN 'Borrador'
-          WHEN e.estado::text = 'Cancelado' THEN 'Cancelado'
-          WHEN e.estado IN ('Arribo','En Aduana','Entregado','EIR','Por liquidar','Cerrado') THEN e.estado::text
-          WHEN e.modo = 'Marítimo' AND e.tipo = 'Importación' AND e.etd IS NOT NULL AND e.eta IS NOT NULL THEN
-            CASE
-              WHEN v_hoy < e.etd THEN 'Confirmado'
-              WHEN v_hoy >= e.etd AND v_hoy < e.eta THEN 'En Tránsito'
-              WHEN v_hoy >= e.eta THEN 'Arribo'
-              ELSE e.estado::text
-            END
-          ELSE e.estado::text
-        END AS estado_real
+        e.estado::text AS estado_real
       FROM embarques e
       WHERE e.deleted_at IS NULL
         AND (e.organization_id = public.org_scope())
@@ -17705,11 +17680,14 @@ CREATE FUNCTION public.dashboard_details_datos() RETURNS jsonb
     SET search_path TO 'public'
     AS $$
 DECLARE
+  -- Ola 17 · H8-A: el servidor corre en UTC; el tablero debe razonar en hora
+  -- de México o los días de demora se adelantan a partir de las 18:00 CDMX.
   v_hoy date := (now() AT TIME ZONE 'America/Mexico_City')::date;
   v_inicio_mes date := date_trunc('month', v_hoy)::date;
   v_fin_mes date := (date_trunc('month', v_hoy) + interval '1 month' - interval '1 day')::date;
   v_inicio_sig date := (date_trunc('month', v_hoy) + interval '1 month')::date;
   v_fin_sig date := (date_trunc('month', v_hoy) + interval '2 months' - interval '1 day')::date;
+  -- Fallback SÓLO cuando la naviera no tiene condiciones capturadas.
   v_dias_libres_fallback int := 7;
   v_nombre_mes text;
   v_meses text[] := ARRAY['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
@@ -17724,25 +17702,18 @@ BEGIN
              e.ciudad_origen, e.ciudad_destino, e.contenedor, e.created_at,
              e.naviera, e.organization_id,
              e.tipo_cambio_usd, e.tipo_cambio_eur,
-        CASE
-          WHEN e.estado = 'Borrador' THEN 'Borrador'
-          WHEN e.estado = 'Cancelado' THEN 'Cancelado'
-          WHEN e.estado IN ('Arribo','En Aduana','Entregado','EIR','Por liquidar','Cerrado') THEN e.estado::text
-          WHEN e.modo = 'Marítimo' AND e.tipo = 'Importación' AND e.etd IS NOT NULL AND e.eta IS NOT NULL THEN
-            CASE
-              WHEN v_hoy < e.etd THEN 'Confirmado'
-              WHEN v_hoy >= e.etd AND v_hoy < e.eta THEN 'En Tránsito'
-              WHEN v_hoy >= e.eta THEN 'Arribo'
-              ELSE e.estado::text
-            END
-          ELSE e.estado::text
-        END AS estado_real
+        e.estado::text AS estado_real
       FROM embarques e
-      WHERE e.deleted_at IS NULL
+      WHERE e.deleted_at IS NULL              -- FIX C5
         AND (e.organization_id = public.org_scope())
     ),
     profit AS (SELECT * FROM profit_por_embarque()),
+    -- Ola 4 · N10 (B-033): Borrador ya no cuenta como activo operativo.
     activos AS (SELECT * FROM embarques_base WHERE estado_real NOT IN ('Borrador','EIR','Por liquidar','Cerrado','Cancelado')),
+    -- Ola 17 · H8-A: los días de demora se calculan con la MISMA base que
+    -- factura calcular_demoras_embarque: fecha real de descarga (evento o
+    -- contenedor) y días libres reales (override del contenedor → condiciones
+    -- de la naviera → fallback). La ETA sólo se usa como estimación.
     demoras_ctx AS (
       SELECT a.id,
         (SELECT min((ev.fecha AT TIME ZONE 'America/Mexico_City')::date)
@@ -17822,7 +17793,7 @@ BEGIN
       WHERE eb.estado_real NOT IN ('Borrador','Cancelado')
         AND eb.eta IS NOT NULL AND eb.eta >= v_inicio_mes AND eb.eta <= v_fin_mes
         AND (COALESCE(p.venta_mxn, 0) > 0 OR COALESCE(p.costo_mxn, 0) > 0)
-      ORDER BY (COALESCE(p.venta_mxn, 0) - COALESCE(p.costo_mxn, 0)) DESC LIMIT 200
+      ORDER BY (COALESCE(p.venta_mxn, 0) - COALESCE(p.costo_mxn, 0)) DESC LIMIT 200  -- AUD-UTIL-MES: la vista "Míos" suma esta lista; 30 truncaba el mes
     ),
     profit_este_mes AS (
       SELECT jsonb_agg(jsonb_build_object(
@@ -17862,7 +17833,10 @@ BEGIN
              EXISTS (
                SELECT 1 FROM facturas f
                WHERE f.embarque_id = eb.id
-                 AND f.deleted_at IS NULL
+                 AND f.deleted_at IS NULL     -- FIX C5
+                 -- Ola 5 · RG4-2 (N45): 'Sustituida' ya no es CFDI vigente;
+                 -- excluirla del flag "facturado" (la definición vigente
+                 -- sólo excluía Cancelada/Borrador).
                  AND f.estado::text NOT IN ('Cancelada','Borrador','Sustituida')
              ) AS facturado_flag
       FROM activos eb LEFT JOIN profit p ON p.embarque_id = eb.id
@@ -17940,6 +17914,7 @@ BEGIN
       )::int AS val
       FROM activos
     ),
+    -- v13.303.13 · Listado ligero de EIR para el scope "mis embarques" del chip EIR.
     embarques_eir AS (
       SELECT jsonb_agg(jsonb_build_object(
         'id', eb.id,
@@ -18063,20 +18038,7 @@ BEGIN
            e.puerto_origen, e.puerto_destino,
            e.aeropuerto_origen, e.aeropuerto_destino,
            e.ciudad_origen, e.ciudad_destino, e.contenedor, e.created_at,
-      CASE
-        -- B-033 (v13.320.42): preservar Borrador para que no se cuente como Confirmado.
-        WHEN e.estado = 'Borrador' THEN 'Borrador'
-        WHEN e.estado::text = 'Cancelado' THEN 'Cancelado'
-          WHEN e.estado IN ('Arribo','En Aduana','Entregado','EIR','Por liquidar','Cerrado') THEN e.estado::text
-        WHEN e.modo = 'Marítimo' AND e.tipo = 'Importación' AND e.etd IS NOT NULL AND e.eta IS NOT NULL THEN
-          CASE
-            WHEN v_hoy < e.etd THEN 'Confirmado'
-            WHEN v_hoy >= e.etd AND v_hoy < e.eta THEN 'En Tránsito'
-            WHEN v_hoy >= e.eta THEN 'Arribo'
-            ELSE e.estado::text
-          END
-        ELSE e.estado::text
-      END AS estado_real
+      e.estado::text AS estado_real
     FROM embarques e
     WHERE (e.organization_id = public.org_scope())
       AND e.deleted_at IS NULL
@@ -18274,6 +18236,9 @@ CREATE FUNCTION public.dashboard_summary_datos() RETURNS jsonb
     SET search_path TO 'public'
     AS $$
 DECLARE
+  -- v13.821.3: mismo canon horario que dashboard_details_datos y el resto de
+  -- los periodos fiscales (CDMX). Con `current_date` (UTC) el tablero saltaba
+  -- de mes a las 18:00 hora de México y dejaba de sumar los gastos del día.
   v_hoy date := (now() AT TIME ZONE 'America/Mexico_City')::date;
   v_inicio_mes date := date_trunc('month', v_hoy)::date;
   v_fin_mes date := (date_trunc('month', v_hoy) + interval '1 month' - interval '1 day')::date;
@@ -18284,19 +18249,7 @@ BEGIN
     WITH embarques_base AS (
       SELECT e.id, e.estado::text, e.modo, e.tipo, e.etd, e.eta,
         e.tipo_cambio_eur,
-        CASE
-          WHEN e.estado = 'Borrador' THEN 'Borrador'
-          WHEN e.estado = 'Cancelado' THEN 'Cancelado'
-          WHEN e.estado IN ('Arribo','En Aduana','Entregado','EIR','Por liquidar','Cerrado') THEN e.estado::text
-          WHEN e.modo = 'Marítimo' AND e.tipo = 'Importación' AND e.etd IS NOT NULL AND e.eta IS NOT NULL THEN
-            CASE
-              WHEN v_hoy < e.etd THEN 'Confirmado'
-              WHEN v_hoy >= e.etd AND v_hoy < e.eta THEN 'En Tránsito'
-              WHEN v_hoy >= e.eta THEN 'Arribo'
-              ELSE e.estado::text
-            END
-          ELSE e.estado::text
-        END AS estado_real
+        e.estado::text AS estado_real
       FROM embarques e
       WHERE e.deleted_at IS NULL
         AND (e.organization_id = public.org_scope())
@@ -18317,6 +18270,8 @@ BEGIN
     ),
     gastos_op_facturas AS (
       -- AUD-UTIL-MES: base sin IVA (subtotal), igual que la utilidad de embarques.
+      -- FIX BL-11: EUR usa el TC del embarque ligado y, si no hay, el TC DOF
+      -- vigente a fecha_emision (LEFT JOIN LATERAL sobre tipos_cambio_dof).
       SELECT COALESCE(SUM(
         CASE
           WHEN pf.moneda = 'MXN' THEN pf.subtotal
@@ -18342,6 +18297,8 @@ BEGIN
         AND (pf.organization_id = public.org_scope())
     ),
     gastos_op_sin_tc AS (
+      -- FIX BL-11: mismo fallback DOF — una factura EUR con TC DOF disponible ya
+      -- no cuenta como "sin TC".
       SELECT COUNT(*) AS val
       FROM proveedor_facturas pf
       JOIN presupuesto_categorias pc ON pc.id = pf.categoria_presupuesto_id
@@ -18367,6 +18324,8 @@ BEGIN
       WHERE periodo = to_char(v_inicio_mes, 'YYYY-MM')
         AND (organization_id = public.org_scope())
     ),
+    -- FIX P1: 'arribos_mes' usaba embarques_base (incluye Borrador), lo que
+    -- inflaba 'Arribos este mes' y la utilidad con embarques aun no confirmados.
     -- AUD-UTIL-MES (2026-09-30): excluye sólo Borrador/Cancelado. EIR, Por
     -- liquidar y Cerrado SÍ arribaron en el mes y su utilidad cuenta.
     arribos_mes AS (
@@ -20351,18 +20310,7 @@ CREATE FUNCTION public.embarques_alertas_ids() RETURNS TABLE(embarque_id uuid, t
     AND e.estado::text NOT IN ('Cancelado','Borrador')
     AND e.eta IS NOT NULL
     AND (current_date - e.eta) >= 7
-    AND CASE
-       WHEN e.estado IN ('Arribo','En Aduana','Entregado','EIR','Por liquidar','Cerrado') THEN e.estado::text
-       WHEN e.modo = 'Marítimo' AND e.tipo = 'Importación'
-            AND e.etd IS NOT NULL AND e.eta IS NOT NULL THEN
-         CASE
-           WHEN current_date < e.etd THEN 'Confirmado'
-           WHEN current_date >= e.etd AND current_date < e.eta THEN 'En Tránsito'
-           WHEN current_date >= e.eta THEN 'Arribo'
-           ELSE e.estado::text
-         END
-       ELSE e.estado::text
-     END = 'Arribo'
+    AND e.estado::text = 'Arribo'
     AND (e.organization_id = public.org_scope())
   UNION ALL
   SELECT DISTINCT e.id, 'garantia'::text
@@ -24605,25 +24553,7 @@ BEGIN
       e.puerto_origen, e.puerto_destino,
       e.aeropuerto_origen, e.aeropuerto_destino,
       e.ciudad_origen, e.ciudad_destino,
-      CASE
-        -- Ola 4 · N10 (guard B-033): preservar Borrador para que no se
-        -- cuente como Confirmado por derivación ETD/ETA.
-        WHEN e.estado = 'Borrador' THEN 'Borrador'
-        -- R221 (ELIMP00353): preservar Cancelado ANTES de derivar por ETD/ETA;
-        -- si no, un cancelado con ETA vencida se volvía 'Arribo' y sobrevivía
-        -- al filtro posterior que pretendía excluirlo.
-        WHEN e.estado = 'Cancelado' THEN 'Cancelado'
-        WHEN e.estado IN ('Arribo','En Aduana','Entregado','EIR','Por liquidar','Cerrado') THEN e.estado::text
-        WHEN e.modo = 'Marítimo' AND e.tipo = 'Importación'
-             AND e.etd IS NOT NULL AND e.eta IS NOT NULL THEN
-          CASE
-            WHEN v_hoy < e.etd THEN 'Confirmado'
-            WHEN v_hoy >= e.etd AND v_hoy < e.eta THEN 'En Tránsito'
-            WHEN v_hoy >= e.eta THEN 'Arribo'
-            ELSE e.estado::text
-          END
-        ELSE e.estado::text
-      END AS estado_real
+      e.estado::text AS estado_real
     FROM embarques e
     WHERE e.deleted_at IS NULL                -- FIX C5
       AND (e.organization_id = public.org_scope())
@@ -24782,6 +24712,7 @@ BEGIN
     ) sub
     GROUP BY operador_norm
   ),
+  -- NUEVO: detalle de embarques por (operador, estado_ui), con tope por estado
   embarques_ranked AS (
     SELECT
       operador_norm, estado_ui, id, expediente, cliente_nombre,
@@ -32758,18 +32689,7 @@ CREATE FUNCTION public.sidebar_alert_counts() RETURNS TABLE(embarques_demora big
        -- R220: Cancelado/Borrador nunca son demora.
        AND e.estado::text NOT IN ('Cancelado','Borrador')
        AND (current_date - e.eta) >= 7
-       AND CASE
-         WHEN e.estado IN ('Arribo','En Aduana','Entregado','EIR','Por liquidar','Cerrado') THEN e.estado::text
-         WHEN e.modo = 'Marítimo' AND e.tipo = 'Importación'
-              AND e.etd IS NOT NULL AND e.eta IS NOT NULL THEN
-           CASE
-             WHEN current_date < e.etd THEN 'Confirmado'
-             WHEN current_date >= e.etd AND current_date < e.eta THEN 'En Tránsito'
-             WHEN current_date >= e.eta THEN 'Arribo'
-             ELSE e.estado::text
-           END
-         ELSE e.estado::text
-       END = 'Arribo'
+       AND e.estado::text = 'Arribo'
        AND e.organization_id = public.org_scope()
     ) AS embarques_demora,
     (SELECT count(*) FROM facturas f

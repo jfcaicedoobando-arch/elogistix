@@ -17,11 +17,11 @@ vi.mock("@/features/portal-agente/hooks", () => ({
 describe("AgenteEmbarques · estado consistente con Operaciones", () => {
   afterEach(() => vi.useRealTimers());
 
-  it("muestra En Tránsito cuando el ETD ya ocurrió aunque el estado almacenado siga Confirmado", () => {
+  it("conserva Confirmado aunque el ETD venció hasta registrar salida real", () => {
     vi.useFakeTimers();
     vi.setSystemTime(new Date("2026-09-29T18:00:00Z"));
     render(<MemoryRouter><AgenteEmbarques /></MemoryRouter>);
-    expect(screen.getByText("En Tránsito")).toBeInTheDocument();
-    expect(screen.queryByText("Confirmado")).not.toBeInTheDocument();
+    expect(screen.getByText("Confirmado")).toBeInTheDocument();
+    expect(screen.queryByText("En Tránsito")).not.toBeInTheDocument();
   });
 });
