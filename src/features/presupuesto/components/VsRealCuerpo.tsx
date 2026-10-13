@@ -5,7 +5,7 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { TableCell } from "@/components/ui/table";
 import { DetailTableRow } from "@/components/shared/DetailTable";
-import { Button } from "@/components/ui/button";
+import { EmptyStateInline } from "@/components/empty/EmptyStateInline";
 import { pluralizar } from "@/lib/format/pluralizar";
 import { VsRealFila } from "./VsRealFila";
 import type { ordenarFilas } from "./vsRealSort";
@@ -43,17 +43,16 @@ export function VsRealCuerpo({
   }
   return (
     <DetailTableRow hoverable={false}>
-      <TableCell colSpan={5} className="py-8 text-center">
-        <p className="text-body-sm text-muted-foreground mb-3">
-          {soloExcesos
+      <TableCell colSpan={5} className="p-0">
+        <EmptyStateInline
+          message={soloExcesos
             ? "No hay categorías con más del 110% ni gasto positivo sin presupuesto este mes."
             : "No hay categorías de presupuesto capturadas para este periodo."}
-        </p>
-        {soloExcesos && (
-          <Button variant="outline" size="sm" onClick={onQuitarFiltro}>
-            Quitar filtro "Solo excepciones"
-          </Button>
-        )}
+          action={soloExcesos ? {
+            label: 'Quitar filtro "Solo excepciones"',
+            onClick: onQuitarFiltro,
+          } : undefined}
+        />
       </TableCell>
     </DetailTableRow>
   );

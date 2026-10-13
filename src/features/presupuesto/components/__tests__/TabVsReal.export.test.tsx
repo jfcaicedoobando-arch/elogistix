@@ -33,9 +33,23 @@ it("el filtro vacío sigue vacío en el PDF y el reporte parcial avisa", async (
   render(<TabVsReal />);
   expect(screen.getByRole("status")).toHaveTextContent("Reporte provisional");
   fireEvent.click(screen.getByRole("switch", { name: "Solo excepciones" }));
+  expect(screen.getByText("No hay categorías con más del 110% ni gasto positivo sin presupuesto este mes.")).toBeInTheDocument();
+  expect(screen.queryByText("Normal")).not.toBeInTheDocument();
   fireEvent.click(screen.getByRole("button", { name: "PDF" }));
   await waitFor(() => expect(mocks.download).toHaveBeenCalledOnce());
   expect(mocks.download.mock.calls[0][0].props).toMatchObject({ filas: [], soloExcesos: true });
+  fireEvent.click(screen.getByRole("button", { name: 'Quitar filtro "Solo excepciones"' }));
+  expect(screen.getByRole("switch", { name: "Solo excepciones" })).not.toBeChecked();
+  expect(screen.getByText("Normal")).toBeInTheDocument();
+  expect(screen.queryByText(/No hay categorías con más del 110%/)).not.toBeInTheDocument();
+  expect(screen.queryByRole("button", { name: 'Quitar filtro "Solo excepciones"' })).not.toBeInTheDocument();
+});
+
+it("muestra el vacío sin categorías sin ofrecer quitar un filtro inactivo", () => {
+  mocks.query.mockReturnValue({ data: { ...resumen, filas: [] }, organizationId: "org-a" });
+  render(<TabVsReal />);
+  expect(screen.getByText("No hay categorías de presupuesto capturadas para este periodo.")).toBeInTheDocument();
+  expect(screen.queryByRole("button", { name: 'Quitar filtro "Solo excepciones"' })).not.toBeInTheDocument();
 });
 
 it("EX08: muestra importe y captura, filtra y exporta las mismas excepciones sin ocultar parcialidad", async () => {
