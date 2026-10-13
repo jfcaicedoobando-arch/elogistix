@@ -1,15 +1,39 @@
 # Propuesta de revisión de PR para replay NC
 
-## Archive preparation (active runner unchanged)
+## Explicit archived provenance, v1 preserved by default
 
-Both NC and Acceptance workflows remain active. The frozen observations at
+Both NC and Acceptance workflows remain active and their commands/events are
+unchanged. `run.mjs minimal` and `run.mjs full` still read the active NC YAML,
+emit `format: 1` with the same seven/thirteen string-valued `sources`, and do not
+load the archive helper. Existing v1 records are never rewritten or upgraded.
+
+The opt-in argument `--archive-snapshot <exact-known-commit>` selects NC
+`format: 2`. It only accepts the two immutable observations
 43a453641a933e2f3f2be3fd766322307c8b9f3b and
-2efa854223d0b7e7b38cb4cf743fc48b9b86a052 are kept separately in
+2efa854223d0b7e7b38cb4cf743fc48b9b86a052 in
 [the workflow archive](../../../docs/ci/workflow-archive/README.md).
-The prepared `source-evidence.mjs` helper is not imported by `run.mjs`; the
-active runner still reads its active YAML and emits v1. This addition neither
-runs replay nor updates historical results. Effective required checks/workflows
-and artifact consumers must be verified before a later retirement/format change.
+The same Actions/PR/repository/head-branch/checkout admission remains mandatory;
+this option is not a local execution route or permission to dispatch a workflow.
+No active workflow selects it yet.
+
+NC v2 adds complete `sourceBindings` and the helper/selected manifest to the
+source inventory. The logical NC workflow path binds to the verified archive;
+`reviewCommit` remains the admitted current head, never the archive observation.
+There is no default snapshot, YAML-missing autodetection, or active-file fallback.
+Minimal staging remains nine inputs and full staging keeps its existing roots
+and extension rules. Archives are host provenance, never exported SQL inputs.
+V2 does not change verification, result status or owned-container cleanup.
+
+Acceptance's existing `format: 2` is a separate artifact family with
+`head`/`base` and object-valued `sources` (`sha256`, `bytes`, `use`); it is not NC
+v2 and is not a consumer of `sourceBindings`. Readers must identify the harness
+and version, not infer a shared schema from the number 2.
+
+Four Vitest suites exercise exact runner orchestration with synthetic fixtures
+and mocked subprocess/verification boundaries, plus archive identity failures.
+These are not PostgreSQL replay results. Required checks/workflow rules,
+consumers, a replacement execution route and real final-SHA CI still need review
+before retiring either wrapper. See the archive README for the remaining gates.
 The original technical proposal and validation-at-preparation notes follow.
 
 Estado: **propuesta estática, no ejecutada ni disparada**. El workflow nuevo
