@@ -1,6 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { calcularFlujoProyectado } from '@/features/tesoreria/domain/flujoProyectado';
-import type { CxpRow } from '@/features/tesoreria/domain';
+import { calcularFlujoProyectado, type CxpRow } from '@/features/tesoreria/domain';
 import { buildFinancialAnalysis } from '../financialAnalysis';
 const base={organizationId:'mock-org',selectedMonth:'2026-09',currentBalanceReference:'2026-10-13',
   currencyRows:[{moneda:'MXN'},{moneda:'USD'},{moneda:'EUR'},{moneda:'USD'}]};
