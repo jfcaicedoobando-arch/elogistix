@@ -1,15 +1,46 @@
+import { Component, createRef, type ReactNode } from 'react';
 import { Clock, Hourglass, Waves } from 'lucide-react';
 import { KpiCard } from '@/components/shared/KpiCard';
 import { KpiStrip } from '@/components/shared/KpiStrip';
 import { ANALYSIS_DATA_REQUIRED, type FinancialAnalysis } from '../services/financialAnalysis';
 
+interface FocusBoundaryProps { contentKey: string; children: ReactNode }
+
+/** Snapshot before DOM removal; an effect would see BODY after the summary disappears. */
+class AnalysisFocusBoundary extends Component<FocusBoundaryProps, unknown, Element | null> {
+  private region = createRef<HTMLElement>();
+  private content = createRef<HTMLDivElement>();
+
+  getSnapshotBeforeUpdate(): Element | null {
+    const content = this.content.current;
+    if (!content) return null;
+    const focused = content.ownerDocument.activeElement;
+    return focused && content.contains(focused) ? focused : null;
+  }
+
+  componentDidUpdate(_previous: FocusBoundaryProps, _state: unknown, previousFocus: Element | null) {
+    const region = this.region.current;
+    if (previousFocus?.isConnected === false && region && region.ownerDocument.activeElement === region.ownerDocument.body) {
+      region.focus({preventScroll: true});
+    }
+  }
+
+  render() {
+    return <section ref={this.region} aria-label="Eficiencia financiera por moneda" tabIndex={-1}
+      className="space-y-3 rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+      <div ref={this.content} key={this.props.contentKey} className="space-y-3">{this.props.children}</div>
+    </section>;
+  }
+}
+
 export function BandaKPIsEficiencia({analysis, loading = false, error}: {
   analysis?: FinancialAnalysis; loading?: boolean; error?: Error | null;
 }) {
-  if (error) return <p role="alert">DSO, DPO y runway: N/D. No se pudieron consultar las fuentes financieras: {error.message}</p>;
-  if (loading) return <p role="status">DSO, DPO y runway: N/D. Consultando las fuentes financieras.</p>;
-  if (!analysis) return <p role="status">DSO, DPO y runway: N/D. {ANALYSIS_DATA_REQUIRED}</p>;
-  return <section aria-label="Eficiencia financiera por moneda" className="space-y-3">
+  if (error) return <AnalysisFocusBoundary contentKey="error"><p role="alert">DSO, DPO y runway: N/D. No se pudieron consultar las fuentes financieras: {error.message}</p></AnalysisFocusBoundary>;
+  if (loading) return <AnalysisFocusBoundary contentKey="loading"><p role="status">DSO, DPO y runway: N/D. Consultando las fuentes financieras.</p></AnalysisFocusBoundary>;
+  if (!analysis) return <AnalysisFocusBoundary contentKey="empty"><p role="status">DSO, DPO y runway: N/D. {ANALYSIS_DATA_REQUIRED}</p></AnalysisFocusBoundary>;
+  const contentKey = JSON.stringify([analysis.organizationId, analysis.selectedMonth, analysis.currentBalanceReference]);
+  return <AnalysisFocusBoundary contentKey={contentKey}>
     <p className="text-body text-muted-foreground">
       Mes seleccionado: {analysis.selectedMonth}. Referencia de cartera actual: {analysis.currentBalanceReference}.
       {' '}Corte financiero y cierre contable sin verificar. Políticas aprobadas; datos pendientes de verificación.
@@ -37,5 +68,5 @@ export function BandaKPIsEficiencia({analysis, loading = false, error}: {
         </div>)}
       </details>
     </div>)}
-  </section>;
+  </AnalysisFocusBoundary>;
 }
