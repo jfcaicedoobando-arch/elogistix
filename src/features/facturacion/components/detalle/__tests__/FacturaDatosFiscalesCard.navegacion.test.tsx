@@ -33,7 +33,7 @@ import { useTimbrarFacturaDialog } from "../../../hooks/useTimbrarFacturaDialog"
 import type { FacturaDetalle } from "../../../services/detail";
 
 const cliente = { rfc: "XAXX010101000", codigo_postal: "64000", regimen_fiscal: "616", uso_cfdi_default: "G03" };
-const f1 = { id: "f1", organization_id: "org1", cliente_id: "c1", uso_cfdi: "G03", forma_pago: "99", metodo_pago: "PPD", moneda: "MXN", tipo_cambio: 1, total: 5, numero: "BORRADOR", cliente_nombre: "Prueba", fecha_emision: "2026-10-07", notas: "primera", dias_credito: 0, estado: "Borrador", uuid_fiscal: null, facturapi_id: null };
+const f1 = { deleted_at: null, id: "f1", organization_id: "org1", cliente_id: "c1", uso_cfdi: "G03", forma_pago: "99", metodo_pago: "PPD", moneda: "MXN", tipo_cambio: 1, total: 5, numero: "BORRADOR", cliente_nombre: "Prueba", fecha_emision: "2026-10-07", notas: "primera", dias_credito: 0, estado: "Borrador", uuid_fiscal: null, facturapi_id: null };
 const f2 = { ...f1, id: "f2", organization_id: "org2", cliente_id: "c2", rfc_cliente: "AAA010101AAA", uso_cfdi: "G01", notas: "segunda" };
 const cliente2 = { ...cliente, rfc: "AAA010101AAA", regimen_fiscal: "601" };
 let confirmar: (() => Promise<void>) | undefined;

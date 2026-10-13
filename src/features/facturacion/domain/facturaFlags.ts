@@ -1,11 +1,6 @@
+/** Flags puros del detalle: vigencia, estado fiscal, saldo y permisos. */
 import { esFacturaVigenteParaOperar } from "./facturaVigencia";
 import { tieneSaldoMonetario } from "@/lib/financial/toleranciaPago";
-/**
- * Deriva los flags booleanos que gobiernan la UI del detalle de factura.
- * Se extrae como helper puro para reducir la complejidad ciclomática del
- * route `FacturaDetalle` (Power of 10 #4) y hacerlos testeables.
- */
-
 import { esCreadaConCapacidadTimbrado } from "./facturaCapacidadTimbrado";
 
 export {

@@ -1,11 +1,6 @@
 /**
- * FacturaPagosSection — historial de pagos con acciones admin
- * (registrar pago / eliminar pago). Reusa `usePagosFactura` y los hooks
- * de mutación ya existentes. El cálculo de saldo replica al del diálogo
- * de registrar pago: `total − Σ monto_aplicado_factura`.
- *
- * v13.232.0 · Confirmación de eliminar pago migrada a `ConfirmActionDialog` (Lote 7d.2).
- * v13.823.240 · Agrega cancelación de REP desde el detalle de factura.
+ * Historial de pagos, eliminación confirmada y cancelación de REP.
+ * Reusa los hooks de lectura/mutación y el cálculo compartido de saldo.
  */
 import { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
@@ -78,7 +73,6 @@ export function FacturaPagosSection({
   const { saldo, pagado: totalPagado, liquidada: sinSaldo } = calcularSaldoFactura(
     totalFactura, pagos, notasAplicadas, estadoFactura, saldoServidorQuery?.data,
   );
-
 
   const liquidada = sinSaldo && pagos.length > 0;
 
