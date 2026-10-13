@@ -91,11 +91,22 @@ describe("fetchProyeccionMes", () => {
     ];
     mock.setTableResult("conceptos_costo", { data: [], error: null });
     mock.setTableResult("facturas", { data: [], error: null });
-    const rows = await fetchProyeccionMes({ organizationId: null, year: 2026, month: 5 });
+    const rows = await fetchProyeccionMes({ organizationId: "org-1", year: 2026, month: 5 });
     const e1 = rows.find((r) => r.embarque_id === "e1")!;
     const e2 = rows.find((r) => r.embarque_id === "e2")!;
     expect(e1.venta_usd).toBeCloseTo(15, 2);
     expect(e2.venta_usd).toBeCloseTo(7, 2);
+    const shipments = mock.tableCalls.find((call) => call.table === "embarques")!;
+    expect(shipments.opArgs.filter((_, i) => shipments.ops[i] === "eq"))
+      .toContainEqual(["organization_id", "org-1"]);
+  });
+
+  it.each([null, ""])("rechaza organización ausente (%s) antes de consultar", async (organizationId) => {
+    await expect(
+      fetchProyeccionMes({ organizationId, year: 2026, month: 5 }),
+    ).rejects.toThrow("Selecciona una organización para consultar la proyección.");
+    expect(mock.tableCalls).toHaveLength(0);
+    expect(mock.rpcCalls).toHaveLength(0);
   });
 
   it("propaga error de embarques", async () => {

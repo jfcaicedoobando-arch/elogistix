@@ -2,6 +2,7 @@
  * Fuentes de datos (Supabase) para la proyección de facturación.
  * Solo I/O: trae embarques del mes + sus conceptos/facturas. Sin agregaciones.
  */
+import { fetchProjectionInChunks } from "./fetchInChunks";
 import { supabase } from "@/integrations/supabase/client";
 import { fetchFacturasEmitidasCierre, ventasPendientes } from "./ventasPendientes";
 import { leerTodasLasPaginas } from "@/lib/supabase/paginado";
@@ -25,7 +26,8 @@ export async function fetchEmbarquesMes(
   desde: string,
   hasta: string,
 ): Promise<EmbarqueProyeccionRow[]> {
-  let q = supabase
+  if (!organizationId) throw new Error("Selecciona una organización para consultar la proyección.");
+  return leerTodasLasPaginas("cierre.embarques", (ini, fin) => supabase
     .from("embarques")
     .select(
       "id, expediente, cliente_nombre, operador, eta, contenedor, tipo_cambio_usd, tipo_cambio_eur, tiene_proforma",
@@ -36,11 +38,11 @@ export async function fetchEmbarquesMes(
     // Excluir embarques cancelados — alineado con Estado de Resultados
     // para que la proyección no infle ingresos con expedientes cancelados.
     .not("estado", "in", `(${ESTADOS_EMBARQUE_NO_CONTABLES.join(",")})`)
-    .order("eta", { ascending: true });
-  if (organizationId) q = q.eq("organization_id", organizationId);
-  const { data, error } = await q;
-  if (error) throw error;
-  return data ?? [];
+    .eq("organization_id", organizationId)
+    .order("eta", { ascending: true })
+    .order("id", { ascending: true })
+    .range(ini, fin),
+  );
 }
 
 export async function fetchConceptosYFacturas(
@@ -54,27 +56,27 @@ export async function fetchConceptosYFacturas(
   // trunca en silencio.
   const [facturadas, proyectadas, costos, facturas] = await Promise.all([
     // AUD-ANALISIS-8: venta = facturas timbradas vigentes − notas de crédito.
-    fetchVentaFacturadaEmbarques(ids),
+    fetchProjectionInChunks(ids, fetchVentaFacturadaEmbarques),
     // AUD-ANALISIS-9: Cierre mensual ES una proyección; los embarques aún sin
     // factura usan su venta proyectada (conceptos) en "Pendiente de facturar".
-    leerTodasLasPaginas("cierre.ventas", (ini, fin) =>
+    fetchProjectionInChunks(ids, (lote) => leerTodasLasPaginas("cierre.ventas", (ini, fin) =>
       supabase
         .from("conceptos_venta")
         .select("id, embarque_id, total, moneda, proforma_id")
-        .in("embarque_id", ids)
+        .in("embarque_id", lote)
         .is("deleted_at", null)
         .order("id")
         .range(ini, fin),
-    ),
-    leerTodasLasPaginas("cierre.costos", (ini, fin) =>
+    )),
+    fetchProjectionInChunks(ids, (lote) => leerTodasLasPaginas("cierre.costos", (ini, fin) =>
       supabase
         .from("conceptos_costo")
         .select("id, embarque_id, monto, moneda")
-        .in("embarque_id", ids)
+        .in("embarque_id", lote)
         .is("deleted_at", null)
         .order("id")
         .range(ini, fin),
-    ),
+    )),
     fetchFacturasEmitidasCierre(ids),
   ]);
   // Keep projected and invoiced bases separate: one invoice does not bill the whole shipment.

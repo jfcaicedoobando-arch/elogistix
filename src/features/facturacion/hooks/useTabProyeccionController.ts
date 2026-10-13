@@ -3,7 +3,7 @@
  * Encapsula selección de mes (sincronizada con URL ?mes=YYYY-MM), filtros,
  * fetch del backend, KPIs y export a CSV.
  */
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useMemo, useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useSearchParams } from "react-router";
 import { useOrgFilter } from "@/hooks/shared";
@@ -26,7 +26,7 @@ import { queryKeys } from "@/lib/query";
 type FiltroEstado = "todos" | EstadoProyeccion;
 
 export function useTabProyeccionController() {
-  const { organizationId } = useOrgFilter();
+  const { organizationId, orgListo } = useOrgFilter();
   const [searchParams, setSearchParams] = useSearchParams();
 
   const mesesDisponibles = useMemo(() => generarMesesDisponibles(), []);
@@ -62,16 +62,34 @@ export function useTabProyeccionController() {
   const [filtroOperador, setFiltroOperador] = useState<string>("todos");
   const [filtroEstado, setFiltroEstado] = useState<FiltroEstado>("todos");
 
-  const { data: filas = [], isLoading, error, refetch, isFetching } = useQuery({
+  const scope = `${organizationId ?? ""}|${mesActual.key}`;
+  const ready = orgListo && !!organizationId;
+  const currentScope = useRef({ scope, ready, exportable: false });
+  currentScope.current = { scope, ready, exportable: false };
+
+  const { data, isLoading, error, refetch, isFetching } = useQuery({
     queryKey: queryKeys.facturacion.proyeccion(organizationId, mesActual.key),
-    queryFn: () =>
-      fetchProyeccionMes({
-        organizationId: organizationId ?? null,
+    enabled: ready,
+    queryFn: async ({ signal }) => {
+      // enabled does not guard an imperative refetch.
+      if (!ready || !organizationId || currentScope.current.scope !== scope || !currentScope.current.ready) {
+        throw new Error("Selecciona una organización para consultar la proyección.");
+      }
+      const filas = await fetchProyeccionMes({
+        organizationId,
         year: mesActual.year,
         month: mesActual.month,
-      }),
+      });
+      if (signal.aborted || currentScope.current.scope !== scope || !currentScope.current.ready) {
+        throw new Error("La organización o el mes de la proyección cambió.");
+      }
+      return { scope, filas };
+    },
     staleTime: 60_000,
   });
+  const exportable = ready && !isLoading && !isFetching && !error && data?.scope === scope;
+  currentScope.current.exportable = exportable;
+  const filas = useMemo(() => exportable ? data!.filas : [], [exportable, data]);
 
   const grupos = useMemo(() => agruparPorExpediente(filas), [filas]);
 
@@ -99,13 +117,16 @@ export function useTabProyeccionController() {
   const kpis = useMemo(() => calcularKpisProyeccion(gruposFiltrados), [gruposFiltrados]);
   const kpisGlobales = useMemo(() => calcularKpisProyeccion(grupos), [grupos]);
 
+  const currentGroups = useRef(gruposFiltrados);
+  currentGroups.current = gruposFiltrados;
   const exportarCsv = useCallback(() => {
+    if (!exportable || !currentScope.current.exportable || currentScope.current.scope !== scope || currentGroups.current !== gruposFiltrados) return;
     exportToCsv(
       buildProyeccionCsvFilename(mesActual.key),
       PROYECCION_CSV_HEADERS,
       buildProyeccionCsvRows(gruposFiltrados),
     );
-  }, [gruposFiltrados, mesActual.key]);
+  }, [exportable, scope, gruposFiltrados, mesActual.key]);
 
   return {
     // mes
