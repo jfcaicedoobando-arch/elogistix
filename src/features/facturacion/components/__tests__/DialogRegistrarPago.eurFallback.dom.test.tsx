@@ -35,7 +35,7 @@ const manual = (value: string) => fireEvent.change(tc(), { target: { value } });
 const enviarForm = () => fireEvent.submit(screen.getByLabelText("Monto del pago").closest("form")!);
 async function moneda(value: string) {
   fireEvent.keyDown(screen.getByRole("combobox", { name: "Moneda" }), { key: "ArrowDown" });
-  fireEvent.click(await screen.findByRole("option", { name: value, exact: true }));
+  fireEvent.click(await screen.findByRole("option", { name: value }));
 }
 function montar(monedaFactura = "EUR", total = 1) {
   mocks.saldo = total;
