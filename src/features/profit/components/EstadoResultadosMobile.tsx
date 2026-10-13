@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import { MargenTexto } from "@/components/shared/MargenBadge";
+import { SectionHeading } from "@/components/shared/SectionHeading";
 import { UMBRAL_MARGEN_OPERATIVO } from "@/lib/ui/margen";
 import { MODOS_COLUMNAS, type EstadoResultados, type FilaER, type TotalER } from "../domain/estadoResultados";
 import { fmt } from "./EstadoResultadosTable.helpers";
@@ -25,7 +26,9 @@ function MobileValues({ label, children, variant = "plain" }: {
   const bg = variant === "primary" ? "bg-primary/10" : variant === "muted" ? "bg-muted" : "";
   return (
     <section aria-label={label} className={`${bg} min-w-0 border-b px-3 py-3 text-body-sm`}>
-      <h3 className="mb-2 break-words font-semibold">{label}</h3>
+      <SectionHeading as="h3" variant="subsection" className="mb-2 [&_h3>span]:whitespace-normal [&_h3>span]:break-words">
+        {label}
+      </SectionHeading>
       <dl className="space-y-2">{children}</dl>
     </section>
   );

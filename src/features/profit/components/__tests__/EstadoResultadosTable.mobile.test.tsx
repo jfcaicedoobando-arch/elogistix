@@ -13,8 +13,7 @@ function mobile(container: HTMLElement) {
 }
 
 function amounts(container: HTMLElement, label: string) {
-  // A heading's parent contains its entire card, without depending on the row implementation.
-  return within(mobile(container)).getByText(label, { exact: true }).parentElement!;
+  return within(mobile(container)).getByRole("region", { name: label });
 }
 
 function expectAmounts(card: HTMLElement, total: TotalER) {
@@ -137,7 +136,11 @@ describe("Estado de resultados: mobile/desktop breakdown parity", () => {
     data.ingresos[0].concepto = label;
     const { container } = render(<EstadoResultadosTable data={data} />);
     const card = within(mobile(container)).getByRole("region", { name: label });
-    expect(within(card).getByRole("heading", { name: label })).toHaveClass("break-words");
+    const heading = within(card).getByRole("heading", { name: label, level: 3 });
+    expect(heading).toHaveClass("text-subsection");
+    expect(heading.parentElement?.parentElement).toHaveClass(
+      "mb-2", "[&_h3>span]:whitespace-normal", "[&_h3>span]:break-words",
+    );
     expectAmounts(card, data.ingresos[0]);
     expectAmounts(amounts(container, "UTILIDAD BRUTA"), data.utilidad);
   });
