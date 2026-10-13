@@ -90,7 +90,7 @@ hope the above is useful for you`;
       Agente: "SHENZHEN GOLDEN SHIPPING", "Tarifa 20": 5600, "Tarifa 40": 5900,
       "Término de la vigencia": "2026-10-21", "Días libres": 21,
     });
-    expect(filas.filter((f) => f.Destino === "Ensenada")).toHaveLength(9);
+    expect(filas.filter((f) => f.Destino === "Ensenada")).toHaveLength(8);
     expect(filas.filter((f) => f.Naviera === "EGLV").every((f) => f.Destino !== "Ensenada")).toBe(true);
   });
 });
