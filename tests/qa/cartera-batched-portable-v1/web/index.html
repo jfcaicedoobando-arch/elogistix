@@ -1,0 +1,11 @@
+<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>QA local · Cartera por lotes</title><link rel="stylesheet" href="./style.css"></head><body><main>
+<h1>Cartera por lotes: prueba local</h1>
+<p class="notice">Prototipo experimental. Sólo datos sintéticos incluidos. No conecta con Librecarga, bases de datos ni producción. El resultado de Node no certifica este navegador.</p>
+<p>Ejecute primero 120 filas, Unicode y cancelaciones. Después 5,001, en una sola pestaña. Límite automático: 150 segundos. El navegador no permite imponer el límite Node de 896 MiB; supervise su memoria en el administrador de tareas y cancele si el proceso supera 1,200 MiB.</p>
+<label>Caso <select id="fixture"><option value="120">120 filas · lotes de 50</option><option value="mixed">121 filas · Unicode y fila alta · lotes de 50</option><option value="5001">5,001 filas · lotes de 500</option></select></label>
+<label>Cancelación <select id="cancelMode"><option value="manual">Manual</option><option value="render">Automática durante render (5.5 s)</option><option value="merge">Automática durante unión (50 ms)</option><option value="pre">Antes de iniciar</option></select></label>
+<div class="actions"><button id="run">Ejecutar</button><button id="cancel" disabled>Cancelar</button><button id="pdf" disabled>Guardar PDF completo</button><button id="report" disabled>Guardar informe JSON</button></div>
+<p id="status" role="status" aria-live="polite">Listo. Abra las herramientas del navegador para registrar errores y memoria.</p>
+<p id="clock">0.0 s</p><pre id="log"></pre>
+<p>“Workers activos” cuenta instancias del protocolo y solicitudes de terminación; no prueba que el navegador haya liberado la memoria. Las medidas JS mostradas pertenecen sólo al hilo principal y no son RSS total.</p>
+</main><script type="module" src="./harness.mjs"></script></body></html>

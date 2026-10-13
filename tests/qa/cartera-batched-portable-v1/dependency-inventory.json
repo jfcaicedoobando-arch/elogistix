@@ -1,0 +1,595 @@
+[
+  {
+    "name": "@noble/ciphers",
+    "version": "1.3.0",
+    "license": "MIT",
+    "licenseFiles": [
+      "licenses/@noble__ciphers-1.3.0/LICENSE"
+    ],
+    "source": "pre-existing installed package; no download for this task"
+  },
+  {
+    "name": "@noble/hashes",
+    "version": "1.8.0",
+    "license": "MIT",
+    "licenseFiles": [
+      "licenses/@noble__hashes-1.8.0/LICENSE"
+    ],
+    "source": "pre-existing installed package; no download for this task"
+  },
+  {
+    "name": "@pdf-lib/standard-fonts",
+    "version": "1.0.0",
+    "license": "MIT",
+    "licenseFiles": [
+      "licenses/@pdf-lib__standard-fonts-1.0.0/LICENSE.md"
+    ],
+    "source": "pre-existing installed package; no download for this task"
+  },
+  {
+    "name": "@pdf-lib/upng",
+    "version": "1.0.1",
+    "license": "MIT",
+    "licenseFiles": [
+      "licenses/@pdf-lib__upng-1.0.1/LICENSE"
+    ],
+    "source": "pre-existing installed package; no download for this task"
+  },
+  {
+    "name": "@react-pdf/fns",
+    "version": "3.1.3",
+    "license": "MIT",
+    "licenseFiles": [
+      "licenses/@react-pdf__fns-3.1.3/PACKAGE-NOTICE.json"
+    ],
+    "source": "pre-existing installed package; no download for this task",
+    "repository": "https://github.com/diegomura/react-pdf.git",
+    "fullStandaloneNoticeMissing": true
+  },
+  {
+    "name": "@react-pdf/font",
+    "version": "4.1.2",
+    "license": "MIT",
+    "licenseFiles": [
+      "licenses/@react-pdf__font-4.1.2/PACKAGE-NOTICE.json"
+    ],
+    "source": "pre-existing installed package; no download for this task",
+    "repository": "https://github.com/diegomura/react-pdf.git",
+    "fullStandaloneNoticeMissing": true
+  },
+  {
+    "name": "@react-pdf/hyphenate",
+    "version": "0.1.0",
+    "license": "MIT",
+    "licenseFiles": [
+      "licenses/@react-pdf__hyphenate-0.1.0/PACKAGE-NOTICE.json"
+    ],
+    "source": "pre-existing installed package; no download for this task",
+    "repository": "https://github.com/diegomura/react-pdf.git",
+    "fullStandaloneNoticeMissing": true
+  },
+  {
+    "name": "@react-pdf/image",
+    "version": "3.1.2",
+    "license": "MIT",
+    "licenseFiles": [
+      "licenses/@react-pdf__image-3.1.2/PACKAGE-NOTICE.json"
+    ],
+    "source": "pre-existing installed package; no download for this task",
+    "repository": "https://github.com/diegomura/react-pdf.git",
+    "fullStandaloneNoticeMissing": true
+  },
+  {
+    "name": "@react-pdf/layout",
+    "version": "5.2.0",
+    "license": "MIT",
+    "licenseFiles": [
+      "licenses/@react-pdf__layout-5.2.0/PACKAGE-NOTICE.json"
+    ],
+    "source": "pre-existing installed package; no download for this task",
+    "repository": "https://github.com/diegomura/react-pdf.git",
+    "fullStandaloneNoticeMissing": true
+  },
+  {
+    "name": "@react-pdf/paginate",
+    "version": "1.0.1",
+    "license": "MIT",
+    "licenseFiles": [
+      "licenses/@react-pdf__paginate-1.0.1/PACKAGE-NOTICE.json"
+    ],
+    "source": "pre-existing installed package; no download for this task",
+    "repository": "https://github.com/diegomura/react-pdf.git",
+    "fullStandaloneNoticeMissing": true
+  },
+  {
+    "name": "@react-pdf/primitives",
+    "version": "4.4.0",
+    "license": "MIT",
+    "licenseFiles": [
+      "licenses/@react-pdf__primitives-4.4.0/PACKAGE-NOTICE.json"
+    ],
+    "source": "pre-existing installed package; no download for this task",
+    "repository": "https://github.com/diegomura/react-pdf.git",
+    "fullStandaloneNoticeMissing": true
+  },
+  {
+    "name": "@react-pdf/reconciler",
+    "version": "2.0.0",
+    "license": "MIT",
+    "licenseFiles": [
+      "licenses/@react-pdf__reconciler-2.0.0/PACKAGE-NOTICE.json"
+    ],
+    "source": "pre-existing installed package; no download for this task",
+    "repository": "https://github.com/diegomura/react-pdf.git",
+    "fullStandaloneNoticeMissing": true
+  },
+  {
+    "name": "@react-pdf/render",
+    "version": "4.7.0",
+    "license": "MIT",
+    "licenseFiles": [
+      "licenses/@react-pdf__render-4.7.0/PACKAGE-NOTICE.json"
+    ],
+    "source": "pre-existing installed package; no download for this task",
+    "repository": "https://github.com/diegomura/react-pdf.git",
+    "fullStandaloneNoticeMissing": true
+  },
+  {
+    "name": "@react-pdf/renderer",
+    "version": "4.9.0",
+    "license": "MIT",
+    "licenseFiles": [
+      "licenses/@react-pdf__renderer-4.9.0/PACKAGE-NOTICE.json"
+    ],
+    "source": "pre-existing installed package; no download for this task",
+    "repository": "https://github.com/diegomura/react-pdf.git",
+    "fullStandaloneNoticeMissing": true
+  },
+  {
+    "name": "@react-pdf/stylesheet",
+    "version": "6.3.2",
+    "license": "MIT",
+    "licenseFiles": [
+      "licenses/@react-pdf__stylesheet-6.3.2/PACKAGE-NOTICE.json"
+    ],
+    "source": "pre-existing installed package; no download for this task",
+    "repository": "https://github.com/diegomura/react-pdf.git",
+    "fullStandaloneNoticeMissing": true
+  },
+  {
+    "name": "@react-pdf/svg",
+    "version": "1.1.1",
+    "license": "MIT",
+    "licenseFiles": [
+      "licenses/@react-pdf__svg-1.1.1/PACKAGE-NOTICE.json"
+    ],
+    "source": "pre-existing installed package; no download for this task",
+    "repository": "https://github.com/diegomura/react-pdf.git",
+    "fullStandaloneNoticeMissing": true
+  },
+  {
+    "name": "@react-pdf/textkit",
+    "version": "7.0.1",
+    "license": "MIT",
+    "licenseFiles": [
+      "licenses/@react-pdf__textkit-7.0.1/PACKAGE-NOTICE.json"
+    ],
+    "source": "pre-existing installed package; no download for this task",
+    "repository": "https://github.com/diegomura/react-pdf.git",
+    "fullStandaloneNoticeMissing": true
+  },
+  {
+    "name": "@swc/helpers",
+    "version": "0.5.23",
+    "license": "Apache-2.0",
+    "licenseFiles": [
+      "licenses/@swc__helpers-0.5.23/LICENSE"
+    ],
+    "source": "pre-existing installed package; no download for this task"
+  },
+  {
+    "name": "abs-svg-path",
+    "version": "0.1.1",
+    "license": "MIT",
+    "licenseFiles": [
+      "licenses/abs-svg-path-0.1.1/PACKAGE-NOTICE.json"
+    ],
+    "source": "pre-existing installed package; no download for this task",
+    "repository": "jkroso/abs-svg-path",
+    "fullStandaloneNoticeMissing": true
+  },
+  {
+    "name": "base64-js",
+    "version": "0.0.8",
+    "license": "MIT",
+    "licenseFiles": [
+      "licenses/base64-js-0.0.8/LICENSE.MIT"
+    ],
+    "source": "pre-existing installed package; no download for this task"
+  },
+  {
+    "name": "base64-js",
+    "version": "1.5.1",
+    "license": "MIT",
+    "licenseFiles": [
+      "licenses/base64-js-1.5.1/LICENSE"
+    ],
+    "source": "pre-existing installed package; no download for this task"
+  },
+  {
+    "name": "bidi-js",
+    "version": "1.0.3",
+    "license": "MIT",
+    "licenseFiles": [
+      "licenses/bidi-js-1.0.3/LICENSE.txt"
+    ],
+    "source": "pre-existing installed package; no download for this task"
+  },
+  {
+    "name": "brotli",
+    "version": "1.3.3",
+    "license": "MIT",
+    "licenseFiles": [
+      "licenses/brotli-1.3.3/PACKAGE-NOTICE.json"
+    ],
+    "source": "pre-existing installed package; no download for this task",
+    "repository": "devongovett/brotli.js",
+    "fullStandaloneNoticeMissing": true
+  },
+  {
+    "name": "clone",
+    "version": "2.1.2",
+    "license": "MIT",
+    "licenseFiles": [
+      "licenses/clone-2.1.2/LICENSE"
+    ],
+    "source": "pre-existing installed package; no download for this task"
+  },
+  {
+    "name": "color-name",
+    "version": "2.1.1",
+    "license": "MIT",
+    "licenseFiles": [
+      "licenses/color-name-2.1.1/LICENSE"
+    ],
+    "source": "pre-existing installed package; no download for this task"
+  },
+  {
+    "name": "color-string",
+    "version": "2.1.4",
+    "license": "MIT",
+    "licenseFiles": [
+      "licenses/color-string-2.1.4/LICENSE"
+    ],
+    "source": "pre-existing installed package; no download for this task"
+  },
+  {
+    "name": "date-fns",
+    "version": "4.4.0",
+    "license": "MIT",
+    "licenseFiles": [
+      "licenses/date-fns-4.4.0/LICENSE.md"
+    ],
+    "source": "pre-existing installed package; no download for this task"
+  },
+  {
+    "name": "dfa",
+    "version": "1.2.0",
+    "license": "MIT",
+    "licenseFiles": [
+      "licenses/dfa-1.2.0/PACKAGE-NOTICE.json"
+    ],
+    "source": "pre-existing installed package; no download for this task",
+    "repository": "devongovett/dfa",
+    "fullStandaloneNoticeMissing": true
+  },
+  {
+    "name": "emoji-regex-xs",
+    "version": "1.0.0",
+    "license": "MIT",
+    "licenseFiles": [
+      "licenses/emoji-regex-xs-1.0.0/LICENSE"
+    ],
+    "source": "pre-existing installed package; no download for this task"
+  },
+  {
+    "name": "events",
+    "version": "3.3.0",
+    "license": "MIT",
+    "licenseFiles": [
+      "licenses/events-3.3.0/LICENSE"
+    ],
+    "source": "pre-existing installed package; no download for this task"
+  },
+  {
+    "name": "fast-deep-equal",
+    "version": "3.1.3",
+    "license": "MIT",
+    "licenseFiles": [
+      "licenses/fast-deep-equal-3.1.3/LICENSE"
+    ],
+    "source": "pre-existing installed package; no download for this task"
+  },
+  {
+    "name": "fflate",
+    "version": "0.8.3",
+    "license": "MIT",
+    "licenseFiles": [
+      "licenses/fflate-0.8.3/LICENSE"
+    ],
+    "source": "pre-existing installed package; no download for this task"
+  },
+  {
+    "name": "fontkit",
+    "version": "2.0.4",
+    "license": "MIT",
+    "licenseFiles": [
+      "licenses/fontkit-2.0.4/PACKAGE-NOTICE.json"
+    ],
+    "source": "pre-existing installed package; no download for this task",
+    "repository": "foliojs/fontkit",
+    "fullStandaloneNoticeMissing": true
+  },
+  {
+    "name": "hsl-to-hex",
+    "version": "1.0.0",
+    "license": "MIT",
+    "licenseFiles": [
+      "licenses/hsl-to-hex-1.0.0/PACKAGE-NOTICE.json"
+    ],
+    "source": "pre-existing installed package; no download for this task",
+    "repository": "davidmarkclements/hsl-to-hex",
+    "fullStandaloneNoticeMissing": true
+  },
+  {
+    "name": "hsl-to-rgb-for-reals",
+    "version": "1.1.1",
+    "license": "ISC",
+    "licenseFiles": [
+      "licenses/hsl-to-rgb-for-reals-1.1.1/PACKAGE-NOTICE.json"
+    ],
+    "source": "pre-existing installed package; no download for this task",
+    "repository": "davidmarkclements/hsl_rgb_converter",
+    "fullStandaloneNoticeMissing": true
+  },
+  {
+    "name": "hyphen",
+    "version": "1.6.6",
+    "license": "ISC",
+    "licenseFiles": [
+      "licenses/hyphen-1.6.6/LICENSE"
+    ],
+    "source": "pre-existing installed package; no download for this task"
+  },
+  {
+    "name": "inherits",
+    "version": "2.0.4",
+    "license": "ISC",
+    "licenseFiles": [
+      "licenses/inherits-2.0.4/LICENSE"
+    ],
+    "source": "pre-existing installed package; no download for this task"
+  },
+  {
+    "name": "is-url",
+    "version": "1.2.4",
+    "license": "MIT",
+    "licenseFiles": [
+      "licenses/is-url-1.2.4/LICENSE-MIT"
+    ],
+    "source": "pre-existing installed package; no download for this task"
+  },
+  {
+    "name": "jay-peg",
+    "version": "1.1.1",
+    "license": "MIT",
+    "licenseFiles": [
+      "licenses/jay-peg-1.1.1/LICENSE"
+    ],
+    "source": "pre-existing installed package; no download for this task"
+  },
+  {
+    "name": "libphonenumber-js",
+    "version": "1.13.14",
+    "license": "MIT",
+    "licenseFiles": [
+      "licenses/libphonenumber-js-1.13.14/LICENSE",
+      "licenses/libphonenumber-js-1.13.14/LICENSE.Apache"
+    ],
+    "source": "pre-existing installed package; no download for this task"
+  },
+  {
+    "name": "linebreak",
+    "version": "1.1.0",
+    "license": "MIT",
+    "licenseFiles": [
+      "licenses/linebreak-1.1.0/LICENSE"
+    ],
+    "source": "pre-existing installed package; no download for this task"
+  },
+  {
+    "name": "media-engine",
+    "version": "2.0.0",
+    "license": "MIT",
+    "licenseFiles": [
+      "licenses/media-engine-2.0.0/PACKAGE-NOTICE.json"
+    ],
+    "source": "pre-existing installed package; no download for this task",
+    "repository": "diegomura/media-engine",
+    "fullStandaloneNoticeMissing": true
+  },
+  {
+    "name": "normalize-svg-path",
+    "version": "1.1.0",
+    "license": "MIT",
+    "licenseFiles": [
+      "licenses/normalize-svg-path-1.1.0/license.md"
+    ],
+    "source": "pre-existing installed package; no download for this task"
+  },
+  {
+    "name": "object-assign",
+    "version": "4.1.1",
+    "license": "MIT",
+    "licenseFiles": [
+      "licenses/object-assign-4.1.1/license"
+    ],
+    "source": "pre-existing installed package; no download for this task"
+  },
+  {
+    "name": "pako",
+    "version": "1.0.11",
+    "license": "(MIT AND Zlib)",
+    "licenseFiles": [
+      "licenses/pako-1.0.11/LICENSE"
+    ],
+    "source": "pre-existing installed package; no download for this task"
+  },
+  {
+    "name": "parse-svg-path",
+    "version": "0.1.2",
+    "license": "MIT",
+    "licenseFiles": [
+      "licenses/parse-svg-path-0.1.2/License"
+    ],
+    "source": "pre-existing installed package; no download for this task"
+  },
+  {
+    "name": "pdf-lib",
+    "version": "1.17.1",
+    "license": "MIT",
+    "licenseFiles": [
+      "licenses/pdf-lib-1.17.1/LICENSE.md"
+    ],
+    "source": "pre-existing installed package; no download for this task"
+  },
+  {
+    "name": "pdfkit",
+    "version": "0.20.1",
+    "license": "MIT",
+    "licenseFiles": [
+      "licenses/pdfkit-0.20.1/LICENSE"
+    ],
+    "source": "pre-existing installed package; no download for this task"
+  },
+  {
+    "name": "png-js",
+    "version": "2.0.0",
+    "license": null,
+    "licenseFiles": [
+      "licenses/png-js-2.0.0/LICENSE"
+    ],
+    "source": "pre-existing installed package; no download for this task"
+  },
+  {
+    "name": "postcss-value-parser",
+    "version": "4.2.0",
+    "license": "MIT",
+    "licenseFiles": [
+      "licenses/postcss-value-parser-4.2.0/LICENSE"
+    ],
+    "source": "pre-existing installed package; no download for this task"
+  },
+  {
+    "name": "queue",
+    "version": "6.0.2",
+    "license": "MIT",
+    "licenseFiles": [
+      "licenses/queue-6.0.2/LICENSE"
+    ],
+    "source": "pre-existing installed package; no download for this task"
+  },
+  {
+    "name": "react",
+    "version": "19.3.0",
+    "license": "MIT",
+    "licenseFiles": [
+      "licenses/react-19.3.0/LICENSE"
+    ],
+    "source": "pre-existing installed package; no download for this task"
+  },
+  {
+    "name": "restructure",
+    "version": "3.0.2",
+    "license": "MIT",
+    "licenseFiles": [
+      "licenses/restructure-3.0.2/LICENSE"
+    ],
+    "source": "pre-existing installed package; no download for this task"
+  },
+  {
+    "name": "scheduler",
+    "version": "0.25.0-rc-603e6108-20241029",
+    "license": "MIT",
+    "licenseFiles": [
+      "licenses/scheduler-0.25.0-rc-603e6108-20241029/LICENSE"
+    ],
+    "source": "pre-existing installed package; no download for this task"
+  },
+  {
+    "name": "svg-arc-to-cubic-bezier",
+    "version": "3.2.0",
+    "license": "ISC",
+    "licenseFiles": [
+      "licenses/svg-arc-to-cubic-bezier-3.2.0/LICENSE.md"
+    ],
+    "source": "pre-existing installed package; no download for this task"
+  },
+  {
+    "name": "tiny-inflate",
+    "version": "1.0.3",
+    "license": "MIT",
+    "licenseFiles": [
+      "licenses/tiny-inflate-1.0.3/LICENSE"
+    ],
+    "source": "pre-existing installed package; no download for this task"
+  },
+  {
+    "name": "tslib",
+    "version": "1.14.1",
+    "license": "0BSD",
+    "licenseFiles": [
+      "licenses/tslib-1.14.1/LICENSE.txt"
+    ],
+    "source": "pre-existing installed package; no download for this task"
+  },
+  {
+    "name": "tslib",
+    "version": "2.8.1",
+    "license": "0BSD",
+    "licenseFiles": [
+      "licenses/tslib-2.8.1/LICENSE.txt"
+    ],
+    "source": "pre-existing installed package; no download for this task"
+  },
+  {
+    "name": "unicode-properties",
+    "version": "1.4.1",
+    "license": "MIT",
+    "licenseFiles": [
+      "licenses/unicode-properties-1.4.1/LICENSE"
+    ],
+    "source": "pre-existing installed package; no download for this task"
+  },
+  {
+    "name": "unicode-trie",
+    "version": "2.0.0",
+    "license": "MIT",
+    "licenseFiles": [
+      "licenses/unicode-trie-2.0.0/LICENSE"
+    ],
+    "source": "pre-existing installed package; no download for this task"
+  },
+  {
+    "name": "yoga-layout",
+    "version": "3.2.1",
+    "license": "MIT",
+    "licenseFiles": [
+      "licenses/yoga-layout-3.2.1/LICENSE-upstream.txt"
+    ],
+    "source": "pre-existing installed package; no download for this task",
+    "noticeSourceUrl": "https://raw.githubusercontent.com/facebook/yoga/master/LICENSE",
+    "noticeSha256": "52412d7bc7ce4157ea628bbaacb8829e0a9cb3c58f57f99176126bc8cf2bfc85",
+    "noticeRetrieval": "Upstream plain-text notice; package code and exact version were already installed."
+  }
+]

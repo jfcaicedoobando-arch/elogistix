@@ -1,0 +1,264 @@
+{
+  "format_version": 1,
+  "review_date_utc": "2026-10-13",
+  "purpose": "Isolated browser benchmark of the synthetic-only Cartera candidate, not ERP integration",
+  "repository": "jfcaicedoobando-arch/elogistix",
+  "base_commit": "5b2294da3badd117fb498cbf4daac278bd291bf0",
+  "base_tree": "0fd79b4e752754d0bc3b552005648bb7652246f1",
+  "original_package": {
+    "filename": "cartera-batched-portable-v1.zip",
+    "bytes": 4659524,
+    "sha256": "5f0d2a40c9bae2152aad60f964027456fe2366229b37ce9a4a7d69a99b9bde02",
+    "manifest_entries_verified": 155,
+    "original_candidate_commit": null
+  },
+  "reused_repository_files": [
+    {
+      "path": "src/lib/formatters/dates.ts",
+      "bytes": 6505,
+      "git_blob": "a4e98ab3d015e8d144f2a5ac4c7cba66cfa01c7f",
+      "sha256": "d8d971c3c34dafa4b7b1ecb70c8964e7b89032c493aabf205c10c7a2e3143991",
+      "destination": "source/src/lib/formatters/dates.ts"
+    },
+    {
+      "path": "src/lib/formatters/datesInstantes.ts",
+      "bytes": 663,
+      "git_blob": "4e73de943aca1509b585b377102eab0293339269",
+      "sha256": "7b706b169b93db82f56b2d82efb41c0c70daddd3128f2925df693dd7ee756e19",
+      "destination": "source/src/lib/formatters/datesInstantes.ts"
+    },
+    {
+      "path": "src/lib/formatters/datesSegura.ts",
+      "bytes": 1076,
+      "git_blob": "fc2f034768234aac6d4c5c1e55e5f3972e55597b",
+      "sha256": "285bf7df3d9c3977469761bdfe44f4e576263cc44877380ccd39ce24ccdcd2d5",
+      "destination": "source/src/lib/formatters/datesSegura.ts"
+    },
+    {
+      "path": "src/lib/formatters/index.ts",
+      "bytes": 273,
+      "git_blob": "11eba6732da5ef630187d00efea1f069584d18cf",
+      "sha256": "5f307a36c0b1f7646f812b1a4fef3569339661ce00d08beb4e228daf2810a081",
+      "destination": "source/src/lib/formatters/index.ts"
+    },
+    {
+      "path": "src/lib/formatters/numbers.ts",
+      "bytes": 7725,
+      "git_blob": "58476df4b8d4f23ad48be15258dabb1e33d12e12",
+      "sha256": "dd793f42d1c3786fcbed4efa8222347a8eec6ab54d79d5fe09f18d8e95c8301a",
+      "destination": "source/src/lib/formatters/numbers.ts"
+    },
+    {
+      "path": "src/lib/formatters/phone.ts",
+      "bytes": 1218,
+      "git_blob": "06fe4b76a724e0edd18f2eef39ab6edeff4d1e79",
+      "sha256": "6ddfc97b4a3b786966b4082ddb8f3c2340d2df0bdf1f6caf278c7e661cbdb1ac",
+      "destination": "source/src/lib/formatters/phone.ts"
+    },
+    {
+      "path": "src/lib/formatters/places.ts",
+      "bytes": 1830,
+      "git_blob": "3e42b1bfaa15cf1f8e78601ba9baaedde57853aa",
+      "sha256": "a2690a9e7cd2e58a0573ba8a3ce1cae62074818e20c9f5c1a048b06d20771cae",
+      "destination": "source/src/lib/formatters/places.ts"
+    },
+    {
+      "path": "src/lib/formatters/text.ts",
+      "bytes": 3647,
+      "git_blob": "bc9d2d7106f9f344cf7dee8bc4f1c18a3cf8cbec",
+      "sha256": "4d88dcf3e8503cba8b86dc0fc19a804b26bbdcd3a25f7b1633b666faedc5e93f",
+      "destination": "source/src/lib/formatters/text.ts"
+    },
+    {
+      "path": "src/pdf/assets/Inter-Italic.ttf",
+      "bytes": 344784,
+      "git_blob": "6985f5636abc9774fe71bf4bc0dc4d1dc2d6df33",
+      "sha256": "c561c3ddb4ba28a70a55355044cb604c56b46ba1268057a305836950df178bbd",
+      "destination": "source/src/pdf/assets/Inter-Italic.ttf"
+    },
+    {
+      "path": "src/pdf/assets/Inter-OFL.txt",
+      "bytes": 4377,
+      "git_blob": "21f6aff961064c2e429f570995e446bcdd555422",
+      "sha256": "5b9321a4298cfeb6b34354164a1c3afc3db114569984c502b9b35d988fd58c57",
+      "destination": "source/src/pdf/assets/Inter-OFL.txt"
+    },
+    {
+      "path": "src/pdf/assets/Inter-Regular.ttf",
+      "bytes": 341396,
+      "git_blob": "03799124776385107e7015b9e506387c4949cc0d",
+      "sha256": "b28c9b95f741e1cdd34c9e2c2e5430962b3890e37f2c8672805ff86832fd8f32",
+      "destination": "source/src/pdf/assets/Inter-Regular.ttf"
+    },
+    {
+      "path": "src/pdf/assets/Inter-SemiBold.ttf",
+      "bytes": 342660,
+      "git_blob": "7852a93a67fa23e3f87de3f39a29f35ecc73556b",
+      "sha256": "923285ba3b0f328855c8f2fcf6de8af505dc6bb0000f4414e499d2cd7a8e8d17",
+      "destination": "source/src/pdf/assets/Inter-SemiBold.ttf"
+    },
+    {
+      "path": "src/pdf/assets/README.md",
+      "bytes": 892,
+      "git_blob": "f5318666b25c0c2877bf604aa9305383041bbfe9",
+      "sha256": "20892b4997246eeec63373e515ca38f86ce546ededb81ab6e243f6a4284f40da",
+      "destination": "source/src/pdf/assets/README.md"
+    },
+    {
+      "path": "src/pdf/components/BrandHeader.tsx",
+      "bytes": 2295,
+      "git_blob": "f0269cd32c024f709416590c8437f22a5eb39392",
+      "sha256": "1ac01815bc4e8b4153e96acac857913afbfe2fd400fa2ffdfa9e04b43c6536ae",
+      "destination": "source/src/pdf/components/BrandHeader.tsx"
+    },
+    {
+      "path": "src/pdf/components/BrandIdentity.tsx",
+      "bytes": 1828,
+      "git_blob": "61e09ba5c7d764e93c1ffaf994bd0d53c6aeb9c8",
+      "sha256": "0bba2f70f1c01e3ac14096a75e0522f85197b22a0d6c1c0447d117f9d8dfd762",
+      "destination": "source/src/pdf/components/BrandIdentity.tsx"
+    },
+    {
+      "path": "src/pdf/components/DataTable.tsx",
+      "bytes": 4981,
+      "git_blob": "19ea73f6d2fef084d7a9ce3a45145ee63f8769f6",
+      "sha256": "6b39db5c070db19e65c381eadb938b1708f2b5a648a93f36a663f3a79b17bdd1",
+      "destination": "source/src/pdf/components/DataTable.tsx"
+    },
+    {
+      "path": "src/pdf/components/ReportContext.tsx",
+      "bytes": 338,
+      "git_blob": "2804bf9faa7cd2865b3753e4eab8c849c2f47762",
+      "sha256": "e4411e78814bc1d44b0f10e0a7b38b7caf489ce1beba9817117068084c93a378",
+      "destination": "source/src/pdf/components/ReportContext.tsx"
+    },
+    {
+      "path": "src/pdf/components/ReportHeader.tsx",
+      "bytes": 640,
+      "git_blob": "b1c018352dd154582f47729fdd811a022eb40361",
+      "sha256": "58114489772cd90e601b6e60b9dae8c38c2baae056988ff9442512aec594ce15",
+      "destination": "source/src/pdf/components/ReportHeader.tsx"
+    },
+    {
+      "path": "src/pdf/components/statusTextStyle.ts",
+      "bytes": 563,
+      "git_blob": "1d08b9f9eb423388403a6d85db6a0a4f01c91e17",
+      "sha256": "f80deda31c98c499f1ad5746641dcba9b04448ae5cc8730f7843df911593e18a",
+      "destination": "source/src/pdf/components/statusTextStyle.ts"
+    },
+    {
+      "path": "src/pdf/documents/carteraPagination.ts",
+      "bytes": 1547,
+      "git_blob": "872ed957d11ebe971547a4d78437dcded75e1bba",
+      "sha256": "436fd8557d83d3f01458678b2838a81d7dafd292cfc289743520df74c551bff1",
+      "destination": "source/src/pdf/documents/carteraPagination.ts"
+    },
+    {
+      "path": "src/pdf/documents/reporteLayout.ts",
+      "bytes": 621,
+      "git_blob": "6d5f32b5301c74a93989673cd8239c3815c09a36",
+      "sha256": "270877a5235af45df72f87290ff50570603a5a35c34546ce1e8a80a31366f4b5",
+      "destination": "source/src/pdf/documents/reporteLayout.ts"
+    },
+    {
+      "path": "src/pdf/text/DescriptionText.tsx",
+      "bytes": 2153,
+      "git_blob": "8663a26cfbdfa58eadd2abc40f3516c15b787d19",
+      "sha256": "c5d6c953a4077bc11d9a12dfff248d9da36576cac1dd2e7c4e5cd6c507995b84",
+      "destination": "source/src/pdf/text/DescriptionText.tsx"
+    },
+    {
+      "path": "src/pdf/text/interAdvanceWidths.ts",
+      "bytes": 2619,
+      "git_blob": "51013c20df59bae6214615e7a6070ceacce24d1a",
+      "sha256": "3318eed2692f6ff9608e3635ecc868470f9c5b14db72fd95d3469faa8fa18ffd",
+      "destination": "source/src/pdf/text/interAdvanceWidths.ts"
+    },
+    {
+      "path": "src/pdf/text/rowLayoutBudget.ts",
+      "bytes": 924,
+      "git_blob": "25f210c80558ab66a08375e47f1a840b8d619060",
+      "sha256": "20598483fd75a3e3e93ceacf5118da27bcd53c979798536a93c66ae2c09ef4bc",
+      "destination": "source/src/pdf/text/rowLayoutBudget.ts"
+    },
+    {
+      "path": "src/pdf/text/sanitizePdfText.ts",
+      "bytes": 882,
+      "git_blob": "df73d432635c946eb522482066a511df4d6f8e6b",
+      "sha256": "dad77774e15a17a650740280f1b686656b5d6b4b4d994d64e3c2bc2dffe3244c",
+      "destination": "source/src/pdf/text/sanitizePdfText.ts"
+    },
+    {
+      "path": "src/pdf/theme/fonts.ts",
+      "bytes": 1309,
+      "git_blob": "fecc055fd8c73daffcb2100f6535a78d7fba0820",
+      "sha256": "ca7835bc7a23b984780d6b403aa2cfc0e2e2b4a82b73af1e3efbf5f8a260dc86",
+      "destination": "source/src/pdf/theme/fonts.ts"
+    },
+    {
+      "path": "src/pdf/theme/styles.ts",
+      "bytes": 832,
+      "git_blob": "65206f49eeef58cc433cf1f1a53d48cadb64ce27",
+      "sha256": "3f92d1a0496f6456f611db82c007633a4f07d8a18a82309554755a88a72e9f9a",
+      "destination": "source/src/pdf/theme/styles.ts"
+    },
+    {
+      "path": "src/pdf/theme/stylesContent.ts",
+      "bytes": 5843,
+      "git_blob": "90ccfc3c1f6512a0bc0a042905470b11bbc1f8a8",
+      "sha256": "11685c1b66b53741cf54484dc8a7c156318aeb8bd9e81a55d04c8d6f908fa8b3",
+      "destination": "source/src/pdf/theme/stylesContent.ts"
+    },
+    {
+      "path": "src/pdf/theme/stylesLayout.ts",
+      "bytes": 2783,
+      "git_blob": "b39f8d769c9508561d3e80504ca3060b4bd43fa1",
+      "sha256": "b686900d05188a9a7dc24d88ba0124430e65f92fc7eb25e70cd947d88305c7db",
+      "destination": "source/src/pdf/theme/stylesLayout.ts"
+    },
+    {
+      "path": "src/pdf/theme/stylesReports.ts",
+      "bytes": 1684,
+      "git_blob": "ef212337a5d57b682874f241d771242d8d6610f5",
+      "sha256": "22d95d8fd00ae8e61e9fe5e3ec76dbbf8d9be688575d9c1a7290fd82959e8c93",
+      "destination": "source/src/pdf/theme/stylesReports.ts"
+    },
+    {
+      "path": "src/pdf/theme/tokens.ts",
+      "bytes": 1202,
+      "git_blob": "a74aa042a863692cde59f8ae26558e92e4684904",
+      "sha256": "eebbc83f450641cc79aade4b5c4d60685d63d9a5be6bc1ab360743f33779f5e3",
+      "destination": "source/src/pdf/theme/tokens.ts"
+    }
+  ],
+  "changed_candidate_repository_files": [
+    {
+      "path": "src/pdf/components/Footer.tsx",
+      "bytes": 1557,
+      "blob": "ad486f8bc180190211e77e34bf2e59bca2b2145f",
+      "sha256": "b5165dc62913c8e8ad02be0d7e79453d0ef8a69d8454e4d885097cd24077abad",
+      "main_blob": "baf2cc0f6ceca829c79ffe5484391226e478533a",
+      "identical": false
+    },
+    {
+      "path": "src/pdf/documents/ReporteCarteraDocument.tsx",
+      "bytes": 6301,
+      "blob": "cbe0f5ff288b9e4497b77bc74bac949991dc4510",
+      "sha256": "458b65d8f749f7cbe293b04316b2a252887e0b074704b481786dab5607c3d622",
+      "main_blob": "0cb24a4a85ae0e8ebf50cca42f6ff47130a3ae94",
+      "identical": false
+    }
+  ],
+  "excluded": {
+    "precompiled_vendor_bundles": "Original third-party notice/provenance gaps unresolved; do not publish vendor bundles through this manifest.",
+    "binary_uploads": "None required; exact Inter assets already exist in pinned repository source and are copied consumer-locally from Git.",
+    "node_harness_and_pdfs": "Unneeded for browser reconstruction; prior Node evidence is historical only.",
+    "private_urls_credentials_customer_data": "Not included."
+  },
+  "assurance": {
+    "source_and_synthetic_recipe": "Exact original text plus byte-identical repository modules/fonts. Source equality is verified.",
+    "build_equivalence": "Not yet established. Original no lockfile/integrity; clean registry install untested. Compare dependency-inventory.json with actual resolved packages before measurement; retain differences.",
+    "browser_runtime": "Not run in this review. Must execute in CLOUD with real Chromium/Firefox/WebKit, never Node VM substitute.",
+    "licensing": "This is a source-only research/test proposal, not a declaration of full dependency license clearance."
+  }
+}
