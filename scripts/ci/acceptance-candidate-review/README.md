@@ -1,5 +1,14 @@
 # Canonical prospect acceptance: isolated candidate review
 
+## Archive preparation (active workflow preserved)
+
+The Acceptance and NC workflows remain active. Their two frozen observations
+are documented in [the workflow archive](../../../docs/ci/workflow-archive/README.md),
+with separate immutable identities for 43a4536 and 2efa854. This preparation
+changes no Acceptance runner, contract, index, SQL, admission rule or runtime
+result. It does not resolve the pending retirement gates or prove a SQL pass.
+The original harness description and historical validation notes follow.
+
 This package is a review harness, not approval to merge or deploy. It evolves the
 baseline-only PR264 approach without changing that PR or claiming its 12-case
 pass proved candidate behavior. The exact product candidate is independently

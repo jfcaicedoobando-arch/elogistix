@@ -1,5 +1,17 @@
 # Propuesta de revisión de PR para replay NC
 
+## Archive preparation (active runner unchanged)
+
+Both NC and Acceptance workflows remain active. The frozen observations at
+43a453641a933e2f3f2be3fd766322307c8b9f3b and
+2efa854223d0b7e7b38cb4cf743fc48b9b86a052 are kept separately in
+[the workflow archive](../../../docs/ci/workflow-archive/README.md).
+The prepared `source-evidence.mjs` helper is not imported by `run.mjs`; the
+active runner still reads its active YAML and emits v1. This addition neither
+runs replay nor updates historical results. Effective required checks/workflows
+and artifact consumers must be verified before a later retirement/format change.
+The original technical proposal and validation-at-preparation notes follow.
+
 Estado: **propuesta estática, no ejecutada ni disparada**. El workflow nuevo
 `nc-publica-replay-review.yml` acepta sólo `pull_request` opened/synchronize/
 reopened hacia `main`, con base y head en `jfcaicedoobando-arch/elogistix` y head
