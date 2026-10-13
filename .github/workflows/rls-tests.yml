@@ -291,7 +291,7 @@ jobs:
 
       - name: Subir evidencia de pendiente por embarque
         if: always()
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: receivable155-evidence
           path: .receivable155-logs/
@@ -301,7 +301,7 @@ jobs:
 
       - name: Subir evidencia selector148
         if: always()
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: selector148-ci-evidence
           path: .selector148-logs/
@@ -311,7 +311,7 @@ jobs:
 
       - name: Subir evidencia de envelopes financieros
         if: always()
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: financial49-envelope-evidence
           path: .financial49-logs/
@@ -321,7 +321,7 @@ jobs:
 
       - name: Subir evidencia de container RPC installer
         if: always()
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: pricing-container-installer
           path: .pricing-container-logs/
@@ -331,7 +331,7 @@ jobs:
 
       - name: Evidencia de controles del instalador de leads
         if: always()
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: leads-scope-envelope-evidence
           path: .leads-scope-logs/
@@ -341,7 +341,7 @@ jobs:
 
       - name: Evidencia de controles AUD54 CxC
         if: always()
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: audit54-cxc-forward-runtime-evidence
           path: /tmp/audit54-cxc-forward-runtime/
@@ -350,7 +350,7 @@ jobs:
 
       - name: Evidencia compacta del catálogo y ejecución RLS
         if: always()
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: rls-test-inventory-attempt-${{ github.run_attempt }}
           path: |
@@ -365,7 +365,7 @@ jobs:
 
       - name: Subir logs y diff (sólo al fallar)
         if: failure()
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: rls-logs
           path: |
