@@ -1,6 +1,6 @@
 import { useId, useState } from "react";
 import { Calendar as CalendarIcon, X } from "lucide-react";
-import { es } from "date-fns/locale";
+import { es } from "react-day-picker/locale";
 import { Calendar } from "@/components/ui/calendar";
 import { Input } from "@/components/ui/input";
 import {
