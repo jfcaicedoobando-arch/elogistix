@@ -1,5 +1,17 @@
 # Changelog
 
+## [13.824.81] - Unreleased
+
+### Bajas lógicas: fuentes operativas activas y consultas históricas
+
+- Excluye fuentes dadas de baja en las consultas operativas cubiertas de cotizaciones, costos, datos fiscales, conciliación, traspasos, compras, CRM, pagos y relaciones auxiliares del portal. La conciliación rechaza errores y fuentes ausentes antes de vincular; la lectura de costos exige una cotización de origen disponible y el envío automático de REP no continúa si falta el pago o la factura activa.
+- La creación de seguros comprueba siempre el embarque activo, su organización y el ámbito de sesión antes de insertar, incluso si se recibe una organización explícita. Conserva los controles existentes de negocio y evita registrar la actividad bajo otra sesión después de una escritura confirmada.
+- Protege la edición de facturas de proveedor, la actualización de embarques, la reutilización/subida de documentos y la consulta de sustitución. Comprueba vigencia y ámbito antes de los efectos dependientes; limita también los UPDATE cubiertos a filas activas y conserva el manejo de concurrencia, limpieza e idempotencia. Una sustituta dada de baja devuelve ausencia para reiniciar el estado de la interfaz, sin reinterpretar estados fiscales de facturas activas.
+- Conserva las bajas visibles por los permisos/RLS vigentes en la exportación del catálogo de organización y la pertenencia persistida ID-organización al resolver el emisor de un PDF interno. Estas consultas no habilitan nuevas operaciones sobre bajas ni reconstruyen una identidad fiscal histórica; tampoco certifican un respaldo restaurable o un snapshot transaccional.
+- Sustituye la detección global por un auditor AST por consulta: filtros y excepciones documentadas pertenecen al builder exacto, incluidas tablas condicionales y destinos dinámicos. Rechaza deuda nueva y entradas de baseline sin un hallazgo vigente; la actualización sólo permite reducir el conjunto existente. La deuda restante se conserva explícita y no se declara concluida la auditoría global.
+- Añade regresiones de fuentes activas, rechazo antes de efectos, contratos históricos y aislamiento de consultas vecinas. Los controles cliente no hacen atómicas las secuencias de lectura/escritura ni certifican RLS desplegada. Publicación y validación de la interfaz publicada siguen pendientes; las pruebas automatizadas no sustituyen esa revisión. No cambia fórmulas financieras, SQL ni permisos.
+- Conserva las 45 entradas históricas completas del manifest y agrega 13.824.81 con las mismas 1,525 migraciones de 13.824.80. No agrega ni modifica SQL ni reaplica migraciones.
+
 ## [13.824.80] - Unreleased
 
 ### Cartera PDF: paginación acotada por lotes
