@@ -1,11 +1,18 @@
 import { Font } from "@react-pdf/renderer";
 import { FONTS } from "./tokens";
 
-// Vite emits same-origin, content-hashed assets. The file URL branch lets the
-// real Node renderer use the identical files in PDF regression tests.
-const regular = new URL("../assets/Inter-Regular.ttf", import.meta.url).href.replace(/^file:\/\//, "");
-const semibold = new URL("../assets/Inter-SemiBold.ttf", import.meta.url).href.replace(/^file:\/\//, "");
-const italic = new URL("../assets/Inter-Italic.ttf", import.meta.url).href.replace(/^file:\/\//, "");
+// Keep Vite's statically analyzable asset URLs and browser URLs unchanged.
+// Node >=22.22 (package engines) supplies a platform-correct file URL decoder
+// without importing a Node builtin into the browser bundle.
+function fontSource(url: URL): string {
+  return url.protocol === "file:"
+    ? process.getBuiltinModule("node:url").fileURLToPath(url)
+    : url.href;
+}
+
+const regular = fontSource(new URL("../assets/Inter-Regular.ttf", import.meta.url));
+const semibold = fontSource(new URL("../assets/Inter-SemiBold.ttf", import.meta.url));
+const italic = fontSource(new URL("../assets/Inter-Italic.ttf", import.meta.url));
 
 let registered = false;
 

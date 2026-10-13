@@ -1,5 +1,15 @@
 # Changelog
 
+## [13.824.78] - Unreleased
+
+### PDF: rutas nativas y reutilización de fuentes
+
+- Corrige la resolución de las fuentes locales del renderer Node mediante fileURLToPath nativo, para rutas con espacios, acentos, signos de porcentaje o numeral. Conserva las URLs de assets y el registro de fuentes en la aplicación web HTTP(S); el alcance Node sigue los engines del proyecto.
+- Corrige únicamente el nombre PostScript interno de Inter-SemiBold, que coincidía con Inter-Regular y provocaba incrustaciones repetidas en la caché de fuentes del PDF. Conserva contornos, métricas, licencia y cálculos financieros.
+- Añade regresiones permanentes de conversión de URLs, registro/carga real, bundle web y reutilización de fuentes en filas de Cartera. Los contratos Windows se prueban desde Linux; no acreditan una ejecución nativa de Windows.
+- La corrección reduce duplicación de recursos de fuente, pero no resuelve ni garantiza la exportación de 5,001 filas; la paginación y los límites de memoria de documentos grandes siguen pendientes. Publicación y validación GUI de esta entrega permanecen pendientes.
+- Conserva las 42 entradas históricas completas del manifest y agrega 13.824.78 con las mismas 1,525 migraciones de 13.824.77. No agrega ni modifica SQL ni reaplica migraciones.
+
 ## [13.824.77] - Unreleased
 
 ### Reportes: encabezados y detalle financiero en móvil
