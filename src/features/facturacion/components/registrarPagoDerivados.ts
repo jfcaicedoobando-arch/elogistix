@@ -11,6 +11,8 @@ export interface RatesTc {
   eurMxn: number;
   /** EC-10: true cuando el TC viene del respaldo operativo (no fiscal). */
   esFallback?: boolean;
+  /** Respaldo exclusivo de EUR aunque el USD sea fiable. */
+  eurEsFallback?: boolean;
 }
 
 /**
@@ -67,7 +69,7 @@ export interface DerivadosPago {
   tipoCambio: number;
   excede: boolean;
   tcBloqueado: boolean;
-  /** EC-10: conversión cross-moneda apoyada en el TC de respaldo. */
+  /** EC-10: valuación de divisa apoyada en el TC de respaldo. */
   tcRespaldo: boolean;
   /** Cruce USD↔EUR: la BD no lo convierte (LC_PAGO_CRUCE_NO_SOPORTADO). */
   cruceNoSoportado: boolean;
@@ -106,10 +108,10 @@ export function derivarEstadoPago(a: {
   // FE-01 / UIA-01: cross-moneda sin TC confiable (p. ej. exchange-rates caído)
   // → bloqueamos el submit en vez de dejar el insert reventar contra el CHECK
   // (tipo_cambio > 0) con un 23514 crudo.
-  // EC-10: si el TC disponible es el respaldo operativo (esFallback) y el cobro
-  // requiere conversión, también bloqueamos: un REP timbrado con TC estimado es
+  // EC-10: si el TC de la divisa es respaldo operativo, también bloqueamos
+  // su valuación (incluso misma moneda): un REP timbrado con TC estimado es
   // un error fiscal, no sólo de visualización.
-  const tcRespaldo = !usaManual && requiereTcPago(a.monedaPago, a.monedaFactura) && esRespaldo(a.rates);
+  const tcRespaldo = !usaManual && requiereTcPago(a.monedaPago, a.monedaFactura) && esRespaldo(a.rates, a.monedaPago, a.monedaFactura);
   // La BD sólo soporta cruces con MXN en una pata (LC_PAGO_CRUCE_NO_SOPORTADO).
   const cruceNoSoportado =
     crucePagoNoSoportado(a.monedaPago, a.monedaFactura);
@@ -154,8 +156,9 @@ export function tcCuadreExacto(montoMxn: number, saldo: number): number | null {
   return Math.round((montoMxn / saldo) * 10000) / 10000;
 }
 
-function esRespaldo(r: RatesTc | undefined): boolean {
-  return r?.esFallback === true;
+function esRespaldo(r: RatesTc | undefined, mp: string, mf: string): boolean {
+  return r?.esFallback === true ||
+    ((mp === "EUR" || mf === "EUR") && r?.eurEsFallback === true);
 }
 
 /** TC convenido (si hay y aplica) o DOF de la fecha. */
