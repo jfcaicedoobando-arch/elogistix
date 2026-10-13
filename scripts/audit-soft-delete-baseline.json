@@ -1,7 +1,6 @@
 {
   "_doc": "Deuda histórica de lecturas sin filtro `deleted_at IS NULL`. Sólo puede bajar. Regenerar con `bun run audit:soft-delete -- --update` SÓLO al corregir entradas.",
   "deuda": [
-    "src/features/cliente/services/crud.ts::clientes",
     "src/features/cxp/services/facturasEntrantesCaptura.ts::embarque_facturas_entrantes",
     "src/features/cxp/services/pagoProveedorMovimiento.ts::proveedor_facturas",
     "src/features/cxp/services/programarPagoProveedor.ts::proveedor_facturas",
