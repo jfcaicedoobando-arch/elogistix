@@ -3,6 +3,7 @@
  * Las filas emitidas usan los mismos encabezados que la importación
  * CSV/Excel para reutilizar `prepararImportacion` y sus validaciones.
  */
+import { ALIAS_PUERTOS } from "./proveedoresCorreo";
 
 export interface FilaCorreo {
   Origen: string;

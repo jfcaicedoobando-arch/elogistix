@@ -114,7 +114,7 @@ QINGDAOMANZANILLO /LAZARO5200530018-OctMSC SPOT21General cargoSpace is OK`;
     expect(errores).toEqual([]);
     // SPOT: 2 orígenes × 2 destinos; booking: 2 + 1 + 2
     expect(filas).toHaveLength(9);
-    const spot = filas.find((f) => f.Origen === "Yantian");
+    const spot = filas.find((f) => f.Origen === "Shenzhen Yantian");
     expect(spot).toMatchObject({
       Naviera: "MAEU", "Tarifa 20": 5061, "Tarifa 40": 5586,
       "Inicio de la vigencia": "2026-10-18", "Término de la vigencia": "2026-10-29", "Días libres": 21,
