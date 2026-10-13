@@ -34,7 +34,7 @@ describe("prevalidación de costos", () => {
   });
 });
 
-describe("errores de lectura no se convierten en datos vivos", () => {
+describe("errores de lectura en la prevalidación de costos CxP", () => {
   it("prevalidación propaga el error del costo antes de aprobar vínculos", async () => {
     const error = new Error("lectura-costos"); mock.queue("conceptos_costo", null, error);
     mock.queue("proveedor_facturas_conceptos", []);

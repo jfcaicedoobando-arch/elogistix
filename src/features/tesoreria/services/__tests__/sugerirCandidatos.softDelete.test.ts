@@ -32,7 +32,7 @@ describe("moneda de la cuenta bancaria", () => {
   });
 });
 
-describe("errores de lectura no se convierten en datos vivos", () => {
+describe("errores de lectura de cuentas bancarias al sugerir candidatos", () => {
   it("propaga error de cuentas_bancarias", async () => {
     mock.queue("cuentas_bancarias", null, new Error("lectura-fallida"));
     await expect(monedaDeCuenta("cta1")).rejects.toThrow("lectura-fallida");
