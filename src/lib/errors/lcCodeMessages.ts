@@ -36,6 +36,12 @@ export const LC_CODE_MESSAGES: Record<string, string> = {
     "El origen de tesorería del anticipo no es consistente. Revisa el cargo original o su registro en efectivo; no generes otro cargo.",
   LC_ANTICIPO_SIN_NUEVO_CARGO:
     "Esta aplicación de anticipo usa la salida original y no admite otro cargo bancario. Revisa el movimiento del anticipo.",
+  LC_FACTURA_HIJOS_METADATA:
+    "La actualización de la protección de facturas no superó la verificación de integridad. Solicita una revisión técnica antes de volver a aplicarla.",
+  LC_FACTURA_HIJOS_PRECONDITION:
+    "No se puede actualizar la protección de facturas porque la configuración de la base de datos difiere de la revisada. Solicita una revisión técnica antes de continuar.",
+  LC_NC_FACTURA_NO_VIVA:
+    "La factura está eliminada o no está disponible en esta empresa. No se puede crear o reactivar la nota de crédito.",
   LC_NC_EXCEDE_CONCEPTO:
     "El crédito supera el importe sin impuestos disponible para este concepto de la factura. Revisa el importe y las notas de crédito ya registradas.",
   LC_NC_LINAJE_INVALIDO:

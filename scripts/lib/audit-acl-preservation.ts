@@ -7,7 +7,7 @@ import { scanSecurityDefiner, type Violation } from "./audit-sql-signatures";
  * This is not an annotation-based or general SECURITY DEFINER exemption.
  */
 const REVIEWED_FORWARDS: ReadonlyMap<string, string> = new Map([
-  ["20261013141500_factura_eliminada_guard_hijos.sql", "3191c832a4e8e63e864f79bcd947a6956c99afb9350f91c97e28515787d20a26"],
+  ["20261013141500_factura_eliminada_guard_hijos.sql", "3c4be5f97b8145dd78c5aa96750e10b5d779407b6ed95862c6e74232ab59ec08"],
   ["20261009174000_cxp_centavo_sin_cobertura.sql", "d54365354a0dbbe59353247adead9f93d298f48a7a1b5796fb23045040a873be"],
   ["20261011180000_proforma_cancelada_acciones_terminales.sql", "8fa5e007826c8c5a004882ad34d54f922d440501290edb30fa408395d0778ea9"],
 ]);

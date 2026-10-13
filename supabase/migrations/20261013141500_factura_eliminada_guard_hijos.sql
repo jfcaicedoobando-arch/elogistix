@@ -1,14 +1,17 @@
 BEGIN;
 -- Fail closed before CREATE OR REPLACE: all three functions must already exist
--- with reviewed bodies/security/search_path. The second hash allows reapplication.
+-- with reviewed bodies/security/search_path. Exact target hashes allow reapplication.
+-- REP and substitution also accept the exact squash bodies (blob a74b0a5d2ab96ea720d414e388bf6f203649a606):
+-- only 4 and 12 empty separator lines differ from their source migrations.
+-- Keep original remote preimages; do not normalize, recompute or accept arbitrary hashes.
 -- Capture existing owner/ACL without rewriting or broadening them.
 DO $preconditions$
 BEGIN
   IF EXISTS (
     SELECT 1 FROM (VALUES
     ('public._nc_validar_linaje_conceptos()', true, ARRAY['3ead908da81f25c72424f0ceb88e6099','e8bce96bfa2d9edb6569333ca3fe18aa']::text[]),
-    ('public.assert_factura_viva_para_rep()', false, ARRAY['10621bffc7289d11acf116b24f9fe966','0c2bac8a98f9398940c5cb22c3092208']::text[]),
-    ('public.duplicar_factura_para_sustitucion(uuid)', true, ARRAY['51cd445e39365a256a4864cf1d871cb3','d1ed6e79d2cf281f3b9088cc3492042a']::text[])
+    ('public.assert_factura_viva_para_rep()', false, ARRAY['10621bffc7289d11acf116b24f9fe966','40badfd37ee72215f3b81c21c3f0bc50','0c2bac8a98f9398940c5cb22c3092208']::text[]),
+    ('public.duplicar_factura_para_sustitucion(uuid)', true, ARRAY['51cd445e39365a256a4864cf1d871cb3','e0b8bdc97556afd0cba54c11104eebfb','d1ed6e79d2cf281f3b9088cc3492042a']::text[])
     ) expected(signature, security_definer, body_hashes)
     LEFT JOIN pg_proc p ON p.oid = to_regprocedure(expected.signature)
     WHERE p.oid IS NULL OR p.prosecdef IS DISTINCT FROM expected.security_definer

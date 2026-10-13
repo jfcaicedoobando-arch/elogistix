@@ -11,7 +11,7 @@ WORK="$(mktemp -d "${TMPDIR:-/tmp}/deleted-parent-XXXXXX")"
 PORT="${TEST_PG_PORT:-56413}"
 cleanup() { "$POSTGRES_BIN/pg_ctl" -D "$WORK/data" -m immediate stop >/dev/null 2>&1 || true; }
 trap cleanup EXIT
-"$POSTGRES_BIN/initdb" -D "$WORK/data" -U guard_owner --auth=trust --no-locale >"$WORK/initdb.log"
+"$POSTGRES_BIN/initdb" -D "$WORK/data" -U guard_owner --auth=trust --no-locale --encoding=UTF8 >"$WORK/initdb.log"
 "$POSTGRES_BIN/pg_ctl" -D "$WORK/data" -l "$WORK/postgres.log" -o "-h 127.0.0.1 -p $PORT -k ''" -w start
 python3 "$HERE/assemble-baseline.py" "$WORK/baseline.sql"
 ARGS=(-X -w -v ON_ERROR_STOP=1 -h 127.0.0.1 -p "$PORT" -U guard_owner -d postgres)
