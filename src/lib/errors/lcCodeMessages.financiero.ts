@@ -5,6 +5,14 @@
  * Se consume desde `lcCodeMessages.ts` (índice).
  */
 export const LC_CODE_MESSAGES_FINANCIERO: Record<string, string> = {
+  // ── Rentabilidad · acceso a información financiera ─────────────────────
+  LC_PROFIT_ROLE_REQUIRED:
+    "No tienes permisos para consultar Rentabilidad. Contacta a un administrador si necesitas acceso.",
+  LC_PROFIT_ORG_REQUIRED:
+    "La empresa seleccionada no está activa. Selecciona una empresa activa para consultar Rentabilidad.",
+  LC_PROFIT_MEMBERSHIP_REQUIRED:
+    "No se pudo validar tu acceso a la empresa seleccionada. Contacta a un administrador para revisar tu membresía y el estado de la empresa.",
+
   // ── Ola 3 · cierre de periodo e inmutabilidad fiscal ───────────────────
   LC_PERIODO_CERRADO:
     "El periodo contable ya está cerrado en esa fecha. Usa una fecha posterior al cierre " +
