@@ -5,8 +5,8 @@ import { esSalidaPendienteDeConfirmar } from "@/features/embarques/domain/salida
 export function SalidaPendienteAlert({ estado, etd }: { estado: string; etd?: string | null }) {
   if (!esSalidaPendienteDeConfirmar(estado, etd)) return null;
   return (
-    <Alert className="mb-4 border-warning/40 bg-warning/10">
-      <AlertTriangle className="h-4 w-4" aria-hidden />
+    <Alert variant="warning" className="mb-4">
+      <AlertTriangle className="size-4" aria-hidden />
       <AlertTitle>Salida pendiente de confirmar</AlertTitle>
       <AlertDescription>
         La ETD venció. Verifica la salida con el transportista antes de avanzar a En Tránsito.
