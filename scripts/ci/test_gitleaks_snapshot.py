@@ -6,6 +6,7 @@ import hashlib
 import io
 import json
 import os
+import re
 from pathlib import Path
 import shutil
 import subprocess
@@ -480,6 +481,19 @@ class SQLAllowlistConfigTests(unittest.TestCase):
         ])
 
 
+    def test_exact_match_allowlist_rejects_identifier_suffixes(self):
+        allowlist = tomllib.loads(CONFIG.decode())["rules"][0]["allowlists"][0]
+        pattern = allowlist["regexes"][0]
+        for reference in RealSQLAllowlistTests.references:
+            matched = f"auth.users u ON u.id = {reference}"
+            self.assertIsNotNone(re.fullmatch(pattern, matched))
+            # Keep the original boundary probe too: the exact SQL exception
+            # must reject it even though the default rule ignores "change".
+            for suffix in ("_changed", "_Q8z4V2n9"):
+                with self.subTest(reference=reference, suffix=suffix):
+                    self.assertIsNone(re.search(pattern, matched + suffix))
+
+
 @unittest.skipUnless(REAL_BINARY, "Gitleaks not installed locally; real controls are required in CI")
 class RealSQLAllowlistTests(Fixture):
     baseline_path = "supabase/schema/baseline.sql"
@@ -518,15 +532,19 @@ class RealSQLAllowlistTests(Fixture):
                     self.scan_case(path, content, expected_leak=path != self.baseline_path)
 
     def test_real_mutated_sql_context_is_not_allowlisted(self):
+        # 8.24.3's inherited generic rule ignores tokens containing "change".
+        # Use a suffix without built-in stopwords, keeping the boundary probe.
+        # Every mutation must also trigger away from the path-scoped exception.
         for reference in self.references:
             for content in (
                 f"LEFT JOIN auth.users u ON u.id = '{reference}'\n",
-                f"LEFT JOIN auth.users u ON u.id = {reference}_changed\n",
+                f"LEFT JOIN auth.users u ON u.id = {reference}_Q8z4V2n9\n",
                 f"LEFT JOIN auth.users v ON v.id = {reference}\n",
                 f"LEFT JOIN auth.users u ON u.id  = {reference}\n",
             ):
-                with self.subTest(reference=reference, content=content):
-                    self.scan_case(self.baseline_path, content, expected_leak=True)
+                for path in ("other.sql", self.baseline_path):
+                    with self.subTest(reference=reference, content=content, path=path):
+                        self.scan_case(path, content, expected_leak=True)
 
     def test_real_synthetic_credential_literals_in_baseline_are_detected(self):
         # Inert high-entropy canary assembled only for tests; never a credential.
@@ -554,10 +572,10 @@ class RealSQLAllowlistTests(Fixture):
 
 
 class SQLFixtureConstructionTests(unittest.TestCase):
-    def test_runtime_construction_preserves_all_thirty_scanner_scenarios(self):
-        # Capture inputs without launching Git or the scanner. This fingerprint
-        # is from the pre-refactor fixtures, including paths, content and expected
-        # failures. Runtime construction must not weaken any real CLI control.
+    def test_runtime_construction_preserves_all_forty_two_scanner_scenarios(self):
+        # Freeze all paths, inputs and outcomes after correcting the suffix
+        # fixture's built-in stopword collision and adding off-path controls.
+        # Runtime construction must not weaken any real CLI control.
         fixture = RealSQLAllowlistTests()
         cases = []
         with patch.object(fixture, "scan_case", side_effect=lambda *args, **kwargs: cases.append([args, kwargs])):
@@ -565,10 +583,10 @@ class SQLFixtureConstructionTests(unittest.TestCase):
             fixture.test_real_mutated_sql_context_is_not_allowlisted()
             fixture.test_real_synthetic_credential_literals_in_baseline_are_detected()
             fixture.test_real_other_default_rule_remains_active_in_baseline()
-        self.assertEqual(len(cases), 30)
+        self.assertEqual(len(cases), 42)
         serialized = json.dumps(cases, sort_keys=True).encode()
         self.assertEqual(hashlib.sha256(serialized).hexdigest(),
-                         "1ede9bf5be228e8f712e92bc2d19771a2326ba803d93c05c27a9d88121d9dc7a")
+                         "17714809ec61e2d6fd7077e105c0d8917a1822d6e0e9bc561e3552410eeac06f")
 
 
 if __name__ == "__main__":
