@@ -20,3 +20,16 @@ paths = [
   '''bun\.lockb$''',
   '''package-lock\.json$''',
 ]
+
+# Gitleaks 8.24.3: these three verified SQL column joins are not credentials.
+# Extend only this rule's allowlist; keep its default regex/entropy and all rules.
+# Both the exact path AND complete match are required. No value-only exclusions.
+[[rules]]
+id = "generic-api-key"
+
+[[rules.allowlists]]
+description = "Verified baseline SQL column joins; exact context only"
+condition = "AND"
+paths = ['''^supabase/schema/baseline\.sql$''']
+regexTarget = "match"
+regexes = ['''^auth\.users u ON u\.id = (?:fe2\.enviado_por|fe3\.subido_por|fe4\.capturado_por)$''']

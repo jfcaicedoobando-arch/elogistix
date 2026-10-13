@@ -27,6 +27,7 @@ on:
       - "scripts/ci/audit54-cxc-forward-runtime.sh"
       - "scripts/ci/audit54-cxc-runtime-fixtures.py"
       - "scripts/ci/selector148/**"
+      - "scripts/ci/cxp-approval/**"
       - "scripts/ci/financial49/**"
       - "scripts/ci/receivable155/**"
       - "scripts/ci/pricing-container/**"
@@ -54,6 +55,7 @@ on:
       - "scripts/ci/audit54-cxc-forward-runtime.sh"
       - "scripts/ci/audit54-cxc-runtime-fixtures.py"
       - "scripts/ci/selector148/**"
+      - "scripts/ci/cxp-approval/**"
       - "scripts/ci/financial49/**"
       - "scripts/ci/receivable155/**"
       - "scripts/ci/pricing-container/**"
@@ -176,6 +178,26 @@ jobs:
 
       - name: Pricing RPC exact ACL before harness grants
         run: $PSQL -f supabase/tests/rls/_ci_check_pricing_container_acl.sql
+
+      - name: Contador CxP — two-session races in fresh strict clones
+        timeout-minutes: 8
+        # Before CI grants/FK relaxation; source postgres is cloned, never seeded.
+        env:
+          ISOLATED_QA_DB: '1'
+          CXP_APPROVAL_DISPOSABLE: '1'
+          CXP_POSTGRES_SERVICE_ID: ${{ job.services.postgres.id }}
+        run: |
+          python3 scripts/ci/cxp-approval/test_static.py -v
+          python3 scripts/ci/cxp-approval/run-actions.py
+
+      - name: Contador CxP concurrency evidence
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: cxp-approval-concurrency-${{ github.run_attempt }}
+          path: reports/cxp-approval-concurrency/
+          if-no-files-found: warn
+          retention-days: 7
 
       - name: Post-migrate (drop auth.users FKs para CI)
         run: $PSQL -f supabase/tests/rls/_ci_post_migrate.sql

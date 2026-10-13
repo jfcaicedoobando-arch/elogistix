@@ -1,7 +1,8 @@
-"""Offline selection/safety contracts; optional real CLI synthetic controls."""
+"""Offline safety contracts; real CLI controls are mandatory in CI."""
 
 import contextlib
 import importlib.util
+import hashlib
 import io
 import json
 import os
@@ -9,6 +10,7 @@ from pathlib import Path
 import shutil
 import subprocess
 import tempfile
+import tomllib
 import unittest
 from unittest.mock import patch
 
@@ -452,6 +454,121 @@ class RealScannerTests(Fixture):
         self.write('--quote"tab\tnewline\nbackslash\\á.txt', DUMMY)
         with self.assertRaisesRegex(snapshot.CoverageError, "exit 2"):
             self.actual_scan(self.commit())
+
+
+class SQLAllowlistConfigTests(unittest.TestCase):
+    def test_default_rules_and_detection_parameters_are_not_overridden(self):
+        config = tomllib.loads(CONFIG.decode())
+        self.assertEqual(config["extend"], {"useDefault": True})
+        self.assertEqual(set(config), {"extend", "allowlist", "rules"})
+        self.assertEqual(len(config["rules"]), 1)
+        rule = config["rules"][0]
+        # Inherit the complete default rule, including regex, entropy and its
+        # existing allowlists. Never disable rules or substitute weaker rules.
+        self.assertEqual(set(rule), {"id", "allowlists"})
+        self.assertEqual(rule["id"], "generic-api-key")
+        self.assertEqual(len(rule["allowlists"]), 1)
+        allowlist = rule["allowlists"][0]
+        self.assertEqual(set(allowlist), {
+            "description", "condition", "paths", "regexTarget", "regexes",
+        })
+        self.assertEqual(allowlist["condition"], "AND")
+        self.assertEqual(allowlist["regexTarget"], "match")
+        self.assertEqual(allowlist["paths"], [r"^supabase/schema/baseline\.sql$"])
+        self.assertEqual(allowlist["regexes"], [
+            r"^auth\.users u ON u\.id = (?:fe2\.enviado_por|fe3\.subido_por|fe4\.capturado_por)$",
+        ])
+
+
+@unittest.skipUnless(REAL_BINARY, "Gitleaks not installed locally; real controls are required in CI")
+class RealSQLAllowlistTests(Fixture):
+    baseline_path = "supabase/schema/baseline.sql"
+    references = ("fe2.enviado_por", "fe3.subido_por", "fe4.capturado_por")
+
+    def scan_case(self, path, content, expected_leak, expected_rule="generic-api-key"):
+        self.write(path, content.encode())
+        head = self.commit()
+        output = io.StringIO()
+        try:
+            with contextlib.redirect_stdout(output):
+                if expected_leak:
+                    with self.assertRaisesRegex(snapshot.CoverageError, "exit 2"):
+                        snapshot.scan(self.repo, "pull_request", self.event(head), head, REAL_BINARY)
+                else:
+                    self.assertEqual(snapshot.scan(
+                        self.repo, "pull_request", self.event(head), head, REAL_BINARY,
+                    ), 0)
+            if expected_leak:
+                if expected_rule is not None:
+                    self.assertIn(f"rule={expected_rule};", output.getvalue())
+            else:
+                self.assertRegex(output.getvalue(), r"scanned_bytes=[1-9][0-9]*;")
+        finally:
+            # Each case has exactly one selected content file. A finding from
+            # an earlier case must never make a later negative control pass.
+            (self.repo / path).unlink()
+            self.base = self.commit()
+
+    def test_real_each_verified_join_is_allowed_only_in_exact_baseline(self):
+        for reference in self.references:
+            content = f"LEFT JOIN auth.users u ON u.id = {reference}\n"
+            for path in (self.baseline_path, "other.sql", "backup/" + self.baseline_path,
+                         self.baseline_path + ".bak"):
+                with self.subTest(reference=reference, path=path):
+                    self.scan_case(path, content, expected_leak=path != self.baseline_path)
+
+    def test_real_mutated_sql_context_is_not_allowlisted(self):
+        for reference in self.references:
+            for content in (
+                f"LEFT JOIN auth.users u ON u.id = '{reference}'\n",
+                f"LEFT JOIN auth.users u ON u.id = {reference}_changed\n",
+                f"LEFT JOIN auth.users v ON v.id = {reference}\n",
+                f"LEFT JOIN auth.users u ON u.id  = {reference}\n",
+            ):
+                with self.subTest(reference=reference, content=content):
+                    self.scan_case(self.baseline_path, content, expected_leak=True)
+
+    def test_real_synthetic_credential_literals_in_baseline_are_detected(self):
+        # Inert high-entropy canary assembled only for tests; never a credential.
+        canary = "".join(("Q8z4V2n9", "B7x5L3p6", "R1s0T4m8"))
+        credential = f"api_key = '{canary}'\n"
+        # Construct SQL at runtime so the test source is not itself a finding.
+        # Keep the exact scanner input; never exempt this file or disable history.
+        known_join = f"LEFT JOIN auth.users u ON u.id = {self.references[0]}"
+        for content in (
+            credential,
+            f"LEFT JOIN auth.users u ON u.id = '{canary}'\n",
+            f"LEFT JOIN auth.users u ON u.id = {canary}\n",
+            f"{known_join}\n{credential}",
+            f"{known_join}; {credential}",
+        ):
+            with self.subTest(content=content):
+                self.scan_case(self.baseline_path, content, expected_leak=True)
+
+    def test_real_other_default_rule_remains_active_in_baseline(self):
+        # Synthetic GCP-shaped fixture. No account, issuer or usable key exists.
+        value = "AI" + "za" + "".join(("Q8z4V2n9", "B7x5L3p6", "R1s0T4m8", "C2d6F9h3", "J5k"))
+        self.assertEqual(len(value), 39)
+        self.scan_case(self.baseline_path, f"SELECT '{value}';\n",
+                       expected_leak=True, expected_rule=None)
+
+
+class SQLFixtureConstructionTests(unittest.TestCase):
+    def test_runtime_construction_preserves_all_thirty_scanner_scenarios(self):
+        # Capture inputs without launching Git or the scanner. This fingerprint
+        # is from the pre-refactor fixtures, including paths, content and expected
+        # failures. Runtime construction must not weaken any real CLI control.
+        fixture = RealSQLAllowlistTests()
+        cases = []
+        with patch.object(fixture, "scan_case", side_effect=lambda *args, **kwargs: cases.append([args, kwargs])):
+            fixture.test_real_each_verified_join_is_allowed_only_in_exact_baseline()
+            fixture.test_real_mutated_sql_context_is_not_allowlisted()
+            fixture.test_real_synthetic_credential_literals_in_baseline_are_detected()
+            fixture.test_real_other_default_rule_remains_active_in_baseline()
+        self.assertEqual(len(cases), 30)
+        serialized = json.dumps(cases, sort_keys=True).encode()
+        self.assertEqual(hashlib.sha256(serialized).hexdigest(),
+                         "1ede9bf5be228e8f712e92bc2d19771a2326ba803d93c05c27a9d88121d9dc7a")
 
 
 if __name__ == "__main__":
