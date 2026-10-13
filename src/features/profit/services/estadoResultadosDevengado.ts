@@ -1,3 +1,4 @@
+import type { ValuacionER } from "../domain/valuacion";
 /** EERR devengado: el mensual y la tendencia anual comparten bases, fechas y TC. */
 import { rangoMes } from "@/features/facturacion/domain/proyeccionFacturacion";
 import { fechaFiscalFactura } from "@/features/profit/domain/fechaFiscalFactura";
@@ -16,6 +17,7 @@ export async function fetchEstadoResultadosDevengado(p: Params): Promise<EstadoR
 }
 
 export interface ResumenDevengadoMes {
+  valuacion?: ValuacionER;
   notas_proveedor_sin_base_count?: number;
   mes: number;
   ingresos_mxn: number;
@@ -48,7 +50,7 @@ export async function fetchEstadoResultadosDevengadoAnual(p: {
       pfacts: datos.pfacts.filter((pf) => pf.fecha_emision.startsWith(periodo)),
       pncs: datos.pncs.filter((nc) => nc.fecha.startsWith(periodo)),
     });
-    filas.push({ mes, ingresos_mxn: estado.totalIngresos.total, costos_mxn: estado.totalCostos.total,
+    filas.push({ mes, valuacion: estado.valuacion, ingresos_mxn: estado.totalIngresos.total, costos_mxn: estado.totalCostos.total,
       ...(estado.notas_proveedor_sin_base?.length ? { notas_proveedor_sin_base_count: estado.notas_proveedor_sin_base.length } : {}),
     });
   }

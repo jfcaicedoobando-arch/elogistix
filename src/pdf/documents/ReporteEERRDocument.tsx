@@ -1,3 +1,4 @@
+import { exigirValuacionCompleta } from "@/features/profit/domain/valuacion";
 import { avisoNcProveedorSinBase } from "@/lib/financial/baseNcProveedor";
 import { Document, Page, Text, View } from "@react-pdf/renderer";
 import { formatCurrency } from "@/lib/formatters";
@@ -49,6 +50,7 @@ const cols: PdfColumn<FilaPlana>[] = [
 ];
 
 export function ReporteEERRDocument({ periodo, fuente, data, emisor }: Props) {
+  exigirValuacionCompleta(data);
   const ingresos = aplanar(data.ingresos);
   const costos = aplanar(data.costos);
   const utilidadModos = MODOS.map((m) => data.utilidad.porModo[m] ?? 0);
@@ -81,7 +83,7 @@ export function ReporteEERRDocument({ periodo, fuente, data, emisor }: Props) {
           { label: "Ingresos totales", value: formatCurrency(data.totalIngresos.total, "MXN") },
           { label: "Costos totales", value: formatCurrency(data.totalCostos.total, "MXN") },
           { label: "Utilidad bruta", value: formatCurrency(data.utilidad.total, "MXN") },
-          { label: "Margen", value: `${data.margen.total.toFixed(1)}%` },
+          { label: "Margen", value: data.totalIngresos.total === 0 ? "No calculable" : `${data.margen.total.toFixed(1)}%` },
         ]} />
 
         <Text minPresenceAhead={70} style={[styles.h3, { marginTop: 8 }]}>Ingresos</Text>

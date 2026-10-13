@@ -1,3 +1,4 @@
+import { avisoValuacion, valuacionIncompleta } from "../domain/valuacion";
 /**
  * Excepción documentada al guardrail `no-raw-table` (Ola F, punto 8):
  * esta tabla tiene subtotales con `colSpan` y una fila de "Margen %" con
@@ -39,30 +40,30 @@ function SectionHeader({ label }: { label: string }) {
   );
 }
 
-function TotalRow({ label, valores, variant = "muted" }: { label: string; valores: TotalER; variant?: "muted" | "primary" }) {
+function TotalRow({ label, valores, noDisponible, variant = "muted" }: { label: string; valores: TotalER; noDisponible?: boolean; variant?: "muted" | "primary" }) {
   const bg = variant === "primary" ? "bg-primary/10" : "bg-muted";
   return (
     <DetailTableRow hoverable={false} className={`${bg} font-bold`}>
       <TableCell className="py-2.5 px-3">{label}</TableCell>
       {MODOS_COLUMNAS.map((m) => (
-        <TableCell key={m} className="py-2.5 px-3 text-right tabular-nums">{fmt(valores.porModo[m])}</TableCell>
+        <TableCell key={m} className="py-2.5 px-3 text-right tabular-nums">{noDisponible ? "No disponible" : fmt(valores.porModo[m])}</TableCell>
       ))}
-      <TableCell className="py-2.5 px-3 text-right tabular-nums">{fmt(valores.total)}</TableCell>
+      <TableCell className="py-2.5 px-3 text-right tabular-nums">{noDisponible ? "No disponible" : fmt(valores.total)}</TableCell>
     </DetailTableRow>
   );
 }
 
-function MargenRow({ margen }: { margen: TotalER }) {
+function MargenRow({ margen, ingresos, incompleta }: { margen: TotalER; ingresos: TotalER; incompleta: boolean }) {
   return (
     <DetailTableRow hoverable={false} className="bg-muted/60 font-semibold">
       <TableCell className={CELL_PAD}>Margen %</TableCell>
       {MODOS_COLUMNAS.map((m) => (
         <TableCell key={m} className={`${CELL_PAD} text-right`}>
-          <MargenTexto pct={margen.porModo[m]} umbrales={UMBRAL_MARGEN_OPERATIVO} />
+          {incompleta ? "No disponible" : ingresos.porModo[m] === 0 ? "No calculable" : <MargenTexto pct={margen.porModo[m]} umbrales={UMBRAL_MARGEN_OPERATIVO} />}
         </TableCell>
       ))}
       <TableCell className={`${CELL_PAD} text-right`}>
-        <MargenTexto pct={margen.total} umbrales={UMBRAL_MARGEN_OPERATIVO} />
+        {incompleta ? "No disponible" : ingresos.total === 0 ? "No calculable" : <MargenTexto pct={margen.total} umbrales={UMBRAL_MARGEN_OPERATIVO} />}
       </TableCell>
     </DetailTableRow>
   );
@@ -122,29 +123,38 @@ function MobileSection({ label, filas, total, totalLabel, totalVariant }: {
 }
 
 export function EstadoResultadosTable({ data }: { data: EstadoResultados }) {
+  const incompleta = valuacionIncompleta(data);
   return (
     <>
+      {incompleta && <div role="status" className="p-3 text-sm text-warning">
+        <p>{avisoValuacion(data)}</p>
+        <details><summary>Conceptos excluidos de los parciales MXN</summary><ul>
+          {data.valuacion?.excluidos_sin_tc.map((e, i) => <li key={i}>
+            {e.seccion}: {e.concepto} · {e.nominal} {e.moneda} · {e.modo} · Referencia {e.embarque_id}
+          </li>)}
+        </ul></details>
+      </div>}
       {/* Mobile (<sm): tarjetas apiladas para que ninguna cifra quede cortada. */}
       <div className="sm:hidden">
         <MobileSection
           label="Ingresos"
           filas={data.ingresos}
           total={data.totalIngresos}
-          totalLabel="TOTAL INGRESOS"
+          totalLabel={incompleta ? "INGRESOS PARCIALES" : "TOTAL INGRESOS"}
         />
         <MobileSection
           label="Costos"
           filas={data.costos}
           total={data.totalCostos}
-          totalLabel="TOTAL COSTOS"
+          totalLabel={incompleta ? "COSTOS PARCIALES" : "TOTAL COSTOS"}
         />
         <div className="bg-primary/10 font-bold px-3 py-2.5 flex items-center justify-between border-y">
           <span>UTILIDAD BRUTA</span>
-          <span className="tabular-nums">{fmt(data.utilidad.total)}</span>
+          <span className="tabular-nums">{incompleta ? "No disponible" : fmt(data.utilidad.total)}</span>
         </div>
         <div className="bg-muted/60 font-semibold px-3 py-2 flex items-center justify-between text-body-sm">
           <span>Margen %</span>
-          <MargenTexto pct={data.margen.total} umbrales={UMBRAL_MARGEN_OPERATIVO} />
+          {incompleta ? "No disponible" : data.totalIngresos.total === 0 ? "No calculable" : <MargenTexto pct={data.margen.total} umbrales={UMBRAL_MARGEN_OPERATIVO} />}
         </div>
       </div>
 
@@ -165,17 +175,17 @@ export function EstadoResultadosTable({ data }: { data: EstadoResultados }) {
             {data.ingresos.length === 0
               ? <EmptyRow label="Sin ingresos registrados." />
               : data.ingresos.map((r) => <Row key={`v-${r.concepto}`} label={r.concepto} fila={r} />)}
-            <TotalRow label="TOTAL INGRESOS" valores={data.totalIngresos} />
+            <TotalRow label={incompleta ? "INGRESOS PARCIALES" : "TOTAL INGRESOS"} valores={data.totalIngresos} />
 
             <SectionHeader label="Costos" />
             {data.costos.length === 0
               ? <EmptyRow label="Sin costos registrados." />
               : data.costos.map((r) => <Row key={`c-${r.concepto}`} label={r.concepto} fila={r} />)}
-            <TotalRow label="TOTAL COSTOS" valores={data.totalCostos} />
+            <TotalRow label={incompleta ? "COSTOS PARCIALES" : "TOTAL COSTOS"} valores={data.totalCostos} />
 
             <DetailTableRow hoverable={false}><TableCell colSpan={6} className="h-2 py-0" /></DetailTableRow>
-            <TotalRow label="UTILIDAD BRUTA" valores={data.utilidad} variant="primary" />
-            <MargenRow margen={data.margen} />
+            <TotalRow label="UTILIDAD BRUTA" noDisponible={incompleta} valores={data.utilidad} variant="primary" />
+            <MargenRow margen={data.margen} ingresos={data.totalIngresos} incompleta={incompleta} />
           </TableBody>
         </Table>
       </div>

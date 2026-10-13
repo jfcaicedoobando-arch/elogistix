@@ -1,3 +1,4 @@
+import { puedeExportarEerr, sinMovimientosEerr } from "../domain/valuacion";
 import { avisoNcProveedorSinBase } from "@/lib/financial/baseNcProveedor";
 import { Calendar, Download, FileText, Info } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
@@ -56,7 +57,7 @@ export default function ProfitEstadoResultados() {
   });
 
   const handleExport = () => {
-    if (!data) return;
+    if (!puedeExportarEerr(data)) return;
     exportToCsv(
       `estado-resultados-${c.mesActual.key}.csv`,
       ESTADO_RESULTADOS_CSV_HEADERS,
@@ -65,7 +66,7 @@ export default function ProfitEstadoResultados() {
   };
 
   const handleExportPdf = () => {
-    if (!data) return;
+    if (!puedeExportarEerr(data)) return;
     void runPdfExport(async () => {
       const scope = captureAuthOperationScope();
       const [emisor, { ReporteEERRDocument }] = await Promise.all([
@@ -81,7 +82,8 @@ export default function ProfitEstadoResultados() {
   };
 
 
-  const sinDatos = !c.isLoading && data && data.ingresos.length === 0 && data.costos.length === 0;
+  const sinDatos = !c.isLoading && sinMovimientosEerr(data);
+  const exportacionBloqueada = !puedeExportarEerr(data) || sinDatos;
 
   return (
     <PageContainer>
@@ -107,10 +109,10 @@ export default function ProfitEstadoResultados() {
           />
           <FuenteEerrToggle fuente={c.fuente} onFuenteChange={c.setFuente} />
           <div className="flex-1" />
-          <Button variant="outline" onClick={handleExport} disabled={!data || sinDatos === true}>
+          <Button variant="outline" onClick={handleExport} disabled={exportacionBloqueada}>
             <Download className="h-4 w-4 mr-2" /> Exportar CSV
           </Button>
-          <Button loading={exportandoPdf} variant="outline" onClick={handleExportPdf} disabled={!data || sinDatos === true || exportandoPdf}>
+          <Button loading={exportandoPdf} variant="outline" onClick={handleExportPdf} disabled={exportacionBloqueada || exportandoPdf}>
             <FileText className="h-4 w-4 mr-2" />
             {exportandoPdf ? "Generando…" : "PDF"}
           </Button>
