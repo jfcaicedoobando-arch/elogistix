@@ -1,11 +1,12 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-const io = vi.hoisted(() => ({ crear: vi.fn(), persistir: vi.fn(), vincular: vi.fn(), notifyError: vi.fn() }));
+const io = vi.hoisted(() => ({ crear: vi.fn(), persistir: vi.fn(), vincular: vi.fn(), notifyError: vi.fn(), costosIs: vi.fn() }));
 vi.mock("@/integrations/supabase/client", () => ({ supabase: {
   from: vi.fn((table: string) => {
-    const query = { select: vi.fn(), eq: vi.fn(), in: vi.fn() };
+    const query = { select: vi.fn(), eq: vi.fn(), is: table === "conceptos_costo" ? io.costosIs : vi.fn(), in: vi.fn() };
     query.select.mockReturnValue(query);
     query.eq.mockReturnValue(query);
+    query.is.mockReturnValue(query);
     query.in.mockResolvedValue({ data: table === "conceptos_costo"
       ? [{ id: "c1", concepto: "Flete", moneda: "MXN", monto: 20.44 }] : [], error: null });
     return query;
@@ -37,6 +38,7 @@ describe("auditoría 133 · guardado sin efectos parciales", () => {
       embarqueAdHoc: null, crearMutateAsync: io.crear, setFolioError: vi.fn(),
     });
     expect(result).toEqual({ ok: false, facturaId: null });
+    expect(io.costosIs).toHaveBeenCalledExactlyOnceWith("deleted_at", null);
     expect(io.crear).not.toHaveBeenCalled();
     expect(io.persistir).not.toHaveBeenCalled();
     expect(io.vincular).not.toHaveBeenCalled();

@@ -50,6 +50,7 @@ function makeMov(partial: Partial<MovimientoBBVA>): MovimientoBBVA {
 
 describe("conciliacion service", () => {
   beforeEach(() => {
+    mock.resetResults();
     mock.tableCalls.length = 0;
     mock.rpcCalls.length = 0;
   });
@@ -101,11 +102,18 @@ describe("conciliacion service", () => {
 
   describe("conciliarConPago", () => {
     beforeEach(() => {
-      mock.setTableResult("pagos_proveedor", { data: { es_ajuste: false }, error: null });
+      mock.setTableResult("pagos_proveedor", { data: { es_ajuste: false, monto: 100, moneda: "MXN" }, error: null });
+      mock.setTableResult("pagos_factura", { data: { monto: 100, moneda: "MXN" }, error: null });
     });
+    function prepararMovimiento(id: string, cargo: number, abono: number) {
+      mock.setTableResultOnce("bbva_movimientos", { data: [], error: null });
+      mock.setTableResultOnce("bbva_movimientos", { data: { cargo, abono }, error: null });
+      mock.setTableResultOnce("bbva_movimientos", { data: { cargo, abono }, error: null });
+      mock.setTableResult("bbva_movimientos", { data: [{ id }], error: null });
+    }
     it("escribe pago_factura_id (no pago_proveedor_id) cuando tipo=cxc", async () => {
       // N5: un cobro sólo se concilia con un abono (entrada de dinero).
-      mock.setTableResult("bbva_movimientos", { data: [{ id: "m1", cargo: 0, abono: 100 }], error: null });
+      prepararMovimiento("m1", 0, 100);
       await conciliarConPago("m1", "cxc", "p1", "u1");
       const { assertUpdatePayload, assertEq, findTableCall } = await import(
         "@/test/helpers/assertMutation"
@@ -122,7 +130,7 @@ describe("conciliacion service", () => {
 
     it("escribe pago_proveedor_id (no pago_factura_id) cuando tipo=cxp", async () => {
       // N5: un pago a proveedor sólo se concilia con un cargo (salida).
-      mock.setTableResult("bbva_movimientos", { data: [{ id: "m2", cargo: 100, abono: 0 }], error: null });
+      prepararMovimiento("m2", 100, 0);
       await conciliarConPago("m2", "cxp", "p2", "u1");
       const { assertUpdatePayload, findTableCall } = await import(
         "@/test/helpers/assertMutation"
@@ -136,14 +144,14 @@ describe("conciliacion service", () => {
 
     // N5 (v13.823.386): el sentido bancario debe coincidir con el tipo de pago.
     it("rechaza conciliar un cargo como cobro de cliente (cxc)", async () => {
-      mock.setTableResult("bbva_movimientos", { data: [{ id: "m3", cargo: 100, abono: 0 }], error: null });
+      prepararMovimiento("m3", 100, 0);
       await expect(conciliarConPago("m3", "cxc", "p3", "u1")).rejects.toMatchObject({
         code: "LC_MOVIMIENTO_SENTIDO_COBRO",
       });
     });
 
     it("rechaza conciliar un abono como pago a proveedor (cxp)", async () => {
-      mock.setTableResult("bbva_movimientos", { data: [{ id: "m4", cargo: 0, abono: 100 }], error: null });
+      prepararMovimiento("m4", 0, 100);
       await expect(conciliarConPago("m4", "cxp", "p4", "u1")).rejects.toMatchObject({
         code: "LC_MOVIMIENTO_SENTIDO_PAGO",
       });
@@ -152,6 +160,7 @@ describe("conciliacion service", () => {
 
 
     it("mapea LC_MOVIMIENTO_ORG_MISMATCH del trigger a MovimientoVinculoError", async () => {
+      prepararMovimiento("m1", 0, 100);
       mock.setTableResult("bbva_movimientos", {
         data: null,
         error: { code: "P0001", message: "LC_MOVIMIENTO_ORG_MISMATCH: el pago pertenece a otra organización" },
@@ -160,6 +169,7 @@ describe("conciliacion service", () => {
     });
 
     it("mapea 23505 sobre uq_bbva_movimientos_pago_factura a LC_MOVIMIENTO_YA_VINCULADO", async () => {
+      prepararMovimiento("m1", 0, 100);
       mock.setTableResult("bbva_movimientos", {
         data: null,
         error: { code: "23505", message: 'duplicate key value violates unique constraint "uq_bbva_movimientos_pago_factura"' },
@@ -170,6 +180,7 @@ describe("conciliacion service", () => {
     });
 
     it("mapea 23505 con status 409 (forma real de PostgREST) preservando el código de dominio", async () => {
+      prepararMovimiento("m1", 100, 0);
       mock.setTableResult("bbva_movimientos", {
         data: null,
         error: {

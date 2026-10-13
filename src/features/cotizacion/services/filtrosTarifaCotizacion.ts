@@ -20,6 +20,7 @@ export async function fetchFiltrosTarifaCotizacion(
     .from("cotizaciones")
     .select("tarifa_id")
     .eq("id", cotizacionId)
+    .is("deleted_at", null)
     .maybeSingle();
   if (errCot) throw new Error(errCot.message);
   const tarifaId = cot?.tarifa_id ?? null;

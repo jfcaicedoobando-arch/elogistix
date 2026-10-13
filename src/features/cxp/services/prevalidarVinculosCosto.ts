@@ -45,7 +45,7 @@ export async function prevalidarVinculosCosto(
   const [{ data: costos, error: errorCostos }, { data: existentes, error: errorVinculos }] = await Promise.all([
     supabase.from("conceptos_costo")
       .select("id, concepto, monto, moneda")
-      .eq("organization_id", organizationId).in("id", ids),
+      .eq("organization_id", organizationId).is("deleted_at", null).in("id", ids),
     supabase.from("proveedor_facturas_conceptos")
       .select("concepto_costo_id, monto, cantidad")
       .eq("organization_id", organizationId).in("concepto_costo_id", ids),
