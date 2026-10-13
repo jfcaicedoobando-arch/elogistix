@@ -6,8 +6,9 @@
  * detectar cuándo ese valor se apartó del DOF de su fecha y, si el embarque
  * sigue abierto, alinearlo con la RPC `actualizar_tc_embarque_dof`.
  */
+import { z } from "zod";
 import { supabase } from "@/integrations/supabase/client";
-import { unwrapOr, run } from "@/lib/supabase/response";
+import { unwrapOr, unwrap } from "@/lib/supabase/response";
 import { fetchTcDofPorFecha, type TcDofVigente } from "@/features/catalogos/services/tipoCambioDof";
 import { hoyMx } from "@/lib/date/mx";
 import { registrarActividad } from "@/services/bitacora/registrar";
@@ -52,6 +53,7 @@ export async function fetchEmbarqueTcContexto(embarqueId: string): Promise<Embar
     .from("embarques")
     .select("expediente, estado, created_at, tipo_cambio_usd, tipo_cambio_eur")
     .eq("id", embarqueId)
+    .is("deleted_at", null)
     .limit(1);
   const rows = await unwrapOr(query, []);
   const fila = (rows ?? [])[0] as FilaEmbarqueTc | undefined;
@@ -85,16 +87,28 @@ export interface ActualizarTcDofResultado {
   eur_nuevo: number | null;
 }
 
+const resultadoTcDofSchema = z.object({
+  fecha_dof: z.iso.date(),
+  usd_anterior: z.number().nullable(),
+  usd_nuevo: z.number().positive(),
+  eur_anterior: z.number().nullable(),
+  eur_nuevo: z.number().nullable(),
+});
+
 /** Alinea el T/C del embarque al DOF de `fecha` y lo deja en bitácora. */
 export async function actualizarTcEmbarqueDof(
   embarqueId: string,
   fecha: string,
 ): Promise<ActualizarTcDofResultado> {
-  const data = await run(
+  const data = await unwrap(
     supabase.rpc("actualizar_tc_embarque_dof", { _embarque_id: embarqueId, _fecha: fecha }),
   );
-  // SAFE-CAST: la RPC devuelve el shape ActualizarTcDofResultado (ver migración).
-  const res = (data ?? {}) as ActualizarTcDofResultado;
+  const resultado = resultadoTcDofSchema.safeParse(data);
+  if (!resultado.success) {
+    // La RPC pudo aplicar el cambio: nunca repetirla para recuperar la respuesta.
+    throw new Error("No se pudo verificar el resultado del cambio. Actualiza el embarque antes de volver a intentarlo.");
+  }
+  const res = resultado.data;
   await registrarActividad({
     modulo: "embarques",
     accion: "Alineó el tipo de cambio al DOF",

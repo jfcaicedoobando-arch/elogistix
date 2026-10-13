@@ -5,14 +5,11 @@
     "src/features/cxp/services/facturasEntrantesCaptura.ts::embarque_facturas_entrantes",
     "src/features/cxp/services/pagoProveedorMovimiento.ts::proveedor_facturas",
     "src/features/cxp/services/programarPagoProveedor.ts::proveedor_facturas",
-    "src/features/embarques/services/comisionExclusion.ts::embarques",
     "src/features/embarques/services/tarifaInfo.ts::embarques",
-    "src/features/embarques/services/tcEmbarqueDof.ts::embarques",
     "src/features/facturacion/estadoCuenta/services/clienteFicha.ts::clientes",
     "src/features/facturacion/services/detail.ts::facturas",
     "src/features/facturacion/services/detail.ts::proformas",
     "src/features/facturacion/services/pagos/eliminarPago.ts::pagos_factura",
-    "src/features/facturacion/services/recalcularTotalesFactura.ts::facturas",
     "src/features/facturacion/services/refacturacion.ts::facturas"
   ]
 }
