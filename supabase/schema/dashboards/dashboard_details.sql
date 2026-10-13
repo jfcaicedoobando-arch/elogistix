@@ -10,14 +10,11 @@ CREATE OR REPLACE FUNCTION public.dashboard_details_datos()
  SET search_path TO 'public'
 AS $function$
 DECLARE
-  -- Ola 17 · H8-A: el servidor corre en UTC; el tablero debe razonar en hora
-  -- de México o los días de demora se adelantan a partir de las 18:00 CDMX.
   v_hoy date := (now() AT TIME ZONE 'America/Mexico_City')::date;
   v_inicio_mes date := date_trunc('month', v_hoy)::date;
   v_fin_mes date := (date_trunc('month', v_hoy) + interval '1 month' - interval '1 day')::date;
   v_inicio_sig date := (date_trunc('month', v_hoy) + interval '1 month')::date;
   v_fin_sig date := (date_trunc('month', v_hoy) + interval '2 months' - interval '1 day')::date;
-  -- Fallback SÓLO cuando la naviera no tiene condiciones capturadas.
   v_dias_libres_fallback int := 7;
   v_nombre_mes text;
   v_meses text[] := ARRAY['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
@@ -35,16 +32,28 @@ BEGIN
              e.tipo_cambio_usd, e.tipo_cambio_eur,
         e.estado::text AS estado_real
       FROM embarques e
-      WHERE e.deleted_at IS NULL              -- FIX C5
+      WHERE e.deleted_at IS NULL
         AND (e.organization_id = public.org_scope())
     ),
     profit AS (SELECT * FROM profit_por_embarque()),
-    -- Ola 4 · N10 (B-033): Borrador ya no cuenta como activo operativo.
+    tc_factura AS (
+      SELECT f.embarque_id, sum(f.subtotal * f.tipo_cambio) / NULLIF(sum(f.subtotal), 0) AS tc
+      FROM facturas f
+      WHERE f.deleted_at IS NULL
+        AND f.organization_id = public.org_scope()
+        AND f.moneda::text = 'USD' AND f.tipo_cambio > 1 AND f.subtotal > 0
+        AND f.estado::text NOT IN ('Cancelada','Borrador','Sustituida')
+      GROUP BY f.embarque_id
+    ),
+    profit_fx AS (
+      SELECT p.embarque_id, p.venta_usd, p.costo_usd, p.costo_mxn,
+             p.costo_mxn_from_usd, p.venta_mxn_from_eur, p.costo_mxn_from_eur,
+             p.venta_mxn_native, p.costo_mxn_native,
+             p.venta_usd * COALESCE(tf.tc, p.tipo_cambio_usd) AS venta_mxn_from_usd,
+             p.venta_usd * COALESCE(tf.tc, p.tipo_cambio_usd) + p.venta_mxn_from_eur + p.venta_mxn_native AS venta_mxn
+      FROM profit p LEFT JOIN tc_factura tf ON tf.embarque_id = p.embarque_id
+    ),
     activos AS (SELECT * FROM embarques_base WHERE estado_real NOT IN ('Borrador','EIR','Por liquidar','Cerrado','Cancelado')),
-    -- Ola 17 · H8-A: los días de demora se calculan con la MISMA base que
-    -- factura calcular_demoras_embarque: fecha real de descarga (evento o
-    -- contenedor) y días libres reales (override del contenedor → condiciones
-    -- de la naviera → fallback). La ETA sólo se usa como estimación.
     demoras_ctx AS (
       SELECT a.id,
         (SELECT min((ev.fecha AT TIME ZONE 'America/Mexico_City')::date)
@@ -119,12 +128,11 @@ BEGIN
              p.venta_mxn_from_usd, p.costo_mxn_from_usd,
              p.venta_mxn_from_eur, p.costo_mxn_from_eur,
              p.venta_mxn_native, p.costo_mxn_native
-      FROM embarques_base eb LEFT JOIN profit p ON p.embarque_id = eb.id
-      -- AUD-UTIL-MES: mismos estados que arribos_mes del resumen.
+      FROM embarques_base eb LEFT JOIN profit_fx p ON p.embarque_id = eb.id
       WHERE eb.estado_real NOT IN ('Borrador','Cancelado')
         AND eb.eta IS NOT NULL AND eb.eta >= v_inicio_mes AND eb.eta <= v_fin_mes
         AND (COALESCE(p.venta_mxn, 0) > 0 OR COALESCE(p.costo_mxn, 0) > 0)
-      ORDER BY (COALESCE(p.venta_mxn, 0) - COALESCE(p.costo_mxn, 0)) DESC LIMIT 200  -- AUD-UTIL-MES: la vista "Míos" suma esta lista; 30 truncaba el mes
+      ORDER BY (COALESCE(p.venta_mxn, 0) - COALESCE(p.costo_mxn, 0)) DESC LIMIT 200
     ),
     profit_este_mes AS (
       SELECT jsonb_agg(jsonb_build_object(
@@ -164,10 +172,7 @@ BEGIN
              EXISTS (
                SELECT 1 FROM facturas f
                WHERE f.embarque_id = eb.id
-                 AND f.deleted_at IS NULL     -- FIX C5
-                 -- Ola 5 · RG4-2 (N45): 'Sustituida' ya no es CFDI vigente;
-                 -- excluirla del flag "facturado" (la definición vigente
-                 -- sólo excluía Cancelada/Borrador).
+                 AND f.deleted_at IS NULL
                  AND f.estado::text NOT IN ('Cancelada','Borrador','Sustituida')
              ) AS facturado_flag
       FROM activos eb LEFT JOIN profit p ON p.embarque_id = eb.id
@@ -245,7 +250,6 @@ BEGIN
       )::int AS val
       FROM activos
     ),
-    -- v13.303.13 · Listado ligero de EIR para el scope "mis embarques" del chip EIR.
     embarques_eir AS (
       SELECT jsonb_agg(jsonb_build_object(
         'id', eb.id,

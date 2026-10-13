@@ -264,3 +264,5 @@ supabase/tests/nc_publica_paridad_replay.sql
 supabase/tests/cotizacion_conversion_puertos_uuid.sql
 
 supabase/tests/estado_operativo_confirmado.sql
+
+supabase/tests/estado_operativo_preserva_fx.sql

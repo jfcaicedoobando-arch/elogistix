@@ -7,7 +7,7 @@ separado; esta migración no cambia estados de filas ni reinterpreta el históri
 
 ## Alcance SQL
 
-La migración `20261012235900_estado_operativo_confirmado.sql` sustituye únicamente
+La migración `20261012235900_estado_operativo_confirmado.sql` corrige
 la expresión que infería estado por ETD/ETA en ocho funciones: los dos cuerpos
 `dashboard_*_datos`, `operaciones_stats`, `dashboard_stats`, los dos
 `_dashboard_*_calc`, `sidebar_alert_counts` y `embarques_alertas_ids`.
@@ -18,6 +18,30 @@ Los conteos y etiquetas leen el estado persistido. Las fechas siguen alimentando
 las previsiones de arribo y los umbrales de alerta. Una ETA vencida por sí sola no
 convierte un Confirmado o En Tránsito en Arribo ni activa la demora de puerto.
 No se modifica dinero, TEU, tenant, papelera, filtros, firmas ni contratos JSON.
+
+## Reconciliación previa a la aplicación
+
+El primer intento remoto abortó por precondiciones antes de DDL; el readback del
+coordinador confirmó ocho funciones y hooks sin cambios y ninguna fila de ledger.
+La migración no aplicada se corrige mediante un nuevo PR, sin reescribir commits.
+
+El catálogo live tenía lógica financiera ausente del replay en
+`dashboard_summary_datos` y `dashboard_details_datos`: `tc_factura` calcula TC USD
+ponderado por subtotal de facturas vigentes; `profit_fx` lo usa para la venta del
+mes. Se conservan esos dos cuerpos live byte por byte salvo la expresión de
+estado. No se amplían las huellas para sobrescribir esa lógica con el cuerpo viejo.
+
+`_dashboard_summary_calc` mantiene el fallback EUR→DOF ya presente en replay,
+ausente en el perfil live. Las otras cinco funciones conservan su destino anterior.
+Así, replay original, destino anterior y catálogo live revisado convergen en un
+solo destino. Los hashes permitidos son exactos, sin normalización ni comodines.
+
+La prueba USD usa dos facturas de 100 a TC18 y 300 a TC22; una NC de50 en la primera
+distingue el comportamiento live (neto350 × promedio bruto21 =7350) del replay
+previo (50×18+300×22 =7500). Esta prueba preserva una conducta observada; no aprueba
+una nueva política fiscal ni afirma que ésa sea la única regla contable posible.
+El fallback sin factura conserva50×17 =850. EUR sin TC de embarque usa DOF24 para
+un gasto de10 =240; sin tasa válida informa un faltante, sin fabricar importe.
 
 ## Seguridad y aplicación
 
@@ -41,11 +65,14 @@ precondición, investigar el drift; no ampliar las huellas sin revisión.
 - Casos: Confirmado con fechas pasadas, futuras, nulas o ETD hoy; En Tránsito
   con ETD futura o ETA pasada; Arribo persistido con demora; Borrador/Cancelado;
   Aéreo/Terrestre; otro tenant y papelera; previsión ETA del resumen canónico.
+- `estado_operativo_preserva_fx.sql` valida numéricamente USD ponderado y
+  fallbacks USD/EUR con tablas y triggers reales, dentro de BEGIN/ROLLBACK.
 - `dashboards_cancelado_y_teu.sql` conserva las comprobaciones de papelera/TEU
   y comprueba ahora estado persistido en lugar de exigir el CASE retirado.
-- Comparación del replay efectivo anterior y posterior: sólo cambia la
-  expresión de estado; ACL, propietario, OID, firmas y seguridad son idénticos.
-  Segunda aplicación idéntica.
+- Comparación del replay efectivo anterior y posterior: se conservan los
+  cuerpos live de datos salvo estado, y el destino previo de las otras seis
+  funciones; ACL, propietario, OID, firmas y seguridad son idénticos.
+  Segunda aplicación idéntica en los tres perfiles revisados.
 - Auditorías de migraciones, espejos y funciones canónicas pasan. Las dos
   divergencias históricas registradas de espejos siguen sin cambios.
 
