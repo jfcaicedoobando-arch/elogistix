@@ -9,6 +9,9 @@
 
 import { baseNcProveedor } from "@/lib/financial/baseNcProveedor";
 
+/** Identificador reservado: las categorías persistidas son UUIDs. */
+export const CATEGORIA_SIN_ASIGNAR = "__sin_categoria__";
+
 export type CxpRow = {
   categoria_presupuesto_id: string | null;
   /** BL-07: base SIN IVA; los presupuestos se capturan como gasto neto. */
@@ -54,7 +57,7 @@ export function agregarGastosCxP(rows: CxpRow[]): GastosAgregados {
   const porCategoria = new Map<string, number>();
   let sinTc = 0;
   for (const g of rows) {
-    if (!g.categoria_presupuesto_id) continue;
+    const categoriaId = g.categoria_presupuesto_id ?? CATEGORIA_SIN_ASIGNAR;
     const mxn = convertirAMxn(Number(g.subtotal), g.moneda, g.tipo_cambio_usd, true);
     if (mxn === null) {
       // Ola 5 · A7 + N9: sin paridad válida para esa divisa no se puede valuar;
@@ -63,8 +66,8 @@ export function agregarGastosCxP(rows: CxpRow[]): GastosAgregados {
       continue;
     }
     porCategoria.set(
-      g.categoria_presupuesto_id,
-      (porCategoria.get(g.categoria_presupuesto_id) ?? 0) + mxn,
+      categoriaId,
+      (porCategoria.get(categoriaId) ?? 0) + mxn,
     );
   }
   return { porCategoria, sinTc };
@@ -83,7 +86,7 @@ export function restarNotasCreditoCxP(
 ): number {
   let sinTc = 0;
   for (const nc of rows) {
-    if (!nc.categoria_presupuesto_id) continue;
+    const categoriaId = nc.categoria_presupuesto_id ?? CATEGORIA_SIN_ASIGNAR;
     const subtotal = baseNcProveedor(nc.subtotal);
     if (subtotal === null) continue;
     const mxn = convertirAMxn(
@@ -94,8 +97,8 @@ export function restarNotasCreditoCxP(
       continue;
     }
     porCategoria.set(
-      nc.categoria_presupuesto_id,
-      (porCategoria.get(nc.categoria_presupuesto_id) ?? 0) - mxn,
+      categoriaId,
+      (porCategoria.get(categoriaId) ?? 0) - mxn,
     );
   }
   return sinTc;

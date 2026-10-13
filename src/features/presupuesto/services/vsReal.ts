@@ -46,6 +46,8 @@ export async function fetchPresupuestoVsReal(
     // Fase 3: excluye facturas canceladas para consistencia con
     // `estadoResultadosDevengado` (que ya las excluye).
     .neq("estado", "Cancelada")
+    // Mismo criterio que EERR: pendientes siguen elegibles; rechazadas no.
+    .neq("estado_aprobacion", "rechazada")
     .limit(LIMITE_FILAS_CXP);
   // BL-07: NCs de proveedor aplicadas en el periodo descuentan el real de la
   // categoría de la factura padre (antes el gasto quedaba bruto, inflado).
@@ -54,6 +56,8 @@ export async function fetchPresupuestoVsReal(
     .eq("estado", "Aplicada")
     .gte("fecha", desde).lte("fecha", hasta)
     .is("deleted_at", null)
+    // Igual que EERR, sin filtrar por el periodo de la factura padre.
+    .is("proveedor_facturas.deleted_at", null)
     .limit(LIMITE_FILAS_CXP);
   // Nota: `liquidaciones_comision` no tiene columna `deleted_at` en el schema.
   // Filtrar por ella causa `column ... does not exist` y rompe el Dashboard Ejecutivo.
@@ -94,7 +98,7 @@ export async function fetchPresupuestoVsReal(
   const { porCategoria: realPorCat, sinTc: gastosSinTc } = agregarGastosCxP(gastosCxP.data ?? []);
   const notas = mapNcsCxP(ncsCxP.data ?? []);
   const ncsSinTc = restarNotasCreditoCxP(notas, realPorCat);
-  const notasSinBase = notas.filter((nc) => nc.categoria_presupuesto_id && baseNcProveedor(nc.subtotal) === null).length;
+  const notasSinBase = notas.filter((nc) => baseNcProveedor(nc.subtotal) === null).length;
   aplicarLiquidacionesComisiones(realPorCat, cats, liquidaciones.data ?? []);
 
   const catIds = new Set(cats.map((c) => c.id));
