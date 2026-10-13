@@ -30,8 +30,13 @@ function filtrar(bloque: BloqueCartera, busqueda: string): BloqueCartera {
 }
 
 export function useCarteraAging(fechaCorte: string, busqueda: string) {
-  const snapshot = useCarteraSnapshot();
+  const snapshot = useCarteraSnapshot(fechaCorte);
   const tcQuery = useTcDofPorFecha(fechaCorte);
+
+  const listo = !snapshot.isLoading && !snapshot.isError
+    && !tcQuery.isPending && !tcQuery.isFetching && !tcQuery.isError
+    && !tcQuery.isPlaceholderData;
+  const datos = listo ? snapshot.data : undefined;
 
   const tc: TcCorte | null = useMemo(
     () =>
@@ -48,7 +53,7 @@ export function useCarteraAging(fechaCorte: string, busqueda: string) {
 
   const bloqueCxc = useMemo<BloqueCartera>(() => {
     const filas = construirFilasCartera(
-      facturasCarteraDeCobranza(snapshot.data?.cxc ?? []),
+      facturasCarteraDeCobranza(datos?.cxc ?? []),
       fechaCorte,
       tc,
     );
@@ -58,26 +63,26 @@ export function useCarteraAging(fechaCorte: string, busqueda: string) {
       buckets: totalesPorBucket(filas),
       total: totalCartera(filas),
     };
-  }, [snapshot.data?.cxc, fechaCorte, tc]);
+  }, [datos?.cxc, fechaCorte, tc]);
 
   const bloqueCxp = useMemo<BloqueCartera>(() => {
-    const filas = construirFilasCartera(facturasCarteraDeCxp(snapshot.data?.cxp ?? []), fechaCorte, tc);
+    const filas = construirFilasCartera(facturasCarteraDeCxp(datos?.cxp ?? []), fechaCorte, tc);
     return {
       titulo: "Cuentas por pagar",
       filas,
       buckets: totalesPorBucket(filas),
       total: totalCartera(filas),
     };
-  }, [snapshot.data?.cxp, fechaCorte, tc]);
+  }, [datos?.cxp, fechaCorte, tc]);
 
   return {
-    dataScope: snapshot.data?.scope,
+    dataScope: datos?.scope,
     tc,
-    tcLoading: tcQuery.isLoading,
+    tcLoading: tcQuery.isPending || tcQuery.isFetching,
     tcError: tcQuery.isError,
     cxc: useMemo(() => filtrar(bloqueCxc, busqueda), [bloqueCxc, busqueda]),
     cxp: useMemo(() => filtrar(bloqueCxp, busqueda), [bloqueCxp, busqueda]),
-    isLoading: snapshot.isLoading || tcQuery.isLoading,
+    isLoading: snapshot.isLoading || tcQuery.isPending || tcQuery.isFetching,
     isError: snapshot.isError || tcQuery.isError,
     refetch: () => {
       void snapshot.refetch();

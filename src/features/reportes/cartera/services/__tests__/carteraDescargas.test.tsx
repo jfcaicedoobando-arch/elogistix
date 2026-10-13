@@ -7,8 +7,13 @@ import { setAuthSnapshot } from "@/lib/auth/authSnapshot";
 import { resetSessionCaches } from "@/lib/auth/sessionCacheRegistry";
 import type { ReporteCarteraDocument } from "@/pdf/documents/ReporteCarteraDocument";
 
-const mocks = vi.hoisted(() => ({ pdf: vi.fn(), csv: vi.fn(), emisor: vi.fn(), error: vi.fn() }));
-vi.mock("@/pdf/render/descargarPdf", () => ({ descargarPdf: mocks.pdf }));
+vi.mock("@/features/facturacion/services", () => ({ fetchCobranza: vi.fn(), fetchCobranzaKpis: vi.fn() }));
+vi.mock("@/features/cxp/services", () => ({ fetchFacturasCxP: vi.fn() }));
+vi.mock("@/services/organization", () => ({ getSuperAdminOrg: vi.fn() }));
+
+const mocks = vi.hoisted(() => ({ pdf: vi.fn(), render: vi.fn(), csv: vi.fn(), emisor: vi.fn(), error: vi.fn() }));
+vi.mock("@react-pdf/renderer", () => ({ pdf: mocks.pdf }));
+vi.mock("@/pdf/documents/ReporteCarteraDocument", () => ({ ReporteCarteraDocument: () => null }));
 vi.mock("@/features/configuracion/services/emisorPdf", () => ({ fetchEmisorReporte: mocks.emisor }));
 vi.mock("@/lib/downloadBlob", () => ({ descargarBlob: mocks.csv }));
 vi.mock("@/lib/ui/appFeedback", () => ({ notifySuccess: vi.fn(), notifyError: mocks.error, notifyWarning: vi.fn() }));
@@ -26,16 +31,20 @@ function session(organizationId: string | null = "org-a") {
 
 beforeEach(() => {
   vi.resetAllMocks();
+  vi.useFakeTimers({ toFake: ["Date"] });
+  vi.setSystemTime(new Date("2026-09-30T18:00:00Z"));
   session();
-  mocks.pdf.mockResolvedValue(undefined);
+  mocks.pdf.mockReturnValue({ toBlob: mocks.render });
+  mocks.render.mockResolvedValue(new Blob(["pdf"]));
   mocks.emisor.mockResolvedValue({ razonSocial: "Organización sintética SA", organizacionNombre: "Identidad comercial A" });
 });
 
 describe("Cartera — contrato de descarga filtrada", () => {
   it("entrega el filtro al documento y distingue el PDF parcial sin cambiar importes", async () => {
-    await descargarCarteraPdf("2026-09-30", "TC DOF USD/MXN 18.0710", [bloque], captureAuthDataScope(), " FP-000007 ");
+    await descargarCarteraPdf("2026-09-30", "TC DOF USD/MXN 18.0710", [bloque], captureAuthDataScope(), { busqueda: " FP-000007 " });
     expect(mocks.pdf).toHaveBeenCalledTimes(1);
-    const [documento, nombre] = mocks.pdf.mock.calls[0] as [ReactElement<ComponentProps<typeof ReporteCarteraDocument>>, string];
+    const [documento] = mocks.pdf.mock.calls[0] as [ReactElement<ComponentProps<typeof ReporteCarteraDocument>>];
+    const nombre = mocks.csv.mock.calls[0][1];
     expect(nombre).toBe("cartera-antiguedad-2026-09-30-filtrada.pdf");
     expect(documento.props.busqueda).toBe(" FP-000007 ");
     expect(documento.props.emisor?.razonSocial).toBe("Organización sintética SA");
@@ -45,8 +54,8 @@ describe("Cartera — contrato de descarga filtrada", () => {
   });
 
   it("conserva el nombre original cuando la búsqueda está vacía", async () => {
-    await descargarCarteraPdf("2026-09-30", "TC DOF USD/MXN 18.0710", [bloque], captureAuthDataScope(), "  ");
-    expect(mocks.pdf).toHaveBeenCalledWith(expect.anything(), "cartera-antiguedad-2026-09-30.pdf");
+    await descargarCarteraPdf("2026-09-30", "TC DOF USD/MXN 18.0710", [bloque], captureAuthDataScope(), { busqueda: "  " });
+    expect(mocks.csv).toHaveBeenCalledWith(expect.any(Blob), "cartera-antiguedad-2026-09-30.pdf");
   });
 
   it("distingue el CSV filtrado sin alterar su estructura contable", () => {
@@ -104,5 +113,40 @@ describe("Cartera: identidad vinculada al snapshot", () => {
     await descargarCarteraPdf("2026-09-30", "TC", [bloque], captureAuthDataScope());
     expect(mocks.emisor).toHaveBeenCalledWith(null);
     expect(mocks.pdf.mock.calls[0][0].props.emisor).toBeUndefined();
+  });
+});
+
+
+describe("Cartera: descarga y cambio de día", () => {
+  it("rechaza CSV de ayer incluso antes de que React procese focus", () => {
+    vi.setSystemTime(new Date("2026-10-01T06:00:01Z"));
+    descargarCarteraCsv("2026-09-30", [bloque], captureAuthDataScope());
+    expect(mocks.csv).not.toHaveBeenCalled();
+    expect(mocks.error).toHaveBeenCalledOnce();
+  });
+  it("no descarga un PDF que terminó de renderizar después de medianoche CDMX", async () => {
+    mocks.render.mockImplementation(async () => {
+      vi.setSystemTime(new Date("2026-10-01T06:00:01Z"));
+      return new Blob(["pdf"]);
+    });
+    await descargarCarteraPdf("2026-09-30", "TC", [bloque], captureAuthDataScope());
+    expect(mocks.render).toHaveBeenCalledOnce();
+    expect(mocks.csv).not.toHaveBeenCalled();
+  });
+  it("no renderiza si la identidad llega después de medianoche", async () => {
+    mocks.emisor.mockImplementation(async () => {
+      vi.setSystemTime(new Date("2026-10-01T06:00:01Z"));
+      return undefined;
+    });
+    await descargarCarteraPdf("2026-09-30", "TC", [bloque], captureAuthDataScope());
+    expect(mocks.render).not.toHaveBeenCalled();
+    expect(mocks.csv).not.toHaveBeenCalled();
+  });
+  it("descarta PDF si refetch, filtro o selección invalidan el snapshot durante render", async () => {
+    let vigente = true;
+    mocks.render.mockImplementation(async () => { vigente = false; return new Blob(["pdf"]); });
+    await descargarCarteraPdf("2026-09-30", "TC", [bloque], captureAuthDataScope(), { sigueVigente: () => vigente });
+    expect(mocks.render).toHaveBeenCalledOnce();
+    expect(mocks.csv).not.toHaveBeenCalled();
   });
 });

@@ -26,7 +26,7 @@ beforeEach(() => {
 
 describe("Cartera: caché aislada y cambio de organización", () => {
   it("oculta A durante la transición y habilita B sólo tras recuperar ambas fuentes en B", async () => {
-    const { result, rerender } = renderHook(() => useCarteraSnapshot(), { wrapper: createWrapper() });
+    const { result, rerender } = renderHook(() => useCarteraSnapshot("2026-09-30"), { wrapper: createWrapper() });
     await waitFor(() => expect(result.current.data?.scope.organizationId).toBe("org-a"));
     act(() => {
       mocks.orgId = "org-b";
@@ -43,7 +43,7 @@ describe("Cartera: caché aislada y cambio de organización", () => {
   });
 
   it("no reutiliza la misma caché tras revocar la sesión aunque usuario y tenant coincidan", async () => {
-    const { result } = renderHook(() => useCarteraSnapshot(), { wrapper: createWrapper() });
+    const { result } = renderHook(() => useCarteraSnapshot("2026-09-30"), { wrapper: createWrapper() });
     await waitFor(() => expect(result.current.data).toBeDefined());
     const firstGeneration = result.current.data?.scope.generation;
     await act(async () => resetSessionCaches());
@@ -53,7 +53,7 @@ describe("Cartera: caché aislada y cambio de organización", () => {
 
   it("espera la resolución del contexto antes de consultar los saldos", () => {
     mocks.loading = true;
-    const { result } = renderHook(() => useCarteraSnapshot(), { wrapper: createWrapper() });
+    const { result } = renderHook(() => useCarteraSnapshot("2026-09-30"), { wrapper: createWrapper() });
     expect(result.current.data).toBeUndefined();
     expect(result.current.isLoading).toBe(true);
     expect(mocks.cxc).not.toHaveBeenCalled();

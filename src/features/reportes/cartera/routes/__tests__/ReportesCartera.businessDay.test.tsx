@@ -1,0 +1,42 @@
+import { act, fireEvent, render, screen } from "@testing-library/react";
+import type { ReactNode } from "react";
+import { beforeEach, expect, it, vi } from "vitest";
+import ReportesCartera from "../ReportesCartera";
+const m = vi.hoisted(() => ({ hook: vi.fn(), pdf: vi.fn(), csv: vi.fn() }));
+vi.mock("../../hooks/useCarteraAging", () => ({ useCarteraAging: m.hook }));
+vi.mock("../../services/carteraDescargas", () => ({ descargarCarteraPdf: m.pdf, descargarCarteraCsv: m.csv }));
+vi.mock("@/hooks/shared", () => ({ useDocumentTitle: () => {} }));
+vi.mock("@/components/shared/PageHeader", () => ({ PageHeader: ({ actions }: { actions: ReactNode }) => <>{actions}</> }));
+vi.mock("@/components/shared/PageContainer", () => ({ PageContainer: ({ children }: { children: ReactNode }) => <>{children}</> }));
+vi.mock("@/components/ui/date-picker-mx", () => ({ DatePickerMx: ({ value, disabled }: { value: string; disabled: boolean }) => <input aria-label="corte" value={value} disabled={disabled} readOnly /> }));
+vi.mock("../../components/CarteraBloque", () => ({ CarteraBloque: () => null }));
+const bloque = { filas: [{ id: "fp" }], buckets: [], total: {} };
+const listo = { dataScope: {}, tc: null, tcLoading: false, tcError: false, cxc: bloque, cxp: bloque, isLoading: false, isError: false, refetch: vi.fn() };
+beforeEach(() => { vi.clearAllMocks(); vi.useFakeTimers({ toFake: ["Date", "setTimeout", "clearTimeout"] }); vi.setSystemTime(new Date("2026-10-13T05:59:59Z")); m.hook.mockReturnValue(listo); m.pdf.mockReturnValue(new Promise(() => {})); });
+it("el corte disabled sigue CDMX y bloquea export mientras se obtiene el nuevo día", async () => {
+  const view = render(<ReportesCartera />);
+  expect(screen.getByLabelText("corte")).toHaveValue("2026-10-12");
+  expect(screen.getByLabelText("corte")).toBeDisabled();
+  fireEvent.click(screen.getByRole("button", { name: "Exportar PDF" }));
+  const vigente = m.pdf.mock.calls[0][4].sigueVigente as () => boolean;
+  expect(typeof vigente).toBe("function");
+  m.hook.mockReturnValue({ ...listo, dataScope: undefined, isLoading: true });
+  await act(async () => { await vi.advanceTimersByTimeAsync(1000); });
+  expect(m.hook).toHaveBeenLastCalledWith("2026-10-13", "");
+  expect(screen.getByLabelText("corte")).toHaveValue("2026-10-13");
+  expect(vigente()).toBe(false);
+  expect(screen.getByRole("button", { name: "Exportar CSV" })).toBeDisabled();
+  fireEvent.click(screen.getByRole("button", { name: "Exportar CSV" }));
+  expect(m.csv).not.toHaveBeenCalled();
+  m.hook.mockReturnValue(listo); view.rerender(<ReportesCartera />);
+  fireEvent.click(screen.getByRole("button", { name: "Exportar CSV" }));
+  expect(m.csv).toHaveBeenCalledWith("2026-10-13", [bloque, bloque], listo.dataScope, "");
+});
+
+it("actualiza fechaCorte inicial al cruzar medianoche CDMX", async () => {
+  render(<ReportesCartera />);
+  expect(screen.getByLabelText("corte")).toHaveValue("2026-10-12");
+  await act(async () => { await vi.advanceTimersByTimeAsync(1000); });
+  expect(screen.getByLabelText("corte")).toHaveValue("2026-10-13");
+  expect(m.hook).toHaveBeenLastCalledWith("2026-10-13", "");
+});
