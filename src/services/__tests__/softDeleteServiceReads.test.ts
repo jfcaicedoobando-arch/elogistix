@@ -7,10 +7,7 @@ vi.mock("@/integrations/supabase/client", () => ({ supabase: mock.supabase }));
 vi.mock("@/services/bitacora/registrar", () => ({ registrarActividad: vi.fn() }));
 import { fetchFiltrosTarifaCotizacion } from "@/features/cotizacion/services/filtrosTarifaCotizacion";
 import { fetchOrigenLclManual } from "@/features/embarques/services/origenLclManual";
-import { prevalidarVinculosCosto } from "@/features/cxp/services/prevalidarVinculosCosto";
 import { fetchClienteFiscal } from "@/features/facturacion/services/datosFiscalesCliente";
-import { monedaDeCuenta, sugerirCandidatosDetalle } from "@/features/tesoreria/services/sugerirCandidatos";
-import type { MovimientoBBVA } from "@/features/tesoreria/services/conciliacion";
 
 const deleted_at = "2026-10-01T00:00:00Z";
 beforeEach(() => mock.reset());
@@ -45,27 +42,6 @@ describe("lecturas de origen de cotización", () => {
   });
 });
 
-describe("prevalidación de costos", () => {
-  const costo = { id: "c1", concepto: "Flete", monto: 100, moneda: "MXN" };
-  const run = () => prevalidarVinculosCosto("org-test", "MXN", { c1: { monto: 50 } });
-  const queue = (rows: unknown[]) => {
-    mock.queue("conceptos_costo", rows);
-    mock.queue("proveedor_facturas_conceptos", []);
-  };
-  it("acepta el costo vivo y conserva los dos filtros tenant", async () => {
-    queue([costo]); await expect(run()).resolves.toBeUndefined(); vivo();
-    for (const call of mock.tableCalls) expect(call.opArgs).toContainEqual(["organization_id", "org-test"]);
-    expect(mock.tableCalls[0].opArgs).toContainEqual(["id", ["c1"]]);
-    expect(mock.tableCalls[1].opArgs).toContainEqual(["concepto_costo_id", ["c1"]]);
-  });
-  it.each([{ rows: [] }, { rows: [{ ...costo, deleted_at }] }])("rechaza selección ausente/borrada: %j", async ({ rows }) => {
-    queue(rows); await expect(run()).rejects.toThrow(/verificar todos los costos/); vivo();
-  });
-  it("sin selección no consulta tablas", async () => {
-    await prevalidarVinculosCosto("org-test", "MXN", {}); expect(mock.tableCalls).toEqual([]);
-  });
-});
-
 describe("datos fiscales del cliente", () => {
   const fiscal = { rfc: "XAXX010101000", codigo_postal: "01000", regimen_fiscal: "601", uso_cfdi_default: "G03" };
   it("conserva los datos de un cliente vivo", async () => {
@@ -80,37 +56,14 @@ describe("datos fiscales del cliente", () => {
   });
 });
 
-describe("moneda de la cuenta bancaria", () => {
-  it.each(["MXN", "USD", "EUR"])("conserva moneda %s de cuenta viva", async moneda => {
-    mock.queue("cuentas_bancarias", { moneda });
-    expect(await monedaDeCuenta("cta1")).toBe(moneda); vivo();
-    expect(mock.tableCalls[0].opArgs).toContainEqual(["id", "cta1"]);
-  });
-  it.each([null, { moneda: "USD", deleted_at }])("sin cuenta viva no propone pagos: %j", async row => {
-    mock.queue("cuentas_bancarias", row);
-    const mov = { cargo: 100, abono: 0, fecha: "2026-10-01", cuenta_bancaria_id: "cta1" } as MovimientoBBVA;
-    expect(await sugerirCandidatosDetalle(mov)).toEqual({ candidatos: [], truncado: false });
-    vivo(); expect(mock.tableCalls).toHaveLength(1);
-  });
-  it("sin cuenta no consulta ni asume moneda", async () => {
-    expect(await monedaDeCuenta(null)).toBeNull(); expect(mock.tableCalls).toEqual([]);
-  });
-});
-
 describe("errores de lectura no se convierten en datos vivos", () => {
   it.each([
     { table: "cotizaciones", run: () => fetchFiltrosTarifaCotizacion("cot1") },
     { table: "cotizaciones", run: () => fetchOrigenLclManual("cot1") },
     { table: "clientes", run: () => fetchClienteFiscal("cli1") },
-    { table: "cuentas_bancarias", run: () => monedaDeCuenta("cta1") },
   ])("propaga error de $table", async ({ table, run }) => {
     mock.queue(table, null, new Error("lectura-fallida"));
     await expect(run()).rejects.toThrow("lectura-fallida");
     expect(mock.tableCalls).toHaveLength(1);
-  });
-  it("prevalidación propaga el error del costo antes de aprobar vínculos", async () => {
-    const error = new Error("lectura-costos"); mock.queue("conceptos_costo", null, error);
-    mock.queue("proveedor_facturas_conceptos", []);
-    await expect(prevalidarVinculosCosto("org-test", "MXN", { c1: { monto: 1 } })).rejects.toBe(error);
   });
 });

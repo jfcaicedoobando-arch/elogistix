@@ -35,15 +35,6 @@ import {
 
 export * from "./reconciliacion3Columnas.helpers";
 
-interface EmbarqueMeta {
-  cotizacion_id: string | null;
-  organization_id: string;
-  version_aceptada: number | null;
-  tipo_cambio_usd: number | string | null;
-  tipo_cambio_eur: number | string | null;
-}
-
-
 export async function obtenerReconciliacion3Columnas(
   embarqueId: string,
   umbrales: UmbralesVarianza = UMBRALES_DEFAULT,
@@ -51,7 +42,7 @@ export async function obtenerReconciliacion3Columnas(
   const scope = captureAuthOperationScope();
   // 1. Meta del embarque (cotizacion_id). El delta de Fase 1 vive en
   // `embarques_interno_v` desde FIX2 · B-1 (columna revocada a authenticated).
-  const { data: embRaw, error: embErr } = await supabase
+  const { data: emb, error: embErr } = await supabase
     .from("embarques")
     .select("cotizacion_id, organization_id, tipo_cambio_usd, tipo_cambio_eur")
     .eq("id", embarqueId)
@@ -59,7 +50,7 @@ export async function obtenerReconciliacion3Columnas(
     .maybeSingle();
   scope.assertCurrent();
   if (embErr) throw new Error(embErr.message);
-  if (!embRaw) {
+  if (!emb) {
     return {
       filas: [],
       resumen: construirResumen([], umbrales),
@@ -68,16 +59,13 @@ export async function obtenerReconciliacion3Columnas(
     };
   }
 
-  // SAFE-CAST: el select trae sólo columnas de EmbarqueMeta; Supabase devuelve unknown.
-  const emb = embRaw as unknown as EmbarqueMeta;
   let cotizados: CostoVersionado[] = [];
   let versionAceptada: number | null = null;
 
   if (emb.cotizacion_id) {
     const { data: cotMeta, error: cotErr } = await supabase
       .from("cotizaciones")
-      // SAFE-CAST: version_aceptada se agregó en Fase 2.
-      .select("version_aceptada" as unknown as string)
+      .select("version_aceptada")
       .eq("id", emb.cotizacion_id)
       .is("deleted_at", null)
       .maybeSingle();
@@ -85,9 +73,7 @@ export async function obtenerReconciliacion3Columnas(
     if (cotErr) throw new Error(cotErr.message);
     // Sin una cotización viva, versión null haría consultar sus costos actuales.
     if (!cotMeta) throw new Error("La cotización de origen ya no está disponible. Actualiza el embarque antes de consultar sus costos.");
-    // SAFE-CAST: version_aceptada existe pero el tipo generado aún no la incluye.
-    versionAceptada = ((cotMeta as unknown as { version_aceptada: number | null } | null)
-      ?.version_aceptada) ?? null;
+    versionAceptada = cotMeta.version_aceptada ?? null;
     cotizados = await obtenerCostosCotizacionVersion(emb.cotizacion_id, versionAceptada);
   }
 

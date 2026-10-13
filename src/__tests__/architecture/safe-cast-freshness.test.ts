@@ -64,7 +64,6 @@ const BASELINE = new Set<string>([
   "src/features/embarques/services/alertas.ts::embarques_alertas_ids",
   "src/features/embarques/services/contenedores/demoras.ts::embarque_contenedores",
   // v13.342.0: `reabrir_embarque` ya está tipado en types.ts y el cast se eliminó.
-  "src/features/embarques/services/reconciliacion3Columnas.ts::cotizacion_id",
   // v13.624.7: `estado_cliente` ya está tipado; el cast de AccionesProforma
   // (hoy `accionesProformaFlags.ts`) se eliminó.
 
