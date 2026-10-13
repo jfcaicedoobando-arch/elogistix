@@ -151,3 +151,96 @@ jobs:
             reports/audit136-137/
           retention-days: 3
           if-no-files-found: warn
+
+  virtualization:
+    name: Isolated virtualization (4 cases, Chromium and Firefox)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          persist-credentials: false
+      # Reuses the exact lockfile cache or bun install --frozen-lockfile --ignore-scripts.
+      - uses: ./.github/actions/setup-bun
+      - name: Record tested commit, lock hashes and installed versions
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p reports/virtualization
+          git diff --exit-code -- bun.lock package.json
+          node --input-type=module <<'JS'
+          import { readFileSync, writeFileSync } from "node:fs";
+          import { createHash } from "node:crypto";
+          import { execFileSync } from "node:child_process";
+          import { createRequire } from "node:module";
+          import { dirname, join } from "node:path";
+          const require = createRequire(import.meta.url);
+          const version = (name, resolver = require) => JSON.parse(readFileSync(resolver.resolve(`${name}/package.json`), "utf8")).version;
+          const virtualRequire = createRequire(require.resolve("@tanstack/react-virtual/package.json"));
+          const playwrightRequire = createRequire(require.resolve("@playwright/test/package.json"));
+          const coreRequire = createRequire(playwrightRequire.resolve("playwright/package.json"));
+          const browserManifest = join(dirname(coreRequire.resolve("playwright-core/package.json")), "browsers.json");
+          const lock = readFileSync("bun.lock");
+          const provenance = {
+            testedCommit: execFileSync("git", ["rev-parse", "HEAD"], { encoding: "utf8" }).trim(),
+            node: process.version,
+            bun: execFileSync("bun", ["--version"], { encoding: "utf8" }).trim(),
+            lockfile: {
+              gitBlob: createHash("sha1").update(`blob ${lock.length}\0`).update(lock).digest("hex"),
+              sha256: createHash("sha256").update(lock).digest("hex"),
+            },
+            packages: Object.fromEntries([
+              "@playwright/test", "@tanstack/react-virtual", "@tanstack/react-table",
+              "react", "react-dom", "react-router", "typescript", "eslint", "vite",
+            ].map(name => [name, version(name)])),
+            virtualCore: version("@tanstack/virtual-core", virtualRequire),
+            playwrightCore: version("playwright-core", coreRequire),
+            browsers: JSON.parse(readFileSync(browserManifest, "utf8")).browsers
+              .filter(browser => ["chromium", "firefox"].includes(browser.name)),
+          };
+          writeFileSync("reports/virtualization/provenance.json", `${JSON.stringify(provenance, null, 2)}\n`);
+          console.log(JSON.stringify(provenance, null, 2));
+          JS
+      - name: Install lockfile Playwright Chromium, Firefox and system dependencies
+        shell: bash
+        run: |
+          set -euo pipefail
+          node node_modules/@playwright/test/cli.js install --with-deps chromium firefox 2>&1 | tee reports/virtualization/browser-install.log
+      - name: Typecheck isolated virtualization fixture and tests
+        shell: bash
+        run: |
+          set -euo pipefail
+          node node_modules/typescript/bin/tsc -p e2e/visual/virtualization/tsconfig.json 2>&1 | tee reports/virtualization/typecheck.log
+      - name: Lint isolated virtualization fixture and tests
+        shell: bash
+        run: |
+          set -euo pipefail
+          node node_modules/eslint/bin/eslint.js --no-cache e2e/visual/virtualization 2>&1 | tee reports/virtualization/lint.log
+      - name: Check all 4 browser cases with a fresh isolated build
+        shell: bash
+        run: |
+          set -euo pipefail
+          node node_modules/@playwright/test/cli.js test --config e2e/visual/virtualization/playwright.config.ts 2>&1 | tee reports/virtualization/browser.log
+      - name: Require all 4 cases without skips or retries
+        if: always()
+        shell: bash
+        run: |
+          set -euo pipefail
+          node --input-type=module <<'JS'
+          import { readFileSync } from "node:fs";
+          const { stats } = JSON.parse(readFileSync("reports/virtualization/results.json", "utf8"));
+          if (stats.expected !== 4 || stats.unexpected !== 0 || stats.skipped !== 0 || stats.flaky !== 0) {
+            throw new Error(`Expected 4 passing GUI cases with no skips/retries: ${JSON.stringify(stats)}`);
+          }
+          JS
+      - name: Upload only synthetic virtualization evidence
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: isolated-ui-virtualization
+          path: |
+            test-results/virtualization/
+            reports/virtualization/
+          retention-days: 3
+          if-no-files-found: warn
