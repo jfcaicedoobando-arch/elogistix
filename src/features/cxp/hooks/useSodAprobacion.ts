@@ -2,9 +2,10 @@
  * Segregación de funciones (SoD) en el cliente para aprobar facturas de proveedor.
  *
  * Espejo de la regla de BD (`aprobar_factura_proveedor`): quien capturó la
- * factura no puede aprobarla, salvo roles administradores. Se evalúa ANTES del
- * clic para deshabilitar el botón con una explicación, en lugar de mostrar el
- * error rojo `LC_SOD_VIOLATION` después de intentarlo.
+ * factura puede aprobarla si tiene rol administrador o contador. Esta excepción
+ * sólo cubre la aprobación de facturas de proveedor; no otorga permisos de pago.
+ * Se evalúa ANTES del clic para deshabilitar el botón con una explicación,
+ * en lugar de mostrar el error rojo `LC_SOD_VIOLATION` después de intentarlo.
  */
 import { useCallback } from "react";
 import { useAuth } from "@/lib/contexts/AuthContext";

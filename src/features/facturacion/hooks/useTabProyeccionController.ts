@@ -1,9 +1,9 @@
 /**
  * Controller de la tab "Proyección" de Facturación.
- * Encapsula selección de mes (sincronizada con URL ?mes=YYYY-MM), filtros,
+ * Encapsula mes y filtros sincronizados con la URL,
  * fetch del backend, KPIs y export a CSV.
  */
-import { useCallback, useMemo, useRef, useState } from "react";
+import { useCallback, useMemo, useRef } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useSearchParams } from "react-router";
 import { useOrgFilter } from "@/hooks/shared";
@@ -32,11 +32,10 @@ export function useTabProyeccionController() {
   const mesesDisponibles = useMemo(() => generarMesesDisponibles(), []);
   const mesQp = searchParams.get("mes");
   const mesValido = mesesDisponibles.find((m) => m.key === mesQp);
-  const [mesKey, setMesKeyState] = useState<string>(mesValido?.key ?? mesActualKey());
+  const mesKey = mesValido?.key ?? mesActualKey();
 
   const setMesKey = useCallback(
     (key: string) => {
-      setMesKeyState(key);
       const next = new URLSearchParams(searchParams);
       next.set("mes", key);
       setSearchParams(next, { replace: true });
@@ -57,10 +56,21 @@ export function useTabProyeccionController() {
     if (indiceMes < mesesDisponibles.length - 1) setMesKey(mesesDisponibles[indiceMes + 1].key);
   }, [indiceMes, mesesDisponibles, setMesKey]);
 
-  // Filtros
-  const [filtroCliente, setFiltroCliente] = useState<string>("todos");
-  const [filtroOperador, setFiltroOperador] = useState<string>("todos");
-  const [filtroEstado, setFiltroEstado] = useState<FiltroEstado>("todos");
+  // La URL es la única fuente de selección, también al volver desde el detalle.
+  const filtroCliente = searchParams.get("cliente") || "todos";
+  const filtroOperador = searchParams.get("operador") || "todos";
+  const estadoQp = searchParams.get("estado");
+  const filtroEstado: FiltroEstado = estadoQp === "Facturado" || estadoQp === "Parcial" || estadoQp === "Pendiente"
+    ? estadoQp : "todos";
+  const setFiltro = useCallback((param: string, value: string) => {
+    const next = new URLSearchParams(searchParams);
+    if (value === "todos") next.delete(param);
+    else next.set(param, value);
+    setSearchParams(next, { replace: true });
+  }, [searchParams, setSearchParams]);
+  const setFiltroCliente = useCallback((value: string) => setFiltro("cliente", value), [setFiltro]);
+  const setFiltroOperador = useCallback((value: string) => setFiltro("operador", value), [setFiltro]);
+  const setFiltroEstado = useCallback((value: FiltroEstado) => setFiltro("estado", value), [setFiltro]);
 
   const scope = `${organizationId ?? ""}|${mesActual.key}`;
   const ready = orgListo && !!organizationId;

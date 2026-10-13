@@ -1,5 +1,40 @@
 # Changelog
 
+## [13.824.83] - Unreleased
+
+### Análisis, navegación y lectura del crédito de proveedores
+
+- Presenta el estado de resultados en tarjetas móviles con importes por modo y totales, títulos que admiten varias líneas y estados explícitos de información parcial o no calculable, conservando los cálculos y la tabla de escritorio.
+- Conserva mes y filtros de la proyección de facturación en la URL al consultar un expediente y volver; evita que el segundo clic de un doble clic agregue otra navegación de fila y mantiene los controles internos y la apertura con modificadores.
+- Incluye `dias_credito` en la lectura del detalle del proveedor para recuperar el valor ya guardado, sin modificar registros ni reglas de crédito.
+- Reconoce los estados documentales de CxC, CxP y notas de crédito de proveedores en el diagnóstico de cobertura, con validación según su origen. Documenta los requisitos de las fuentes financieras sin activar DSO, DPO ni runway ni convertir estados observados en elegibilidad operativa o cifras disponibles.
+
+### Fechas y horas en español
+
+- Alinea los calendarios compartidos y selectores de fecha y hora con el locale español compatible de react-day-picker; permite que las ayudas largas se ajusten al ancho disponible y conserva asociaciones accesibles de fecha en los formularios de actividad de CRM.
+- Asocia la etiqueta «Hora» a un identificador estable y propio de cada control de hora, sin reutilizar el identificador del campo de fecha.
+
+### Cartera: vigencia de las descargas
+
+- Evita inicios repetidos de PDF y descarta descargas, avisos y finalizaciones obsoletas al cambiar la selección, la búsqueda, los datos o el contexto autorizado, o al salir de la pantalla. Revalida organización, usuario, permisos, sesión y día del reporte antes de descargar.
+- Conserva el formato CSV y sus controles de vigencia. La cancelación lógica del PDF suprime continuaciones obsoletas; no detiene físicamente la generación ya iniciada.
+
+### CI: cobertura del contenido final en merges
+
+- Complementa el escaneo histórico de secretos con un escaneo obligatorio de los blobs finales añadidos o modificados, verificado contra los SHA del evento. Cierra el caso de merges cuyo escaneo histórico informa cero commits y cero bytes, sin ampliar exclusiones ni sustituir el escaneo histórico.
+- Verifica la identidad y materialización del snapshot y rechaza resultados vacíos inconsistentes o errores del scanner; incluye contratos offline y casos con el binario real en CI. No declara cobertura de secretos introducidos y retirados en commits intermedios omitidos por el escaneo histórico.
+
+### CxP: autoaprobación del rol Contador
+
+- Permite que Contador apruebe facturas de proveedor que él mismo capturó dentro de las empresas a las que ya tiene acceso. Conserva los controles de organización, validación del gasto, bloqueo de fila y versión revisada, así como el actor, la fecha y el historial de aprobación.
+- Alinea la disponibilidad de aprobación individual y selección por lote con esa excepción. Conserva los roles autorizados, las reglas de rechazo y las reglas de pagos; no amplía el acceso a otras empresas.
+- Agrega la migración forward de esta excepción con verificación de la definición revisada y conservación de metadatos, propietario y permisos de la función. Incluye su espejo canónico y regresiones; la presencia del archivo no acredita su aplicación a una base de datos.
+
+### Corte y alcance de la propuesta
+
+- Conserva completas las 47 entradas históricas del manifest y agrega 13.824.83 con 1,528 migraciones: las 1,527 anteriores y `20261013195000_cxp_contador_autoaprobacion.sql`.
+- Parte del código revisado de PR337, head `64ed0e2e3df072846b6e34d49c31e91644dce205`, preservando las cinco rutas concurrentes de main `fe97a9933cdf363ba3295c26a162102966e7054e`, y añade los cambios de Contador descritos arriba. Esta entrada no acredita integración en main, publicación web, despliegue de backend/Edge ni aceptación de la interfaz publicada. La publicación de 13.824.82 conserva su proceso separado.
+
 ## [13.824.82] - Unreleased
 
 ### Padres activos, pagos idempotentes y contexto del tarifario
