@@ -45,6 +45,8 @@ DECLARE
   v_hoy     date := public.fecha_negocio_mx();
   v_anio    int  := EXTRACT(year FROM v_hoy)::int;
   v_mes     int  := EXTRACT(month FROM v_hoy)::int;
+  v_guard_check int;
+  v_guard_rejected boolean;
 BEGIN
   -- ── Seed (como postgres, bypass RLS) ─────────────────────────────────────
   BEGIN
@@ -197,12 +199,62 @@ BEGIN
   -- ── T7/T8. eerr_resumen_anual (fuente facturas) ──────────────────────────
   PERFORM pg_temp.as_postgres();
 
-  -- NC aplicada sobre la factura de cliente BORRADA: no debe bajar ingresos.
-  -- El trigger BUG-05 exige folio fiscal (UUID) para nacer/quedar 'Aplicada'.
-  INSERT INTO public.factura_notas_credito(organization_id, factura_id, folio, monto,
-                                           moneda, estado, fecha_emision, uuid_fiscal)
-  VALUES (org_a, fac_borr, 'SD-NC-1', 500, 'MXN', 'Aplicada', v_hoy,
-          '11111111-1111-1111-1111-111111111111');
+  -- Estado LEGADO: hoy no se puede crear una NC sobre un padre borrado, ni
+  -- borrar una factura Emitida con cobros/NC vivos (LC_FACTURA_DELETE_CON_PAGOS
+  -- / LC_FACTURA_DELETE_CON_NC). Conservamos la cobertura de lectura histórica.
+  -- Sólo en esta transacción de prueba se omite el trigger NC exacto durante
+  -- la siembra de UNA fila; los demás triggers (incluido BUG-05/UUID) siguen
+  -- activos. Se restaura antes de consultar reportes y todo termina en ROLLBACK.
+  FOR v_guard_check IN 1..2 LOOP
+    PERFORM pg_temp.assert(
+      (SELECT tgenabled = 'O' FROM pg_trigger
+       WHERE tgrelid = 'public.factura_notas_credito'::regclass
+         AND tgname = 'trg_nc_validar_linaje_conceptos') IS TRUE,
+      'T7 guard NC debe estar habilitado antes y después del fixture legado');
+
+    -- Canario antes y después: el contrato productivo sigue rechazando la NC.
+    v_guard_rejected := false;
+    BEGIN
+      INSERT INTO public.factura_notas_credito(organization_id, factura_id, folio, monto,
+                                               moneda, estado, fecha_emision, uuid_fiscal)
+      VALUES (org_a, fac_borr, 'SD-NC-RECHAZADA', 1, 'MXN', 'Aplicada', v_hoy,
+              '22222222-2222-2222-2222-222222222222');
+    EXCEPTION WHEN check_violation THEN
+      PERFORM pg_temp.assert(SQLERRM LIKE 'LC_NC_FACTURA_NO_VIVA:%',
+        format('T7 guard NC falló con error inesperado: %s', SQLERRM));
+      v_guard_rejected := true;
+    END;
+    PERFORM pg_temp.assert(v_guard_rejected,
+      'T7 guard NC permitió crear una NC sobre factura borrada');
+    PERFORM pg_temp.assert(NOT EXISTS (
+      SELECT 1 FROM public.factura_notas_credito
+      WHERE organization_id = org_a AND folio = 'SD-NC-RECHAZADA'
+    ), 'T7 canario dejó una NC sobre factura borrada');
+
+    IF v_guard_check = 1 THEN
+      BEGIN
+        ALTER TABLE public.factura_notas_credito
+          DISABLE TRIGGER trg_nc_validar_linaje_conceptos;
+        INSERT INTO public.factura_notas_credito(organization_id, factura_id, folio, monto,
+                                                 moneda, estado, fecha_emision, uuid_fiscal)
+        VALUES (org_a, fac_borr, 'SD-NC-1', 500, 'MXN', 'Aplicada', v_hoy,
+                '11111111-1111-1111-1111-111111111111');
+        ALTER TABLE public.factura_notas_credito
+          ENABLE TRIGGER trg_nc_validar_linaje_conceptos;
+      EXCEPTION WHEN OTHERS THEN
+        -- La subtransacción revierte también el DISABLE; restaurar explícito
+        -- conserva el contrato incluso si falla la siembra o el ENABLE.
+        ALTER TABLE public.factura_notas_credito
+          ENABLE TRIGGER trg_nc_validar_linaje_conceptos;
+        RAISE;
+      END;
+    END IF;
+  END LOOP;
+  PERFORM pg_temp.assert((
+    SELECT count(*) = 1 FROM public.factura_notas_credito
+    WHERE organization_id = org_a AND factura_id = fac_borr
+      AND folio = 'SD-NC-1' AND estado = 'Aplicada' AND deleted_at IS NULL
+  ), 'T7 falta la NC histórica viva sobre factura borrada');
 
   -- NC aplicada sobre la factura de proveedor BORRADA: no debe bajar costos.
   -- El trigger de transición exige nacer en Borrador y avanzar por pasos.
@@ -232,7 +284,7 @@ BEGIN
     format('T8 eerr_resumen_anual reportó costos %s, esperaba 0 (factura de proveedor borrada y/o su NC entraron al reporte)', v_num));
 
   PERFORM pg_temp.as_postgres();
-  RAISE NOTICE 'OK — soft delete estricto en reportes: 8 aserciones + 2 controles';
+  RAISE NOTICE 'OK — soft delete estricto en reportes: 8 aserciones + 2 controles; fixture legado y guard NC antes/después';
 END $$;
 
 ROLLBACK;

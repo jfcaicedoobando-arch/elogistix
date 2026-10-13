@@ -4802,7 +4802,7 @@ $$;
 CREATE FUNCTION public._nc_validar_linaje_conceptos() RETURNS trigger
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
-    AS $fn$
+    AS $_$
 DECLARE
   r record;
   v_f record;
@@ -4858,7 +4858,7 @@ BEGIN
   END LOOP;
   RETURN NEW;
 END;
-$fn$;
+$_$;
 CREATE FUNCTION public._normalizar_email() RETURNS trigger
     LANGUAGE plpgsql
     SET search_path TO 'public'
@@ -8562,29 +8562,24 @@ BEGIN
   IF NEW.uuid_rep IS NULL AND NEW.facturapi_rep_id IS NULL THEN
     RETURN NEW;
   END IF;
-
   SELECT estado::text, uuid_fiscal
     INTO v_estado, v_uuid_fiscal
   FROM public.facturas
   WHERE id = NEW.factura_id AND organization_id = NEW.organization_id
     AND deleted_at IS NULL;
-
   IF NOT FOUND THEN
     RAISE EXCEPTION 'LC_REP_FACTURA_NO_VIVA: la factura no está disponible para REP'
       USING ERRCODE = 'check_violation';
   END IF;
-
   IF v_uuid_fiscal IS NULL THEN
     RAISE EXCEPTION 'LC_REP_FACTURA_SIN_TIMBRAR: no se puede timbrar REP de una factura sin UUID fiscal'
       USING ERRCODE = 'check_violation';
   END IF;
-
   IF v_estado IN ('Cancelada','Sustituida','Borrador') THEN
     RAISE EXCEPTION 'LC_REP_FACTURA_NO_VIVA: la factura está en estado % y no admite REP', v_estado
       USING ERRCODE = 'check_violation',
             HINT    = json_build_object('estado_factura', v_estado)::text;
   END IF;
-
   RETURN NEW;
 END;
 $$;
@@ -19008,7 +19003,7 @@ $$;
 CREATE FUNCTION public.duplicar_factura_para_sustitucion(p_factura_id uuid) RETURNS uuid
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
-    AS $function$
+    AS $$
 DECLARE
   v_caller uuid := auth.uid();
   v_old public.facturas%ROWTYPE;
@@ -19019,14 +19014,12 @@ BEGIN
   IF v_caller IS NULL THEN
     RAISE EXCEPTION 'unauthenticated' USING ERRCODE = '28000';
   END IF;
-
   SELECT * INTO v_old FROM public.facturas
   WHERE id = p_factura_id AND deleted_at IS NULL
   FOR UPDATE;
   IF NOT FOUND THEN
     RAISE EXCEPTION 'factura_not_found' USING ERRCODE = 'P0002';
   END IF;
-
   IF NOT EXISTS (
     SELECT 1 FROM public.organization_members
     WHERE user_id = v_caller
@@ -19035,27 +19028,22 @@ BEGIN
   ) THEN
     RAISE EXCEPTION 'forbidden: requiere rol admin, contador o tesorero' USING ERRCODE = '42501';
   END IF;
-
   IF v_old.uuid_fiscal IS NULL THEN
     RAISE EXCEPTION 'factura_sin_uuid: sólo se puede sustituir un CFDI timbrado' USING ERRCODE = 'P0001';
   END IF;
-
   IF v_old.sustituida_por IS NOT NULL THEN
     SELECT estado::text INTO v_sust_estado FROM public.facturas WHERE id = v_old.sustituida_por;
     IF v_sust_estado IS NOT NULL AND v_sust_estado NOT IN ('Cancelada','Sustituida') THEN
       RAISE EXCEPTION 'factura_ya_sustituida' USING ERRCODE = 'P0001';
     END IF;
   END IF;
-
   IF v_old.estado = 'Cancelada' THEN
     RAISE EXCEPTION 'factura_ya_cancelada' USING ERRCODE = 'P0001';
   END IF;
-
   v_new_numero := v_old.numero || '-R';
   WHILE EXISTS (SELECT 1 FROM public.facturas WHERE organization_id = v_old.organization_id AND numero = v_new_numero) LOOP
     v_new_numero := v_new_numero || '1';
   END LOOP;
-
   INSERT INTO public.facturas (
     id, organization_id, cliente_id, cliente_nombre, expediente,
     cotizacion_id, embarque_id, proforma_id,
@@ -19080,9 +19068,7 @@ BEGIN
     'Borrador', v_old.origen,
     v_old.id
   );
-
   UPDATE public.facturas SET sustituida_por = v_new_id WHERE id = v_old.id;
-
   INSERT INTO public.conceptos_factura (
     factura_id, organization_id,
     descripcion, cantidad, precio_unitario, moneda, total,
@@ -19099,7 +19085,6 @@ BEGIN
   FROM public.conceptos_factura
   WHERE factura_id = v_old.id
     AND deleted_at IS NULL;
-
   -- Copiar los vínculos con embarques (tabla puente) al borrador sustituto.
   -- La original queda con activa=false al cancelarse; la nueva nace activa.
   INSERT INTO public.factura_embarques (factura_id, embarque_id, organization_id, activa)
@@ -19107,7 +19092,6 @@ BEGIN
   FROM public.factura_embarques
   WHERE factura_id = v_old.id
   ON CONFLICT DO NOTHING;
-
   INSERT INTO public.bitacora_actividad (
     organization_id, usuario_id, usuario_email, accion, modulo, entidad_id, entidad_nombre, detalles
   ) VALUES (
@@ -19120,10 +19104,9 @@ BEGIN
     COALESCE(v_new_numero, ''),
     jsonb_build_object('factura_original_id', v_old.id, 'factura_original_uuid', v_old.uuid_fiscal, 'numero_nuevo', v_new_numero)
   );
-
   RETURN v_new_id;
 END;
-$function$;
+$$;
 CREATE FUNCTION public.eerr_resumen_anual(p_year integer, p_fuente text DEFAULT 'embarques'::text) RETURNS TABLE(mes integer, ingresos_mxn numeric, costos_mxn numeric, excluidos_sin_tc integer)
     LANGUAGE plpgsql STABLE SECURITY DEFINER
     SET search_path TO 'public'

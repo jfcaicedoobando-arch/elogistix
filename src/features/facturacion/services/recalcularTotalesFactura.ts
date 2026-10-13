@@ -30,6 +30,7 @@ export async function recalcularTotalesFactura(facturaId: string): Promise<Total
       .from("facturas")
       .select("subtotal, iva, ret_isr, ret_iva, total")
       .eq("id", facturaId)
+      .is("deleted_at", null)
       .maybeSingle(),
   );
 
