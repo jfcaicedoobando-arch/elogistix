@@ -24,7 +24,7 @@ function mount() {
   return { ...hook, client };
 }
 beforeEach(() => {
-  vi.resetAllMocks(); vi.useFakeTimers(); vi.setSystemTime(new Date("2026-10-13T05:59:59Z"));
+  vi.resetAllMocks(); vi.useFakeTimers({ toFake: ["Date", "setTimeout", "clearTimeout"] }); vi.setSystemTime(new Date("2026-10-13T05:59:59Z"));
   setAuthSnapshot({ userId: "user-a", email: null, organizationId: null, organizationName: null, role: "super_admin", effectiveRole: "super_admin" });
   syncActiveOrganizationScope({ userId: "user-a", organizationId: "org-a" });
   m.cxc.mockResolvedValue([]);

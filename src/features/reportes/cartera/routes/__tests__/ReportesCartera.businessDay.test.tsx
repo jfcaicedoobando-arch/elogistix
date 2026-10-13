@@ -12,7 +12,7 @@ vi.mock("@/components/ui/date-picker-mx", () => ({ DatePickerMx: ({ value, disab
 vi.mock("../../components/CarteraBloque", () => ({ CarteraBloque: () => null }));
 const bloque = { filas: [{ id: "fp" }], buckets: [], total: {} };
 const listo = { dataScope: {}, tc: null, tcLoading: false, tcError: false, cxc: bloque, cxp: bloque, isLoading: false, isError: false, refetch: vi.fn() };
-beforeEach(() => { vi.clearAllMocks(); vi.useFakeTimers(); vi.setSystemTime(new Date("2026-10-13T05:59:59Z")); m.hook.mockReturnValue(listo); m.pdf.mockReturnValue(new Promise(() => {})); });
+beforeEach(() => { vi.clearAllMocks(); vi.useFakeTimers({ toFake: ["Date", "setTimeout", "clearTimeout"] }); vi.setSystemTime(new Date("2026-10-13T05:59:59Z")); m.hook.mockReturnValue(listo); m.pdf.mockReturnValue(new Promise(() => {})); });
 it("el corte disabled sigue CDMX y bloquea export mientras se obtiene el nuevo día", async () => {
   const view = render(<ReportesCartera />);
   expect(screen.getByLabelText("corte")).toHaveValue("2026-10-12");
