@@ -7456,7 +7456,9 @@ DECLARE
 BEGIN
   SELECT organization_id, estado::text, tipo_cambio_usd, tipo_cambio_eur
     INTO v_org, v_estado, v_usd_ant, v_eur_ant
-  FROM public.embarques WHERE id = _embarque_id;
+  FROM public.embarques
+  WHERE id = _embarque_id AND deleted_at IS NULL
+  FOR NO KEY UPDATE;
   IF NOT FOUND THEN
     RAISE EXCEPTION 'Embarque no encontrado' USING ERRCODE = 'P0002';
   END IF;
@@ -7474,7 +7476,7 @@ BEGIN
      SET tipo_cambio_usd = v_tc.usd_mxn,
          tipo_cambio_eur = COALESCE(NULLIF(v_tc.eur_mxn, 0), tipo_cambio_eur),
          updated_at = now()
-   WHERE id = _embarque_id;
+   WHERE id = _embarque_id AND deleted_at IS NULL;
   RETURN jsonb_build_object(
     'embarque_id', _embarque_id,
     'fecha_dof', v_tc.fecha,
@@ -28512,6 +28514,14 @@ DECLARE
   v_isr      numeric;
   v_iva_ret  numeric;
 BEGIN
+  -- Keep INVOKER/RLS semantics and the existing no-op for an unavailable parent.
+  -- Serialize against soft deletion before reading or calculating its concepts.
+  PERFORM 1 FROM public.facturas
+  WHERE id = p_factura_id AND deleted_at IS NULL
+  FOR NO KEY UPDATE;
+  IF NOT FOUND THEN
+    RETURN;
+  END IF;
   SELECT
     count(*),
     COALESCE(SUM(ROUND(COALESCE(c.cantidad, 1) * COALESCE(c.precio_unitario, 0), 2)), 0),
@@ -28538,7 +28548,7 @@ BEGIN
            ret_iva = 0,
            total = 0,
            updated_at = now()
-     WHERE id = p_factura_id;
+     WHERE id = p_factura_id AND deleted_at IS NULL;
     RETURN;
   END IF;
   UPDATE public.facturas
@@ -28548,7 +28558,7 @@ BEGIN
          ret_iva    = v_iva_ret,
          total      = v_subtotal + v_iva - v_isr - v_iva_ret,
          updated_at = now()
-   WHERE id = p_factura_id;
+   WHERE id = p_factura_id AND deleted_at IS NULL;
 END;
 $$;
 CREATE FUNCTION public.recalcular_cobro_embarques(p_embarque_ids uuid[]) RETURNS void

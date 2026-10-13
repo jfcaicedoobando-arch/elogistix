@@ -36,6 +36,10 @@ export const LC_CODE_MESSAGES: Record<string, string> = {
     "El origen de tesorería del anticipo no es consistente. Revisa el cargo original o su registro en efectivo; no generes otro cargo.",
   LC_ANTICIPO_SIN_NUEVO_CARGO:
     "Esta aplicación de anticipo usa la salida original y no admite otro cargo bancario. Revisa el movimiento del anticipo.",
+  LC_PARENT_MUTATION_METADATA:
+    "La actualización del recálculo y tipo de cambio no superó la verificación de integridad. Solicita una revisión técnica antes de volver a aplicarla.",
+  LC_PARENT_MUTATION_PRECONDITION:
+    "No se puede actualizar el recálculo y tipo de cambio porque la base difiere de la versión revisada. Solicita una revisión técnica antes de continuar.",
   LC_FACTURA_HIJOS_METADATA:
     "La actualización de la protección de facturas no superó la verificación de integridad. Solicita una revisión técnica antes de volver a aplicarla.",
   LC_FACTURA_HIJOS_PRECONDITION:
