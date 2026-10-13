@@ -88,3 +88,6 @@ describe("useDashboardEjecutivo — máquina de estados", () => {
     expect(result.current.error).toBeNull();
   });
 });
+
+vi.mock('@/features/tesoreria/services', () => ({fetchSaldosCuentas: vi.fn(async () => [])}));
+vi.mock('@/hooks/shared/useDiaNegocio', () => ({useDiaNegocio: () => '2026-10-13'}));

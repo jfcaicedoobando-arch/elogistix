@@ -2,9 +2,9 @@
 
 ## Resultado y límite de autoridad
 
-Adaptador puro, local y sin efectos para transformar ocho estructuras de agregados del inventario de veinte SELECT en un diagnóstico por organización, corte solicitado y moneda. Está junto al núcleo de etapa 1, pero no lo invoca, no cambia números productivos y no consulta bases de datos.
+Adaptador puro, local y sin efectos para transformar ocho estructuras de agregados del inventario de veinte SELECT en un diagnóstico por organización, corte solicitado y moneda. Está junto al núcleo de etapa 1, pero no habilita números y no consulta bases de datos. La primera integración UI se documenta en integration-approved.md.
 
-La salida siempre contiene `status: 'unavailable'`, `numericEligible: false` y `certification: 'not-evaluated'`. Cada indicador conserva N/D y sus causas acumulativas. No existe rama `ready`, `evidenceId`, `complete`, importe financiero, autorización de políticas ni conversión a `Scope`/`ComparableScope`. Agregar estos atributos al JSON de entrada no les otorga autoridad.
+La salida siempre contiene `status: 'unavailable'`, `numericEligible: false` y `certification: 'not-evaluated'`. Cada indicador conserva N/D y sus causas acumulativas. No existe rama `ready`, `evidenceId`, `complete`, importe financiero, certificación de datos ni conversión a `Scope`/`ComparableScope`. Agregar estos atributos al JSON de entrada no les otorga autoridad.
 
 Esta restricción es deliberada: los SELECT inspeccionados muestran cobertura y problemas, pero no prueban un cierre aprobado, historia íntegra, conciliación documental, caja disponible ni un snapshot coherente. Un futuro verificador real y su contrato requerirán revisión separada; un identificador, booleano o texto enviado por el cliente nunca lo sustituye.
 
@@ -16,7 +16,7 @@ Código candidato nuevo: `src/features/dashboardEjecutivo/domain/financialCovera
 - `parsing.ts`: validación exacta de conteos y fechas; proyección de campos permitidos.
 - `schemas.ts`: proyecciones de las ocho consultas observadas, límites y reglas de consistencia.
 - `observations.ts`: validación del sobre, organización, fuentes y filas; eliminación de datos no necesarios.
-- `diagnostics.ts`: tres períodos calendario, políticas pendientes, causas acumuladas y salida siempre N/D.
+- `diagnostics.ts`: tres períodos calendario, datos pendientes, causas acumuladas y salida siempre N/D.
 
 Pruebas nuevas: `src/features/dashboardEjecutivo/domain/financialCoverage/__tests__/{fixtures,diagnostics.test,validation.test,review-regressions.test}.ts`. Fixtures ficticios y valores de prueba; no contienen UUIDs, documentos, importes, nombres ni filas exportadas de la empresa auditada. Los nombres de columnas y formas provienen del inventario; los valores de ejemplo no son resultados del negocio.
 
@@ -61,52 +61,26 @@ La salida separa:
 - `observations`: proyecciones explícitas sin importes, PII o identificadores fuente. `queryId` y `rowIndex` sólo ubican una fila en esta lectura; no son certificados.
 - `sources`: `observed`, `empty-response`, `error`, `invalid`, `missing`, `scope-mismatch`, `duplicate` o `possibly-truncated`. `observed` no significa `complete`.
 - `causes`: código, explicación, indicadores afectados y base `observed-gap`, `unverified-prerequisite` o `invalid-input`. Diferentes filas pueden compartir un código con referencias distintas; cada indicador deduplica sus códigos.
-- `policies`: las cinco claves, todas con `approval-unverified`. Las recomendaciones previas no se aceptan como decisiones contables.
+- `policies`: las cinco claves con `approved` y fecha `2026-10-13T12:32:00Z`. Es la aprobación explícita recibida, nunca una propiedad aceptada del JSON ni certificación de datos.
 - `metrics`: DSO, DPO, aging, forecast de trece semanas y runway en estado `unavailable`, con todas sus causas.
 
 Causas principales: período no cerrado, cierre no configurado/no verificado, historia no reconstruida, clasificación comercial y principal-agente sin verificar, política de base fiscal/FX sin verificar, bases NC faltantes, caja no conciliada/disponibilidad sin verificar, cobertura y linaje de flujos incompletos, fechas previstas faltantes y vencimientos contractuales desconocidos. Una observación sin problemas visibles no elimina las causas de certificación pendiente.
 
-Los bloqueos monetarios por documento se atribuyen a la moneda pertinente. Los conteos de organización permanecen como contexto. Las bases faltantes de NC aplicadas afectan DPO; notas borrador no se convierten en actividad emitida. Faltantes de calendario de pagos afectan forecast, no cambian DPO. El aging de este diagnóstico no utiliza programación como fecha contractual. Los detalles de historia pendiente se separan: tres meses comparables para DSO/DPO, población de saldo al corte para aging y ventana de consumo aún por aprobar para runway; no se convierte la propuesta de tres meses de burn en requisito implícito.
+Los bloqueos monetarios por documento se atribuyen a la moneda pertinente. Los conteos de organización permanecen como contexto. Las bases faltantes de NC aplicadas afectan DPO; notas borrador no se convierten en actividad emitida. Faltantes de calendario de pagos afectan forecast, no cambian DPO. El aging de este diagnóstico no utiliza programación como fecha contractual. Los detalles de historia pendiente se separan: tres meses comparables para DSO/DPO, población de saldo al corte para aging y los tres meses completos cerrados aprobados para runway. La integración comprueba esa ventana explícitamente; el identificador de política no prueba cobertura.
 
-## Integración futura de lectura y UI
+## Integración inicial y lectura futura
 
-1. Incorporar el módulo sin conectar todavía los indicadores productivos. Asegurar que los guardrails del repo, build y pruebas integradas sigan pasando en la rama de integración.
-2. Preparar lector con el cliente autenticado existente, organización explícita y RLS existente. No introducir service-role, SECURITY DEFINER, nuevos GRANT ni políticas permisivas. Un filtro de organización no demuestra por sí solo aislamiento integral; se requieren pruebas de las uniones/vistas existentes. No eludir un permiso denegado.
-3. No ejecutar en navegador los SELECT de auditoría, `information_schema` o lecturas de bitácora sin una superficie existente autorizada. Este paquete no agrega RPC. Si los agregados no son accesibles con RLS actual, reportar el límite y proponer una capa de lectura separada y revisada, sin elevar acceso en este cambio.
-4. Reutilizar la estrategia de lectura/paginación ya revisada en el proyecto y distinguir respuestas parciales, errores y listas vacías. No usar una página UI como población. No cambiar el servicio de paginación dentro de este paquete. La futura coherencia histórica exige un snapshot/corte sustentado por el lector; no basta una etiqueta en el cliente.
-5. Usar las query keys centralizadas del feature y el flujo React Query existente, con organización, moneda, corte y mes en la identidad de caché. Cancelar/aislar respuestas al cambiar de organización; no conservar el diagnóstico anterior como si fuera el nuevo. Consultas bajo permisos reducidos deben dar N/D, no cero ni cifras cacheadas de otro tenant.
-6. Mostrar “N/D” y una explicación corta por indicador, con detalle de todas las causas. Distinguir “cobertura observada” de “verificado”. Mostrar moneda, corte pedido, fechas reales de lectura y cobertura de contexto; no porcentajes de completitud inventados. El código `rows_with_statement_balance` debe presentarse como “campo saldo informado”, no “extracto conciliado”.
-7. Mantener separadas etiquetas de cartera actual, aging contractual y programación. No reemplazar en este paso valores/productos existentes por el output de diagnóstico. El despliegue UI y el cambio de fórmulas requieren paquete posterior revisado y pruebas completas.
+La primera integración usa el cliente, servicios y caché existentes; no ejecuta SELECT de auditoría, lecturas information_schema ni bitácoras, no introduce RPC ni cambia RLS/grants. Usa monedas observadas como contexto, sin proyectarlas a historia ni caja certificada. Estado/corte/método N/D aparecen por moneda y se retiran los ratios financieros heredados insuficientes del snapshot. Ver integration-approved.md.
 
-## Políticas pendientes y paso posterior
+Un futuro lector/verificador requerirá organización y superficie autorizada explícitas, cobertura completa y coherencia de corte/snapshot. Paginación completa no constituye por sí sola historia o conciliación. Falta de permiso deberá informarse sin eludir acceso; este paquete no necesita ni solicita acceso nuevo.
 
-Las cinco recomendaciones siguen siendo propuestas para validación contable, no defaults:
+## Políticas aprobadas; datos todavía sin certificar
 
-1. Clasificación comercial al origen y principal/agente con evidencia y versión.
-2. Asignación documental de base, impuestos y retenciones; recuperar bases faltantes. Prorrateo sólo si se aprueba explícitamente, sin tasa fija universal.
-3. Primero moneda documental; consolidación y tipo de cambio histórico bajo criterio explícito. La falta de FX para otra moneda no invalida por sí sola el importe nominal en su moneda.
-4. Ventana y clasificación de consumo de caja; separar operación, inversión, financiación y terceros, con tratamiento explícito de traspasos internos. No suponer que un lapso corto de movimientos equivale a un mes de consumo.
-5. Caja disponible, restricciones y conciliación real al corte, con extractos y cobertura verificados.
+El 13 de octubre de 2026 a las 12:32 UTC el usuario aprobó los cinco criterios: crédito/contado y propia/terceros documentados; netos/impuestos documentados sin prorrateo automático; moneda documental sin consolidación automática; consumo operativo neto de tres meses completos cerrados excluyendo inversión/financiación/terceros; efectivo conciliado y restricciones explícitas.
 
-Siguiente paquete después de estas decisiones: normalizadores/read-model y verificador con autoridad real, linaje de eventos/ajustes/NC, historia reconstruible o snapshots prospectivos, pruebas de permisos y coherencia, y conexión explícita al núcleo puro. Hasta entonces este adaptador seguirá N/D incluso si recibe strings que afirman que algo está aprobado.
+La aprobación fija las reglas y no valida filas, historia, extractos ni importes. El diagnóstico sigue siempre N/D/numericEligible:false. Las causas describen evidencia faltante, no una aprobación pendiente. No se ejecutan los SELECT de auditoría en navegador ni se simulan sus agregados a partir del snapshot ejecutivo.
 
-### Qué bloquea cada siguiente paso
-
-La integración de un diagnóstico de cobertura, sin cifras ni cambio de fórmulas, no necesita adoptar nuevas políticas contables. Necesita una superficie de lectura existente y autorizada, pruebas de RLS/caché y revisión de UI. Si esa superficie no existe, debe proponerse por separado; este paquete no añade permisos para resolverlo.
-
-Para habilitar métricas numéricas conviene una sola validación agrupada. Propuesta para que el responsable contable revise, no decisión tomada:
-
-| Decisión propuesta | Consecuencia si se aprueba | Si falta dato o no se aprueba |
-| --- | --- | --- |
-| Clasificar crédito/contado y principal/agente por contrato y documento, con responsable y versión | Se podrán definir poblaciones comerciales homogéneas, separando fondos de terceros y comisión según su naturaleza documentada | No usar PPD/días como sustituto; DSO/DPO y flujos afectados permanecen N/D |
-| Aplicar base/impuestos/retenciones a partir de componentes documentales; dejar el prorrateo automático fuera de la primera versión | Se puede normalizar cada aplicación respaldada sin tasa fija; recuperar las NC incompletas desde su documento | Una base desconocida sigue bloqueando el indicador afectado; no inventar su desglose |
-| Primera versión por moneda documental, sin consolidación automática; política de conversión intermoneda separada | Evita mezclar monedas y acota el alcance inicial; aún exige linaje válido de aplicaciones entre monedas | Los casos de aplicación intermoneda sin criterio/tasa validada siguen N/D |
-| Para runway, proponer consumo neto de caja operativa en tres meses completos cerrados, con inversión/financiación/terceros separados | Define denominador y observación; los compromisos obligatorios no operativos siguen dentro del forecast cuando correspondan | No anualizar/mensualizar un puñado de días como historia suficiente ni usar pérdidas EERR |
-| Caja disponible únicamente de cuentas y fondos incluidos explícitamente, con extracto y conciliación al corte y restricciones revisadas | Define la apertura verificable del forecast y numerador de runway | Marcas Conciliado, cuenta activa y campo saldo no habilitan números |
-
-Consulta agrupada sugerida: «¿Apruebas estas cinco reglas para la primera versión, manteniendo N/D hasta que cada documento, aplicación y saldo tenga respaldo verificable? En particular, ¿confirmas tres meses completos para consumo operativo, salida por moneda sin consolidación y sin prorrateo fiscal automático inicial?»
-
-La respuesta a esa consulta fijaría políticas, no certificaría datos existentes. Recuperar documentos, acordar un corte de cierre y verificar bancos/historia seguirían siendo requisitos de evidencia; ninguno se obtiene de una aprobación genérica del diseño.
+La primera integración está descrita en `integration-approved.md`: reutiliza únicamente monedas observadas de lectores existentes, muestra periodos/corte/método pendientes de certificación, mantiene campos heredados null y evita EERR como fallback. Sigue pendiente un lector/verificador real con historia, clasificación documental, impuestos/aplicaciones, conciliación y restricciones. Identificadores o flags del cliente no lo sustituyen.
 
 ## Verificación y entrega
 

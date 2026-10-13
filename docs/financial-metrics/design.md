@@ -4,17 +4,15 @@
 
 DSO = CxC comercial promedio / ventas netas a crédito del mismo periodo × días reales. DPO = CxP comercial promedio / compras y servicios a crédito del mismo periodo × días reales. Toda la cartera comercial del alcance, sin ventana de próximos 30 días. Promedio diario si es verificable; apertura/cierre como aproximación etiquetada. Mes cerrado y tres meses comparables. Aging por vencimiento contractual, separado de programación. Forecast 13 semanas por cobros/pagos previstos desde caja conciliada. Runway sobre caja disponible y consumo neto efectivo. IVA/retenciones coherentes por documento; desembolsos de terceros separados de comisión propia. Ausencia de datos: N/D con causa.
 
-## Decisiones contables que no se deben inferir
+## Criterios aprobados el 13 de octubre de 2026, 12:32 UTC
 
-El núcleo no toma estas decisiones. Su adaptador debe recibir una política identificada y versionada antes de habilitar números productivos.
+1. Separar crédito/contado y operaciones propias/de terceros con datos documentados. PPD, días de crédito o texto libre no constituyen clasificación comercial.
+2. Netos e impuestos documentados, sin prorrateo fiscal automático. Componentes desconocidos quedan N/D.
+3. Cálculo por moneda documental, sin consolidación cambiaria automática. Aplicaciones intermoneda necesitan linaje documental; una tasa actual no inventa su historia.
+4. Runway con consumo neto operativo de tres meses completos cerrados. Se excluyen inversión, financiación, fondos de terceros y patas de transferencia interna; una comisión operativa documentada se conserva.
+5. Caja disponible conciliada al corte, cuentas/fondos y restricciones explícitos. Cuenta activa, marca Conciliado y campo saldo no la certifican.
 
-1. Población comercial a crédito y reconocimiento. Criterio para PPD/PUE, términos a cero/ausentes, compras de activos, provisiones sin factura, reclasificaciones y notas de otro periodo. No usar la fuente seleccionable del EERR como sustituto. Principal/agente se define por el hecho económico aprobado, no por texto libre; relacionar renglones de desembolso con su obligación/recuperación y comisión propia. Si no existe clasificación, N/D del componente afectado.
-2. Asignación de base e impuestos en aplicaciones. Preferir importes netos explícitos con linaje por documento/línea. Si se acepta un reparto proporcional, debe aprobarse cómo opera sobre componentes distintos, retenciones, anticipos, ajustes, diferencias de cambio/redondeo y NC previas. No existe una regla universal implícita de 16%. No se implementa aquí un prorrateo por defecto.
-3. Moneda y valoración histórica. Recomiendo conservar ratios por moneda mientras no exista una política aprobada de consolidación. Para consolidar, definir tasas/fechas de saldos diarios versus flujos/actividad, mantener la misma política entre meses, documentar efecto FX y devolver N/D ante una tasa necesaria ausente. No sustituir un TC histórico por el actual sin declararlo.
-4. Burn: horizonte y clases de efectivo. Falta elegir periodo observado (por ejemplo, tres meses cerrados), partidas operativas/inversión/financiación y clasificación de fondos de terceros. Excluir transferencias internas del neto consolidado exige cobertura de ambas cuentas; sus comisiones reales se conservan. Financiación puede esconder burn si se mezcla sin etiqueta. El núcleo recibe la inclusión/exclusión explícita de cada evento y su evidencia; no la infiere.
-5. Caja disponible. Definir cuentas, moneda, restricciones, depósitos en tránsito, pagos emitidos aún no debitados, efectivo físico y saldos a favor. No usar crédito bancario no dispuesto ni tratar caja restringida como disponible por defecto. Se necesita control de conciliación al corte, no sólo movimientos con estado Conciliado.
-
-Estas decisiones no bloquean revisar y probar el contrato puro. Sí bloquean conectar métricas numéricas al producto donde falte la política/evidencia correspondiente.
+La aprobación fija políticas; no certifica los datos existentes. La integración inicial permanece N/D hasta contar con un lector/verificador real. El módulo puro de runway continúa siendo genérico; su wrapper aprobado exige una ventana observada exacta de tres meses calendario, cierre contable y caja conciliada al corte explícito aplicable, no anterior al fin observado ni futuro respecto de la fecha de negocio. DSO/DPO conservan su mes calendario y comparación de tres meses definidos en la fundación, sin una nueva ventana inferida.
 
 ## Contratos de datos propuestos
 
@@ -59,7 +57,7 @@ Deduplicación: el adaptador debe unir banco ↔ pago ↔ lote ↔ anticipo ↔ 
 
 ### F. Runway
 
-Input exclusivo de caja: disponible al corte y eventos monetarios realizados durante el horizonte observado, clasificados bajo política. No acepta ni consume EERR, utilidad, devengo o saldo de forecast como burn histórico.
+Input exclusivo de caja: disponible y conciliada al mismo corte explícito válido, desde el fin observado hasta la fecha de negocio inclusive, y eventos realizados durante los tres meses completos cerrados, con clasificación documental operativa propia. Un corte de caja posterior no extiende la ventana de consumo. No acepta ni consume EERR, utilidad, devengo o saldo de forecast como burn histórico.
 
 Consumo neto = salidas incluidas − entradas incluidas. Runway en días = caja disponible / consumo neto × días observados. El resultado en días evita introducir una duración de mes no aprobada; el formato final de meses se definirá con la política del producto. Se muestran periodo y saldo disponibles. Consumo neto <=0 con caja positiva se informa sin consumo neto en ese periodo, no autonomía infinita. Caja cero/negativa tiene estado propio; incompletitud prevalece sobre un número aparente.
 

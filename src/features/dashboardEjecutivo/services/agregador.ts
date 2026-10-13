@@ -3,6 +3,7 @@
  * y construye un snapshot. Auditoría Paso 4 (v12.95.11): recibe `cobranza` y
  * `cxp` inyectados por el hook caller para no acoplar service→service.
  */
+import { buildFinancialAnalysis } from "./financialAnalysis";
 import { avisoNcProveedorSinBase } from "@/lib/financial/baseNcProveedor";
 import { fetchEstadoResultadosDevengado, fetchEstadoResultadosDevengadoAnual } from "@/features/profit/services/estadoResultadosDevengado";
 import { fetchEstadoResultadosMes } from "@/features/profit/services/estadoResultados";
@@ -10,6 +11,7 @@ import { logger } from "@/lib/observability/logger";
 import { supabase } from "@/integrations/supabase/client";
 import {
   fetchSaldosCuentas,
+  type ResumenCuenta,
   fetchResumenTesoreria,
   fetchFlujoProyectado,
 } from "@/features/tesoreria/services";
@@ -26,6 +28,8 @@ export interface FetchSnapshotParams {
   periodo: string; // YYYY-MM
   cobranza: CobranzaRow[];
   cxp: CxpRow[];
+  /** Existing scoped bank read can be reused by the independent diagnostic. */
+  cuentas?: ResumenCuenta[];
   /** Fuente del EERR. Default `"embarques"` para alinearse con la pantalla EERR. */
   fuente?: FuenteEERR;
 }
@@ -122,7 +126,7 @@ export async function fetchDashboardEjecutivo(
     tipoCambio,
     eerr12m,
   ] = await Promise.all([
-    fetchSaldosCuentas(organizationId),
+    params.cuentas ? Promise.resolve(params.cuentas) : fetchSaldosCuentas(organizationId),
     fetchEerr({ organizationId, year, month }),
     fetchEerr({ organizationId, year: prevY, month: prevM }),
     fetchPresupuestoVsReal(periodo, organizationId),
@@ -174,6 +178,8 @@ export async function fetchDashboardEjecutivo(
 
   return {
     ...base,
+    financialAnalysis: buildFinancialAnalysis({organizationId, selectedMonth: periodo,
+      currentBalanceReference: vencimientos.fechaReferencia, currencyRows: [...cobranza, ...cxp, ...cuentas]}),
     generadoEn: new Date().toISOString(),
     kpis,
     topDeudores: tesoreria.top_deudores,

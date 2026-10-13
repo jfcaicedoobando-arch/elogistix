@@ -197,4 +197,14 @@ describe("dashboardEjecutivo/agregador", () => {
     expect(snap.vencimientos.cobranzaMayor30.total_mxn).toBe(0);
     expect(snap.vencimientos.cxpProximos7.top).toEqual([]);
   });
+  it("conecta diagnóstico por moneda al snapshot sin certificar cartera/caja ni depender de EERR", async () => {
+    fetchSaldosCuentas.mockResolvedValue([{id:'mock-bank',saldo:500,moneda:'USD'}]);
+    const params={organizationId:'org-1',periodo:'2026-09',cobranza:[],cxp:[]};
+    const invoices=await fetchDashboardEjecutivo({...params,fuente:'facturas'});
+    const shipments=await fetchDashboardEjecutivo({...params,fuente:'embarques'});
+    expect(invoices.financialAnalysis).toMatchObject({organizationId:'org-1',selectedMonth:'2026-09',numericEligible:false,
+      certification:'not-evaluated',currencies:[{currency:'USD'}]});
+    expect(shipments.financialAnalysis).toEqual(invoices.financialAnalysis);
+  });
+
 });

@@ -47,14 +47,14 @@ function snap(over: Record<string, unknown> = {}) {
 }
 
 describe("calcularKPIsEjecutivos · DSO / DPO / Runway (Fase 4)", () => {
-  it("DSO = CxC 30d / ingresos × 30", () => {
+  it("DSO vivo no sustituye cartera histórica certificada", () => {
     const k = calcularKPIsEjecutivos(snap(), 0);
-    expect(k.dso_dias).toBeCloseTo((50_000 / 100_000) * 30, 5); // 15
+    expect(k.dso_dias).toBeNull();
   });
 
-  it("DPO = CxP 30d / costos × 30", () => {
+  it("DPO vivo no sustituye compras a crédito documentadas", () => {
     const k = calcularKPIsEjecutivos(snap(), 0);
-    expect(k.dpo_dias).toBeCloseTo((30_000 / 60_000) * 30, 5); // 15
+    expect(k.dpo_dias).toBeNull();
   });
 
   it("DSO/DPO son null cuando no hay ingresos/costos", () => {
@@ -73,12 +73,12 @@ describe("calcularKPIsEjecutivos · DSO / DPO / Runway (Fase 4)", () => {
     expect(k.dpo_dias).toBeNull();
   });
 
-  it("Runway es null cuando la utilidad es ≥ 0 (sin burn)", () => {
+  it("Utilidad positiva no habilita runway", () => {
     const k = calcularKPIsEjecutivos(snap(), 0);
     expect(k.runway_meses).toBeNull();
   });
 
-  it("Runway = bancos / (costos − ingresos) cuando hay pérdida", () => {
+  it("Pérdida contable no habilita runway", () => {
     const k = calcularKPIsEjecutivos(
       snap({
         eerrPeriodo: {
@@ -90,11 +90,10 @@ describe("calcularKPIsEjecutivos · DSO / DPO / Runway (Fase 4)", () => {
       }),
       0,
     );
-    // burn = 50_000, bancos = 100_000 → 2 meses
-    expect(k.runway_meses).toBeCloseTo(2, 5);
+    expect(k.runway_meses).toBeNull();
   });
 
-  it("Runway = 0 (caja agotada) si hay burn y saldo bancario ≤ 0 (v13.300.49)", () => {
+  it("Banco sin saldo no certifica caja disponible", () => {
     const k = calcularKPIsEjecutivos(
       snap({
         eerrPeriodo: {
@@ -119,6 +118,16 @@ describe("calcularKPIsEjecutivos · DSO / DPO / Runway (Fase 4)", () => {
       }),
       0,
     );
-    expect(k.runway_meses).toBe(0);
+    expect(k.runway_meses).toBeNull();
   });
+});
+
+// No numeric fallback may remain reachable through the raw snapshot KPI fields.
+describe('legacy ratios retired across current bank/profit combinations',()=>{
+ it.each([-100,0,100].flatMap(saldo=>[-100,0,100].flatMap(resultado=>[false,true].map(parcial=>({saldo,resultado,parcial})))))('bank $saldo / profit $resultado / partial $parcial',({saldo,resultado,parcial})=>{
+  const input=snap(); input.eerrPeriodo.totalCostos.total=100000-resultado;
+  input.eerrPeriodo.utilidad.total=resultado;input.tesoreria.saldo_bancos_mxn=saldo;
+  input.tesoreria.saldo_bancos_incompleto=parcial;
+  expect(calcularKPIsEjecutivos(input,0)).toMatchObject({dso_dias:null,dpo_dias:null,runway_meses:null});
+ });
 });
