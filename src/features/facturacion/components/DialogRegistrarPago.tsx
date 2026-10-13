@@ -63,7 +63,7 @@ export function DialogRegistrarPago({ open, onOpenChange, factura }: Props) {
   // la moneda de la factura); así el diálogo no propone un importe que el
   // servidor rechazaría por sobrepago.
   const { data: saldoServidor } = useSaldoFacturaServidor(factura?.id);
-  const { submit, isPending, timbrandoRep } = useRegistrarPagoSubmit(() => onOpenChange(false));
+  const { submit, isPending, timbrandoRep } = useRegistrarPagoSubmit(() => onOpenChange(false), { facturaId: factura?.id, open });
 
   // A1: canon `saldoFactura` (pagos + NC). Se pasa el ESTADO para que las
   // terminales (Pagada/Cancelada/…) den saldo 0 (adeudo fantasma legacy).

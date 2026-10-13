@@ -4,6 +4,7 @@
  * del componente por debajo del límite del linter.
  */
 import { useState } from "react";
+import { useFacturaAsyncScope } from "./useFacturaAsyncScope";
 import { ERROR_FORMA_COBRO, formaPagoCobroValida } from "../domain/formaPagoCobro";
 import { validarTcMxn } from "@/lib/financial/tcBanda";
 import { useQueryClient } from "@tanstack/react-query";
@@ -35,13 +36,18 @@ interface SubmitArgs {
   esPpdTimbrada: boolean;
 }
 
-export function useRegistrarPagoSubmit(onSuccess: () => void) {
+export function useRegistrarPagoSubmit(
+  onSuccess: () => void,
+  contexto?: { facturaId?: string; open: boolean },
+) {
   const qc = useQueryClient();
   const registrar = useRegistrarPagoFactura();
-  const [timbrandoRep, setTimbrandoRep] = useState(false);
+  const { scope, capturar } = useFacturaAsyncScope(contexto?.facturaId, contexto?.open);
+  const [timbrandoScope, setTimbrandoScope] = useState<typeof scope | null>(null);
+  const timbrandoRep = timbrandoScope === scope;
 
   const intentarTimbrarRep = async (pagoId: string, facturaId: string) => {
-    setTimbrandoRep(true);
+    setTimbrandoScope(scope);
     try {
       const res = await emitirRep(pagoId);
       if (esPendiente(res)) {
@@ -72,14 +78,22 @@ export function useRegistrarPagoSubmit(onSuccess: () => void) {
         });
       }
     } finally {
-      setTimbrandoRep(false);
+      setTimbrandoScope((actual) => actual === scope ? null : actual);
       // v13.549.0: sin esto el historial de pagos quedaba con el estado previo
       // ("REP pendiente") y el botón "Timbrar REP" seguía visible.
       invalidarTrasRep(qc, facturaId);
     }
   };
 
+  const completarSiVigente = async (args: SubmitArgs, pagoId: string | null | undefined, vigente: () => boolean) => {
+    if (!vigente()) return;
+    if (args.esPpdTimbrada && pagoId) await intentarTimbrarRep(pagoId, args.facturaId);
+    if (vigente()) onSuccess();
+  };
+
   const submit = async (args: SubmitArgs) => {
+    const vigente = capturar();
+    if (!vigente()) return;
     if (args.esPpdTimbrada && !formaPagoCobroValida(args.formaPago)) {
       notifyError(undefined, { title: "Forma de pago inválida", description: ERROR_FORMA_COBRO,
         method: "ON_ERROR", errorCode: ERROR_CODES.VALIDATION_FAILED });
@@ -140,8 +154,7 @@ export function useRegistrarPagoSubmit(onSuccess: () => void) {
             "La cuenta destino es de otra moneda y no hay tipo de cambio oficial, o el abono falló. Registra el movimiento manualmente en Tesorería.",
         });
       }
-      if (args.esPpdTimbrada && pagoId) await intentarTimbrarRep(pagoId, args.facturaId);
-      onSuccess();
+      await completarSiVigente(args, pagoId, vigente);
     } catch (err) {
       notifyError(undefined, {
         title: "Error al registrar pago",

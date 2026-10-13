@@ -13,10 +13,10 @@ describe('diagnostic authority boundary', () => {
       'COMMERCIAL_CLASSIFICATION_MISSING', 'NET_CREDIT_NOTE_BASE_MISSING', 'CASH_NOT_RECONCILED', 'CASH_FLOW_COVERAGE_INCOMPLETE']));
     for (const metric of METRICS) expect(result.metrics[metric].status).toBe('unavailable');
   });
-  it('never constructs evidence, complete population, policy approval or normalized amounts', () => {
+  it('never constructs evidence, complete population, data certification or normalized amounts', () => {
     const result = diagnose({ ...input(), evidenceId: 'client-invented', complete: true,
       policies: Object.fromEntries(POLICY_KEYS.map((key) => [key, 'approved'])), certification: 'certified' });
-    expect(result.policies.every((policy) => policy.status === 'approval-unverified')).toBe(true);
+    expect(result.policies.every((policy) => policy.status === 'approved')).toBe(true);
     const text = JSON.stringify(result);
     for (const forbidden of ['evidenceId', 'client-invented', 'complete', 'amountMinor', 'current_balance']) expect(text).not.toContain(`"${forbidden}"`);
     expect(result.certification).toBe('not-evaluated');
@@ -36,10 +36,10 @@ describe('diagnostic authority boundary', () => {
     expect(codes(result)).not.toContain('CLOSE_NOT_CONFIGURED');
     expect(codes(result)).toEqual(expect.arrayContaining(['CLOSE_NOT_VERIFIED', 'HISTORY_INCOMPLETE', 'SNAPSHOT_NOT_CERTIFIED']));
   });
-  it('leaves all policies pending after the last observed data gap is removed', () => {
+  it('keeps data requirements despite approved policies and no observed gap', () => {
     const result = diagnose(replace('15-nc-scope-fx', [{ ...noteRow(), missing_net_base: 0 }]));
     expect(dpoCodes(result)).not.toContain('NET_CREDIT_NOTE_BASE_MISSING');
-    expect(dpoCodes(result)).toEqual(expect.arrayContaining(['CLOSE_NOT_CONFIGURED', 'TAX_ALLOCATION_POLICY_UNVERIFIED', 'FX_POLICY_UNVERIFIED']));
+    expect(dpoCodes(result)).toEqual(expect.arrayContaining(['CLOSE_NOT_CONFIGURED', 'TAX_COMPONENTS_UNVERIFIED', 'CURRENCY_LINEAGE_UNVERIFIED']));
   });
   it('never turns missing cash promises into a zero projection', () => {
     const result = diagnose(input());

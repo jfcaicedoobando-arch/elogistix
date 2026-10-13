@@ -49,8 +49,8 @@ export type CauseCode = 'INVALID_REQUEST' | 'INVALID_OBSERVATION' | 'TENANT_SCOP
   'OBSERVATION_CUT_MISMATCH' | 'SNAPSHOT_NOT_CERTIFIED' | 'METRIC_EVIDENCE_NOT_CERTIFIED' |
   'PERIOD_NOT_CLOSED' | 'CLOSE_NOT_CONFIGURED' | 'CLOSE_NOT_VERIFIED' |
   'HISTORY_INCOMPLETE' | 'COMMERCIAL_CLASSIFICATION_MISSING' |
-  'PRINCIPAL_AGENT_CLASSIFICATION_MISSING' | 'TAX_ALLOCATION_POLICY_UNVERIFIED' |
-  'FX_POLICY_UNVERIFIED' | 'BURN_POLICY_UNVERIFIED' | 'AVAILABLE_CASH_POLICY_UNVERIFIED' |
+  'PRINCIPAL_AGENT_CLASSIFICATION_MISSING' | 'TAX_COMPONENTS_UNVERIFIED' |
+  'CURRENCY_LINEAGE_UNVERIFIED' | 'OPERATING_CASH_CLASSIFICATION_MISSING' |
   'NET_CREDIT_NOTE_BASE_MISSING' | 'CREDIT_NOTE_BASE_COVERAGE_UNVERIFIED' |
   'CASH_NOT_RECONCILED' | 'CASH_AVAILABILITY_UNVERIFIED' | 'CASH_FLOW_COVERAGE_INCOMPLETE' |
   'CASH_LINEAGE_UNVERIFIED' | 'EXPECTED_CASH_DATES_MISSING' | 'CONTRACTUAL_DUE_DATES_MISSING';
@@ -74,7 +74,7 @@ export interface CoverageDiagnostic {
   observations: readonly Observation[];
   sources: readonly SourceObservation[];
   causes: readonly CoverageCause[];
-  policies: readonly { key: PolicyKey; status: 'approval-unverified' }[];
+  policies: readonly { key: PolicyKey; status: 'approved'; approvedAt: '2026-10-13T12:32:00Z' }[];
   metrics: Readonly<Record<Metric, { status: 'unavailable'; causeCodes: readonly CauseCode[] }>>;
 }
 export interface SourceObservation {

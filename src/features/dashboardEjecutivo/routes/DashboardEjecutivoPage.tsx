@@ -42,7 +42,8 @@ export default function DashboardEjecutivoPage() {
   const periodoCtl = usePeriodoMesUrl("mes", MES_MINIMO);
   const periodo = periodoCtl.mesActual.key;
   const [generandoPdf, setGenerandoPdf] = useState(false);
-  const { data, isLoading, error, refetch, isFetching } = useDashboardEjecutivo(periodo);
+  const { data, isLoading, error, refetch, isFetching, financialAnalysis,
+    financialAnalysisError, financialAnalysisLoading } = useDashboardEjecutivo(periodo);
 
   const exportar = useMemo(() => async () => {
     if (!data || generandoPdf) return;
@@ -93,6 +94,8 @@ export default function DashboardEjecutivoPage() {
         </CardContent>
       </Card>
 
+      <BandaKPIsEficiencia analysis={financialAnalysis} error={financialAnalysisError} loading={financialAnalysisLoading} />
+
       {/* Máquina de estados: loading → error → empty → data. Exactamente una
           rama se renderiza; nunca pantalla en blanco. */}
       {isLoading ? (
@@ -127,7 +130,7 @@ export default function DashboardEjecutivoPage() {
       )}
 
           <Alert variant="info"><AlertDescription>
-            Resultados del mes {data.periodo}. Bancos y cartera al {data.vencimientos.fechaReferencia}; los ratios combinan estas bases.
+            Resultados del mes {data.periodo}. Bancos y cartera al {data.vencimientos.fechaReferencia}; DSO, DPO y runway requieren evidencia independiente por moneda y permanecen N/D mientras falte.
           </AlertDescription></Alert>
           <BandaKPIs
             kpis={data.kpis}
@@ -139,7 +142,6 @@ export default function DashboardEjecutivoPage() {
             deudoresSinValuar={data.vencimientos.cobranzaMayor30.sin_valuar}
             acreedoresSinValuar={data.vencimientos.cxpProximos7.sin_valuar}
           />
-          <BandaKPIsEficiencia kpis={data.kpis} />
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-3">
             <div className="lg:col-span-2"><GraficoEERR12m data={data.eerr12m} /></div>
             <SaldosBancosCard cuentas={data.tesoreria.cuentas} />

@@ -27,7 +27,7 @@ const flagsBase: Flags = {
 
 function buildProps(overrides: { canEdit: boolean; puedeEmitir: boolean }) {
   return {
-    factura: {} as FacturaDetalle,
+    factura: { deleted_at: null } as FacturaDetalle,
     canEdit: overrides.canEdit,
     puedeEmitir: overrides.puedeEmitir,
     flags: flagsBase,

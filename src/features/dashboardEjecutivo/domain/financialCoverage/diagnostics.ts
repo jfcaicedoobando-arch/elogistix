@@ -1,4 +1,5 @@
 import { calendarMonthBoundsIso } from '@/lib/date/dateOnly';
+import { FINANCIAL_CRITERIA_APPROVAL } from '../financialMetrics/approvedCriteria';
 import type { Period } from '../financialMetrics/calendar';
 import { METRICS, POLICY_KEYS, type CoverageCause, type CoverageDiagnostic, type CoverageRequest,
   type Metric, type Observation } from './contract';
@@ -16,13 +17,12 @@ function baseCauses(): CoverageCause[] {
     prerequisite('METRIC_EVIDENCE_NOT_CERTIFIED', 'Este adaptador sólo diagnostica; no verifica certificados ni habilita importes del núcleo.', METRICS),
     prerequisite('HISTORY_INCOMPLETE', 'No se ha verificado apertura, eventos completos y reconstrucción histórica para el período y las tres mensualidades comparables.', EFFICIENCY),
     prerequisite('HISTORY_INCOMPLETE', 'No está verificada la población completa de saldos y vencimientos contractuales al corte solicitado.', ['aging']),
-    prerequisite('HISTORY_INCOMPLETE', 'No está verificada una serie completa de efectivo real para una ventana de consumo explícitamente aprobada.', ['runway']),
+    prerequisite('HISTORY_INCOMPLETE', 'No está verificada una serie completa de efectivo real para los tres meses completos cerrados aprobados.', ['runway']),
     prerequisite('COMMERCIAL_CLASSIFICATION_MISSING', 'Falta clasificación comercial y crédito de origen verificada; PPD, días de crédito y estado actual no la sustituyen.', EFFICIENCY),
     prerequisite('PRINCIPAL_AGENT_CLASSIFICATION_MISSING', 'No está verificada la separación entre fondos de terceros y operación propia.', METRICS),
-    prerequisite('TAX_ALLOCATION_POLICY_UNVERIFIED', 'Falta política aprobada y aplicaciones por base, impuestos y retenciones documentales.', EFFICIENCY),
-    prerequisite('FX_POLICY_UNVERIFIED', 'Política y linaje de moneda de las aplicaciones no verificados; no se infiere conversión ni consolidación.', EFFICIENCY),
-    prerequisite('BURN_POLICY_UNVERIFIED', 'Ventana y clasificación del consumo neto efectivo pendientes de aprobación verificable.', ['runway']),
-    prerequisite('AVAILABLE_CASH_POLICY_UNVERIFIED', 'Perímetro de caja disponible y restricciones pendientes de aprobación verificable.', CASH),
+    prerequisite('TAX_COMPONENTS_UNVERIFIED', 'Faltan aplicaciones documentadas por base, impuestos y retenciones; la política aprobada excluye el prorrateo automático.', EFFICIENCY),
+    prerequisite('CURRENCY_LINEAGE_UNVERIFIED', 'Falta verificar el linaje de aplicaciones en moneda documental; la política aprobada excluye consolidación automática.', EFFICIENCY),
+    prerequisite('OPERATING_CASH_CLASSIFICATION_MISSING', 'Falta evidencia de flujos operativos propios completos en tres meses cerrados, separando inversión, financiación y terceros.', ['runway']),
     prerequisite('CREDIT_NOTE_BASE_COVERAGE_UNVERIFIED', 'Los conteos observados no certifican bases y aplicaciones netas de todas las notas del período.', EFFICIENCY),
     prerequisite('CASH_NOT_RECONCILED', 'Faltan extractos, cobertura y conciliación verificadas al corte; la marca Conciliado y el campo saldo no son certificados.', CASH),
     prerequisite('CASH_AVAILABILITY_UNVERIFIED', 'No se han verificado saldos disponibles y restricciones al corte.', CASH),
@@ -50,15 +50,16 @@ function comparisonPeriods(selectedMonth: string): Period[] {
   return periods;
 }
 function closingCauses(request: CoverageRequest, periods: readonly Period[], observations: readonly Observation[]): CoverageCause[] {
-  const causes = [prerequisite('CLOSE_NOT_VERIFIED', 'Una configuración observada no acredita cierre aprobado e histórico de todos los períodos.', EFFICIENCY)];
+  const affected: readonly Metric[] = [...EFFICIENCY, 'runway'];
+  const causes = [prerequisite('CLOSE_NOT_VERIFIED', 'Una configuración observada no acredita cierre aprobado e histórico de los tres períodos.', affected)];
   const lastEnd = periods[periods.length - 1].end;
-  if (lastEnd >= request.asOf) causes.push({ code: 'PERIOD_NOT_CLOSED', detail: 'El mes seleccionado no ha terminado antes del corte.', basis: 'observed-gap', affects: EFFICIENCY });
+  if (lastEnd >= request.asOf) causes.push({ code: 'PERIOD_NOT_CLOSED', detail: 'El mes seleccionado no ha terminado antes del corte.', basis: 'observed-gap', affects: affected });
   const close = observations.find((row) => row.queryId === '04-close-history' && row.businessDate === request.asOf);
   if (close?.counts.close_config_rows === 0) causes.push({ code: 'CLOSE_NOT_CONFIGURED', detail: 'No se observó configuración de cierre en esta lectura.',
-    basis: 'observed-gap', affects: EFFICIENCY, queryId: close.queryId, rowIndex: close.rowIndex });
+    basis: 'observed-gap', affects: affected, queryId: close.queryId, rowIndex: close.rowIndex });
   const through = close?.dates.configured_close_through;
   if (through && through < lastEnd) causes.push({ code: 'PERIOD_NOT_CLOSED', detail: 'La configuración observada de cierre no cubre el mes solicitado.',
-    basis: 'observed-gap', affects: EFFICIENCY, queryId: close.queryId, rowIndex: close.rowIndex });
+    basis: 'observed-gap', affects: affected, queryId: close.queryId, rowIndex: close.rowIndex });
   return causes;
 }
 function rowCause(row: Observation, code: CoverageCause['code'], detail: string, affects: readonly Metric[]): CoverageCause {
@@ -94,7 +95,7 @@ function metricStatus(metric: Metric, causes: readonly CoverageCause[]): Coverag
 function output(request: CoverageRequest | null, periods: readonly Period[], inventory: ParsedInventory, causes: CoverageCause[]): CoverageDiagnostic {
   return { version: 'coverage-observation-v1', status: 'unavailable', numericEligible: false, certification: 'not-evaluated',
     request, comparisonPeriods: periods, readingWindow: readingWindow(inventory.observedAt), observations: inventory.observations,
-    sources: inventory.sources, causes, policies: POLICY_KEYS.map((key) => ({ key, status: 'approval-unverified' })),
+    sources: inventory.sources, causes, policies: POLICY_KEYS.map((key) => ({ key, status: 'approved', approvedAt: FINANCIAL_CRITERIA_APPROVAL.approvedAt })),
     metrics: { dso: metricStatus('dso', causes), dpo: metricStatus('dpo', causes), aging: metricStatus('aging', causes),
       forecast13Weeks: metricStatus('forecast13Weeks', causes), runway: metricStatus('runway', causes) } };
 }

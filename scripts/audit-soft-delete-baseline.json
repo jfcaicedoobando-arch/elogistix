@@ -7,7 +7,6 @@
     "src/features/cotizacion/services/datosFiscalesProspecto.ts::crm_oportunidades",
     "src/features/cotizacion/services/envios.ts::clientes",
     "src/features/cxp/services/facturasEntrantesCaptura.ts::embarque_facturas_entrantes",
-    "src/features/cxp/services/pagoProveedorMovimiento.ts::cuentas_bancarias",
     "src/features/cxp/services/pagoProveedorMovimiento.ts::proveedor_facturas",
     "src/features/cxp/services/pagosProveedor.ts::proveedor_facturas",
     "src/features/cxp/services/programarPagoProveedor.ts::proveedor_facturas",
