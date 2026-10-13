@@ -5,6 +5,7 @@
  * Conversión a MXN usando tipo_cambio_usd / tipo_cambio_eur del embarque.
  */
 import currency from "currency.js";
+import { normalizeKey, resolverModoColumna } from "./estadoResultadosConceptos";
 import type { ExclusionTcER, ValuacionER } from "./valuacion";
 import { calcularMargen } from "@/lib/financial/financialUtils";
 import { convertirMxn } from "@/lib/financial/convertir";
@@ -56,33 +57,6 @@ export interface EstadoResultados {
 }
 
 const emptyModos = (): Record<ModoColumna, number> => ({ "Marítimo": 0, "Aéreo": 0, "Terrestre": 0, "Otros": 0 });
-
-/**
- * Mapea el `modo` crudo del embarque a una columna del EERR. Cualquier
- * modo no reconocido (Multimodal, vacío, mayúsculas, con acentos raros)
- * cae a "Otros" para que sus conceptos NO se pierdan silenciosamente —
- * antes eran descartados y hacían que "Utilidad operativa" no cuadrara
- * con "Ingresos del periodo".
- */
-function resolverModoColumna(modo: string): ModoColumna {
-  const raw = (modo ?? "").trim();
-  if (raw === "Marítimo" || raw === "Aéreo" || raw === "Terrestre") return raw;
-  return "Otros";
-}
-
-/**
- * Clave canónica para colapsar filas del pivot. Ignora acentos, colapsa
- * espacios múltiples y normaliza mayúsculas — evita que "Flete Marítimo"
- * y "Flete Maritimo" o "THC" y "THC  " aparezcan como filas separadas.
- */
-function normalizeKey(desc: string): string {
-  return (desc ?? "")
-    .normalize("NFD")
-    .replace(/\p{Diacritic}/gu, "")
-    .replace(/\s+/g, " ")
-    .trim()
-    .toLowerCase();
-}
 
 const emptyModosCurrency = (): Record<ModoColumna, currency.Any> => ({
   "Marítimo": currency(0, { precision: 2 }),
