@@ -25,3 +25,5 @@
 
 
 - CxP: la tolerancia inclusiva de 0.01 requiere cobertura financiera neta positiva; el cierre detecta deuda íntegra por factura antes del reparto. Why: no confundir deuda pequeña sin aplicaciones con redondeo, sin alterar históricos por barrido.
+
+- Catálogos globales: anon no tiene privilegios sobre planes/navieras/puertos/tipos_contenedor/tipos_cambio_dof; authenticated conserva CRUD RLS sólo en los primeros cuatro y SELECT en DOF. Planes comunes filtran activo IS TRUE; super_admin conserva inactivos y RPC manual DOF. Why: quitar privilegios fuera de RLS sin romper la administración existente ni la lectura global operativa. Aplicación remota exige envelope revisado y aprobación específica.

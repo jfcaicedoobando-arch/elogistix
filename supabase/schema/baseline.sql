@@ -39040,7 +39040,7 @@ CREATE POLICY "Anyone can insert demo leads" ON public.demo_leads FOR INSERT TO 
 CREATE POLICY "Autenticados pueden leer navieras" ON public.navieras FOR SELECT TO authenticated USING (true);
 CREATE POLICY "Autenticados pueden leer puertos" ON public.puertos FOR SELECT TO authenticated USING (true);
 CREATE POLICY "Autenticados pueden leer tipos_contenedor" ON public.tipos_contenedor FOR SELECT TO authenticated USING (true);
-CREATE POLICY "Authenticated read planes" ON public.planes FOR SELECT TO authenticated USING (true);
+CREATE POLICY "Authenticated read planes" ON public.planes FOR SELECT TO authenticated USING ((activo IS TRUE));
 CREATE POLICY "Author update crm_comentarios_oportunidad" ON public.crm_comentarios_oportunidad FOR UPDATE TO authenticated USING (((autor_id = ( SELECT auth.uid() AS uid)) AND (organization_id = ( SELECT public.current_user_org_id() AS current_user_org_id)))) WITH CHECK (((autor_id = ( SELECT auth.uid() AS uid)) AND (organization_id = ( SELECT public.current_user_org_id() AS current_user_org_id))));
 CREATE POLICY "Autor borra conceptos entrante" ON public.embarque_facturas_entrantes_conceptos FOR DELETE TO authenticated USING ((((organization_id = public.current_user_org_id()) OR ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'super_admin'::public.app_role) AS has_role)) AND (EXISTS ( SELECT 1
    FROM public.embarque_facturas_entrantes e
@@ -40822,10 +40822,8 @@ GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.costeo_tarifa_recargos TO auth
 GRANT ALL ON TABLE public.costeo_tarifa_recargos TO service_role;
 GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.navieras TO authenticated;
 GRANT ALL ON TABLE public.navieras TO service_role;
-GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.puertos TO anon;
 GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.puertos TO authenticated;
 GRANT ALL ON TABLE public.puertos TO service_role;
-GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.tipos_contenedor TO anon;
 GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.tipos_contenedor TO authenticated;
 GRANT ALL ON TABLE public.tipos_contenedor TO service_role;
 GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.costeo_tarifas_vigentes_v TO authenticated;
@@ -41939,7 +41937,6 @@ GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.pagos_factura_lote TO authenti
 GRANT ALL ON TABLE public.pagos_factura_lote TO service_role;
 GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.pagos_proveedor_lote TO authenticated;
 GRANT ALL ON TABLE public.pagos_proveedor_lote TO service_role;
-GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.planes TO anon;
 GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.planes TO authenticated;
 GRANT ALL ON TABLE public.planes TO service_role;
 GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.presupuesto_categorias TO authenticated;
@@ -41977,7 +41974,7 @@ GRANT ALL ON TABLE public.super_admin_org_activa TO service_role;
 GRANT ALL ON TABLE public.suppressed_emails TO service_role;
 GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.suppressed_emails TO anon;
 GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.suppressed_emails TO authenticated;
-GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.tipos_cambio_dof TO authenticated;
+GRANT SELECT ON TABLE public.tipos_cambio_dof TO authenticated;
 GRANT ALL ON TABLE public.tipos_cambio_dof TO service_role;
 GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.tracking_externo TO authenticated;
 GRANT ALL ON TABLE public.tracking_externo TO service_role;

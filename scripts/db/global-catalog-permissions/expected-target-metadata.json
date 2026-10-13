@@ -1,0 +1,2601 @@
+{
+  "app_roles": [
+    "admin",
+    "operador",
+    "viewer",
+    "super_admin",
+    "cliente",
+    "vendedor",
+    "admin_org",
+    "gerente_operaciones",
+    "coordinador_logistico",
+    "ejecutivo_pricing",
+    "contador",
+    "tesorero",
+    "customer_service",
+    "gerente_visor",
+    "gerente_comercial",
+    "auxiliar_contable",
+    "ejecutivo_cobranza",
+    "agente_carga"
+  ],
+  "context": {
+    "current_user": "postgres",
+    "schemas": [
+      "pg_catalog",
+      "public",
+      "extensions"
+    ],
+    "search_path": "\"\\$user\", public, extensions",
+    "server_version_num": "170006"
+  },
+  "dependent_views": [
+    {
+      "acl": "{postgres=arwdDxtm/postgres,anon=arwdDxtm/postgres,authenticated=arwdDxtm/postgres,service_role=arwdDxtm/postgres,sandbox_exec=ar/postgres}",
+      "definition": " SELECT t.id,\n    t.organization_id,\n    t.agente_id,\n    a.nombre AS agente_nombre,\n    a.dias_credito,\n    t.naviera_id,\n    n.name AS naviera_nombre,\n    t.ruta_id,\n    r.puerto_origen_id,\n    r.puerto_destino_id,\n    po.name AS puerto_origen_nombre,\n    pd.name AS puerto_destino_nombre,\n    t.tipo_contenedor_id,\n    tc.name AS tipo_contenedor_nombre,\n    t.moneda,\n    t.flete_base,\n    COALESCE(( SELECT sum(rc.monto) AS sum\n           FROM costeo_tarifa_recargos rc\n          WHERE rc.tarifa_id = t.id AND rc.incluido_en_total), 0::numeric) AS recargos_total,\n    t.flete_base + COALESCE(( SELECT sum(rc.monto) AS sum\n           FROM costeo_tarifa_recargos rc\n          WHERE rc.tarifa_id = t.id AND rc.incluido_en_total), 0::numeric) AS total_comparable,\n    t.dias_libres_demoras,\n    t.transit_time_dias,\n    t.vigente_desde,\n    t.vigente_hasta,\n    t.estado,\n    nc.id AS naviera_condicion_id,\n    COALESCE(nc.tiene_carta_garantia, false) AS naviera_tiene_carta_garantia,\n    nc.carta_garantia_vigente_hasta AS naviera_carta_garantia_vigente_hasta,\n    nc.tiene_carta_garantia = true AND nc.carta_garantia_vigente_hasta IS NOT NULL AND nc.carta_garantia_vigente_hasta >= (now() AT TIME ZONE 'America/Mexico_City'::text)::date AS naviera_carta_garantia_activa,\n    nc.dias_libres_demoras_default AS naviera_dias_libres_default,\n    demora.monto_por_dia AS naviera_demora_dia_6,\n    t.dias_libres_almacenaje_lcl,\n    COALESCE(t.frecuencia_override, nc.frecuencia) AS frecuencia_resuelta,\n    nc.frecuencia AS naviera_frecuencia,\n    t.frecuencia_override AS tarifa_frecuencia_override,\n    po.code AS puerto_origen_code,\n    po.country AS puerto_origen_country,\n    pd.code AS puerto_destino_code,\n    pd.country AS puerto_destino_country,\n    demora.moneda AS naviera_demora_moneda,\n    demora.desde_dia AS naviera_demora_desde_dia,\n    demora.hasta_dia AS naviera_demora_hasta_dia\n   FROM costeo_tarifas t\n     JOIN costeo_agentes a ON a.id = t.agente_id\n     JOIN navieras n ON n.id = t.naviera_id\n     JOIN costeo_rutas r ON r.id = t.ruta_id\n     JOIN puertos po ON po.id = r.puerto_origen_id\n     JOIN puertos pd ON pd.id = r.puerto_destino_id\n     JOIN tipos_contenedor tc ON tc.id = t.tipo_contenedor_id\n     LEFT JOIN costeo_navieras_condiciones nc ON nc.naviera_id = t.naviera_id AND nc.organization_id = t.organization_id\n     LEFT JOIN LATERAL ( SELECT dt.monto_por_dia,\n            dt.moneda,\n            dt.desde_dia,\n            dt.hasta_dia\n           FROM costeo_naviera_demoras_tarifa dt\n          WHERE dt.naviera_condicion_id = nc.id AND dt.tipo_contenedor_id = t.tipo_contenedor_id AND dt.desde_dia <= 6 AND (dt.hasta_dia IS NULL OR dt.hasta_dia >= 6)\n          ORDER BY dt.desde_dia DESC\n         LIMIT 1) demora ON true\n  WHERE t.estado_aprobacion = 'vigente'::text AND t.estado = 'vigente'::text AND a.activo = true AND (t.vigente_hasta IS NULL OR t.vigente_hasta >= (now() AT TIME ZONE 'America/Mexico_City'::text)::date);",
+      "name": "public.costeo_tarifas_vigentes_v",
+      "options": [
+        "security_invoker=on"
+      ],
+      "owner": "postgres"
+    }
+  ],
+  "event_triggers": [
+    {
+      "enabled": "O",
+      "event": "sql_drop",
+      "function": "CREATE OR REPLACE FUNCTION extensions.set_graphql_placeholder()\n RETURNS event_trigger\n LANGUAGE plpgsql\n SET search_path TO ''\nAS $function$\n    DECLARE\n    graphql_is_dropped bool;\n    BEGIN\n    graphql_is_dropped = (\n        SELECT ev.schema_name = 'graphql_public'\n        FROM pg_event_trigger_dropped_objects() AS ev\n        WHERE ev.schema_name = 'graphql_public'\n    );\n\n    IF graphql_is_dropped\n    THEN\n        create or replace function graphql_public.graphql(\n            \"operationName\" text default null,\n            query text default null,\n            variables jsonb default null,\n            extensions jsonb default null\n        )\n            returns jsonb\n            language plpgsql\n            set search_path to ''\n        as $$\n            DECLARE\n                server_version float;\n            BEGIN\n                server_version = (SELECT (SPLIT_PART((select version()), ' ', 2))::float);\n\n                IF server_version >= 14 THEN\n                    RETURN jsonb_build_object(\n                        'errors', jsonb_build_array(\n                            jsonb_build_object(\n                                'message', 'pg_graphql extension is not enabled.'\n                            )\n                        )\n                    );\n                ELSE\n                    RETURN jsonb_build_object(\n                        'errors', jsonb_build_array(\n                            jsonb_build_object(\n                                'message', 'pg_graphql is only available on projects running Postgres 14 onwards.'\n                            )\n                        )\n                    );\n                END IF;\n            END;\n        $$;\n    END IF;\n\n    END;\n$function$\n",
+      "function_acl": "{=X/supabase_admin,supabase_admin=X/supabase_admin,postgres=X*/supabase_admin}",
+      "function_owner": "supabase_admin",
+      "name": "issue_graphql_placeholder",
+      "owner": "supabase_admin",
+      "tags": [
+        "DROP EXTENSION"
+      ]
+    },
+    {
+      "enabled": "O",
+      "event": "ddl_command_end",
+      "function": "CREATE OR REPLACE FUNCTION extensions.grant_pg_cron_access()\n RETURNS event_trigger\n LANGUAGE plpgsql\n SET search_path TO ''\nAS $function$\nBEGIN\n  IF EXISTS (\n    SELECT\n    FROM pg_event_trigger_ddl_commands() AS ev\n    JOIN pg_extension AS ext\n    ON ev.objid = ext.oid\n    WHERE ext.extname = 'pg_cron'\n  )\n  THEN\n    grant usage on schema cron to postgres with grant option;\n\n    alter default privileges in schema cron grant all on tables to postgres with grant option;\n    alter default privileges in schema cron grant all on functions to postgres with grant option;\n    alter default privileges in schema cron grant all on sequences to postgres with grant option;\n\n    alter default privileges for user supabase_admin in schema cron grant all\n        on sequences to postgres with grant option;\n    alter default privileges for user supabase_admin in schema cron grant all\n        on tables to postgres with grant option;\n    alter default privileges for user supabase_admin in schema cron grant all\n        on functions to postgres with grant option;\n\n    grant all privileges on all tables in schema cron to postgres with grant option;\n    revoke all on table cron.job from postgres;\n    grant select on table cron.job to postgres with grant option;\n    revoke trigger on cron.job_run_details from postgres;\n  END IF;\nEND;\n$function$\n",
+      "function_acl": "{=X/supabase_admin,supabase_admin=X*/supabase_admin,dashboard_user=X/supabase_admin}",
+      "function_owner": "supabase_admin",
+      "name": "issue_pg_cron_access",
+      "owner": "supabase_admin",
+      "tags": [
+        "CREATE EXTENSION"
+      ]
+    },
+    {
+      "enabled": "O",
+      "event": "ddl_command_end",
+      "function": "CREATE OR REPLACE FUNCTION extensions.grant_pg_graphql_access()\n RETURNS event_trigger\n LANGUAGE plpgsql\n SET search_path TO ''\nAS $function$\nbegin\n    if not exists (\n        select 1\n        from pg_catalog.pg_event_trigger_ddl_commands() ev\n        join pg_catalog.pg_extension e on ev.objid = e.oid\n        where e.extname = 'pg_graphql'\n    ) then\n        return;\n    end if;\n\n    drop function if exists graphql_public.graphql;\n    create or replace function graphql_public.graphql(\n        \"operationName\" text default null,\n        query text default null,\n        variables jsonb default null,\n        extensions jsonb default null\n    )\n        returns jsonb\n        language sql\n    as $$\n        select graphql.resolve(\n            query := query,\n            variables := coalesce(variables, '{}'),\n            \"operationName\" := \"operationName\",\n            extensions := extensions\n        );\n    $$;\n\n    -- Attach the wrapper to the extension so DROP EXTENSION cascades to it,\n    -- which in turn triggers set_graphql_placeholder to reinstall the \"not enabled\" stub.\n    alter extension pg_graphql add function graphql_public.graphql(text, text, jsonb, jsonb);\n\n    grant usage on schema graphql to postgres, anon, authenticated, service_role;\n    grant execute on function graphql.resolve to postgres, anon, authenticated, service_role;\n    grant usage on schema graphql to postgres with grant option;\n    grant usage on schema graphql_public to postgres with grant option;\nend;\n$function$\n",
+      "function_acl": "{=X/supabase_admin,supabase_admin=X/supabase_admin,postgres=X*/supabase_admin}",
+      "function_owner": "supabase_admin",
+      "name": "issue_pg_graphql_access",
+      "owner": "supabase_admin",
+      "tags": [
+        "CREATE FUNCTION"
+      ]
+    },
+    {
+      "enabled": "O",
+      "event": "ddl_command_end",
+      "function": "CREATE OR REPLACE FUNCTION extensions.grant_pg_net_access()\n RETURNS event_trigger\n LANGUAGE plpgsql\n SET search_path TO ''\nAS $function$\nBEGIN\n  IF EXISTS (\n    SELECT 1\n    FROM pg_event_trigger_ddl_commands() AS ev\n    JOIN pg_extension AS ext\n    ON ev.objid = ext.oid\n    WHERE ext.extname = 'pg_net'\n  )\n  THEN\n    IF NOT EXISTS (\n      SELECT 1\n      FROM pg_roles\n      WHERE rolname = 'supabase_functions_admin'\n    )\n    THEN\n      CREATE USER supabase_functions_admin NOINHERIT CREATEROLE LOGIN NOREPLICATION;\n    END IF;\n\n    GRANT USAGE ON SCHEMA net TO supabase_functions_admin, postgres, anon, authenticated, service_role;\n\n    IF EXISTS (\n      SELECT FROM pg_extension\n      WHERE extname = 'pg_net'\n      -- all versions in use on existing projects as of 2025-02-20\n      -- version 0.12.0 onwards don't need these applied\n      AND extversion IN ('0.2', '0.6', '0.7', '0.7.1', '0.8.0', '0.10.0', '0.11.0')\n    ) THEN\n      ALTER function net.http_get(url text, params jsonb, headers jsonb, timeout_milliseconds integer) SECURITY DEFINER;\n      ALTER function net.http_post(url text, body jsonb, params jsonb, headers jsonb, timeout_milliseconds integer) SECURITY DEFINER;\n\n      ALTER function net.http_get(url text, params jsonb, headers jsonb, timeout_milliseconds integer) SET search_path = net;\n      ALTER function net.http_post(url text, body jsonb, params jsonb, headers jsonb, timeout_milliseconds integer) SET search_path = net;\n\n      REVOKE ALL ON FUNCTION net.http_get(url text, params jsonb, headers jsonb, timeout_milliseconds integer) FROM PUBLIC;\n      REVOKE ALL ON FUNCTION net.http_post(url text, body jsonb, params jsonb, headers jsonb, timeout_milliseconds integer) FROM PUBLIC;\n\n      GRANT EXECUTE ON FUNCTION net.http_get(url text, params jsonb, headers jsonb, timeout_milliseconds integer) TO supabase_functions_admin, postgres, anon, authenticated, service_role;\n      GRANT EXECUTE ON FUNCTION net.http_post(url text, body jsonb, params jsonb, headers jsonb, timeout_milliseconds integer) TO supabase_functions_admin, postgres, anon, authenticated, service_role;\n    END IF;\n  END IF;\nEND;\n$function$\n",
+      "function_acl": "{=X/supabase_admin,supabase_admin=X*/supabase_admin,dashboard_user=X/supabase_admin}",
+      "function_owner": "supabase_admin",
+      "name": "issue_pg_net_access",
+      "owner": "supabase_admin",
+      "tags": [
+        "CREATE EXTENSION"
+      ]
+    },
+    {
+      "enabled": "O",
+      "event": "ddl_command_end",
+      "function": "CREATE OR REPLACE FUNCTION extensions.pgrst_ddl_watch()\n RETURNS event_trigger\n LANGUAGE plpgsql\n SET search_path TO ''\nAS $function$\nDECLARE\n  cmd record;\nBEGIN\n  FOR cmd IN SELECT * FROM pg_event_trigger_ddl_commands()\n  LOOP\n    IF cmd.command_tag IN (\n      'CREATE SCHEMA', 'ALTER SCHEMA'\n    , 'CREATE TABLE', 'CREATE TABLE AS', 'SELECT INTO', 'ALTER TABLE'\n    , 'CREATE FOREIGN TABLE', 'ALTER FOREIGN TABLE'\n    , 'CREATE VIEW', 'ALTER VIEW'\n    , 'CREATE MATERIALIZED VIEW', 'ALTER MATERIALIZED VIEW'\n    , 'CREATE FUNCTION', 'ALTER FUNCTION'\n    , 'CREATE TRIGGER'\n    , 'CREATE TYPE', 'ALTER TYPE'\n    , 'CREATE RULE'\n    , 'COMMENT'\n    )\n    -- don't notify in case of CREATE TEMP table or other objects created on pg_temp\n    AND cmd.schema_name is distinct from 'pg_temp'\n    THEN\n      NOTIFY pgrst, 'reload schema';\n    END IF;\n  END LOOP;\nEND; $function$\n",
+      "function_acl": "{=X/supabase_admin,supabase_admin=X/supabase_admin,postgres=X*/supabase_admin}",
+      "function_owner": "supabase_admin",
+      "name": "pgrst_ddl_watch",
+      "owner": "supabase_admin",
+      "tags": null
+    },
+    {
+      "enabled": "O",
+      "event": "sql_drop",
+      "function": "CREATE OR REPLACE FUNCTION extensions.pgrst_drop_watch()\n RETURNS event_trigger\n LANGUAGE plpgsql\n SET search_path TO ''\nAS $function$\nDECLARE\n  obj record;\nBEGIN\n  FOR obj IN SELECT * FROM pg_event_trigger_dropped_objects()\n  LOOP\n    IF obj.object_type IN (\n      'schema'\n    , 'table'\n    , 'foreign table'\n    , 'view'\n    , 'materialized view'\n    , 'function'\n    , 'trigger'\n    , 'type'\n    , 'rule'\n    )\n    AND obj.is_temporary IS false -- no pg_temp objects\n    THEN\n      NOTIFY pgrst, 'reload schema';\n    END IF;\n  END LOOP;\nEND; $function$\n",
+      "function_acl": "{=X/supabase_admin,supabase_admin=X/supabase_admin,postgres=X*/supabase_admin}",
+      "function_owner": "supabase_admin",
+      "name": "pgrst_drop_watch",
+      "owner": "supabase_admin",
+      "tags": null
+    }
+  ],
+  "functions": [
+    {
+      "acl": "{=X/supabase_auth_admin,supabase_auth_admin=X/supabase_auth_admin,dashboard_user=X/supabase_auth_admin}",
+      "args": "",
+      "definition": "CREATE OR REPLACE FUNCTION auth.uid()\n RETURNS uuid\n LANGUAGE sql\n STABLE\nAS $function$\n  select \n  coalesce(\n    nullif(current_setting('request.jwt.claim.sub', true), ''),\n    (nullif(current_setting('request.jwt.claims', true), '')::jsonb ->> 'sub')\n  )::uuid\n$function$\n",
+      "name": "uid",
+      "owner": "supabase_auth_admin",
+      "schema": "auth"
+    },
+    {
+      "acl": "{postgres=X/postgres,authenticated=X/postgres,service_role=X/postgres}",
+      "args": "",
+      "definition": "CREATE OR REPLACE FUNCTION public.current_user_org_id()\n RETURNS uuid\n LANGUAGE sql\n STABLE SECURITY DEFINER\n SET search_path TO 'public'\nAS $function$\n  SELECT CASE\n    WHEN public.has_role(auth.uid(), 'super_admin'::app_role)\n      THEN COALESCE(\n             (SELECT s.organization_id FROM public.super_admin_org_activa s\n               WHERE s.user_id = auth.uid()),\n             public.default_user_org_id())\n    ELSE public.default_user_org_id()\n  END;\n$function$\n",
+      "name": "current_user_org_id",
+      "owner": "postgres",
+      "schema": "public"
+    },
+    {
+      "acl": "{postgres=X/postgres,authenticated=X/postgres,service_role=X/postgres}",
+      "args": "",
+      "definition": "CREATE OR REPLACE FUNCTION public.default_user_org_id()\n RETURNS uuid\n LANGUAGE plpgsql\n STABLE SECURITY DEFINER\n SET search_path TO 'public'\nAS $function$\nDECLARE\n  v_uid uuid := auth.uid();\n  v_count int;\n  v_org uuid;\nBEGIN\n  IF v_uid IS NULL THEN RETURN NULL; END IF;\n\n  SELECT count(*) INTO v_count FROM public.organization_members WHERE user_id = v_uid;\n  IF v_count = 0 THEN RETURN NULL; END IF;\n\n  IF v_count = 1 THEN\n    SELECT organization_id INTO v_org FROM public.organization_members WHERE user_id = v_uid;\n    RETURN v_org;\n  END IF;\n\n  SELECT m.organization_id INTO v_org\n  FROM public.organization_members m\n  LEFT JOIN public.organizations o ON o.id = m.organization_id\n  WHERE m.user_id = v_uid\n  ORDER BY\n    (CASE WHEN EXISTS (SELECT 1 FROM public.embarques e WHERE e.organization_id = m.organization_id)\n            OR EXISTS (SELECT 1 FROM public.cotizaciones c WHERE c.organization_id = m.organization_id)\n          THEN 0 ELSE 1 END) ASC,\n    (CASE WHEN coalesce(o.nombre, '') ILIKE '%demo%' THEN 1 ELSE 0 END) ASC,\n    m.created_at ASC,\n    m.organization_id ASC\n  LIMIT 1;\n\n  RETURN v_org;\nEND;\n$function$\n",
+      "name": "default_user_org_id",
+      "owner": "postgres",
+      "schema": "public"
+    },
+    {
+      "acl": "{postgres=X/postgres,authenticated=X/postgres,service_role=X/postgres}",
+      "args": "",
+      "definition": "CREATE OR REPLACE FUNCTION public.get_user_context()\n RETURNS jsonb\n LANGUAGE sql\n STABLE SECURITY DEFINER\n SET search_path TO 'public'\nAS $function$\n  SELECT jsonb_build_object(\n    'role', (\n      SELECT role::text FROM public.user_roles\n      WHERE user_id = auth.uid()\n      ORDER BY CASE role::text\n        WHEN 'super_admin' THEN 1 WHEN 'admin_org' THEN 2 WHEN 'admin' THEN 3\n        WHEN 'gerente_operaciones' THEN 4 WHEN 'contador' THEN 5 WHEN 'tesorero' THEN 6\n        WHEN 'ejecutivo_pricing' THEN 7 WHEN 'coordinador_logistico' THEN 8\n        WHEN 'operador' THEN 9 WHEN 'vendedor' THEN 10 WHEN 'customer_service' THEN 11\n        WHEN 'viewer' THEN 12 WHEN 'cliente' THEN 13 ELSE 99\n      END LIMIT 1\n    ),\n    'orgRole', (\n      SELECT role::text FROM public.organization_members\n      WHERE user_id = auth.uid()\n      ORDER BY CASE role::text\n        WHEN 'super_admin' THEN 1 WHEN 'admin_org' THEN 2 WHEN 'admin' THEN 3\n        WHEN 'gerente_operaciones' THEN 4 WHEN 'contador' THEN 5 WHEN 'tesorero' THEN 6\n        WHEN 'ejecutivo_pricing' THEN 7 WHEN 'coordinador_logistico' THEN 8\n        WHEN 'operador' THEN 9 WHEN 'vendedor' THEN 10 WHEN 'customer_service' THEN 11\n        WHEN 'viewer' THEN 12 WHEN 'cliente' THEN 13 ELSE 99\n      END LIMIT 1\n    ),\n    'organizationId', public.default_user_org_id(),\n    'organization', (\n      SELECT jsonb_build_object(\n        'id', o.id, 'nombre', o.nombre, 'logo_url', o.logo_url, 'plan', o.plan,\n        'rfc', o.rfc, 'activo', o.activo,\n        'direccion', o.direccion,\n        'moneda_preferida', o.moneda_preferida,\n        'onboarding_completado', o.onboarding_completado\n      )\n      FROM public.organizations o\n      WHERE o.id = public.default_user_org_id()\n    )\n  );\n$function$\n",
+      "name": "get_user_context",
+      "owner": "postgres",
+      "schema": "public"
+    },
+    {
+      "acl": "{postgres=X/postgres,authenticated=X/postgres,service_role=X/postgres,anon=X/postgres}",
+      "args": "_user_id uuid, _role app_role",
+      "definition": "CREATE OR REPLACE FUNCTION public.has_role(_user_id uuid, _role app_role)\n RETURNS boolean\n LANGUAGE sql\n STABLE SECURITY DEFINER\n SET search_path TO 'public'\nAS $function$\n  SELECT EXISTS (\n    SELECT 1 FROM public.user_roles ur\n    WHERE ur.user_id = _user_id\n      AND ur.role = ANY (public.roles_jerarquia(_role))\n  )\n$function$\n",
+      "name": "has_role",
+      "owner": "postgres",
+      "schema": "public"
+    },
+    {
+      "acl": "{postgres=X/postgres,authenticated=X/postgres,service_role=X/postgres,anon=X/postgres}",
+      "args": "_role app_role",
+      "definition": "CREATE OR REPLACE FUNCTION public.roles_jerarquia(_role app_role)\n RETURNS app_role[]\n LANGUAGE sql\n IMMUTABLE\n SET search_path TO 'public'\nAS $function$\n  SELECT CASE _role\n    WHEN 'super_admin'::app_role THEN ARRAY['super_admin']::app_role[]\n    WHEN 'admin'::app_role THEN ARRAY['admin','admin_org','super_admin']::app_role[]\n    WHEN 'admin_org'::app_role THEN ARRAY['admin_org','super_admin']::app_role[]\n    WHEN 'operador'::app_role THEN ARRAY['operador','coordinador_logistico','gerente_operaciones','admin','admin_org','super_admin']::app_role[]\n    WHEN 'viewer'::app_role THEN ARRAY['viewer','customer_service','vendedor','contador','tesorero','auxiliar_contable','ejecutivo_cobranza','ejecutivo_pricing','gerente_operaciones','gerente_visor','gerente_comercial','coordinador_logistico','admin','admin_org','super_admin']::app_role[]\n    WHEN 'vendedor'::app_role THEN ARRAY['vendedor','gerente_comercial','admin_org','super_admin']::app_role[]\n    WHEN 'contador'::app_role THEN ARRAY['contador','auxiliar_contable','admin_org','super_admin']::app_role[]\n    WHEN 'tesorero'::app_role THEN ARRAY['tesorero','admin_org','super_admin']::app_role[]\n    WHEN 'auxiliar_contable'::app_role THEN ARRAY['auxiliar_contable','contador','admin_org','super_admin']::app_role[]\n    WHEN 'ejecutivo_cobranza'::app_role THEN ARRAY['ejecutivo_cobranza','contador','admin_org','super_admin']::app_role[]\n    ELSE ARRAY[_role]::app_role[]\n  END\n$function$\n",
+      "name": "roles_jerarquia",
+      "owner": "postgres",
+      "schema": "public"
+    },
+    {
+      "acl": "{postgres=X/postgres,authenticated=X/postgres,service_role=X/postgres}",
+      "args": "_fecha date, _usd numeric, _eur numeric",
+      "definition": "CREATE OR REPLACE FUNCTION public.tc_dof_upsert_manual(_fecha date, _usd numeric, _eur numeric DEFAULT NULL::numeric)\n RETURNS void\n LANGUAGE plpgsql\n SECURITY DEFINER\n SET search_path TO 'public'\nAS $function$\nDECLARE\n  v_uid uuid := auth.uid();\n  v_previo record;\n  v_email text;\nBEGIN\n  IF NOT public.has_role(v_uid, 'super_admin'::app_role) THEN\n    RAISE EXCEPTION 'LC_TC_DOF_FORBIDDEN: el tipo de cambio DOF es un cat\u00e1logo global de la plataforma; s\u00f3lo un super administrador puede capturarlo'\n      USING ERRCODE = '42501';\n  END IF;\n\n  IF _usd IS NULL OR _usd <= 0 THEN\n    RAISE EXCEPTION 'LC_TC_DOF_INVALIDO: el tipo de cambio USD debe ser mayor a cero'\n      USING ERRCODE = '22023';\n  END IF;\n\n  IF _fecha IS NULL OR _fecha > CURRENT_DATE THEN\n    RAISE EXCEPTION 'LC_TC_DOF_FECHA_INVALIDA: la fecha del tipo de cambio no puede ser futura'\n      USING ERRCODE = '22023';\n  END IF;\n\n  SELECT fecha, usd_mxn, eur_mxn INTO v_previo\n  FROM public.tipos_cambio_dof WHERE fecha = _fecha;\n\n  INSERT INTO public.tipos_cambio_dof (fecha, usd_mxn, eur_mxn, fuente, origen)\n  VALUES (_fecha, _usd, NULLIF(_eur, 0), 'banxico_sie', 'manual')\n  ON CONFLICT (fecha) DO UPDATE\n    SET usd_mxn = EXCLUDED.usd_mxn,\n        eur_mxn = COALESCE(EXCLUDED.eur_mxn, public.tipos_cambio_dof.eur_mxn),\n        origen  = 'manual',\n        updated_at = now();\n\n  BEGIN\n    SELECT email INTO v_email FROM auth.users WHERE id = v_uid;\n    INSERT INTO public.bitacora_actividad\n      (organization_id, usuario_id, usuario_email, modulo, accion, entidad_id, entidad_nombre, detalles)\n    VALUES (\n      public.current_user_org_id(), v_uid, COALESCE(v_email, ''),\n      'catalogos', 'tc_dof_upsert_manual', NULL, _fecha::text,\n      jsonb_build_object(\n        'fecha', _fecha,\n        'usd_mxn', _usd,\n        'eur_mxn', NULLIF(_eur, 0),\n        'usd_mxn_previo', v_previo.usd_mxn,\n        'eur_mxn_previo', v_previo.eur_mxn,\n        'alcance', 'global_plataforma'\n      )\n    );\n  EXCEPTION WHEN OTHERS THEN\n    RAISE WARNING 'bitacora insert failed en tc_dof_upsert_manual: % %', SQLSTATE, SQLERRM;\n  END;\nEND;\n$function$\n",
+      "name": "tc_dof_upsert_manual",
+      "owner": "postgres",
+      "schema": "public"
+    }
+  ],
+  "incoming_foreign_keys": [
+    {
+      "definition": "FOREIGN KEY (naviera_id) REFERENCES navieras(id) ON DELETE RESTRICT",
+      "name": "costeo_cargos_locales_naviera_naviera_id_fkey",
+      "source": "public.costeo_cargos_locales_naviera",
+      "validated": true
+    },
+    {
+      "definition": "FOREIGN KEY (tipo_contenedor_id) REFERENCES tipos_contenedor(id)",
+      "name": "costeo_demoras_venta_tarifa_tipo_contenedor_id_fkey",
+      "source": "public.costeo_demoras_venta_tarifa",
+      "validated": true
+    },
+    {
+      "definition": "FOREIGN KEY (tipo_contenedor_id) REFERENCES tipos_contenedor(id)",
+      "name": "costeo_naviera_demoras_tarifa_tipo_contenedor_id_fkey",
+      "source": "public.costeo_naviera_demoras_tarifa",
+      "validated": true
+    },
+    {
+      "definition": "FOREIGN KEY (naviera_id) REFERENCES navieras(id) ON DELETE RESTRICT",
+      "name": "costeo_navieras_condiciones_naviera_id_fkey",
+      "source": "public.costeo_navieras_condiciones",
+      "validated": true
+    },
+    {
+      "definition": "FOREIGN KEY (puerto_destino_id) REFERENCES puertos(id)",
+      "name": "costeo_rutas_puerto_destino_id_fkey",
+      "source": "public.costeo_rutas",
+      "validated": true
+    },
+    {
+      "definition": "FOREIGN KEY (puerto_origen_id) REFERENCES puertos(id)",
+      "name": "costeo_rutas_puerto_origen_id_fkey",
+      "source": "public.costeo_rutas",
+      "validated": true
+    },
+    {
+      "definition": "FOREIGN KEY (naviera_id) REFERENCES navieras(id)",
+      "name": "costeo_tarifas_naviera_id_fkey",
+      "source": "public.costeo_tarifas",
+      "validated": true
+    },
+    {
+      "definition": "FOREIGN KEY (tipo_contenedor_id) REFERENCES tipos_contenedor(id)",
+      "name": "costeo_tarifas_tipo_contenedor_id_fkey",
+      "source": "public.costeo_tarifas",
+      "validated": true
+    },
+    {
+      "definition": "FOREIGN KEY (naviera_id) REFERENCES navieras(id) ON DELETE SET NULL",
+      "name": "cotizaciones_naviera_id_fkey",
+      "source": "public.cotizaciones",
+      "validated": true
+    },
+    {
+      "definition": "FOREIGN KEY (puerto_destino_id) REFERENCES puertos(id) ON DELETE SET NULL",
+      "name": "cotizaciones_puerto_destino_id_fkey",
+      "source": "public.cotizaciones",
+      "validated": true
+    },
+    {
+      "definition": "FOREIGN KEY (puerto_origen_id) REFERENCES puertos(id) ON DELETE SET NULL",
+      "name": "cotizaciones_puerto_origen_id_fkey",
+      "source": "public.cotizaciones",
+      "validated": true
+    },
+    {
+      "definition": "FOREIGN KEY (puerto_destino_id) REFERENCES puertos(id) ON DELETE SET NULL",
+      "name": "crm_oportunidades_puerto_destino_id_fkey",
+      "source": "public.crm_oportunidades",
+      "validated": true
+    },
+    {
+      "definition": "FOREIGN KEY (puerto_origen_id) REFERENCES puertos(id) ON DELETE SET NULL",
+      "name": "crm_oportunidades_puerto_origen_id_fkey",
+      "source": "public.crm_oportunidades",
+      "validated": true
+    },
+    {
+      "definition": "FOREIGN KEY (naviera_id) REFERENCES navieras(id) ON DELETE RESTRICT",
+      "name": "crm_pricing_opciones_naviera_id_fkey",
+      "source": "public.crm_pricing_opciones",
+      "validated": true
+    },
+    {
+      "definition": "FOREIGN KEY (naviera_id) REFERENCES navieras(id) ON DELETE SET NULL",
+      "name": "embarque_garantias_contenedor_naviera_id_fkey",
+      "source": "public.embarque_garantias_contenedor",
+      "validated": true
+    },
+    {
+      "definition": "FOREIGN KEY (naviera_id) REFERENCES navieras(id) ON DELETE SET NULL",
+      "name": "embarques_naviera_id_fkey",
+      "source": "public.embarques",
+      "validated": true
+    },
+    {
+      "definition": "FOREIGN KEY (puerto_destino_id) REFERENCES puertos(id) ON DELETE SET NULL",
+      "name": "embarques_puerto_destino_id_fkey",
+      "source": "public.embarques",
+      "validated": true
+    },
+    {
+      "definition": "FOREIGN KEY (puerto_origen_id) REFERENCES puertos(id) ON DELETE SET NULL",
+      "name": "embarques_puerto_origen_id_fkey",
+      "source": "public.embarques",
+      "validated": true
+    }
+  ],
+  "ledger": {
+    "apply_version": "20261013040000",
+    "rollback_version": "20261013040001",
+    "rows": [
+      {
+        "created_by": null,
+        "rollback": null,
+        "version": "20261013040000",
+        "idempotency_key": null,
+        "statements": [
+          "-- 13.824.75: privilegios m\u00ednimos de cinco cat\u00e1logos globales.\n-- Payload can\u00f3nico para replay transaccional; no incluye registro de ledger.\n-- Aplicaci\u00f3n remota s\u00f3lo mediante envelope fail-closed revisado y aprobaci\u00f3n espec\u00edfica.\n\n-- anon no tiene pol\u00edticas aplicables. Se retiran ocho privilegios de tabla.\nREVOKE ALL PRIVILEGES ON TABLE\n  public.planes,\n  public.navieras,\n  public.puertos,\n  public.tipos_contenedor,\n  public.tipos_cambio_dof\nFROM anon;\n\n-- Mantener SELECT/INSERT/UPDATE/DELETE para la administraci\u00f3n RLS existente.\nREVOKE TRUNCATE, REFERENCES, TRIGGER, MAINTAIN ON TABLE\n  public.planes,\n  public.navieras,\n  public.puertos,\n  public.tipos_contenedor,\n  public.tipos_cambio_dof\nFROM authenticated;\n\n-- DOF se escribe mediante cron service_role o RPC SECURITY DEFINER con guard.\nREVOKE INSERT, UPDATE, DELETE ON TABLE public.tipos_cambio_dof\nFROM authenticated;\n\n-- ALTER conserva la pol\u00edtica ALL separada del super_admin y su OR permisivo.\nALTER POLICY \"Authenticated read planes\" ON public.planes\n  USING (activo IS TRUE);\n"
+        ],
+        "name": "global_catalog_permission_hardening"
+      }
+    ]
+  },
+  "memberships": [
+    {
+      "admin": true,
+      "grantor": "supabase_admin",
+      "inherit": true,
+      "member": "postgres",
+      "role": "anon",
+      "set": true
+    },
+    {
+      "admin": true,
+      "grantor": "supabase_admin",
+      "inherit": true,
+      "member": "postgres",
+      "role": "authenticated",
+      "set": true
+    },
+    {
+      "admin": true,
+      "grantor": "supabase_admin",
+      "inherit": true,
+      "member": "postgres",
+      "role": "authenticator",
+      "set": true
+    },
+    {
+      "admin": true,
+      "grantor": "supabase_admin",
+      "inherit": true,
+      "member": "postgres",
+      "role": "pg_create_subscription",
+      "set": true
+    },
+    {
+      "admin": true,
+      "grantor": "supabase_admin",
+      "inherit": true,
+      "member": "postgres",
+      "role": "pg_monitor",
+      "set": true
+    },
+    {
+      "admin": true,
+      "grantor": "supabase_admin",
+      "inherit": true,
+      "member": "postgres",
+      "role": "pg_read_all_data",
+      "set": true
+    },
+    {
+      "admin": true,
+      "grantor": "supabase_admin",
+      "inherit": true,
+      "member": "postgres",
+      "role": "pg_signal_backend",
+      "set": true
+    },
+    {
+      "admin": true,
+      "grantor": "supabase_admin",
+      "inherit": false,
+      "member": "postgres",
+      "role": "sandbox_exec",
+      "set": false
+    },
+    {
+      "admin": true,
+      "grantor": "supabase_admin",
+      "inherit": true,
+      "member": "postgres",
+      "role": "service_role",
+      "set": true
+    },
+    {
+      "admin": false,
+      "grantor": "supabase_admin",
+      "inherit": true,
+      "member": "postgres",
+      "role": "supabase_privileged_role",
+      "set": true
+    }
+  ],
+  "roles": [
+    {
+      "bypass_rls": false,
+      "can_login": false,
+      "config": [
+        "statement_timeout=3s"
+      ],
+      "create_db": false,
+      "create_role": false,
+      "inherit": true,
+      "name": "anon",
+      "replication": false,
+      "superuser": false
+    },
+    {
+      "bypass_rls": false,
+      "can_login": false,
+      "config": [
+        "statement_timeout=8s"
+      ],
+      "create_db": false,
+      "create_role": false,
+      "inherit": true,
+      "name": "authenticated",
+      "replication": false,
+      "superuser": false
+    },
+    {
+      "bypass_rls": true,
+      "can_login": true,
+      "config": [
+        "search_path=\"\\$user\", public, extensions"
+      ],
+      "create_db": true,
+      "create_role": true,
+      "inherit": true,
+      "name": "postgres",
+      "replication": true,
+      "superuser": false
+    },
+    {
+      "bypass_rls": true,
+      "can_login": true,
+      "config": null,
+      "create_db": false,
+      "create_role": false,
+      "inherit": true,
+      "name": "sandbox_exec",
+      "replication": false,
+      "superuser": false
+    },
+    {
+      "bypass_rls": true,
+      "can_login": false,
+      "config": null,
+      "create_db": false,
+      "create_role": false,
+      "inherit": true,
+      "name": "service_role",
+      "replication": false,
+      "superuser": false
+    }
+  ],
+  "tables": [
+    {
+      "acl": [
+        {
+          "grantable": false,
+          "grantee": "authenticated",
+          "grantor": "postgres",
+          "privilege": "DELETE"
+        },
+        {
+          "grantable": false,
+          "grantee": "authenticated",
+          "grantor": "postgres",
+          "privilege": "INSERT"
+        },
+        {
+          "grantable": false,
+          "grantee": "authenticated",
+          "grantor": "postgres",
+          "privilege": "SELECT"
+        },
+        {
+          "grantable": false,
+          "grantee": "authenticated",
+          "grantor": "postgres",
+          "privilege": "UPDATE"
+        },
+        {
+          "grantable": false,
+          "grantee": "postgres",
+          "grantor": "postgres",
+          "privilege": "DELETE"
+        },
+        {
+          "grantable": false,
+          "grantee": "postgres",
+          "grantor": "postgres",
+          "privilege": "INSERT"
+        },
+        {
+          "grantable": false,
+          "grantee": "postgres",
+          "grantor": "postgres",
+          "privilege": "MAINTAIN"
+        },
+        {
+          "grantable": false,
+          "grantee": "postgres",
+          "grantor": "postgres",
+          "privilege": "REFERENCES"
+        },
+        {
+          "grantable": false,
+          "grantee": "postgres",
+          "grantor": "postgres",
+          "privilege": "SELECT"
+        },
+        {
+          "grantable": false,
+          "grantee": "postgres",
+          "grantor": "postgres",
+          "privilege": "TRIGGER"
+        },
+        {
+          "grantable": false,
+          "grantee": "postgres",
+          "grantor": "postgres",
+          "privilege": "TRUNCATE"
+        },
+        {
+          "grantable": false,
+          "grantee": "postgres",
+          "grantor": "postgres",
+          "privilege": "UPDATE"
+        },
+        {
+          "grantable": false,
+          "grantee": "sandbox_exec",
+          "grantor": "postgres",
+          "privilege": "INSERT"
+        },
+        {
+          "grantable": false,
+          "grantee": "sandbox_exec",
+          "grantor": "postgres",
+          "privilege": "SELECT"
+        },
+        {
+          "grantable": false,
+          "grantee": "service_role",
+          "grantor": "postgres",
+          "privilege": "DELETE"
+        },
+        {
+          "grantable": false,
+          "grantee": "service_role",
+          "grantor": "postgres",
+          "privilege": "INSERT"
+        },
+        {
+          "grantable": false,
+          "grantee": "service_role",
+          "grantor": "postgres",
+          "privilege": "MAINTAIN"
+        },
+        {
+          "grantable": false,
+          "grantee": "service_role",
+          "grantor": "postgres",
+          "privilege": "REFERENCES"
+        },
+        {
+          "grantable": false,
+          "grantee": "service_role",
+          "grantor": "postgres",
+          "privilege": "SELECT"
+        },
+        {
+          "grantable": false,
+          "grantee": "service_role",
+          "grantor": "postgres",
+          "privilege": "TRIGGER"
+        },
+        {
+          "grantable": false,
+          "grantee": "service_role",
+          "grantor": "postgres",
+          "privilege": "TRUNCATE"
+        },
+        {
+          "grantable": false,
+          "grantee": "service_role",
+          "grantor": "postgres",
+          "privilege": "UPDATE"
+        }
+      ],
+      "columns": [
+        {
+          "acl": [],
+          "default": "gen_random_uuid()",
+          "generated": "",
+          "identity": "",
+          "name": "id",
+          "not_null": true,
+          "number": 1,
+          "type": "uuid"
+        },
+        {
+          "acl": [],
+          "default": null,
+          "generated": "",
+          "identity": "",
+          "name": "code",
+          "not_null": true,
+          "number": 2,
+          "type": "text"
+        },
+        {
+          "acl": [],
+          "default": null,
+          "generated": "",
+          "identity": "",
+          "name": "name",
+          "not_null": true,
+          "number": 3,
+          "type": "text"
+        },
+        {
+          "acl": [],
+          "default": "true",
+          "generated": "",
+          "identity": "",
+          "name": "activo",
+          "not_null": true,
+          "number": 4,
+          "type": "boolean"
+        },
+        {
+          "acl": [],
+          "default": "now()",
+          "generated": "",
+          "identity": "",
+          "name": "created_at",
+          "not_null": true,
+          "number": 5,
+          "type": "timestamp with time zone"
+        },
+        {
+          "acl": [],
+          "default": null,
+          "generated": "",
+          "identity": "",
+          "name": "tracking_url_template",
+          "not_null": false,
+          "number": 6,
+          "type": "text"
+        }
+      ],
+      "constraints": [
+        {
+          "deferrable": false,
+          "definition": "UNIQUE (code)",
+          "initially_deferred": false,
+          "name": "navieras_code_key",
+          "type": "u",
+          "validated": true
+        },
+        {
+          "deferrable": false,
+          "definition": "CHECK (code ~ '^[A-Z]{4}$'::text) NOT VALID",
+          "initially_deferred": false,
+          "name": "navieras_code_scac_format",
+          "type": "c",
+          "validated": false
+        },
+        {
+          "deferrable": false,
+          "definition": "PRIMARY KEY (id)",
+          "initially_deferred": false,
+          "name": "navieras_pkey",
+          "type": "p",
+          "validated": true
+        }
+      ],
+      "force_rls": false,
+      "kind": "r",
+      "name": "navieras",
+      "options": null,
+      "owner": "postgres",
+      "policies": [
+        {
+          "check": null,
+          "command": "r",
+          "name": "Autenticados pueden leer navieras",
+          "permissive": true,
+          "roles": [
+            "authenticated"
+          ],
+          "using": "true"
+        },
+        {
+          "check": "( SELECT has_role(( SELECT auth.uid() AS uid), 'super_admin'::app_role) AS has_role)",
+          "command": "*",
+          "name": "Super admin CRUD navieras",
+          "permissive": true,
+          "roles": [
+            "authenticated"
+          ],
+          "using": "( SELECT has_role(( SELECT auth.uid() AS uid), 'super_admin'::app_role) AS has_role)"
+        }
+      ],
+      "rls": true,
+      "rules": [],
+      "schema": "public",
+      "triggers": [
+        {
+          "definition": "CREATE TRIGGER trg_navieras_propaga_nombre AFTER UPDATE OF name ON navieras FOR EACH ROW EXECUTE FUNCTION trg_navieras_propaga_nombre()",
+          "enabled": "O",
+          "function_acl": "{postgres=X/postgres,authenticated=X/postgres,service_role=X/postgres}",
+          "function_definition": "CREATE OR REPLACE FUNCTION public.trg_navieras_propaga_nombre()\n RETURNS trigger\n LANGUAGE plpgsql\n SECURITY DEFINER\n SET search_path TO 'public'\nAS $function$\nBEGIN\n  IF NEW.name IS DISTINCT FROM OLD.name THEN\n    UPDATE public.embarques\n       SET naviera = NEW.name\n     WHERE naviera_id = NEW.id\n       AND naviera IS DISTINCT FROM NEW.name\n       AND estado::text <> 'Cerrado'\n       AND deleted_at IS NULL;\n  END IF;\n  RETURN NEW;\nEND;\n$function$\n",
+          "function_owner": "postgres",
+          "internal": false,
+          "name": "trg_navieras_propaga_nombre"
+        }
+      ]
+    },
+    {
+      "acl": [
+        {
+          "grantable": false,
+          "grantee": "anon",
+          "grantor": "postgres",
+          "privilege": "DELETE"
+        },
+        {
+          "grantable": false,
+          "grantee": "anon",
+          "grantor": "postgres",
+          "privilege": "INSERT"
+        },
+        {
+          "grantable": false,
+          "grantee": "anon",
+          "grantor": "postgres",
+          "privilege": "MAINTAIN"
+        },
+        {
+          "grantable": false,
+          "grantee": "anon",
+          "grantor": "postgres",
+          "privilege": "REFERENCES"
+        },
+        {
+          "grantable": false,
+          "grantee": "anon",
+          "grantor": "postgres",
+          "privilege": "SELECT"
+        },
+        {
+          "grantable": false,
+          "grantee": "anon",
+          "grantor": "postgres",
+          "privilege": "TRIGGER"
+        },
+        {
+          "grantable": false,
+          "grantee": "anon",
+          "grantor": "postgres",
+          "privilege": "TRUNCATE"
+        },
+        {
+          "grantable": false,
+          "grantee": "anon",
+          "grantor": "postgres",
+          "privilege": "UPDATE"
+        },
+        {
+          "grantable": false,
+          "grantee": "authenticated",
+          "grantor": "postgres",
+          "privilege": "DELETE"
+        },
+        {
+          "grantable": false,
+          "grantee": "authenticated",
+          "grantor": "postgres",
+          "privilege": "INSERT"
+        },
+        {
+          "grantable": false,
+          "grantee": "authenticated",
+          "grantor": "postgres",
+          "privilege": "MAINTAIN"
+        },
+        {
+          "grantable": false,
+          "grantee": "authenticated",
+          "grantor": "postgres",
+          "privilege": "REFERENCES"
+        },
+        {
+          "grantable": false,
+          "grantee": "authenticated",
+          "grantor": "postgres",
+          "privilege": "SELECT"
+        },
+        {
+          "grantable": false,
+          "grantee": "authenticated",
+          "grantor": "postgres",
+          "privilege": "TRIGGER"
+        },
+        {
+          "grantable": false,
+          "grantee": "authenticated",
+          "grantor": "postgres",
+          "privilege": "TRUNCATE"
+        },
+        {
+          "grantable": false,
+          "grantee": "authenticated",
+          "grantor": "postgres",
+          "privilege": "UPDATE"
+        },
+        {
+          "grantable": false,
+          "grantee": "postgres",
+          "grantor": "postgres",
+          "privilege": "DELETE"
+        },
+        {
+          "grantable": false,
+          "grantee": "postgres",
+          "grantor": "postgres",
+          "privilege": "INSERT"
+        },
+        {
+          "grantable": false,
+          "grantee": "postgres",
+          "grantor": "postgres",
+          "privilege": "MAINTAIN"
+        },
+        {
+          "grantable": false,
+          "grantee": "postgres",
+          "grantor": "postgres",
+          "privilege": "REFERENCES"
+        },
+        {
+          "grantable": false,
+          "grantee": "postgres",
+          "grantor": "postgres",
+          "privilege": "SELECT"
+        },
+        {
+          "grantable": false,
+          "grantee": "postgres",
+          "grantor": "postgres",
+          "privilege": "TRIGGER"
+        },
+        {
+          "grantable": false,
+          "grantee": "postgres",
+          "grantor": "postgres",
+          "privilege": "TRUNCATE"
+        },
+        {
+          "grantable": false,
+          "grantee": "postgres",
+          "grantor": "postgres",
+          "privilege": "UPDATE"
+        },
+        {
+          "grantable": false,
+          "grantee": "sandbox_exec",
+          "grantor": "postgres",
+          "privilege": "INSERT"
+        },
+        {
+          "grantable": false,
+          "grantee": "sandbox_exec",
+          "grantor": "postgres",
+          "privilege": "SELECT"
+        },
+        {
+          "grantable": false,
+          "grantee": "service_role",
+          "grantor": "postgres",
+          "privilege": "DELETE"
+        },
+        {
+          "grantable": false,
+          "grantee": "service_role",
+          "grantor": "postgres",
+          "privilege": "INSERT"
+        },
+        {
+          "grantable": false,
+          "grantee": "service_role",
+          "grantor": "postgres",
+          "privilege": "MAINTAIN"
+        },
+        {
+          "grantable": false,
+          "grantee": "service_role",
+          "grantor": "postgres",
+          "privilege": "REFERENCES"
+        },
+        {
+          "grantable": false,
+          "grantee": "service_role",
+          "grantor": "postgres",
+          "privilege": "SELECT"
+        },
+        {
+          "grantable": false,
+          "grantee": "service_role",
+          "grantor": "postgres",
+          "privilege": "TRIGGER"
+        },
+        {
+          "grantable": false,
+          "grantee": "service_role",
+          "grantor": "postgres",
+          "privilege": "TRUNCATE"
+        },
+        {
+          "grantable": false,
+          "grantee": "service_role",
+          "grantor": "postgres",
+          "privilege": "UPDATE"
+        }
+      ],
+      "columns": [
+        {
+          "acl": [],
+          "default": "gen_random_uuid()",
+          "generated": "",
+          "identity": "",
+          "name": "id",
+          "not_null": true,
+          "number": 1,
+          "type": "uuid"
+        },
+        {
+          "acl": [],
+          "default": null,
+          "generated": "",
+          "identity": "",
+          "name": "nombre",
+          "not_null": true,
+          "number": 2,
+          "type": "text"
+        },
+        {
+          "acl": [],
+          "default": "''::text",
+          "generated": "",
+          "identity": "",
+          "name": "rfc",
+          "not_null": false,
+          "number": 3,
+          "type": "text"
+        },
+        {
+          "acl": [],
+          "default": null,
+          "generated": "",
+          "identity": "",
+          "name": "logo_url",
+          "not_null": false,
+          "number": 4,
+          "type": "text"
+        },
+        {
+          "acl": [],
+          "default": "'basic'::text",
+          "generated": "",
+          "identity": "",
+          "name": "plan",
+          "not_null": false,
+          "number": 5,
+          "type": "text"
+        },
+        {
+          "acl": [],
+          "default": "true",
+          "generated": "",
+          "identity": "",
+          "name": "activo",
+          "not_null": false,
+          "number": 6,
+          "type": "boolean"
+        },
+        {
+          "acl": [],
+          "default": "now()",
+          "generated": "",
+          "identity": "",
+          "name": "created_at",
+          "not_null": false,
+          "number": 7,
+          "type": "timestamp with time zone"
+        },
+        {
+          "acl": [],
+          "default": "now()",
+          "generated": "",
+          "identity": "",
+          "name": "updated_at",
+          "not_null": false,
+          "number": 8,
+          "type": "timestamp with time zone"
+        },
+        {
+          "acl": [],
+          "default": null,
+          "generated": "",
+          "identity": "",
+          "name": "direccion",
+          "not_null": false,
+          "number": 9,
+          "type": "text"
+        },
+        {
+          "acl": [],
+          "default": "'MXN'::text",
+          "generated": "",
+          "identity": "",
+          "name": "moneda_preferida",
+          "not_null": true,
+          "number": 10,
+          "type": "text"
+        },
+        {
+          "acl": [],
+          "default": "false",
+          "generated": "",
+          "identity": "",
+          "name": "onboarding_completado",
+          "not_null": true,
+          "number": 11,
+          "type": "boolean"
+        },
+        {
+          "acl": [],
+          "default": null,
+          "generated": "",
+          "identity": "",
+          "name": "sat_barrido_fecha",
+          "not_null": false,
+          "number": 12,
+          "type": "timestamp with time zone"
+        }
+      ],
+      "constraints": [
+        {
+          "deferrable": false,
+          "definition": "CHECK (moneda_preferida = ANY (ARRAY['MXN'::text, 'USD'::text, 'EUR'::text]))",
+          "initially_deferred": false,
+          "name": "organizations_moneda_preferida_check",
+          "type": "c",
+          "validated": true
+        },
+        {
+          "deferrable": false,
+          "definition": "PRIMARY KEY (id)",
+          "initially_deferred": false,
+          "name": "organizations_pkey",
+          "type": "p",
+          "validated": true
+        }
+      ],
+      "force_rls": false,
+      "kind": "r",
+      "name": "organizations",
+      "options": null,
+      "owner": "postgres",
+      "policies": [
+        {
+          "check": null,
+          "command": "r",
+          "name": "Client read own org",
+          "permissive": true,
+          "roles": [
+            "authenticated"
+          ],
+          "using": "(( SELECT has_role(( SELECT auth.uid() AS uid), 'cliente'::app_role) AS has_role) AND (id IN ( SELECT client_users.organization_id\n   FROM client_users\n  WHERE (client_users.user_id = ( SELECT auth.uid() AS uid)))))"
+        },
+        {
+          "check": null,
+          "command": "r",
+          "name": "Members can read own org",
+          "permissive": true,
+          "roles": [
+            "authenticated"
+          ],
+          "using": "((id IN ( SELECT get_user_org_ids(( SELECT auth.uid() AS uid)) AS get_user_org_ids)) OR ( SELECT has_role(( SELECT auth.uid() AS uid), 'super_admin'::app_role) AS has_role))"
+        },
+        {
+          "check": "( SELECT has_role(( SELECT auth.uid() AS uid), 'super_admin'::app_role) AS has_role)",
+          "command": "*",
+          "name": "Super admins manage organizations",
+          "permissive": true,
+          "roles": [
+            "authenticated"
+          ],
+          "using": "( SELECT has_role(( SELECT auth.uid() AS uid), 'super_admin'::app_role) AS has_role)"
+        }
+      ],
+      "rls": true,
+      "rules": [],
+      "schema": "public",
+      "triggers": [
+        {
+          "definition": "CREATE TRIGGER trg_handle_new_organization AFTER INSERT ON organizations FOR EACH ROW EXECUTE FUNCTION handle_new_organization()",
+          "enabled": "O",
+          "function_acl": "{postgres=X/postgres,service_role=X/postgres,authenticated=X/postgres}",
+          "function_definition": "CREATE OR REPLACE FUNCTION public.handle_new_organization()\n RETURNS trigger\n LANGUAGE plpgsql\n SECURITY DEFINER\n SET search_path TO 'public'\nAS $function$\nDECLARE\n  v_rows integer;\nBEGIN\n  -- Serie de facturaci\u00f3n por defecto\n  INSERT INTO public.factura_series (organization_id, codigo, prefijo, folio_actual, folio_inicial, activa, es_default, descripcion)\n  VALUES (NEW.id, 'A', 'A', 0, 1, true, true, 'Serie por defecto')\n  ON CONFLICT DO NOTHING;\n  GET DIAGNOSTICS v_rows = ROW_COUNT;\n  PERFORM public._log_provisioning_step(NEW.id, 'trigger', 'seed_factura_series', 'factura_series', v_rows);\n\n  -- Pipeline CRM\n  INSERT INTO public.crm_etapas_pipeline (organization_id, nombre, orden, probabilidad_default, color, tipo)\n  VALUES\n    (NEW.id, 'Prospecto',    1, 10,  '#94a3b8', 'abierta'),\n    (NEW.id, 'Calificado',   2, 25,  '#38bdf8', 'abierta'),\n    (NEW.id, 'Propuesta',    3, 50,  '#6366f1', 'abierta'),\n    (NEW.id, 'Negociaci\u00f3n',  4, 75,  '#f59e0b', 'abierta'),\n    (NEW.id, 'Ganada',       5, 100, '#10b981', 'ganada'),\n    (NEW.id, 'Perdida',      6, 0,   '#ef4444', 'perdida')\n  ON CONFLICT DO NOTHING;\n  GET DIAGNOSTICS v_rows = ROW_COUNT;\n  PERFORM public._log_provisioning_step(NEW.id, 'trigger', 'seed_crm_etapas_pipeline', 'crm_etapas_pipeline', v_rows);\n\n  -- Motivos de p\u00e9rdida\n  INSERT INTO public.crm_motivos_perdida (organization_id, nombre)\n  VALUES\n    (NEW.id, 'Precio'),\n    (NEW.id, 'Tiempo de tr\u00e1nsito'),\n    (NEW.id, 'Competencia'),\n    (NEW.id, 'No responde'),\n    (NEW.id, 'Otro')\n  ON CONFLICT DO NOTHING;\n  GET DIAGNOSTICS v_rows = ROW_COUNT;\n  PERFORM public._log_provisioning_step(NEW.id, 'trigger', 'seed_crm_motivos_perdida', 'crm_motivos_perdida', v_rows);\n\n  -- Categor\u00edas de presupuesto\n  INSERT INTO public.presupuesto_categorias (organization_id, nombre, orden, tipo_contable)\n  VALUES\n    (NEW.id, 'Ventas',           1, 'Venta'),\n    (NEW.id, 'Costo directo',    2, 'CostoDirectoEmbarque'),\n    (NEW.id, 'Administraci\u00f3n',   3, 'Administracion')\n  ON CONFLICT DO NOTHING;\n  GET DIAGNOSTICS v_rows = ROW_COUNT;\n  PERFORM public._log_provisioning_step(NEW.id, 'trigger', 'seed_presupuesto_categorias', 'presupuesto_categorias', v_rows);\n\n  RETURN NEW;\nEND;\n$function$\n",
+          "function_owner": "postgres",
+          "internal": false,
+          "name": "trg_handle_new_organization"
+        },
+        {
+          "definition": "CREATE TRIGGER update_organizations_updated_at BEFORE UPDATE ON organizations FOR EACH ROW EXECUTE FUNCTION update_updated_at_column()",
+          "enabled": "O",
+          "function_acl": "{postgres=X/postgres,authenticated=X/postgres,service_role=X/postgres}",
+          "function_definition": "CREATE OR REPLACE FUNCTION public.update_updated_at_column()\n RETURNS trigger\n LANGUAGE plpgsql\n SET search_path TO 'public'\nAS $function$\nBEGIN\n  NEW.updated_at = now();\n  RETURN NEW;\nEND;\n$function$\n",
+          "function_owner": "postgres",
+          "internal": false,
+          "name": "update_organizations_updated_at"
+        }
+      ]
+    },
+    {
+      "acl": [
+        {
+          "grantable": false,
+          "grantee": "authenticated",
+          "grantor": "postgres",
+          "privilege": "DELETE"
+        },
+        {
+          "grantable": false,
+          "grantee": "authenticated",
+          "grantor": "postgres",
+          "privilege": "INSERT"
+        },
+        {
+          "grantable": false,
+          "grantee": "authenticated",
+          "grantor": "postgres",
+          "privilege": "SELECT"
+        },
+        {
+          "grantable": false,
+          "grantee": "authenticated",
+          "grantor": "postgres",
+          "privilege": "UPDATE"
+        },
+        {
+          "grantable": false,
+          "grantee": "postgres",
+          "grantor": "postgres",
+          "privilege": "DELETE"
+        },
+        {
+          "grantable": false,
+          "grantee": "postgres",
+          "grantor": "postgres",
+          "privilege": "INSERT"
+        },
+        {
+          "grantable": false,
+          "grantee": "postgres",
+          "grantor": "postgres",
+          "privilege": "MAINTAIN"
+        },
+        {
+          "grantable": false,
+          "grantee": "postgres",
+          "grantor": "postgres",
+          "privilege": "REFERENCES"
+        },
+        {
+          "grantable": false,
+          "grantee": "postgres",
+          "grantor": "postgres",
+          "privilege": "SELECT"
+        },
+        {
+          "grantable": false,
+          "grantee": "postgres",
+          "grantor": "postgres",
+          "privilege": "TRIGGER"
+        },
+        {
+          "grantable": false,
+          "grantee": "postgres",
+          "grantor": "postgres",
+          "privilege": "TRUNCATE"
+        },
+        {
+          "grantable": false,
+          "grantee": "postgres",
+          "grantor": "postgres",
+          "privilege": "UPDATE"
+        },
+        {
+          "grantable": false,
+          "grantee": "sandbox_exec",
+          "grantor": "postgres",
+          "privilege": "INSERT"
+        },
+        {
+          "grantable": false,
+          "grantee": "sandbox_exec",
+          "grantor": "postgres",
+          "privilege": "SELECT"
+        },
+        {
+          "grantable": false,
+          "grantee": "service_role",
+          "grantor": "postgres",
+          "privilege": "DELETE"
+        },
+        {
+          "grantable": false,
+          "grantee": "service_role",
+          "grantor": "postgres",
+          "privilege": "INSERT"
+        },
+        {
+          "grantable": false,
+          "grantee": "service_role",
+          "grantor": "postgres",
+          "privilege": "MAINTAIN"
+        },
+        {
+          "grantable": false,
+          "grantee": "service_role",
+          "grantor": "postgres",
+          "privilege": "REFERENCES"
+        },
+        {
+          "grantable": false,
+          "grantee": "service_role",
+          "grantor": "postgres",
+          "privilege": "SELECT"
+        },
+        {
+          "grantable": false,
+          "grantee": "service_role",
+          "grantor": "postgres",
+          "privilege": "TRIGGER"
+        },
+        {
+          "grantable": false,
+          "grantee": "service_role",
+          "grantor": "postgres",
+          "privilege": "TRUNCATE"
+        },
+        {
+          "grantable": false,
+          "grantee": "service_role",
+          "grantor": "postgres",
+          "privilege": "UPDATE"
+        }
+      ],
+      "columns": [
+        {
+          "acl": [],
+          "default": "gen_random_uuid()",
+          "generated": "",
+          "identity": "",
+          "name": "id",
+          "not_null": true,
+          "number": 1,
+          "type": "uuid"
+        },
+        {
+          "acl": [],
+          "default": null,
+          "generated": "",
+          "identity": "",
+          "name": "nombre",
+          "not_null": true,
+          "number": 2,
+          "type": "text"
+        },
+        {
+          "acl": [],
+          "default": "5",
+          "generated": "",
+          "identity": "",
+          "name": "max_usuarios",
+          "not_null": true,
+          "number": 3,
+          "type": "integer"
+        },
+        {
+          "acl": [],
+          "default": "100",
+          "generated": "",
+          "identity": "",
+          "name": "max_embarques_mes",
+          "not_null": true,
+          "number": 4,
+          "type": "integer"
+        },
+        {
+          "acl": [],
+          "default": "500",
+          "generated": "",
+          "identity": "",
+          "name": "almacenamiento_mb",
+          "not_null": true,
+          "number": 5,
+          "type": "integer"
+        },
+        {
+          "acl": [],
+          "default": "0",
+          "generated": "",
+          "identity": "",
+          "name": "precio_mensual",
+          "not_null": true,
+          "number": 6,
+          "type": "numeric"
+        },
+        {
+          "acl": [],
+          "default": "true",
+          "generated": "",
+          "identity": "",
+          "name": "activo",
+          "not_null": true,
+          "number": 7,
+          "type": "boolean"
+        },
+        {
+          "acl": [],
+          "default": "now()",
+          "generated": "",
+          "identity": "",
+          "name": "created_at",
+          "not_null": false,
+          "number": 8,
+          "type": "timestamp with time zone"
+        }
+      ],
+      "constraints": [
+        {
+          "deferrable": false,
+          "definition": "UNIQUE (nombre)",
+          "initially_deferred": false,
+          "name": "planes_nombre_key",
+          "type": "u",
+          "validated": true
+        },
+        {
+          "deferrable": false,
+          "definition": "PRIMARY KEY (id)",
+          "initially_deferred": false,
+          "name": "planes_pkey",
+          "type": "p",
+          "validated": true
+        }
+      ],
+      "force_rls": false,
+      "kind": "r",
+      "name": "planes",
+      "options": null,
+      "owner": "postgres",
+      "policies": [
+        {
+          "check": null,
+          "command": "r",
+          "name": "Authenticated read planes",
+          "permissive": true,
+          "roles": [
+            "authenticated"
+          ],
+          "using": "(activo IS TRUE)"
+        },
+        {
+          "check": "( SELECT has_role(( SELECT auth.uid() AS uid), 'super_admin'::app_role) AS has_role)",
+          "command": "*",
+          "name": "Super admin CRUD planes",
+          "permissive": true,
+          "roles": [
+            "authenticated"
+          ],
+          "using": "( SELECT has_role(( SELECT auth.uid() AS uid), 'super_admin'::app_role) AS has_role)"
+        }
+      ],
+      "rls": true,
+      "rules": [],
+      "schema": "public",
+      "triggers": []
+    },
+    {
+      "acl": [
+        {
+          "grantable": false,
+          "grantee": "authenticated",
+          "grantor": "postgres",
+          "privilege": "DELETE"
+        },
+        {
+          "grantable": false,
+          "grantee": "authenticated",
+          "grantor": "postgres",
+          "privilege": "INSERT"
+        },
+        {
+          "grantable": false,
+          "grantee": "authenticated",
+          "grantor": "postgres",
+          "privilege": "SELECT"
+        },
+        {
+          "grantable": false,
+          "grantee": "authenticated",
+          "grantor": "postgres",
+          "privilege": "UPDATE"
+        },
+        {
+          "grantable": false,
+          "grantee": "postgres",
+          "grantor": "postgres",
+          "privilege": "DELETE"
+        },
+        {
+          "grantable": false,
+          "grantee": "postgres",
+          "grantor": "postgres",
+          "privilege": "INSERT"
+        },
+        {
+          "grantable": false,
+          "grantee": "postgres",
+          "grantor": "postgres",
+          "privilege": "MAINTAIN"
+        },
+        {
+          "grantable": false,
+          "grantee": "postgres",
+          "grantor": "postgres",
+          "privilege": "REFERENCES"
+        },
+        {
+          "grantable": false,
+          "grantee": "postgres",
+          "grantor": "postgres",
+          "privilege": "SELECT"
+        },
+        {
+          "grantable": false,
+          "grantee": "postgres",
+          "grantor": "postgres",
+          "privilege": "TRIGGER"
+        },
+        {
+          "grantable": false,
+          "grantee": "postgres",
+          "grantor": "postgres",
+          "privilege": "TRUNCATE"
+        },
+        {
+          "grantable": false,
+          "grantee": "postgres",
+          "grantor": "postgres",
+          "privilege": "UPDATE"
+        },
+        {
+          "grantable": false,
+          "grantee": "sandbox_exec",
+          "grantor": "postgres",
+          "privilege": "INSERT"
+        },
+        {
+          "grantable": false,
+          "grantee": "sandbox_exec",
+          "grantor": "postgres",
+          "privilege": "SELECT"
+        },
+        {
+          "grantable": false,
+          "grantee": "service_role",
+          "grantor": "postgres",
+          "privilege": "DELETE"
+        },
+        {
+          "grantable": false,
+          "grantee": "service_role",
+          "grantor": "postgres",
+          "privilege": "INSERT"
+        },
+        {
+          "grantable": false,
+          "grantee": "service_role",
+          "grantor": "postgres",
+          "privilege": "MAINTAIN"
+        },
+        {
+          "grantable": false,
+          "grantee": "service_role",
+          "grantor": "postgres",
+          "privilege": "REFERENCES"
+        },
+        {
+          "grantable": false,
+          "grantee": "service_role",
+          "grantor": "postgres",
+          "privilege": "SELECT"
+        },
+        {
+          "grantable": false,
+          "grantee": "service_role",
+          "grantor": "postgres",
+          "privilege": "TRIGGER"
+        },
+        {
+          "grantable": false,
+          "grantee": "service_role",
+          "grantor": "postgres",
+          "privilege": "TRUNCATE"
+        },
+        {
+          "grantable": false,
+          "grantee": "service_role",
+          "grantor": "postgres",
+          "privilege": "UPDATE"
+        }
+      ],
+      "columns": [
+        {
+          "acl": [],
+          "default": "gen_random_uuid()",
+          "generated": "",
+          "identity": "",
+          "name": "id",
+          "not_null": true,
+          "number": 1,
+          "type": "uuid"
+        },
+        {
+          "acl": [],
+          "default": null,
+          "generated": "",
+          "identity": "",
+          "name": "code",
+          "not_null": true,
+          "number": 2,
+          "type": "text"
+        },
+        {
+          "acl": [],
+          "default": null,
+          "generated": "",
+          "identity": "",
+          "name": "name",
+          "not_null": true,
+          "number": 3,
+          "type": "text"
+        },
+        {
+          "acl": [],
+          "default": null,
+          "generated": "",
+          "identity": "",
+          "name": "country",
+          "not_null": true,
+          "number": 4,
+          "type": "text"
+        },
+        {
+          "acl": [],
+          "default": "true",
+          "generated": "",
+          "identity": "",
+          "name": "activo",
+          "not_null": true,
+          "number": 5,
+          "type": "boolean"
+        },
+        {
+          "acl": [],
+          "default": "now()",
+          "generated": "",
+          "identity": "",
+          "name": "created_at",
+          "not_null": true,
+          "number": 6,
+          "type": "timestamp with time zone"
+        }
+      ],
+      "constraints": [
+        {
+          "deferrable": false,
+          "definition": "UNIQUE (code)",
+          "initially_deferred": false,
+          "name": "puertos_code_key",
+          "type": "u",
+          "validated": true
+        },
+        {
+          "deferrable": false,
+          "definition": "PRIMARY KEY (id)",
+          "initially_deferred": false,
+          "name": "puertos_pkey",
+          "type": "p",
+          "validated": true
+        }
+      ],
+      "force_rls": false,
+      "kind": "r",
+      "name": "puertos",
+      "options": null,
+      "owner": "postgres",
+      "policies": [
+        {
+          "check": null,
+          "command": "r",
+          "name": "Autenticados pueden leer puertos",
+          "permissive": true,
+          "roles": [
+            "authenticated"
+          ],
+          "using": "true"
+        },
+        {
+          "check": "( SELECT has_role(( SELECT auth.uid() AS uid), 'super_admin'::app_role) AS has_role)",
+          "command": "*",
+          "name": "Super admin CRUD puertos",
+          "permissive": true,
+          "roles": [
+            "authenticated"
+          ],
+          "using": "( SELECT has_role(( SELECT auth.uid() AS uid), 'super_admin'::app_role) AS has_role)"
+        }
+      ],
+      "rls": true,
+      "rules": [],
+      "schema": "public",
+      "triggers": []
+    },
+    {
+      "acl": [
+        {
+          "grantable": false,
+          "grantee": "postgres",
+          "grantor": "postgres",
+          "privilege": "DELETE"
+        },
+        {
+          "grantable": false,
+          "grantee": "postgres",
+          "grantor": "postgres",
+          "privilege": "INSERT"
+        },
+        {
+          "grantable": false,
+          "grantee": "postgres",
+          "grantor": "postgres",
+          "privilege": "MAINTAIN"
+        },
+        {
+          "grantable": false,
+          "grantee": "postgres",
+          "grantor": "postgres",
+          "privilege": "REFERENCES"
+        },
+        {
+          "grantable": false,
+          "grantee": "postgres",
+          "grantor": "postgres",
+          "privilege": "SELECT"
+        },
+        {
+          "grantable": false,
+          "grantee": "postgres",
+          "grantor": "postgres",
+          "privilege": "TRIGGER"
+        },
+        {
+          "grantable": false,
+          "grantee": "postgres",
+          "grantor": "postgres",
+          "privilege": "TRUNCATE"
+        },
+        {
+          "grantable": false,
+          "grantee": "postgres",
+          "grantor": "postgres",
+          "privilege": "UPDATE"
+        }
+      ],
+      "columns": [
+        {
+          "acl": [],
+          "default": null,
+          "generated": "",
+          "identity": "",
+          "name": "version",
+          "not_null": true,
+          "number": 1,
+          "type": "text"
+        },
+        {
+          "acl": [],
+          "default": null,
+          "generated": "",
+          "identity": "",
+          "name": "statements",
+          "not_null": false,
+          "number": 2,
+          "type": "text[]"
+        },
+        {
+          "acl": [],
+          "default": null,
+          "generated": "",
+          "identity": "",
+          "name": "name",
+          "not_null": false,
+          "number": 3,
+          "type": "text"
+        },
+        {
+          "acl": [],
+          "default": null,
+          "generated": "",
+          "identity": "",
+          "name": "created_by",
+          "not_null": false,
+          "number": 4,
+          "type": "text"
+        },
+        {
+          "acl": [],
+          "default": null,
+          "generated": "",
+          "identity": "",
+          "name": "idempotency_key",
+          "not_null": false,
+          "number": 5,
+          "type": "text"
+        },
+        {
+          "acl": [],
+          "default": null,
+          "generated": "",
+          "identity": "",
+          "name": "rollback",
+          "not_null": false,
+          "number": 6,
+          "type": "text[]"
+        }
+      ],
+      "constraints": [
+        {
+          "deferrable": false,
+          "definition": "UNIQUE (idempotency_key)",
+          "initially_deferred": false,
+          "name": "schema_migrations_idempotency_key_key",
+          "type": "u",
+          "validated": true
+        },
+        {
+          "deferrable": false,
+          "definition": "PRIMARY KEY (version)",
+          "initially_deferred": false,
+          "name": "schema_migrations_pkey",
+          "type": "p",
+          "validated": true
+        }
+      ],
+      "force_rls": false,
+      "kind": "r",
+      "name": "schema_migrations",
+      "options": null,
+      "owner": "postgres",
+      "policies": [],
+      "rls": false,
+      "rules": [],
+      "schema": "supabase_migrations",
+      "triggers": []
+    },
+    {
+      "acl": [
+        {
+          "grantable": false,
+          "grantee": "authenticated",
+          "grantor": "postgres",
+          "privilege": "SELECT"
+        },
+        {
+          "grantable": false,
+          "grantee": "postgres",
+          "grantor": "postgres",
+          "privilege": "DELETE"
+        },
+        {
+          "grantable": false,
+          "grantee": "postgres",
+          "grantor": "postgres",
+          "privilege": "INSERT"
+        },
+        {
+          "grantable": false,
+          "grantee": "postgres",
+          "grantor": "postgres",
+          "privilege": "MAINTAIN"
+        },
+        {
+          "grantable": false,
+          "grantee": "postgres",
+          "grantor": "postgres",
+          "privilege": "REFERENCES"
+        },
+        {
+          "grantable": false,
+          "grantee": "postgres",
+          "grantor": "postgres",
+          "privilege": "SELECT"
+        },
+        {
+          "grantable": false,
+          "grantee": "postgres",
+          "grantor": "postgres",
+          "privilege": "TRIGGER"
+        },
+        {
+          "grantable": false,
+          "grantee": "postgres",
+          "grantor": "postgres",
+          "privilege": "TRUNCATE"
+        },
+        {
+          "grantable": false,
+          "grantee": "postgres",
+          "grantor": "postgres",
+          "privilege": "UPDATE"
+        },
+        {
+          "grantable": false,
+          "grantee": "sandbox_exec",
+          "grantor": "postgres",
+          "privilege": "INSERT"
+        },
+        {
+          "grantable": false,
+          "grantee": "sandbox_exec",
+          "grantor": "postgres",
+          "privilege": "SELECT"
+        },
+        {
+          "grantable": false,
+          "grantee": "service_role",
+          "grantor": "postgres",
+          "privilege": "DELETE"
+        },
+        {
+          "grantable": false,
+          "grantee": "service_role",
+          "grantor": "postgres",
+          "privilege": "INSERT"
+        },
+        {
+          "grantable": false,
+          "grantee": "service_role",
+          "grantor": "postgres",
+          "privilege": "MAINTAIN"
+        },
+        {
+          "grantable": false,
+          "grantee": "service_role",
+          "grantor": "postgres",
+          "privilege": "REFERENCES"
+        },
+        {
+          "grantable": false,
+          "grantee": "service_role",
+          "grantor": "postgres",
+          "privilege": "SELECT"
+        },
+        {
+          "grantable": false,
+          "grantee": "service_role",
+          "grantor": "postgres",
+          "privilege": "TRIGGER"
+        },
+        {
+          "grantable": false,
+          "grantee": "service_role",
+          "grantor": "postgres",
+          "privilege": "TRUNCATE"
+        },
+        {
+          "grantable": false,
+          "grantee": "service_role",
+          "grantor": "postgres",
+          "privilege": "UPDATE"
+        }
+      ],
+      "columns": [
+        {
+          "acl": [],
+          "default": null,
+          "generated": "",
+          "identity": "",
+          "name": "fecha",
+          "not_null": true,
+          "number": 1,
+          "type": "date"
+        },
+        {
+          "acl": [],
+          "default": null,
+          "generated": "",
+          "identity": "",
+          "name": "usd_mxn",
+          "not_null": true,
+          "number": 2,
+          "type": "numeric(12,4)"
+        },
+        {
+          "acl": [],
+          "default": null,
+          "generated": "",
+          "identity": "",
+          "name": "eur_mxn",
+          "not_null": false,
+          "number": 3,
+          "type": "numeric(12,4)"
+        },
+        {
+          "acl": [],
+          "default": "'banxico_sie'::text",
+          "generated": "",
+          "identity": "",
+          "name": "fuente",
+          "not_null": true,
+          "number": 4,
+          "type": "text"
+        },
+        {
+          "acl": [],
+          "default": "'cron'::text",
+          "generated": "",
+          "identity": "",
+          "name": "origen",
+          "not_null": true,
+          "number": 5,
+          "type": "text"
+        },
+        {
+          "acl": [],
+          "default": null,
+          "generated": "",
+          "identity": "",
+          "name": "fecha_publicacion_usd",
+          "not_null": false,
+          "number": 6,
+          "type": "date"
+        },
+        {
+          "acl": [],
+          "default": "now()",
+          "generated": "",
+          "identity": "",
+          "name": "created_at",
+          "not_null": true,
+          "number": 7,
+          "type": "timestamp with time zone"
+        },
+        {
+          "acl": [],
+          "default": "now()",
+          "generated": "",
+          "identity": "",
+          "name": "updated_at",
+          "not_null": true,
+          "number": 8,
+          "type": "timestamp with time zone"
+        }
+      ],
+      "constraints": [
+        {
+          "deferrable": false,
+          "definition": "CHECK (eur_mxn IS NULL OR eur_mxn > 0::numeric)",
+          "initially_deferred": false,
+          "name": "tipos_cambio_dof_eur_mxn_check",
+          "type": "c",
+          "validated": true
+        },
+        {
+          "deferrable": false,
+          "definition": "CHECK (origen = ANY (ARRAY['cron'::text, 'manual'::text]))",
+          "initially_deferred": false,
+          "name": "tipos_cambio_dof_origen_check",
+          "type": "c",
+          "validated": true
+        },
+        {
+          "deferrable": false,
+          "definition": "PRIMARY KEY (fecha)",
+          "initially_deferred": false,
+          "name": "tipos_cambio_dof_pkey",
+          "type": "p",
+          "validated": true
+        },
+        {
+          "deferrable": false,
+          "definition": "CHECK (usd_mxn > 0::numeric)",
+          "initially_deferred": false,
+          "name": "tipos_cambio_dof_usd_mxn_check",
+          "type": "c",
+          "validated": true
+        }
+      ],
+      "force_rls": false,
+      "kind": "r",
+      "name": "tipos_cambio_dof",
+      "options": null,
+      "owner": "postgres",
+      "policies": [
+        {
+          "check": "true",
+          "command": "*",
+          "name": "tc_dof_all_service_role",
+          "permissive": true,
+          "roles": [
+            "service_role"
+          ],
+          "using": "true"
+        },
+        {
+          "check": null,
+          "command": "r",
+          "name": "tc_dof_select_authenticated",
+          "permissive": true,
+          "roles": [
+            "authenticated"
+          ],
+          "using": "true"
+        }
+      ],
+      "rls": true,
+      "rules": [],
+      "schema": "public",
+      "triggers": [
+        {
+          "definition": "CREATE TRIGGER trg_tipos_cambio_dof_updated_at BEFORE UPDATE ON tipos_cambio_dof FOR EACH ROW EXECUTE FUNCTION update_updated_at_column()",
+          "enabled": "O",
+          "function_acl": "{postgres=X/postgres,authenticated=X/postgres,service_role=X/postgres}",
+          "function_definition": "CREATE OR REPLACE FUNCTION public.update_updated_at_column()\n RETURNS trigger\n LANGUAGE plpgsql\n SET search_path TO 'public'\nAS $function$\nBEGIN\n  NEW.updated_at = now();\n  RETURN NEW;\nEND;\n$function$\n",
+          "function_owner": "postgres",
+          "internal": false,
+          "name": "trg_tipos_cambio_dof_updated_at"
+        }
+      ]
+    },
+    {
+      "acl": [
+        {
+          "grantable": false,
+          "grantee": "authenticated",
+          "grantor": "postgres",
+          "privilege": "DELETE"
+        },
+        {
+          "grantable": false,
+          "grantee": "authenticated",
+          "grantor": "postgres",
+          "privilege": "INSERT"
+        },
+        {
+          "grantable": false,
+          "grantee": "authenticated",
+          "grantor": "postgres",
+          "privilege": "SELECT"
+        },
+        {
+          "grantable": false,
+          "grantee": "authenticated",
+          "grantor": "postgres",
+          "privilege": "UPDATE"
+        },
+        {
+          "grantable": false,
+          "grantee": "postgres",
+          "grantor": "postgres",
+          "privilege": "DELETE"
+        },
+        {
+          "grantable": false,
+          "grantee": "postgres",
+          "grantor": "postgres",
+          "privilege": "INSERT"
+        },
+        {
+          "grantable": false,
+          "grantee": "postgres",
+          "grantor": "postgres",
+          "privilege": "MAINTAIN"
+        },
+        {
+          "grantable": false,
+          "grantee": "postgres",
+          "grantor": "postgres",
+          "privilege": "REFERENCES"
+        },
+        {
+          "grantable": false,
+          "grantee": "postgres",
+          "grantor": "postgres",
+          "privilege": "SELECT"
+        },
+        {
+          "grantable": false,
+          "grantee": "postgres",
+          "grantor": "postgres",
+          "privilege": "TRIGGER"
+        },
+        {
+          "grantable": false,
+          "grantee": "postgres",
+          "grantor": "postgres",
+          "privilege": "TRUNCATE"
+        },
+        {
+          "grantable": false,
+          "grantee": "postgres",
+          "grantor": "postgres",
+          "privilege": "UPDATE"
+        },
+        {
+          "grantable": false,
+          "grantee": "sandbox_exec",
+          "grantor": "postgres",
+          "privilege": "INSERT"
+        },
+        {
+          "grantable": false,
+          "grantee": "sandbox_exec",
+          "grantor": "postgres",
+          "privilege": "SELECT"
+        },
+        {
+          "grantable": false,
+          "grantee": "service_role",
+          "grantor": "postgres",
+          "privilege": "DELETE"
+        },
+        {
+          "grantable": false,
+          "grantee": "service_role",
+          "grantor": "postgres",
+          "privilege": "INSERT"
+        },
+        {
+          "grantable": false,
+          "grantee": "service_role",
+          "grantor": "postgres",
+          "privilege": "MAINTAIN"
+        },
+        {
+          "grantable": false,
+          "grantee": "service_role",
+          "grantor": "postgres",
+          "privilege": "REFERENCES"
+        },
+        {
+          "grantable": false,
+          "grantee": "service_role",
+          "grantor": "postgres",
+          "privilege": "SELECT"
+        },
+        {
+          "grantable": false,
+          "grantee": "service_role",
+          "grantor": "postgres",
+          "privilege": "TRIGGER"
+        },
+        {
+          "grantable": false,
+          "grantee": "service_role",
+          "grantor": "postgres",
+          "privilege": "TRUNCATE"
+        },
+        {
+          "grantable": false,
+          "grantee": "service_role",
+          "grantor": "postgres",
+          "privilege": "UPDATE"
+        }
+      ],
+      "columns": [
+        {
+          "acl": [],
+          "default": "gen_random_uuid()",
+          "generated": "",
+          "identity": "",
+          "name": "id",
+          "not_null": true,
+          "number": 1,
+          "type": "uuid"
+        },
+        {
+          "acl": [],
+          "default": null,
+          "generated": "",
+          "identity": "",
+          "name": "code",
+          "not_null": true,
+          "number": 2,
+          "type": "text"
+        },
+        {
+          "acl": [],
+          "default": null,
+          "generated": "",
+          "identity": "",
+          "name": "name",
+          "not_null": true,
+          "number": 3,
+          "type": "text"
+        },
+        {
+          "acl": [],
+          "default": "true",
+          "generated": "",
+          "identity": "",
+          "name": "activo",
+          "not_null": true,
+          "number": 4,
+          "type": "boolean"
+        },
+        {
+          "acl": [],
+          "default": "now()",
+          "generated": "",
+          "identity": "",
+          "name": "created_at",
+          "not_null": true,
+          "number": 5,
+          "type": "timestamp with time zone"
+        }
+      ],
+      "constraints": [
+        {
+          "deferrable": false,
+          "definition": "UNIQUE (code)",
+          "initially_deferred": false,
+          "name": "tipos_contenedor_code_key",
+          "type": "u",
+          "validated": true
+        },
+        {
+          "deferrable": false,
+          "definition": "PRIMARY KEY (id)",
+          "initially_deferred": false,
+          "name": "tipos_contenedor_pkey",
+          "type": "p",
+          "validated": true
+        }
+      ],
+      "force_rls": false,
+      "kind": "r",
+      "name": "tipos_contenedor",
+      "options": null,
+      "owner": "postgres",
+      "policies": [
+        {
+          "check": null,
+          "command": "r",
+          "name": "Autenticados pueden leer tipos_contenedor",
+          "permissive": true,
+          "roles": [
+            "authenticated"
+          ],
+          "using": "true"
+        },
+        {
+          "check": "( SELECT has_role(( SELECT auth.uid() AS uid), 'super_admin'::app_role) AS has_role)",
+          "command": "*",
+          "name": "Super admin CRUD tipos_contenedor",
+          "permissive": true,
+          "roles": [
+            "authenticated"
+          ],
+          "using": "( SELECT has_role(( SELECT auth.uid() AS uid), 'super_admin'::app_role) AS has_role)"
+        }
+      ],
+      "rls": true,
+      "rules": [],
+      "schema": "public",
+      "triggers": []
+    },
+    {
+      "acl": [
+        {
+          "grantable": false,
+          "grantee": "anon",
+          "grantor": "postgres",
+          "privilege": "DELETE"
+        },
+        {
+          "grantable": false,
+          "grantee": "anon",
+          "grantor": "postgres",
+          "privilege": "INSERT"
+        },
+        {
+          "grantable": false,
+          "grantee": "anon",
+          "grantor": "postgres",
+          "privilege": "MAINTAIN"
+        },
+        {
+          "grantable": false,
+          "grantee": "anon",
+          "grantor": "postgres",
+          "privilege": "REFERENCES"
+        },
+        {
+          "grantable": false,
+          "grantee": "anon",
+          "grantor": "postgres",
+          "privilege": "SELECT"
+        },
+        {
+          "grantable": false,
+          "grantee": "anon",
+          "grantor": "postgres",
+          "privilege": "TRIGGER"
+        },
+        {
+          "grantable": false,
+          "grantee": "anon",
+          "grantor": "postgres",
+          "privilege": "TRUNCATE"
+        },
+        {
+          "grantable": false,
+          "grantee": "anon",
+          "grantor": "postgres",
+          "privilege": "UPDATE"
+        },
+        {
+          "grantable": false,
+          "grantee": "authenticated",
+          "grantor": "postgres",
+          "privilege": "DELETE"
+        },
+        {
+          "grantable": false,
+          "grantee": "authenticated",
+          "grantor": "postgres",
+          "privilege": "INSERT"
+        },
+        {
+          "grantable": false,
+          "grantee": "authenticated",
+          "grantor": "postgres",
+          "privilege": "MAINTAIN"
+        },
+        {
+          "grantable": false,
+          "grantee": "authenticated",
+          "grantor": "postgres",
+          "privilege": "REFERENCES"
+        },
+        {
+          "grantable": false,
+          "grantee": "authenticated",
+          "grantor": "postgres",
+          "privilege": "SELECT"
+        },
+        {
+          "grantable": false,
+          "grantee": "authenticated",
+          "grantor": "postgres",
+          "privilege": "TRIGGER"
+        },
+        {
+          "grantable": false,
+          "grantee": "authenticated",
+          "grantor": "postgres",
+          "privilege": "TRUNCATE"
+        },
+        {
+          "grantable": false,
+          "grantee": "authenticated",
+          "grantor": "postgres",
+          "privilege": "UPDATE"
+        },
+        {
+          "grantable": false,
+          "grantee": "postgres",
+          "grantor": "postgres",
+          "privilege": "DELETE"
+        },
+        {
+          "grantable": false,
+          "grantee": "postgres",
+          "grantor": "postgres",
+          "privilege": "INSERT"
+        },
+        {
+          "grantable": false,
+          "grantee": "postgres",
+          "grantor": "postgres",
+          "privilege": "MAINTAIN"
+        },
+        {
+          "grantable": false,
+          "grantee": "postgres",
+          "grantor": "postgres",
+          "privilege": "REFERENCES"
+        },
+        {
+          "grantable": false,
+          "grantee": "postgres",
+          "grantor": "postgres",
+          "privilege": "SELECT"
+        },
+        {
+          "grantable": false,
+          "grantee": "postgres",
+          "grantor": "postgres",
+          "privilege": "TRIGGER"
+        },
+        {
+          "grantable": false,
+          "grantee": "postgres",
+          "grantor": "postgres",
+          "privilege": "TRUNCATE"
+        },
+        {
+          "grantable": false,
+          "grantee": "postgres",
+          "grantor": "postgres",
+          "privilege": "UPDATE"
+        },
+        {
+          "grantable": false,
+          "grantee": "sandbox_exec",
+          "grantor": "postgres",
+          "privilege": "INSERT"
+        },
+        {
+          "grantable": false,
+          "grantee": "sandbox_exec",
+          "grantor": "postgres",
+          "privilege": "SELECT"
+        },
+        {
+          "grantable": false,
+          "grantee": "service_role",
+          "grantor": "postgres",
+          "privilege": "DELETE"
+        },
+        {
+          "grantable": false,
+          "grantee": "service_role",
+          "grantor": "postgres",
+          "privilege": "INSERT"
+        },
+        {
+          "grantable": false,
+          "grantee": "service_role",
+          "grantor": "postgres",
+          "privilege": "MAINTAIN"
+        },
+        {
+          "grantable": false,
+          "grantee": "service_role",
+          "grantor": "postgres",
+          "privilege": "REFERENCES"
+        },
+        {
+          "grantable": false,
+          "grantee": "service_role",
+          "grantor": "postgres",
+          "privilege": "SELECT"
+        },
+        {
+          "grantable": false,
+          "grantee": "service_role",
+          "grantor": "postgres",
+          "privilege": "TRIGGER"
+        },
+        {
+          "grantable": false,
+          "grantee": "service_role",
+          "grantor": "postgres",
+          "privilege": "TRUNCATE"
+        },
+        {
+          "grantable": false,
+          "grantee": "service_role",
+          "grantor": "postgres",
+          "privilege": "UPDATE"
+        }
+      ],
+      "columns": [
+        {
+          "acl": [],
+          "default": "gen_random_uuid()",
+          "generated": "",
+          "identity": "",
+          "name": "id",
+          "not_null": true,
+          "number": 1,
+          "type": "uuid"
+        },
+        {
+          "acl": [],
+          "default": null,
+          "generated": "",
+          "identity": "",
+          "name": "user_id",
+          "not_null": true,
+          "number": 2,
+          "type": "uuid"
+        },
+        {
+          "acl": [],
+          "default": "'viewer'::app_role",
+          "generated": "",
+          "identity": "",
+          "name": "role",
+          "not_null": true,
+          "number": 3,
+          "type": "app_role"
+        }
+      ],
+      "constraints": [
+        {
+          "deferrable": false,
+          "definition": "PRIMARY KEY (id)",
+          "initially_deferred": false,
+          "name": "user_roles_pkey",
+          "type": "p",
+          "validated": true
+        },
+        {
+          "deferrable": false,
+          "definition": "FOREIGN KEY (user_id) REFERENCES auth.users(id) ON DELETE CASCADE",
+          "initially_deferred": false,
+          "name": "user_roles_user_id_fkey",
+          "type": "f",
+          "validated": true
+        },
+        {
+          "deferrable": false,
+          "definition": "UNIQUE (user_id)",
+          "initially_deferred": false,
+          "name": "user_roles_user_id_unique",
+          "type": "u",
+          "validated": true
+        }
+      ],
+      "force_rls": false,
+      "kind": "r",
+      "name": "user_roles",
+      "options": null,
+      "owner": "postgres",
+      "policies": [
+        {
+          "check": "( SELECT has_role(( SELECT auth.uid() AS uid), 'super_admin'::app_role) AS has_role)",
+          "command": "*",
+          "name": "Super admins manage all roles",
+          "permissive": true,
+          "roles": [
+            "authenticated"
+          ],
+          "using": "( SELECT has_role(( SELECT auth.uid() AS uid), 'super_admin'::app_role) AS has_role)"
+        },
+        {
+          "check": null,
+          "command": "r",
+          "name": "Users can view own roles",
+          "permissive": true,
+          "roles": [
+            "authenticated"
+          ],
+          "using": "(user_id = ( SELECT auth.uid() AS uid))"
+        }
+      ],
+      "rls": true,
+      "rules": [],
+      "schema": "public",
+      "triggers": [
+        {
+          "definition": "CREATE TRIGGER trg_bloquear_rol_legacy_ur BEFORE INSERT ON user_roles FOR EACH ROW EXECUTE FUNCTION _bloquear_rol_legacy_insert()",
+          "enabled": "O",
+          "function_acl": "{postgres=X/postgres,authenticated=X/postgres,service_role=X/postgres}",
+          "function_definition": "CREATE OR REPLACE FUNCTION public._bloquear_rol_legacy_insert()\n RETURNS trigger\n LANGUAGE plpgsql\n SECURITY DEFINER\n SET search_path TO 'public'\nAS $function$\nDECLARE\n  v_rol_texto text := NEW.role::text;\n  v_moderno text;\nBEGIN\n  IF v_rol_texto NOT IN ('admin', 'operador', 'viewer') THEN\n    RETURN NEW;\n  END IF;\n\n  v_moderno := CASE v_rol_texto\n    WHEN 'admin'    THEN 'admin_org'\n    WHEN 'operador' THEN 'coordinador_logistico'\n    WHEN 'viewer'   THEN 'customer_service'\n  END;\n\n  RAISE EXCEPTION 'LC_ROL_LEGACY_BLOQUEADO: el rol \"%\" est\u00e1 deprecado; usa \"%\" en su lugar', v_rol_texto, v_moderno\n    USING ERRCODE = 'check_violation';\nEND;\n$function$\n",
+          "function_owner": "postgres",
+          "internal": false,
+          "name": "trg_bloquear_rol_legacy_ur"
+        },
+        {
+          "definition": "CREATE TRIGGER trg_log_role_change_ur AFTER UPDATE OF role ON user_roles FOR EACH ROW EXECUTE FUNCTION _log_role_change_ur()",
+          "enabled": "O",
+          "function_acl": "{postgres=X/postgres,authenticated=X/postgres,service_role=X/postgres}",
+          "function_definition": "CREATE OR REPLACE FUNCTION public._log_role_change_ur()\n RETURNS trigger\n LANGUAGE plpgsql\n SECURITY DEFINER\n SET search_path TO 'public'\nAS $function$\nBEGIN\n  IF NEW.role IS DISTINCT FROM OLD.role THEN\n    INSERT INTO public.role_change_log\n      (user_id, organization_id, source, from_role, to_role, changed_by)\n    VALUES\n      (NEW.user_id, NULL, 'user_roles', OLD.role::text, NEW.role::text, auth.uid());\n    PERFORM public.registrar_bitacora(\n      'usuarios', 'cambiar_rol_global', NEW.user_id, '',\n      jsonb_build_object('origen', 'user_roles', 'rol_anterior', OLD.role::text, 'rol_nuevo', NEW.role::text),\n      NULL, auth.uid());\n  END IF;\n  RETURN NEW;\nEND;\n$function$\n",
+          "function_owner": "postgres",
+          "internal": false,
+          "name": "trg_log_role_change_ur"
+        }
+      ]
+    }
+  ]
+}

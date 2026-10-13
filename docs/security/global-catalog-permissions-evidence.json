@@ -1,0 +1,62 @@
+{
+  "schema_version": 1,
+  "status": "prepared_local_only",
+  "repository": "jfcaicedoobando-arch/elogistix",
+  "base_commit": "a9faa570fbaa764398844ed6e987288c764c2576",
+  "base_tree": "446a23c35928d155387cbd4b7cace1395acab09a",
+  "version": "13.824.75",
+  "remote_writes": false,
+  "canonical_migration": {
+    "path": "supabase/migrations/20261013040000_global_catalog_permission_hardening.sql",
+    "sha256": "da199ffb6b8b7685cf352eb279818b562a078e4aa01d16dee7757cf641e1e93a",
+    "bytes": 1056
+  },
+  "reviewed_envelope": {
+    "path": "scripts/db/global-catalog-permissions/apply_guarded_PREPARED_ONLY.sql",
+    "sha256": "52c0ce2819c32850b3913de38e81b61925e8bda324487efee67218f1e757ec95",
+    "remote_postgresql_version": "17.6",
+    "applied": false
+  },
+  "baseline": {
+    "base_blob_sha": "0cdf2d04d574f9f30eb201a71ee3e8facc4b5cb3",
+    "expected_sha256": "c603cb2443cec50ef769c089154d4140ffaa137202ca90f4848d5c62fbcda853",
+    "actual_matches_expected": true,
+    "actual_postgresql_version": "PostgreSQL 17.9 on x86_64-pc-linux-gnu, compiled by gcc (Ubuntu 7.5.0-3ubuntu1~18.04) 7.5.0, 64-bit"
+  },
+  "release_history": {
+    "historical_entries_unchanged": 39,
+    "total_entries": 40,
+    "historical_migrations_unchanged": 1524,
+    "current_migrations": 1525,
+    "reviewed_consumers_unchanged": 24
+  },
+  "local_checks": {
+    "ordered_post_squash_migrations": 331,
+    "explicit_data_only_omissions": 1,
+    "guards_passed": 221,
+    "rls_suites_passed": 58,
+    "negative_controls_passed": 37,
+    "vitest_package_tests_passed": 4,
+    "vitest_read_app_version_tests_passed": 2,
+    "lint_changed_typescript": "passed",
+    "focused_typescript": "passed",
+    "audit_manifest": "passed",
+    "audit_migrations": "passed",
+    "audit_replay_mirror": "passed_with_2_preexisting_exact_hash_exceptions"
+  },
+  "separate_author_evidence": {
+    "synthetic_functional_groups_passed": 38,
+    "envelope_groups_passed": 39,
+    "remote_execution": false
+  },
+  "limitations": [
+    "Full tsc -b ended with exit 137 and no diagnostic; its cause was not established and the full check is not validated. The focused changed-files typecheck passed.",
+    "GitHub CI, GUI, deployment and remote application were not run.",
+    "PostgreSQL 17.9 isolated tests do not execute the literal bound to remote PostgreSQL 17.6.",
+    "Unrelated optional historical concurrency and installer checks were not executed by this runner."
+  ],
+  "sources": {
+    "base_commit": "https://github.com/jfcaicedoobando-arch/elogistix/commit/a9faa570fbaa764398844ed6e987288c764c2576",
+    "comparison": "https://github.com/jfcaicedoobando-arch/elogistix/compare/3e2956b781d0574ad48b4e04be5b970fcd8c687a...a9faa570fbaa764398844ed6e987288c764c2576"
+  }
+}

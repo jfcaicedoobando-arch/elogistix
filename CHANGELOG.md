@@ -1,5 +1,15 @@
 # Changelog
 
+## [13.824.75] - Unreleased
+
+### Seguridad: privilegios mínimos de catálogos globales
+
+- Retira todos los privilegios de tabla de anon sobre planes, navieras, puertos, tipos_contenedor y tipos_cambio_dof; retira TRUNCATE, REFERENCES, TRIGGER y MAINTAIN de authenticated en los cinco catálogos.
+- Conserva la administración RLS del super_admin en cuatro catálogos y la captura manual DOF mediante su RPC. El acceso directo de authenticated a DOF queda en lectura; service_role mantiene el flujo del backend.
+- Los usuarios autenticados comunes ven sólo planes activos. La política separada de super_admin conserva planes inactivos y las lecturas globales de los otros cuatro catálogos permanecen intactas.
+- Añade una migración forward, guard de privilegios efectivos, suite RLS y comprobación previa/posterior a los grants del harness CI. Actualiza únicamente el delta esperado del baseline de esquema.
+- Conserva completas las 39 entradas históricas del manifest y agrega 13.824.75 con 1,525 migraciones. Este paquete no acredita aplicación remota: esa operación exige snapshot fresco, envelope fail-closed, ledger atómico y aprobación específica.
+
 ## [13.824.74] - Unreleased
 
 ### Pagos: fallback EUR y captura manual del tipo de cambio

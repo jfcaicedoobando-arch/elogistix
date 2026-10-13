@@ -238,6 +238,13 @@ jobs:
           } >> "$GITHUB_STEP_SUMMARY"
           exit 1
 
+      - name: Global catalogs — fail-closed permission mutations
+        env:
+          GLOBAL_CATALOG_OWNED_CLUSTER: '1'
+        run: |
+          mkdir -p reports/rls-evidence
+          python3 scripts/db/global-catalog-permissions/test-negative.py > reports/rls-evidence/global-catalog-negative.json
+
       - name: Guards conductuales + schema invariants (manifiesto bloqueante)
         env:
           JOBS: 4
