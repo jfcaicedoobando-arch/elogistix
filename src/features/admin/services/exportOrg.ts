@@ -69,6 +69,7 @@ export async function fetchOrganizationExport(
         };
       })
         .from(table)
+        // SOFT-DELETE-OK: catálogo con bajas visibles; contrato acotado en docs/historical-read-contracts.md.
         .select("*")
         .eq("organization_id", organizationId)
         .range(from, from + PAGE - 1);

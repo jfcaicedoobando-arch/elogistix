@@ -66,6 +66,7 @@ export async function fetchEmisorEntidad(
     throw new Error("No se pudo identificar la organización del documento.");
   }
   const { data, error } = await supabase.from(tabla)
+    // SOFT-DELETE-OK: pertenencia ID/org para DTO, no vigencia; docs/historical-read-contracts.md.
     .select("id, organization_id")
     .eq("id", entidadId)
     .eq("organization_id", scope.organizationId)
