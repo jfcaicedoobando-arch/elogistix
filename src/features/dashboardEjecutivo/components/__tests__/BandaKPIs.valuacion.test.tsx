@@ -26,11 +26,11 @@ describe('EX03/05 representación de datos incompletos',()=>{
    expect(screen.queryByText('En rango')).not.toBeInTheDocument();
  });
  it('bancos incompletos no aparecen como caja agotada o Sin burn',()=>{
-   render(<BandaKPIsEficiencia kpis={{...base,saldo_bancos_incompleto:true}} />);
-   expect(screen.getByText('No disponible')).toBeInTheDocument();
+   render(<BandaKPIsEficiencia />);
+   expect(screen.getByRole('status')).toHaveTextContent('N/D');
    expect(screen.queryByText('Caja agotada')).not.toBeInTheDocument();
    expect(screen.queryByText('Sin burn')).not.toBeInTheDocument();
-   expect(screen.getByText('Valuación incompleta')).toHaveClass('text-muted-foreground');
+   expect(screen.getByRole('status')).toHaveTextContent('Falta una fuente verificada');
  });
  it('drilldown mantiene nominales no valuados fuera del ranking y sin recortar',()=>{
    render(<MemoryRouter><BandaKPIs kpis={{...base,cartera_vencida_incompleta:true}} periodo="2026-09" fuente="facturas" topDeudores={[]} deudoresSinValuar={Array.from({length:12},(_,i)=>({nombre:`Cliente EUR ${i}`,saldo:100,moneda:'EUR',saldo_mxn:null,tipo_cambio:null}))}/></MemoryRouter>);

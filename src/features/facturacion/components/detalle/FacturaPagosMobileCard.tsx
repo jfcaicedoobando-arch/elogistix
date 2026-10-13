@@ -32,12 +32,13 @@ interface Props {
   facturaId: string;
   monedaFactura: string;
   canEdit: boolean;
+  soloLectura?: boolean;
   onEliminar: (pagoId: string) => void;
   onCancelarRep: (pago: PagoRow) => void;
   onPreviewRep: (id: string, label: string) => void;
 }
 
-export function FacturaPagosMobileCard({ row, facturaId, monedaFactura, canEdit, onEliminar, onCancelarRep, onPreviewRep }: Props) {
+export function FacturaPagosMobileCard({ row, facturaId, monedaFactura, canEdit, soloLectura, onEliminar, onCancelarRep, onPreviewRep }: Props) {
   const cs = (row.rep_cancellation_status ?? "").toLowerCase();
   const repVivo = !!row.uuid_rep && !row.rep_cancelado_en && cs !== "accepted";
   const repEnVerificacion = repVivo && ["pending", "verifying"].includes(cs);
@@ -77,6 +78,7 @@ export function FacturaPagosMobileCard({ row, facturaId, monedaFactura, canEdit,
           folioRep={row.folio_rep ?? null}
           cancellationStatus={row.rep_cancellation_status ?? null}
           onPreview={onPreviewRep}
+          soloLectura={soloLectura}
         />
 
         {canEdit && (

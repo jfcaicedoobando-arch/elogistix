@@ -105,7 +105,7 @@ export interface MotivoPerdidaRow {
 }
 
 export async function fetchMotivosPerdida(soloActivos = true): Promise<MotivoPerdidaRow[]> {
-  let q = supabase.from("crm_motivos_perdida").select("id, nombre, activa").order("nombre");
+  let q = supabase.from("crm_motivos_perdida").select("id, nombre, activa").is("deleted_at", null).order("nombre");
   if (soloActivos) q = q.eq("activa", true);
   return unwrapOr(q, []) as Promise<MotivoPerdidaRow[]>;
 }

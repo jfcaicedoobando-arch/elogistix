@@ -37,3 +37,6 @@ describe('useDashboardEjecutivo Hook', () => {
     expect(mockFetch).not.toHaveBeenCalled();
   });
 });
+
+vi.mock('@/features/tesoreria/services', () => ({fetchSaldosCuentas: vi.fn(async () => [])}));
+vi.mock('@/hooks/shared/useDiaNegocio', () => ({useDiaNegocio: () => '2026-10-13'}));

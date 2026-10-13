@@ -50,23 +50,23 @@ describe("AUD54: deuda monetaria real", () => {
     expect(cobranza.facturas_vencidas).toBe(2);
   });
   it("PPD documentado permite cobrar un centavo aunque conserve etiqueta histórica Pagada", () => {
-    expect(deriveFacturaFlags({ estado: "Pagada", metodo_pago: "PPD" }, true,
+    expect(deriveFacturaFlags({ deleted_at: null, estado: "Pagada", metodo_pago: "PPD" }, true,
       { saldo: .01, pagosActivos: 1 }).puedeRegistrarPago).toBe(true);
-    expect(deriveFacturaFlags({ estado: "Parcialmente pagada", metodo_pago: "PPD" }, true,
+    expect(deriveFacturaFlags({ deleted_at: null, estado: "Parcialmente pagada", metodo_pago: "PPD" }, true,
       { saldo: .01, pagosActivos: 1 }).puedeRegistrarPago).toBe(true);
   });
   it.each(["Pagada", "Parcialmente pagada"])("PUE %s con pago previo se revisa, no cobra segunda exhibición", (estado) => {
-    expect(deriveFacturaFlags({ estado, metodo_pago: "PUE" }, true,
+    expect(deriveFacturaFlags({ deleted_at: null, estado, metodo_pago: "PUE" }, true,
       { saldo: .01, pagosActivos: 1 }).puedeRegistrarPago).toBe(false);
   });
   it("no reabre Pagada sin evidencia, ni permite cobro cancelado o lectura fallida", () => {
-    expect(deriveFacturaFlags({ estado: "Pagada", metodo_pago: "PPD" }, true,
+    expect(deriveFacturaFlags({ deleted_at: null, estado: "Pagada", metodo_pago: "PPD" }, true,
       { saldo: 1.16, pagosActivos: 0 }).puedeRegistrarPago).toBe(false);
     for (const estado of ["Cancelada", "Sustituida", "Borrador"]) {
-      expect(deriveFacturaFlags({ estado, metodo_pago: "PPD" }, true,
+      expect(deriveFacturaFlags({ deleted_at: null, estado, metodo_pago: "PPD" }, true,
         { saldo: .01, pagosActivos: 1 }).puedeRegistrarPago).toBe(false);
     }
-    expect(deriveFacturaFlags({ estado: "Pagada", metodo_pago: "PPD" }, true,
+    expect(deriveFacturaFlags({ deleted_at: null, estado: "Pagada", metodo_pago: "PPD" }, true,
       { saldo: .01, pagosActivos: 1, saldoError: true }).puedeRegistrarPago).toBe(false);
   });
 });

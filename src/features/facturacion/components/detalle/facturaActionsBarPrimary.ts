@@ -1,3 +1,4 @@
+import { esFacturaVigenteParaOperar } from "../../domain/facturaVigencia";
 /**
  * Acción principal ("primary") de la barra del detalle de factura.
  * Vive fuera del componente para que el archivo de UI sólo exporte
@@ -39,6 +40,7 @@ export interface FacturaActionsBarProps {
 
 export function buildPrimary(props: FacturaActionsBarProps): DetalleActionItem | null {
   const { flags, canEdit, puedeEmitir } = props;
+  if (!esFacturaVigenteParaOperar(props.factura)) return null;
   if (puedeEmitir && flags.puedeTimbrarDesdeSistema) {
     return { id: "timbrar", label: "Timbrar factura", icon: Stamp, onClick: props.onTimbrar };
   }

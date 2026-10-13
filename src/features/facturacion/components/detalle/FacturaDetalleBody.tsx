@@ -3,6 +3,7 @@
  * v13.350.0: pestañas en espejo con facturas recibidas — Conceptos ·
  * Cliente y datos fiscales · Cobros · Notas de crédito · Documentos.
  */
+import { esFacturaVigenteParaOperar } from "../../domain/facturaVigencia";
 import { FacturaResumenCard } from "@/features/facturacion/components/detalle/FacturaResumenCard";
 import { FacturaReceptorCard } from "@/features/facturacion/components/detalle/FacturaReceptorCard";
 import { FacturaTimbradoCard } from "@/features/facturacion/components/detalle/FacturaTimbradoCard";
@@ -36,7 +37,10 @@ interface FacturaDetalleBodyProps {
 }
 
 export function FacturaDetalleBody(props: FacturaDetalleBodyProps) {
-  const { factura, canEdit, puedeEditarBorrador, conceptosVivos, onRegistrarPago } = props;
+  const { factura, conceptosVivos, onRegistrarPago } = props;
+  const vigente = esFacturaVigenteParaOperar(factura);
+  const canEdit = props.canEdit && vigente;
+  const puedeEditarBorrador = props.puedeEditarBorrador && vigente;
   const { data: pagos = [] } = usePagosFactura(factura.id);
   const { data: notasCredito = [] } = useNotasCreditoDeFactura(factura.id);
 
@@ -85,7 +89,7 @@ export function FacturaDetalleBody(props: FacturaDetalleBodyProps) {
             factura={factura}
             saldo={props.saldo}
             estaCancelada={props.estaCancelada}
-            canEnviarRecordatorio={props.canEnviarRecordatorio}
+            canEnviarRecordatorio={props.canEnviarRecordatorio && vigente}
             onEnviarRecordatorio={props.onEnviarRecordatorio}
           />
           {factura.uuid_fiscal && (
@@ -114,6 +118,7 @@ export function FacturaDetalleBody(props: FacturaDetalleBodyProps) {
           moneda={factura.moneda}
           estadoFactura={factura.estado}
           canEdit={canEdit}
+          soloLectura={!vigente}
           onRegistrarPago={onRegistrarPago}
         />
       ),
@@ -134,6 +139,7 @@ export function FacturaDetalleBody(props: FacturaDetalleBodyProps) {
           uuidFacturaOriginal={factura.uuid_fiscal ?? null}
           snapshotEmision={factura.snapshot_emision}
           canEdit={canEdit}
+          soloLectura={!vigente}
         />
       ),
     },
@@ -144,6 +150,6 @@ export function FacturaDetalleBody(props: FacturaDetalleBodyProps) {
     },
   ];
 
-  return <DocumentoTabs key={`${factura.organization_id}:${factura.id}`} tabs={tabs} />;
+  return <DocumentoTabs key={`${factura.organization_id}:${factura.id}:${vigente}`} tabs={tabs} />;
 }
 

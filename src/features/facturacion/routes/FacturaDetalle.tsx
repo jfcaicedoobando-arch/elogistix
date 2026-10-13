@@ -46,7 +46,7 @@ export default function FacturaDetalle() {
   // UIA-12: título de pestaña por folio de factura.
   useDocumentTitle(numeroVisible ? `Factura ${numeroVisible}` : "Factura");
 
-  const dialogs = useFacturaDetalleDialogs();
+  const dialogs = useFacturaDetalleDialogs(factura);
   const { puedeTimbrarDesdeSistema } = flags;
   useAutoAbrirTimbrar(puedeTimbrarDesdeSistema, puedeEmitir, () => dialogs.setTimbrarOpen(true));
   const sustituyeA = (factura as { sustituye_a?: string | null } | null | undefined)?.sustituye_a ?? null;

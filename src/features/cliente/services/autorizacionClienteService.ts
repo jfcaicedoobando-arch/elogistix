@@ -18,6 +18,7 @@ export async function obtenerAutorizacionCliente(
     .from("clientes")
     .select("id, requiere_autorizacion_cotizacion, requiere_autorizacion_proforma")
     .eq("id", clienteId)
+    .is("deleted_at", null)
     .maybeSingle();
   if (error) throw new Error(error.message);
   const cot = data?.requiere_autorizacion_cotizacion ?? true;

@@ -18,6 +18,7 @@ export type FacturaDetalle = Pick<
   | "moneda"
   | "tipo_cambio"
   | "estado"
+  | "deleted_at"
   | "referencia_bl"
   | "notas"
   | "factura_pdf_url"

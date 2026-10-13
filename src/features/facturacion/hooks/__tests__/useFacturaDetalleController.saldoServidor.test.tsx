@@ -2,13 +2,14 @@ import { beforeEach, describe, it, expect, vi } from "vitest";
 import { renderHook } from "@testing-library/react";
 
 const mocks = vi.hoisted(() => ({
+  deletedAt: null as string | null | undefined,
   pagos: [] as Array<{ monto_aplicado_factura: number; estado_rep: string }>,
   saldo: { data: 95, isError: false, isLoading: false, refetch: vi.fn() },
   notas: { data: [{ monto: 58 }], isError: false, isLoading: false, refetch: vi.fn() },
 }));
 vi.mock("@/hooks/shared", () => ({ usePermissions: () => ({ canEdit: true, canRegistrarCobro: true, canEmitirFactura: true }) }));
 vi.mock("../index", () => ({
-  useFactura: () => ({ data: { id: "f1", total: 116, estado: "Emitida", uuid_fiscal: "uuid", fecha_emision: "2026-10-03" }, isLoading: false, refetch: vi.fn() }),
+  useFactura: () => ({ data: { deleted_at: mocks.deletedAt, id: "f1", total: 116, estado: "Emitida", uuid_fiscal: "uuid", fecha_emision: "2026-10-03" }, isLoading: false, refetch: vi.fn() }),
   usePagosFactura: () => ({ data: mocks.pagos, isError: false, isLoading: false, refetch: vi.fn() }),
 }));
 vi.mock("../useSaldoFactura", () => ({
@@ -24,8 +25,20 @@ import { useFacturaDetalleController } from "../useFacturaDetalleController";
 
 describe("detalle de factura: saldo del servidor y cobros vigentes", () => {
   beforeEach(() => {
+    mocks.deletedAt = null;
     mocks.saldo.data = 95; mocks.saldo.isError = false; mocks.saldo.isLoading = false;
     mocks.pagos = []; vi.clearAllMocks();
+  });
+  it.each(["2026-10-10T10:00:00Z", undefined])("baja/vigencia desconocida %s bloquea operaciones sin alterar permisos ni lectura", (deletedAt) => {
+    mocks.deletedAt = deletedAt;
+    const { result } = renderHook(() => useFacturaDetalleController("f1"));
+    expect(result.current.factura?.id).toBe("f1");
+    expect(result.current.saldo).toBe(95);
+    expect(result.current.canEdit).toBe(true);
+    expect(result.current.puedeEmitir).toBe(true);
+    expect(result.current.flags.puedeRegistrarPago).toBe(false);
+    expect(result.current.flags.puedeSustituirCfdi).toBe(false);
+    expect(result.current.flags.puedeRefacturarReceptor).toBe(false);
   });
   it("no vuelve a restar NC nominales cuando el servidor trae otra conversión", () => {
     const { result } = renderHook(() => useFacturaDetalleController("f1"));

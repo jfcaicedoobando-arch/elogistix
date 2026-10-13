@@ -1,4 +1,5 @@
 /** FacturaDetalleView — vista pura de la factura ya resuelta. */
+import { esFacturaVigenteParaOperar } from "../../domain/facturaVigencia";
 import { PageContainer } from "@/components/shared/PageContainer";
 import { FacturaDetalleFooterDialogs } from "@/features/facturacion/components/detalle/FacturaDetalleFooterDialogs";
 import { FacturaDetalleActionsBar } from "@/features/facturacion/components/detalle/FacturaDetalleActionsBar";
@@ -68,11 +69,12 @@ export function FacturaDetalleView(props: FacturaDetalleViewProps) {
     recordatorioOpen, setRecordatorioOpen,
   } = dialogs;
   const saldoFactura = Number(props.saldo ?? 0);
+  const vigente = esFacturaVigenteParaOperar(factura);
 
   const acuseCancelacionStatus = factura.acuse_cancelacion_status ?? null;
   const cancellationStatus = factura.cancellation_status ?? null;
   const handleTimbrarRep = () => {
-    if (pagoRepPendiente) timbrarRep.mutate(pagoRepPendiente.id);
+    if (vigente && canEdit && pagoRepPendiente) timbrarRep.mutate(pagoRepPendiente.id);
   };
 
   return (
@@ -98,22 +100,22 @@ export function FacturaDetalleView(props: FacturaDetalleViewProps) {
             actions={
               <FacturaDetalleActionsBar
                 factura={factura}
-                canEdit={canEdit}
-                puedeEmitir={puedeEmitir}
+                canEdit={canEdit && vigente}
+                puedeEmitir={puedeEmitir && vigente}
                 flags={flags}
                 acuse={acuse}
                 eliminando={eliminando}
                 puedeEliminarBorrador={puedeEliminarBorrador}
                 timbrarRepPending={timbrarRep.isPending}
-                onTimbrar={() => setTimbrarOpen(true)}
-                onEnviarEmail={() => setEnviarOpen(true)}
-                onRegistrarPago={() => setPagoOpen(true)}
+                onTimbrar={() => { if (vigente) setTimbrarOpen(true); }}
+                onEnviarEmail={() => { if (vigente) setEnviarOpen(true); }}
+                onRegistrarPago={() => { if (vigente) setPagoOpen(true); }}
                 onTimbrarRep={handleTimbrarRep}
-                onSustituir={() => setSustituirOpen(true)}
-                onRefacturar={() => setRefacturarOpen(true)}
-                onCancelar={() => setCancelarOpen(true)}
-                onEliminar={() => setEliminarOpen(true)}
-                onConsultar={() => setConsultarOpen(true)}
+                onSustituir={() => { if (vigente) setSustituirOpen(true); }}
+                onRefacturar={() => { if (vigente) setRefacturarOpen(true); }}
+                onCancelar={() => { if (vigente) setCancelarOpen(true); }}
+                onEliminar={() => { if (vigente) setEliminarOpen(true); }}
+                onConsultar={() => { if (vigente) setConsultarOpen(true); }}
                 onDownload={handleDownload}
               />
             }
@@ -132,20 +134,20 @@ export function FacturaDetalleView(props: FacturaDetalleViewProps) {
       >
         <FacturaDetalleBody
           factura={factura}
-          canEdit={canEdit}
+          canEdit={canEdit && vigente}
           puedeEditarBorrador={puedeEditarBorrador}
           conceptosVivos={conceptosVivos}
-          onRegistrarPago={() => setPagoOpen(true)}
+          onRegistrarPago={() => { if (vigente) setPagoOpen(true); }}
           saldo={saldoFactura}
           saldoError={props.saldoError}
           estaCancelada={flags.estaCancelada}
-          canEnviarRecordatorio={canEdit}
-          onEnviarRecordatorio={() => setRecordatorioOpen(true)}
+          canEnviarRecordatorio={canEdit && vigente}
+          onEnviarRecordatorio={() => { if (vigente) setRecordatorioOpen(true); }}
         />
         <RefacturacionTrazabilidadSection facturaId={factura.id} />
       </DocumentoDetalleShell>
 
-      <FacturaDetalleModales
+      {vigente && <FacturaDetalleModales
         factura={factura}
         pagoOpen={pagoOpen} setPagoOpen={setPagoOpen}
         timbrarOpen={timbrarOpen} setTimbrarOpen={setTimbrarOpen}
@@ -153,9 +155,9 @@ export function FacturaDetalleView(props: FacturaDetalleViewProps) {
         sustituirOpen={sustituirOpen} setSustituirOpen={setSustituirOpen}
         cancelarOpen={cancelarOpen} setCancelarOpen={setCancelarOpen}
         refacturarOpen={refacturarOpen} setRefacturarOpen={setRefacturarOpen}
-      />
+      />}
 
-      <FacturaDetalleFooterDialogs
+      {vigente && <FacturaDetalleFooterDialogs
         facturaId={factura.id}
         numero={factura.numero}
         eliminarOpen={eliminarOpen}
@@ -176,7 +178,7 @@ export function FacturaDetalleView(props: FacturaDetalleViewProps) {
           fecha_vencimiento: factura.fecha_vencimiento,
           cliente_nombre: factura.cliente_nombre,
         }}
-      />
+      />}
     </PageContainer>
   );
 }

@@ -1,11 +1,6 @@
 /**
- * FacturaPagosSection — historial de pagos con acciones admin
- * (registrar pago / eliminar pago). Reusa `usePagosFactura` y los hooks
- * de mutación ya existentes. El cálculo de saldo replica al del diálogo
- * de registrar pago: `total − Σ monto_aplicado_factura`.
- *
- * v13.232.0 · Confirmación de eliminar pago migrada a `ConfirmActionDialog` (Lote 7d.2).
- * v13.823.240 · Agrega cancelación de REP desde el detalle de factura.
+ * Historial de pagos, eliminación confirmada y cancelación de REP.
+ * Reusa los hooks de lectura/mutación y el cálculo compartido de saldo.
  */
 import { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
@@ -37,6 +32,7 @@ interface Props {
   totalFactura: number;
   moneda: string;
   canEdit: boolean;
+  soloLectura?: boolean;
   /** Estado actual de la factura (para detectar inconsistencias contables). */
   estadoFactura?: string;
   /** @deprecated Ahora el botón vive en `FacturaDetalleActionsBar`. */
@@ -44,7 +40,7 @@ interface Props {
 }
 
 export function FacturaPagosSection({
-  facturaId, facturaNumero, totalFactura, moneda, canEdit, estadoFactura,
+  facturaId, facturaNumero, totalFactura, moneda, canEdit, estadoFactura, soloLectura,
 }: Props) {
   const pagosQuery = usePagosFactura(facturaId);
   const notasQuery = useNotasCreditoAplicadas(facturaId);
@@ -78,7 +74,6 @@ export function FacturaPagosSection({
     totalFactura, pagos, notasAplicadas, estadoFactura, saldoServidorQuery?.data,
   );
 
-
   const liquidada = sinSaldo && pagos.length > 0;
 
   const inconsistente = esEstadoInconsistente({
@@ -89,7 +84,7 @@ export function FacturaPagosSection({
   });
 
   const handleEliminar = async () => {
-    if (!pagoAEliminar) return;
+    if (!canEdit || !pagoAEliminar) return;
     try {
       await eliminar.mutateAsync({ id: pagoAEliminar, facturaId });
       registrarActividad.mutate({
@@ -134,6 +129,7 @@ export function FacturaPagosSection({
               facturaId={facturaId}
               moneda={moneda}
               canEdit={canEdit}
+              soloLectura={soloLectura}
               onEliminar={setPagoAEliminar}
               onCancelarRep={setPagoACancelar}
               onPreviewRep={(id, label) => setPreviewRep({ id, label })}
@@ -185,6 +181,7 @@ export function FacturaPagosSection({
         motivo={repController.motivo}
         onMotivoChange={repController.setMotivo}
         onConfirm={async () => {
+          if (!canEdit) return;
           const res = await repController.confirmar();
           if (res === "accepted") {
             setPagoACancelar(null);

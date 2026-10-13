@@ -135,7 +135,7 @@ export function useNotaCreditoDraft(p: Params) {
     setDraft((prev) => ({ ...prev, conceptos, baseDescuento: conceptos.map((c) => ({ ...c })) }));
   };
 
-  const submit = useNotaCreditoSubmit({ facturaId: p.facturaId, onOpenChange: p.onOpenChange });
+  const submit = useNotaCreditoSubmit({ facturaId: p.facturaId, open: p.open, onOpenChange: p.onOpenChange });
 
   const handleSubmit = async (timbrarAhora: boolean) => {
     // C-bug: timbrar exige `puedeTimbrar` (incluye UUID), no sólo `puedeGuardar`:
