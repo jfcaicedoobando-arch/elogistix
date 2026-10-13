@@ -23,7 +23,12 @@ beforeEach(() => {
   setAuthSnapshot(context);
   syncActiveOrganizationScope({ userId: context.userId, organizationId: context.organizationId });
   db.from.mockReset(); db.maybeSingle.mockReset();
-  db.from.mockImplementation(() => ({ select: () => ({ eq: () => ({ maybeSingle: db.maybeSingle }) }) }));
+  db.from.mockImplementation(() => ({
+    select: vi.fn().mockReturnThis(),
+    eq: vi.fn().mockReturnThis(),
+    is: vi.fn().mockReturnThis(),
+    maybeSingle: db.maybeSingle,
+  }));
 });
 afterEach(() => vi.useRealTimers());
 
@@ -146,6 +151,16 @@ describe("private shipment short-lived cache", () => {
     setAuthSnapshot({ ...context, userId: "user-b" });
     old.resolve({ data: { tarifa_decision: "old" }, error: null }); await rejected;
     expect(db.from).toHaveBeenCalledOnce();
+  });
+  it("filters the public tariff parent by deleted_at without filtering the internal view", async () => {
+    db.maybeSingle.mockResolvedValueOnce({ data: { tarifa_decision: "public" }, error: null }).mockResolvedValueOnce({ data: internal, error: null });
+    expect(await obtenerEmbarqueTarifaInfo("shipment")).toMatchObject({ tarifa_decision: "public", tarifa_delta_jsonb: internal.tarifa_delta_jsonb });
+    expect(db.from.mock.calls.map(([table]) => table)).toEqual(["embarques", "embarques_interno_v"]);
+    const [parent, privateView] = db.from.mock.results.map(({ value }) => value);
+    expect(parent.eq).toHaveBeenCalledExactlyOnceWith("id", "shipment");
+    expect(parent.is).toHaveBeenCalledExactlyOnceWith("deleted_at", null);
+    expect(privateView.eq).toHaveBeenCalledExactlyOnceWith("id", "shipment");
+    expect(privateView.is).not.toHaveBeenCalled();
   });
   it("mutation invalidation refreshes private data without revoking the authenticated continuation", async () => {
     db.maybeSingle.mockResolvedValueOnce({ data: internal, error: null }); await obtenerEmbarqueInterno("shipment");

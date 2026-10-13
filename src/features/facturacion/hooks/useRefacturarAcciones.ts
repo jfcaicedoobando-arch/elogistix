@@ -70,7 +70,7 @@ export function useRefacturarAcciones(p: Params) {
     } catch (error) {
       liberar();
       if (!operacion.isCurrent()) return;
-      notifyError(undefined, { title: "No se pudo verificar la nueva factura", description: getErrorMessage(error) });
+      notifyError(undefined, { title: "No se pudo verificar la nueva factura", description: getErrorMessage(error), error });
       p.s.refrescar();
       return;
     }
@@ -97,7 +97,7 @@ export function useRefacturarAcciones(p: Params) {
       navigate(`/facturacion/${nuevaId}?accion=timbrar`);
     } catch (error) {
       if (!operacion.isCurrent()) return;
-      notifyError(undefined, { title: "No se pudo abrir la nueva factura", description: getErrorMessage(error) });
+      notifyError(undefined, { title: "No se pudo abrir la nueva factura", description: getErrorMessage(error), error });
       p.s.refrescar();
     } finally {
       if (accionEnCurso.current === operacion) accionEnCurso.current = null;
