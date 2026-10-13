@@ -6,6 +6,7 @@ import { ArrowUpRight, CheckCircle2, Copy } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { FormDialogSection } from "@/components/shared/FormDialogSection";
+import { bloqueoFacturaNueva, type EstadoFacturaNueva } from "@/features/facturacion/domain/refacturacionNuevaVigencia";
 import { facturaNuevaLista } from "@/features/facturacion/domain/refacturacionPasos";
 import type { FacturaRefacturacionEstado } from "@/features/facturacion/services/refacturacion";
 import type { ConsistenciaRefacturacion } from "@/features/facturacion/services/refacturacionConsistencia";
@@ -13,6 +14,7 @@ import { ComparativoConsistencia } from "./ComparativoConsistencia";
 
 interface Props {
   facturaNueva: FacturaRefacturacionEstado | null;
+  estadoFacturaNueva: EstadoFacturaNueva;
   clienteDestinoNombre: string;
   duplicando: boolean;
   consultando: boolean;
@@ -26,7 +28,9 @@ interface Props {
 
 export function PasoFacturaNueva(props: Props) {
   const nueva = props.facturaNueva;
-  const lista = facturaNuevaLista(nueva);
+  const vigente = props.estadoFacturaNueva === "vigente";
+  const lista = vigente && facturaNuevaLista(nueva);
+  const bloqueo = bloqueoFacturaNueva(props.estadoFacturaNueva);
 
   return (
     <FormDialogSection
@@ -34,7 +38,7 @@ export function PasoFacturaNueva(props: Props) {
       description="Se copian conceptos y vínculos del embarque; los datos fiscales se toman del cliente destino."
       flat
     >
-      {!nueva && (
+      {props.estadoFacturaNueva === "sin_referencia" && (
         <div className="space-y-3">
           <p className="text-body">
             Se creará un borrador a nombre de <strong>{props.clienteDestinoNombre}</strong> con
@@ -50,8 +54,50 @@ export function PasoFacturaNueva(props: Props) {
         </div>
       )}
 
+      {bloqueo && <p role="alert" className="rounded-md border p-3 text-body">{bloqueo}</p>}
+      {!nueva && props.estadoFacturaNueva !== "sin_referencia" && (
+        <Button variant="outline" onClick={props.onRefrescar} loading={props.consultando}>
+          Actualizar estado
+        </Button>
+      )}
       {nueva && (
         <div className="space-y-3">
+          <ReferenciaHistorica nueva={nueva} lista={lista} />
+
+          {lista ? (
+            <div className="rounded-md border border-success/30 bg-success/5 p-3 text-body flex items-start gap-2">
+              <CheckCircle2 className="h-4 w-4 text-success mt-0.5" />
+              <span>La nueva factura está timbrada. Puedes continuar.</span>
+            </div>
+          ) : vigente ? (
+            <div className="rounded-md border border-warning/30 bg-warning/5 p-3 text-body">
+              Abre el borrador, revisa los datos fiscales y tímbralo. Al volver, este
+              asistente retoma en este mismo paso.
+            </div>
+          ) : null}
+
+          {props.consistencia && <ComparativoConsistencia data={props.consistencia} />}
+          {!props.consistencia && props.consistenciaCargando && (
+            <p className="text-body-sm text-muted-foreground">Validando consistencia fiscal…</p>
+          )}
+
+          <div className="flex flex-wrap gap-2">
+            {vigente && <Button variant="secondary" onClick={() => props.onIrABorrador(nueva.id)}>
+              <ArrowUpRight className="h-4 w-4 mr-1" />
+              {lista ? "Ver la nueva factura" : "Abrir y timbrar"}
+            </Button>}
+            <Button variant="outline" onClick={props.onRefrescar} loading={props.consultando}>
+              Actualizar estado
+            </Button>
+          </div>
+        </div>
+      )}
+    </FormDialogSection>
+  );
+}
+
+function ReferenciaHistorica({ nueva, lista }: { nueva: FacturaRefacturacionEstado; lista: boolean }) {
+  return (
           <div className="rounded-md border p-3 space-y-1">
             <div className="flex flex-wrap items-center justify-between gap-2">
               <p className="text-body font-medium">{nueva.numero}</p>
@@ -67,35 +113,5 @@ export function PasoFacturaNueva(props: Props) {
               <p className="text-body-sm text-muted-foreground break-all">UUID {nueva.uuid_fiscal}</p>
             )}
           </div>
-
-          {lista ? (
-            <div className="rounded-md border border-success/30 bg-success/5 p-3 text-body flex items-start gap-2">
-              <CheckCircle2 className="h-4 w-4 text-success mt-0.5" />
-              <span>La nueva factura está timbrada. Puedes continuar.</span>
-            </div>
-          ) : (
-            <div className="rounded-md border border-warning/30 bg-warning/5 p-3 text-body">
-              Abre el borrador, revisa los datos fiscales y tímbralo. Al volver, este
-              asistente retoma en este mismo paso.
-            </div>
-          )}
-
-          {props.consistencia && <ComparativoConsistencia data={props.consistencia} />}
-          {!props.consistencia && props.consistenciaCargando && (
-            <p className="text-body-sm text-muted-foreground">Validando consistencia fiscal…</p>
-          )}
-
-          <div className="flex flex-wrap gap-2">
-            <Button variant="secondary" onClick={() => props.onIrABorrador(nueva.id)}>
-              <ArrowUpRight className="h-4 w-4 mr-1" />
-              {lista ? "Ver la nueva factura" : "Abrir y timbrar"}
-            </Button>
-            <Button variant="outline" onClick={props.onRefrescar} loading={props.consultando}>
-              Actualizar estado
-            </Button>
-          </div>
-        </div>
-      )}
-    </FormDialogSection>
   );
 }

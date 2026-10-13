@@ -124,16 +124,17 @@ export interface FacturaRefacturacionEstado {
   total: number | null;
   moneda: string;
   cancellation_status: string | null;
+  deleted_at: string | null;
 }
 
-/** Estado mínimo de la factura nueva (para validar el avance del asistente). */
+/** Referencia histórica de original/nueva; deleted_at permite validar vigencia sin ocultar evidencia. */
 export async function obtenerEstadoFacturaRefacturacion(
   facturaId: string,
 ): Promise<FacturaRefacturacionEstado | null> {
   const { data, error } = await supabase
     .from("facturas")
     .select(
-      "id, numero, estado, uuid_fiscal, cliente_nombre, rfc_cliente, total, moneda, cancellation_status",
+      "id, numero, estado, uuid_fiscal, cliente_nombre, rfc_cliente, total, moneda, cancellation_status, deleted_at",
     )
     .eq("id", facturaId)
     .maybeSingle();

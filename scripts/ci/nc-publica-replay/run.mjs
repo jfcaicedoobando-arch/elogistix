@@ -12,7 +12,11 @@ import { verifyMinimal } from './verify-minimal.mjs';
 const IMAGE = 'postgres@sha256:66b6a97eac1771fc78bd201b918b4253859f436c6913aeede97bd5366cce89ae';
 const REPOSITORY = 'jfcaicedoobando-arch/elogistix';
 const mode = process.argv[2];
-assert(['minimal', 'full'].includes(mode) && process.argv.length === 3, 'Usage: run.mjs minimal|full');
+assert(['minimal', 'full'].includes(mode) && (process.argv.length === 3 ||
+  (process.argv.length === 5 && process.argv[3] === '--archive-snapshot')),
+  'Usage: run.mjs minimal|full [--archive-snapshot <exact-known-commit>]');
+// Omission keeps the v1 active-checkout contract. Never infer a snapshot or fall back.
+const archiveSnapshot = process.argv.length === 5 ? process.argv[4] : null;
 assert(process.env.GITHUB_ACTIONS === 'true', 'Actions only; local execution is deliberately refused');
 assert(process.env.GITHUB_EVENT_NAME === 'pull_request', 'pull_request review only');
 assert(process.env.GITHUB_REPOSITORY === REPOSITORY, 'Unexpected repository');
@@ -44,12 +48,14 @@ const sourcePaths = [
   'supabase/migrations/20261012010000_nc_publica_paridad_replay.sql',
 ];
 if (mode === 'full') sourcePaths.push('scripts/db/local-verify.sh', 'scripts/db/schema-snapshot.sh', 'scripts/ci/run-guards.sh', 'scripts/ci/run-rls-suites.sh', 'supabase/schema/squash/cutoff.env', 'supabase/tests/_guards_manifest.txt');
-const sourceHashes = Object.fromEntries(sourcePaths.map(relative => {
-  rejectSymlinkComponents(relative);
-  const source = path.join(root, relative);
-  assert(fs.lstatSync(source).isFile(), `Regular hash source required: ${relative}`);
-  return [relative, hash(fs.readFileSync(source))];
-}));
+const provenance = archiveSnapshot !== null
+  ? { format: 2, ...(await import('./source-evidence.mjs')).collectSourceEvidence(root, mode, archiveSnapshot) }
+  : { format: 1, sources: Object.fromEntries(sourcePaths.map(relative => {
+    rejectSymlinkComponents(relative);
+    const source = path.join(root, relative);
+    assert(fs.lstatSync(source).isFile(), `Regular hash source required: ${relative}`);
+    return [relative, hash(fs.readFileSync(source))];
+  })) };
 const scratch = fs.mkdtempSync(path.join(process.env.RUNNER_TEMP ?? os.tmpdir(), 'nc-publica-review-'));
 const dockerConfig = path.join(scratch, 'docker-config');
 fs.mkdirSync(dockerConfig);
@@ -113,7 +119,7 @@ if (mode === 'minimal') {
   fs.writeFileSync(path.join(out, 'prepare.log'), prepareLog);
   fs.copyFileSync(path.join(prepared, 'source-hashes.json'), path.join(out, 'source-hashes.json'));
 }
-const record = { format: 1, reviewCommit: review, repository: REPOSITORY, mode, image: IMAGE, status: 'created-proposal-run', sources: sourceHashes, scope: mode === 'minimal' ? '24 cases x 2 phases plus metadata; minimum fixture only' : 'official local-verify baseline flow; guards/RLS after dump; no hosted data' };
+const record = { format: provenance.format, reviewCommit: review, repository: REPOSITORY, mode, image: IMAGE, status: 'created-proposal-run', sources: provenance.sources, ...(provenance.sourceBindings ? { sourceBindings: provenance.sourceBindings } : {}), scope: mode === 'minimal' ? '24 cases x 2 phases plus metadata; minimum fixture only' : 'official local-verify baseline flow; guards/RLS after dump; no hosted data' };
 fs.writeFileSync(path.join(out, 'run.json'), JSON.stringify(record, null, 2) + '\n');
 const mounts = ['--mount', `type=bind,source=${stage},target=/repo,readonly`, '--mount', `type=bind,source=${out},target=/evidence`];
 if (prepared) mounts.push('--mount', `type=bind,source=${prepared},target=/prepared,readonly`);

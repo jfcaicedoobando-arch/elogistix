@@ -1,4 +1,4 @@
-// Prepared provenance API; not called by the active runner. No effects at import.
+// Explicit archive provenance API; the runner opts in by exact snapshot. No effects at import.
 import fs from 'node:fs';
 import path from 'node:path';
 import crypto from 'node:crypto';

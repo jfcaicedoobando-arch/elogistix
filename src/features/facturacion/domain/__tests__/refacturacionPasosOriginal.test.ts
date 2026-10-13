@@ -18,7 +18,7 @@ function contexto(factura: FacturaRefacturacion | null): ContextoPasos {
     clienteDestinoId: "cliente-2",
     motivo: "Pago desde otra razón social",
     pagos: [],
-    facturaNueva: { id: "f-1035", numero: "F1035", estado: "Emitida", uuid_fiscal: "UUID-2" },
+    facturaNueva: { id: "f-1035", numero: "F1035", estado: "Emitida", uuid_fiscal: "UUID-2", deleted_at: null },
     original: factura,
     pagoSeleccionadoId: "p-1",
     pagoYaReasignado: false,
