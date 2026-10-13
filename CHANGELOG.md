@@ -1,5 +1,34 @@
 # Changelog
 
+## [13.824.82] - Unreleased
+
+### Padres activos, pagos idempotentes y contexto del tarifario
+
+- Incorpora los guards ya integrados que rechazan facturas dadas de baja como padres operativos de notas de crédito, REP y sustituciones, conservando consultas históricas, conceptos manuales de NC y controles existentes de organización y permisos. El código de REP rechaza un padre dado de baja antes de contactar al proveedor o adquirir el claim; su despliegue Edge no queda acreditado por este registro.
+- Exige padres activos antes de recalcular los totales de una factura o actualizar el tipo de cambio DOF de un embarque. Conserva las fórmulas, el redondeo, los comportamientos de ausencia existentes y las restricciones de embarques cerrados.
+- Limita la comprobación previa de REP a pagos vigentes y conserva el RPC autoritativo e idempotente ante pagos ausentes, dados de baja o errores de lectura, sin fabricar éxito local. El contexto de tarifas exige un embarque activo, pero conserva el snapshot histórico, los ceros y las listas vacías sin consultar el catálogo actual.
+
+### Dependencias y virtualización
+
+- Integra las actualizaciones menores de dependencias y jest-dom 7, con el arnés y catálogo de pruebas de virtualización. El alcance queda sujeto a las pruebas de compatibilidad y navegadores del SHA final; no incorpora Tailwind 4 ni Table 9.
+
+### Refacturación: continuaciones de interfaz vigentes
+
+- Invalida acciones asíncronas de refacturación al cambiar el caso, la organización o la elegibilidad de las referencias; consulta el estado vigente de QueryClient y evita continuaciones obsoletas y acciones repetidas. Conserva la lectura histórica de la factura original y no restaura ni recrea documentos automáticamente. Estas protecciones de frontend no acreditan integridad transaccional del backend.
+
+### Crédito del cliente después de reintentar el tipo de cambio
+
+- Distingue cliente ausente, error de lectura, crédito nulo y crédito cero; revalida las condiciones vigentes después de guardar el tipo de cambio y bloquea la creación mientras la consulta se actualiza o falla. Reintentar un PDF no vuelve a crear documentos.
+
+### Compatibilidad explícita de evidencias de workflows
+
+- Mantiene como predeterminado el formato 1 de las evidencias de NC y habilita el formato 2 sólo mediante un snapshot de archivo conocido y explícito. Conserva el contrato distinto de aceptación y no elimina ni desactiva workflows.
+
+### Alcance y estado de la entrega
+
+- Conserva las 46 entradas existentes completas del manifest y agrega 13.824.82 con las mismas 1,527 migraciones de 13.824.81 en este corte, incluidas 20261013141500 y 20261013151000 ya incorporadas al repositorio. El cambio de metadatos no agrega SQL ni vuelve a ejecutar migraciones.
+- El frente transaccional de backend de refacturación sigue fuera de este corte; no se declara resuelto. El estado de la base, el despliegue de Edge Functions, la publicación web y la validación de la interfaz publicada requieren evidencias separadas. La integración y las pruebas locales no equivalen a un despliegue.
+
 ## [13.824.81] - Unreleased
 
 ### Bajas lógicas: fuentes operativas activas y consultas históricas
