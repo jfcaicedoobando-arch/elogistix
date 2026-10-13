@@ -55,6 +55,7 @@ export async function obtenerReconciliacion3Columnas(
     .from("embarques")
     .select("cotizacion_id, organization_id, tipo_cambio_usd, tipo_cambio_eur")
     .eq("id", embarqueId)
+    .is("deleted_at", null)
     .maybeSingle();
   scope.assertCurrent();
   if (embErr) throw new Error(embErr.message);
@@ -78,8 +79,12 @@ export async function obtenerReconciliacion3Columnas(
       // SAFE-CAST: version_aceptada se agregó en Fase 2.
       .select("version_aceptada" as unknown as string)
       .eq("id", emb.cotizacion_id)
+      .is("deleted_at", null)
       .maybeSingle();
+    scope.assertCurrent();
     if (cotErr) throw new Error(cotErr.message);
+    // Sin una cotización viva, versión null haría consultar sus costos actuales.
+    if (!cotMeta) throw new Error("La cotización de origen ya no está disponible. Actualiza el embarque antes de consultar sus costos.");
     // SAFE-CAST: version_aceptada existe pero el tipo generado aún no la incluye.
     versionAceptada = ((cotMeta as unknown as { version_aceptada: number | null } | null)
       ?.version_aceptada) ?? null;

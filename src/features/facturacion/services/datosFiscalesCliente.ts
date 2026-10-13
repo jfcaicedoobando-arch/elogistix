@@ -26,13 +26,16 @@ export async function fetchAmbienteEmision(organizationId: string): Promise<stri
 }
 
 export async function fetchClienteFiscal(clienteId: string): Promise<ClienteFiscalRow | null> {
-  return unwrap(
+  const row = await unwrap(
     supabase
       .from("clientes")
       .select("rfc, codigo_postal, regimen_fiscal, uso_cfdi_default")
       .eq("id", clienteId)
+      .is("deleted_at", null)
       .maybeSingle(),
-  ) as Promise<ClienteFiscalRow | null>;
+  );
+  if (!row) throw new Error("El cliente ya no está disponible. Actualiza la factura antes de consultar sus datos fiscales.");
+  return row;
 }
 
 import type { DatosTimbradoPatch } from "../types/datosFiscales";

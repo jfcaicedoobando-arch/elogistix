@@ -23,15 +23,22 @@ import { formatCurrency } from "@/lib/formatters/numbers";
  * es la última línea de defensa.
  */
 async function assertMontosCuadran(movId: string, tipo: "cxc" | "cxp", pagoId: string) {
-  const [{ data: mov }, { data: pago }] = await Promise.all([
-    supabase.from("bbva_movimientos").select("cargo, abono").eq("id", movId).maybeSingle(),
+  const [{ data: mov, error: movErr }, { data: pago, error: pagoErr }] = await Promise.all([
+    supabase.from("bbva_movimientos").select("cargo, abono").eq("id", movId).is("deleted_at", null).maybeSingle(),
     supabase
       .from(tipo === "cxc" ? "pagos_factura" : "pagos_proveedor")
       .select("monto, moneda")
       .eq("id", pagoId)
+      .is("deleted_at", null)
       .maybeSingle(),
   ]);
-  if (!mov || !pago) return;
+  if (movErr) throw movErr;
+  if (pagoErr) throw pagoErr;
+  if (!mov) throw conflictoConcurrenciaError();
+  if (!pago) throw new MovimientoVinculoError(
+    "LC_MOVIMIENTO_PAGO_INEXISTENTE",
+    "El pago ya no está disponible. Recarga antes de conciliar el movimiento.",
+  );
   const montoMov = importeMovimiento(mov);
   const montoPago = Number(pago.monto ?? 0);
   // MNY P1.2: la tolerancia se toma de la moneda del pago (= la de la cuenta).
@@ -50,14 +57,16 @@ async function assertMontosCuadran(movId: string, tipo: "cxc" | "cxp", pagoId: s
  * conciliarse como cobro. El trigger de base de datos es la última defensa.
  */
 async function assertSentidoCorrecto(movId: string, tipo: "cxc" | "cxp") {
-  const { data: mov } = await supabase
+  const { data: mov, error } = await supabase
     .from("bbva_movimientos")
     .select("cargo, abono")
     .eq("id", movId)
+    .is("deleted_at", null)
     .maybeSingle();
-  if (!mov) return;
+  if (error) throw error;
+  if (!mov) throw conflictoConcurrenciaError();
   const fila = (Array.isArray(mov) ? mov[0] : mov) as { cargo?: number | null; abono?: number | null } | undefined;
-  if (!fila) return;
+  if (!fila) throw conflictoConcurrenciaError();
   const cargo = Number(fila.cargo ?? 0);
   const abono = Number(fila.abono ?? 0);
   if (tipo === "cxc" && (abono <= 0 || cargo !== 0)) {

@@ -38,6 +38,7 @@ export async function monedaDeCuenta(
     .from("cuentas_bancarias")
     .select("moneda")
     .eq("id", cuentaBancariaId)
+    .is("deleted_at", null)
     .maybeSingle();
   if (error) throw error;
   return monedaConocida(data?.moneda);

@@ -30,9 +30,9 @@ describe("datosFiscalesCliente service", () => {
     await expect(fetchClienteFiscal("c1")).resolves.toEqual(row);
   });
 
-  it("fetchClienteFiscal devuelve null cuando no hay data", async () => {
+  it("fetchClienteFiscal rechaza cuando no hay cliente vivo", async () => {
     mock.setTableResult("clientes", { data: null, error: null });
-    await expect(fetchClienteFiscal("c1")).resolves.toBeNull();
+    await expect(fetchClienteFiscal("c1")).rejects.toThrow(/cliente ya no está disponible/);
   });
 
   it("fetchClienteFiscal propaga error", async () => {
