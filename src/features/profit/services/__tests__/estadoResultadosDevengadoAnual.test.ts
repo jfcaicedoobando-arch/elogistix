@@ -67,7 +67,7 @@ describe("AUD83: tendencia de Facturas y EERR mensual con el mismo criterio cont
     expect(fetches.ncs).toHaveBeenCalledWith("org-83", "2026-01-01", "2026-12-31");
     const mensual = await fetchEstadoResultadosDevengado({ ...params, month: 10 });
     const octubre = anual.find((fila) => fila.mes === 10)!;
-    expect(octubre).toEqual({ mes: 10, ingresos_mxn: 251.11, costos_mxn: 3134.4 });
+    expect(octubre).toEqual({ valuacion: { completa: true, conceptos_sin_tc_count: 0, excluidos_sin_tc: [] }, mes: 10, ingresos_mxn: 251.11, costos_mxn: 3134.4 });
     expect(octubre.ingresos_mxn).toBe(mensual.totalIngresos.total);
     expect(octubre.costos_mxn).toBe(mensual.totalCostos.total);
     expect(octubre.ingresos_mxn - octubre.costos_mxn).toBeCloseTo(-2883.29, 2);
@@ -94,7 +94,7 @@ describe("AUD83: tendencia de Facturas y EERR mensual con el mismo criterio cont
     }]);
     const [octubre] = await fetchEstadoResultadosDevengadoAnual({ ...params, desdeMes: 10, hastaMes: 10 });
     const mensual = await fetchEstadoResultadosDevengado({ ...params, month: 10 });
-    expect(octubre).toEqual({ mes: 10, ingresos_mxn: 3150, costos_mxn: 900 });
+    expect(octubre).toEqual({ valuacion: { completa: true, conceptos_sin_tc_count: 0, excluidos_sin_tc: [] }, mes: 10, ingresos_mxn: 3150, costos_mxn: 900 });
     expect(octubre.ingresos_mxn).toBe(mensual.totalIngresos.total);
     expect(octubre.costos_mxn).toBe(mensual.totalCostos.total);
   });
@@ -139,7 +139,7 @@ describe("AUD83: tendencia de Facturas y EERR mensual con el mismo criterio cont
     const [anual] = await fetchEstadoResultadosDevengadoAnual({ ...params, desdeMes: 10, hastaMes: 10 });
     expect(mensual.totalIngresos.total).toBe(3050);
     expect(mensual.totalCostos.total).toBe(700);
-    expect(anual).toEqual({ mes: 10, ingresos_mxn: 3050, costos_mxn: 700 });
+    expect(anual).toEqual({ valuacion: { completa: true, conceptos_sin_tc_count: 0, excluidos_sin_tc: [] }, mes: 10, ingresos_mxn: 3050, costos_mxn: 700 });
   });
 
   it("una NC sin base avisa en su mes sin bloquear los demás meses", async () => {
@@ -150,7 +150,7 @@ describe("AUD83: tendencia de Facturas y EERR mensual con el mismo criterio cont
     expect(mensual.totalCostos.total).toBe(100);
     expect(mensual.notas_proveedor_sin_base).toEqual(["legacy"]);
     expect(anual[9]).toMatchObject({ costos_mxn: 100, notas_proveedor_sin_base_count: 1 });
-    expect(anual[8]).toEqual({ mes: 9, ingresos_mxn: 0, costos_mxn: 0 });
+    expect(anual[8]).toEqual({ valuacion: { completa: true, conceptos_sin_tc_count: 0, excluidos_sin_tc: [] }, mes: 9, ingresos_mxn: 0, costos_mxn: 0 });
   });
 
   it("un rango entre años carga sólo los meses solicitados y conserva bloqueo de NC sin desglose", async () => {
@@ -164,4 +164,18 @@ describe("AUD83: tendencia de Facturas y EERR mensual con el mismo criterio cont
     });
     expect(fetches.ncs).toHaveBeenCalledWith("org-83", "2026-10-01", "2026-10-31");
   });
+});
+
+
+it("EX01: monthly and annual accrued results retain the same unavailable FX valuation", async () => {
+  datos.pfacts = mapProveedorFacturaRows([{
+    id: "pf-ex01", subtotal: 100, total: 116, moneda: "CAD", fecha_emision: "2026-10-04",
+  }]);
+  const mensual = await fetchEstadoResultadosDevengado({ ...params, month: 10 });
+  const anual = await fetchEstadoResultadosDevengadoAnual(params);
+  expect(mensual.valuacion).toMatchObject({ completa: false, conceptos_sin_tc_count: 1,
+    excluidos_sin_tc: [{embarque_id: "pf-pf-ex01", moneda: "CAD", nominal: 100, seccion: "costos"}],
+  });
+  expect(anual[9].valuacion).toEqual(mensual.valuacion);
+  expect(anual[8].valuacion?.completa).toBe(true);
 });

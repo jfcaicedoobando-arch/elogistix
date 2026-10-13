@@ -1,3 +1,4 @@
+import { exigirValuacionCompleta } from "../domain/valuacion";
 import { avisoNcProveedorSinBase } from "@/lib/financial/baseNcProveedor";
 import { formatCurrency } from "@/lib/formatters";
 import type { EstadoResultados, ModoColumna } from "@/features/profit/domain/estadoResultados";
@@ -18,6 +19,7 @@ export const ESTADO_RESULTADOS_CSV_HEADERS = [
 ] as const;
 
 export function buildEstadoResultadosCsvRows(data: EstadoResultados) {
+  exigirValuacionCompleta(data);
   const rowOf = (
     seccion: string,
     concepto: string,
@@ -41,11 +43,11 @@ export function buildEstadoResultadosCsvRows(data: EstadoResultados) {
   rows.push({
     seccion: "Resultado",
     concepto: "MARGEN %",
-    maritimo: data.margen.porModo["Marítimo"].toFixed(2),
-    aereo: data.margen.porModo["Aéreo"].toFixed(2),
-    terrestre: data.margen.porModo["Terrestre"].toFixed(2),
-    otros: data.margen.porModo["Otros"].toFixed(2),
-    total: data.margen.total.toFixed(2),
+    maritimo: data.totalIngresos.porModo["Marítimo"] === 0 ? "No calculable" : data.margen.porModo["Marítimo"].toFixed(2),
+    aereo: data.totalIngresos.porModo["Aéreo"] === 0 ? "No calculable" : data.margen.porModo["Aéreo"].toFixed(2),
+    terrestre: data.totalIngresos.porModo["Terrestre"] === 0 ? "No calculable" : data.margen.porModo["Terrestre"].toFixed(2),
+    otros: data.totalIngresos.porModo["Otros"] === 0 ? "No calculable" : data.margen.porModo["Otros"].toFixed(2),
+    total: data.totalIngresos.total === 0 ? "No calculable" : data.margen.total.toFixed(2),
   });
   return rows;
 }

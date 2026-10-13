@@ -85,7 +85,7 @@ describe("AUD83: el EERR mensual/anual conserva la exclusión de NC con padre el
     const anual = await fetchEstadoResultadosDevengadoAnual(params);
     expect(mensual.totalIngresos.total).toBe(0);
     expect(mensual.totalCostos.total).toBe(0);
-    expect(anual[9]).toEqual({ mes: 10, ingresos_mxn: 0, costos_mxn: 0 });
+    expect(anual[9]).toEqual({ valuacion: { completa: true, conceptos_sin_tc_count: 0, excluidos_sin_tc: [] }, mes: 10, ingresos_mxn: 0, costos_mxn: 0 });
   });
 
   it.each(["2026-09-03", "2025-10-03"])("mantiene las NC del periodo con padre vivo de %s", async (fechaPadre) => {
@@ -97,7 +97,7 @@ describe("AUD83: el EERR mensual/anual conserva la exclusión de NC con padre el
     const [anual] = await fetchEstadoResultadosDevengadoAnual({ ...params, desdeMes: 10, hastaMes: 10 });
     expect(mensual.totalIngresos.total).toBe(-50);
     expect(mensual.totalCostos.total).toBe(-50);
-    expect(anual).toEqual({ mes: 10, ingresos_mxn: -50, costos_mxn: -50 });
+    expect(anual).toEqual({ valuacion: { completa: true, conceptos_sin_tc_count: 0, excluidos_sin_tc: [] }, mes: 10, ingresos_mxn: -50, costos_mxn: -50 });
     for (const table of ["factura_notas_credito", "proveedor_notas_credito"]) {
       const relacion = table === "factura_notas_credito" ? "facturas" : "proveedor_facturas";
       for (const call of db.calls.filter((c) => c.table === table)) {
@@ -117,6 +117,6 @@ describe("AUD83: el EERR mensual/anual conserva la exclusión de NC con padre el
     const [anual] = await fetchEstadoResultadosDevengadoAnual({ ...params, desdeMes: 10, hastaMes: 10 });
     expect(mensual.totalIngresos.total).toBe(0);
     expect(mensual.totalCostos.total).toBe(0);
-    expect(anual).toEqual({ mes: 10, ingresos_mxn: 0, costos_mxn: 0 });
+    expect(anual).toEqual({ valuacion: { completa: true, conceptos_sin_tc_count: 0, excluidos_sin_tc: [] }, mes: 10, ingresos_mxn: 0, costos_mxn: 0 });
   });
 });
