@@ -107,9 +107,11 @@ export async function crearEmbarqueBorradorDesdeCotizacion(cotizacionId: string)
     .from("cotizaciones")
     .select("tipo_documento")
     .eq("id", cotizacionId)
+    .is("deleted_at", null)
     .maybeSingle();
   if (errCot) throw errCot;
-  if (cot?.tipo_documento === "informativa") {
+  if (!cot) throw new Error("La cotización no existe o fue eliminada.");
+  if (cot.tipo_documento === "informativa") {
     throw new Error("Las cotizaciones informativas (tarifarios) no pueden convertirse a embarques");
   }
   await assertTarifaSinCambios(cotizacionId);

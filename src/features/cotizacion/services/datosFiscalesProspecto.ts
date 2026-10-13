@@ -24,6 +24,7 @@ export async function fetchDatosFiscalesProspecto(
     .from("crm_oportunidades")
     .select("lead_id")
     .eq("id", oportunidadId)
+    .is("deleted_at", null)
     .maybeSingle();
   if (errOp || !op?.lead_id) return VACIO;
 
@@ -31,6 +32,7 @@ export async function fetchDatosFiscalesProspecto(
     .from("crm_leads")
     .select("rfc, direccion, ciudad, entidad_federativa, cp")
     .eq("id", op.lead_id)
+    .is("deleted_at", null)
     .maybeSingle();
   if (error || !lead) return VACIO;
 

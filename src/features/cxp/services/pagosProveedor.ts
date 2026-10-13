@@ -58,6 +58,7 @@ async function resolverOrgFactura(facturaId: string): Promise<string> {
     .from("proveedor_facturas")
     .select("organization_id, estado_aprobacion")
     .eq("id", facturaId)
+    .is("deleted_at", null)
     .maybeSingle();
   if (errFact) throw errFact;
   if (!fact?.organization_id) {

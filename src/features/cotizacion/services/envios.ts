@@ -53,7 +53,12 @@ export async function fetchContactosClienteConEmail(
         .select("id, nombre, contacto, email, tipo")
         .eq("cliente_id", clienteId)
         .is("deleted_at", null),
-      supabase.from("clientes").select("nombre, email").eq("id", clienteId).maybeSingle(),
+      supabase
+        .from("clientes")
+        .select("nombre, email")
+        .eq("id", clienteId)
+        .is("deleted_at", null)
+        .maybeSingle(),
     ]);
   if (errContactos) throw errContactos;
   if (errCliente) throw errCliente;
