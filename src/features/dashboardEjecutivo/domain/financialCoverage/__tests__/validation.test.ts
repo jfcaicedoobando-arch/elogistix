@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
-import { diagnoseFinancialCoverage as diagnose } from '../../src/features/dashboardEjecutivo/domain/financialCoverage/diagnostics';
-import { QUERY_IDS, type QueryId } from '../../src/features/dashboardEjecutivo/domain/financialCoverage/contract';
-import { count, observedDate } from '../../src/features/dashboardEjecutivo/domain/financialCoverage/parsing';
+import { diagnoseFinancialCoverage as diagnose } from '@/features/dashboardEjecutivo/domain/financialCoverage/diagnostics';
+import { QUERY_IDS, type QueryId } from '@/features/dashboardEjecutivo/domain/financialCoverage/contract';
+import { count, observedDate } from '@/features/dashboardEjecutivo/domain/financialCoverage/parsing';
 import { bankRow, batch, input, noteRow, replace, request, scheduleRow } from './fixtures';
 
 const source = (value: unknown, id: QueryId = '15-nc-scope-fx') => diagnose(value).sources.find((item) => item.queryId === id);

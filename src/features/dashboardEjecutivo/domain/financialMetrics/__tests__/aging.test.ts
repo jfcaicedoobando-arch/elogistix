@@ -1,5 +1,5 @@
 import { describe,it,expect } from 'vitest';
-import { calculateAging } from '../../src/features/dashboardEjecutivo/domain/financialMetrics/aging';
+import { calculateAging } from '@/features/dashboardEjecutivo/domain/financialMetrics/aging';
 import { code,scope as baseScope,value } from './fixtures';
 const scope = { ...baseScope, balanceAsOf: '2026-09-30' };
 describe('contractual aging, separate from payment schedule',()=>{

@@ -1,6 +1,6 @@
 import { describe,it,expect } from 'vitest';
-import { calculateForecast13Weeks, type ExpectedCashEvent } from '../../src/features/dashboardEjecutivo/domain/financialMetrics/forecast';
-import { calculateCashRunway, type ActualCashEvent } from '../../src/features/dashboardEjecutivo/domain/financialMetrics/runway';
+import { calculateForecast13Weeks, type ExpectedCashEvent } from '@/features/dashboardEjecutivo/domain/financialMetrics/forecast';
+import { calculateCashRunway, type ActualCashEvent } from '@/features/dashboardEjecutivo/domain/financialMetrics/runway';
 import { cash,cashScope,code,period,value } from './fixtures';
 const event: ExpectedCashEvent = { cashEventKey:'settlement-1',obligationKey:'invoice-1',expectedDate:'2026-10-01',dateEvidence:'promise',sourceId:'promise-1',direction:'in',amountMinor:50_000 };
 function forecast() {return {scope:{...cashScope},opening:{...cash},start:'2026-10-01',events:[{...event}],obligations:[{obligationKey:'invoice-1',direction:'in' as const,remainingCashMinor:50_000}],settledCashEventKeys:[] as string[]};}

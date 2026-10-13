@@ -1,4 +1,4 @@
-import type { CoverageInput, ObservationBatch, QueryId } from '../../src/features/dashboardEjecutivo/domain/financialCoverage/contract';
+import type { CoverageInput, ObservationBatch, QueryId } from '@/features/dashboardEjecutivo/domain/financialCoverage/contract';
 
 /** Synthetic shapes only. No live tenant, account, document IDs, amounts or exported rows. */
 export const request = { organizationId: 'test-organization-a', currency: 'USD', asOf: '2040-10-10', selectedMonth: '2040-09' };

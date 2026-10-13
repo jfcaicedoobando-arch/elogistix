@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { diagnoseFinancialCoverage as diagnose } from '../../src/features/dashboardEjecutivo/domain/financialCoverage/diagnostics';
-import { METRICS, POLICY_KEYS, type CoverageDiagnostic } from '../../src/features/dashboardEjecutivo/domain/financialCoverage/contract';
+import { diagnoseFinancialCoverage as diagnose } from '@/features/dashboardEjecutivo/domain/financialCoverage/diagnostics';
+import { METRICS, POLICY_KEYS, type CoverageDiagnostic } from '@/features/dashboardEjecutivo/domain/financialCoverage/contract';
 import { bankRow, batch, creditRow, input, noteRow, paymentRow, replace, request, scheduleRow } from './fixtures';
 
 const codes = (result: CoverageDiagnostic) => result.causes.map((cause) => cause.code);

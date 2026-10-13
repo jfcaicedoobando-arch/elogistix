@@ -1,7 +1,7 @@
 /** All amounts are artificial minor units. These fixtures certify no live data. */
-import type { ComparableScope, Result } from '../../src/features/dashboardEjecutivo/domain/financialMetrics/contract';
-import type { EfficiencyInput } from '../../src/features/dashboardEjecutivo/domain/financialMetrics/efficiency';
-import type { CashScope, ReconciledCash } from '../../src/features/dashboardEjecutivo/domain/financialMetrics/cashContract';
+import type { ComparableScope, Result } from '@/features/dashboardEjecutivo/domain/financialMetrics/contract';
+import type { EfficiencyInput } from '@/features/dashboardEjecutivo/domain/financialMetrics/efficiency';
+import type { CashScope, ReconciledCash } from '@/features/dashboardEjecutivo/domain/financialMetrics/cashContract';
 export const period = { start: '2026-09-01', end: '2026-09-30' };
 export const scope: ComparableScope = { organizationId: 'fictional-org', currency: 'MXN', evidenceId: 'mock-only', complete: true,
   basis: 'net-commercial', populationPolicyId: 'mock-population', taxAllocationPolicyId: 'mock-explicit-net-components',

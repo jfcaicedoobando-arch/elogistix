@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
-import { calculateEfficiency } from '../../src/features/dashboardEjecutivo/domain/financialMetrics/efficiency';
-import { closedThreeMonths, daysInclusive, epochDay } from '../../src/features/dashboardEjecutivo/domain/financialMetrics/calendar';
+import { calculateEfficiency } from '@/features/dashboardEjecutivo/domain/financialMetrics/efficiency';
+import { closedThreeMonths, daysInclusive, epochDay } from '@/features/dashboardEjecutivo/domain/financialMetrics/calendar';
 import { code, efficiency, value } from './fixtures';
 describe('calendar and closed comparison', () => {
   it.each([['2026-02-01','2026-02-28',28], ['2024-02-01','2024-02-29',29], ['2026-04-01','2026-04-30',30], ['2026-10-01','2026-10-31',31]])('counts real days %s', (start,end,days) => expect(daysInclusive({start,end})).toBe(days));

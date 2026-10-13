@@ -1,8 +1,8 @@
 import { describe,it,expect } from 'vitest';
-import { sumMoney } from '../../src/features/dashboardEjecutivo/domain/financialMetrics/contract';
-import { closedThreeMonths, dateFromDay, epochDay } from '../../src/features/dashboardEjecutivo/domain/financialMetrics/calendar';
-import { calculateEfficiency } from '../../src/features/dashboardEjecutivo/domain/financialMetrics/efficiency';
-import { calculateForecast13Weeks } from '../../src/features/dashboardEjecutivo/domain/financialMetrics/forecast';
+import { sumMoney } from '@/features/dashboardEjecutivo/domain/financialMetrics/contract';
+import { closedThreeMonths, dateFromDay, epochDay } from '@/features/dashboardEjecutivo/domain/financialMetrics/calendar';
+import { calculateEfficiency } from '@/features/dashboardEjecutivo/domain/financialMetrics/efficiency';
+import { calculateForecast13Weeks } from '@/features/dashboardEjecutivo/domain/financialMetrics/forecast';
 import { cash,cashScope,code,efficiency,value } from './fixtures';
 function forecast() { return {scope:cashScope,opening:{...cash,availableMinor:100},start:'2026-10-01',events:[
   {cashEventKey:'out',obligationKey:'ap',expectedDate:'2026-10-01',dateEvidence:'payment-schedule' as const,sourceId:'plan-out',direction:'out' as const,amountMinor:200},

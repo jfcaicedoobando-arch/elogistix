@@ -18,7 +18,7 @@ Código candidato nuevo: `src/features/dashboardEjecutivo/domain/financialCovera
 - `observations.ts`: validación del sobre, organización, fuentes y filas; eliminación de datos no necesarios.
 - `diagnostics.ts`: tres períodos calendario, políticas pendientes, causas acumuladas y salida siempre N/D.
 
-Pruebas nuevas: `tests/financialCoverage/{fixtures,diagnostics.test,validation.test,review-regressions.test}.ts`. Fixtures ficticios y valores de prueba; no contienen UUIDs, documentos, importes, nombres ni filas exportadas de la empresa auditada. Los nombres de columnas y formas provienen del inventario; los valores de ejemplo no son resultados del negocio.
+Pruebas nuevas: `src/features/dashboardEjecutivo/domain/financialCoverage/__tests__/{fixtures,diagnostics.test,validation.test,review-regressions.test}.ts`. Fixtures ficticios y valores de prueba; no contienen UUIDs, documentos, importes, nombres ni filas exportadas de la empresa auditada. Los nombres de columnas y formas provienen del inventario; los valores de ejemplo no son resultados del negocio.
 
 Única dependencia del núcleo etapa 1: utilidades puras de fecha y tipo `Period` en `financialMetrics/calendar.ts`. No se modifica ninguno de sus quince archivos revisados. No se agregan paquetes, cambios de esquema, funciones SQL, GRANT, rutas, servicios, pantallas ni imports productivos.
 

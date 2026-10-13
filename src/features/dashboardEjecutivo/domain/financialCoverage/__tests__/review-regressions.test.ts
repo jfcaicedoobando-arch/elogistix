@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { diagnoseFinancialCoverage as diagnose } from '../../src/features/dashboardEjecutivo/domain/financialCoverage/diagnostics';
+import { diagnoseFinancialCoverage as diagnose } from '@/features/dashboardEjecutivo/domain/financialCoverage/diagnostics';
 import { bankRow, batch, creditRow, input, replace, request, scheduleRow } from './fixtures';
 
 describe('independent coverage review regressions', () => {
