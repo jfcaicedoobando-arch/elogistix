@@ -17,6 +17,7 @@ import { assertNotTruncated } from "@/lib/supabase/assertNotTruncated";
 import { kpisCobranzaSchema, type KpisCobranzaRemotos } from "./cobranzaWire";
 export type { KpisCobranzaRemotos } from "./cobranzaWire";
 import { escapeIlike } from "@/lib/search/ilike";
+import { conAbortSignal } from "@/lib/supabase/paginadoPorClave";
 
 // Re-export de agregados puros (extraídos a `cobranzaAggregates.ts` en 12.61.18).
 export {
@@ -64,11 +65,14 @@ export interface FetchCobranzaFilters {
  */
 export async function fetchCobranzaKpis(
   filtros: FetchCobranzaFilters = {},
+  signal?: AbortSignal,
 ): Promise<KpisCobranzaRemotos> {
-  const { data, error } = await supabase.rpc("cobranza_agregados", {
+  signal?.throwIfAborted();
+  const { data, error } = await conAbortSignal(supabase.rpc("cobranza_agregados", {
     p_cliente_id: filtros.cliente_id ?? undefined,
     p_moneda: filtros.moneda && filtros.moneda !== "todas" ? filtros.moneda : undefined,
-  });
+  }), signal);
+  signal?.throwIfAborted();
   if (error) throw error;
   return kpisCobranzaSchema.parse(data);
 }
@@ -83,8 +87,9 @@ const LIMITE_COBRANZA = 2000;
  * grande el corte de 2000 dejaba fuera facturas vencidas y el listado no
  * cuadraba con los KPIs. La RPC aplica el mismo canon de vencimiento.
  */
-export async function fetchCobranza(filtros: FetchCobranzaFilters = {}): Promise<FacturaCobranza[]> {
-  const { data, error } = await supabase.rpc("cobranza_listado", {
+export async function fetchCobranza(filtros: FetchCobranzaFilters = {}, signal?: AbortSignal): Promise<FacturaCobranza[]> {
+  signal?.throwIfAborted();
+  const { data, error } = await conAbortSignal(supabase.rpc("cobranza_listado", {
     p_cliente_id: filtros.cliente_id ?? undefined,
     p_moneda: filtros.moneda && filtros.moneda !== "todas" ? filtros.moneda : undefined,
     p_estatus: filtros.estatus && filtros.estatus !== "todos" ? filtros.estatus : undefined,
@@ -93,7 +98,8 @@ export async function fetchCobranza(filtros: FetchCobranzaFilters = {}): Promise
     // facturas que no coinciden. Se envía el término como literal.
     p_search: filtros.search ? escapeIlike(filtros.search) : undefined,
     p_limit: LIMITE_COBRANZA,
-  });
+  }), signal);
+  signal?.throwIfAborted();
   if (error) throw error;
   assertNotTruncated(data, LIMITE_COBRANZA, "facturacion.fetchCobranza");
 

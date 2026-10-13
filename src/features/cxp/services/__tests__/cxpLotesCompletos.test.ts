@@ -75,17 +75,25 @@ function builder(): Record<string, unknown> {
   const b: Record<string, unknown> = {};
   let rango: [number, number] = [0, 999];
   let excluyeCanceladas = false;
+  let despues: string | null = null;
+  const columnasOrden: string[] = [];
   const chain = (nombre: string) => (...args: unknown[]) => {
     if (nombre === "range") {
       rango = [args[0] as number, args[1] as number];
       estado.rangos.push(rango);
     }
+    if (nombre === "limit") {
+      rango = [0, Number(args[0]) - 1];
+      estado.rangos.push(rango);
+    }
+    if (nombre === "gt" && args[0] === "id") despues = String(args[1]);
+    if (nombre === "order") columnasOrden.push(String(args[0]));
     if (nombre === "order") estado.ordenes.push(String(args[0]));
     if (nombre === "neq" && args[0] === "estado") excluyeCanceladas = true;
     if (nombre === "eq") estado.eqs.push([String(args[0]), String(args[1])]);
     return b;
   };
-  for (const m of ["select", "is", "neq", "eq", "or", "gte", "lte", "order", "range", "in"]) {
+  for (const m of ["select", "is", "neq", "eq", "or", "gt", "gte", "lte", "order", "range", "limit", "in"]) {
     b[m] = chain(m);
   }
   b.then = (resolve: (v: unknown) => unknown) => {
@@ -94,15 +102,14 @@ function builder(): Record<string, unknown> {
       return resolve({ data: null, error: { message: "lote roto" } });
     }
     let filas = estado.filas;
+    if (despues) filas = filas.filter(f => f.id > despues!);
     if (excluyeCanceladas) filas = filas.filter((f) => f.estado !== "Cancelada");
     for (const [col, val] of estado.eqs) {
       if (col === "estado_aprobacion") filas = filas.filter((f) => f.estado_aprobacion === val);
     }
     // Orden determinista con desempate por id, igual que el servicio pide.
-    const ordenadas = [...filas].sort((a, z) =>
-      (a.fecha_vencimiento ?? "9999").localeCompare(z.fecha_vencimiento ?? "9999") ||
-      a.id.localeCompare(z.id),
-    );
+    const ordenadas = [...filas].sort((a, z) => columnasOrden[0] === "id" ? a.id.localeCompare(z.id)
+      : (a.fecha_vencimiento ?? "9999").localeCompare(z.fecha_vencimiento ?? "9999") || a.id.localeCompare(z.id));
     const page = ordenadas.slice(rango[0], rango[1] + 1).map(toJoined);
     return resolve({ data: page, error: null });
   };

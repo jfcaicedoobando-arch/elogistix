@@ -17,6 +17,7 @@ import {
 import type { FacturaCxP, FetchCxPFiltros } from "./proveedorFacturas.types";
 import { fetchSaldosProveedorFacturas } from "./saldosProveedorFactura";
 import { todayLocalISO } from "@/lib/date/today";
+import { aplicarCursor, conAbortSignal, leerPaginasPorClave } from "@/lib/supabase/paginadoPorClave";
 
 export type {
   ProveedorFacturaRow,
@@ -29,8 +30,7 @@ export type {
 
 /**
  * Tamaño de lote de lectura. NO es un cap: `fetchFacturasCxP` pide lotes
- * consecutivos hasta recibir uno incompleto, así que el resultado siempre
- * contiene todas las filas que cumplen los filtros.
+ * por clave hasta uno incompleto. Las peticiones no comparten un snapshot.
  */
 const CXP_BATCH_SIZE = 1000;
 
@@ -82,38 +82,33 @@ function aplicarFiltrosServidor<Q extends QueryFiltrable<Q>>(q: Q, filtros: Fetc
  * Antes esta función pedía un solo `.range()` de 200 filas y luego aplicaba
  * los filtros derivados (estatus/origen) en memoria: las facturas posteriores
  * a la 200 nunca se veían, un filtro cuya única coincidencia estaba después
- * decía "sin resultados" y los KPIs salían incompletos. Ahora recorre lotes
- * consecutivos hasta recibir uno incompleto, con orden determinista
- * (`fecha_vencimiento`, desempate por `id`) para no omitir ni duplicar filas
- * entre rangos cuando varias comparten fecha.
+ * decía "sin resultados" y los KPIs salían incompletos. La lectura por ID
+ * inmutable evita desplazar páginas por altas/bajas anteriores al cursor.
+ * El orden de presentación por vencimiento se aplica al terminar la lectura.
  */
-async function leerTodosLosLotes(filtros: FetchCxPFiltros): Promise<Joined[]> {
-  const acumulado: Joined[] = [];
-  for (let offset = 0; ; offset += CXP_BATCH_SIZE) {
+async function leerTodosLosLotes(filtros: FetchCxPFiltros, signal?: AbortSignal): Promise<Joined[]> {
+  return leerPaginasPorClave<Joined>("cxp.facturas", async (despues, lote) => {
     const base = supabase
       .from("proveedor_facturas")
       .select(PROVEEDOR_FACTURAS_SELECT)
       .is("deleted_at", null)
-      .order("fecha_vencimiento", { ascending: true, nullsFirst: false })
       .order("id", { ascending: true })
-      .range(offset, offset + CXP_BATCH_SIZE - 1);
+      .limit(lote);
 
-    const { data, error } = await aplicarFiltrosServidor(base, filtros);
+    const { data, error } = await conAbortSignal(aplicarCursor(aplicarFiltrosServidor(base, filtros), ["id"], despues), signal);
     // El error de cualquier lote se propaga: nunca devolvemos un resultado
     // parcial como si fuera completo.
-    if (error) throw error;
     // SAFE-CAST: `Joined` modela el shape del select con embeds; Supabase devuelve unknown.
-    const lote = (data as unknown as Joined[] | null) ?? [];
-    acumulado.push(...lote);
-    if (lote.length < CXP_BATCH_SIZE) return acumulado;
-  }
+    return { data: data as unknown as Joined[] | null, error };
+  }, (fila) => [fila.id], { lote: CXP_BATCH_SIZE, capDuro: Infinity, signal });
 }
 
-export async function fetchFacturasCxP(filtros: FetchCxPFiltros = {}, hoyIso = todayLocalISO()): Promise<FacturaCxP[]> {
-  const crudas = await leerTodosLosLotes(filtros);
+export async function fetchFacturasCxP(filtros: FetchCxPFiltros = {}, hoyIso = todayLocalISO(), signal?: AbortSignal): Promise<FacturaCxP[]> {
+  const crudas = await leerTodosLosLotes(filtros, signal);
+  crudas.sort((a, b) => (a.fecha_vencimiento ?? "\uffff").localeCompare(b.fecha_vencimiento ?? "\uffff") || a.id.localeCompare(b.id));
   // N1: el saldo (pagos + notas de crédito convertidas a la moneda de la
   // factura) lo calcula el servidor; aquí sólo se mapea.
-  const saldos = await fetchSaldosProveedorFacturas(crudas.map((r) => r.id));
+  const saldos = await fetchSaldosProveedorFacturas(crudas.map((r) => r.id), signal);
   // Corte capturado antes del I/O: todos los lotes y sus filtros usan el mismo día.
   const rows = crudas.map((r) => mapJoinedRow(r, saldos.get(r.id), hoyIso));
   // Los filtros derivados (estatus/origen) se aplican sobre el conjunto

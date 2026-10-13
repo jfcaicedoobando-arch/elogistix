@@ -46,7 +46,7 @@ describe("fetchProyeccionMes", () => {
       ], error: null,
     });
     mock.setTableResult("conceptos_costo", {
-      data: [{ embarque_id: "e1", monto: 50, moneda: "USD" }],
+      data: [{ id: "cc1", embarque_id: "e1", monto: 50, moneda: "USD" }],
       error: null,
     });
     mock.setTableResult("facturas", {

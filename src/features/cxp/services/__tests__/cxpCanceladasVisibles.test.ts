@@ -13,7 +13,7 @@ function builder(): Record<string, unknown> {
     llamadas.push(`${nombre}:${JSON.stringify(args[0] ?? null)}`);
     return b;
   };
-  for (const m of ["select", "is", "neq", "eq", "or", "gte", "lte", "order", "range", "in"]) {
+  for (const m of ["select", "is", "neq", "eq", "or", "gte", "lte", "order", "range", "limit", "in"]) {
     b[m] = chain(m);
   }
   b.then = (resolve: (v: unknown) => unknown) => resolve({ data: [], count: 0, error: null });
@@ -34,6 +34,9 @@ describe("fetchFacturasCxP y facturas canceladas", () => {
   it("por defecto excluye las canceladas", async () => {
     await fetchFacturasCxP({});
     expect(llamadas.some((c) => c.startsWith('neq:"estado"'))).toBe(true);
+    expect(llamadas).toContain('order:"id"');
+    expect(llamadas).toContain("limit:1000");
+    expect(llamadas.some((c) => c.startsWith("range:"))).toBe(false);
   });
 
   it("las incluye al filtrar por estatus Cancelada", async () => {

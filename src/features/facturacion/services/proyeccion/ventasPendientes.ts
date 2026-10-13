@@ -1,5 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
-import { leerTodasLasPaginas } from "@/lib/supabase/paginado";
+import { aplicarCursor, conAbortSignal, leerPaginasPorClave } from "@/lib/supabase/paginadoPorClave";
 import { fetchProjectionInChunks } from "./fetchInChunks";
 import { FACTURA_ESTADOS_VIVOS } from "@/lib/domain/estadosFactura";
 
@@ -27,25 +27,27 @@ export interface VentaProyectada {
 }
 
 /** Emission, not a PDF or cached proforma status, establishes coverage. */
-export async function fetchFacturasEmitidasCierre(ids: string[]) {
+export async function fetchFacturasEmitidasCierre(ids: string[], signal?: AbortSignal) {
   const [cabeceras, enlaces, vinculos] = await Promise.all([
-    fetchProjectionInChunks(ids, (lote) => leerTodasLasPaginas("cierre.emitidas", (ini, fin) => supabase.from("facturas")
+    fetchProjectionInChunks(ids, (lote) => leerPaginasPorClave("cierre.emitidas", (despues, tamano) => conAbortSignal(aplicarCursor(supabase.from("facturas")
       .select(CAMPOS).in("embarque_id", lote).in("estado", [...FACTURA_ESTADOS_VIVOS])
-      .is("deleted_at", null).order("id").range(ini, fin))),
-    fetchProjectionInChunks(ids, (lote) => leerTodasLasPaginas("cierre.enlaces", (ini, fin) => supabase.from("conceptos_factura")
+      .is("deleted_at", null).order("id").limit(tamano), ["id"], despues), signal), (fila) => [fila.id], { signal }), signal),
+    fetchProjectionInChunks(ids, (lote) => leerPaginasPorClave("cierre.enlaces", (despues, tamano) => conAbortSignal(aplicarCursor(supabase.from("conceptos_factura")
       .select("id, factura_id").in("embarque_id", lote).is("deleted_at", null)
-      .order("id").range(ini, fin))),
-    fetchProjectionInChunks(ids, (lote) => leerTodasLasPaginas("cierre.vinculos", (ini, fin) => supabase.from("factura_embarques")
+      .order("id").limit(tamano), ["id"], despues), signal), (fila) => [fila.id], { signal }), signal),
+    fetchProjectionInChunks(ids, (lote) => leerPaginasPorClave("cierre.vinculos", (despues, tamano) => conAbortSignal(aplicarCursor(supabase.from("factura_embarques")
       .select("factura_id, embarque_id").in("embarque_id", lote).eq("activa", true)
-      .order("factura_id").order("embarque_id").range(ini, fin))),
+      .order("factura_id").order("embarque_id").limit(tamano), ["factura_id", "embarque_id"], despues), signal),
+    (fila) => [fila.factura_id, fila.embarque_id], { signal }), signal),
   ]);
   const directas = new Set(cabeceras.map((f) => f.id));
   const indirectas = [...new Set([...enlaces, ...vinculos].map((c) => c.factura_id))].filter((id) => !directas.has(id));
   const consolidadas = await fetchProjectionInChunks(indirectas, (lote) =>
-    leerTodasLasPaginas("cierre.consolidadas", (ini, fin) =>
-      supabase.from("facturas").select(CAMPOS).in("id", lote)
+    leerPaginasPorClave("cierre.consolidadas", (despues, tamano) =>
+      conAbortSignal(aplicarCursor(supabase.from("facturas").select(CAMPOS).in("id", lote)
         .in("estado", [...FACTURA_ESTADOS_VIVOS]).is("deleted_at", null)
-        .order("id").range(ini, fin)),
+        .order("id").limit(tamano), ["id"], despues), signal), (fila) => [fila.id], { signal }),
+    signal,
   );
   return [...new Map([...cabeceras, ...consolidadas].map((f) => [f.id, f])).values()];
 }
