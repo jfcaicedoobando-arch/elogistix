@@ -17,6 +17,7 @@ import { insertTarifaConRecargos, fetchCosteoTarifas } from "@/features/costeo/s
 import { detectarConflictos, seleccionInicial, type Conflicto } from "./duplicadosTarifas";
 import { ConflictosTarifasLista } from "./ConflictosTarifasLista";
 import { TarifasPorProveedor } from "./TarifasPorProveedor";
+import { mapearAgentes } from "./agruparProveedor";
 import { hoyMx } from "@/lib/date/mx";
 import { prepararImportacion, type ResultadoImport } from "./importarTarifas";
 import { parsearCorreoProveedor, type CorreoDescargado } from "./correo/parsearCorreoTarifas";
