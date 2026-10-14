@@ -5,8 +5,9 @@ import { Card, CardContent } from "@/components/ui/card";
 import { useAccionSolicitud } from "@/features/crm/hooks/usePricingCrm";
 import type { SolicitudPricingRow } from "@/features/crm/services/pricing/tiposPricing";
 
-export function EnviarSolicitudFinal({ solicitud: s }: { solicitud: SolicitudPricingRow }) {
+export function EnviarSolicitudFinal({ solicitud: s, puede }: { solicitud: SolicitudPricingRow; puede: boolean }) {
   const accion = useAccionSolicitud();
+  if (s.estado !== "borrador" || !puede) return null;
   return (
     <Card>
       <CardContent className="flex flex-wrap items-center gap-3 py-4">

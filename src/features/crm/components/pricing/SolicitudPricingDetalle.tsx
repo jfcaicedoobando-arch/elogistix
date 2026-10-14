@@ -57,7 +57,7 @@ export function SolicitudPricingDetalle({ solicitud: s }: Props) {
       <AdjuntosSolicitudPricing organizationId={s.organization_id} solicitudId={s.id}
         puedeAdjuntar={s.estado !== "cancelada"} />
       <OpcionesTarifario solicitud={s} puedeElegir={puedeElegir} />
-      {s.estado === "borrador" && puedeElegir && <EnviarSolicitudFinal solicitud={s} />}
+      <EnviarSolicitudFinal solicitud={s} puede={puedeElegir} />
       {opciones.map((o) => (
         <OpcionPricingEditor key={o.id} solicitudId={s.id} organizationId={s.organization_id}
           orden={o.orden} opcion={o} editable={false} />
