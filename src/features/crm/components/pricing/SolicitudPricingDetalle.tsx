@@ -3,6 +3,7 @@
  * La respuesta son tarifas del catálogo ligadas a la solicitud; las opciones
  * capturadas con el formulario anterior se muestran sólo para consulta.
  */
+import { useState } from "react";
 import { useNavigate } from "react-router";
 import { useAuth } from "@/lib/contexts/AuthContext";
 import { usePermissions } from "@/hooks/shared/usePermissions";
@@ -15,6 +16,7 @@ import { AdjuntosSolicitudPricing } from "./AdjuntosSolicitudPricing";
 import { OpcionPricingEditor } from "./OpcionPricingEditor";
 import { ResumenSolicitudPricing } from "./ResumenSolicitudPricing";
 import { OpcionesTarifario } from "./OpcionesTarifario";
+import { SolicitudPricingDialog } from "./SolicitudPricingDialog";
 import { TarifasRespuestaPricing } from "./TarifasRespuestaPricing";
 
 interface Props { solicitud: SolicitudPricingRow }
@@ -27,12 +29,14 @@ export function SolicitudPricingDetalle({ solicitud: s }: Props) {
   const { effectiveRole, user } = useAuth();
   const { canWriteCotizaciones } = usePermissions();
   const navigate = useNavigate();
+  const [editando, setEditando] = useState(false);
   const esPricing = esRolPricing(effectiveRole);
   const { data: opciones = [] } = useOpcionesPricing(s.id);
   const tarifasRespuesta = useTarifasRespuestaPricing(s.id, s.estado === "enviada");
   const editable = esPricing && s.estado === "enviada";
   const abierta = s.estado === "borrador" || s.estado === "enviada";
   const puedeCancelar = abierta && (esPricing || s.created_by === user?.id);
+  const puedeEditar = abierta && (esPricing || s.created_by === user?.id || s.solicitante_id === user?.id);
   const puedeElegir = puedeUsarRespuesta(s, user?.id, esPricing);
   const puedeCotizar = s.estado === "respondida" && puedeElegir && canWriteCotizaciones;
   const cotizarRespuesta = (tarifaId: string) => {
@@ -45,7 +49,10 @@ export function SolicitudPricingDetalle({ solicitud: s }: Props) {
   return (
     <div className="space-y-4">
       <AccionesSolicitudPricing solicitud={s} puedeCancelar={puedeCancelar} puedeResponder={editable}
+        puedeEditar={puedeEditar} onEditar={() => setEditando(true)}
         numOpciones={opciones.length + (tarifasRespuesta.data?.length ?? 0)} />
+      <SolicitudPricingDialog open={editando} onOpenChange={setEditando}
+        oportunidadId={s.oportunidad_id ?? ""} solicitud={s} />
       <ResumenSolicitudPricing solicitud={s} />
       <AdjuntosSolicitudPricing organizationId={s.organization_id} solicitudId={s.id}
         puedeAdjuntar={s.estado !== "cancelada"} />
