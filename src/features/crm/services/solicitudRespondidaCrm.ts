@@ -4,6 +4,8 @@
  */
 import { supabase } from "@/integrations/supabase/client";
 
+export const LLAVE_SOLICITUD_RESPONDIDA = ["crm", "pricing", "oportunidades-respondidas"] as const;
+
 export type EstadoSolicitudOp = { oportunidad_id: string | null; estado: string };
 
 export function oportunidadesConSolicitudRespondida(filas: EstadoSolicitudOp[]): Set<string> {

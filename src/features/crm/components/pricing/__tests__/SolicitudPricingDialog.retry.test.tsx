@@ -38,7 +38,6 @@ vi.mock("../AdjuntosPendientes", () => ({
 }));
 vi.mock("../AdjuntosSolicitudPricing", () => ({ AdjuntosSolicitudPricing: () => null }));
 import { SolicitudPricingDialog } from "../SolicitudPricingDialog";
-import { purgeSessionCache } from "@/lib/auth/purgeSessionCache";
 
 const borrador: SolicitudPricingRow = {
   id: "s1", organization_id: "org1", oportunidad_id: "o1", solicitante_id: "u1", created_by: "u1",
@@ -58,20 +57,6 @@ function Harness({ clienteNombre = "Cliente" }: { clienteNombre?: string }) {
     <SolicitudPricingDialog open={open} onOpenChange={(next) => { mocks.cambio(next); setOpen(next); }}
       oportunidadId="o1" clienteNombre={clienteNombre} solicitud={solicitud} />
   </QueryClientProvider>;
-}
-function SesionHarness({ open = true, oportunidadId = "o1", solicitud = null }: {
-  open?: boolean; oportunidadId?: string; solicitud?: SolicitudPricingRow | null;
-}) {
-  return <QueryClientProvider client={client}>
-    <SolicitudPricingDialog open={open} onOpenChange={mocks.cambio}
-      oportunidadId={oportunidadId} solicitud={solicitud} />
-  </QueryClientProvider>;
-}
-function diferido<T>() {
-  let resolve!: (value: T) => void;
-  let reject!: (reason: unknown) => void;
-  const promise = new Promise<T>((si, no) => { resolve = si; reject = no; });
-  return { promise, resolve, reject };
 }
 function completar() {
   fireEvent.change(screen.getByLabelText("Servicio"), { target: { value: "Marítimo" } });

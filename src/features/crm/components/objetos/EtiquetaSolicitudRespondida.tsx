@@ -1,9 +1,7 @@
 /** Etiqueta «Solicitud respondida» para tarjetas del Kanban y la ficha de oportunidad. */
 import { useQuery } from "@tanstack/react-query";
 import { Badge } from "@/components/ui/badge";
-import { fetchOportunidadesSolicitudRespondida } from "@/features/crm/services/solicitudRespondidaCrm";
-
-export const LLAVE_SOLICITUD_RESPONDIDA = ["crm", "pricing", "oportunidades-respondidas"] as const;
+import { fetchOportunidadesSolicitudRespondida, LLAVE_SOLICITUD_RESPONDIDA } from "@/features/crm/services/solicitudRespondidaCrm";
 
 export function EtiquetaSolicitudRespondida({ oportunidadId }: { oportunidadId: string }) {
   // Una sola consulta compartida por todas las tarjetas (misma llave de caché).

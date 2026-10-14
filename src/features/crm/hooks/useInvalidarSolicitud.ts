@@ -1,6 +1,6 @@
 import { useQueryClient, type InvalidateQueryFilters } from "@tanstack/react-query";
 import { crmPricingKeys } from "@/features/crm/queryKeys.performance";
-import { LLAVE_SOLICITUD_RESPONDIDA } from "@/features/crm/components/objetos/EtiquetaSolicitudRespondida";
+import { LLAVE_SOLICITUD_RESPONDIDA } from "@/features/crm/services/solicitudRespondidaCrm";
 
 export function useInvalidarSolicitud() {
   const qc = useQueryClient();
