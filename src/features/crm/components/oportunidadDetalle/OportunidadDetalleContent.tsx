@@ -21,6 +21,7 @@ import { useOportunidadDetalleActions } from "@/features/crm/hooks";
 import { useContactosCliente } from "@/features/cliente/hooks";
 import type { CrmOportunidadRow, CrmEtapaRow } from "@/features/crm/hooks";
 import { MoverEtapaSelect } from "./MoverEtapaSelect";
+import { EtiquetaEmpresaEliminada } from "@/features/crm/components/objetos/EtiquetaEmpresaEliminada";
 
 interface Props {
   op: CrmOportunidadRow;
@@ -67,7 +68,10 @@ export function OportunidadDetalleContent({ op, etapas }: Props) {
         title={op.nombre}
         titleAs="h2"
 
-        badge={etapa ? <Badge variant="outline">{etapa.nombre}</Badge> : undefined}
+        badge={<span className="flex items-center gap-2">
+          {etapa ? <Badge variant="outline">{etapa.nombre}</Badge> : null}
+          <EtiquetaEmpresaEliminada oportunidadId={op.id} />
+        </span>}
         subtitle={op.cliente_nombre || "Sin cliente"}
         trailing={(canEdit || canCotizar) ? (
           <div className="flex flex-wrap items-center gap-2">

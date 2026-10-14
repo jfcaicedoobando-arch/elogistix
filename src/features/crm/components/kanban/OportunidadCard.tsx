@@ -17,6 +17,7 @@ import {
 import { formatProx, type EstadoProximas } from "@/features/crm/domain/proximaActividadLabel";
 import type { ProximaActividad } from "@/features/crm/hooks";
 import type { CrmOportunidadRow } from "@/features/crm/hooks";
+import { EtiquetaEmpresaEliminada } from "@/features/crm/components/objetos/EtiquetaEmpresaEliminada";
 
 interface Props {
   op: CrmOportunidadRow;
@@ -100,6 +101,7 @@ export default function OportunidadCard({ op, onClick, proxima, estadoProximas =
         <Hint label={op.nombre}>
           <div className="font-medium text-body line-clamp-2">{op.nombre}</div>
         </Hint>
+        <EtiquetaEmpresaEliminada oportunidadId={op.id} />
         {op.cliente_nombre ? (
           <Hint label={op.cliente_nombre}>
             <div className="text-body-sm text-muted-foreground line-clamp-1">{op.cliente_nombre}</div>
