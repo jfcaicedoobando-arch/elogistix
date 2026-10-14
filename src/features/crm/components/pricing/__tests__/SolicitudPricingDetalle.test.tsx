@@ -14,6 +14,7 @@ vi.mock("@/lib/contexts/AuthContext", () => ({ useAuth: () => ({ role: m.role, e
 vi.mock("@/features/crm/hooks/usePricingCrm", () => ({
   useOpcionesPricing: () => ({ data: [] }),
   useAccionSolicitud: () => ({ isPending: false, mutate: m.accion }),
+  useGuardarSolicitud: () => ({ isPending: false, mutate: vi.fn() }),
 }));
 vi.mock("@/features/crm/hooks/useTarifasRespuestaPricing", () => ({
   useTarifasRespuestaPricing: () => ({ data: m.tarifas, isLoading: false, isError: false, refetch: vi.fn() }),
