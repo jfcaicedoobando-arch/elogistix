@@ -17,11 +17,11 @@ import { ConflictosTarifasLista } from "./ConflictosTarifasLista";
 import { TarifasPorProveedor } from "./TarifasPorProveedor";
 import { mapearAgentes } from "./agruparProveedor";
 import { hoyMx } from "@/lib/date/mx";
-import { prepararImportacion, type ResultadoImport } from "./importarTarifas";
+import { prepararImportacion, erroresVisibles, type ResultadoImport } from "./importarTarifas";
 import { guardarSeleccionadas } from "./guardarSeleccionadas";
 import { leerCorreos } from "./correo/leerCorreos";
 import type { FilaCorreo } from "./correo/comun";
-import { ErroresLista, erroresVisibles } from "./ErroresLista";
+import { ErroresLista } from "./ErroresLista";
 import { faltantesDeCatalogo, type Faltantes } from "./correo/faltantesCatalogo";
 import { PendientesAltaSeccion } from "./AltaFaltantesPanel";
 

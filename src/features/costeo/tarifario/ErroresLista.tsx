@@ -7,10 +7,3 @@ export function ErroresLista({ errores }: { errores: string[] }) {
     </ul>
   );
 }
-
-type ConErrores = { errores: string[] } | null | undefined;
-
-/** Errores del último guardado o, si no hay, los de la revisión previa. */
-export function erroresVisibles(resultado: ConErrores, estado: { prep: { errores: string[] } } | null | undefined): string[] {
-  return resultado?.errores ?? estado?.prep.errores ?? [];
-}
