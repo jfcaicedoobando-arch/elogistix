@@ -22,7 +22,7 @@ import { parsearCorreoProveedor, type CorreoDescargado } from "./correo/parsearC
 import { AGENTE_CLAVE, NOMBRE_PROVEEDOR, type ProveedorCorreo } from "./correo/proveedoresCorreo";
 import type { FilaCorreo } from "./correo/comun";
 import { faltantesDeCatalogo, type Faltantes } from "./correo/faltantesCatalogo";
-import { AltaFaltantesPanel } from "./AltaFaltantesPanel";
+import { PendientesAltaSeccion } from "./AltaFaltantesPanel";
 
 interface Props { open: boolean; onOpenChange: (v: boolean) => void; onDone: () => void }
 
@@ -114,17 +114,13 @@ export function ExtraerCorreoDialog({ open, onOpenChange, onDone }: Props) {
   };
 
   const cerrar = (v: boolean) => { if (!v) { setEstado(null); setResultado(null); setFaltantes(null); } onOpenChange(v); };
+  const mostrarAltas = Boolean(resultado) || estado?.prep.tarifas.length === 0;
   const errores = resultado?.errores ?? estado?.prep.errores ?? [];
   const footer = (
     <>
       <Button variant="outline" onClick={() => cerrar(false)}>Cerrar</Button>
       {!estado && !resultado && (
         <Button onClick={() => void extraer()} disabled={cargando}>{cargando ? "Leyendo correos…" : "Buscar tarifas en el correo"}</Button>
-      )}
-      {(resultado || estado?.prep.tarifas.length === 0) && faltantes && altasHechas > 0 && (
-        <Button onClick={() => void prepararPendientes()} disabled={cargando}>
-          {cargando ? "Preparando…" : `Dar de alta ${faltantes.pendientes.length} tarifa(s) pendientes`}
-        </Button>
       )}
       {estado && estado.prep.tarifas.length > 0 && (
         <Button onClick={() => void importar()} disabled={cargando || seleccion.size === 0}>
@@ -151,9 +147,10 @@ export function ExtraerCorreoDialog({ open, onOpenChange, onDone }: Props) {
           </>
         )}
         {resultado && <p>Se cargaron <strong>{resultado.creadas}</strong> tarifa(s) en borrador.</p>}
-        {(resultado || estado?.prep.tarifas.length === 0) && faltantes && (altasHechas === 0
-          ? <AltaFaltantesPanel puertos={faltantes.puertos} navieras={faltantes.navieras} onAltas={setAltasHechas} />
-          : <p>Se dieron de alta {altasHechas} puerto(s)/naviera(s). Ahora puedes preparar las {faltantes.pendientes.length} tarifa(s) que estaban esperando.</p>)}
+        {mostrarAltas && faltantes && (
+          <PendientesAltaSeccion faltantes={faltantes} altasHechas={altasHechas} cargando={cargando}
+            onAltas={setAltasHechas} onPreparar={() => void prepararPendientes()} />
+        )}
         {errores.length > 0 && (
           <ul className="max-h-48 list-disc space-y-1 overflow-auto rounded-md border p-3 pl-6 text-destructive">
             {errores.slice(0, 100).map((e) => <li key={e}>{e}</li>)}

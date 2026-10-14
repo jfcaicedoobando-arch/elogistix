@@ -47,10 +47,10 @@ export function AltaFaltantesPanel({ puertos, navieras, onAltas }: Props) {
           <li key={`${x.tipo}-${x.nombre}`} className="flex flex-wrap items-center gap-2">
             <Checkbox checked={x.sel} onCheckedChange={(v) => set(i, { sel: v === true })} aria-label={`Dar de alta ${x.nombre}`} />
             <span className="min-w-[160px]">{x.tipo === "puerto" ? "Puerto" : "Naviera"}: <strong>{x.nombre}</strong></span>
-            <Input className="h-8 w-32" placeholder={x.tipo === "puerto" ? "Código (CNLYG)" : "Código"} value={x.code}
+            <Input aria-label={`Código de ${x.nombre}`} className="h-8 w-32" placeholder={x.tipo === "puerto" ? "Código (CNLYG)" : "Código"} value={x.code}
               onChange={(e) => set(i, { code: e.target.value })} disabled={!x.sel} />
             {x.tipo === "puerto" && (
-              <Input className="h-8 w-32" placeholder="País" value={x.country} onChange={(e) => set(i, { country: e.target.value })} disabled={!x.sel} />
+              <Input aria-label={`País de ${x.nombre}`} className="h-8 w-32" placeholder="País" value={x.country} onChange={(e) => set(i, { country: e.target.value })} disabled={!x.sel} />
             )}
           </li>
         ))}
@@ -58,6 +58,25 @@ export function AltaFaltantesPanel({ puertos, navieras, onAltas }: Props) {
       {errores.length > 0 && <ul className="list-disc pl-5 text-destructive">{errores.map((e) => <li key={e}>{e}</li>)}</ul>}
       <Button size="sm" onClick={() => void darAlta()} disabled={guardando || elegidos.length === 0 || incompleto}>
         {guardando ? "Dando de alta…" : `Dar de alta ${elegidos.length} seleccionado(s)`}
+      </Button>
+    </div>
+  );
+}
+
+interface SeccionProps {
+  faltantes: { puertos: string[]; navieras: string[]; pendientes: readonly unknown[] };
+  altasHechas: number; cargando: boolean;
+  onAltas: (n: number) => void; onPreparar: () => void;
+}
+
+/** Primero da de alta faltantes; después ofrece preparar las tarifas que esperaban. */
+export function PendientesAltaSeccion({ faltantes, altasHechas, cargando, onAltas, onPreparar }: SeccionProps) {
+  if (altasHechas === 0) return <AltaFaltantesPanel puertos={faltantes.puertos} navieras={faltantes.navieras} onAltas={onAltas} />;
+  return (
+    <div className="space-y-2 rounded-md border p-3">
+      <p>Se dieron de alta {altasHechas} puerto(s)/naviera(s). Ahora puedes cargar las {faltantes.pendientes.length} tarifa(s) que estaban esperando.</p>
+      <Button size="sm" onClick={onPreparar} disabled={cargando}>
+        {cargando ? "Preparando…" : `Dar de alta ${faltantes.pendientes.length} tarifa(s) pendientes`}
       </Button>
     </div>
   );
