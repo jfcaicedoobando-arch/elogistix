@@ -51,6 +51,7 @@ describe("copiar solicitud", () => {
       tarifa_tarifario_id: "t", servicio: "Marítimo", pol: "CNSHA", oportunidad_id: "o" } as never;
     const d = datosCopiaSolicitud(s) as Record<string, unknown>;
     expect(d).toMatchObject({ servicio: "Marítimo", pol: "CNSHA", oportunidad_id: "o" });
-    for (const k of ["id", "folio", "estado", "enviada_at", "vence_at", "tarifa_tarifario_id"]) expect(d).not.toHaveProperty(k);
+    expect(d.folio).toBe("");
+    for (const k of ["id", "estado", "enviada_at", "vence_at", "tarifa_tarifario_id"]) expect(d).not.toHaveProperty(k);
   });
 });

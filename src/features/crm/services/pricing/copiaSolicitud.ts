@@ -10,5 +10,5 @@ export function datosCopiaSolicitud(s: SolicitudPricingRow): SolicitudPricingIns
     deleted_at: _d, enviada_at: _e, vence_at: _v, respondida_at: _r, tarifa_tarifario_id: _t,
     fecha: _f, ...datos
   } = s;
-  return datos;
+  return { ...datos, folio: "" };
 }
