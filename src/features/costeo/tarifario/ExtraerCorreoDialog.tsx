@@ -13,7 +13,9 @@ import { useOrganization } from "@/lib/contexts/OrganizationContext";
 import { fetchPuertos, fetchNavieras, fetchTiposContenedor } from "@/features/catalogos/services";
 import { fetchCosteoAgentes } from "@/features/costeo/services/agentes";
 import { fetchCosteoRutas, insertCosteoRuta } from "@/features/costeo/services/rutas";
-import { insertTarifaConRecargos } from "@/features/costeo/services/tarifas";
+import { insertTarifaConRecargos, fetchCosteoTarifas } from "@/features/costeo/services/tarifas";
+import { detectarConflictos, seleccionInicial, type Conflicto } from "./duplicadosTarifas";
+import { ConflictosTarifasLista } from "./ConflictosTarifasLista";
 import { hoyMx } from "@/lib/date/mx";
 import { prepararImportacion, type ResultadoImport } from "./importarTarifas";
 import { parsearCorreoProveedor, type CorreoDescargado } from "./correo/parsearCorreoTarifas";
@@ -28,12 +30,14 @@ const norm = (s: string) => s.normalize("NFD").replace(/[̀-ͯ]/g, "").trim().to
 interface Estado {
   prep: ResultadoImport;
   resumen: { proveedor: string; filas: number }[];
+  conflictos: Conflicto[];
 }
 
 export function ExtraerCorreoDialog({ open, onOpenChange, onDone }: Props) {
   const { organizationId } = useOrganization();
   const [estado, setEstado] = useState<Estado | null>(null);
   const [cargando, setCargando] = useState(false);
+  const [seleccion, setSeleccion] = useState<Set<number>>(new Set());
   const [resultado, setResultado] = useState<{ creadas: number; errores: string[] } | null>(null);
 
   const extraer = async () => {
@@ -46,6 +50,7 @@ export function ExtraerCorreoDialog({ open, onOpenChange, onDone }: Props) {
       const [puertos, agentes, navieras, tipos, rutas] = await Promise.all([
         fetchPuertos(), fetchCosteoAgentes(organizationId), fetchNavieras(), fetchTiposContenedor(), fetchCosteoRutas(organizationId),
       ]);
+      const existentes = await fetchCosteoTarifas(organizationId, { estado: "todas" });
       const filas: FilaCorreo[] = [];
       const errores: string[] = [];
       const resumen: Estado["resumen"] = [];
@@ -58,9 +63,11 @@ export function ExtraerCorreoDialog({ open, onOpenChange, onDone }: Props) {
         resumen.push({ proveedor: NOMBRE_PROVEEDOR[c.proveedor as ProveedorCorreo] ?? c.proveedor, filas: r.filas.length });
       }
       const prep = prepararImportacion(filas as unknown as Record<string, unknown>[], { puertos, agentes, navieras, tipos, rutas });
-      setEstado({ prep: { tarifas: prep.tarifas, errores: [...errores, ...prep.errores] }, resumen });
+      const conflictos = detectarConflictos(prep.tarifas, existentes, rutas, hoyMx());
+      setSeleccion(seleccionInicial(prep.tarifas.length, conflictos));
+      setEstado({ prep: { tarifas: prep.tarifas, errores: [...errores, ...prep.errores] }, resumen, conflictos });
     } catch (e) {
-      setEstado({ prep: { tarifas: [], errores: [`No se pudieron leer los correos: ${msg(e)}`] }, resumen: [] });
+      setEstado({ prep: { tarifas: [], errores: [`No se pudieron leer los correos: ${msg(e)}`] }, resumen: [], conflictos: [] });
     } finally { setCargando(false); }
   };
 
@@ -70,7 +77,7 @@ export function ExtraerCorreoDialog({ open, onOpenChange, onDone }: Props) {
     const rutas = new Map<string, string>();
     const errores: string[] = [];
     let creadas = 0;
-    for (const t of estado.prep.tarifas) {
+    for (const t of estado.prep.tarifas.filter((_, i) => seleccion.has(i))) {
       try {
         let rutaId = t.input.ruta_id;
         if (!rutaId) {
@@ -95,8 +102,8 @@ export function ExtraerCorreoDialog({ open, onOpenChange, onDone }: Props) {
         <Button onClick={() => void extraer()} disabled={cargando}>{cargando ? "Leyendo correos…" : "Buscar tarifas en el correo"}</Button>
       )}
       {estado && estado.prep.tarifas.length > 0 && (
-        <Button onClick={() => void importar()} disabled={cargando}>
-          {cargando ? "Guardando…" : `Cargar ${estado.prep.tarifas.length} tarifa(s) en borrador`}
+        <Button onClick={() => void importar()} disabled={cargando || seleccion.size === 0}>
+          {cargando ? "Guardando…" : `Cargar ${seleccion.size} tarifa(s) en borrador`}
         </Button>
       )}
     </>
@@ -114,6 +121,8 @@ export function ExtraerCorreoDialog({ open, onOpenChange, onDone }: Props) {
               {estado.resumen.map((r) => <li key={r.proveedor}>{r.proveedor}: {r.filas} renglón(es) leído(s)</li>)}
             </ul>
             <p>Listas para cargar: <strong>{estado.prep.tarifas.length}</strong> tarifa(s). Renglones con error: <strong>{estado.prep.errores.length}</strong> (se omiten).</p>
+            <ConflictosTarifasLista tarifas={estado.prep.tarifas} conflictos={estado.conflictos} seleccion={seleccion}
+              onToggle={(i, v) => setSeleccion((s) => { const n = new Set(s); if (v) n.add(i); else n.delete(i); return n; })} />
           </>
         )}
         {resultado && <p>Se cargaron <strong>{resultado.creadas}</strong> tarifa(s) en borrador.</p>}
