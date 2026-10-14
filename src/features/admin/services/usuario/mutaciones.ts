@@ -88,3 +88,16 @@ export async function enviarResetPassword(userId: string): Promise<void> {
     entidadId: userId,
   });
 }
+
+/** Desactiva (bloquea el acceso) o reactiva una cuenta sin borrarla. */
+export async function cambiarAccesoUsuario(userId: string, activo: boolean): Promise<void> {
+  const res = await invokeUserManagement({ action: "set-active", user_id: userId, activo });
+  if (res.error) throw await errorDeEdgeFunction(res.error, "No se pudo cambiar el acceso. Reintenta en unos minutos.");
+  const body = res.data as { error?: string };
+  if (body?.error) throw new Error(body.error);
+  await registrarActividad({
+    modulo: "usuarios",
+    accion: activo ? "Reactivó usuario" : "Desactivó usuario",
+    entidadId: userId,
+  });
+}
