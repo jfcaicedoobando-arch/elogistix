@@ -12,6 +12,8 @@ import { DataTable, defineColumns, type ColumnDef } from "@/components/shared/Da
 import { TABLE_DENSITY } from "@/components/shared/dataTable/tableTokens";
 import DoubleConfirmDeleteDialog from "@/components/shared/DoubleConfirmDeleteDialog";
 import { usePermissions } from "@/hooks/shared";
+import { useAuth } from "@/lib/contexts/AuthContext";
+import { puedeDarAltaCatalogo } from "../domain/permisosCatalogo";
 
 type Puerto = { id: string; code: string; name: string; country: string; activo: boolean; activoOrg?: boolean };
 
@@ -22,6 +24,7 @@ export default function TabPuertos() {
   const { data: puertos = [], isLoading: puertosLoading, isError, error, refetch, isFetching } = useAllPuertos();
   const { agregarPuerto, toggleActivo, eliminarPuerto } = useAdminPuertos();
   const { isSuperAdmin } = usePermissions();
+  const puedeCrear = puedeDarAltaCatalogo(useAuth().effectiveRole);
   const [puertoBusqueda, setPuertoBusqueda] = useState("");
   const [nuevoCode, setNuevoCode] = useState("");
   const [nuevoName, setNuevoName] = useState("");
@@ -81,7 +84,7 @@ export default function TabPuertos() {
         <CardDescription>Catálogo compartido. Enciende o apaga los puertos que quieres ver en tu empresa; no afecta a otras empresas.</CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
-        {isSuperAdmin && (
+        {puedeCrear && (
         <div className="flex flex-wrap gap-2 items-end">
           <FormField label="Código" className="space-y-1">
             <Input className="w-28" placeholder="MXZLO" value={nuevoCode} onChange={(e) => setNuevoCode(e.target.value)} />
