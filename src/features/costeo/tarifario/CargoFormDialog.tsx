@@ -20,15 +20,27 @@ interface Props {
   onSaved: () => void;
 }
 
+function valoresIniciales(tipo: TipoCargo, cargo: CargoTarifario | null) {
+  const fob = tipo === "fob";
+  return {
+    entidad: cargo?.entidad_id ?? "",
+    concepto: cargo?.concepto ?? (fob ? "Cargos FOB" : "Revalidación"),
+    monto: cargo ? String(cargo.monto) : "",
+    moneda: cargo?.moneda ?? (fob ? "USD" : "MXN"),
+    unidad: cargo?.unidad ?? "",
+    aplicaIva: cargo?.aplica_iva ?? false,
+  };
+}
 
 export function CargoFormDialog({ tipo, orgId, cargo, onClose, onSaved }: Props) {
   const { data: entidades = [] } = useQuery({ queryKey: costeo.tarifario.entidades(tipo), queryFn: () => listarEntidadesCargo(tipo) });
-  const [entidad, setEntidad] = useState(cargo?.entidad_id ?? "");
-  const [concepto, setConcepto] = useState(cargo?.concepto ?? (tipo === "fob" ? "Cargos FOB" : "Revalidación"));
-  const [monto, setMonto] = useState(cargo ? String(cargo.monto) : "");
-  const [moneda, setMoneda] = useState(cargo?.moneda ?? (tipo === "fob" ? "USD" : "MXN"));
-  const [unidad, setUnidad] = useState(cargo?.unidad ?? "");
-  const [aplicaIva, setAplicaIva] = useState(cargo?.aplica_iva ?? false);
+  const ini = valoresIniciales(tipo, cargo);
+  const [entidad, setEntidad] = useState(ini.entidad);
+  const [concepto, setConcepto] = useState(ini.concepto);
+  const [monto, setMonto] = useState(ini.monto);
+  const [moneda, setMoneda] = useState(ini.moneda);
+  const [unidad, setUnidad] = useState(ini.unidad);
+  const [aplicaIva, setAplicaIva] = useState(ini.aplicaIva);
   const [busy, setBusy] = useState(false);
 
   const guardar = async () => {
