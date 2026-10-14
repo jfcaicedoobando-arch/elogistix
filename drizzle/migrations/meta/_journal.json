@@ -113,6 +113,13 @@
       "when": 1791994106303,
       "tag": "0015_catalogos_alta_gerente_admin",
       "breakpoints": true
+    },
+    {
+      "idx": 16,
+      "version": "7",
+      "when": 1792001438191,
+      "tag": "0016_crm_empresa_desde_cliente",
+      "breakpoints": true
     }
   ]
 }
