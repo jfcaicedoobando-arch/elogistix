@@ -11,6 +11,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { FormDialogShell } from "@/components/shared/FormDialogShell";
 import { listarEntidadesCargo, guardarCargo, type CargoTarifario, type TipoCargo } from "./cargosService";
+import { ConceptoNavieraSelect } from "./ConceptoNavieraSelect";
 
 interface Props {
   tipo: TipoCargo;
@@ -74,7 +75,9 @@ export function CargoFormDialog({ tipo, orgId, cargo, onClose, onSaved }: Props)
             <SelectContent>{entidades.map((e) => <SelectItem key={e.id} value={e.id}>{e.nombre}</SelectItem>)}</SelectContent>
           </Select>
         </div>
-        <div className="space-y-1 md:col-span-2"><Label htmlFor="cargo-concepto">Concepto</Label><Input id="cargo-concepto" value={concepto} onChange={(e) => setConcepto(e.target.value)} /></div>
+        {tipo === "fob"
+          ? <div className="space-y-1 md:col-span-2"><Label htmlFor="cargo-concepto">Concepto</Label><Input id="cargo-concepto" value={concepto} onChange={(e) => setConcepto(e.target.value)} /></div>
+          : <div className="md:col-span-2"><ConceptoNavieraSelect value={concepto} onChange={setConcepto} /></div>}
         <div className="space-y-1"><Label htmlFor="cargo-monto">Monto</Label><Input id="cargo-monto" inputMode="decimal" value={monto} onChange={(e) => setMonto(e.target.value)} /></div>
         <div className="space-y-1">
           <Label>Currency</Label>
