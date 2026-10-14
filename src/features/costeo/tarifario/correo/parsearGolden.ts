@@ -19,7 +19,7 @@ interface EstadoGolden { puertos: readonly string[]; dias: number; hasta: string
 
 /** Procesa un renglón de la tabla; actualiza el estado heredado y devuelve filas o error. */
 function procesarRenglon(m: RegExpExecArray, estado: EstadoGolden, anio: number, hoyIso: string): { filas: FilaCorreo[]; error: string | null } {
-  const naviera = NAVIERA_POR_SIGLA[m[1].toUpperCase()];
+  const naviera = NAVIERA_POR_SIGLA[m[1].toUpperCase()] ?? m[1].toUpperCase();
   if (!naviera) return { filas: [], error: `Golden: naviera «${m[1]}» no reconocida` };
   if (m[2]) estado.puertos = GOLDEN_BASE_PORTS;
   if (m[8]) estado.dias = Number(m[8]);

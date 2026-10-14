@@ -21,6 +21,8 @@ import { prepararImportacion, type ResultadoImport } from "./importarTarifas";
 import { parsearCorreoProveedor, type CorreoDescargado } from "./correo/parsearCorreoTarifas";
 import { AGENTE_CLAVE, NOMBRE_PROVEEDOR, type ProveedorCorreo } from "./correo/proveedoresCorreo";
 import type { FilaCorreo } from "./correo/comun";
+import { faltantesDeCatalogo, type Faltantes } from "./correo/faltantesCatalogo";
+import { PendientesAltaSeccion } from "./AltaFaltantesPanel";
 
 interface Props { open: boolean; onOpenChange: (v: boolean) => void; onDone: () => void }
 
@@ -39,6 +41,30 @@ export function ExtraerCorreoDialog({ open, onOpenChange, onDone }: Props) {
   const [cargando, setCargando] = useState(false);
   const [seleccion, setSeleccion] = useState<Set<number>>(new Set());
   const [resultado, setResultado] = useState<{ creadas: number; errores: string[] } | null>(null);
+  const [faltantes, setFaltantes] = useState<Faltantes | null>(null);
+  const [altasHechas, setAltasHechas] = useState(0);
+
+  /** Valida filas contra catálogos frescos y detecta duplicados y faltantes. */
+  const preparar = async (filas: FilaCorreo[], erroresBase: string[], resumen: Estado["resumen"]) => {
+    if (!organizationId) return;
+    const [puertos, agentes, navieras, tipos, rutas] = await Promise.all([
+      fetchPuertos(), fetchCosteoAgentes(organizationId), fetchNavieras(), fetchTiposContenedor(), fetchCosteoRutas(organizationId),
+    ]);
+    const existentes = await fetchCosteoTarifas(organizationId, { estado: "todas" });
+    const prep = prepararImportacion(filas as unknown as Record<string, unknown>[], { puertos, agentes, navieras, tipos, rutas });
+    const conflictos = detectarConflictos(prep.tarifas, existentes, rutas, hoyMx());
+    const f = faltantesDeCatalogo(filas, { puertos, navieras });
+    setFaltantes(f.pendientes.length ? f : null); setAltasHechas(0);
+    setSeleccion(seleccionInicial(prep.tarifas.length, conflictos));
+    setEstado({ prep: { tarifas: prep.tarifas, errores: [...erroresBase, ...prep.errores] }, resumen, conflictos });
+  };
+
+  const prepararPendientes = async () => {
+    if (!faltantes) return;
+    setCargando(true); setResultado(null);
+    try { await preparar(faltantes.pendientes, [], [{ proveedor: "Tarifas pendientes de alta", filas: faltantes.pendientes.length }]); }
+    finally { setCargando(false); }
+  };
 
   const extraer = async () => {
     if (!organizationId) return;
@@ -47,10 +73,7 @@ export function ExtraerCorreoDialog({ open, onOpenChange, onDone }: Props) {
       const { data, error } = await supabase.functions.invoke("extraer-tarifas-correo", { body: { organizationId } });
       if (error) throw new Error(msg(error));
       const correos = (data as { correos: CorreoDescargado[] }).correos ?? [];
-      const [puertos, agentes, navieras, tipos, rutas] = await Promise.all([
-        fetchPuertos(), fetchCosteoAgentes(organizationId), fetchNavieras(), fetchTiposContenedor(), fetchCosteoRutas(organizationId),
-      ]);
-      const existentes = await fetchCosteoTarifas(organizationId, { estado: "todas" });
+      const agentes = await fetchCosteoAgentes(organizationId);
       const filas: FilaCorreo[] = [];
       const errores: string[] = [];
       const resumen: Estado["resumen"] = [];
@@ -62,10 +85,7 @@ export function ExtraerCorreoDialog({ open, onOpenChange, onDone }: Props) {
         errores.push(...r.errores);
         resumen.push({ proveedor: NOMBRE_PROVEEDOR[c.proveedor as ProveedorCorreo] ?? c.proveedor, filas: r.filas.length });
       }
-      const prep = prepararImportacion(filas as unknown as Record<string, unknown>[], { puertos, agentes, navieras, tipos, rutas });
-      const conflictos = detectarConflictos(prep.tarifas, existentes, rutas, hoyMx());
-      setSeleccion(seleccionInicial(prep.tarifas.length, conflictos));
-      setEstado({ prep: { tarifas: prep.tarifas, errores: [...errores, ...prep.errores] }, resumen, conflictos });
+      await preparar(filas, errores, resumen);
     } catch (e) {
       setEstado({ prep: { tarifas: [], errores: [`No se pudieron leer los correos: ${msg(e)}`] }, resumen: [], conflictos: [] });
     } finally { setCargando(false); }
@@ -93,7 +113,8 @@ export function ExtraerCorreoDialog({ open, onOpenChange, onDone }: Props) {
     if (creadas > 0) onDone();
   };
 
-  const cerrar = (v: boolean) => { if (!v) { setEstado(null); setResultado(null); } onOpenChange(v); };
+  const cerrar = (v: boolean) => { if (!v) { setEstado(null); setResultado(null); setFaltantes(null); } onOpenChange(v); };
+  const mostrarAltas = Boolean(resultado) || estado?.prep.tarifas.length === 0;
   const errores = resultado?.errores ?? estado?.prep.errores ?? [];
   const footer = (
     <>
@@ -126,6 +147,10 @@ export function ExtraerCorreoDialog({ open, onOpenChange, onDone }: Props) {
           </>
         )}
         {resultado && <p>Se cargaron <strong>{resultado.creadas}</strong> tarifa(s) en borrador.</p>}
+        {mostrarAltas && faltantes && (
+          <PendientesAltaSeccion faltantes={faltantes} altasHechas={altasHechas} cargando={cargando}
+            onAltas={setAltasHechas} onPreparar={() => void prepararPendientes()} />
+        )}
         {errores.length > 0 && (
           <ul className="max-h-48 list-disc space-y-1 overflow-auto rounded-md border p-3 pl-6 text-destructive">
             {errores.slice(0, 100).map((e) => <li key={e}>{e}</li>)}

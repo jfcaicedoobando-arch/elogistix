@@ -44,7 +44,7 @@ function filasDeRenglon(c: unknown[], e: EstadoRainbow, hoyIso: string): { filas
   const t20 = num(c[3]);
   const t40 = num(c[5]) || num(c[4]);
   if (!e.pol || (t20 <= 0 && t40 <= 0)) return { filas: [], error: null };
-  const naviera = NAVIERA_POR_SIGLA[e.carrier.toUpperCase()] ?? null;
+  const naviera = NAVIERA_POR_SIGLA[e.carrier.toUpperCase()] ?? (e.carrier.trim().toUpperCase() || null);
   if (!naviera) return { filas: [], error: `Rainbow: naviera «${e.carrier}» no reconocida` };
   if (!e.hasta) return { filas: [], error: `Rainbow: renglón de ${e.pol} sin vigencia` };
   const destinos: string[] = [];

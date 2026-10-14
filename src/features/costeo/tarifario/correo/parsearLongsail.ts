@@ -22,7 +22,7 @@ const RE_BOOKING = new RegExp(
 
 function navieraDeSiglas(siglas: string): string | null {
   const primera = siglas.replace(/'/g, "").trim().split(/[\s/]+/)[0]?.toUpperCase() ?? "";
-  return NAVIERA_POR_SIGLA[primera] ?? null;
+  return NAVIERA_POR_SIGLA[primera] ?? (primera || null);
 }
 
 function vigencia(texto: string, anio: number): { desde: string | null; hasta: string | null } {
