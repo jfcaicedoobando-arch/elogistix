@@ -17,6 +17,7 @@ const cargoSchema = z.array(z.object({
   monto: z.number(),
   moneda: z.string(),
   unidad: z.string().nullable(),
+  aplica_iva: z.boolean().default(false),
   entidad_id: z.string(),
   entidad: z.object({ nombre: z.string() }).passthrough().nullable(),
 }).passthrough());
@@ -24,8 +25,8 @@ const cargoSchema = z.array(z.object({
 export type CargoTarifario = z.infer<typeof cargoSchema>[number];
 
 const SELECT = {
-  fob: "id, concepto, monto, moneda, unidad, entidad_id:agente_id, entidad:costeo_agentes(nombre)",
-  locales: "id, concepto, monto, moneda, unidad, entidad_id:naviera_id, entidad:navieras(nombre:name)",
+  fob: "id, concepto, monto, moneda, unidad, aplica_iva, entidad_id:agente_id, entidad:costeo_agentes(nombre)",
+  locales: "id, concepto, monto, moneda, unidad, aplica_iva, entidad_id:naviera_id, entidad:navieras(nombre:name)",
 } as const;
 
 export async function listarCargos(tipo: TipoCargo): Promise<CargoTarifario[]> {
@@ -41,10 +42,11 @@ export interface CargoInput {
   monto: number;
   moneda: string;
   unidad: string | null;
+  aplica_iva: boolean;
 }
 
 export async function guardarCargo(tipo: TipoCargo, orgId: string, input: CargoInput, id?: string): Promise<void> {
-  const base = { concepto: input.concepto, monto: input.monto, moneda: input.moneda, unidad: input.unidad };
+  const base = { concepto: input.concepto, monto: input.monto, moneda: input.moneda, unidad: input.unidad, aplica_iva: input.aplica_iva };
   if (tipo === "fob") {
     const fila = { ...base, agente_id: input.entidad_id, organization_id: orgId };
     const { error } = id
