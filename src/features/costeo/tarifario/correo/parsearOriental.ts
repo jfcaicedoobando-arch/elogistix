@@ -11,7 +11,7 @@ const AGENTE = AGENTE_CLAVE.oriental;
 function navieraDe(texto: string): { codigo: string | null; original: string } {
   const original = texto.trim();
   const primera = original.split("/")[0].trim().toUpperCase();
-  return { codigo: NAVIERA_POR_SIGLA[primera] ?? null, original };
+  return { codigo: NAVIERA_POR_SIGLA[primera] ?? (primera || null), original };
 }
 
 interface CamposBloque {
