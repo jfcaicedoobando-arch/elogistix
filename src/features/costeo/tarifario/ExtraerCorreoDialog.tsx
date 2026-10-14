@@ -10,16 +10,18 @@ import { Button } from "@/components/ui/button";
 import { FormDialogShell } from "@/components/shared/FormDialogShell";
 import { useOrganization } from "@/lib/contexts/OrganizationContext";
 import { fetchPuertos, fetchNavieras, fetchTiposContenedor } from "@/features/catalogos/services";
-import { fetchCosteoRutas, insertCosteoRuta } from "@/features/costeo/services/rutas";
-import { insertTarifaConRecargos, fetchCosteoTarifas } from "@/features/costeo/services/tarifas";
+import { fetchCosteoRutas } from "@/features/costeo/services/rutas";
+import { fetchCosteoTarifas } from "@/features/costeo/services/tarifas";
 import { detectarConflictos, seleccionInicial, type Conflicto } from "./duplicadosTarifas";
 import { ConflictosTarifasLista } from "./ConflictosTarifasLista";
 import { TarifasPorProveedor } from "./TarifasPorProveedor";
 import { mapearAgentes } from "./agruparProveedor";
 import { hoyMx } from "@/lib/date/mx";
 import { prepararImportacion, type ResultadoImport } from "./importarTarifas";
+import { guardarSeleccionadas } from "./guardarSeleccionadas";
 import { leerCorreos } from "./correo/leerCorreos";
 import type { FilaCorreo } from "./correo/comun";
+import { ErroresLista, erroresVisibles } from "./ErroresLista";
 import { faltantesDeCatalogo, type Faltantes } from "./correo/faltantesCatalogo";
 import { PendientesAltaSeccion } from "./AltaFaltantesPanel";
 
@@ -88,23 +90,9 @@ export function ExtraerCorreoDialog({ open, onOpenChange, onDone }: Props) {
   const importar = async () => {
     if (!estado || !organizationId) return;
     setCargando(true);
-    const rutas = new Map<string, string>();
-    const errores: string[] = [];
-    let creadas = 0;
-    for (const t of estado.prep.tarifas.filter((_, i) => seleccion.has(i))) {
-      try {
-        let rutaId = t.input.ruta_id;
-        if (!rutaId) {
-          const k = `${t.origenId}>${t.destinoId}`;
-          rutaId = rutas.get(k) ?? (await insertCosteoRuta(organizationId, { puerto_origen_id: t.origenId, puerto_destino_id: t.destinoId })).id;
-          rutas.set(k, rutaId);
-        }
-        await insertTarifaConRecargos(organizationId, { ...t.input, ruta_id: rutaId });
-        creadas += 1;
-      } catch (e) { errores.push(`Fila ${t.fila}: ${msg(e)}`); }
-    }
-    setResultado({ creadas, errores }); setEstado(null); setCargando(false);
-    if (creadas > 0) onDone();
+    const res = await guardarSeleccionadas(organizationId, seleccion, estado.prep.tarifas);
+    setResultado(res); setEstado(null); setCargando(false);
+    if (res.creadas > 0) onDone();
   };
 
   const cerrar = (v: boolean) => { if (!v) { setEstado(null); setResultado(null); setFaltantes(null); } onOpenChange(v); };
@@ -144,11 +132,7 @@ export function ExtraerCorreoDialog({ open, onOpenChange, onDone }: Props) {
           <PendientesAltaSeccion faltantes={faltantes} altasHechas={altasHechas} cargando={cargando}
             onAltas={setAltasHechas} onPreparar={() => void prepararPendientes()} />
         )}
-        {errores.length > 0 && (
-          <ul className="max-h-48 list-disc space-y-1 overflow-auto rounded-md border p-3 pl-6 text-destructive">
-            {errores.slice(0, 100).map((e) => <li key={e}>{e}</li>)}
-          </ul>
-        )}
+        <ErroresLista errores={errores} />
       </div>
     </FormDialogShell>
   );
