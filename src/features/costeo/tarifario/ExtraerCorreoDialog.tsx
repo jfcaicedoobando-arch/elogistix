@@ -16,6 +16,7 @@ import { fetchCosteoRutas, insertCosteoRuta } from "@/features/costeo/services/r
 import { insertTarifaConRecargos, fetchCosteoTarifas } from "@/features/costeo/services/tarifas";
 import { detectarConflictos, seleccionInicial, type Conflicto } from "./duplicadosTarifas";
 import { ConflictosTarifasLista } from "./ConflictosTarifasLista";
+import { TarifasPorProveedor } from "./TarifasPorProveedor";
 import { hoyMx } from "@/lib/date/mx";
 import { prepararImportacion, type ResultadoImport } from "./importarTarifas";
 import { parsearCorreoProveedor, type CorreoDescargado } from "./correo/parsearCorreoTarifas";
@@ -33,6 +34,10 @@ interface Estado {
   prep: ResultadoImport;
   resumen: { proveedor: string; filas: number }[];
   conflictos: Conflicto[];
+  proveedorDe: Map<string, string>;
+  nombreAgenteDe: Map<string, string>;
+  puertos: Map<string, string>;
+  navieras: Map<string, string>;
 }
 
 export function ExtraerCorreoDialog({ open, onOpenChange, onDone }: Props) {
