@@ -14,6 +14,7 @@ import type { SolicitudPricingRow } from "@/features/crm/services/pricing/tiposP
 import { AccionesSolicitudPricing } from "./AccionesSolicitudPricing";
 import { AdjuntosSolicitudPricing } from "./AdjuntosSolicitudPricing";
 import { OpcionPricingEditor } from "./OpcionPricingEditor";
+import { EnviarSolicitudFinal } from "./EnviarSolicitudFinal";
 import { ResumenSolicitudPricing } from "./ResumenSolicitudPricing";
 import { OpcionesTarifario } from "./OpcionesTarifario";
 import { SolicitudPricingDialog } from "./SolicitudPricingDialog";
@@ -56,6 +57,7 @@ export function SolicitudPricingDetalle({ solicitud: s }: Props) {
       <AdjuntosSolicitudPricing organizationId={s.organization_id} solicitudId={s.id}
         puedeAdjuntar={s.estado !== "cancelada"} />
       <OpcionesTarifario solicitud={s} puedeElegir={puedeElegir} />
+      <EnviarSolicitudFinal solicitud={s} puede={puedeElegir} />
       {opciones.map((o) => (
         <OpcionPricingEditor key={o.id} solicitudId={s.id} organizationId={s.organization_id}
           orden={o.orden} opcion={o} editable={false} />
