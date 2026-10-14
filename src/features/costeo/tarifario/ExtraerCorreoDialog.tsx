@@ -8,10 +8,8 @@ import { useState } from "react";
 import { Mail } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { FormDialogShell } from "@/components/shared/FormDialogShell";
-import { supabase } from "@/integrations/supabase/client";
 import { useOrganization } from "@/lib/contexts/OrganizationContext";
 import { fetchPuertos, fetchNavieras, fetchTiposContenedor } from "@/features/catalogos/services";
-import { fetchCosteoAgentes } from "@/features/costeo/services/agentes";
 import { fetchCosteoRutas, insertCosteoRuta } from "@/features/costeo/services/rutas";
 import { insertTarifaConRecargos, fetchCosteoTarifas } from "@/features/costeo/services/tarifas";
 import { detectarConflictos, seleccionInicial, type Conflicto } from "./duplicadosTarifas";
@@ -20,8 +18,7 @@ import { TarifasPorProveedor } from "./TarifasPorProveedor";
 import { mapearAgentes } from "./agruparProveedor";
 import { hoyMx } from "@/lib/date/mx";
 import { prepararImportacion, type ResultadoImport } from "./importarTarifas";
-import { parsearCorreoProveedor, type CorreoDescargado } from "./correo/parsearCorreoTarifas";
-import { AGENTE_CLAVE, NOMBRE_PROVEEDOR, type ProveedorCorreo } from "./correo/proveedoresCorreo";
+import { leerCorreos } from "./correo/leerCorreos";
 import type { FilaCorreo } from "./correo/comun";
 import { faltantesDeCatalogo, type Faltantes } from "./correo/faltantesCatalogo";
 import { PendientesAltaSeccion } from "./AltaFaltantesPanel";
@@ -29,7 +26,6 @@ import { PendientesAltaSeccion } from "./AltaFaltantesPanel";
 interface Props { open: boolean; onOpenChange: (v: boolean) => void; onDone: () => void }
 
 const msg = (e: unknown) => (e instanceof Error ? e.message : String((e as { message?: string })?.message ?? e));
-const norm = (s: string) => s.normalize("NFD").replace(/[̀-ͯ]/g, "").trim().toLowerCase();
 
 interface Estado {
   prep: ResultadoImport;
@@ -82,22 +78,8 @@ export function ExtraerCorreoDialog({ open, onOpenChange, onDone }: Props) {
     if (!organizationId) return;
     setCargando(true); setResultado(null); setEstado(null);
     try {
-      const { data, error } = await supabase.functions.invoke("extraer-tarifas-correo", { body: { organizationId } });
-      if (error) throw new Error(msg(error));
-      const correos = (data as { correos: CorreoDescargado[] }).correos ?? [];
-      const agentes = await fetchCosteoAgentes(organizationId);
-      const filas: FilaCorreo[] = [];
-      const errores: string[] = [];
-      const resumen: Estado["resumen"] = [];
-      for (const c of correos) {
-        const r = await parsearCorreoProveedor(c, hoyMx());
-        const clave = AGENTE_CLAVE[c.proveedor as ProveedorCorreo];
-        const agente = agentes.find((a) => norm(a.nombre).includes(norm(clave ?? "")));
-        for (const f of r.filas) filas.push({ ...f, Agente: agente?.nombre ?? clave ?? f.Agente });
-        errores.push(...r.errores);
-        resumen.push({ proveedor: NOMBRE_PROVEEDOR[c.proveedor as ProveedorCorreo] ?? c.proveedor, filas: r.filas.length });
-      }
-      await preparar(filas, errores, resumen);
+      const lectura = await leerCorreos(organizationId);
+      await preparar(lectura.filas, lectura.errores, lectura.resumen);
     } catch (e) {
       setEstado({ prep: { tarifas: [], errores: [`No se pudieron leer los correos: ${msg(e)}`] }, resumen: [], conflictos: [], proveedorDe: new Map(), nombreAgenteDe: new Map(), puertos: new Map(), navieras: new Map() });
     } finally { setCargando(false); }
