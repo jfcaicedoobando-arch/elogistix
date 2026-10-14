@@ -8,6 +8,8 @@ import { Button } from "@/components/ui/button";
 import { DataTable, defineColumns } from "@/components/shared/DataTable";
 import { exportToCsv } from "@/generators/exportCsv";
 import { formatCurrency } from "@/lib/formatters/numbers";
+import { useTasaIVA } from "@/features/catalogos/hooks/useTasaIVA";
+import { montoConIva } from "./ivaCargo";
 import { archivarCargo, listarCargos, type CargoTarifario, type TipoCargo } from "./cargosService";
 import { CargoFormDialog } from "./CargoFormDialog";
 
@@ -16,12 +18,13 @@ interface Props { tipo: TipoCargo; orgId: string | null; puedeEditar: boolean }
 export function CargosTab({ tipo, orgId, puedeEditar }: Props) {
   const q = useQuery({ queryKey: costeo.tarifario.cargos(tipo), queryFn: () => listarCargos(tipo) });
   const [editando, setEditando] = useState<CargoTarifario | null | "nuevo">(null);
+  const tasaIva = useTasaIVA();
   const etiqueta = tipo === "fob" ? "Agente" : "Naviera";
   const filas = q.data ?? [];
 
   const descargar = () => exportToCsv(`${tipo === "fob" ? "cargos-fob" : "cargos-locales"}.csv`,
-    [{ key: "e", label: etiqueta }, { key: "c", label: "Concepto" }, { key: "m", label: "Monto" }, { key: "cur", label: "Currency" }, { key: "u", label: "Unidad" }],
-    filas.map((c) => ({ e: c.entidad?.nombre ?? "", c: c.concepto, m: c.monto, cur: c.moneda, u: c.unidad ?? "" })));
+    [{ key: "e", label: etiqueta }, { key: "c", label: "Concepto" }, { key: "m", label: "Monto" }, { key: "cur", label: "Currency" }, { key: "u", label: "Unidad" }, { key: "iva", label: "Aplica IVA" }, { key: "t", label: "Monto con IVA" }],
+    filas.map((c) => ({ e: c.entidad?.nombre ?? "", c: c.concepto, m: c.monto, cur: c.moneda, u: c.unidad ?? "", iva: c.aplica_iva ? "Sí" : "No", t: montoConIva(c.monto, c.aplica_iva, tasaIva) })));
 
   const archivar = async (c: CargoTarifario) => {
     try { await archivarCargo(tipo, c.id); notifySuccess(undefined, { title: "Cargo retirado" }); void q.refetch(); }
@@ -32,6 +35,8 @@ export function CargosTab({ tipo, orgId, puedeEditar }: Props) {
     { id: "entidad", header: etiqueta, accessorFn: (c) => c.entidad?.nombre ?? "—" },
     { accessorKey: "concepto", header: "Concepto" },
     { accessorKey: "monto", header: "Monto", cell: ({ row }) => formatCurrency(row.original.monto, row.original.moneda) },
+    { id: "con_iva", header: "Monto con IVA", cell: ({ row }) => row.original.aplica_iva
+      ? formatCurrency(montoConIva(row.original.monto, true, tasaIva), row.original.moneda) : "No aplica" },
     { accessorKey: "moneda", header: "Currency" },
     { id: "unidad", header: "Unidad", accessorFn: (c) => c.unidad ?? "—" },
     ...(puedeEditar ? [{ id: "acciones", header: "Acciones", cell: ({ row }: { row: { original: CargoTarifario } }) => <>

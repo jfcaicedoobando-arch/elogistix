@@ -6,6 +6,7 @@ import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
 import { costeo } from "../queryKeys";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { FormDialogShell } from "@/components/shared/FormDialogShell";
@@ -27,6 +28,7 @@ export function CargoFormDialog({ tipo, orgId, cargo, onClose, onSaved }: Props)
   const [monto, setMonto] = useState(cargo ? String(cargo.monto) : "");
   const [moneda, setMoneda] = useState(cargo?.moneda ?? (tipo === "fob" ? "USD" : "MXN"));
   const [unidad, setUnidad] = useState(cargo?.unidad ?? "");
+  const [aplicaIva, setAplicaIva] = useState(cargo?.aplica_iva ?? false);
   const [busy, setBusy] = useState(false);
 
   const guardar = async () => {
@@ -37,7 +39,7 @@ export function CargoFormDialog({ tipo, orgId, cargo, onClose, onSaved }: Props)
     }
     setBusy(true);
     try {
-      await guardarCargo(tipo, orgId, { entidad_id: entidad, concepto: concepto.trim(), monto: n, moneda, unidad: unidad.trim() || null }, cargo?.id);
+      await guardarCargo(tipo, orgId, { entidad_id: entidad, concepto: concepto.trim(), monto: n, moneda, unidad: unidad.trim() || null, aplica_iva: aplicaIva }, cargo?.id);
       notifySuccess(undefined, { title: "Cargo guardado" });
       onSaved();
       onClose();
@@ -70,6 +72,10 @@ export function CargoFormDialog({ tipo, orgId, cargo, onClose, onSaved }: Props)
           </Select>
         </div>
         <div className="space-y-1 md:col-span-2"><Label htmlFor="cargo-unidad">Unidad</Label><Input id="cargo-unidad" placeholder="Por contenedor, por BL…" value={unidad} onChange={(e) => setUnidad(e.target.value)} /></div>
+        <div className="flex items-center gap-2 md:col-span-2">
+          <Checkbox id="cargo-iva" checked={aplicaIva} onCheckedChange={(v) => setAplicaIva(v === true)} />
+          <Label htmlFor="cargo-iva">Aplica IVA (se suma al monto en la lista)</Label>
+        </div>
       </div>
     </FormDialogShell>
   );
