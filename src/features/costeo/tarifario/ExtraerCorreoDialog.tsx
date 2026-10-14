@@ -61,7 +61,20 @@ export function ExtraerCorreoDialog({ open, onOpenChange, onDone }: Props) {
     const f = faltantesDeCatalogo(filas, { puertos, navieras });
     setFaltantes(f.pendientes.length ? f : null); setAltasHechas(0);
     setSeleccion(seleccionInicial(prep.tarifas.length, conflictos));
-    setEstado({ prep: { tarifas: prep.tarifas, errores: [...erroresBase, ...prep.errores] }, resumen, conflictos });
+    const proveedorDe = new Map<string, string>();
+    const nombreAgenteDe = new Map<string, string>();
+    for (const ag of agentes) {
+      nombreAgenteDe.set(ag.id, ag.nombre);
+      for (const [prov, clave] of Object.entries(AGENTE_CLAVE)) {
+        if (norm(ag.nombre).includes(norm(clave))) { proveedorDe.set(ag.id, NOMBRE_PROVEEDOR[prov as ProveedorCorreo] ?? prov); break; }
+      }
+    }
+    setEstado({
+      prep: { tarifas: prep.tarifas, errores: [...erroresBase, ...prep.errores] }, resumen, conflictos,
+      proveedorDe, nombreAgenteDe,
+      puertos: new Map(puertos.map((p): [string, string] => [p.id, p.name])),
+      navieras: new Map(navieras.map((n): [string, string] => [n.id, n.name])),
+    });
   };
 
   const prepararPendientes = async () => {
@@ -92,7 +105,7 @@ export function ExtraerCorreoDialog({ open, onOpenChange, onDone }: Props) {
       }
       await preparar(filas, errores, resumen);
     } catch (e) {
-      setEstado({ prep: { tarifas: [], errores: [`No se pudieron leer los correos: ${msg(e)}`] }, resumen: [], conflictos: [] });
+      setEstado({ prep: { tarifas: [], errores: [`No se pudieron leer los correos: ${msg(e)}`] }, resumen: [], conflictos: [], proveedorDe: new Map(), nombreAgenteDe: new Map(), puertos: new Map(), navieras: new Map() });
     } finally { setCargando(false); }
   };
 
@@ -143,9 +156,8 @@ export function ExtraerCorreoDialog({ open, onOpenChange, onDone }: Props) {
         {cargando && !estado && <p>Buscando correos de los 4 agentes…</p>}
         {estado && (
           <>
-            <ul className="list-disc pl-5">
-              {estado.resumen.map((r) => <li key={r.proveedor}>{r.proveedor}: {r.filas} renglón(es) leído(s)</li>)}
-            </ul>
+            <TarifasPorProveedor tarifas={estado.prep.tarifas} proveedorDe={estado.proveedorDe} nombreAgenteDe={estado.nombreAgenteDe}
+              puertos={estado.puertos} navieras={estado.navieras} />
             <p>Listas para cargar: <strong>{estado.prep.tarifas.length}</strong> tarifa(s). Renglones con error: <strong>{estado.prep.errores.length}</strong> (se omiten).</p>
             <ConflictosTarifasLista tarifas={estado.prep.tarifas} conflictos={estado.conflictos} seleccion={seleccion}
               onToggle={(i, v) => setSeleccion((s) => { const n = new Set(s); if (v) n.add(i); else n.delete(i); return n; })} />
