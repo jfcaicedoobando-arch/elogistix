@@ -6,9 +6,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
-export const CONCEPTOS_NAVIERA_BASE = ["Revalidación", "ISPS", "Garantía"] as const;
+const CONCEPTOS_NAVIERA_BASE = ["Revalidación", "ISPS", "Garantía"] as const;
 
-export function opcionesConcepto(extra: string[], actual: string): string[] {
+function opcionesConcepto(extra: string[], actual: string): string[] {
   const todas = [...CONCEPTOS_NAVIERA_BASE, ...extra, actual].map((c) => c.trim()).filter(Boolean);
   return Array.from(new Set(todas));
 }
