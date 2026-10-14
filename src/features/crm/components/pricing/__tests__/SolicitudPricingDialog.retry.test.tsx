@@ -78,13 +78,13 @@ function completar() {
   fireEvent.change(screen.getByLabelText("Origen"), { target: { value: "Shanghai" } });
   fireEvent.change(screen.getByLabelText("Destino"), { target: { value: "Manzanillo" } });
 }
-function enviar() { fireEvent.click(screen.getByRole("button", { name: "Enviar a Pricing" })); }
+function enviar() { fireEvent.click(screen.getByRole("button", { name: "Revisar tarifario" })); }
 function form() { return screen.getByLabelText("Servicio").closest("form")!; }
 async function parcial() {
   services.enviarSolicitud.mockRejectedValueOnce(new Error("LC_PRICING_INCOMPLETA"));
   render(<Harness />); completar(); enviar();
   await screen.findByRole("status");
-  await waitFor(() => expect(screen.getByRole("button", { name: "Enviar a Pricing" })).toBeEnabled());
+  await waitFor(() => expect(screen.getByRole("button", { name: "Revisar tarifario" })).toBeEnabled());
 }
 beforeEach(() => {
   contexto.userId = "u1"; contexto.organizationId = "org1";
