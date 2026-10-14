@@ -9,7 +9,7 @@ import { useAuth } from "@/lib/contexts/AuthContext";
 import { usePermissions } from "@/hooks/shared/usePermissions";
 import { useOpcionesPricing } from "@/features/crm/hooks/usePricingCrm";
 import { useTarifasRespuestaPricing } from "@/features/crm/hooks/useTarifasRespuestaPricing";
-import { esRolPricing, puedeAgregarTarifaRespuesta } from "@/features/crm/services/pricing/permisosPricing";
+import { esRolPricing, esAutorSolicitud, puedeAgregarTarifaRespuesta, puedeEditarSolicitud, solicitudAbierta } from "@/features/crm/services/pricing/permisosPricing";
 import type { SolicitudPricingRow } from "@/features/crm/services/pricing/tiposPricing";
 import { AccionesSolicitudPricing } from "./AccionesSolicitudPricing";
 import { AdjuntosSolicitudPricing } from "./AdjuntosSolicitudPricing";
@@ -22,7 +22,7 @@ import { TarifasRespuestaPricing } from "./TarifasRespuestaPricing";
 interface Props { solicitud: SolicitudPricingRow }
 
 function puedeUsarRespuesta(s: SolicitudPricingRow, userId: string | undefined, esPricing: boolean) {
-  return esPricing || s.created_by === userId || s.solicitante_id === userId;
+  return esPricing || esAutorSolicitud(s, userId);
 }
 
 export function SolicitudPricingDetalle({ solicitud: s }: Props) {
@@ -34,9 +34,8 @@ export function SolicitudPricingDetalle({ solicitud: s }: Props) {
   const { data: opciones = [] } = useOpcionesPricing(s.id);
   const tarifasRespuesta = useTarifasRespuestaPricing(s.id, s.estado === "enviada");
   const editable = esPricing && s.estado === "enviada";
-  const abierta = s.estado === "borrador" || s.estado === "enviada";
-  const puedeCancelar = abierta && (esPricing || s.created_by === user?.id);
-  const puedeEditar = abierta && (esPricing || s.created_by === user?.id || s.solicitante_id === user?.id);
+  const puedeCancelar = solicitudAbierta(s) && (esPricing || s.created_by === user?.id);
+  const puedeEditar = puedeEditarSolicitud(s, user?.id, esPricing);
   const puedeElegir = puedeUsarRespuesta(s, user?.id, esPricing);
   const puedeCotizar = s.estado === "respondida" && puedeElegir && canWriteCotizaciones;
   const cotizarRespuesta = (tarifaId: string) => {
