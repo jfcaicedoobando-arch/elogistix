@@ -48,7 +48,7 @@ export function SolicitudPricingDetalle({ solicitud: s }: Props) {
   return (
     <div className="space-y-4">
       <AccionesSolicitudPricing solicitud={s} puedeCancelar={puedeCancelar} puedeResponder={editable}
-        puedeEditar={puedeEditar} onEditar={() => setEditando(true)}
+        puedeEditar={puedeEditar} puedeCopiar={puedeElegir} onEditar={() => setEditando(true)}
         numOpciones={opciones.length + (tarifasRespuesta.data?.length ?? 0)} />
       <SolicitudPricingDialog open={editando} onOpenChange={setEditando}
         oportunidadId={s.oportunidad_id ?? ""} solicitud={s} />
