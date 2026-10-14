@@ -13,10 +13,12 @@ interface Props {
   solicitud: SolicitudPricingRow;
   puedeCancelar: boolean;
   puedeResponder: boolean;
+  puedeEditar: boolean;
+  onEditar: () => void;
   numOpciones: number;
 }
 
-export function AccionesSolicitudPricing({ solicitud: s, puedeCancelar, puedeResponder, numOpciones }: Props) {
+export function AccionesSolicitudPricing({ solicitud: s, puedeCancelar, puedeResponder, puedeEditar, onEditar, numOpciones }: Props) {
   const accion = useAccionSolicitud();
   const sinOpciones = numOpciones === 0;
   return (
@@ -26,6 +28,9 @@ export function AccionesSolicitudPricing({ solicitud: s, puedeCancelar, puedeRes
         <Badge variant="outline">{ETIQUETA_ESTADO_PRICING[s.estado] ?? s.estado}</Badge>
         <RelojPricing enviadaAt={s.enviada_at} venceAt={s.vence_at} respondidaAt={s.respondida_at} />
         <div className="ml-auto flex gap-2">
+          {puedeEditar && (
+            <Button variant="outline" size="sm" onClick={onEditar}>Editar</Button>
+          )}
           {puedeCancelar && (
             <Button variant="outline" size="sm" disabled={accion.isPending}
               onClick={() => accion.mutate({ id: s.id, oportunidadId: s.oportunidad_id, accion: "cancelar" })}>Cancelar solicitud</Button>
