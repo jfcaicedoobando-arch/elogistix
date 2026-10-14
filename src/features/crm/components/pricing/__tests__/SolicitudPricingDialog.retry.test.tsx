@@ -80,7 +80,6 @@ function completar() {
 }
 function enviar() { fireEvent.click(screen.getByRole("button", { name: "Revisar tarifario" })); }
 function form() { return screen.getByLabelText("Servicio").closest("form")!; }
-}
 beforeEach(() => {
   contexto.userId = "u1"; contexto.organizationId = "org1";
   for (const fn of Object.values(services)) fn.mockReset().mockResolvedValue(undefined);
