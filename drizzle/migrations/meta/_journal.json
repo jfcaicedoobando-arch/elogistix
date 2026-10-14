@@ -127,6 +127,13 @@
       "when": 1792001672033,
       "tag": "0017_crm_empresa_no_borrar_cliente",
       "breakpoints": true
+    },
+    {
+      "idx": 18,
+      "version": "7",
+      "when": 1792006262617,
+      "tag": "0018_cargos_tarifario_aplica_iva",
+      "breakpoints": true
     }
   ]
 }
