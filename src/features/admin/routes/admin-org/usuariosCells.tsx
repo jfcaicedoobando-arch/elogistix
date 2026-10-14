@@ -20,7 +20,7 @@ import {
 } from "@/features/admin/domain/roles/roleCatalog";
 import { Badge } from "@/components/ui/badge";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { AlertTriangle, CheckCircle2, MailWarning } from "lucide-react";
+import { AlertTriangle, Ban, CheckCircle2, MailWarning } from "lucide-react";
 import { inicialesDeEmail } from "./usuariosCellsUtils";
 import { Hint } from "@/components/shared/Hint";
 import { UNRESOLVED_EMAIL } from "@/features/admin/services/usuario/constants";
@@ -159,6 +159,13 @@ export function EstadoInvitacionCell({ estado }: { estado: EstadoInvitacion }) {
     return (
       <Badge variant="outline" className="gap-1 border-success/40 text-success">
         <CheckCircle2 className="size-3.5" /> Activo
+      </Badge>
+    );
+  }
+  if (estado === "desactivado") {
+    return (
+      <Badge variant="outline" className="gap-1 border-destructive/40 text-destructive">
+        <Ban className="size-3.5" /> Desactivado
       </Badge>
     );
   }

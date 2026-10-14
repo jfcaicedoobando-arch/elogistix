@@ -6,6 +6,7 @@ import {
   deleteUserViaEdgeFunction,
   quitarDeOrganizacion,
   enviarResetPassword,
+  cambiarAccesoUsuario,
   type UserRow,
 } from '@/features/admin/services/usuario';
 import type { AppRole } from "@/types/appRole";
@@ -109,6 +110,24 @@ export function useResetPasswordUsuario() {
         title: "No se pudo enviar el correo", description: getErrorMessage(error),
         error,
         method: "RESET_PASSWORD_USUARIO",
+      });
+    },
+  });
+}
+
+/** Desactiva o reactiva el acceso de un usuario (sin borrar su cuenta). */
+export function useCambiarAccesoUsuario() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ userId, activo }: { userId: string; activo: boolean }) => cambiarAccesoUsuario(userId, activo),
+    onSuccess: (_, { activo }) => {
+      void qc.invalidateQueries({ queryKey: queryKeys.usuarios.all });
+      notifySuccess(undefined, { title: activo ? "Usuario reactivado" : "Usuario desactivado" });
+    },
+    onError: (error: Error) => {
+      notifyError(undefined, {
+        title: "No se pudo cambiar el acceso", description: getErrorMessage(error),
+        error, method: "CAMBIAR_ACCESO_USUARIO",
       });
     },
   });
