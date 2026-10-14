@@ -12,6 +12,8 @@ import ColumnaEtapa, {
 } from "@/features/crm/components/kanban/ColumnaEtapa";
 import type { CrmEtapaRow, CrmOportunidadRow } from "@/features/crm/hooks";
 
+vi.mock("@/features/crm/components/objetos/EtiquetaEmpresaEliminada", () => ({ EtiquetaEmpresaEliminada: () => null }));
+
 const ETAPA = {
   id: "e1",
   nombre: "Calificación",
