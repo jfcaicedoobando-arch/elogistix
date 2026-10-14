@@ -8,6 +8,7 @@ import {
   useDeleteUser,
   useQuitarDeOrganizacion,
   useResetPasswordUsuario,
+  useCambiarAccesoUsuario,
   useUsuariosOrgScope,
 } from "@/features/admin/hooks/usuario";
 import { useAuth } from "@/lib/contexts/AuthContext";
@@ -40,6 +41,7 @@ export function UsuariosInternosTab() {
   const deleteUser = useDeleteUser();
   const quitarDeOrg = useQuitarDeOrganizacion();
   const resetPassword = useResetPasswordUsuario();
+  const cambiarAcceso = useCambiarAccesoUsuario();
   const reportedRef = useRef(false);
 
   // P-09: si la edge function `user-management` falla, los correos quedan como
@@ -124,6 +126,7 @@ export function UsuariosInternosTab() {
       onResetPassword: (u) => void resetPassword.mutate(u.user_id),
       onQuitarDeOrg: targets.setQuitarTarget,
       onDelete: targets.setDeleteTarget,
+      onCambiarAcceso: (u, activo) => void cambiarAcceso.mutate({ userId: u.user_id, activo }),
     },
   });
 

@@ -87,6 +87,7 @@ export function UsuariosToolbar({
             <SelectItem value={TODOS}>Todos los estados</SelectItem>
             <SelectItem value="activo">Activos</SelectItem>
             <SelectItem value="pendiente">Invitación pendiente</SelectItem>
+            <SelectItem value="desactivado">Desactivados</SelectItem>
             <SelectItem value="legacy">Rol legado</SelectItem>
           </SelectContent>
         </Select>
