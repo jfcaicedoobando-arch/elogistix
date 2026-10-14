@@ -14,6 +14,7 @@ import OportunidadMontosFields from "./OportunidadMontosFields";
 import OportunidadRutaFields from "./OportunidadRutaFields";
 import { OportunidadEmpresaField } from "./OportunidadEmpresaField";
 import { useNombreProspecto } from "@/features/crm/hooks/useNombreProspecto";
+import { useOrigenClienteForzado } from "@/features/crm/hooks/useOrigenClienteForzado";
 import type { OportunidadFormState } from "@/features/crm/hooks";
 
 interface Etapa {
@@ -51,6 +52,7 @@ export default function OportunidadFormFields({
     faltaNombreLead ? form.lead_id : null,
   );
   const leadNombreVisible = form.lead_nombre || nombreLeadHidratado || "";
+  const esCliente = useOrigenClienteForzado(form.empresa_id, !isEdit, setForm);
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
       {/* Fase 2 rediseño CRM: el origen (prospecto o cliente) es obligatorio. */}
@@ -89,7 +91,7 @@ export default function OportunidadFormFields({
           }))
         }
         clientes={clientes}
-        readOnly={isEdit}
+        readOnly={isEdit || esCliente}
       />
       <div className="sm:col-span-2 space-y-1">
         <Label htmlFor="op-nombre">Nombre *</Label>
