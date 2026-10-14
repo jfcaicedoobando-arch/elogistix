@@ -22,6 +22,7 @@ import { useContactosCliente } from "@/features/cliente/hooks";
 import type { CrmOportunidadRow, CrmEtapaRow } from "@/features/crm/hooks";
 import { MoverEtapaSelect } from "./MoverEtapaSelect";
 import { EtiquetaEmpresaEliminada } from "@/features/crm/components/objetos/EtiquetaEmpresaEliminada";
+import { EtiquetaSolicitudRespondida } from "@/features/crm/components/objetos/EtiquetaSolicitudRespondida";
 
 interface Props {
   op: CrmOportunidadRow;
@@ -71,6 +72,7 @@ export function OportunidadDetalleContent({ op, etapas }: Props) {
         badge={<span className="flex items-center gap-2">
           {etapa ? <Badge variant="outline">{etapa.nombre}</Badge> : null}
           <EtiquetaEmpresaEliminada oportunidadId={op.id} />
+          <EtiquetaSolicitudRespondida oportunidadId={op.id} />
         </span>}
         subtitle={op.cliente_nombre || "Sin cliente"}
         trailing={(canEdit || canCotizar) ? (
