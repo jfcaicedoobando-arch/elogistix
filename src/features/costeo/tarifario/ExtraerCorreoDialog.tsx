@@ -121,7 +121,7 @@ export function ExtraerCorreoDialog({ open, onOpenChange, onDone }: Props) {
       {!estado && !resultado && (
         <Button onClick={() => void extraer()} disabled={cargando}>{cargando ? "Leyendo correos…" : "Buscar tarifas en el correo"}</Button>
       )}
-      {resultado && faltantes && altasHechas > 0 && (
+      {(resultado || estado?.prep.tarifas.length === 0) && faltantes && altasHechas > 0 && (
         <Button onClick={() => void prepararPendientes()} disabled={cargando}>
           {cargando ? "Preparando…" : `Dar de alta ${faltantes.pendientes.length} tarifa(s) pendientes`}
         </Button>
@@ -151,7 +151,7 @@ export function ExtraerCorreoDialog({ open, onOpenChange, onDone }: Props) {
           </>
         )}
         {resultado && <p>Se cargaron <strong>{resultado.creadas}</strong> tarifa(s) en borrador.</p>}
-        {resultado && faltantes && (altasHechas === 0
+        {(resultado || estado?.prep.tarifas.length === 0) && faltantes && (altasHechas === 0
           ? <AltaFaltantesPanel puertos={faltantes.puertos} navieras={faltantes.navieras} onAltas={setAltasHechas} />
           : <p>Se dieron de alta {altasHechas} puerto(s)/naviera(s). Ahora puedes preparar las {faltantes.pendientes.length} tarifa(s) que estaban esperando.</p>)}
         {errores.length > 0 && (
