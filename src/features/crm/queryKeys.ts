@@ -9,6 +9,7 @@ export const crm = {
     list: (tipo: string, busqueda: string, pagina: number, ...filtros: string[]) => ["crm", "objetos", tipo, busqueda, pagina, ...filtros] as const,
     detail: (tipo: string, id?: string) => ["crm", "objetos", tipo, id] as const,
     relacion: (relacion: string, id: string) => ["crm", "objetos", "rel", relacion, id] as const,
+    empresaEliminada: ["crm", "objetos", "empresa-eliminada"] as const,
   },
   propiedades: {
     all: ["crm", "propiedades"] as const,
