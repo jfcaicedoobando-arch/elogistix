@@ -34,6 +34,7 @@ import {
 import { handleInviteAgente, handleListAgentes } from "./agenteHandlers.ts";
 import { handleInvite, handleResetPassword } from "./inviteHandler.ts";
 import { handleListPortalEmails } from "./portalEmailsHandler.ts";
+import { handleSetActive } from "./setActiveHandler.ts";
 
 initSentryEdge("user-management");
 
@@ -48,7 +49,8 @@ export type Action =
   | "list-clients"
   | "invite-agente"
   | "list-agentes"
-  | "list-portal-emails";
+  | "list-portal-emails"
+  | "set-active";
 
 const ACTIONS = new Set<Action>([
   "list",
@@ -62,6 +64,7 @@ const ACTIONS = new Set<Action>([
   "invite-agente",
   "list-agentes",
   "list-portal-emails",
+  "set-active",
 ]);
 
 export function parseAction(raw: unknown): Action | null {
@@ -84,6 +87,7 @@ const ACCIONES_ADMIN = new Set<Action>([
   "invite-client",
   "invite-agente",
   "list-portal-emails",
+  "set-active",
 ]);
 
 const HANDLERS: Record<Action, (ctx: Ctx, admin: AdminArg) => Promise<Response>> = {
@@ -98,6 +102,7 @@ const HANDLERS: Record<Action, (ctx: Ctx, admin: AdminArg) => Promise<Response>>
   "invite-agente": handleInviteAgente,
   "list-agentes": (ctx) => handleListAgentes(ctx),
   "list-portal-emails": handleListPortalEmails,
+  "set-active": handleSetActive,
 };
 
 Deno.serve(async (req) => {
@@ -113,7 +118,7 @@ Deno.serve(async (req) => {
     if (!action) {
       log.finish(400, "invalid_action", { user_id: callerId });
       return errorResponse(
-        "action inválida. Use: list | list-nombres | create | invite | reset-password | delete | invite-client | list-clients | invite-agente | list-agentes | list-portal-emails",
+        "action inválida. Use: list | list-nombres | create | invite | reset-password | delete | invite-client | list-clients | invite-agente | list-agentes | list-portal-emails | set-active",
         400,
         cors,
       );
