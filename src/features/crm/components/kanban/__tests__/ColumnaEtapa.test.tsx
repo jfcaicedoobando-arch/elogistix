@@ -3,8 +3,10 @@
  * máximo LIMITE_ETAPA_INICIAL tarjetas, muestra el aviso de truncamiento y
  * "Mostrar más" amplía la ventana por INCREMENTO_ETAPA.
  */
-import { describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { fireEvent, render, screen } from "@testing-library/react";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { LLAVE_SOLICITUD_RESPONDIDA } from "@/features/crm/services/solicitudRespondidaCrm";
 import { DndContext } from "@dnd-kit/core";
 import ColumnaEtapa, {
   INCREMENTO_ETAPA,
@@ -13,6 +15,13 @@ import ColumnaEtapa, {
 import type { CrmEtapaRow, CrmOportunidadRow } from "@/features/crm/hooks";
 
 vi.mock("@/features/crm/components/objetos/EtiquetaEmpresaEliminada", () => ({ EtiquetaEmpresaEliminada: () => null }));
+
+let client: QueryClient;
+beforeEach(() => {
+  client = new QueryClient({ defaultOptions: { queries: { retry: false, staleTime: Infinity } } });
+  client.setQueryData(LLAVE_SOLICITUD_RESPONDIDA, new Set());
+});
+afterEach(() => client.clear());
 
 const ETAPA = {
   id: "e1",
@@ -35,15 +44,17 @@ function op(i: number): CrmOportunidadRow {
 function renderColumna(n: number) {
   const ops = Array.from({ length: n }, (_, i) => op(i));
   return render(
-    <DndContext>
-      <ColumnaEtapa
-        etapa={ETAPA}
-        ops={ops}
-        onClickCard={() => {}}
-        proximasMap={new Map()}
-        avanceMap={new Map()}
-      />
-    </DndContext>,
+    <QueryClientProvider client={client}>
+      <DndContext>
+        <ColumnaEtapa
+          etapa={ETAPA}
+          ops={ops}
+          onClickCard={() => {}}
+          proximasMap={new Map()}
+          avanceMap={new Map()}
+        />
+      </DndContext>
+    </QueryClientProvider>,
   );
 }
 
