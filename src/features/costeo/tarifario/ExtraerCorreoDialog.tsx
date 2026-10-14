@@ -97,7 +97,7 @@ export function ExtraerCorreoDialog({ open, onOpenChange, onDone }: Props) {
 
   const cerrar = (v: boolean) => { if (!v) { setEstado(null); setResultado(null); setFaltantes(null); } onOpenChange(v); };
   const mostrarAltas = Boolean(resultado) || estado?.prep.tarifas.length === 0;
-  const errores = resultado?.errores ?? estado?.prep.errores ?? [];
+  const errores = erroresVisibles(resultado, estado);
   const footer = (
     <>
       <Button variant="outline" onClick={() => cerrar(false)}>Cerrar</Button>
