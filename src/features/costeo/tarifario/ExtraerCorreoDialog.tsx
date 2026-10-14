@@ -61,14 +61,7 @@ export function ExtraerCorreoDialog({ open, onOpenChange, onDone }: Props) {
     const f = faltantesDeCatalogo(filas, { puertos, navieras });
     setFaltantes(f.pendientes.length ? f : null); setAltasHechas(0);
     setSeleccion(seleccionInicial(prep.tarifas.length, conflictos));
-    const proveedorDe = new Map<string, string>();
-    const nombreAgenteDe = new Map<string, string>();
-    for (const ag of agentes) {
-      nombreAgenteDe.set(ag.id, ag.nombre);
-      for (const [prov, clave] of Object.entries(AGENTE_CLAVE)) {
-        if (norm(ag.nombre).includes(norm(clave))) { proveedorDe.set(ag.id, NOMBRE_PROVEEDOR[prov as ProveedorCorreo] ?? prov); break; }
-      }
-    }
+    const { proveedorDe, nombreAgenteDe } = mapearAgentes(agentes);
     setEstado({
       prep: { tarifas: prep.tarifas, errores: [...erroresBase, ...prep.errores] }, resumen, conflictos,
       proveedorDe, nombreAgenteDe,

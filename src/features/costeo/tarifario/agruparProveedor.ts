@@ -1,7 +1,25 @@
 /** Agrupa tarifas por proveedor (o agente) para la lista desplegable del diálogo. */
+import { AGENTE_CLAVE, NOMBRE_PROVEEDOR, type ProveedorCorreo } from "./correo/proveedoresCorreo";
 import type { TarifaImport } from "./importarTarifas";
 
 export interface GrupoProveedor { proveedor: string; indices: number[] }
+
+const norm = (s: string) => s.normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim().toLowerCase();
+
+/** Relaciona cada agente del catálogo con su proveedor de correo (si existe). */
+export function mapearAgentes(agentes: ReadonlyArray<{ id: string; nombre: string }>): {
+  proveedorDe: Map<string, string>; nombreAgenteDe: Map<string, string>;
+} {
+  const proveedorDe = new Map<string, string>();
+  const nombreAgenteDe = new Map<string, string>();
+  for (const ag of agentes) {
+    nombreAgenteDe.set(ag.id, ag.nombre);
+    for (const [prov, clave] of Object.entries(AGENTE_CLAVE)) {
+      if (norm(ag.nombre).includes(norm(clave))) { proveedorDe.set(ag.id, NOMBRE_PROVEEDOR[prov as ProveedorCorreo] ?? prov); break; }
+    }
+  }
+  return { proveedorDe, nombreAgenteDe };
+}
 
 /**
  * Devuelve los grupos en orden de primera aparición; `indices` apunta a la
