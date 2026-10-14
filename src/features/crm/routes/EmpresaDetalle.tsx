@@ -15,6 +15,8 @@ import { varianteEstadoEmpresa } from "@/features/crm/components/objetos/estadoE
 import { PropiedadesCard } from "@/features/crm/components/objetos/PropiedadesCard";
 import { VinculosCard } from "@/features/crm/components/objetos/VinculosCard";
 import { DesglosePuntajeCard } from "@/features/crm/components/scoring/DesglosePuntajeCard";
+import { EliminarEmpresaBoton } from "@/features/crm/components/objetos/EliminarEmpresaBoton";
+import { puedeEliminarEmpresa } from "@/features/crm/services/eliminarEmpresaCrm";
 
 export default function CrmEmpresaDetalle() {
   const { id = "" } = useParams<{ id: string }>();
@@ -32,10 +34,15 @@ export default function CrmEmpresaDetalle() {
         title={data?.nombre ?? "Empresa"}
         subtitle={data ? `Alta: ${formatFechaDia(data.created_at)}` : undefined}
         badge={estado ? <Badge variant={varianteEstadoEmpresa(estado)}>{estado}</Badge> : undefined}
-        trailing={canEditCrm && (estado === "Lead" || estado === "Sospechoso") ? (
-          <Button onClick={() => pasar.mutate(id)} disabled={pasar.isPending}>
-            <ArrowRight className="size-4" /> Pasar a prospecto
-          </Button>
+        trailing={canEditCrm && data ? (
+          <div className="flex gap-2">
+            {puedeEliminarEmpresa(data) && <EliminarEmpresaBoton empresaId={id} nombre={data.nombre} />}
+            {(estado === "Lead" || estado === "Sospechoso") && (
+              <Button onClick={() => pasar.mutate(id)} disabled={pasar.isPending}>
+                <ArrowRight className="size-4" /> Pasar a prospecto
+              </Button>
+            )}
+          </div>
         ) : undefined}
       />
       {isLoading ? <LoadingState label="Cargando empresa…" /> : isError || !data ? (
