@@ -51,8 +51,8 @@
   },
   {
     "path": "run_ci.py",
-    "bytes": 22658,
-    "sha256": "b9be018fa4d55a9467f4248214af6ec8a16e2d7aa62cf47ffbf68fc8d77006e1"
+    "bytes": 22734,
+    "sha256": "1eadd1ebe1858863a17407d9961a7747d905cb2cf3b2a09d906a73c5424ef147"
   },
   {
     "path": "source-pins.json",
@@ -136,8 +136,8 @@
   },
   {
     "path": "test_runner.py",
-    "bytes": 8415,
-    "sha256": "8bf5905acf31a27eff9a040f401623ef33354830fc4aef94600607f5a169f68d"
+    "bytes": 8964,
+    "sha256": "147f6b527e00b178fd9aa0187f0d21fefe6bef7efe64024203202fa4f36a3971"
   },
   {
     "path": "test_suites.py",

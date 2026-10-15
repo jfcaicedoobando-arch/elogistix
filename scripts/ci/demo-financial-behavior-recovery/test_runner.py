@@ -103,6 +103,11 @@ class RunnerTests(unittest.TestCase):
         self.assertEqual(installed.count(b"AND proowner=current_user::regrole::oid AND NOT prosecdef"), 2)
         self.assertEqual(evidence["new_purpose_replay_adapter"], "HOLD_UNCHANGED")
         self.assertEqual(r.sha(installed), evidence["installed_stdin_sha256"])
+    def test_success_with_null_diagnostic_is_a_valid_replay_summary(self):
+        self.assertEqual(r.replay_status({"status": "PASS", "diagnostic": None}), "PASS")
+        self.assertEqual(r.replay_status({"status": "FAIL", "diagnostic": None}), "NOT_RUN")
+        self.assertEqual(r.replay_status({"status": "FAIL", "diagnostic": {"phase": "happy_materialized", "sqlstate": "23514"}}), "FAIL")
+        self.assertFalse(r.fault_probes_allowed({"status": "FAIL", "materialization_assertions": "PASS", "cleanup_verified": True, "diagnostic": None}))
     def test_inventory_rejects_path_escape_and_hash_drift(self):
         with tempfile.TemporaryDirectory(dir=HERE) as tmp:
             root = Path(tmp); (root / "a").write_bytes(b"a")

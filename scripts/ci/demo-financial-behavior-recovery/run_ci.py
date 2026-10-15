@@ -177,7 +177,7 @@ def case_summary(result, suite, successful, expected, proposal="original"):
     all_stages = [r.get("stage") for r in stages] == [*expected, *correction_stage, "synthetic-boundary-privileges", "behavior-" + suite] and all(r.get("status") == "PASS" for r in stages)
     accepted = successful and installed and all_stages and cleanup_ok(result) and result.get("suite_markers") is True and (suite not in FAULT_SUITES or result.get("injection_observed") is True)
     return {"suite": suite, "status": "PASS" if accepted else "FAIL", "catalog_compile": "PASS" if installed else "FAIL",
-            "financial_behavior": "PASS" if accepted else "NOT_RUN" if result.get("stage") != "behavior-" + suite or result.get("diagnostic", {}).get("phase") in ("fixture", "prepare_context", "assertions") else "FAIL",
+            "financial_behavior": "PASS" if accepted else "NOT_RUN" if result.get("stage") != "behavior-" + suite or (result.get("diagnostic") or {}).get("phase") in ("fixture", "prepare_context", "assertions") else "FAIL",
             "materialization_assertions": "PASS" if result.get("materialization_assertions") is True else "NOT_RUN",
             "injection": "PASS" if suite in FAULT_SUITES and result.get("injection_observed") is True else "NOT_RUN",
             "stage": "complete_owned_cleanup_confirmed" if accepted else result.get("stage"),
@@ -189,7 +189,12 @@ def fault_probes_allowed(happy):
     # after real materialization + deferred guards and verified owned cleanup.
     return happy.get("status") == "PASS" or (
         happy.get("materialization_assertions") == "PASS" and happy.get("cleanup_verified") is True
-        and happy.get("diagnostic", {}).get("phase") == "happy_materialized")
+        and (happy.get("diagnostic") or {}).get("phase") == "happy_materialized")
+
+def replay_status(happy):
+    if happy.get("status") == "PASS":
+        return "PASS"
+    return "FAIL" if (happy.get("diagnostic") or {}).get("phase") == "happy_materialized" else "NOT_RUN"
 
 def run_case(output, suite, frozen, compile_frozen, bundle, compile_module, infrastructure, variant, proposal, correction):
     class BehaviorRunner(infrastructure.Runner):
@@ -309,7 +314,7 @@ def run(output, selected, proposal="original"):
         save()
     summary["status"] = "PASS_SYNTHETIC_ROLLBACK_ONLY" if all(c["status"] == "PASS" for c in summary["cases"]) else "FAIL"
     summary["selected_suite"] = selected
-    summary["replay"] = "FAIL" if summary["cases"][0].get("diagnostic", {}).get("phase") == "happy_materialized" else "PASS" if summary["cases"][0]["status"] == "PASS" else "NOT_RUN"
+    summary["replay"] = replay_status(summary["cases"][0])
     save()
     print(json.dumps(summary))
     require(summary["status"] == "PASS_SYNTHETIC_ROLLBACK_ONLY", "Behavior or cleanup incomplete; inspect bounded evidence")
