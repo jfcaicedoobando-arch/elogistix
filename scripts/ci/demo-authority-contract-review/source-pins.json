@@ -1,0 +1,145 @@
+{
+  "schema_version": 1,
+  "base_commit": "025270cadcee0cedef64aab31be93eb0ff3f0288",
+  "scope": "OFFLINE_SOURCE_AND_SYNTHETIC_COMPOSITION_ONLY",
+  "operational_wire": "UNBOUND",
+  "external_authentication": "NOT_RUN",
+  "runtime_acl": "NOT_RUN",
+  "durability_and_restore": "NOT_RUN",
+  "endpoint": "CLOSED",
+  "sources": [
+    {
+      "path": "docs/review/demo-durable-owner-adapter-20261015/issuer.mjs",
+      "bytes": 1833,
+      "sha256": "5d78d058a336f4eb21fa715d45844d86aa41c046f462c1670610084229e172d1",
+      "git_blob_sha1": "21aabf95836cd3385e0410b1c4d0afc136af45ed",
+      "checkout_eol": "CRLF_TO_LF_ALLOWED"
+    },
+    {
+      "path": "docs/review/demo-durable-owner-adapter-20261015/owner.mjs",
+      "bytes": 2641,
+      "sha256": "e16d06f030bf53aea860325448041e2b3e9cd84ff152ea4bb281709a6d786504",
+      "git_blob_sha1": "a8485df9c881604766d2976910b4366375f23b75",
+      "checkout_eol": "CRLF_TO_LF_ALLOWED"
+    },
+    {
+      "path": "docs/review/demo-durable-owner-adapter-20261015/driver.mjs",
+      "bytes": 2202,
+      "sha256": "82305d90a131339c3170dd2fdc48f46410b6a58a268bb72b798ffedcc5bcac6b",
+      "git_blob_sha1": "b166630236fcc2d3baa61b68fa155a8aa290dc91",
+      "checkout_eol": "CRLF_TO_LF_ALLOWED"
+    },
+    {
+      "path": "docs/review/demo-durable-owner-adapter-20261015/store.mjs",
+      "bytes": 1684,
+      "sha256": "a0aac72315944475b014019e312253619b42ee30dc0ba1040ec6d86f53432b45",
+      "git_blob_sha1": "03019204a5df6678260f9b05d1bb9f3afe09e842",
+      "checkout_eol": "CRLF_TO_LF_ALLOWED"
+    },
+    {
+      "path": "docs/review/demo-durable-owner-adapter-20261015/store.sql",
+      "bytes": 2599,
+      "sha256": "fb7fa69c17eca7230606ecb6217086c6eb5317d75551df9efc268959f69140a7",
+      "git_blob_sha1": "55d8709e29ae5b0b14f3aa82dc86cec4b93b9bd0",
+      "checkout_eol": "CRLF_TO_LF_ALLOWED"
+    },
+    {
+      "path": "docs/review/demo-flow-20261015/sql/01-private.sql",
+      "bytes": 16972,
+      "sha256": "e78412eb7e0efe59749c7f7077b8955df5752a4a8d911a02822ddf56c57dd9a2",
+      "git_blob_sha1": "23093a265a53287aa65a153922df3085c90220cb",
+      "checkout_eol": "CRLF_TO_LF_ALLOWED"
+    },
+    {
+      "path": "docs/review/demo-flow-20261015/sql/04-engine.sql",
+      "bytes": 28344,
+      "sha256": "44460cb9e8e4028ad02e3eb2485ca451ab9489208f84b9c2a85917d45a642f1d",
+      "git_blob_sha1": "5b06190de1af981d07a28b047cd1bcaa645ca5cc",
+      "checkout_eol": "CRLF_TO_LF_ALLOWED"
+    },
+    {
+      "path": "docs/review/demo-flow-20261015/sql/06-simulation-guards.sql",
+      "bytes": 2312,
+      "sha256": "44f88ad264f1c2e0bd89577fe1dcdd24e3b11a017b78c4b26ad911147e7012a3",
+      "git_blob_sha1": "7aa37a61f25365bbc722c8bca06a79bc0d60c603",
+      "checkout_eol": "CRLF_TO_LF_ALLOWED"
+    },
+    {
+      "path": "docs/review/demo-flow-20261015/issuer/11-atomic-entry.sql",
+      "bytes": 6570,
+      "sha256": "a2093b45e37c922f0505e496581381b4b5a3d105d3f0e583d694ef92e9c47cb3",
+      "git_blob_sha1": "42ac0a5a263a9b3414657c0146c7bf6d09202332",
+      "checkout_eol": "CRLF_TO_LF_ALLOWED"
+    },
+    {
+      "path": "docs/review/demo-flow-20261015/issuer/12-approval-main.sql",
+      "bytes": 10603,
+      "sha256": "ee528767111b8352196f2d40629342b00bbcceedc4b5f2ecbdadc88c7477e583",
+      "git_blob_sha1": "da04314e839476197c05f7b9f958170c77655673",
+      "checkout_eol": "CRLF_TO_LF_ALLOWED"
+    },
+    {
+      "path": "docs/review/demo-flow-20261015/issuer/15-rpc-boundary.sql",
+      "bytes": 4236,
+      "sha256": "9656003b716ea2c60ec90b7a4de9dc1b21743c46a0ef1199f2522f9831979799",
+      "git_blob_sha1": "749fd6abf87b56530aedfc2ddde44d008bcb805c",
+      "checkout_eol": "CRLF_TO_LF_ALLOWED"
+    },
+    {
+      "path": "docs/review/demo-flow-20261015/issuer/16-owner-registry.sql",
+      "bytes": 11333,
+      "sha256": "a74d69ed6d19356ba36fe27d7070a496e99c3ef5cec7a030c3b96b609a64463b",
+      "git_blob_sha1": "7b8060d3669e7c71cf0cb8f828a4ad314c8f1254",
+      "checkout_eol": "CRLF_TO_LF_ALLOWED"
+    },
+    {
+      "path": "scripts/ci/demo-authentic-review/sql/identity.sql",
+      "bytes": 16101,
+      "sha256": "666a466b0b8189ef3cec661f489495b7059cfd9bbcb2492d9d221b693ea3be7f",
+      "git_blob_sha1": "8d166a8ded732de4861bcad2f5ae7f713a3d5cf7",
+      "checkout_eol": "CRLF_TO_LF_ALLOWED"
+    },
+    {
+      "path": "scripts/ci/demo-authentic-review/sql/producer.sql",
+      "bytes": 19028,
+      "sha256": "f0a14f683ee524527ed3b7f29305bc793f7f9e3d5581b4332da72f8fb8bb55a6",
+      "git_blob_sha1": "0eef8bcef4cf4eec32315bdd2e44b697f2d119be",
+      "checkout_eol": "CRLF_TO_LF_ALLOWED"
+    },
+    {
+      "path": "scripts/ci/demo-authentic-review/sql/bridge.sql",
+      "bytes": 8362,
+      "sha256": "69bbcd2ec825953ca4fda822ec5fde143f1f70a5120f372ee3c211e96523c5b2",
+      "git_blob_sha1": "9728b864af8a9cb7bc6eebaf61e750e068e3da75",
+      "checkout_eol": "CRLF_TO_LF_ALLOWED"
+    },
+    {
+      "path": "supabase/functions/demo-access/availability.ts",
+      "bytes": 833,
+      "sha256": "1f5bbf10b1b02389716a4daf27186923f84afb83b8d667e31d9b9a1b4b9eced5",
+      "git_blob_sha1": "d3c4c2cc86792f4087ac407939a45d92ed94c609",
+      "checkout_eol": "EXACT"
+    },
+    {
+      "path": "supabase/functions/demo-access/handler.ts",
+      "bytes": 10091,
+      "sha256": "6775289b7c35b7dd97ae88b9c1bc16c6acfd8389504a49db75357daf2bf2e21b",
+      "git_blob_sha1": "bc0c86f70f399af77dc8beaf9999739efe1518bc",
+      "checkout_eol": "CRLF_TO_LF_ALLOWED"
+    },
+    {
+      "path": "supabase/functions/demo-access/index.ts",
+      "bytes": 1113,
+      "sha256": "777cc81270d75c4a460d7c7d18de254895f6c079a93eb0a986852caaeb8c144e",
+      "git_blob_sha1": "35dd3d55f11e4042b4f03d59506f68ec500eddb2",
+      "checkout_eol": "CRLF_TO_LF_ALLOWED"
+    },
+    {
+      "path": "src/features/marketing/lib/demoAccessAvailability.ts",
+      "bytes": 326,
+      "sha256": "38ca78ba9e730b656afd426b6847f585c8010862670283fb58897e4d2900c047",
+      "git_blob_sha1": "374446d4bb963544292d5202497fcbbe8e21e373",
+      "checkout_eol": "CRLF_TO_LF_ALLOWED"
+    }
+  ]
+}
