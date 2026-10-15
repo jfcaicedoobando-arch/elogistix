@@ -1,0 +1,133 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "CRM operational evidence, not an admitted renderer contract",
+  "type": "object",
+  "required": ["kind", "section", "admission", "capture", "result"],
+  "additionalProperties": false,
+  "properties": {
+    "kind": {"const": "crm-operational-evidence-v1"},
+    "admission": {"const": "NOT_ADMITTED"},
+    "section": {"enum": ["discovery", "catalog", "drizzle_history", "supabase_manifest", "supabase_page", "activity", "sequence_state"]},
+    "capture": {"$ref": "#/$defs/capture"},
+    "result": {"type": "object"}
+  },
+  "allOf": [
+    {"if": {"properties": {"section": {"const": "discovery"}}}, "then": {"properties": {"result": {"$ref": "#/$defs/discovery"}}}},
+    {"if": {"properties": {"section": {"const": "catalog"}}}, "then": {"properties": {"result": {"$ref": "#/$defs/catalog"}}}},
+    {"if": {"properties": {"section": {"const": "drizzle_history"}}}, "then": {"properties": {"result": {"$ref": "#/$defs/drizzle"}}}},
+    {"if": {"properties": {"section": {"enum": ["supabase_manifest", "supabase_page"]}}}, "then": {"properties": {"result": {"$ref": "#/$defs/supabase"}}}},
+    {"if": {"properties": {"section": {"const": "activity"}}}, "then": {"properties": {"result": {"$ref": "#/$defs/activity"}}}},
+    {"if": {"properties": {"section": {"const": "sequence_state"}}}, "then": {"properties": {"result": {"$ref": "#/$defs/sequence"}}}}
+  ],
+  "$defs": {
+    "decimal": {"type": "string", "pattern": "^-?[0-9]+$"},
+    "digest": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "nullableDigest": {"anyOf": [{"$ref": "#/$defs/digest"}, {"type": "null"}]},
+    "nullableDecimal": {"anyOf": [{"$ref": "#/$defs/decimal"}, {"type": "null"}]},
+    "capture": {
+      "type": "object",
+      "required": ["captured_at", "statement_at", "database", "database_oid", "backend_pid", "snapshot", "xid_if_assigned", "user", "session_user"],
+      "properties": {
+        "captured_at": {"type": "string", "format": "date-time"},
+        "statement_at": {"type": "string", "format": "date-time"},
+        "database": {"type": "string"},
+        "database_oid": {"$ref": "#/$defs/decimal"},
+        "backend_pid": {"type": "integer"},
+        "snapshot": {"type": "string"},
+        "xid_if_assigned": {"$ref": "#/$defs/nullableDecimal"},
+        "user": {"type": "string"},
+        "session_user": {"type": "string"},
+        "format_settings": {"type": "object", "additionalProperties": {"type": "string"}}
+      },
+      "additionalProperties": false
+    },
+    "safeMetadata": {
+      "type": "object",
+      "not": {"anyOf": [
+        {"required": ["prosrc"]}, {"required": ["probin"]}, {"required": ["prosqlbody"]},
+        {"required": ["proargdefaults"]}, {"required": ["proconfig"]}, {"required": ["rolconfig"]},
+        {"required": ["rolpassword"]}, {"required": ["attmissingval"]}, {"required": ["attoptions"]},
+        {"required": ["attfdwoptions"]}, {"required": ["adbin"]}, {"required": ["conbin"]},
+        {"required": ["indexprs"]}, {"required": ["indpred"]}, {"required": ["tgargs"]},
+        {"required": ["tgqual"]}, {"required": ["ev_action"]}, {"required": ["ev_qual"]},
+        {"required": ["polqual"]}, {"required": ["polwithcheck"]}, {"required": ["relpartbound"]},
+        {"required": ["reloptions"]}, {"required": ["typdefault"]}, {"required": ["typdefaultbin"]}
+      ]}
+    },
+    "catalogNode": {
+      "type": "object",
+      "properties": {"metadata": {"$ref": "#/$defs/safeMetadata"}}
+    },
+    "discovery": {
+      "type": "object",
+      "required": ["context", "roles", "relations", "helpers", "sequence", "transport_properties"],
+      "properties": {
+        "context": {"type": "object", "required": ["server_version_num", "server_encoding", "client_encoding", "isolation", "read_all_stats_effective"]},
+        "roles": {"type": "array", "items": {"type": "object", "required": ["oid", "name", "superuser", "bypass_rls"]}},
+        "relations": {"type": "array", "items": {"type": "object", "required": ["label", "requested_name", "oid", "columns"]}},
+        "helpers": {"type": ["array", "null"]},
+        "sequence": {"type": ["object", "null"], "properties": {"oid": {"$ref": "#/$defs/decimal"}, "name": {"type": "string"}, "select": {"type": "boolean"}, "state_select": {"type": "string"}}},
+        "transport_properties": {"const": "UNKNOWN_REQUIRES_PARENT_VERIFICATION"}
+      }
+    },
+    "catalog": {
+      "type": "object",
+      "required": ["relations", "namespaces", "attributes", "functions", "triggers", "defaults", "constraints", "indexes", "policies", "rules", "inheritance", "types", "languages", "sequences", "operator_classes", "operator_families", "access_methods", "dependencies", "shared_dependencies", "comments", "security_labels", "event_triggers", "roles", "memberships", "custom_or_unreviewed_behavior"],
+      "patternProperties": {
+        "^(relations|namespaces|attributes|functions|triggers|defaults|constraints|indexes|policies|rules|inheritance|types|languages|sequences|operator_classes|operator_families|access_methods|dependencies|shared_dependencies|comments|security_labels|event_triggers|roles|memberships)$": {"type": "array", "items": {"$ref": "#/$defs/catalogNode"}}
+      },
+      "properties": {"custom_or_unreviewed_behavior": {"const": "NOT_ADMITTED_REQUIRES_INDEPENDENT_REVIEW"}}
+    },
+    "drizzle": {
+      "type": "object", "required": ["shape_supported"],
+      "properties": {
+        "shape_supported": {"type": "boolean"}, "row_count": {"$ref": "#/$defs/decimal"},
+        "history_sha256": {"$ref": "#/$defs/digest"},
+        "rows": {"type": "array", "items": {"type": "object", "required": ["id", "hash", "hash_is_canonical_format", "hash_value_sha256", "created_at", "row_sha256"], "properties": {
+          "id": {"$ref": "#/$defs/nullableDecimal"}, "created_at": {"$ref": "#/$defs/nullableDecimal"},
+          "hash": {"$ref": "#/$defs/nullableDigest"}, "hash_is_canonical_format": {"type": "boolean"},
+          "hash_value_sha256": {"$ref": "#/$defs/digest"}, "row_sha256": {"$ref": "#/$defs/digest"}
+        }}}
+      },
+      "allOf": [{"if": {"properties": {"shape_supported": {"const": true}}}, "then": {"required": ["row_count", "rows", "history_sha256", "null_id_count", "null_hash_count", "null_created_at_count", "duplicate_ids", "duplicate_hashes", "duplicate_timestamps"]}}]
+    },
+    "supabase": {
+      "type": "object", "required": ["shape_supported", "status", "row_count", "null_versions", "duplicate_versions", "history_sha256"],
+      "properties": {
+        "shape_supported": {"type": "boolean"}, "status": {"enum": ["CAPTURE_ONLY", "BLOCKED_UNSUPPORTED_LEDGER_COLUMNS"]},
+        "row_count": {"$ref": "#/$defs/nullableDecimal"}, "null_versions": {"$ref": "#/$defs/nullableDecimal"},
+        "duplicate_versions": {"$ref": "#/$defs/nullableDecimal"}, "history_sha256": {"$ref": "#/$defs/nullableDigest"},
+        "offset": {"$ref": "#/$defs/decimal"}, "page_size": {"$ref": "#/$defs/decimal"},
+        "has_more": {"type": "boolean"}, "next_offset": {"$ref": "#/$defs/nullableDecimal"},
+        "page_rows": {"type": "array", "items": {"type": "object", "required": ["row_number", "version", "version_is_numeric", "version_sha256", "row_sha256"], "properties": {
+          "row_number": {"$ref": "#/$defs/decimal"}, "version": {"type": ["string", "null"]},
+          "version_is_numeric": {"type": "boolean"}, "version_sha256": {"$ref": "#/$defs/digest"}, "row_sha256": {"$ref": "#/$defs/digest"}
+        }}}
+      }
+    },
+    "activity": {
+      "type": "object",
+      "required": ["statistics_visibility", "read_all_stats_effective", "other_session_count", "sessions", "prepared_count", "prepared", "locks", "subscriptions", "subscription_workers", "external_queues_pre_readers_owner_ddl_acl_window", "transport_commit_session_registration_retry_properties"],
+      "properties": {
+        "statistics_visibility": {"enum": ["PRIVILEGE_PRESENT_DETAILS_MUST_BE_CHECKED", "RESTRICTED_OR_ROLE_SCOPED"]},
+        "details_available_for_all_observed_sessions": {"type": "boolean"},
+        "read_all_stats_effective": {"type": "boolean"},
+        "other_session_count": {"$ref": "#/$defs/decimal"}, "prepared_count": {"$ref": "#/$defs/decimal"},
+        "sessions": {"type": "array", "items": {"type": "object", "not": {"anyOf": [{"required": ["query"]}, {"required": ["application_name"]}, {"required": ["client_addr"]}, {"required": ["client_hostname"]}]}}},
+        "prepared": {"type": "array", "items": {"type": "object", "required": ["transaction", "prepared_at", "owner", "database", "gid_sha256"], "properties": {"gid_sha256": {"$ref": "#/$defs/digest"}}, "not": {"required": ["gid"]}}},
+        "locks": {"type": "array"}, "subscriptions": {"type": "array"}, "subscription_workers": {"type": "array"},
+        "external_queues_pre_readers_owner_ddl_acl_window": {"const": "UNKNOWN_REQUIRES_EXTERNAL_COORDINATION"},
+        "transport_commit_session_registration_retry_properties": {"const": "UNKNOWN_REQUIRES_PARENT_VERIFICATION"}
+      }
+    },
+    "sequence": {
+      "type": "object", "required": ["sequence_name", "expected_sequence_oid", "identity_matches", "sequence_state"],
+      "properties": {
+        "sequence_name": {"type": "string"}, "expected_sequence_oid": {"$ref": "#/$defs/decimal"},
+        "identity_matches": {"type": "boolean"},
+        "sequence_state": {"type": "object", "required": ["last_value", "is_called"], "additionalProperties": false,
+          "properties": {"last_value": {"$ref": "#/$defs/decimal"}, "is_called": {"type": "boolean"}}}
+      }
+    }
+  }
+}

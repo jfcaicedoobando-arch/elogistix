@@ -313,6 +313,7 @@ def main():
     from cases import run_cases
     from canonical_cases import run_canonical_cases
     from wrapper_cases import run_wrapper_cases
+    from capture_cases import run_capture_cases
     ap=argparse.ArgumentParser(description='CI-only synthetic CRM ACL checks, no DSN or external container accepted')
     ap.add_argument('--output',type=Path,required=True)
     a=ap.parse_args()
@@ -339,6 +340,9 @@ def main():
                 and all(item['case'].startswith('direct-') and item['status']=='pass' for item in wrapper),'Incomplete direct wrapper matrix')
         r.result['direct_wrapper']='PASS_SYNTHETIC_ONLY'
         r.result['direct_wrapper_case_count']=len(wrapper)
+        run_capture_cases(r)
+        require(len(r.result['checks'])==67 and r.result['checks'][-1]['case']=='capture-selects-syntax-redaction-preservation','Incomplete capture SELECT witness')
+        r.result['operational_capture_queries']='PASS_SYNTHETIC_SYNTAX_REDACTION_ONLY'
         r.result['concurrency_two_sessions']='NOT_RUN_CANONICAL_LANE'
         r.result['status']='checks_pass_cleanup_pending';r.save()
     except BaseException as exc:
