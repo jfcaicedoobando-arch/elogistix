@@ -1,0 +1,39 @@
+{
+  "fixture_only": true,
+  "binding": "SYNTHETIC_PLACEHOLDER_REQUIRES_DISPOSABLE_FIXTURE_EXPORT",
+  "functions": [
+    {
+      "signature": "public._crm_empresa_no_borrar_cliente()",
+      "oid": 1,
+      "expected": {
+        "metadata": {},
+        "prosrc_sha256": "synthetic-placeholder",
+        "probin_is_null": true,
+        "prosqlbody_is_null": true
+      }
+    },
+    {
+      "signature": "public._crm_empresa_no_delete_fisico()",
+      "oid": 2,
+      "expected": {
+        "metadata": {},
+        "prosrc_sha256": "synthetic-placeholder",
+        "probin_is_null": true,
+        "prosqlbody_is_null": true
+      }
+    }
+  ],
+  "triggers": [
+    {
+      "oid": "4"
+    },
+    {
+      "oid": "5"
+    }
+  ],
+  "relation": {
+    "oid": 3,
+    "relkind": "r",
+    "relispartition": false
+  }
+}

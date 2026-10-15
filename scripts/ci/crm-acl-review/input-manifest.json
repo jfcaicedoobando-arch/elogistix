@@ -1,0 +1,28 @@
+{
+  "source_commit": "70a55d4e29784fb1a78ed74f164473153bead704",
+  "candidate_kind": "new_reconstruction_not_historical",
+  "files": {
+    "inputs/SNAPSHOT_RACE_TEST.md": "26f402dd3437df922506e081b29b85624c59233cc66908b77b21f6c157425221",
+    "inputs/TEST_PLAN.md": "881e3de67f766cc64d77415e0b21cd88f204d7129425573d7a50d831605d345a",
+    "inputs/build_sql.py": "5812fc4d9aee441b557784c822104c664e3186fc7dc05403580e0e176dff47ee",
+    "inputs/export_contract.sql": "01d2f8b043d15de9f003b679ec3a22cf226418ed30acb375d4011f6282ccfef2",
+    "inputs/fixture.sql": "dcdcf15c0f9c3b71d5ae4721bef20afc91158f98bdb60cedd93372631ff31631",
+    "inputs/proposed-owner-only.sql": "a21a4b68cb217f4ed30bbaa55b10bf41f7f6e877481690da70528bf103dcfcc3",
+    "inputs/sources/0016_crm_empresa_desde_cliente.sql": "0ee774177db92f5edb867aff59554acd9edde29a064a759a60dc9b01ce5cdf73",
+    "inputs/sources/0017_crm_empresa_no_borrar_cliente.sql": "22984b2e778538856867550beaa0a4df86e5151b82d5604eaac27f044d66ba11",
+    "inputs/sources/0018_cargos_tarifario_aplica_iva.sql": "e5868a62ee010d213f02678d284643ca326feec1ff5b47fcdc63c4ea48748fd4",
+    "inputs/synthetic-contract-shape.json": "8cf0cfe3f04dc630fede1776669b652a6153b07f2a9a787ff70b6b9ef129708f"
+  },
+  "binding": "Synthetic placeholder replaced only with contract from disposable fixture; no live metadata included",
+  "runtime": "CI only, owned network-none PG17.6 digest container; postgres NOSUPERUSER",
+  "acceptance": "all named cases plus cleanup; offline checks are not integration results",
+  "sanitization": {
+    "contract": "synthetic-only placeholder",
+    "advisory_pair": [
+      817401,
+      817402
+    ],
+    "normalized_candidate_sha256": "2d6be3a073863a19f0c6793655216fcd5a716fd2aee7085c287c273c81b1b828",
+    "private_public_normalized_equality": true
+  }
+}
