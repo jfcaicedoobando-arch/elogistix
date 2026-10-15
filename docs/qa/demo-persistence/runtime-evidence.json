@@ -1,0 +1,371 @@
+{
+  "schema_version": 1,
+  "status": "PASS_SYNTHETIC_ONLY",
+  "workflow_commit": "eaeeeabba1624f63081a455e529af43f1633082a",
+  "run_id": 38806953890,
+  "run_url": "https://github.com/jfcaicedoobando-arch/elogistix/actions/runs/38806953890",
+  "artifact_id": 12006303781,
+  "artifact_zip_sha256": "4c08a0503a7005e84c6a1f38fe6182a58b9291059989ca8be72c3bed5ffbd327",
+  "input_manifest": {
+    "source_commit": "860ac59cc9b6d80887c1a7811e2c81ef8ef17ca8",
+    "source_base": "5d1f00d27628100a58ab166367a067ea90068b84",
+    "source_route": "pinned Git files; not Library ZIP materialization",
+    "manifest_sha256": "d0a7c1655f9d137f7c88d5489318f42639f7c2548ec627fec7134363afbc2335",
+    "store_sha256": "fb7fa69c17eca7230606ecb6217086c6eb5317d75551df9efc268959f69140a7",
+    "files": {
+      "README.md": "0193d3b6c4b1664b2a368e82b789498f52f94007d9a650d3b162f61e654ba948",
+      "RUNTIME_PLAN.md": "048cb8f5db2d506b6dac3cd97d131b45e46a99963339ec74799adc47da6a1717",
+      "SHA256SUMS.txt": "d0a7c1655f9d137f7c88d5489318f42639f7c2548ec627fec7134363afbc2335",
+      "config.example.json": "d9d756fa4d8792eb70442659cb106244f8d89b2e839fcab511a9740675a21565",
+      "driver.mjs": "82305d90a131339c3170dd2fdc48f46410b6a58a268bb72b798ffedcc5bcac6b",
+      "issuer.mjs": "5d78d058a336f4eb21fa715d45844d86aa41c046f462c1670610084229e172d1",
+      "owner.mjs": "e16d06f030bf53aea860325448041e2b3e9cd84ff152ea4bb281709a6d786504",
+      "owner.test.mjs": "0b8d2c5e4acd367668460fa21f18098d63a519751cf417e4da35ab39985ad7cb",
+      "store.mjs": "a0aac72315944475b014019e312253619b42ee30dc0ba1040ec6d86f53432b45",
+      "store.sql": "fb7fa69c17eca7230606ecb6217086c6eb5317d75551df9efc268959f69140a7",
+      "tests.tap": "133223861fb1bf20a059895b4500e23b8ce44361c8f557743590c56bac644579",
+      "validation.json": "4526c5cf332862174aa1a0ae8f0036c021b8af3bad20abf8d7a5f7a1658056c0"
+    },
+    "wire": "UNBOUND",
+    "configuration": "EMPTY"
+  },
+  "store_byte_hashes": {
+    "store_file_sha256": "fb7fa69c17eca7230606ecb6217086c6eb5317d75551df9efc268959f69140a7",
+    "store_stdin_sha256": "fb7fa69c17eca7230606ecb6217086c6eb5317d75551df9efc268959f69140a7",
+    "store_log_sha256": "fb7fa69c17eca7230606ecb6217086c6eb5317d75551df9efc268959f69140a7"
+  },
+  "checks": [
+    {
+      "case": "exact-store-compilation",
+      "status": "PASS"
+    },
+    {
+      "case": "business-entrypoint-remains-unbound",
+      "status": "PASS"
+    },
+    {
+      "case": "sql-append-only-zero-rows-issuer_obligations-update",
+      "status": "PASS",
+      "sqlstate": "P0001"
+    },
+    {
+      "case": "sql-append-only-zero-rows-issuer_obligations-delete",
+      "status": "PASS",
+      "sqlstate": "P0001"
+    },
+    {
+      "case": "sql-append-only-zero-rows-claims-update",
+      "status": "PASS",
+      "sqlstate": "P0001"
+    },
+    {
+      "case": "sql-append-only-zero-rows-claims-delete",
+      "status": "PASS",
+      "sqlstate": "P0001"
+    },
+    {
+      "case": "sql-append-only-zero-rows-issuer_obligations-truncate",
+      "status": "PASS",
+      "sqlstate": "P0001"
+    },
+    {
+      "case": "sql-append-only-zero-rows-claims-truncate",
+      "status": "PASS",
+      "sqlstate": "P0001"
+    },
+    {
+      "case": "sql-issuer-check-deployment-0",
+      "status": "PASS",
+      "sqlstate": "23514"
+    },
+    {
+      "case": "sql-issuer-check-canonical_version-1",
+      "status": "PASS",
+      "sqlstate": "23514"
+    },
+    {
+      "case": "sql-issuer-check-tenant_id-2",
+      "status": "PASS",
+      "sqlstate": "23514"
+    },
+    {
+      "case": "sql-issuer-check-manifest_identity-3",
+      "status": "PASS",
+      "sqlstate": "23514"
+    },
+    {
+      "case": "sql-issuer-check-scheduler_job_identity-4",
+      "status": "PASS",
+      "sqlstate": "23514"
+    },
+    {
+      "case": "sql-issuer-check-authorized_occurrence-5",
+      "status": "PASS",
+      "sqlstate": "23514"
+    },
+    {
+      "case": "sql-issuer-check-binding-6",
+      "status": "PASS",
+      "sqlstate": "23514"
+    },
+    {
+      "case": "sql-issuer-check-binding-7",
+      "status": "PASS",
+      "sqlstate": "23514"
+    },
+    {
+      "case": "sql-logical-obligation-distinct-ids-and-binding",
+      "status": "PASS",
+      "sqlstate": "23505"
+    },
+    {
+      "case": "sql-issuer-primary-key",
+      "status": "PASS",
+      "sqlstate": "23505"
+    },
+    {
+      "case": "sql-issuer-context-unique",
+      "status": "PASS",
+      "sqlstate": "23505"
+    },
+    {
+      "case": "sql-foreign-key-deployment",
+      "status": "PASS",
+      "sqlstate": "23503"
+    },
+    {
+      "case": "sql-foreign-key-obligation_id",
+      "status": "PASS",
+      "sqlstate": "23503"
+    },
+    {
+      "case": "sql-foreign-key-context_id",
+      "status": "PASS",
+      "sqlstate": "23503"
+    },
+    {
+      "case": "sql-foreign-key-binding-tenant",
+      "status": "PASS",
+      "sqlstate": "23503"
+    },
+    {
+      "case": "sql-foreign-key-binding-origin",
+      "status": "PASS",
+      "sqlstate": "23503"
+    },
+    {
+      "case": "sql-foreign-key-binding-contextId",
+      "status": "PASS",
+      "sqlstate": "23503"
+    },
+    {
+      "case": "sql-foreign-key-binding-runId",
+      "status": "PASS",
+      "sqlstate": "23503"
+    },
+    {
+      "case": "sql-foreign-key-binding-lineageId",
+      "status": "PASS",
+      "sqlstate": "23503"
+    },
+    {
+      "case": "sql-foreign-key-binding-skipMs",
+      "status": "PASS",
+      "sqlstate": "23503"
+    },
+    {
+      "case": "sql-foreign-key-binding-snapshots",
+      "status": "PASS",
+      "sqlstate": "23503"
+    },
+    {
+      "case": "sql-foreign-key-binding-generation",
+      "status": "PASS",
+      "sqlstate": "23503"
+    },
+    {
+      "case": "sql-foreign-key-binding-expiresAt",
+      "status": "PASS",
+      "sqlstate": "23503"
+    },
+    {
+      "case": "sql-foreign-key-binding-snapshot-manifest",
+      "status": "PASS",
+      "sqlstate": "23503"
+    },
+    {
+      "case": "sql-foreign-key-binding-snapshot-financial",
+      "status": "PASS",
+      "sqlstate": "23503"
+    },
+    {
+      "case": "sql-foreign-key-binding-missing-component",
+      "status": "PASS",
+      "sqlstate": "23503"
+    },
+    {
+      "case": "sql-claim-stage-check",
+      "status": "PASS",
+      "sqlstate": "23514"
+    },
+    {
+      "case": "sql-original-ingress-requires-dispatch",
+      "status": "PASS"
+    },
+    {
+      "case": "sql-original-dispatch-wrong-deployment",
+      "status": "PASS"
+    },
+    {
+      "case": "sql-original-ingress-wrong-deployment",
+      "status": "PASS"
+    },
+    {
+      "case": "sql-original-dispatch-wrong-context_id",
+      "status": "PASS"
+    },
+    {
+      "case": "sql-original-ingress-wrong-context_id",
+      "status": "PASS"
+    },
+    {
+      "case": "sql-original-dispatch-first",
+      "status": "PASS"
+    },
+    {
+      "case": "sql-original-dispatch-duplicate",
+      "status": "PASS"
+    },
+    {
+      "case": "sql-original-ingress-first",
+      "status": "PASS"
+    },
+    {
+      "case": "sql-original-ingress-duplicate",
+      "status": "PASS"
+    },
+    {
+      "case": "sql-direct-duplicate-claim",
+      "status": "PASS",
+      "sqlstate": "23505"
+    },
+    {
+      "case": "sql-append-only-populated-issuer_obligations-update",
+      "status": "PASS",
+      "sqlstate": "P0001"
+    },
+    {
+      "case": "sql-append-only-populated-issuer_obligations-delete",
+      "status": "PASS",
+      "sqlstate": "P0001"
+    },
+    {
+      "case": "sql-append-only-populated-claims-update",
+      "status": "PASS",
+      "sqlstate": "P0001"
+    },
+    {
+      "case": "sql-append-only-populated-claims-delete",
+      "status": "PASS",
+      "sqlstate": "P0001"
+    },
+    {
+      "case": "sql-append-only-populated-issuer_obligations-truncate",
+      "status": "PASS",
+      "sqlstate": "P0001"
+    },
+    {
+      "case": "sql-append-only-populated-claims-truncate",
+      "status": "PASS",
+      "sqlstate": "P0001"
+    },
+    {
+      "case": "sql-durable-claim-before-separate-synthetic-business",
+      "status": "PASS"
+    },
+    {
+      "case": "sql-two-connections-claim-commit",
+      "status": "PASS"
+    },
+    {
+      "case": "sql-two-connections-claim-rollback",
+      "status": "PASS"
+    },
+    {
+      "case": "sql-postclaim-business-rollback-explicit",
+      "status": "PASS"
+    },
+    {
+      "case": "sql-postclaim-business-rollback-failure",
+      "status": "PASS",
+      "sqlstate": "23514"
+    }
+  ],
+  "check_count": 56,
+  "independent_artifact_audit": {
+    "negative_row_snapshot_pairs": 40,
+    "negative_primary_sqlstates": {
+      "P0001": 12,
+      "23514": 9,
+      "23505": 4,
+      "23503": 15
+    },
+    "owned_container_inspections": 9,
+    "network": "none",
+    "ports_or_host_mounts": false,
+    "postgres_version_num": "170006",
+    "candidate_superuser": false,
+    "admin_membership": false,
+    "catalog_write": false,
+    "committed_claim_visible_before_business": true,
+    "distinct_claimant_observer_pids": true,
+    "races": [
+      {
+        "case": "sql-two-connections-claim-commit",
+        "distinct_backend_pids": true,
+        "actual_lock_wait": true,
+        "blocker_matches_first": true,
+        "first_committed": true,
+        "first_returned": 1,
+        "second_returned": 0,
+        "claimants": 1,
+        "synthetic_business_events": 1
+      },
+      {
+        "case": "sql-two-connections-claim-rollback",
+        "distinct_backend_pids": true,
+        "actual_lock_wait": true,
+        "blocker_matches_first": true,
+        "first_committed": false,
+        "first_returned": 1,
+        "second_returned": 1,
+        "claimants": 1,
+        "synthetic_business_events": 1
+      }
+    ],
+    "business_rollbacks_preserve_claim_and_duplicate_returns_zero": true
+  },
+  "cleanup": {
+    "result": "confirmed_stopped_and_removed",
+    "owned_clients_closed": true,
+    "cluster_status_3_and_pid_absent": true,
+    "shutdown_confirmed": true,
+    "empty_post_removal_listing": true
+  },
+  "wire": "UNBOUND",
+  "configuration": "EMPTY",
+  "synthetic_business": true,
+  "limits": [
+    "Disposable SQL store/claim behavior only; not an operational wire, real issuer or identity",
+    "Synthetic business fixture does not certify authentic engine or financial checkpoints",
+    "At-most-once with quarantine; no exactly-once or availability guarantee",
+    "Inherited harness uses fsync=off and ephemeral tmpfs: committed visibility/rollback only, not crash/WAL/failover or restore durability"
+  ],
+  "prior_attempt": {
+    "workflow_commit": "b8a0ae80872f94b2bf8b66c1bbe9cb20043e1e3a",
+    "run_id": 38806841219,
+    "status": "FAIL",
+    "phase": "offline test before Docker/SQL",
+    "reason": "Referenced base object absent in shallow checkout; test fixed to validate HEAD blob with unchanged pinned hash"
+  }
+}

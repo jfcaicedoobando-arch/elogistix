@@ -1,0 +1,33 @@
+✔ empty config does not open transport (2.259653ms)
+✔ happy flow: durable claim COMMIT then one business transaction (5.642292ms)
+✔ reconstructed owner same durable row cannot regain execution (2.194337ms)
+✔ client cannot supply workId, namespace, skip or changed context with workId (0.605651ms)
+✔ unknown claim ACK seals forever and starts no business (3.192919ms)
+✔ business rollback cannot unconsume claim (0.666921ms)
+✔ unknown business COMMIT ACK cannot invoke again (2.144066ms)
+✔ physical connection change after claim prevents business (0.649578ms)
+✔ ROLLBACK command tag never counts as commit acknowledgment (0.78167ms)
+✔ missing dispatch row fails sealed without business (2.83335ms)
+✔ authentication prevents socket acquisition (0.163905ms)
+✔ revocation after claim burns obligation without business (1.295453ms)
+✔ cleanup uncertainty reported even on duplicate sealed path (0.496242ms)
+✔ claim insert failure never reaches business (0.211013ms)
+✔ driver rejects unproven exclusive and noReplay metadata (2.588471ms)
+✔ driver rejects concurrent use and poisons in-flight result (3.180719ms)
+✔ issuer same obligation survives changes to both context and retry/snapshot binding (2.645577ms)
+✔ issuer without authenticated resolver fails closed (0.230485ms)
+✔ inherited context does not bypass strict request keys (0.232626ms)
+✔ pre-query metadata mismatch permanently poisons driver even if metadata recovers (2.364514ms)
+✔ pre-query metadata exception permanently poisons driver even if metadata recovers (0.288049ms)
+✔ pre-query wrong ReadyForQuery state remains terminal after state recovers (0.192726ms)
+✔ context getter is read once and same validated identity reaches SQL (2.489471ms)
+✔ context objects cannot coerce into UUID during validation (0.202538ms)
+✔ hidden and symbol request overrides are rejected (3.381177ms)
+ℹ tests 25
+ℹ suites 0
+ℹ pass 25
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 434.974626
