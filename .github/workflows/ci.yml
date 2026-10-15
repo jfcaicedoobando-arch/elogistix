@@ -100,6 +100,9 @@ jobs:
       - name: Demo physical wire state machine offline lane (no database or external network)
         run: node scripts/ci/test-catalog.mjs --run node-demo-wire-lab reports/test-inventory.json
 
+      - name: Demo authority composition contracts offline (no database or external authentication)
+        run: node scripts/ci/test-catalog.mjs --run node-demo-authority-contract reports/test-inventory.json
+
       - name: Post-deploy smoke contract (offline, no credentials)
         run: node --test scripts/ci/post-deploy-smoke.test.mjs
 

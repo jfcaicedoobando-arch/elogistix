@@ -19,6 +19,11 @@ export const PHYSICAL_WIRE_TESTS = Object.freeze([
   'scripts/ci/demo-wire-lab/lab_wire.test.mjs',
   'scripts/ci/test-catalog/demo-wire-lab.test.mjs',
 ]);
+export const AUTHORITY_CONTRACT_TESTS = Object.freeze([
+  'scripts/ci/demo-authority-contract-review/canonical-envelope.test.mjs',
+  'scripts/ci/demo-authority-contract-review/claim-authority.test.mjs',
+  'scripts/ci/demo-authority-contract-review/entrypoint-contract.test.mjs',
+]);
 
 export const DEMO_PREFREEZE_EVIDENCE = 'reports/demo-guard-prefreeze/actions-result.json';
 const DEMO_PREFREEZE_MIGRATION = '20261015050000_disable_demo_reseed.sql';
@@ -72,6 +77,7 @@ export function classifyFiles(files, guards, sqlSupport) {
         || file === 'scripts/ci/demo-review-offline.test.mjs') lane = 'node-demo-review';
       else if (DURABLE_OWNER_TESTS.includes(file)) lane = 'node-demo-durable-owner';
       else if (PHYSICAL_WIRE_TESTS.includes(file)) lane = 'node-demo-wire-lab';
+      else if (AUTHORITY_CONTRACT_TESTS.includes(file)) lane = 'node-demo-authority-contract';
       else if (/^(src|scripts)\//.test(file) && normal.test(file) && !perf.test(file)) lane = 'vitest-normal';
       else if (file.startsWith('src/') && perf.test(file)) { lane = 'vitest-perf'; mode = 'manual'; }
       else if (/^tests\/pdf\/.+\.test\.tsx$/.test(file)) {
@@ -130,6 +136,17 @@ export function validatePhysicalWireLane(catalog, root = process.cwd()) {
   for (const entry of entries) {
     if (entry.mode !== 'automatic') throw new Error('Physical wire lane must execute automatically');
     if (entry.sha256 !== hash(fs.readFileSync(path.join(root, entry.path)))) throw new Error(`Physical wire source drift: ${entry.path}`);
+  }
+  return entries;
+}
+
+export function validateAuthorityContractLane(catalog, root = process.cwd()) {
+  if (catalog?.schemaVersion !== 1 || !Array.isArray(catalog.entries)) throw new Error('Expected complete test catalog schema');
+  const entries = catalog.entries.filter(entry => entry.lane === 'node-demo-authority-contract');
+  assertExactPaths(AUTHORITY_CONTRACT_TESTS, entries.map(entry => entry.path), 'Authority contract offline lane');
+  for (const entry of entries) {
+    if (entry.mode !== 'automatic') throw new Error('Authority contract lane must execute automatically');
+    if (entry.sha256 !== hash(fs.readFileSync(path.join(root, entry.path)))) throw new Error(`Authority contract source drift: ${entry.path}`);
   }
   return entries;
 }
@@ -214,14 +231,17 @@ if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.me
       const entries = catalog.entries.filter(entry => entry.lane === process.argv[3]);
       if (!entries.length) throw new Error(`Unknown/empty lane: ${process.argv[3]}`);
       console.log(entries.map(entry => entry.path).join('\n'));
-    } else if (process.argv[2] === '--run' && ['node-demo-durable-owner', 'node-demo-wire-lab'].includes(process.argv[3]) && process.argv.length === 5) {
+    } else if (process.argv[2] === '--run' && ['node-demo-durable-owner', 'node-demo-wire-lab', 'node-demo-authority-contract'].includes(process.argv[3]) && process.argv.length === 5) {
       const recorded = JSON.parse(fs.readFileSync(process.argv[4], 'utf8'));
       if (recorded.sha !== catalog.sha) throw new Error('Durable owner catalog HEAD mismatch');
-      const entries = process.argv[3] === 'node-demo-wire-lab' ? validatePhysicalWireLane(recorded) : validateDurableOwnerLane(recorded);
+      const entries = process.argv[3] === 'node-demo-authority-contract' ? validateAuthorityContractLane(recorded)
+        : process.argv[3] === 'node-demo-wire-lab' ? validatePhysicalWireLane(recorded) : validateDurableOwnerLane(recorded);
       const result = spawnSync(process.execPath, ['--test', ...entries.map(entry => entry.path)], { stdio: 'inherit' });
       if (result.error) throw result.error;
       if (result.status !== 0) process.exitCode = result.status ?? 1;
-      else console.log(`${process.argv[3]} PASS (offline fixtures only); wire remains UNBOUND.`);
-    } else throw new Error('Usage: node scripts/ci/test-catalog.mjs --output FILE | --list LANE | --run {node-demo-durable-owner|node-demo-wire-lab} CATALOG.json | --verify-rls FILE | --verify-prefreeze FILE');
+      else console.log(process.argv[3] === 'node-demo-authority-contract'
+        ? 'node-demo-authority-contract PASS (offline contracts and synthetic composition only); external identity and runtime ACL NOT_RUN; operational wire UNBOUND.'
+        : `${process.argv[3]} PASS (offline fixtures only); wire remains UNBOUND.`);
+    } else throw new Error('Usage: node scripts/ci/test-catalog.mjs --output FILE | --list LANE | --run {node-demo-durable-owner|node-demo-wire-lab|node-demo-authority-contract} CATALOG.json | --verify-rls FILE | --verify-prefreeze FILE');
   } catch (error) { console.error(error.message); process.exitCode = 1; }
 }
