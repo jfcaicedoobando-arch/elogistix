@@ -17,7 +17,7 @@ ROOT = Path(__file__).resolve().parent
 REPOSITORY = 'jfcaicedoobando-arch/elogistix'
 OWNER = 'jfcaicedoobando-arch'
 BRANCH = 'fix/crm-canonical-owner-only-20261015'
-BASE = '5d1f00d27628100a58ab166367a067ea90068b84'
+BASE = '8887cb5c11307b420719ec4430bb8eed2d44b121'
 IMAGE = 'postgres@sha256:f3bd19c606e442c3d7bdfa8002e03fe260a1023351e0ea4598032022b68dd6e3'
 def require(condition, message):
     if not condition:
