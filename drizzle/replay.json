@@ -140,5 +140,12 @@
     "replays": [
       "20261014203100_replay_cargos_tarifario_aplica_iva.sql"
     ]
+  },
+  {
+    "file": "0019_cxp_contador_autoaprobacion.sql",
+    "sha256": "b86955edc5440a0b4d4c5599494abca193876589761f905f7512738ef48179ad",
+    "replays": [
+      "20261013195000_cxp_contador_autoaprobacion.sql"
+    ]
   }
 ]
