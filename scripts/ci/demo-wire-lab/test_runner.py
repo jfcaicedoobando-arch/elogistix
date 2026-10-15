@@ -48,8 +48,18 @@ def synthetic_report():
             'timeline': [{'event': 'SYNTHETIC_TEST_ONLY'}], 'physicalWire': {'scope': 'SYNTHETIC'}}
 
 
+def synthetic_failure_report():
+    value = synthetic_report()
+    value.update(status='FAIL_SYNTHETIC_ONLY', cases=value['cases'][:1],
+                 failure={'case': lane.RUNTIME_CASES[1], 'code': 'SYNTHETIC_FAILURE'})
+    return value
+
+
 class RunnerSafety(unittest.TestCase):
-    def test_gate_accepts_only_frozen_stacked_draft_checkout(self):
+    def test_gate_accepts_only_frozen_main_draft_checkout(self):
+        self.assertEqual(lane.BASE_REF, 'main')
+        self.assertEqual(lane.BASE, 'd1de16b7cafda5f739511cf7cfef645a7733651a')
+        self.assertEqual(lane.BRANCH, 'codex/physical-wire-main-20261015')
         event, env, head = event_fixture()
         self.assertEqual(lane.gate(event, env, head), head)
         mutations = (
@@ -57,7 +67,7 @@ class RunnerSafety(unittest.TestCase):
             lambda e: e['pull_request'].update(draft=False),
             lambda e: e['pull_request']['head'].update(ref='main'),
             lambda e: e['pull_request']['head'].update(sha='b' * 40),
-            lambda e: e['pull_request']['base'].update(ref='main'),
+            lambda e: e['pull_request']['base'].update(ref='codex/persistence-pg176-quarantine'),
             lambda e: e['pull_request']['base'].update(sha='b' * 40),
             lambda e: e['pull_request']['head'].update(repo={'full_name': 'SYNTHETIC/fork', 'owner': {'login': lane.OWNER}}),
             lambda e: e['pull_request']['base'].update(repo={'full_name': lane.REPOSITORY, 'owner': {'login': 'SYNTHETIC_OTHER'}}),
@@ -125,6 +135,31 @@ class RunnerSafety(unittest.TestCase):
         with self.assertRaises(RuntimeError):
             lane.public_payload({'value': 'SYNTHETIC_TOKEN'}, 'SYNTHETIC_TOKEN')
 
+    def test_failure_protocol_is_safe_partial_evidence_and_never_a_pass(self):
+        report = synthetic_failure_report()
+        self.assertEqual(lane.runtime_failure_report(json.dumps(report)), report)
+        with self.assertRaises(RuntimeError):
+            lane.runtime_report(json.dumps(report))
+        bootstrap = dict(report, cases=[], timeline=[], physicalWire={})
+        self.assertEqual(lane.runtime_failure_report(json.dumps(bootstrap)), bootstrap)
+        self.assertIsNone(lane.runtime_failure_report('raw stderr must stay private'))
+        self.assertIsNone(lane.runtime_failure_report(json.dumps(synthetic_report())))
+        mutations = (
+            lambda r: r.update(message='SYNTHETIC raw detail'),
+            lambda r: r.update(operationalWire='BOUND'),
+            lambda r: r['failure'].update(stack='SYNTHETIC raw detail'),
+            lambda r: r['failure'].update(code='SYNTHETIC raw detail with spaces'),
+            lambda r: r['cases'][0].update(status='FAIL'),
+            lambda r: r['cases'][0].update(case=lane.RUNTIME_CASES[1]),
+            lambda r: r['timeline'].append({'message': 'SYNTHETIC raw detail'}),
+            lambda r: r['physicalWire'].update(secretKey='SYNTHETIC'),
+        )
+        for mutate in mutations:
+            changed = copy.deepcopy(report)
+            mutate(changed)
+            with self.subTest(mutate=mutate), self.assertRaises(RuntimeError):
+                lane.runtime_failure_report(json.dumps(changed))
+
     def test_publish_copies_only_explicit_sanitized_json(self):
         # Explicit workspace temp avoids platform-specific sandbox temp redirects.
         with tempfile.TemporaryDirectory(dir=Path(__file__).resolve().parent) as directory:
@@ -165,6 +200,71 @@ class RunnerSafety(unittest.TestCase):
             self.assertEqual(runner.result['synthetic_business_fixture_sha256'],
                              hashlib.sha256(fixture.read_bytes()).hexdigest())
 
+    def test_node_loader_failure_exposes_only_bounded_library_basenames(self):
+        diagnostic = ('SYNTHETIC_PRIVATE_STDERR /opt/SYNTHETIC/libstdc++.so.6: missing; '
+                      'libatomic.so.1 libstdc++.so.6 libbad.so.private ' + 'lib' + 'x' * 80 + '.so.1')
+        failure = lane.node_execution_failure(SimpleNamespace(returncode=127, stdout='', stderr=diagnostic))
+        self.assertEqual(failure, {'code': 'NODE_EXECUTION_FAILED', 'exitCode': 127,
+                                   'sharedLibraryNames': ['libatomic.so.1', 'libstdc++.so.6']})
+        self.assertNotIn('SYNTHETIC_PRIVATE_STDERR', json.dumps(failure))
+        many = ' '.join('libsynthetic' + str(n) + '.so.1' for n in range(20))
+        self.assertEqual(len(lane.node_execution_failure(
+            SimpleNamespace(returncode=1, stdout='', stderr=many))['sharedLibraryNames']), 8)
+        for invalid in (None, True, 256, -256):
+            with self.subTest(invalid=invalid), self.assertRaises(RuntimeError):
+                lane.node_execution_failure(SimpleNamespace(returncode=invalid, stdout='', stderr=''))
+
+    def test_runtime_install_requires_exact_node_version_before_running_cases(self):
+        class Base:
+            def inspect_owned(self):
+                pass
+        persistence = SimpleNamespace(runner_class=lambda _: Base, load_infrastructure=lambda: None)
+        data, _ = synthetic_tar()
+        manifest = lane.validate_tar(data)
+        hashes = ''.join(checksum + '  ' + lane.CONTAINER_ROOT + '/' + name + '\n'
+                         for name, checksum in sorted(manifest['files'].items()))
+        probes = ((0, lane.NODE_VERSION + '\n', '', True),
+                  (0, 'v0.0.0\n', 'SYNTHETIC_PRIVATE_STDERR', False),
+                  (127, '', '/opt/SYNTHETIC/libatomic.so.1: SYNTHETIC_PRIVATE_STDERR', False))
+        for code, stdout, stderr, succeeds in probes:
+            with self.subTest(code=code, succeeds=succeeds), tempfile.TemporaryDirectory(
+                    dir=Path(__file__).resolve().parent) as directory:
+                root = Path(directory)
+                private, public = root / 'private', root / 'public'
+                (private / 'logs').mkdir(parents=True)
+                public.mkdir()
+                archive = private / 'runtime.tar'
+                archive.write_bytes(data)
+                runner = lane.runner_class(persistence)()
+                runner.output, runner.cid, runner.token = private, 'SYNTHETIC_CID', 'SYNTHETIC_TOKEN'
+                runner.counter, runner.env, runner.result = 0, {'PATH': 'SYNTHETIC'}, {'wire': 'UNBOUND'}
+                runner.inside = Mock(side_effect=[SimpleNamespace(returncode=0, stdout='', stderr=''),
+                                                 SimpleNamespace(returncode=0, stdout=hashes, stderr=''),
+                                                 SimpleNamespace(returncode=code, stdout=stdout, stderr=stderr)])
+                transfer = SimpleNamespace(returncode=0, stdout=b'', stderr=b'')
+                with patch.object(lane.subprocess, 'run', return_value=transfer):
+                    if succeeds:
+                        runner.install_runtime(archive, manifest)
+                        self.assertEqual(runner.result['runtime_node_version'], lane.NODE_VERSION)
+                        self.assertNotIn('runtime_node_failure', runner.result)
+                    else:
+                        with self.assertRaisesRegex(RuntimeError, '^NODE_EXECUTION_FAILED$'):
+                            runner.install_runtime(archive, manifest)
+                        self.assertEqual(runner.result['physical_wire_lab'], 'FAIL')
+                        self.assertIsNone(runner.result['runtime_node_version'])
+                        self.assertEqual(runner.result['runtime_node_failure']['exitCode'], code)
+                args, label = runner.inside.call_args.args
+                self.assertEqual(args, ['/usr/bin/env', '-i', 'PATH=/usr/bin:/bin', 'LANG=C',
+                                        'GITHUB_ACTIONS=true', 'HOME=' + lane.CONTAINER_ROOT,
+                                        lane.CONTAINER_ROOT + '/node', '--version'])
+                self.assertEqual(label, 'wire-node-version-probe')
+                self.assertIsNone(runner.inside.call_args.kwargs['expected'])
+                self.assertFalse(any(value.startswith('PG') for value in args))
+                lane.publish(public, runner)
+                public_text = ''.join(path.read_text() for path in public.iterdir())
+                self.assertNotIn('SYNTHETIC_PRIVATE_STDERR', public_text)
+                self.assertNotIn('/opt/SYNTHETIC', public_text)
+
     def test_node_invocation_is_registered_and_has_no_pg_environment(self):
         class Base:
             def inspect_owned(self):
@@ -189,6 +289,37 @@ class RunnerSafety(unittest.TestCase):
             self.assertEqual(runner.sessions, [process])
             self.assertEqual(process._crm_label, 'wire-lab-node')
             self.assertEqual(popen.call_args.kwargs['env'], runner.env)
+
+    def test_nonzero_and_zero_exit_failure_reports_are_preserved_without_public_stderr(self):
+        class Base:
+            def inspect_owned(self):
+                pass
+        persistence = SimpleNamespace(runner_class=lambda _: Base, load_infrastructure=lambda: None)
+        report = synthetic_failure_report()
+        for exit_code in (1, 0):
+            with self.subTest(exit_code=exit_code), tempfile.TemporaryDirectory(dir=Path(__file__).resolve().parent) as directory:
+                root = Path(directory)
+                private, public = root / 'private', root / 'public'
+                (private / 'logs').mkdir(parents=True)
+                public.mkdir()
+                runner = lane.runner_class(persistence)()
+                runner.output, runner.cid, runner.token = private, 'SYNTHETIC_CID', 'SYNTHETIC_TOKEN'
+                runner.sessions, runner.result, runner.env = [], {'wire': 'UNBOUND'}, {'PATH': 'SYNTHETIC'}
+                process = Mock()
+                process.returncode = exit_code
+                process.communicate.return_value = (json.dumps(report), 'SYNTHETIC_PRIVATE_STDERR_SENTINEL')
+                with patch.object(lane.subprocess, 'Popen', return_value=process), self.assertRaises(RuntimeError):
+                    runner.run_physical_cases()
+                self.assertEqual(runner.physical_report, report)
+                self.assertEqual(runner.result['status'], 'failed')
+                self.assertEqual(runner.result['physical_wire_lab'], 'FAIL')
+                self.assertEqual(runner.result['runtime_failure'], report['failure'])
+                self.assertEqual(runner.result['node_process_exit_code'], exit_code)
+                lane.publish(public, runner)
+                self.assertEqual(json.loads((public / 'runtime.json').read_text())['status'], 'FAIL_SYNTHETIC_ONLY')
+                public_text = ''.join(path.read_text() for path in public.iterdir())
+                self.assertNotIn('SYNTHETIC_PRIVATE_STDERR_SENTINEL', public_text)
+                self.assertIn('SYNTHETIC_FAILURE', public_text)
 
 
 if __name__ == '__main__':

@@ -10,7 +10,7 @@ assert.equal(process.env.GITHUB_ACTIONS, 'true', 'Actions laboratory gate');
 const cases = [], timeline = [], identities = [];
 const trace = event => timeline.push(event);
 const hash = value => createHash('sha256').update(value).digest('hex');
-let opened = 0, fixture = 0;
+let opened = 0, fixture = 0, currentCase = 'open_synthetic_observer';
 const wires = new Set();
 async function open(label, fault) {
   const wire = await createLabWire({ config: LAB_CONFIG, label, trace, fault });
@@ -20,10 +20,11 @@ async function open(label, fault) {
   return wire;
 }
 async function check(name, action) {
+  currentCase = name;
   const evidence = await action();
   cases.push({ case: name, status: 'PASS', ...(evidence ? { evidence } : {}) });
 }
-const observer = await open('synthetic-observer');
+let observer;
 const q = (text, params = []) => observer.query(text, params);
 async function counts(contextId) {
   const r = await q(`SELECT
@@ -69,6 +70,10 @@ function commitBoundary(label, ordinal) {
 }
 
 try {
+  assert.equal(process.version, 'v24.19.0');
+  assert.equal(process.platform, 'linux');
+  assert.equal(process.arch, 'x64');
+  observer = await open('synthetic-observer');
   await check('empty_config_zero_transport', async () => {
     const before = opened;
     const result = await createOwner({ openWire: async () => open('must-never-open'),
@@ -76,8 +81,9 @@ try {
     assert.equal(result.outcome, 'quarantine'); assert.equal(opened, before);
     return { transportsOpened: 0 };
   });
-  const happy = await seed();
+  let happy;
   await check('claim_commit_then_business_same_socket', async () => {
+    happy = await seed();
     const result = await owner('happy').execute({ contextId: happy });
     assert.equal(result.outcome, 'business_commit_acknowledged');
     assert.deepEqual(await counts(happy), { claims: 1, effects: 1 });
@@ -147,18 +153,26 @@ try {
     await wire.close();
     return { subsequentSocketWrites: 0, retry: 'rejected before write' };
   });
+  currentCase = 'all_owned_transport_cleanup';
   await observer.close();
   const closed = await Promise.allSettled([...wires].map(wire => wire.close()));
   assert.ok(closed.every(result => result.status === 'fulfilled'), 'all owned transports must confirm close before PASS');
   assert.ok(identities.every(identity => labelEvents(identity.label).some(event => event.event === 'close-confirmed')));
   process.stdout.write(`${JSON.stringify({ status: 'PASS_SYNTHETIC_ONLY', scope: 'SYNTHETIC', cases, timeline,
-    physicalWire: { driver: 'node-postgres', version: '8.23.1', transport: 'exclusive Unix net.Socket per Client; no Pool',
+    physicalWire: { driver: 'node-postgres', version: '8.23.1', nodeVersion: process.version, transport: 'exclusive Unix net.Socket per Client; no Pool',
       identities, allOwnedTransportsCloseConfirmed: true, noReconnect: true, noReplay: true, businessSqlSha256: hash(SQL.business),
       readyForQuery: 'observed protocol messages; see timeline', commandComplete: 'observed protocol messages; see timeline' },
     operationalWire: 'UNBOUND', limitations: ['Synthetic issuer, authentication, guard and business fixture only',
       'No pooler, failover, TLS, credentials, production identity or engine certification',
       'Deterministic COMMIT acknowledgment injection; not arbitrary network-loss coverage',
       'fsync off on disposable tmpfs; crash recovery and durable storage NOT_RUN'] })}\n`);
+} catch (cause) {
+  const safeCode = typeof cause?.code === 'string' && /^(?:HOLD_LAB_[A-Z_]+|ERR_ASSERTION)$/.test(cause.code)
+    ? cause.code : 'UNCLASSIFIED_FAILURE';
+  process.stdout.write(`${JSON.stringify({ status: 'FAIL_SYNTHETIC_ONLY', scope: 'SYNTHETIC', cases, timeline,
+    physicalWire: { driver: 'node-postgres', version: '8.23.1', identities }, operationalWire: 'UNBOUND',
+    failure: { case: currentCase, code: safeCode } })}\n`);
+  process.exitCode = 1;
 } finally {
   await Promise.allSettled([...wires].map(wire => wire.close()));
 }

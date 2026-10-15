@@ -18,13 +18,15 @@ import uuid
 ROOT = Path(__file__).resolve().parents[3]
 REPOSITORY = 'jfcaicedoobando-arch/elogistix'
 OWNER = 'jfcaicedoobando-arch'
-BRANCH = 'codex/physical-wire-lab-20261015'
-BASE_REF = 'codex/persistence-pg176-quarantine'
-BASE = '8386f47502ca70516a9111c9983b5c3f6955d953'
+BRANCH = 'codex/physical-wire-main-20261015'
+BASE_REF = 'main'
+BASE = 'd1de16b7cafda5f739511cf7cfef645a7733651a'
 PERSISTENCE = ROOT / 'scripts/ci/demo-persistence-review/run_ci.py'
 PERSISTENCE_SHA256 = '09cf6d2035b14005006b656649cf2e3f5f99322eb6776f80927586c522c204fe'
 SYNTHETIC_FIXTURE = Path(__file__).resolve().parent / 'synthetic_fixture.sql'
 CONTAINER_ROOT = '/tmp/crm/wire-lab'
+NODE_VERSION = 'v24.19.0'
+SHARED_LIBRARY = re.compile(r'(?<![A-Za-z0-9_+.-])(lib[A-Za-z0-9_+.-]{0,64}\.so(?:\.[0-9]{1,5}){0,4})(?![A-Za-z0-9_+.-])')
 MAX_TAR_BYTES = 256 * 1024 * 1024
 MAX_EXPANDED_BYTES = 256 * 1024 * 1024
 MAX_MEMBERS = 2000
@@ -51,7 +53,7 @@ def gate(event, env, head):
         require(pr[side]['repo']['full_name'] == REPOSITORY
                 and pr[side]['repo']['owner']['login'] == OWNER, 'Foreign repository or owner')
     require(pr['draft'] is True, 'Draft PR required')
-    require(pr['base']['ref'] == BASE_REF and pr['base']['sha'] == BASE, 'Exact stacked base required')
+    require(pr['base']['ref'] == BASE_REF and pr['base']['sha'] == BASE, 'Exact main base required')
     require(pr['head']['ref'] == BRANCH, 'Head branch mismatch')
     require(re.fullmatch(r'[0-9a-f]{40}', head) and head == pr['head']['sha'], 'Checkout SHA mismatch')
     return head
@@ -135,6 +137,53 @@ def runtime_report(stdout):
     return value
 
 
+def runtime_failure_report(stdout):
+    """Accept only the explicit safe failure protocol, never raw error text."""
+    try:
+        value = json.loads(stdout)
+    except ValueError:
+        return None
+    if not isinstance(value, dict) or value.get('status') != 'FAIL_SYNTHETIC_ONLY':
+        return None
+    require(set(value) == {'status', 'scope', 'cases', 'timeline', 'physicalWire', 'operationalWire', 'failure'},
+            'Unknown runtime failure field')
+    public_payload(value)
+    require(value['scope'] == 'SYNTHETIC' and value['operationalWire'] == 'UNBOUND',
+            'Unsafe runtime failure scope')
+    failure = value['failure']
+    require(isinstance(failure, dict) and set(failure) == {'case', 'code'}
+            and isinstance(failure['case'], str) and re.fullmatch(r'[a-z0-9_-]{1,96}', failure['case'])
+            and isinstance(failure['code'], str) and re.fullmatch(r'[A-Za-z0-9_-]{1,96}', failure['code']),
+            'Invalid runtime failure identifier')
+    require(isinstance(value['cases'], list) and isinstance(value['timeline'], list)
+            and isinstance(value['physicalWire'], dict), 'Invalid runtime failure evidence shape')
+    names = []
+    for case in value['cases']:
+        require(isinstance(case, dict) and isinstance(case.get('case'), str)
+                and case.get('status') == 'PASS', 'Invalid completed failure case')
+        names.append(case['case'])
+    require(names == list(RUNTIME_CASES[:len(names)]), 'Invalid completed failure case prefix')
+    def reject_raw_details(item):
+        if isinstance(item, dict):
+            require(not any(str(key).lower() in {'message', 'stack', 'stderr', 'stdout'} for key in item),
+                    'Raw runtime failure details refused')
+            for child in item.values():
+                reject_raw_details(child)
+        elif isinstance(item, list):
+            for child in item:
+                reject_raw_details(child)
+    reject_raw_details(value)
+    return value
+
+
+def node_execution_failure(result):
+    """Expose a bounded loader classification, never its raw stdout/stderr."""
+    require(type(result.returncode) is int and -255 <= result.returncode <= 255, 'Invalid Node probe exit code')
+    diagnostic = (result.stdout or '') + '\n' + (result.stderr or '')
+    libraries = sorted(set(SHARED_LIBRARY.findall(diagnostic)))[:8]
+    return {'code': 'NODE_EXECUTION_FAILED', 'exitCode': result.returncode, 'sharedLibraryNames': libraries}
+
+
 def runner_class(persistence):
     base = persistence.runner_class(persistence.load_infrastructure())
     class WireLabRunner(base):
@@ -186,6 +235,16 @@ def runner_class(persistence):
                                runtime_transfer='binary stdin into owned tmpfs; no mount or network',
                                runtime_extracted_file_hashes_verified=True)
             self.runtime_manifest = manifest
+            probe = self.inside(['/usr/bin/env', '-i', 'PATH=/usr/bin:/bin', 'LANG=C', 'GITHUB_ACTIONS=true',
+                                 'HOME=' + CONTAINER_ROOT, CONTAINER_ROOT + '/node', '--version'],
+                                'wire-node-version-probe', expected=None)
+            if probe.returncode != 0 or probe.stdout.strip() != NODE_VERSION:
+                failure = node_execution_failure(probe)
+                public_payload(failure, self.token)
+                self.result.update(status='failed', physical_wire_lab='FAIL', runtime_node_version=None,
+                                   runtime_node_failure=failure)
+                raise RuntimeError('NODE_EXECUTION_FAILED')
+            self.result['runtime_node_version'] = NODE_VERSION
 
         def run_physical_cases(self):
             self.inspect_owned()
@@ -216,6 +275,13 @@ def runner_class(persistence):
                 raise RuntimeError('Physical runtime timed out') from None
             (self.output / 'logs/wire-runtime.stdout').write_text(stdout, encoding='utf-8')
             (self.output / 'logs/wire-runtime.stderr').write_text(stderr, encoding='utf-8')
+            failure = runtime_failure_report(stdout)
+            if failure is not None:
+                public_payload(failure, self.token)
+                self.physical_report = failure
+                self.result.update(status='failed', physical_wire_lab='FAIL', runtime_failure=failure['failure'],
+                                   physical_case_names=[case['case'] for case in failure['cases']],
+                                   physical_case_count=len(failure['cases']), node_process_exit_code=process.returncode)
             require(process.returncode == 0, 'Physical runtime exited unsuccessfully')
             report = runtime_report(stdout)
             public_payload(report, self.token)

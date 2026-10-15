@@ -2,7 +2,7 @@ name: Demo physical wire synthetic laboratory
 on:
   pull_request:
     types: [opened, synchronize, reopened]
-    branches: [codex/persistence-pg176-quarantine]
+    branches: [main]
     paths:
       - 'scripts/ci/demo-wire-lab/**'
       - 'scripts/ci/demo-persistence-review/**'
@@ -14,7 +14,7 @@ permissions:
   contents: read
 jobs:
   physical-wire-lab:
-    if: github.repository == 'jfcaicedoobando-arch/elogistix' && github.event.pull_request.draft == true && github.event.pull_request.head.repo.full_name == github.repository && github.event.pull_request.head.ref == 'codex/physical-wire-lab-20261015' && github.event.pull_request.base.sha == '8386f47502ca70516a9111c9983b5c3f6955d953'
+    if: github.repository == 'jfcaicedoobando-arch/elogistix' && github.event.pull_request.draft == true && github.event.pull_request.head.repo.full_name == github.repository && github.event.pull_request.head.ref == 'codex/physical-wire-main-20261015' && github.event.pull_request.base.sha == 'd1de16b7cafda5f739511cf7cfef645a7733651a'
     runs-on: ubuntu-24.04
     timeout-minutes: 20
     steps:

@@ -8,8 +8,8 @@ guaranteed.
 
 ## Execution boundary
 
-The draft PR gate fixes repository, branch, checkout and stacked base
-`8386f47502ca70516a9111c9983b5c3f6955d953`. It reuses the hash-pinned persistence
+The draft PR gate fixes repository, branch, checkout and merged main base
+`d1de16b7cafda5f739511cf7cfef645a7733651a`. It reuses the hash-pinned persistence
 runner and unchanged CRM infrastructure. PostgreSQL 17.6 uses the same pinned
 image, network none, no ports, no mounts, read-only root, tmpfs and non-superuser
 candidate. Software is staged from public, integrity-pinned Node/npm inputs on
@@ -50,6 +50,10 @@ no PID, reaped owned clients and removed container before final PASS.
 
 Only sanitized `public/*.json` evidence is uploaded. Ownership files, container
 inspection logs, dependency trees, paths and transfer bytes remain private.
+Failure evidence contains a bounded case/code and protocol timeline, with no
+raw error message or stack. A separate Node version probe distinguishes a
+loader failure without exposing its stderr. Failed or partial evidence cannot
+be promoted to PASS by either a zero exit code or successful container cleanup.
 The artifact includes the ordered protocol timeline, identities of disposable
 backends and source/runtime hashes. Offline tests are registered in the complete
 catalog and execute automatically in general CI as `node-demo-wire-lab`.
