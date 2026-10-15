@@ -18,7 +18,12 @@ class CanonicalLane(unittest.TestCase):
   self.assertLess(sql.index('statement_timeout'),sql.index(candidate));self.assertIn(hashlib.sha256(candidate.encode()).hexdigest(),sql)
  def test_abort_after_mutation_and_registry(self):
   sql=witness('EXACT_CANONICAL_SENTINEL;',True)
-  self.assertLess(sql.index('EXACT_CANONICAL_SENTINEL'),sql.index('INSERT INTO synthetic_registry'));self.assertLess(sql.index('INSERT INTO synthetic_registry'),sql.index('SYNTHETIC_ROLLBACK_WITNESS'))
+  self.assertLess(sql.index('EXACT_CANONICAL_SENTINEL'),sql.index('INSERT INTO public.synthetic_registry'));self.assertLess(sql.index('INSERT INTO public.synthetic_registry'),sql.index('SYNTHETIC_ROLLBACK_WITNESS'))
+ def test_registry_references_are_schema_qualified_after_canonical_search_path(self):
+  sql=witness("DO $$ BEGIN PERFORM set_config('search_path','pg_catalog',true); END $$;",True)
+  self.assertIn('LOCK TABLE public.synthetic_registry',sql)
+  self.assertIn('INSERT INTO public.synthetic_registry',sql)
+  self.assertNotRegex(sql,r'(?<![\w.])synthetic_registry\b')
  def test_no_rebinding(self):
   sql=(ROOT/'run_ci.py').read_text();self.assertNotIn('bind_candidate',sql);self.assertIn("candidate_transformations']=[]",sql)
  def test_matrix_count(self):

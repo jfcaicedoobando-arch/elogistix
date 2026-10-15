@@ -7,15 +7,15 @@ def owner_only(r,db,label):
  assert r.query("SELECT bool_and(proacl=ARRAY['postgres=X/postgres']::aclitem[]) FROM pg_proc WHERE oid=ANY(ARRAY['"+F[0]+"'::regprocedure::oid,'"+F[1]+"'::regprocedure::oid]);",label,db).stdout.strip()=='t'
 
 def ledger(r,db,label):
- return json.loads(r.query("SELECT coalesce(jsonb_agg(to_jsonb(x) ORDER BY id),'[]') FROM synthetic_registry x;",label,db).stdout)
+ return json.loads(r.query("SELECT coalesce(jsonb_agg(to_jsonb(x) ORDER BY id),'[]') FROM public.synthetic_registry x;",label,db).stdout)
 
 def witness(candidate,fail=False):
  h=hashlib.sha256(candidate.encode()).hexdigest()
  # Deliberately synthetic explicit ID, not a model of the real sequence/default.
- guard="DO $$ BEGIN IF EXISTS(SELECT 1 FROM synthetic_registry WHERE id<>1 OR hash<>'"+h+"' OR created_at<>1792093404000) THEN RAISE EXCEPTION 'SYNTHETIC_LEDGER_CONFLICT'; END IF; END $$;"
- insert="INSERT INTO synthetic_registry SELECT 1,'"+h+"',1792093404000 WHERE NOT EXISTS(SELECT 1 FROM synthetic_registry);"
+ guard="DO $$ BEGIN IF EXISTS(SELECT 1 FROM public.synthetic_registry WHERE id<>1 OR hash<>'"+h+"' OR created_at<>1792093404000) THEN RAISE EXCEPTION 'SYNTHETIC_LEDGER_CONFLICT'; END IF; END $$;"
+ insert="INSERT INTO public.synthetic_registry SELECT 1,'"+h+"',1792093404000 WHERE NOT EXISTS(SELECT 1 FROM public.synthetic_registry);"
  abort="DO $$ BEGIN RAISE EXCEPTION 'SYNTHETIC_ROLLBACK_WITNESS'; END $$;" if fail else ''
- return "BEGIN;SET LOCAL statement_timeout='20s';LOCK TABLE synthetic_registry IN SHARE ROW EXCLUSIVE MODE NOWAIT;"+guard+candidate+insert+abort+'COMMIT;'
+ return "BEGIN;SET LOCAL statement_timeout='20s';LOCK TABLE public.synthetic_registry IN SHARE ROW EXCLUSIVE MODE NOWAIT;"+guard+candidate+insert+abort+'COMMIT;'
 
 def run_canonical_cases(r):
  db='crm_acl_fixture_fresh_history'
@@ -41,9 +41,9 @@ def run_canonical_cases(r):
    assert re.search(r'^ERROR:\s+P0001: CRM_ACL_',p.stdout,re.M);assert r.snapshot(db,name+'-after')==before;r.check(name,complete_rollback=True)
  for mode in ['commit','idempotent','rollback','conflict']:
   with database(r,'registry_'+mode) as db:
-   r.query('CREATE TABLE synthetic_registry(id integer PRIMARY KEY,hash text NOT NULL,created_at bigint NOT NULL);','registry-create-'+mode,db)
+   r.query('CREATE TABLE public.synthetic_registry(id integer PRIMARY KEY,hash text NOT NULL,created_at bigint NOT NULL);','registry-create-'+mode,db)
    if mode=='idempotent':r.query(witness(r.candidate),'registry-first',db)
-   if mode=='conflict':r.query("INSERT INTO synthetic_registry VALUES(1,'wrong',1792093404000);",'registry-conflict-setup',db)
+   if mode=='conflict':r.query("INSERT INTO public.synthetic_registry VALUES(1,'wrong',1792093404000);",'registry-conflict-setup',db)
    before=r.snapshot(db,'registry-'+mode+'-before');rows=ledger(r,db,'registry-'+mode+'-rows-before')
    fail=mode in ['rollback','conflict'];response=r.query(witness(r.candidate,mode=='rollback'),'registry-'+mode,db,expected=3 if fail else 0)
    after=r.snapshot(db,'registry-'+mode+'-after');rows_after=ledger(r,db,'registry-'+mode+'-rows-after')
