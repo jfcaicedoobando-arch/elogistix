@@ -1,10 +1,15 @@
-/** Offline state-machine checks: synthetic protocol messages; no connection, SQL or pg import. */
+/** Offline checks: synthetic protocol messages and local IPC; no SQL, pg or external network. */
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { Socket } from 'node:net';
+import { Socket, createServer } from 'node:net';
 import { spawnSync } from 'node:child_process';
+import { once } from 'node:events';
+import { randomUUID } from 'node:crypto';
+import { mkdtemp, rmdir } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import { LAB_CONFIG, _labTest } from './lab_wire.mjs';
-const { ProtocolState, commandTag, guardedWrite, inputs, parameters } = _labTest;
+const { ProtocolState, LabSocket, commandTag, guardedWrite, inputs, parameters } = _labTest;
 const socketPath = LAB_CONFIG.host + '/.s.PGSQL.' + LAB_CONFIG.port;
 
 function fixture(t, options = {}) {
@@ -32,6 +37,120 @@ function complete(f, text, tag, status, result, internal = false) {
   f.state.message({ name: 'readyForQuery', status });
   return f.state.finish(pending, result);
 }
+
+async function ipcFixture() {
+  const directory = process.platform === 'win32' ? null : await mkdtemp(join(tmpdir(), 'wire-synthetic-'));
+  const path = directory ? join(directory, 'socket') : '\\\\.\\pipe\\wire-synthetic-' + randomUUID();
+  const peers = new Set(), clients = new Map();
+  const server = createServer(peer => {
+    peers.add(peer);
+    peer.on('error', () => {});
+  });
+  const listening = once(server, 'listening');
+  server.listen(path);
+  await listening;
+  let cleanup;
+  return { path, server,
+    async connect(socket) {
+      socket.on('error', () => {});
+      clients.set(socket, new Promise(resolve => socket.once('close', resolve)));
+      const peer = once(server, 'connection'), connected = once(socket, 'connect');
+      socket.connect(path);
+      await connected;
+      return (await peer)[0];
+    },
+    close() {
+      if (!cleanup) cleanup = (async () => {
+        for (const client of clients.keys()) client.destroy();
+        for (const peer of peers) peer.destroy();
+        await Promise.all(clients.values());
+        await new Promise((resolve, reject) => server.close(cause => cause ? reject(cause) : resolve()));
+        assert.equal(server.listening, false);
+        assert.ok([...clients.keys(), ...peers].every(socket => socket.destroyed));
+        if (directory) await rmdir(directory); // The server unlinks its own Unix socket.
+      })();
+      return cleanup;
+    },
+  };
+}
+
+test('Node connect really replaces an inherited write override on a local IPC socket', { timeout: 10000 }, async t => {
+  const ipc = await ipcFixture();
+  t.after(() => ipc.close());
+  let inheritedCalls = 0;
+  class OldSocket extends Socket {
+    write(...args) { inheritedCalls++; return super.write(...args); }
+  }
+  const socket = new OldSocket();
+  try {
+    const peer = await ipc.connect(socket);
+    assert.equal(socket.write, Socket.prototype.write);
+    const incoming = once(peer, 'data'), payload = Buffer.from('SYNTHETIC_CORE_RESET');
+    socket.write(payload);
+    assert.deepEqual((await incoming)[0], payload);
+    assert.equal(inheritedCalls, 0, 'real Node connect bypassed the old prototype override');
+  } finally { await ipc.close(); }
+});
+
+test('the production LabSocket guards real IPC writes after connect and cannot be replaced', { timeout: 10000 }, async t => {
+  const ipc = await ipcFixture();
+  t.after(() => ipc.close());
+  let socket, terminal, connects = 0, admitted = 0, bypassed = 0;
+  // Synthetic policy only; Node connect/write and the peer receiving bytes are real.
+  const state = {
+    connect(path) { assert.equal(path, ipc.path); connects++; },
+    beforeWrite(actual) { assert.equal(actual, socket); if (terminal) return false; admitted++; return true; },
+    seal(reason) { terminal ||= reason; socket.destroy(); },
+  };
+  socket = new LabSocket(() => state);
+  try {
+    const payload = Buffer.from('SYNTHETIC_GUARDED_IPC');
+    let intactAtConnect;
+    socket.once('connect', () => {
+      intactAtConnect = socket.writeBarrierIntact();
+      socket.write(payload); // Same event boundary where pg sends its startup bytes.
+    });
+    const peer = await ipc.connect(socket);
+    assert.equal(connects, 1);
+    assert.equal(intactAtConnect, true);
+    assert.equal(socket.writeBarrierIntact(), true);
+    assert.equal(Object.hasOwn(socket, 'write'), true);
+    const write = socket.write, incoming = once(peer, 'data');
+    assert.deepEqual((await incoming)[0], payload);
+    assert.equal(admitted, 1);
+    const bytes = socket.bytesWritten;
+    socket.write = () => { bypassed++; return true; };
+    assert.equal(terminal, 'WRITE_REPLACED');
+    assert.equal(socket.write, write);
+    assert.equal(socket.writeBarrierIntact(), true);
+    assert.throws(() => Object.defineProperty(socket, 'write', { value() { bypassed++; } }), TypeError);
+    assert.equal(socket.write(Buffer.from('SYNTHETIC_BLOCKED')), false);
+    assert.equal(socket.bytesWritten, bytes);
+    assert.equal(admitted, 1);
+    assert.equal(bypassed, 0);
+  } finally { await ipc.close(); }
+});
+
+test('a real IPC peer FIN seals the own write barrier without an uncaught readonly assignment', { timeout: 10000 }, async t => {
+  const ipc = await ipcFixture();
+  t.after(() => ipc.close());
+  let socket, terminal;
+  const state = {
+    connect(path) { assert.equal(path, ipc.path); },
+    beforeWrite() { return !terminal; },
+    seal(reason) { terminal ||= reason; socket.destroy(); },
+  };
+  socket = new LabSocket(() => state);
+  try {
+    const peer = await ipc.connect(socket), closed = once(socket, 'close');
+    peer.end();
+    socket.resume();
+    await closed;
+    assert.equal(terminal, 'WRITE_REPLACED');
+    assert.equal(socket.writeBarrierIntact(), true);
+    assert.equal(socket.write(Buffer.from('SYNTHETIC_AFTER_FIN')), false);
+  } finally { await ipc.close(); }
+});
 
 test('factory fails before loading pg outside Actions', () => {
   const script = `import {createLabWire,LAB_CONFIG} from ${JSON.stringify(new URL('./lab_wire.mjs', import.meta.url).href)};

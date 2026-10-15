@@ -73,11 +73,14 @@ In pinned [`connection.js`](https://github.com/brianc/node-postgres/blob/0980cef
 laboratory observer uses that ordering to see CommandComplete/ReadyForQuery
 before the Client handler. It does not infer status from SQL text or a timer.
 The stream is one private `net.Socket` object; a generated epoch identifies
-that object and its single permitted connect attempt. A guarded override runs
-before every underlying `Socket.write`, including writes buffered by corking.
-Replacing the stream, closing it or attempting another connection seals the
-attempt. TLS and poolers are absent from this laboratory; their continuity is
-not certified by its epoch.
+that object and its single permitted connect attempt. An own-property writer
+installed after the core `connect()` call checks admission before calling the
+captured native `Socket.write`, including writes buffered by corking. Its
+identity is checked at the connect event and before queries. Replacing the
+writer seals the attempt and leaves the guard installed. Replacing the stream,
+closing it or attempting another connection also seals the attempt. TLS and
+poolers are absent from this laboratory; their continuity is not certified by
+its epoch.
 
 Pinned [`query.js`](https://github.com/brianc/node-postgres/blob/0980cefebe0ae461da8883703be049fe13ca96cf/packages/pg/lib/query.js)
 sends Parse/Bind/Describe/Execute/Sync for the selected extended-query mode.
@@ -137,12 +140,40 @@ any of its writes. No caller-supplied fault callback can access the socket.
 
 ## Validation and remaining boundaries
 
-The offline tests exercise the actual state machine with synthetic protocol
-messages and unconnected `net.Socket` objects. The writer sink is synthetic;
-these tests do not open sockets, load pg, execute SQL or certify physical
-continuity. The public factory gate is also tested in a child process with an
-explicit minimal non-Actions environment. Real wire/owner execution belongs to
-the separately authorized disposable Actions lane and its exact artifact.
+The initial physical attempt at `ae19b938` reached actual SELECT CommandComplete
+and ReadyForQuery, but recorded zero socket writes. Its `HOLD_LAB_RESULT` failure
+therefore exposed a real missing barrier, rather than a passing physical proof.
+The old inherited `write()` override was overwritten by Node itself.
+
+The primary source inspected locally is Node **v24.19.0**'s incorporated
+`process.binding('natives').net`, SHA256
+`eba05bb24bdd1e208632a1df0fdeeb8e4bdf6ffc062cb19e92f0e7a8c37f60af`.
+Lines 1460–1461 assign `this.write = Socket.prototype.write` in `connect()`.
+The same source assigns `writeAfterFIN` on peer EOF. The corrected laboratory
+class installs a nonconfigurable own accessor immediately after `super.connect`
+returns, before the asynchronous connect event can invoke pg startup. Its getter
+returns the fixed guarded writer; its setter seals and destroys the socket
+without a readonly-property exception if core EOF handling or another caller
+tries to replace it. No Node or pg prototype is modified.
+
+The **22 offline tests** have two evidence categories. Nineteen cover the input
+gates and state machine using synthetic protocol messages, unconnected
+`net.Socket` objects and synthetic writer sinks. Three open actual local IPC sockets: Unix
+domain sockets on Linux or named pipes on Windows, without TCP or PostgreSQL.
+They reproduce core's inherited-override reset, exercise the production
+`LabSocket` guard at the real connect event, verify receipt of only admitted
+synthetic bytes, reject replacement with no further bytes written, and handle
+a real peer FIN terminally. Those IPC tests use an explicitly synthetic policy;
+they do not simulate a PostgreSQL server. Each confirms server/socket closure,
+and Unix fixture directories are removed after server cleanup.
+All 22 passed locally on Node v24.19.0/Windows with zero skips. The Linux UDS
+variants remain to be exercised by Actions after this correction.
+
+The public factory gate is also tested in a child process with an explicit
+minimal non-Actions environment. The tests load no pg, execute no SQL and use
+no external network. They do not certify PostgreSQL framing or physical owner
+continuity; that proof still requires a successful separately authorized
+disposable Actions lane and its exact artifact after this correction.
 
 The fixture's fsync-off/tmpfs PostgreSQL setup cannot establish crash, WAL,
 restore or failover durability. A direct laboratory UDS says nothing about a

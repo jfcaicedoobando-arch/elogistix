@@ -204,22 +204,55 @@ function guardedWrite(state, socket, buffer, write) {
   try { return write(); } catch { state.seal('WRITE'); return false; }
 }
 
+const nativeSocketWrite = Socket.prototype.write;
+class LabSocket extends Socket {
+  #state;
+  #barrier;
+  constructor(getState) {
+    super({ allowHalfOpen: false });
+    this.#state = getState;
+  }
+  connect(path, ...rest) {
+    const state = this.#state();
+    state.connect(path);
+    // Node 24.19.0 net.connect() resets this.write to Socket.prototype.write.
+    // Install the own-property barrier after that reset, before its asynchronous
+    // connect event can let pg send StartupMessage. Never rely on a prototype override.
+    const connected = super.connect(path, ...rest);
+    const write = (buffer, ...args) => guardedWrite(state, this, buffer,
+      () => Reflect.apply(nativeSocketWrite, this, [buffer, ...args]));
+    const get = () => write;
+    // Node also assigns writeAfterFIN on peer EOF. Seal without an uncaught
+    // readonly-property exception; the guarded writer remains installed forever.
+    const set = () => state.seal('WRITE_REPLACED');
+    Object.defineProperty(this, 'write', { get, set, configurable: false, enumerable: false });
+    this.#barrier = { write, get, set };
+    if (!this.writeBarrierIntact()) { state.seal('WRITE_BARRIER'); throw error('WRITE_BARRIER'); }
+    return connected;
+  }
+  writeBarrierIntact() {
+    const field = Object.getOwnPropertyDescriptor(this, 'write');
+    return !!this.#barrier && field?.configurable === false && field.enumerable === false
+      && field.get === this.#barrier.get && field.set === this.#barrier.set
+      && this.write === this.#barrier.write && Socket.prototype.write === nativeSocketWrite;
+  }
+}
+
 export async function createLabWire({ config, label, trace = () => {}, fault } = {}) {
   const faults = inputs({ config, label, trace, fault }, process.env);
   const require = createRequire(import.meta.url);
   demand(require('./deps/node_modules/pg/package.json').version === '8.23.1', 'PG_VERSION');
   const { Client } = require('./deps/node_modules/pg/lib/index.js');
   let state, client, identity, started = false, socketClosed = false, clientEnded = false, closePromise;
-  class LabSocket extends Socket {
-    connect(path, ...rest) { state.connect(path); return super.connect(path, ...rest); }
-    write(buffer, ...rest) { return guardedWrite(state, this, buffer, () => super.write(buffer, ...rest)); }
-  }
-  const socket = new LabSocket({ allowHalfOpen: false });
+  const socket = new LabSocket(() => state);
   state = new ProtocolState({ socket, currentSocket: () => client?.connection.stream ?? socket,
     label, trace, fault: faults, onTerminal: () => socket.destroy() });
   const socketDone = new Promise(resolve => socket.once('close', () => { socketClosed = true; state.seal('SOCKET_CLOSED'); state.emit('socket-close'); resolve(); }));
   socket.on('error', () => state.seal('SOCKET_ERROR'));
-  socket.on('connect', () => state.connected());
+  socket.on('connect', () => {
+    if (!socket.writeBarrierIntact()) { state.seal('WRITE_BARRIER'); return; }
+    state.connected();
+  });
   client = new Client({ host: LAB_CONFIG.host, port: LAB_CONFIG.port, database: LAB_CONFIG.database,
     user: LAB_CONFIG.sessionUser, password: 'SYNTHETIC_LAB_UNUSED', ssl: false, stream: socket,
     pipeline: false, application_name: 'synthetic_wire_' + label,
@@ -230,7 +263,7 @@ export async function createLabWire({ config, label, trace = () => {}, fault } =
   client.connection.on('message', message => { try { state.message(message); } catch { state.seal('PROTOCOL'); } });
 
   function idleClient() {
-    if (!state.physical() || client.pipeline !== false || client.connection.stream !== socket
+    if (!state.physical() || !socket.writeBarrierIntact() || client.pipeline !== false || client.connection.stream !== socket
       || client._getActiveQuery() != null || client._queryQueue.length !== 0 || client._sentQueryQueue.length !== 0
       || client.getTransactionStatus() !== state.ready) {
       state.seal('CLIENT_STATE'); throw error('CLIENT_STATE');
@@ -297,4 +330,4 @@ export async function createLabWire({ config, label, trace = () => {}, fault } =
   }
 }
 
-export const _labTest = Object.freeze({ ProtocolState, commandTag, guardedWrite, inputs, parameters });
+export const _labTest = Object.freeze({ ProtocolState, LabSocket, commandTag, guardedWrite, inputs, parameters });
