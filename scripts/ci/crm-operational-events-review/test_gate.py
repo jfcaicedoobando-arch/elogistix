@@ -116,7 +116,7 @@ class ImmutableInputs(unittest.TestCase):
         self.assertEqual(result['image'], IMAGE)
         self.assertRegex(IMAGE, r'^postgres@sha256:[0-9a-f]{64}$')
 
-    def test_changed_payload_mirror_or_inherited_runner_rejects(self):
+    def test_changed_payload_journal_mirror_or_inherited_runner_rejects(self):
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)
             for relative in INPUT_SHA256:
@@ -125,6 +125,7 @@ class ImmutableInputs(unittest.TestCase):
                 shutil.copyfile(REPOSITORY_ROOT / relative, target)
             self.assertEqual(verify_inputs(root)['files'], INPUT_SHA256)
             for relative in ('drizzle/migrations/0021_crm_helpers_owner_only.sql',
+                             'drizzle/migrations/meta/_journal.json',
                              'supabase/migrations/20261015194324_crm_helpers_owner_only.sql',
                              'scripts/ci/crm-canonical-review/run_ci.py'):
                 with self.subTest(relative=relative):

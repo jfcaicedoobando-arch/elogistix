@@ -28,6 +28,8 @@ The seven operational-capture projections are also executed in read-only transac
 
 ## Remaining implementation and operational gates
 
+The [minimum private contract specification](private-contract-spec.md) defines the exact existing projection fields, review order and permitted postimage. Its field list is not an approved policy or window.
+
 A real candidate still needs a separately reviewed private contract and comparator using the exact server-side projections. It must bind identities, all semantic commitments, role capabilities, event definitions and their complete reviewed call/effect graph. Only the two permitted helper ACL removals and their exact service-role dependency changes may normalize; removing complete ACL or privilege sections is not preservation.
 
 The candidate must validate complete fresh ledger/default/sequence/index metadata, lock and recapture in a reviewed order, execute the unchanged payload, register exactly one default-generated Drizzle row and preserve Supabase history. Existing exact registration must verify all postconditions without repair, another DDL execution or sequence allocation. Rollback must distinguish transactional state from sequence gaps. The public proposal does not implement this missing operational registration/comparison protocol or manufacture private preimages.

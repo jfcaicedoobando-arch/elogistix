@@ -23,6 +23,7 @@ IMAGE = 'postgres@sha256:f3bd19c606e442c3d7bdfa8002e03fe260a1023351e0ea459803202
 # Measured from the unchanged files at the recorded parent commit above.
 # No mutable tag, arbitrary image, private evidence or regenerated hash is used.
 INPUT_SHA256 = {
+    'drizzle/migrations/meta/_journal.json': '397060687921b1c9996b177906a8d775c6991e9f8c664e63f7389287b577fa37',
     'drizzle/migrations/0021_crm_helpers_owner_only.sql': CANONICAL_SHA256,
     'supabase/migrations/20261015194324_crm_helpers_owner_only.sql': CANONICAL_SHA256,
     'scripts/ci/crm-canonical-review/run_ci.py': 'd85fd4ea06f9db197fcef56898a806e365a27145be94254192023257d053ae6f',
