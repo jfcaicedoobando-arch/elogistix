@@ -1,0 +1,120 @@
+{
+  "source_commit": "e8d45165216403478f144f75437fa8c4c6116b5b",
+  "source_base": "5d1f00d27628100a58ab166367a067ea90068b84",
+  "recovery_base": "025270cadcee0cedef64aab31be93eb0ff3f0288",
+  "route": "public immutable Git sources from PR348; not Library ZIP transfer",
+  "files": [
+    {
+      "source_path": "scripts/ci/demo-financial-engine-review/extract_catalog.py",
+      "local_path": "upstream/extract_catalog.py",
+      "bytes": 16514,
+      "sha256": "f43ecd420e03caf3ab9fdf47dcc0047d16a28bf94d02a78929885e20bb6714f5",
+      "git_blob_sha1": "dbf20c23fbfeb4b59a2a68014bfb16a2dd5e75e3"
+    },
+    {
+      "source_path": "scripts/ci/demo-financial-engine-review/upstream/authentic/bridge.sql",
+      "local_path": "upstream/authentic/bridge.sql",
+      "bytes": 8362,
+      "sha256": "69bbcd2ec825953ca4fda822ec5fde143f1f70a5120f372ee3c211e96523c5b2",
+      "git_blob_sha1": "9728b864af8a9cb7bc6eebaf61e750e068e3da75"
+    },
+    {
+      "source_path": "scripts/ci/demo-financial-engine-review/upstream/authentic/core-owner-fixture.sql",
+      "local_path": "upstream/authentic/core-owner-fixture.sql",
+      "bytes": 282,
+      "sha256": "a850f7d409b721c317001947daf6633fa3d3f0ca4680eac6670e193eed82a563",
+      "git_blob_sha1": "633f4a06b35990bcef684416df269d7d5a8be31f"
+    },
+    {
+      "source_path": "scripts/ci/demo-financial-engine-review/upstream/authentic/identity.sql",
+      "local_path": "upstream/authentic/identity.sql",
+      "bytes": 16101,
+      "sha256": "666a466b0b8189ef3cec661f489495b7059cfd9bbcb2492d9d221b693ea3be7f",
+      "git_blob_sha1": "8d166a8ded732de4861bcad2f5ae7f713a3d5cf7"
+    },
+    {
+      "source_path": "scripts/ci/demo-financial-engine-review/upstream/authentic/producer.sql",
+      "local_path": "upstream/authentic/producer.sql",
+      "bytes": 19028,
+      "sha256": "f0a14f683ee524527ed3b7f29305bc793f7f9e3d5581b4332da72f8fb8bb55a6",
+      "git_blob_sha1": "0eef8bcef4cf4eec32315bdd2e44b697f2d119be"
+    },
+    {
+      "source_path": "scripts/ci/demo-financial-engine-review/upstream/flow/issuer/10-issuer.sql",
+      "local_path": "upstream/flow/issuer/10-issuer.sql",
+      "bytes": 9929,
+      "sha256": "8c739036ea948163d83617d6f59068f5b414a641c251c7ac4115be82b3d0a81e",
+      "git_blob_sha1": "44bbf7f72807efb9a33516ea522d8d0f037b6505"
+    },
+    {
+      "source_path": "scripts/ci/demo-financial-engine-review/upstream/flow/issuer/11-atomic-entry.sql",
+      "local_path": "upstream/flow/issuer/11-atomic-entry.sql",
+      "bytes": 6570,
+      "sha256": "a2093b45e37c922f0505e496581381b4b5a3d105d3f0e583d694ef92e9c47cb3",
+      "git_blob_sha1": "42ac0a5a263a9b3414657c0146c7bf6d09202332"
+    },
+    {
+      "source_path": "scripts/ci/demo-financial-engine-review/upstream/flow/issuer/12-approval-main.sql",
+      "local_path": "upstream/flow/issuer/12-approval-main.sql",
+      "bytes": 10603,
+      "sha256": "ee528767111b8352196f2d40629342b00bbcceedc4b5f2ecbdadc88c7477e583",
+      "git_blob_sha1": "da04314e839476197c05f7b9f958170c77655673"
+    },
+    {
+      "source_path": "scripts/ci/demo-financial-engine-review/upstream/flow/issuer/13-readonly-verifiers.sql",
+      "local_path": "upstream/flow/issuer/13-readonly-verifiers.sql",
+      "bytes": 7742,
+      "sha256": "15ff74c47b4b33840fceb5ec918f25749f9c9c4ef761c61a976b438a60f81dcd",
+      "git_blob_sha1": "ebc1ca7ea87d6aa082b6619fccc4af7a1b794004"
+    },
+    {
+      "source_path": "scripts/ci/demo-financial-engine-review/upstream/flow/issuer/14-reconcile.sql",
+      "local_path": "upstream/flow/issuer/14-reconcile.sql",
+      "bytes": 5461,
+      "sha256": "f2345eb19c532a0cce48042bc8afa6f27d58ff60796b7c6dc930be44f0aa50a1",
+      "git_blob_sha1": "213684eb0d1cc54c756c15700a6e6e83fffa5bf8"
+    },
+    {
+      "source_path": "scripts/ci/demo-financial-engine-review/upstream/flow/issuer/15-rpc-boundary.sql",
+      "local_path": "upstream/flow/issuer/15-rpc-boundary.sql",
+      "bytes": 4236,
+      "sha256": "9656003b716ea2c60ec90b7a4de9dc1b21743c46a0ef1199f2522f9831979799",
+      "git_blob_sha1": "749fd6abf87b56530aedfc2ddde44d008bcb805c"
+    },
+    {
+      "source_path": "scripts/ci/demo-financial-engine-review/upstream/flow/issuer/16-owner-registry.sql",
+      "local_path": "upstream/flow/issuer/16-owner-registry.sql",
+      "bytes": 11333,
+      "sha256": "a74d69ed6d19356ba36fe27d7070a496e99c3ef5cec7a030c3b96b609a64463b",
+      "git_blob_sha1": "7b8060d3669e7c71cf0cb8f828a4ad314c8f1254"
+    },
+    {
+      "source_path": "scripts/ci/demo-financial-engine-review/upstream/flow/sql/01-private.sql",
+      "local_path": "upstream/flow/sql/01-private.sql",
+      "bytes": 16972,
+      "sha256": "e78412eb7e0efe59749c7f7077b8955df5752a4a8d911a02822ddf56c57dd9a2",
+      "git_blob_sha1": "23093a265a53287aa65a153922df3085c90220cb"
+    },
+    {
+      "source_path": "scripts/ci/demo-financial-engine-review/upstream/flow/sql/02-manifest.sql",
+      "local_path": "upstream/flow/sql/02-manifest.sql",
+      "bytes": 2811,
+      "sha256": "be3e506d347121bba52fd4bb14ea3d5d5984bde51f720185a5054c2a63ecef63",
+      "git_blob_sha1": "16aec78666115e99faf4cd4b4197bf2c492515bb"
+    },
+    {
+      "source_path": "scripts/ci/demo-financial-engine-review/upstream/flow/sql/04-engine.sql",
+      "local_path": "upstream/flow/sql/04-engine.sql",
+      "bytes": 28344,
+      "sha256": "44460cb9e8e4028ad02e3eb2485ca451ab9489208f84b9c2a85917d45a642f1d",
+      "git_blob_sha1": "5b06190de1af981d07a28b047cd1bcaa645ca5cc"
+    },
+    {
+      "source_path": "scripts/ci/demo-financial-engine-review/upstream/flow/sql/06-simulation-guards.sql",
+      "local_path": "upstream/flow/sql/06-simulation-guards.sql",
+      "bytes": 2312,
+      "sha256": "44f88ad264f1c2e0bd89577fe1dcdd24e3b11a017b78c4b26ad911147e7012a3",
+      "git_blob_sha1": "7aa37a61f25365bbc722c8bca06a79bc0d60c603"
+    }
+  ]
+}
