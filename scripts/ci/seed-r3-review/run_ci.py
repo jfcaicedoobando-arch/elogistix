@@ -20,7 +20,7 @@ BRANCH = 'fix/seed-r3-review-20261015'
 BASE = 'c7db22e047ff22e9059233adc86918d6b51bc39c'
 IMAGE = 'postgres@sha256:f3bd19c606e442c3d7bdfa8002e03fe260a1023351e0ea4598032022b68dd6e3'
 HASHES = {
-    'terminal_calls.py': '6121e1dc600de51fa34d1a59d29751bf91983de596540c8952b977c851e03acf',
+    'terminal_calls.py': 'ef2e686b8794890e0751a06ab8e09929c34407c2d4f1d9c0f4ddf4abc18ad7a5',
     'test_terminal_calls.py': '046b4165e724da6aa67c4f2fc6c6c2b4dd7eeae6713cf1075a0b50d2c3c9f117',
 
     'concurrency_cases.py': '6fa9de94b8f482a94213c0d55bef012a8f8c54b1ee4f38f724c52c51cac6e373',
@@ -136,7 +136,10 @@ class Runner:
         context = json.loads(self.query("SELECT jsonb_build_object('version',current_setting('server_version_num'),'user',current_user,'session',session_user,'superuser',(SELECT rolsuper FROM pg_roles WHERE rolname=current_user),'admin_member',pg_has_role(current_user,'supabase_admin','MEMBER'),'listen',current_setting('listen_addresses'));", 'persistent-context-' + label, db).stdout)
         require(context == {'version': '170006', 'user': 'postgres', 'session': 'postgres',
                             'superuser': False, 'admin_member': False, 'listen': ''}, 'Persistent session context mismatch')
-        args = ['docker', 'exec', '-i', self.cid, 'psql', '-X', '-w', '-qAt', '-h', '/tmp/r3/socket',
+        # Merge at the psql descriptor before Docker multiplexes its streams.
+        # This constant wrapper never interpolates SQL, names, or arguments.
+        args = ['docker', 'exec', '-i', self.cid, 'sh', '-c', 'exec "$@" 2>&1', 'sh',
+                'psql', '-X', '-w', '-qAt', '-h', '/tmp/r3/socket',
                 '-p', '5432', '-U', 'postgres', '-d', db, '-v', 'ON_ERROR_STOP=0', '-v', 'VERBOSITY=verbose']
         # Defer Python interruption until registration; do not inherit a blocked
         # signal mask into docker exec (the child must remain terminable).

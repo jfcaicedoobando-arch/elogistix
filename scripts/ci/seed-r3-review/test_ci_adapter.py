@@ -147,6 +147,7 @@ class Lifecycle(unittest.TestCase):
             self.assertIs(self.runner.psqlctl('qa_r3_cc_writer_commit', 'cc-writer_commit-a'), process)
         args = popen.call_args.args[0]; opts = popen.call_args.kwargs
         self.assertEqual(args[:4], ['docker', 'exec', '-i', self.runner.cid])
+        self.assertEqual(args[4:9], ['sh', '-c', 'exec "$@" 2>&1', 'sh', 'psql'])
         self.assertIn('/tmp/r3/socket', args)
         self.assertIn('ON_ERROR_STOP=0', args)
         self.assertIs(opts['stderr'], subprocess.STDOUT)
@@ -155,6 +156,16 @@ class Lifecycle(unittest.TestCase):
         self.assertEqual(opts['bufsize'], 1)
         self.assertEqual(self.runner.sessions, [process])
         self.assertNotIn('PGHOST', opts['env'])
+
+    def test_fixed_wrapper_merges_before_transport_without_interpolation(self):
+        # Local synthetic byte I/O only: no Docker, SQL, network, or database.
+        marker = 'literal; $(must_not_execute)'
+        code = "import os,sys; [(os.write(2,b'ERROR: XX000: tuple concurrently updated\\n'),os.write(1,b'MARK XX000\\n')) for _ in range(100)]; os.write(1,sys.argv[1].encode())"
+        completed_process = subprocess.run(['sh', '-c', 'exec "$@" 2>&1', 'sh', sys.executable, '-I', '-c', code, marker],
+                                           text=True, capture_output=True, shell=False, timeout=5)
+        self.assertEqual(completed_process.returncode, 0)
+        self.assertEqual(completed_process.stderr, '')
+        self.assertEqual(completed_process.stdout, ('ERROR: XX000: tuple concurrently updated\nMARK XX000\n' * 100) + marker)
 
     def test_persistent_invalid_names_identity_and_version_never_spawn(self):
         with patch.object(ci.subprocess, 'Popen') as popen:

@@ -107,6 +107,6 @@ def run_terminal_calls(runner, controls):
             evidence.append({'call': name, 'sqlstate': reply.state, 'primary_error': MESSAGE, 'lock_before': lock_before, 'lock_after': lock_after})
         a.execute('ROLLBACK;').ok()
     # PASS/check occur only after both sessions and synthetic DB are cleaned.
-    runner.check('terminal_direct_calls_while_seed_advisory_held', routes=4, invocations=5, historical_seed_invocations=0, evidence=evidence, auth_fixture='synthetic_nonnull_uuid_after_verified_R3')
+    runner.check('terminal_direct_calls_while_seed_advisory_held', routes=4, invocations=5, historical_seed_invocations=0, evidence=evidence, auth_fixture='synthetic')
     runner.result['terminal_direct_calls'] = 'PASS'
     runner.save()
