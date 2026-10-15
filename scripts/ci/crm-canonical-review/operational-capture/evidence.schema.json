@@ -1,133 +1,1122 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "title": "CRM operational evidence, not an admitted renderer contract",
+  "$comment": "Projection format only. False/null/unsupported states and observed anomalies remain evidence, not operational admission. PostgreSQL 17 catalog rows are scoped and their sensitive values are replaced by commitments. SQL/permission/transport errors have no fabricated evidence envelope.",
   "type": "object",
-  "required": ["kind", "section", "admission", "capture", "result"],
-  "additionalProperties": false,
+  "required": ["kind","section","admission","capture","result"],
   "properties": {
-    "kind": {"const": "crm-operational-evidence-v1"},
-    "admission": {"const": "NOT_ADMITTED"},
-    "section": {"enum": ["discovery", "catalog", "drizzle_history", "supabase_manifest", "supabase_page", "activity", "sequence_state"]},
-    "capture": {"$ref": "#/$defs/capture"},
-    "result": {"type": "object"}
+    "kind": {"const":"crm-operational-evidence-v1"},
+    "section": {"enum":["discovery","catalog","drizzle_history","supabase_manifest","supabase_page","activity","sequence_state"]},
+    "admission": {"const":"NOT_ADMITTED"},
+    "capture": {"$ref":"#/$defs/capture"},
+    "result": {"type":"object"}
   },
+  "additionalProperties": false,
   "allOf": [
-    {"if": {"properties": {"section": {"const": "discovery"}}}, "then": {"properties": {"result": {"$ref": "#/$defs/discovery"}}}},
-    {"if": {"properties": {"section": {"const": "catalog"}}}, "then": {"properties": {"result": {"$ref": "#/$defs/catalog"}}}},
-    {"if": {"properties": {"section": {"const": "drizzle_history"}}}, "then": {"properties": {"result": {"$ref": "#/$defs/drizzle"}}}},
-    {"if": {"properties": {"section": {"enum": ["supabase_manifest", "supabase_page"]}}}, "then": {"properties": {"result": {"$ref": "#/$defs/supabase"}}}},
-    {"if": {"properties": {"section": {"const": "activity"}}}, "then": {"properties": {"result": {"$ref": "#/$defs/activity"}}}},
-    {"if": {"properties": {"section": {"const": "sequence_state"}}}, "then": {"properties": {"result": {"$ref": "#/$defs/sequence"}}}}
+    {"if":{"properties":{"section":{"const":"discovery"}}},"then":{"properties":{"result":{"$ref":"#/$defs/discovery"}}}},
+    {"if":{"properties":{"section":{"const":"catalog"}}},"then":{"properties":{"result":{"$ref":"#/$defs/catalog"}}}},
+    {"if":{"properties":{"section":{"const":"drizzle_history"}}},"then":{"properties":{"result":{"$ref":"#/$defs/drizzle"}}}},
+    {
+      "if": {"properties":{"section":{"const":"supabase_manifest"}}},
+      "then": {"properties":{"result":{"$ref":"#/$defs/supabaseManifest"},"capture":{"required":["format_settings"]}}}
+    },
+    {
+      "if": {"properties":{"section":{"const":"supabase_page"}}},
+      "then": {"properties":{"result":{"$ref":"#/$defs/supabasePage"},"capture":{"required":["format_settings"]}}}
+    },
+    {"if":{"properties":{"section":{"const":"activity"}}},"then":{"properties":{"result":{"$ref":"#/$defs/activity"}}}},
+    {"if":{"properties":{"section":{"const":"sequence_state"}}},"then":{"properties":{"result":{"$ref":"#/$defs/sequence"}}}}
   ],
   "$defs": {
-    "decimal": {"type": "string", "pattern": "^-?[0-9]+$"},
-    "digest": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
-    "nullableDigest": {"anyOf": [{"$ref": "#/$defs/digest"}, {"type": "null"}]},
-    "nullableDecimal": {"anyOf": [{"$ref": "#/$defs/decimal"}, {"type": "null"}]},
+    "decimal": {"type":"string","pattern":"^-?[0-9]+$","not":{"pattern":"[^0-9-]"}},
+    "nonnegativeDecimal": {"type":"string","pattern":"^[0-9]+$","not":{"pattern":"[^0-9]"}},
+    "digest": {"type":"string","minLength":64,"maxLength":64,"pattern":"^[0-9a-f]{64}$"},
+    "nullableDigest": {"anyOf":[{"$ref":"#/$defs/digest"},{"type":"null"}]},
+    "nullableDecimal": {"anyOf":[{"$ref":"#/$defs/decimal"},{"type":"null"}]},
+    "nullableString": {"anyOf":[{"type":"string"},{"type":"null"}]},
+    "nullableInteger": {"anyOf":[{"type":"integer"},{"type":"null"}]},
+    "nullableBoolean": {"anyOf":[{"type":"boolean"},{"type":"null"}]},
+    "timestamp": {"type":"string","format":"date-time"},
+    "nullableTimestamp": {"anyOf":[{"$ref":"#/$defs/timestamp"},{"type":"null"}]},
+    "formatSettings": {
+      "type": "object",
+      "required": ["TimeZone","DateStyle","IntervalStyle","bytea_output","extra_float_digits"],
+      "properties": {
+        "TimeZone": {"type":"string"},
+        "DateStyle": {"type":"string"},
+        "IntervalStyle": {"type":"string"},
+        "bytea_output": {"type":"string"},
+        "extra_float_digits": {"type":"string"}
+      },
+      "additionalProperties": false
+    },
     "capture": {
       "type": "object",
-      "required": ["captured_at", "statement_at", "database", "database_oid", "backend_pid", "snapshot", "xid_if_assigned", "user", "session_user"],
+      "required": ["captured_at","statement_at","database","database_oid","backend_pid","snapshot","xid_if_assigned","user","session_user"],
       "properties": {
-        "captured_at": {"type": "string", "format": "date-time"},
-        "statement_at": {"type": "string", "format": "date-time"},
-        "database": {"type": "string"},
-        "database_oid": {"$ref": "#/$defs/decimal"},
-        "backend_pid": {"type": "integer"},
-        "snapshot": {"type": "string"},
-        "xid_if_assigned": {"$ref": "#/$defs/nullableDecimal"},
-        "user": {"type": "string"},
-        "session_user": {"type": "string"},
-        "format_settings": {"type": "object", "additionalProperties": {"type": "string"}}
+        "captured_at": {"$ref":"#/$defs/timestamp"},
+        "statement_at": {"$ref":"#/$defs/timestamp"},
+        "database": {"type":"string"},
+        "database_oid": {"$ref":"#/$defs/decimal"},
+        "backend_pid": {"type":"integer"},
+        "snapshot": {"type":"string"},
+        "xid_if_assigned": {"$ref":"#/$defs/nullableDecimal"},
+        "user": {"type":"string"},
+        "session_user": {"type":"string"},
+        "format_settings": {"$ref":"#/$defs/formatSettings"}
       },
       "additionalProperties": false
     },
     "safeMetadata": {
       "type": "object",
-      "not": {"anyOf": [
-        {"required": ["prosrc"]}, {"required": ["probin"]}, {"required": ["prosqlbody"]},
-        {"required": ["proargdefaults"]}, {"required": ["proconfig"]}, {"required": ["rolconfig"]},
-        {"required": ["rolpassword"]}, {"required": ["attmissingval"]}, {"required": ["attoptions"]},
-        {"required": ["attfdwoptions"]}, {"required": ["adbin"]}, {"required": ["conbin"]},
-        {"required": ["indexprs"]}, {"required": ["indpred"]}, {"required": ["tgargs"]},
-        {"required": ["tgqual"]}, {"required": ["ev_action"]}, {"required": ["ev_qual"]},
-        {"required": ["polqual"]}, {"required": ["polwithcheck"]}, {"required": ["relpartbound"]},
-        {"required": ["reloptions"]}, {"required": ["typdefault"]}, {"required": ["typdefaultbin"]}
-      ]}
+      "not": {
+        "anyOf": [
+          {"required":["prosrc"]},
+          {"required":["probin"]},
+          {"required":["prosqlbody"]},
+          {"required":["proargdefaults"]},
+          {"required":["proconfig"]},
+          {"required":["rolconfig"]},
+          {"required":["rolpassword"]},
+          {"required":["attmissingval"]},
+          {"required":["attoptions"]},
+          {"required":["attfdwoptions"]},
+          {"required":["adbin"]},
+          {"required":["conbin"]},
+          {"required":["indexprs"]},
+          {"required":["indpred"]},
+          {"required":["tgargs"]},
+          {"required":["tgqual"]},
+          {"required":["ev_action"]},
+          {"required":["ev_qual"]},
+          {"required":["polqual"]},
+          {"required":["polwithcheck"]},
+          {"required":["relpartbound"]},
+          {"required":["reloptions"]},
+          {"required":["typdefault"]},
+          {"required":["typdefaultbin"]}
+        ]
+      }
     },
-    "catalogNode": {
+    "role": {
       "type": "object",
-      "properties": {"metadata": {"$ref": "#/$defs/safeMetadata"}}
+      "required": ["oid","name","superuser","inherit","create_role","create_db","can_login","replication","bypass_rls","current_member","current_usage","current_can_set"],
+      "properties": {
+        "oid": {"$ref":"#/$defs/decimal"},
+        "name": {"type":"string"},
+        "superuser": {"type":"boolean"},
+        "inherit": {"type":"boolean"},
+        "create_role": {"type":"boolean"},
+        "create_db": {"type":"boolean"},
+        "can_login": {"type":"boolean"},
+        "replication": {"type":"boolean"},
+        "bypass_rls": {"type":"boolean"},
+        "current_member": {"type":"boolean"},
+        "current_usage": {"type":"boolean"},
+        "current_can_set": {"type":"boolean"}
+      },
+      "additionalProperties": false
+    },
+    "discoveryColumn": {
+      "type": "object",
+      "required": ["number","name","identity","generated","type_oid","dropped","not_null","has_default","has_missing","type_schema","type_name","type_kind"],
+      "properties": {
+        "number": {"type":"integer"},
+        "name": {"type":"string"},
+        "identity": {"type":"string"},
+        "generated": {"type":"string"},
+        "type_oid": {"$ref":"#/$defs/decimal"},
+        "dropped": {"type":"boolean"},
+        "not_null": {"type":"boolean"},
+        "has_default": {"type":"boolean"},
+        "has_missing": {"type":"boolean"},
+        "type_schema": {"$ref":"#/$defs/nullableString"},
+        "type_name": {"$ref":"#/$defs/nullableString"},
+        "type_kind": {"$ref":"#/$defs/nullableString"}
+      },
+      "additionalProperties": false
+    },
+    "discoveryRelation": {
+      "type": "object",
+      "required": ["label","requested_name","oid","relkind","owner","access_method_oid","is_partition","row_security","force_row_security","has_rules","has_triggers","select","insert","update","delete","truncate","owner_usage","inheritance_links","columns"],
+      "properties": {
+        "label": {"enum":["crm","drizzle","supabase"]},
+        "requested_name": {"type":"string"},
+        "oid": {"$ref":"#/$defs/nullableDecimal"},
+        "relkind": {"$ref":"#/$defs/nullableString"},
+        "owner": {"$ref":"#/$defs/nullableDecimal"},
+        "access_method_oid": {"$ref":"#/$defs/nullableDecimal"},
+        "is_partition": {"$ref":"#/$defs/nullableBoolean"},
+        "row_security": {"$ref":"#/$defs/nullableBoolean"},
+        "force_row_security": {"$ref":"#/$defs/nullableBoolean"},
+        "has_rules": {"$ref":"#/$defs/nullableBoolean"},
+        "has_triggers": {"$ref":"#/$defs/nullableBoolean"},
+        "select": {"$ref":"#/$defs/nullableBoolean"},
+        "insert": {"$ref":"#/$defs/nullableBoolean"},
+        "update": {"$ref":"#/$defs/nullableBoolean"},
+        "delete": {"$ref":"#/$defs/nullableBoolean"},
+        "truncate": {"$ref":"#/$defs/nullableBoolean"},
+        "owner_usage": {"$ref":"#/$defs/nullableBoolean"},
+        "inheritance_links": {"$ref":"#/$defs/nonnegativeDecimal"},
+        "columns": {"anyOf":[{"type":"array","items":{"$ref":"#/$defs/discoveryColumn"}},{"type":"null"}]}
+      },
+      "additionalProperties": false
+    },
+    "discoveryHelper": {
+      "type": "object",
+      "required": ["oid","namespace","owner","return_type_oid","name","kind","argument_count","argument_type_oids"],
+      "properties": {
+        "oid": {"$ref":"#/$defs/decimal"},
+        "namespace": {"$ref":"#/$defs/decimal"},
+        "owner": {"$ref":"#/$defs/decimal"},
+        "return_type_oid": {"$ref":"#/$defs/decimal"},
+        "name": {"type":"string"},
+        "kind": {"type":"string"},
+        "argument_count": {"type":"integer"},
+        "argument_type_oids": {"type":"array","items":{"$ref":"#/$defs/decimal"}}
+      },
+      "additionalProperties": false
+    },
+    "discoverySequence": {
+      "type": "object",
+      "required": ["oid","owner","name","state_select","select","usage","update"],
+      "properties": {
+        "oid": {"$ref":"#/$defs/decimal"},
+        "owner": {"$ref":"#/$defs/decimal"},
+        "name": {"type":"string"},
+        "state_select": {"type":"string"},
+        "select": {"type":"boolean"},
+        "usage": {"type":"boolean"},
+        "update": {"type":"boolean"}
+      },
+      "additionalProperties": false
+    },
+    "discoveryContext": {
+      "type": "object",
+      "required": ["server_version_num","server_encoding","client_encoding","isolation","transaction_read_only","row_security","session_replication_role","statement_timeout","lock_timeout","search_path","in_recovery","read_all_stats_effective"],
+      "properties": {
+        "server_version_num": {"type":"string"},
+        "server_encoding": {"type":"string"},
+        "client_encoding": {"type":"string"},
+        "isolation": {"type":"string"},
+        "transaction_read_only": {"type":"string"},
+        "row_security": {"type":"string"},
+        "session_replication_role": {"type":"string"},
+        "statement_timeout": {"type":"string"},
+        "lock_timeout": {"type":"string"},
+        "search_path": {"type":"string"},
+        "in_recovery": {"type":"boolean"},
+        "read_all_stats_effective": {"type":"boolean"}
+      },
+      "additionalProperties": false
     },
     "discovery": {
       "type": "object",
-      "required": ["context", "roles", "relations", "helpers", "sequence", "transport_properties"],
+      "required": ["context","roles","relations","helpers","sequence","transport_properties"],
       "properties": {
-        "context": {"type": "object", "required": ["server_version_num", "server_encoding", "client_encoding", "isolation", "read_all_stats_effective"]},
-        "roles": {"type": "array", "items": {"type": "object", "required": ["oid", "name", "superuser", "bypass_rls"]}},
-        "relations": {"type": "array", "items": {"type": "object", "required": ["label", "requested_name", "oid", "columns"]}},
-        "helpers": {"type": ["array", "null"]},
-        "sequence": {"type": ["object", "null"], "properties": {"oid": {"$ref": "#/$defs/decimal"}, "name": {"type": "string"}, "select": {"type": "boolean"}, "state_select": {"type": "string"}}},
-        "transport_properties": {"const": "UNKNOWN_REQUIRES_PARENT_VERIFICATION"}
-      }
+        "context": {"$ref":"#/$defs/discoveryContext"},
+        "roles": {"type":"array","items":{"$ref":"#/$defs/role"}},
+        "relations": {"type":"array","items":{"$ref":"#/$defs/discoveryRelation"}},
+        "helpers": {"anyOf":[{"type":"array","items":{"$ref":"#/$defs/discoveryHelper"}},{"type":"null"}]},
+        "sequence": {"anyOf":[{"$ref":"#/$defs/discoverySequence"},{"type":"null"}]},
+        "transport_properties": {"const":"UNKNOWN_REQUIRES_PARENT_VERIFICATION"}
+      },
+      "additionalProperties": false
+    },
+    "relationMetadata": {
+      "allOf": [
+        {"$ref":"#/$defs/safeMetadata"},
+        {
+          "type": "object",
+          "required": ["oid","relnamespace","reltype","reloftype","relowner","relam","relfilenode","reltablespace","reltoastrelid","relrewrite","relname","relpersistence","relkind","relreplident","relnatts","relchecks","relhasindex","relisshared","relhasrules","relhastriggers","relhassubclass","relrowsecurity","relforcerowsecurity","relispopulated","relispartition","relacl"],
+          "properties": {
+            "oid": {"$ref":"#/$defs/decimal"},
+            "relnamespace": {"$ref":"#/$defs/decimal"},
+            "reltype": {"$ref":"#/$defs/decimal"},
+            "reloftype": {"$ref":"#/$defs/decimal"},
+            "relowner": {"$ref":"#/$defs/decimal"},
+            "relam": {"$ref":"#/$defs/decimal"},
+            "relfilenode": {"$ref":"#/$defs/decimal"},
+            "reltablespace": {"$ref":"#/$defs/decimal"},
+            "reltoastrelid": {"$ref":"#/$defs/decimal"},
+            "relrewrite": {"$ref":"#/$defs/decimal"},
+            "relname": {"type":"string"},
+            "relpersistence": {"type":"string"},
+            "relkind": {"type":"string"},
+            "relreplident": {"type":"string"},
+            "relnatts": {"type":"integer"},
+            "relchecks": {"type":"integer"},
+            "relhasindex": {"type":"boolean"},
+            "relisshared": {"type":"boolean"},
+            "relhasrules": {"type":"boolean"},
+            "relhastriggers": {"type":"boolean"},
+            "relhassubclass": {"type":"boolean"},
+            "relrowsecurity": {"type":"boolean"},
+            "relforcerowsecurity": {"type":"boolean"},
+            "relispopulated": {"type":"boolean"},
+            "relispartition": {"type":"boolean"},
+            "relacl": {"anyOf":[{"type":"array","items":{"type":"string"}},{"type":"null"}]}
+          },
+          "additionalProperties": false
+        }
+      ]
+    },
+    "relation": {
+      "type": "object",
+      "required": ["metadata","options_sha256","partition_bound_sha256","partition_bound_is_null","qualified_name","schema_usage"],
+      "properties": {
+        "metadata": {"$ref":"#/$defs/relationMetadata"},
+        "options_sha256": {"$ref":"#/$defs/digest"},
+        "partition_bound_sha256": {"$ref":"#/$defs/digest"},
+        "partition_bound_is_null": {"type":"boolean"},
+        "qualified_name": {"type":"string"},
+        "schema_usage": {"type":"boolean"}
+      },
+      "additionalProperties": false
+    },
+    "namespace": {
+      "type": "object",
+      "required": ["oid","nspowner","nspname","nspacl"],
+      "properties": {
+        "oid": {"$ref":"#/$defs/decimal"},
+        "nspowner": {"$ref":"#/$defs/decimal"},
+        "nspname": {"type":"string"},
+        "nspacl": {"anyOf":[{"type":"array","items":{"type":"string"}},{"type":"null"}]}
+      },
+      "additionalProperties": false
+    },
+    "attributeMetadata": {
+      "allOf": [
+        {"$ref":"#/$defs/safeMetadata"},
+        {
+          "type": "object",
+          "required": ["attrelid","atttypid","attcollation","attname","attalign","attstorage","attcompression","attidentity","attgenerated","attlen","attnum","attndims","attcacheoff","atttypmod","attinhcount","attbyval","attnotnull","atthasdef","atthasmissing","attisdropped","attislocal","attstattarget","attacl"],
+          "properties": {
+            "attrelid": {"$ref":"#/$defs/decimal"},
+            "atttypid": {"$ref":"#/$defs/decimal"},
+            "attcollation": {"$ref":"#/$defs/decimal"},
+            "attname": {"type":"string"},
+            "attalign": {"type":"string"},
+            "attstorage": {"type":"string"},
+            "attcompression": {"type":"string"},
+            "attidentity": {"type":"string"},
+            "attgenerated": {"type":"string"},
+            "attlen": {"type":"integer"},
+            "attnum": {"type":"integer"},
+            "attndims": {"type":"integer"},
+            "attcacheoff": {"type":"integer"},
+            "atttypmod": {"type":"integer"},
+            "attinhcount": {"type":"integer"},
+            "attbyval": {"type":"boolean"},
+            "attnotnull": {"type":"boolean"},
+            "atthasdef": {"type":"boolean"},
+            "atthasmissing": {"type":"boolean"},
+            "attisdropped": {"type":"boolean"},
+            "attislocal": {"type":"boolean"},
+            "attstattarget": {"$ref":"#/$defs/nullableInteger"},
+            "attacl": {"anyOf":[{"type":"array","items":{"type":"string"}},{"type":"null"}]}
+          },
+          "additionalProperties": false
+        }
+      ]
+    },
+    "attribute": {
+      "type": "object",
+      "required": ["metadata","options_sha256","fdw_options_sha256","missing_value_is_null","missing_value_fingerprint_supported","missing_value_sha256"],
+      "properties": {
+        "metadata": {"$ref":"#/$defs/attributeMetadata"},
+        "options_sha256": {"$ref":"#/$defs/digest"},
+        "fdw_options_sha256": {"$ref":"#/$defs/digest"},
+        "missing_value_is_null": {"type":"boolean"},
+        "missing_value_fingerprint_supported": {"type":"boolean"},
+        "missing_value_sha256": {"$ref":"#/$defs/nullableDigest"}
+      },
+      "additionalProperties": false,
+      "allOf": [
+        {
+          "if": {"properties":{"missing_value_is_null":{"const":true}}},
+          "then": {"properties":{"missing_value_fingerprint_supported":{"const":true},"missing_value_sha256":{"type":"null"}}}
+        },
+        {
+          "if": {"properties":{"missing_value_fingerprint_supported":{"const":false}}},
+          "then": {"properties":{"missing_value_is_null":{"const":false},"missing_value_sha256":{"type":"null"}}}
+        },
+        {
+          "if": {"properties":{"missing_value_is_null":{"const":false},"missing_value_fingerprint_supported":{"const":true}}},
+          "then": {"properties":{"missing_value_sha256":{"$ref":"#/$defs/digest"}}}
+        }
+      ]
+    },
+    "functionMetadata": {
+      "allOf": [
+        {"$ref":"#/$defs/safeMetadata"},
+        {
+          "type": "object",
+          "required": ["oid","pronamespace","proowner","prolang","provariadic","prorettype","proname","prosupport","prokind","provolatile","proparallel","prosecdef","proleakproof","proisstrict","proretset","pronargs","pronargdefaults","procost","prorows","proargtypes","proallargtypes","proargmodes","proargnames","protrftypes","proacl"],
+          "properties": {
+            "oid": {"$ref":"#/$defs/decimal"},
+            "pronamespace": {"$ref":"#/$defs/decimal"},
+            "proowner": {"$ref":"#/$defs/decimal"},
+            "prolang": {"$ref":"#/$defs/decimal"},
+            "provariadic": {"$ref":"#/$defs/decimal"},
+            "prorettype": {"$ref":"#/$defs/decimal"},
+            "proname": {"type":"string"},
+            "prosupport": {"type":"string"},
+            "prokind": {"type":"string"},
+            "provolatile": {"type":"string"},
+            "proparallel": {"type":"string"},
+            "prosecdef": {"type":"boolean"},
+            "proleakproof": {"type":"boolean"},
+            "proisstrict": {"type":"boolean"},
+            "proretset": {"type":"boolean"},
+            "pronargs": {"type":"integer"},
+            "pronargdefaults": {"type":"integer"},
+            "procost": {"type":"number"},
+            "prorows": {"type":"number"},
+            "proargtypes": {"type":"array","items":{"$ref":"#/$defs/decimal"}},
+            "proallargtypes": {"anyOf":[{"type":"array","items":{"$ref":"#/$defs/decimal"}},{"type":"null"}]},
+            "proargmodes": {"anyOf":[{"type":"array","items":{"type":"string"}},{"type":"null"}]},
+            "proargnames": {"anyOf":[{"type":"array","items":{"type":"string"}},{"type":"null"}]},
+            "protrftypes": {"anyOf":[{"type":"array","items":{"$ref":"#/$defs/decimal"}},{"type":"null"}]},
+            "proacl": {"anyOf":[{"type":"array","items":{"type":"string"}},{"type":"null"}]}
+          },
+          "additionalProperties": false
+        }
+      ]
+    },
+    "aclEntry": {
+      "type": "object",
+      "required": ["grantor","grantee","privilege_type","is_grantable"],
+      "properties": {
+        "grantor": {"$ref":"#/$defs/decimal"},
+        "grantee": {"$ref":"#/$defs/decimal"},
+        "privilege_type": {"type":"string"},
+        "is_grantable": {"type":"boolean"}
+      },
+      "additionalProperties": false
+    },
+    "effectiveExecute": {
+      "type": "object",
+      "required": ["role_oid","role_name","execute"],
+      "properties": {"role_oid":{"$ref":"#/$defs/decimal"},"role_name":{"type":"string"},"execute":{"type":"boolean"}},
+      "additionalProperties": false
+    },
+    "function": {
+      "type": "object",
+      "required": ["metadata","is_named_helper","binary_is_null","sql_body_is_null","argument_defaults_is_null","config_is_null","config_is_expected_helper_value","source_sha256","binary_sha256","sql_body_sha256","argument_defaults_sha256","config_sha256","acl_entries","effective_execute"],
+      "properties": {
+        "metadata": {"$ref":"#/$defs/functionMetadata"},
+        "is_named_helper": {"type":"boolean"},
+        "binary_is_null": {"type":"boolean"},
+        "sql_body_is_null": {"type":"boolean"},
+        "argument_defaults_is_null": {"type":"boolean"},
+        "config_is_null": {"type":"boolean"},
+        "config_is_expected_helper_value": {"type":"boolean"},
+        "source_sha256": {"$ref":"#/$defs/digest"},
+        "binary_sha256": {"$ref":"#/$defs/digest"},
+        "sql_body_sha256": {"$ref":"#/$defs/digest"},
+        "argument_defaults_sha256": {"$ref":"#/$defs/digest"},
+        "config_sha256": {"$ref":"#/$defs/digest"},
+        "acl_entries": {"type":"array","items":{"$ref":"#/$defs/aclEntry"}},
+        "effective_execute": {"type":"array","items":{"$ref":"#/$defs/effectiveExecute"}}
+      },
+      "additionalProperties": false
+    },
+    "triggerMetadata": {
+      "allOf": [
+        {"$ref":"#/$defs/safeMetadata"},
+        {
+          "type": "object",
+          "required": ["oid","tgrelid","tgparentid","tgfoid","tgconstrrelid","tgconstrindid","tgconstraint","tgname","tgenabled","tgtype","tgnargs","tgisinternal","tgdeferrable","tginitdeferred","tgattr","tgoldtable","tgnewtable"],
+          "properties": {
+            "oid": {"$ref":"#/$defs/decimal"},
+            "tgrelid": {"$ref":"#/$defs/decimal"},
+            "tgparentid": {"$ref":"#/$defs/decimal"},
+            "tgfoid": {"$ref":"#/$defs/decimal"},
+            "tgconstrrelid": {"$ref":"#/$defs/decimal"},
+            "tgconstrindid": {"$ref":"#/$defs/decimal"},
+            "tgconstraint": {"$ref":"#/$defs/decimal"},
+            "tgname": {"type":"string"},
+            "tgenabled": {"type":"string"},
+            "tgtype": {"type":"integer"},
+            "tgnargs": {"type":"integer"},
+            "tgisinternal": {"type":"boolean"},
+            "tgdeferrable": {"type":"boolean"},
+            "tginitdeferred": {"type":"boolean"},
+            "tgattr": {"type":"array","items":{"type":"integer"}},
+            "tgoldtable": {"$ref":"#/$defs/nullableString"},
+            "tgnewtable": {"$ref":"#/$defs/nullableString"}
+          },
+          "additionalProperties": false
+        }
+      ]
+    },
+    "trigger": {
+      "type": "object",
+      "required": ["metadata","args_octets","args_sha256","when_is_null","when_sha256"],
+      "properties": {
+        "metadata": {"$ref":"#/$defs/triggerMetadata"},
+        "args_octets": {"type":"integer"},
+        "args_sha256": {"$ref":"#/$defs/digest"},
+        "when_is_null": {"type":"boolean"},
+        "when_sha256": {"$ref":"#/$defs/digest"}
+      },
+      "additionalProperties": false
+    },
+    "dependency": {
+      "type": "object",
+      "required": ["classid","objid","refclassid","refobjid","objsubid","refobjsubid","deptype"],
+      "properties": {
+        "classid": {"$ref":"#/$defs/decimal"},
+        "objid": {"$ref":"#/$defs/decimal"},
+        "refclassid": {"$ref":"#/$defs/decimal"},
+        "refobjid": {"$ref":"#/$defs/decimal"},
+        "objsubid": {"type":"integer"},
+        "refobjsubid": {"type":"integer"},
+        "deptype": {"type":"string"}
+      },
+      "additionalProperties": false
+    },
+    "sharedDependency": {
+      "type": "object",
+      "required": ["dbid","classid","objid","refclassid","refobjid","objsubid","deptype"],
+      "properties": {
+        "dbid": {"$ref":"#/$defs/decimal"},
+        "classid": {"$ref":"#/$defs/decimal"},
+        "objid": {"$ref":"#/$defs/decimal"},
+        "refclassid": {"$ref":"#/$defs/decimal"},
+        "refobjid": {"$ref":"#/$defs/decimal"},
+        "objsubid": {"type":"integer"},
+        "deptype": {"type":"string"}
+      },
+      "additionalProperties": false
+    },
+    "defaultMetadata": {
+      "allOf": [
+        {"$ref":"#/$defs/safeMetadata"},
+        {
+          "type": "object",
+          "required": ["oid","adrelid","adnum"],
+          "properties": {"oid":{"$ref":"#/$defs/decimal"},"adrelid":{"$ref":"#/$defs/decimal"},"adnum":{"type":"integer"}},
+          "additionalProperties": false
+        }
+      ]
+    },
+    "default": {
+      "type": "object",
+      "required": ["metadata","tree_sha256","references"],
+      "properties": {
+        "metadata": {"$ref":"#/$defs/defaultMetadata"},
+        "tree_sha256": {"$ref":"#/$defs/digest"},
+        "references": {"type":"array","items":{"$ref":"#/$defs/dependency"}}
+      },
+      "additionalProperties": false
+    },
+    "constraintMetadata": {
+      "allOf": [
+        {"$ref":"#/$defs/safeMetadata"},
+        {
+          "type": "object",
+          "required": ["oid","connamespace","conrelid","contypid","conindid","conparentid","confrelid","conname","contype","confupdtype","confdeltype","confmatchtype","condeferrable","condeferred","convalidated","conislocal","connoinherit","coninhcount","conkey","confkey","confdelsetcols","conpfeqop","conppeqop","conffeqop","conexclop"],
+          "properties": {
+            "oid": {"$ref":"#/$defs/decimal"},
+            "connamespace": {"$ref":"#/$defs/decimal"},
+            "conrelid": {"$ref":"#/$defs/decimal"},
+            "contypid": {"$ref":"#/$defs/decimal"},
+            "conindid": {"$ref":"#/$defs/decimal"},
+            "conparentid": {"$ref":"#/$defs/decimal"},
+            "confrelid": {"$ref":"#/$defs/decimal"},
+            "conname": {"type":"string"},
+            "contype": {"type":"string"},
+            "confupdtype": {"type":"string"},
+            "confdeltype": {"type":"string"},
+            "confmatchtype": {"type":"string"},
+            "condeferrable": {"type":"boolean"},
+            "condeferred": {"type":"boolean"},
+            "convalidated": {"type":"boolean"},
+            "conislocal": {"type":"boolean"},
+            "connoinherit": {"type":"boolean"},
+            "coninhcount": {"type":"integer"},
+            "conkey": {"anyOf":[{"type":"array","items":{"type":"integer"}},{"type":"null"}]},
+            "confkey": {"anyOf":[{"type":"array","items":{"type":"integer"}},{"type":"null"}]},
+            "confdelsetcols": {"anyOf":[{"type":"array","items":{"type":"integer"}},{"type":"null"}]},
+            "conpfeqop": {"anyOf":[{"type":"array","items":{"$ref":"#/$defs/decimal"}},{"type":"null"}]},
+            "conppeqop": {"anyOf":[{"type":"array","items":{"$ref":"#/$defs/decimal"}},{"type":"null"}]},
+            "conffeqop": {"anyOf":[{"type":"array","items":{"$ref":"#/$defs/decimal"}},{"type":"null"}]},
+            "conexclop": {"anyOf":[{"type":"array","items":{"$ref":"#/$defs/decimal"}},{"type":"null"}]}
+          },
+          "additionalProperties": false
+        }
+      ]
+    },
+    "constraint": {
+      "type": "object",
+      "required": ["metadata","expression_is_null","expression_sha256"],
+      "properties": {
+        "metadata": {"$ref":"#/$defs/constraintMetadata"},
+        "expression_is_null": {"type":"boolean"},
+        "expression_sha256": {"$ref":"#/$defs/digest"}
+      },
+      "additionalProperties": false
+    },
+    "indexMetadata": {
+      "allOf": [
+        {"$ref":"#/$defs/safeMetadata"},
+        {
+          "type": "object",
+          "required": ["indexrelid","indrelid","indnatts","indnkeyatts","indisunique","indnullsnotdistinct","indisprimary","indisexclusion","indimmediate","indisclustered","indisvalid","indcheckxmin","indisready","indislive","indisreplident","indkey","indcollation","indclass","indoption"],
+          "properties": {
+            "indexrelid": {"$ref":"#/$defs/decimal"},
+            "indrelid": {"$ref":"#/$defs/decimal"},
+            "indnatts": {"type":"integer"},
+            "indnkeyatts": {"type":"integer"},
+            "indisunique": {"type":"boolean"},
+            "indnullsnotdistinct": {"type":"boolean"},
+            "indisprimary": {"type":"boolean"},
+            "indisexclusion": {"type":"boolean"},
+            "indimmediate": {"type":"boolean"},
+            "indisclustered": {"type":"boolean"},
+            "indisvalid": {"type":"boolean"},
+            "indcheckxmin": {"type":"boolean"},
+            "indisready": {"type":"boolean"},
+            "indislive": {"type":"boolean"},
+            "indisreplident": {"type":"boolean"},
+            "indkey": {"type":"array","items":{"type":"integer"}},
+            "indcollation": {"type":"array","items":{"$ref":"#/$defs/decimal"}},
+            "indclass": {"type":"array","items":{"$ref":"#/$defs/decimal"}},
+            "indoption": {"type":"array","items":{"type":"integer"}}
+          },
+          "additionalProperties": false
+        }
+      ]
+    },
+    "index": {
+      "type": "object",
+      "required": ["metadata","expressions_is_null","predicate_is_null","expressions_sha256","predicate_sha256"],
+      "properties": {
+        "metadata": {"$ref":"#/$defs/indexMetadata"},
+        "expressions_is_null": {"type":"boolean"},
+        "predicate_is_null": {"type":"boolean"},
+        "expressions_sha256": {"$ref":"#/$defs/digest"},
+        "predicate_sha256": {"$ref":"#/$defs/digest"}
+      },
+      "additionalProperties": false
+    },
+    "policyMetadata": {
+      "allOf": [
+        {"$ref":"#/$defs/safeMetadata"},
+        {
+          "type": "object",
+          "required": ["oid","polrelid","polname","polcmd","polpermissive","polroles"],
+          "properties": {
+            "oid": {"$ref":"#/$defs/decimal"},
+            "polrelid": {"$ref":"#/$defs/decimal"},
+            "polname": {"type":"string"},
+            "polcmd": {"type":"string"},
+            "polpermissive": {"type":"boolean"},
+            "polroles": {"type":"array","items":{"$ref":"#/$defs/decimal"}}
+          },
+          "additionalProperties": false
+        }
+      ]
+    },
+    "policy": {
+      "type": "object",
+      "required": ["metadata","using_sha256","check_sha256"],
+      "properties": {"metadata":{"$ref":"#/$defs/policyMetadata"},"using_sha256":{"$ref":"#/$defs/digest"},"check_sha256":{"$ref":"#/$defs/digest"}},
+      "additionalProperties": false
+    },
+    "ruleMetadata": {
+      "allOf": [
+        {"$ref":"#/$defs/safeMetadata"},
+        {
+          "type": "object",
+          "required": ["oid","ev_class","rulename","ev_type","ev_enabled","is_instead"],
+          "properties": {
+            "oid": {"$ref":"#/$defs/decimal"},
+            "ev_class": {"$ref":"#/$defs/decimal"},
+            "rulename": {"type":"string"},
+            "ev_type": {"type":"string"},
+            "ev_enabled": {"type":"string"},
+            "is_instead": {"type":"boolean"}
+          },
+          "additionalProperties": false
+        }
+      ]
+    },
+    "rule": {
+      "type": "object",
+      "required": ["metadata","action_sha256","condition_sha256"],
+      "properties": {
+        "metadata": {"$ref":"#/$defs/ruleMetadata"},
+        "action_sha256": {"$ref":"#/$defs/digest"},
+        "condition_sha256": {"$ref":"#/$defs/digest"}
+      },
+      "additionalProperties": false
+    },
+    "inheritance": {
+      "type": "object",
+      "required": ["inhrelid","inhparent","inhseqno","inhdetachpending"],
+      "properties": {
+        "inhrelid": {"$ref":"#/$defs/decimal"},
+        "inhparent": {"$ref":"#/$defs/decimal"},
+        "inhseqno": {"type":"integer"},
+        "inhdetachpending": {"type":"boolean"}
+      },
+      "additionalProperties": false
+    },
+    "typeMetadata": {
+      "allOf": [
+        {"$ref":"#/$defs/safeMetadata"},
+        {
+          "type": "object",
+          "required": ["oid","typnamespace","typowner","typrelid","typsubscript","typelem","typarray","typbasetype","typcollation","typname","typtype","typcategory","typdelim","typinput","typoutput","typreceive","typsend","typmodin","typmodout","typanalyze","typalign","typstorage","typlen","typtypmod","typndims","typbyval","typispreferred","typisdefined","typnotnull","typacl"],
+          "properties": {
+            "oid": {"$ref":"#/$defs/decimal"},
+            "typnamespace": {"$ref":"#/$defs/decimal"},
+            "typowner": {"$ref":"#/$defs/decimal"},
+            "typrelid": {"$ref":"#/$defs/decimal"},
+            "typsubscript": {"type":"string"},
+            "typelem": {"$ref":"#/$defs/decimal"},
+            "typarray": {"$ref":"#/$defs/decimal"},
+            "typbasetype": {"$ref":"#/$defs/decimal"},
+            "typcollation": {"$ref":"#/$defs/decimal"},
+            "typname": {"type":"string"},
+            "typtype": {"type":"string"},
+            "typcategory": {"type":"string"},
+            "typdelim": {"type":"string"},
+            "typinput": {"type":"string"},
+            "typoutput": {"type":"string"},
+            "typreceive": {"type":"string"},
+            "typsend": {"type":"string"},
+            "typmodin": {"type":"string"},
+            "typmodout": {"type":"string"},
+            "typanalyze": {"type":"string"},
+            "typalign": {"type":"string"},
+            "typstorage": {"type":"string"},
+            "typlen": {"type":"integer"},
+            "typtypmod": {"type":"integer"},
+            "typndims": {"type":"integer"},
+            "typbyval": {"type":"boolean"},
+            "typispreferred": {"type":"boolean"},
+            "typisdefined": {"type":"boolean"},
+            "typnotnull": {"type":"boolean"},
+            "typacl": {"anyOf":[{"type":"array","items":{"type":"string"}},{"type":"null"}]}
+          },
+          "additionalProperties": false
+        }
+      ]
+    },
+    "type": {
+      "type": "object",
+      "required": ["metadata","default_sha256","default_tree_sha256"],
+      "properties": {
+        "metadata": {"$ref":"#/$defs/typeMetadata"},
+        "default_sha256": {"$ref":"#/$defs/digest"},
+        "default_tree_sha256": {"$ref":"#/$defs/digest"}
+      },
+      "additionalProperties": false
+    },
+    "language": {
+      "type": "object",
+      "required": ["oid","lanowner","lanplcallfoid","laninline","lanvalidator","lanname","lanispl","lanpltrusted","lanacl"],
+      "properties": {
+        "oid": {"$ref":"#/$defs/decimal"},
+        "lanowner": {"$ref":"#/$defs/decimal"},
+        "lanplcallfoid": {"$ref":"#/$defs/decimal"},
+        "laninline": {"$ref":"#/$defs/decimal"},
+        "lanvalidator": {"$ref":"#/$defs/decimal"},
+        "lanname": {"type":"string"},
+        "lanispl": {"type":"boolean"},
+        "lanpltrusted": {"type":"boolean"},
+        "lanacl": {"anyOf":[{"type":"array","items":{"type":"string"}},{"type":"null"}]}
+      },
+      "additionalProperties": false
+    },
+    "sequenceMetadata": {
+      "type": "object",
+      "required": ["seqrelid","seqtypid","seqstart","seqincrement","seqmax","seqmin","seqcache","seqcycle"],
+      "properties": {
+        "seqrelid": {"$ref":"#/$defs/decimal"},
+        "seqtypid": {"$ref":"#/$defs/decimal"},
+        "seqstart": {"$ref":"#/$defs/decimal"},
+        "seqincrement": {"$ref":"#/$defs/decimal"},
+        "seqmax": {"$ref":"#/$defs/decimal"},
+        "seqmin": {"$ref":"#/$defs/decimal"},
+        "seqcache": {"$ref":"#/$defs/decimal"},
+        "seqcycle": {"type":"boolean"}
+      },
+      "additionalProperties": false
+    },
+    "operatorClass": {
+      "type": "object",
+      "required": ["oid","opcmethod","opcnamespace","opcowner","opcfamily","opcintype","opckeytype","opcname","opcdefault"],
+      "properties": {
+        "oid": {"$ref":"#/$defs/decimal"},
+        "opcmethod": {"$ref":"#/$defs/decimal"},
+        "opcnamespace": {"$ref":"#/$defs/decimal"},
+        "opcowner": {"$ref":"#/$defs/decimal"},
+        "opcfamily": {"$ref":"#/$defs/decimal"},
+        "opcintype": {"$ref":"#/$defs/decimal"},
+        "opckeytype": {"$ref":"#/$defs/decimal"},
+        "opcname": {"type":"string"},
+        "opcdefault": {"type":"boolean"}
+      },
+      "additionalProperties": false
+    },
+    "operatorFamily": {
+      "type": "object",
+      "required": ["oid","opfmethod","opfnamespace","opfowner","opfname"],
+      "properties": {
+        "oid": {"$ref":"#/$defs/decimal"},
+        "opfmethod": {"$ref":"#/$defs/decimal"},
+        "opfnamespace": {"$ref":"#/$defs/decimal"},
+        "opfowner": {"$ref":"#/$defs/decimal"},
+        "opfname": {"type":"string"}
+      },
+      "additionalProperties": false
+    },
+    "accessMethod": {
+      "type": "object",
+      "required": ["oid","amname","amhandler","amtype"],
+      "properties": {"oid":{"$ref":"#/$defs/decimal"},"amname":{"type":"string"},"amhandler":{"type":"string"},"amtype":{"type":"string"}},
+      "additionalProperties": false
+    },
+    "comment": {
+      "type": "object",
+      "required": ["objoid","classoid","objsubid","sha256"],
+      "properties": {
+        "objoid": {"$ref":"#/$defs/decimal"},
+        "classoid": {"$ref":"#/$defs/decimal"},
+        "objsubid": {"type":"integer"},
+        "sha256": {"$ref":"#/$defs/digest"}
+      },
+      "additionalProperties": false
+    },
+    "securityLabel": {
+      "type": "object",
+      "required": ["objoid","classoid","objsubid","provider","sha256"],
+      "properties": {
+        "objoid": {"$ref":"#/$defs/decimal"},
+        "classoid": {"$ref":"#/$defs/decimal"},
+        "objsubid": {"type":"integer"},
+        "provider": {"type":"string"},
+        "sha256": {"$ref":"#/$defs/digest"}
+      },
+      "additionalProperties": false
+    },
+    "eventTrigger": {
+      "type": "object",
+      "required": ["oid","evtowner","evtfoid","evtname","evtevent","evtenabled","evttags"],
+      "properties": {
+        "oid": {"$ref":"#/$defs/decimal"},
+        "evtowner": {"$ref":"#/$defs/decimal"},
+        "evtfoid": {"$ref":"#/$defs/decimal"},
+        "evtname": {"type":"string"},
+        "evtevent": {"type":"string"},
+        "evtenabled": {"type":"string"},
+        "evttags": {"anyOf":[{"type":"array","items":{"type":"string"}},{"type":"null"}]}
+      },
+      "additionalProperties": false
+    },
+    "membership": {
+      "type": "object",
+      "required": ["oid","roleid","member","grantor","admin_option","inherit_option","set_option"],
+      "properties": {
+        "oid": {"$ref":"#/$defs/decimal"},
+        "roleid": {"$ref":"#/$defs/decimal"},
+        "member": {"$ref":"#/$defs/decimal"},
+        "grantor": {"$ref":"#/$defs/decimal"},
+        "admin_option": {"type":"boolean"},
+        "inherit_option": {"type":"boolean"},
+        "set_option": {"type":"boolean"}
+      },
+      "additionalProperties": false
     },
     "catalog": {
       "type": "object",
-      "required": ["relations", "namespaces", "attributes", "functions", "triggers", "defaults", "constraints", "indexes", "policies", "rules", "inheritance", "types", "languages", "sequences", "operator_classes", "operator_families", "access_methods", "dependencies", "shared_dependencies", "comments", "security_labels", "event_triggers", "roles", "memberships", "custom_or_unreviewed_behavior"],
-      "patternProperties": {
-        "^(relations|namespaces|attributes|functions|triggers|defaults|constraints|indexes|policies|rules|inheritance|types|languages|sequences|operator_classes|operator_families|access_methods|dependencies|shared_dependencies|comments|security_labels|event_triggers|roles|memberships)$": {"type": "array", "items": {"$ref": "#/$defs/catalogNode"}}
+      "required": ["relations","namespaces","attributes","functions","triggers","defaults","constraints","indexes","policies","rules","inheritance","types","languages","sequences","operator_classes","operator_families","access_methods","dependencies","shared_dependencies","comments","security_labels","event_triggers","roles","memberships","custom_or_unreviewed_behavior"],
+      "properties": {
+        "relations": {"type":"array","items":{"$ref":"#/$defs/relation"}},
+        "namespaces": {"type":"array","items":{"$ref":"#/$defs/namespace"}},
+        "attributes": {"type":"array","items":{"$ref":"#/$defs/attribute"}},
+        "functions": {"type":"array","items":{"$ref":"#/$defs/function"}},
+        "triggers": {"type":"array","items":{"$ref":"#/$defs/trigger"}},
+        "defaults": {"type":"array","items":{"$ref":"#/$defs/default"}},
+        "constraints": {"type":"array","items":{"$ref":"#/$defs/constraint"}},
+        "indexes": {"type":"array","items":{"$ref":"#/$defs/index"}},
+        "policies": {"type":"array","items":{"$ref":"#/$defs/policy"}},
+        "rules": {"type":"array","items":{"$ref":"#/$defs/rule"}},
+        "inheritance": {"type":"array","items":{"$ref":"#/$defs/inheritance"}},
+        "types": {"type":"array","items":{"$ref":"#/$defs/type"}},
+        "languages": {"type":"array","items":{"$ref":"#/$defs/language"}},
+        "sequences": {"type":"array","items":{"$ref":"#/$defs/sequenceMetadata"}},
+        "operator_classes": {"type":"array","items":{"$ref":"#/$defs/operatorClass"}},
+        "operator_families": {"type":"array","items":{"$ref":"#/$defs/operatorFamily"}},
+        "access_methods": {"type":"array","items":{"$ref":"#/$defs/accessMethod"}},
+        "dependencies": {"type":"array","items":{"$ref":"#/$defs/dependency"}},
+        "shared_dependencies": {"type":"array","items":{"$ref":"#/$defs/sharedDependency"}},
+        "comments": {"type":"array","items":{"$ref":"#/$defs/comment"}},
+        "security_labels": {"type":"array","items":{"$ref":"#/$defs/securityLabel"}},
+        "event_triggers": {"type":"array","items":{"$ref":"#/$defs/eventTrigger"}},
+        "roles": {"type":"array","items":{"$ref":"#/$defs/role"}},
+        "memberships": {"type":"array","items":{"$ref":"#/$defs/membership"}},
+        "custom_or_unreviewed_behavior": {"const":"NOT_ADMITTED_REQUIRES_INDEPENDENT_REVIEW"}
       },
-      "properties": {"custom_or_unreviewed_behavior": {"const": "NOT_ADMITTED_REQUIRES_INDEPENDENT_REVIEW"}}
+      "additionalProperties": false
+    },
+    "drizzleRow": {
+      "type": "object",
+      "required": ["id","hash","hash_is_canonical_format","hash_value_sha256","created_at","row_sha256"],
+      "properties": {
+        "id": {"$ref":"#/$defs/nullableDecimal"},
+        "hash": {"$ref":"#/$defs/nullableDigest"},
+        "hash_is_canonical_format": {"type":"boolean"},
+        "hash_value_sha256": {"$ref":"#/$defs/digest"},
+        "created_at": {"$ref":"#/$defs/nullableDecimal"},
+        "row_sha256": {"$ref":"#/$defs/digest"}
+      },
+      "additionalProperties": false,
+      "allOf": [
+        {
+          "if": {"properties":{"hash_is_canonical_format":{"const":true}}},
+          "then": {"properties":{"hash":{"$ref":"#/$defs/digest"}}},
+          "else": {"properties":{"hash":{"type":"null"}}}
+        }
+      ]
     },
     "drizzle": {
-      "type": "object", "required": ["shape_supported"],
-      "properties": {
-        "shape_supported": {"type": "boolean"}, "row_count": {"$ref": "#/$defs/decimal"},
-        "history_sha256": {"$ref": "#/$defs/digest"},
-        "rows": {"type": "array", "items": {"type": "object", "required": ["id", "hash", "hash_is_canonical_format", "hash_value_sha256", "created_at", "row_sha256"], "properties": {
-          "id": {"$ref": "#/$defs/nullableDecimal"}, "created_at": {"$ref": "#/$defs/nullableDecimal"},
-          "hash": {"$ref": "#/$defs/nullableDigest"}, "hash_is_canonical_format": {"type": "boolean"},
-          "hash_value_sha256": {"$ref": "#/$defs/digest"}, "row_sha256": {"$ref": "#/$defs/digest"}
-        }}}
-      },
-      "allOf": [{"if": {"properties": {"shape_supported": {"const": true}}}, "then": {"required": ["row_count", "rows", "history_sha256", "null_id_count", "null_hash_count", "null_created_at_count", "duplicate_ids", "duplicate_hashes", "duplicate_timestamps"]}}]
+      "oneOf": [
+        {
+          "type": "object",
+          "required": ["shape_supported","row_count","rows","history_sha256","null_id_count","null_hash_count","null_created_at_count","duplicate_ids","duplicate_hashes","duplicate_timestamps"],
+          "properties": {
+            "shape_supported": {"const":true},
+            "row_count": {"$ref":"#/$defs/nonnegativeDecimal"},
+            "rows": {"type":"array","items":{"$ref":"#/$defs/drizzleRow"}},
+            "history_sha256": {"$ref":"#/$defs/digest"},
+            "null_id_count": {"$ref":"#/$defs/nonnegativeDecimal"},
+            "null_hash_count": {"$ref":"#/$defs/nonnegativeDecimal"},
+            "null_created_at_count": {"$ref":"#/$defs/nonnegativeDecimal"},
+            "duplicate_ids": {"$ref":"#/$defs/nonnegativeDecimal"},
+            "duplicate_hashes": {"$ref":"#/$defs/nonnegativeDecimal"},
+            "duplicate_timestamps": {"$ref":"#/$defs/nonnegativeDecimal"}
+          },
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "required": ["shape_supported","status"],
+          "properties": {"shape_supported":{"const":false},"status":{"const":"BLOCKED_UNSUPPORTED_LEDGER_COLUMNS"}},
+          "additionalProperties": false
+        }
+      ]
     },
-    "supabase": {
-      "type": "object", "required": ["shape_supported", "status", "row_count", "null_versions", "duplicate_versions", "history_sha256"],
+    "supabaseRow": {
+      "type": "object",
+      "required": ["row_number","version","version_is_numeric","version_sha256","row_sha256"],
       "properties": {
-        "shape_supported": {"type": "boolean"}, "status": {"enum": ["CAPTURE_ONLY", "BLOCKED_UNSUPPORTED_LEDGER_COLUMNS"]},
-        "row_count": {"$ref": "#/$defs/nullableDecimal"}, "null_versions": {"$ref": "#/$defs/nullableDecimal"},
-        "duplicate_versions": {"$ref": "#/$defs/nullableDecimal"}, "history_sha256": {"$ref": "#/$defs/nullableDigest"},
-        "offset": {"$ref": "#/$defs/decimal"}, "page_size": {"$ref": "#/$defs/decimal"},
-        "has_more": {"type": "boolean"}, "next_offset": {"$ref": "#/$defs/nullableDecimal"},
-        "page_rows": {"type": "array", "items": {"type": "object", "required": ["row_number", "version", "version_is_numeric", "version_sha256", "row_sha256"], "properties": {
-          "row_number": {"$ref": "#/$defs/decimal"}, "version": {"type": ["string", "null"]},
-          "version_is_numeric": {"type": "boolean"}, "version_sha256": {"$ref": "#/$defs/digest"}, "row_sha256": {"$ref": "#/$defs/digest"}
-        }}}
-      }
+        "row_number": {"$ref":"#/$defs/nonnegativeDecimal"},
+        "version": {"$ref":"#/$defs/nullableString"},
+        "version_is_numeric": {"type":"boolean"},
+        "version_sha256": {"$ref":"#/$defs/digest"},
+        "row_sha256": {"$ref":"#/$defs/digest"}
+      },
+      "additionalProperties": false,
+      "allOf": [
+        {
+          "if": {"properties":{"version_is_numeric":{"const":true}}},
+          "then": {"properties":{"version":{"type":"string","minLength":1,"maxLength":32,"pattern":"^[0-9]{1,32}$","not":{"pattern":"[^0-9]"}}}},
+          "else": {"properties":{"version":{"type":"null"}}}
+        }
+      ]
+    },
+    "supabaseManifest": {
+      "oneOf": [
+        {
+          "type": "object",
+          "required": ["shape_supported","status","row_count","null_versions","duplicate_versions","history_sha256"],
+          "properties": {
+            "shape_supported": {"const":true},
+            "status": {"const":"CAPTURE_ONLY"},
+            "row_count": {"$ref":"#/$defs/nonnegativeDecimal"},
+            "null_versions": {"$ref":"#/$defs/nonnegativeDecimal"},
+            "duplicate_versions": {"$ref":"#/$defs/nonnegativeDecimal"},
+            "history_sha256": {"$ref":"#/$defs/digest"}
+          },
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "required": ["shape_supported","status","row_count","null_versions","duplicate_versions","history_sha256"],
+          "properties": {
+            "shape_supported": {"const":false},
+            "status": {"const":"BLOCKED_UNSUPPORTED_LEDGER_COLUMNS"},
+            "row_count": {"type":"null"},
+            "null_versions": {"type":"null"},
+            "duplicate_versions": {"type":"null"},
+            "history_sha256": {"type":"null"}
+          },
+          "additionalProperties": false
+        }
+      ]
+    },
+    "supabasePage": {
+      "oneOf": [
+        {
+          "type": "object",
+          "required": ["shape_supported","status","row_count","null_versions","duplicate_versions","history_sha256","offset","page_size","page_rows","has_more","next_offset"],
+          "properties": {
+            "shape_supported": {"const":true},
+            "status": {"const":"CAPTURE_ONLY"},
+            "row_count": {"$ref":"#/$defs/nonnegativeDecimal"},
+            "null_versions": {"$ref":"#/$defs/nonnegativeDecimal"},
+            "duplicate_versions": {"$ref":"#/$defs/nonnegativeDecimal"},
+            "history_sha256": {"$ref":"#/$defs/digest"},
+            "offset": {"$ref":"#/$defs/decimal"},
+            "page_size": {"$ref":"#/$defs/decimal"},
+            "page_rows": {"type":"array","items":{"$ref":"#/$defs/supabaseRow"}},
+            "has_more": {"type":"boolean"},
+            "next_offset": {"$ref":"#/$defs/nullableDecimal"}
+          },
+          "additionalProperties": false,
+          "allOf": [
+            {
+              "if": {"properties":{"has_more":{"const":true}}},
+              "then": {"properties":{"next_offset":{"$ref":"#/$defs/decimal"}}},
+              "else": {"properties":{"next_offset":{"type":"null"}}}
+            }
+          ]
+        },
+        {
+          "type": "object",
+          "required": ["shape_supported","status","row_count","null_versions","duplicate_versions","history_sha256","offset","page_size","page_rows","has_more","next_offset"],
+          "properties": {
+            "shape_supported": {"const":false},
+            "status": {"const":"BLOCKED_UNSUPPORTED_LEDGER_COLUMNS"},
+            "row_count": {"type":"null"},
+            "null_versions": {"type":"null"},
+            "duplicate_versions": {"type":"null"},
+            "history_sha256": {"type":"null"},
+            "offset": {"$ref":"#/$defs/decimal"},
+            "page_size": {"$ref":"#/$defs/decimal"},
+            "page_rows": {"type":"array","maxItems":0},
+            "has_more": {"const":false},
+            "next_offset": {"type":"null"}
+          },
+          "additionalProperties": false
+        }
+      ]
+    },
+    "session": {
+      "type": "object",
+      "required": ["pid","role_oid","is_capture_backend","backend_start","xact_start","query_start","state_change","state","backend_type","wait_event_type","wait_event","backend_xid","backend_xmin","role_visibility_verified","blocking_pids"],
+      "properties": {
+        "pid": {"type":"integer"},
+        "role_oid": {"$ref":"#/$defs/nullableDecimal"},
+        "is_capture_backend": {"type":"boolean"},
+        "backend_start": {"$ref":"#/$defs/nullableTimestamp"},
+        "xact_start": {"$ref":"#/$defs/nullableTimestamp"},
+        "query_start": {"$ref":"#/$defs/nullableTimestamp"},
+        "state_change": {"$ref":"#/$defs/nullableTimestamp"},
+        "state": {"$ref":"#/$defs/nullableString"},
+        "backend_type": {"$ref":"#/$defs/nullableString"},
+        "wait_event_type": {"$ref":"#/$defs/nullableString"},
+        "wait_event": {"$ref":"#/$defs/nullableString"},
+        "backend_xid": {"$ref":"#/$defs/nullableDecimal"},
+        "backend_xmin": {"$ref":"#/$defs/nullableDecimal"},
+        "role_visibility_verified": {"type":"boolean"},
+        "blocking_pids": {"type":"array","items":{"type":"integer"}}
+      },
+      "additionalProperties": false
+    },
+    "prepared": {
+      "type": "object",
+      "required": ["transaction","prepared_at","owner","database","gid_sha256"],
+      "properties": {
+        "transaction": {"$ref":"#/$defs/decimal"},
+        "prepared_at": {"$ref":"#/$defs/timestamp"},
+        "owner": {"type":"string"},
+        "database": {"type":"string"},
+        "gid_sha256": {"$ref":"#/$defs/digest"}
+      },
+      "additionalProperties": false
+    },
+    "lock": {
+      "type": "object",
+      "required": ["locktype","mode","granted","fastpath","database","relation","classid","objid","transactionid","page","tuple","objsubid","pid","virtualxid","virtualtransaction","waitstart"],
+      "properties": {
+        "locktype": {"type":"string"},
+        "mode": {"type":"string"},
+        "granted": {"type":"boolean"},
+        "fastpath": {"type":"boolean"},
+        "database": {"$ref":"#/$defs/nullableDecimal"},
+        "relation": {"$ref":"#/$defs/nullableDecimal"},
+        "classid": {"$ref":"#/$defs/nullableDecimal"},
+        "objid": {"$ref":"#/$defs/nullableDecimal"},
+        "transactionid": {"$ref":"#/$defs/nullableDecimal"},
+        "page": {"$ref":"#/$defs/nullableInteger"},
+        "tuple": {"$ref":"#/$defs/nullableInteger"},
+        "objsubid": {"$ref":"#/$defs/nullableInteger"},
+        "pid": {"$ref":"#/$defs/nullableInteger"},
+        "virtualxid": {"$ref":"#/$defs/nullableString"},
+        "virtualtransaction": {"$ref":"#/$defs/nullableString"},
+        "waitstart": {"$ref":"#/$defs/nullableTimestamp"}
+      },
+      "additionalProperties": false
+    },
+    "subscription": {
+      "type": "object",
+      "required": ["oid","owner_oid","enabled"],
+      "properties": {"oid":{"$ref":"#/$defs/decimal"},"owner_oid":{"$ref":"#/$defs/decimal"},"enabled":{"type":"boolean"}},
+      "additionalProperties": false
+    },
+    "subscriptionWorker": {
+      "type": "object",
+      "required": ["subscription_oid","pid","relation_oid"],
+      "properties": {
+        "subscription_oid": {"$ref":"#/$defs/decimal"},
+        "pid": {"$ref":"#/$defs/nullableInteger"},
+        "relation_oid": {"$ref":"#/$defs/nullableDecimal"}
+      },
+      "additionalProperties": false
     },
     "activity": {
       "type": "object",
-      "required": ["statistics_visibility", "read_all_stats_effective", "other_session_count", "sessions", "prepared_count", "prepared", "locks", "subscriptions", "subscription_workers", "external_queues_pre_readers_owner_ddl_acl_window", "transport_commit_session_registration_retry_properties"],
+      "required": ["statistics_visibility","details_available_for_all_observed_sessions","read_all_stats_effective","track_activities","max_prepared_transactions","other_session_count","sessions","prepared_count","prepared","locks","subscriptions","subscription_workers","external_queues_pre_readers_owner_ddl_acl_window","transport_commit_session_registration_retry_properties"],
       "properties": {
-        "statistics_visibility": {"enum": ["PRIVILEGE_PRESENT_DETAILS_MUST_BE_CHECKED", "RESTRICTED_OR_ROLE_SCOPED"]},
-        "details_available_for_all_observed_sessions": {"type": "boolean"},
-        "read_all_stats_effective": {"type": "boolean"},
-        "other_session_count": {"$ref": "#/$defs/decimal"}, "prepared_count": {"$ref": "#/$defs/decimal"},
-        "sessions": {"type": "array", "items": {"type": "object", "not": {"anyOf": [{"required": ["query"]}, {"required": ["application_name"]}, {"required": ["client_addr"]}, {"required": ["client_hostname"]}]}}},
-        "prepared": {"type": "array", "items": {"type": "object", "required": ["transaction", "prepared_at", "owner", "database", "gid_sha256"], "properties": {"gid_sha256": {"$ref": "#/$defs/digest"}}, "not": {"required": ["gid"]}}},
-        "locks": {"type": "array"}, "subscriptions": {"type": "array"}, "subscription_workers": {"type": "array"},
-        "external_queues_pre_readers_owner_ddl_acl_window": {"const": "UNKNOWN_REQUIRES_EXTERNAL_COORDINATION"},
-        "transport_commit_session_registration_retry_properties": {"const": "UNKNOWN_REQUIRES_PARENT_VERIFICATION"}
-      }
+        "statistics_visibility": {"enum":["PRIVILEGE_PRESENT_DETAILS_MUST_BE_CHECKED","RESTRICTED_OR_ROLE_SCOPED"]},
+        "details_available_for_all_observed_sessions": {"type":"boolean"},
+        "read_all_stats_effective": {"type":"boolean"},
+        "track_activities": {"type":"string"},
+        "max_prepared_transactions": {"$ref":"#/$defs/nonnegativeDecimal"},
+        "other_session_count": {"$ref":"#/$defs/nonnegativeDecimal"},
+        "sessions": {"type":"array","items":{"$ref":"#/$defs/session"}},
+        "prepared_count": {"$ref":"#/$defs/nonnegativeDecimal"},
+        "prepared": {"type":"array","items":{"$ref":"#/$defs/prepared"}},
+        "locks": {"type":"array","items":{"$ref":"#/$defs/lock"}},
+        "subscriptions": {"type":"array","items":{"$ref":"#/$defs/subscription"}},
+        "subscription_workers": {"type":"array","items":{"$ref":"#/$defs/subscriptionWorker"}},
+        "external_queues_pre_readers_owner_ddl_acl_window": {"const":"UNKNOWN_REQUIRES_EXTERNAL_COORDINATION"},
+        "transport_commit_session_registration_retry_properties": {"const":"UNKNOWN_REQUIRES_PARENT_VERIFICATION"}
+      },
+      "additionalProperties": false
     },
     "sequence": {
-      "type": "object", "required": ["sequence_name", "expected_sequence_oid", "identity_matches", "sequence_state"],
+      "type": "object",
+      "required": ["sequence_name","expected_sequence_oid","identity_matches","sequence_state"],
       "properties": {
-        "sequence_name": {"type": "string"}, "expected_sequence_oid": {"$ref": "#/$defs/decimal"},
-        "identity_matches": {"type": "boolean"},
-        "sequence_state": {"type": "object", "required": ["last_value", "is_called"], "additionalProperties": false,
-          "properties": {"last_value": {"$ref": "#/$defs/decimal"}, "is_called": {"type": "boolean"}}}
-      }
+        "sequence_name": {"type":"string"},
+        "expected_sequence_oid": {"$ref":"#/$defs/decimal"},
+        "identity_matches": {"type":"boolean"},
+        "sequence_state": {
+          "type": "object",
+          "required": ["last_value","is_called"],
+          "properties": {"last_value":{"$ref":"#/$defs/decimal"},"is_called":{"type":"boolean"}},
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
     }
   }
 }
