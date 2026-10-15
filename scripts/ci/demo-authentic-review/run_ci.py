@@ -21,9 +21,16 @@ def command(args,stdin=None,timeout=90,check=True):
  return subprocess.run(args,input=stdin,text=True,stdout=subprocess.PIPE,stderr=subprocess.STDOUT,timeout=timeout,check=check,env=env)
 def inspect_owned(cid,token):
  r=command(['docker','inspect',cid]); obj=json.loads(r.stdout)[0]
- if obj['Config']['Labels'].get('demo.acceptance.owner')!=token or obj['HostConfig']['NetworkMode']!='none' or obj['HostConfig'].get('PortBindings') or obj.get('Mounts') and any(m.get('Type')=='bind' for m in obj['Mounts']) or obj['HostConfig'].get('Privileged'):
+ if obj['Config'].get('Image')!=IMAGE or obj['Config']['Labels'].get('demo.acceptance.owner')!=token or obj['HostConfig']['NetworkMode']!='none' or obj['HostConfig'].get('PortBindings') or obj.get('Mounts') and any(m.get('Type')=='bind' for m in obj['Mounts']) or obj['HostConfig'].get('Privileged'):
   raise RuntimeError('Container ownership/isolation mismatch')
  return obj
+
+def resolve_created_container(name,token):
+ obj=inspect_owned(name,token)
+ if obj.get('Name')!='/'+name: raise RuntimeError('Unexpected inspected container name')
+ cid=obj.get('Id','')
+ if not re.fullmatch('[0-9a-f]{64}',cid): raise RuntimeError('Unexpected inspected container ID')
+ return cid
 
 def run(output):
  verify_inputs(); output.mkdir(parents=True,exist_ok=False)
@@ -34,8 +41,12 @@ def run(output):
   # --network none and no publish/mount: no application cluster can be reached.
   r=command(['docker','create','--name',name,'--label','demo.acceptance.owner='+token,'--network','none',
     '-e','POSTGRES_USER=supabase_admin','-e','POSTGRES_HOST_AUTH_METHOD=trust',IMAGE,'-c','listen_addresses=','-c','unix_socket_directories=/var/run/postgresql'],timeout=180)
-  cid=r.stdout.strip(); created=True
-  if not re.fullmatch('[0-9a-f]{64}',cid): raise RuntimeError('Unexpected container ID')
+  created=True
+  (output/'docker-create.log').write_text(r.stdout)
+  # create can pull an uncached image; stderr progress is combined in command().
+  # Resolve identity from the unique name plus verified ownership/isolation, never
+  # from informational output or an arbitrary hex line inside it.
+  cid=resolve_created_container(name,token)
   inspect_owned(cid,token); command(['docker','start',cid])
   # pg_isready is readiness only; timeout is failure, not inferred success.
   command(['docker','exec',cid,'sh','-c','i=0; until pg_isready -h /var/run/postgresql -U supabase_admin; do i=$((i+1)); [ "$i" -lt 60 ] || exit 1; sleep 1; done'],timeout=75)

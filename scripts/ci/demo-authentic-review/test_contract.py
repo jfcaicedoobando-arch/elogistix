@@ -4,6 +4,65 @@ from unittest.mock import patch
 R=Path(__file__).resolve().parent
 spec=importlib.util.spec_from_file_location('runner',R/'run_ci.py');runner=importlib.util.module_from_spec(spec);spec.loader.exec_module(runner)
 class Contract(unittest.TestCase):
+ def test_created_id_comes_from_inspected_owned_name(self):
+  with patch.object(runner,'inspect_owned',return_value={'Id':'a'*64,'Name':'/unique-name'}) as inspect:
+   self.assertEqual(runner.resolve_created_container('unique-name','owner-token'),'a'*64)
+   inspect.assert_called_once_with('unique-name','owner-token')
+ def test_malformed_inspected_id_rejected(self):
+  for value in ['', 'a'*63, 'image progress\n'+'a'*64]:
+   with patch.object(runner,'inspect_owned',return_value={'Id':value,'Name':'/unique-name'}):
+    with self.assertRaises(RuntimeError):runner.resolve_created_container('unique-name','owner-token')
+ def test_create_output_is_diagnostic_not_identity(self):
+  s=(R/'run_ci.py').read_text();self.assertNotIn('cid=r.stdout.strip()',s)
+  self.assertIn("(output/'docker-create.log').write_text(r.stdout)",s)
+ def test_wrong_owner_or_image_rejected(self):
+  from types import SimpleNamespace
+  base={'Id':'a'*64,'Name':'/unique-name','Config':{'Labels':{'demo.acceptance.owner':'owner-token'},'Image':runner.IMAGE},'HostConfig':{'NetworkMode':'none','PortBindings':{},'Privileged':False},'Mounts':[]}
+  for kind in ['label','image','network','bind']:
+   obj=json.loads(json.dumps(base))
+   if kind=='label':obj['Config']['Labels']['demo.acceptance.owner']='other'
+   if kind=='image':obj['Config']['Image']='untrusted:latest'
+   if kind=='network':obj['HostConfig']['NetworkMode']='host'
+   if kind=='bind':obj['Mounts']=[{'Type':'bind'}]
+   with patch.object(runner,'command',return_value=SimpleNamespace(stdout=json.dumps([obj]))):
+    with self.assertRaises(RuntimeError):runner.resolve_created_container('unique-name','owner-token')
+ def test_wrong_inspected_name_rejected(self):
+  with patch.object(runner,'inspect_owned',return_value={'Id':'a'*64,'Name':'/other'}):
+   with self.assertRaises(RuntimeError):runner.resolve_created_container('unique-name','owner-token')
+ def test_uncertain_create_cleans_exact_owned_container_without_retry(self):
+  import tempfile,subprocess
+  from types import SimpleNamespace
+  token='b'*32;name='demo-acceptance-'+token;calls=[]
+  obj={'Id':'a'*64,'Name':'/'+name,'Config':{'Labels':{'demo.acceptance.owner':token},'Image':runner.IMAGE},'HostConfig':{'NetworkMode':'none','PortBindings':{},'Privileged':False},'Mounts':[],'State':{'Running':False}}
+  def cmd(args,*a,**kw):
+   calls.append(args)
+   if args[:2]==['docker','create']:raise subprocess.TimeoutExpired(args,180,output='pull progress\n')
+   if args[:2]==['docker','inspect']:return SimpleNamespace(stdout=json.dumps([obj]),returncode=0)
+   return SimpleNamespace(stdout='',returncode=0)
+  with tempfile.TemporaryDirectory() as tmp,patch.object(runner.uuid,'uuid4',return_value=SimpleNamespace(hex=token)),patch.object(runner,'command',side_effect=cmd):
+   output=Path(tmp)/'evidence'
+   with self.assertRaises(subprocess.TimeoutExpired):runner.run(output)
+   result=json.loads((output/'result.json').read_text());self.assertTrue(result['cleanup_verified']);self.assertEqual(result['overall'],'FAIL')
+  self.assertEqual(sum(c[:2]==['docker','create'] for c in calls),1)
+  self.assertIn(['docker','rm','-v','a'*64],calls)
+  self.assertFalse(any(c[:2]==['docker','start'] for c in calls))
+ def test_mixed_create_output_uses_verified_identity(self):
+  import tempfile
+  from types import SimpleNamespace
+  token='b'*32;name='demo-acceptance-'+token;calls=[]
+  obj={'Id':'a'*64,'Name':'/'+name,'Config':{'Labels':{'demo.acceptance.owner':token},'Image':runner.IMAGE},'HostConfig':{'NetworkMode':'none','PortBindings':{},'Privileged':False},'Mounts':[],'State':{'Running':False}}
+  def cmd(args,*a,**kw):
+   calls.append(args)
+   if args[:2]==['docker','create']:return SimpleNamespace(stdout='Unable to find image locally\nPull complete\n'+'c'*64+'\n',returncode=0)
+   if args[:2]==['docker','inspect']:return SimpleNamespace(stdout=json.dumps([obj]),returncode=0)
+   if args[:2]==['docker','start']:raise RuntimeError('stop_after_identity')
+   return SimpleNamespace(stdout='',returncode=0)
+  with tempfile.TemporaryDirectory() as tmp,patch.object(runner.uuid,'uuid4',return_value=SimpleNamespace(hex=token)),patch.object(runner,'command',side_effect=cmd):
+   output=Path(tmp)/'evidence'
+   with self.assertRaisesRegex(RuntimeError,'stop_after_identity'):runner.run(output)
+   self.assertIn('Pull complete',(output/'docker-create.log').read_text())
+  self.assertIn(['docker','start','a'*64],calls)
+  self.assertEqual(sum(c[:2]==['docker','create'] for c in calls),1)
  def test_frozen_inputs(self):runner.verify_inputs()
  def test_no_execution_without_both_real_actions_and_optin(self):
   for env,opt in [({},True),({'GITHUB_ACTIONS':'true'},True),({'GITHUB_ACTIONS':'true','DEMO_ACCEPTANCE_ISOLATED':'1'},False)]:
