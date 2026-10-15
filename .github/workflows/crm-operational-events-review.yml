@@ -59,7 +59,7 @@ jobs:
         run: |
           set -euo pipefail
           python3 -B -m unittest discover -s scripts/ci/crm-operational-events-review -p 'test_*.py' -v 2>&1 | tee "$RUNNER_TEMP/crm-event-preflight/offline-tests.log"
-      - name: Owned disposable PostgreSQL 17.6 synthetic event and comparator review
+      - name: Owned disposable PostgreSQL 17.6 synthetic event, comparator and transaction review
         run: |
           set -euo pipefail
           python3 -B scripts/ci/crm-operational-events-review/run_event_ci.py --output "$RUNNER_TEMP/crm-event-evidence" 2>&1 | tee "$RUNNER_TEMP/crm-event-preflight/runtime.log"
@@ -98,6 +98,41 @@ jobs:
           }
           'PASS 48 synthetic comparator projections independently against Draft 2020-12 schema; six bundles and three NOT_ADMITTED summaries' |
             Tee-Object -FilePath "$env:RUNNER_TEMP/crm-event-preflight/comparator-schema.log"
+          $transactionRoot = "$env:RUNNER_TEMP/crm-event-evidence/transaction-evidence"
+          $transactionBundles = @(Get-ChildItem -LiteralPath $transactionRoot -Recurse -File -Filter 'bundle.json')
+          $transactionFiles = @(Get-ChildItem -LiteralPath $transactionRoot -Recurse -File -Filter 'projection-*.json')
+          if ($transactionBundles.Count -ne 26 -or $transactionFiles.Count -ne 208) {
+            throw '26 complete synthetic transaction bundles and 208 projections required'
+          }
+          foreach ($file in $transactionFiles) {
+            if (-not (Test-Json -Json (Get-Content -LiteralPath $file.FullName -Raw) -SchemaFile $schema -ErrorAction Stop)) {
+              throw 'Synthetic transaction projection failed independent schema validation'
+            }
+          }
+          $transactionSummaries = @(Get-ChildItem -LiteralPath $transactionRoot -File -Filter '*-summary.json')
+          if ($transactionSummaries.Count -ne 4) { throw 'Four synthetic transaction summaries required' }
+          foreach ($file in $transactionSummaries) {
+            $summary = Get-Content -LiteralPath $file.FullName -Raw | ConvertFrom-Json
+            if ($summary.admission -ne 'NOT_ADMITTED' -or $summary.comparison -ne 'MATCHED_DECLARED_DELTA_REVIEW_ONLY') {
+              throw 'Synthetic transaction summary claimed admission or did not match its declared delta'
+            }
+          }
+          $transactionProofs = @(Get-ChildItem -LiteralPath $transactionRoot -File -Filter '*-program-proof.json')
+          $semanticWitnesses = @(Get-ChildItem -LiteralPath $transactionRoot -File -Filter '*-semantic-witness.json')
+          if ($transactionProofs.Count -ne 10 -or $semanticWitnesses.Count -ne 10) {
+            throw 'Ten shared-program proofs and installed semantic-binding witnesses required'
+          }
+          foreach ($file in $transactionProofs) {
+            $proof = Get-Content -LiteralPath $file.FullName -Raw | ConvertFrom-Json
+            if ($proof.admission -ne 'NOT_ADMITTED' -or
+                $proof.public_and_test_only_core_bytes_equal -ne $true -or
+                $proof.independent_extracted_hash -ne $true -or
+                $proof.core_sha256 -notmatch '^[0-9a-f]{64}$') {
+              throw 'Synthetic transaction shared-program proof failed'
+            }
+          }
+          'PASS 208 synthetic transaction projections independently against Draft 2020-12 schema; 26 bundles and four NOT_ADMITTED summaries' |
+            Tee-Object -FilePath "$env:RUNNER_TEMP/crm-event-preflight/transaction-schema.log"
       - name: Preserve synthetic results and cleanup evidence
         if: always()
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # repository precedent

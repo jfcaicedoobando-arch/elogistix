@@ -36,6 +36,7 @@ def main():
     from run_ci import CRMRunner
     from event_cases import EVENT_CASES, run_event_cases
     from comparator_cases import COMPARATOR_CASES, run_comparator_cases
+    from transaction_cases import TRANSACTION_CASES, run_transaction_cases
     public = verify_source()
     args.output.mkdir(parents=True, exist_ok=False)
     (args.output / 'logs').mkdir()
@@ -61,9 +62,10 @@ def main():
         runner.prepare()
         run_event_cases(runner)
         run_comparator_cases(runner)
+        run_transaction_cases(runner)
         checks = runner.result['checks']
         names = [item['case'] for item in checks]
-        expected_cases = EVENT_CASES + COMPARATOR_CASES
+        expected_cases = EVENT_CASES + COMPARATOR_CASES + TRANSACTION_CASES
         require(len(names) == len(expected_cases) and set(names) == set(expected_cases)
                 and len(set(names)) == len(names), 'Incomplete or duplicate event matrix')
         require(all(item['status'] == 'pass' for item in checks), 'Unexpected event status')

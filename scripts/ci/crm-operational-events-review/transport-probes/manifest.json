@@ -1,0 +1,26 @@
+{
+  "kind": "crm-public-transport-probes-v1",
+  "admission": "NOT_ADMITTED",
+  "probes": [
+    {
+      "file": "01-literal.sql",
+      "utf8_octets": 1178,
+      "sha256": "c0681591a3bae00cf2da43295507eabd9b023247998098d7d55aec15f0a6d069"
+    },
+    {
+      "file": "02-read-only-transaction.sql",
+      "utf8_octets": 2986,
+      "sha256": "810f9d048e7665f0b03cd2ebe12aeaca74c81d8d9991cc7021bd35d9d4ea1f6e"
+    },
+    {
+      "file": "03-error-stop.sql",
+      "utf8_octets": 693,
+      "sha256": "5c67de7cc398108493903c4a3980a4b74d156ac92c84d99d50fff2c66fbf34c2"
+    }
+  ],
+  "literal": {
+    "utf8_octets": 147,
+    "sha256": "550296df79ea363e4898ec0f81acfab776a0a00ea6163840d22e63544fb1cbcb",
+    "utf8_hex": "43524d207472616e73706f72742076310a73656d69636f6c6f6e203b2071756f7465202720646f75626c652022206261636b736c617368205c0a2d2d206c69746572616c2c206e6f74206120636f6d6d656e740a2f2a206c69746572616c203b2024626f64792420424547494e20454e443b2024626f647924202a2f0a6163656e746f733a20c3a120c3b120cea90a454e440a"
+  }
+}
