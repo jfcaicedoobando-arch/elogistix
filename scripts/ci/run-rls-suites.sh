@@ -59,7 +59,13 @@ for suite in "${SUITES[@]}"; do
   started=$(date +%s%3N)
   status=passed
   # Cada suite corre aunque la anterior falle: un PR ve TODOS los fallos.
-  if "${PSQL[@]}" -f "$suite" >"$LOG_DIR/$nombre.log" 2>&1; then
+  command=("${PSQL[@]}" -f "$suite")
+  if [ "${GITHUB_ACTIONS:-}" = true ] && [ "$nombre" = test_rls_demo_seed_core_compatibility ]; then
+    # The unchanged SQL requires a local server address, not Docker's published port.
+    # Missing ownership proof fails in the adapter; never fall back to host psql.
+    command=(python3 scripts/ci/demo-guard/run-compat-actions.py)
+  fi
+  if "${command[@]}" >"$LOG_DIR/$nombre.log" 2>&1; then
     echo "✓ $nombre"
   else
     status=failed

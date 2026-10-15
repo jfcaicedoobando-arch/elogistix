@@ -300,7 +300,11 @@ jobs:
       - name: Suites RLS (descubrimiento por patrón)
         env:
           LOG_DIR: .rls-logs
+          ISOLATED_QA_DB: '1'
+          DEMO_COMPAT_DISPOSABLE: '1'
+          DEMO_COMPAT_POSTGRES_SERVICE_ID: ${{ job.services.postgres.id }}
         run: |
+          python3 scripts/ci/demo-guard/test-compat-actions.py
           bash scripts/ci/run-rls-suites.sh
           node scripts/ci/test-catalog.mjs --verify-rls .rls-logs/execution.tsv
 
