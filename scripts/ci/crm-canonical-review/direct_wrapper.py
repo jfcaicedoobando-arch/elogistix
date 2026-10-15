@@ -268,8 +268,8 @@ BEGIN
  """ + capture + " INTO v_now;\n" + state + " INTO v_final_state;\n" + norm + """
  IF v_normal IS DISTINCT FROM v_normal_expected OR v_now->'context' IS DISTINCT FROM v_expected->'context'
     OR v_now->'supabase' IS DISTINCT FROM v_expected->'supabase'
-    OR v_now->'drizzle' IS DISTINCT FROM CASE WHEN v_registered THEN v_before ELSE v_before||jsonb_build_array(v_inserted) END
-    OR v_final_state IS DISTINCT FROM CASE WHEN v_registered THEN v_state ELSE jsonb_build_object('last_value',""" + str(next_value) + """,'is_called',true) END THEN
+    OR v_now->'drizzle' IS DISTINCT FROM (CASE WHEN v_registered THEN v_before ELSE v_before||jsonb_build_array(v_inserted) END)
+    OR v_final_state IS DISTINCT FROM (CASE WHEN v_registered THEN v_state ELSE jsonb_build_object('last_value',""" + str(next_value) + """,'is_called',true) END) THEN
    RAISE EXCEPTION 'CRM_DIRECT_FINAL'; END IF;
  """ + owner_check + """
  -- The enclosing transport must prove commit. DO success alone is insufficient.
