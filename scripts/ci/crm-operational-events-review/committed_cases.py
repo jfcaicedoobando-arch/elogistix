@@ -72,7 +72,7 @@ class Session(_Listener):
         marker = 'TEST_ONLY_COMMITTED_BARRIER_' + str(self.counter)
         start = len(self.output)
         self._release(sql + '\n\\echo ' + marker)
-        self._read_until(lambda: ('\n' + marker + '\n') in self.output[start:], label, timeout=30)
+        self._read_until(lambda: re.search(r'(?:^|\n)' + re.escape(marker) + r'\r?\n', self.output[start:]) is not None, label, timeout=30)
         text = self.output[start:].split(marker, 1)[0]
         require(not re.search(r'^(ERROR|FATAL):', text, re.M), 'Owned serial client failed')
         return text
