@@ -344,13 +344,17 @@ class ComparatorTests(unittest.TestCase):
             for bundle in (before, after):
                 bundle['catalog']['result']['sequences'][0][key] = value
             self.rejects(before, after, returned, code='SEQUENCE_PROFILE')
-        for path in ('references', 'ownership'):
+        for path in ('references', 'ownership', 'extra_ownership'):
             before, after, returned = applied()
             for bundle in (before, after):
                 if path == 'references':
                     bundle['catalog']['result']['defaults'][0]['references'].pop()
-                else:
+                elif path == 'ownership':
                     bundle['catalog']['result']['dependencies'].clear()
+                else:
+                    extra = copy.deepcopy(bundle['catalog']['result']['dependencies'][0])
+                    extra['refobjsubid'] = 2
+                    bundle['catalog']['result']['dependencies'].append(extra)
             self.rejects(before, after, returned)
 
     def test_only_measured_sequence_transition_and_returned_id_supported(self):

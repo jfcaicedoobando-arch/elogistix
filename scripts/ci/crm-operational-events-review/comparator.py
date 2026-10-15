@@ -228,7 +228,10 @@ def _sequence_profile(bundle):
             and sum(_same(edge, own_column) for edge in default['references']) == 1, 'DRIZZLE_DEFAULT_REFERENCES')
     ownership = dict(classid=PG_CLASS, objid=sequence_oid, objsubid=0,
                      refclassid=PG_CLASS, refobjid=ledger['oid'], refobjsubid=identifier['number'], deptype='a')
-    require(sum(_same(edge, ownership) for edge in catalog['dependencies']) == 1, 'SEQUENCE_OWNERSHIP')
+    ownership_edges = [edge for edge in catalog['dependencies']
+                       if edge['classid'] == PG_CLASS and edge['objid'] == sequence_oid
+                       and edge['refclassid'] == PG_CLASS and edge['deptype'] in ('a', 'i')]
+    require(len(ownership_edges) == 1 and _same(ownership_edges[0], ownership), 'SEQUENCE_OWNERSHIP')
     state = bundle['sequence_state']['result']['sequence_state']
     value = evidence._integer(state['last_value'])
     require(1 <= value <= 2147483647 and type(state['is_called']) is bool, 'SEQUENCE_STATE_RANGE')
