@@ -2,6 +2,8 @@
 
 Status: **specification only; NOT_ADMITTED**. The parent already holds the captures and can provide the relevant existing projections in the private coordination thread. This document defines those projections and their review rules; it does not ask the user to collect them again. No captured value, instance name, object identity, observed hash, history row or contact belongs in this public document, repository, PR, workflow input or artifact.
 
+The parent can instead retain the complete projection files locally and run `offline_review.py` using a private file map, returning only its sanitized report and any specifically needed review slice. See the README for the offline invocation and validator requirements. No full instance transfer to a child checkout is needed. Raw private deparse/binding evidence remains separate from the strict projection bundle.
+
 The transaction-bound operational comparator, event-policy admission and executable registration envelope are still missing. `evidence.ingest()` checks projection coherence; `comparator.compare()` checks permitted deltas between supplied complete bundles. Both always return NOT_ADMITTED. An offline match does not approve the preimage, authenticate its completeness or bind it to a locked execution transaction. `envelope.render_review_proposal()` always raises before payload execution. None of these results changes the LAB renderer or admits a target.
 
 ## Version and API boundary

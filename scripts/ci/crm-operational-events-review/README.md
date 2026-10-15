@@ -44,6 +44,52 @@ Transport/session continuity, a timeout established before execution, commit and
 
 ## Reproduce offline checks
 
+### Review private files locally
+
+`offline_review.py` is a local file adapter for the inert evidence/comparison APIs. Run it from a complete checkout of the reviewed public commit. It verifies all 22 inherited public source pins before reading private inputs. It performs no SQL, opens no database connection, installs nothing and downloads nothing. Keep the input envelopes, manifest and returning witness on a local filesystem outside the checkout and outside Actions; this repository receives none of their contents. The adapter emits only sanitized statuses/reason codes and never writes an assembled bundle or derived private postimage.
+
+Create a private file map with exactly these nine keys. This map uses the bundle kind but contains file paths rather than envelopes; it is not itself an evidence bundle. Paths are relative to the manifest directory or absolute local paths. Include every actual page file in `supabase_pages`; the filenames below are illustrative.
+
+```json
+{
+  "kind": "crm-operational-review-bundle-v1",
+  "discovery": "01-discovery.json",
+  "catalog": "02-catalog.json",
+  "drizzle_history": "03-drizzle-history.json",
+  "supabase_manifest_before": "04-manifest-before.json",
+  "supabase_pages": ["05-page-0001.json", "05-page-0002.json"],
+  "supabase_manifest_after": "04-manifest-after.json",
+  "sequence_state": "07-sequence-state.json",
+  "activity": "06-activity.json"
+}
+```
+
+Each file contains either the exact projection envelope or the exact SQL-result wrapper `{"rows":[{"crm_evidence":<envelope>}]}`. Duplicate JSON keys, unexpected wrappers, truncated data and ambiguous values fail closed. The adapter orders page files by their validated offsets without modifying any page rows or catalog arrays. The evidence API then checks exhaustive offsets/row numbers, ordering, counts, commitments, formatting settings and before/page/after manifests. A coherent page set still does not authenticate its hidden SQL preimages or a common transaction snapshot.
+
+```text
+python -B scripts/ci/crm-operational-events-review/offline_review.py review --manifest /private/capture/manifest.json --validator auto
+```
+
+The validator uses an already installed Python `jsonschema` Draft 2020-12 implementation or local PowerShell `Test-Json`. It verifies the pinned local schema and refuses external references; no dependency is installed on demand. Missing validation support yields a sanitized failure. Review checks the canonical helper preimage and supported ledger/sequence structure, derives the permitted catalog postimage in memory and classifies exact existing registration versus absence/conflict. It does not fabricate a future capture record, migration row or ID.
+
+To check real observations after an independently authorized execution, use separate complete before/after file maps and the actual three-field returning witness. The adapter itself executes nothing:
+
+```text
+python -B scripts/ci/crm-operational-events-review/offline_review.py compare --before-manifest /private/capture/before.json --after-manifest /private/capture/after.json --outcome applied --returning /private/capture/returning.json --validator auto
+```
+
+Use `registered_read_only` without `--returning` for verification without allocation, or `rolled_back_after_insert` with its measured returning witness for a rollback observation. A passing result remains NOT_ADMITTED and supplies no authorization to create those observations. The parent can return the sanitized JSON report for review and retain every private input locally.
+
+Exit zero means only that the supplied review observations matched; exit two means blocked/rejected. The returning file is the exact three-field row object, optionally wrapped as `{"rows":[<row>]}`. Raw default/binding definitions are separate private semantic-review evidence and must not be inserted into the strict projection bundle.
+
+### Minimum remaining gates
+
+The parent can check file/schema/page integrity now, retain the complete private preimage, finish independent definition/history/event-route review and report only sanitized results. The parent can also prepare and test the still-missing transaction-bound comparison/registration envelope and verify transport/session continuity, timeout, commit, automatic-registration and uncertain-response reconciliation semantics in an isolated environment. Those are implementation/review tasks; an operational window does not supply them.
+
+A newly authorized user-coordinated DDL/ACL window is separately required for actual application: exclude relevant owner/DDL/ACL writers and external appliers/retries, refresh and review the required contract inside that window, keep exclusion through commit verification and postflight, and stop on drift or contention. Use the actual default/RETURNING row and perform read-only reconciliation before any retry after an uncertain response. The closed historical window is never reusable. Current code has no operational application mode, and this preparation procedure does not authorize real SQL or removal of either fence.
+
+### Run public synthetic unit contracts
+
 From the repository root:
 
 ```powershell
