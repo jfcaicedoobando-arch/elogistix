@@ -24,4 +24,7 @@ test('general CI runs offline wire tests unconditionally after the complete inve
   assert.ok(end > start);
   assert.match(ci.slice(start, end), /--run node-demo-wire-lab reports\/test-inventory.json/);
   assert.doesNotMatch(ci.slice(start, end), /\bif:|continue-on-error/);
+  const lab = fs.readFileSync(new URL('../../../.github/workflows/demo-wire-lab.yml', import.meta.url), 'utf8');
+  assert.match(lab, /ref: \$\{\{ github\.event\.pull_request\.head\.sha \}\}/);
+  assert.match(lab, /GITHUB_SHA: \$\{\{ github\.event\.pull_request\.head\.sha \}\}/);
 });
