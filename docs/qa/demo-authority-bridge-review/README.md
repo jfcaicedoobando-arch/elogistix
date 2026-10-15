@@ -74,7 +74,12 @@ restore fence, immutable storage or crash/failover durability. Their trusted
 storage, administrative boundaries and atomic enforcement are still unimplemented.
 `observedAt` is supplied explicitly; the mapper does not read a clock. Validity is
 half-open, `[notBefore, expiresAt)`, and the reviewed context TTL is capped at
-300 seconds and cannot exceed admission, policy or protected-record deadlines.
+300 seconds from `notBefore` and cannot exceed admission, policy or protected-record
+deadlines. SQL16 captures `notBefore` at function entry, while `issuedAt` is the
+later INSERT default `clock_timestamp()`. The contract permits
+`notBefore <= issuedAt < expiresAt` and requires observation at or after issuance;
+insert delay never resets or extends the TTL. A source tripwire and delayed-insert
+regressions preserve this distinction without executing SQL.
 
 Missing occurrence, semantic identity, governed skip or restore data causes HOLD.
 No UUID, receipt, source run, TTL, digest or snapshot can fill these gaps. Caller
@@ -143,17 +148,21 @@ Run the focused package with Node 24.19.0 and no dependencies:
 node --test scripts/ci/demo-authority-bridge-review/*.test.mjs
 ```
 
-Local focused result: **68/68 PASS, zero skips**, consisting of 42 binding,
-17 conflict and 9 integration/source/census tests. This local workspace contains
+Local focused result: **71/71 PASS, zero skips**, consisting of 44 binding,
+17 conflict and 10 integration/source/census tests. This local workspace contains
 selected verified files, not a full checkout. Its census regression is explicitly
 representative, not a claimed full-repository local census. Twelve canonical
 source pins are verified against SHA256, Git blob identity and byte count; only
 declared CRLF-to-LF checkout equivalence is accepted for LF-pinned text.
 
-Seven local mutation controls were rejected by the same focused tests: accepting
+Nine local mutation controls were rejected by the same focused tests: accepting
 extra fields, accepting unsafe skip values, ignoring restore fence, ignoring
 declared revocation, dropping binding-conflict detection, granting execution on
-classification, and promoting a sponsor UUID into the human actor field.
+classification, promoting a sponsor UUID into the human actor field, requiring
+timestamp equality, and extending TTL from the later insertion time.
+[`mutation-controls.json`](mutation-controls.json) records the exact mutations,
+failing test names, baseline contract SHA256 and per-run TAP hashes. This is
+local synthetic evidence, not SQL execution or operational authorization.
 
 The existing unconditional CI detector now runs the new exact lane after its
 complete repository inventory and pinned Node setup:

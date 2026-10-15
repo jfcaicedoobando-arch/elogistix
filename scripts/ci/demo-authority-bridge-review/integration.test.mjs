@@ -98,6 +98,21 @@ test('actual producer chain exists but does not supply the proposed protected oc
   assert.doesNotMatch(read('scripts/ci/demo-authority-bridge-review/contract.mjs'), /createHash|node:crypto|crypto\.subtle/);
 });
 
+test('authentic SQL16 source uses later INSERT-time issued_at separately from entry-time not_before', () => {
+  const sql = read('docs/review/demo-flow-20261015/issuer/16-owner-registry.sql');
+  assert.match(sql, /issued_at timestamptz NOT NULL DEFAULT clock_timestamp\(\)/);
+  const start = sql.indexOf('CREATE FUNCTION demo_flow_writer.issue_scheduler_context(');
+  const body = sql.slice(start, sql.indexOf('$$;', start));
+  assert.match(body, /issued timestamptz:=clock_timestamp\(\)/);
+  assert.match(body, /deadline:=least\(issued\+make_interval\(secs=>p_ttl_seconds\),a\.valid_until,t\.valid_until\)/);
+  const insert = body.slice(body.indexOf('INSERT INTO demo_flow_writer.server_admissions('));
+  const columns = insert.slice(insert.indexOf('(') + 1, insert.indexOf(')')).split(',').map(s => s.trim());
+  assert.ok(columns.includes('not_before') && columns.includes('expires_at'));
+  assert.ok(!columns.includes('issued_at'), 'issued_at is evaluated by the later INSERT default');
+  assert.match(insert, /owner_id,issued,deadline\)/);
+  // Source-faithful timing regression, not execution against a database or live clock.
+});
+
 test('product endpoint stays closed before Auth and SQL and cannot import this review mapper', () => {
   const index = read('supabase/functions/demo-access/index.ts'), handler = read('supabase/functions/demo-access/handler.ts');
   assert.doesNotMatch(index, /^\s*(?:availabilityProvider|credentials)\s*:/m);

@@ -168,6 +168,30 @@ test('declared validity is explicit and half-open, without trusting the local cl
   assert.throws(() => mapDeclaredVerifiedSnapshots(excessive), /^Error: HOLD_VALIDITY_CHAIN$/);
 });
 
+test('SQL16 timing: INSERT default issuedAt may follow the entry-time notBefore', () => {
+  const e = syntheticSnapshots();
+  e.serverAdmission.issuedAt = '2030-01-01T00:00:00.005Z';
+  assert.equal(e.serverAdmission.notBefore, '2030-01-01T00:00:00.000Z');
+  assert.doesNotThrow(() => mapDeclaredVerifiedSnapshots(e));
+  e.observedAt = e.serverAdmission.issuedAt;
+  assert.doesNotThrow(() => mapDeclaredVerifiedSnapshots(e));
+  e.observedAt = e.serverAdmission.expiresAt;
+  assert.throws(() => mapDeclaredVerifiedSnapshots(e), /^Error: HOLD_DECLARED_VALIDITY$/);
+});
+
+test('SQL16 timing: insertion delay neither extends TTL nor permits observing an unissued context', () => {
+  const early = syntheticSnapshots(); early.serverAdmission.issuedAt = '2029-12-31T23:59:59.999Z';
+  assert.throws(() => mapDeclaredVerifiedSnapshots(early), /^Error: HOLD_VALIDITY_CHAIN$/);
+  const unissued = syntheticSnapshots(); unissued.serverAdmission.issuedAt = '2030-01-01T00:00:11.000Z';
+  assert.throws(() => mapDeclaredVerifiedSnapshots(unissued), /^Error: HOLD_DECLARED_VALIDITY$/);
+  const late = syntheticSnapshots(); late.serverAdmission.issuedAt = late.serverAdmission.expiresAt;
+  assert.throws(() => mapDeclaredVerifiedSnapshots(late), /^Error: HOLD_VALIDITY_CHAIN$/);
+  const extended = syntheticSnapshots(); extended.serverAdmission.issuedAt = '2030-01-01T00:01:00.000Z';
+  extended.observedAt = '2030-01-01T00:01:10.000Z';
+  extended.serverAdmission.expiresAt = extended.serverContext.expiresAt = '2030-01-01T00:05:00.001Z';
+  assert.throws(() => mapDeclaredVerifiedSnapshots(extended), /^Error: HOLD_VALIDITY_CHAIN$/);
+});
+
 for (const [name, change] of [
   ['context/run/lineage UUIDs', renewContext], ['manifest artifact snapshot', renewArtifact],
   ['TTL', e => { e.serverAdmission.expiresAt = e.serverContext.expiresAt = '2030-01-01T00:03:00.000Z'; }],

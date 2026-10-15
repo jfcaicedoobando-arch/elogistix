@@ -132,8 +132,10 @@ function correspondence(b) {
   requireThat(b.manifestIdentity === u.manifestIdentity && b.authorizedOccurrence === u.authorizedOccurrence
     && b.skipMs === u.skipMs && b.generation === u.generation && b.restoreFence === u.restoreFence, 'HOLD_PROTECTED_BINDING');
   // Ordering is consistency only. No TTL, source UUID, digest or sponsor establishes authority.
-  requireThat(c.issuedAt === c.notBefore && c.notBefore < c.expiresAt
-    && Date.parse(c.expiresAt) - Date.parse(c.issuedAt) <= 300_000
+  // SQL16 captures not_before/deadline on function entry, then issued_at uses
+  // DEFAULT clock_timestamp() at INSERT. Issuance can be later, never extend TTL.
+  requireThat(c.notBefore <= c.issuedAt && c.issuedAt < c.expiresAt
+    && Date.parse(c.expiresAt) - Date.parse(c.notBefore) <= 300_000
     && u.notBefore < u.expiresAt && c.notBefore >= u.notBefore
     && c.expiresAt <= u.expiresAt && c.expiresAt <= s.validUntil
     && c.expiresAt <= t.validUntil && c.expiresAt <= a.validUntil, 'HOLD_VALIDITY_CHAIN');
@@ -161,7 +163,7 @@ export function mapDeclaredVerifiedSnapshots(value) {
     && e.restoreState.fence === u.restoreFence, 'HOLD_RESTORE_FENCE');
   requireThat(e.schedulerApproval.disabledAt === null && e.transportApproval.disabledAt === null
     && u.revokedAt === null, 'HOLD_DECLARED_REVOCATION');
-  requireThat(e.observedAt >= c.notBefore && e.observedAt < c.expiresAt, 'HOLD_DECLARED_VALIDITY');
+  requireThat(e.observedAt >= c.issuedAt && e.observedAt < c.expiresAt, 'HOLD_DECLARED_VALIDITY');
   return Object.freeze({tenant: u.tenant, manifestIdentity: u.manifestIdentity,
     schedulerJob: u.schedulerJob, authorizedOccurrence: u.authorizedOccurrence,
     contextId: c.contextId, binding});
