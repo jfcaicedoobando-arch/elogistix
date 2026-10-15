@@ -1,0 +1,114 @@
+{
+  "organizationId": "00000000-0000-4000-8000-000000000001",
+  "version": "seed-core-cxp-v1",
+  "fixtures": [
+    {
+      "id": "aap-vencida",
+      "supplierRef": "v_prov1",
+      "supplierName": "Synthetic Supplier 1",
+      "supplierRFC": "",
+      "shipmentRef": "v_emb2",
+      "shipmentExpediente": "SYNTHETIC-SHIPMENT-1",
+      "folio": "SYNTHETIC-INVOICE-1",
+      "rfc": "",
+      "issuedOffset": -40,
+      "dueOffset": -10,
+      "creditDays": 30,
+      "currency": "MXN",
+      "subtotal": 30000,
+      "vat": 4800,
+      "total": 34800,
+      "finalState": "Vigente",
+      "finalApproval": "aprobada",
+      "categoryRef": "v_cat",
+      "origin": "manual",
+      "notes": "Synthetic fixture 1",
+      "concepts": [
+        {
+          "description": "Synthetic concept 1.1",
+          "quantity": 1,
+          "amount": 22000
+        },
+        {
+          "description": "Synthetic concept 1.2",
+          "quantity": 1,
+          "amount": 8000
+        }
+      ],
+      "payment": null
+    },
+    {
+      "id": "ttn-vigente",
+      "supplierRef": "v_prov2",
+      "supplierName": "Synthetic Supplier 2",
+      "supplierRFC": "",
+      "shipmentRef": "v_emb1",
+      "shipmentExpediente": "SYNTHETIC-SHIPMENT-2",
+      "folio": "SYNTHETIC-INVOICE-2",
+      "rfc": "",
+      "issuedOffset": -5,
+      "dueOffset": 25,
+      "creditDays": 30,
+      "currency": "MXN",
+      "subtotal": 12500,
+      "vat": 2000,
+      "total": 14500,
+      "finalState": "Vigente",
+      "finalApproval": "aprobada",
+      "categoryRef": "v_cat",
+      "origin": "manual",
+      "notes": "Synthetic fixture 2",
+      "concepts": [
+        {
+          "description": "Synthetic concept 2.1",
+          "quantity": 1,
+          "amount": 12500
+        }
+      ],
+      "payment": null
+    },
+    {
+      "id": "ofc-parcial",
+      "supplierRef": "v_prov3",
+      "supplierName": "Synthetic Supplier 3",
+      "supplierRFC": "",
+      "shipmentRef": "v_emb4",
+      "shipmentExpediente": "SYNTHETIC-SHIPMENT-3",
+      "folio": "SYNTHETIC-INVOICE-3",
+      "rfc": "",
+      "issuedOffset": -20,
+      "dueOffset": 25,
+      "creditDays": 45,
+      "currency": "MXN",
+      "subtotal": 50000,
+      "vat": 8000,
+      "total": 58000,
+      "finalState": "Vigente",
+      "finalApproval": "aprobada",
+      "categoryRef": "v_cat",
+      "origin": "manual",
+      "notes": "Synthetic fixture 3",
+      "concepts": [
+        {
+          "description": "Synthetic concept 3.1",
+          "quantity": 1,
+          "amount": 46000
+        },
+        {
+          "description": "Synthetic concept 3.2",
+          "quantity": 1,
+          "amount": 4000
+        }
+      ],
+      "payment": {
+        "dateOffset": -3,
+        "amount": 20000,
+        "currency": "MXN",
+        "method": "Synthetic",
+        "reference": "SYNTHETIC-PAYMENT-1",
+        "notes": "Synthetic payment",
+        "remaining": 38000
+      }
+    }
+  ]
+}

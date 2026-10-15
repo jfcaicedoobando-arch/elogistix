@@ -86,6 +86,14 @@ jobs:
       - name: Catálogo completo de pruebas (sin ejecutar carriles manuales)
         run: node scripts/ci/test-catalog.mjs --output reports/test-inventory.json
 
+      - name: Node 24 for review-only protocol tests
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: '24.19.0'
+
+      - name: Demo review offline lane (no SQL, backend or credentials)
+        run: node scripts/ci/demo-review-offline.mjs reports/test-inventory.json
+
       - name: Post-deploy smoke contract (offline, no credentials)
         run: node --test scripts/ci/post-deploy-smoke.test.mjs
 

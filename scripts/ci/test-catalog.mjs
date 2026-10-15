@@ -58,6 +58,9 @@ export function classifyFiles(files, guards, sqlSupport) {
       // Exact npm-test target; unrelated/new CJS tests must still fail closed.
       if (file === 'scripts/ci/selector148/tests/profile.test.cjs') lane = 'node-selector148';
       else if (file === 'scripts/ci/post-deploy-smoke.test.mjs') lane = 'node-post-deploy-smoke';
+      // Review-only protocol/source tests have an automatic offline CI runner.
+      else if (file === 'docs/review/demo-flow-20261015/rpc/rpc-attempt.test.mjs'
+        || file === 'scripts/ci/demo-review-offline.test.mjs') lane = 'node-demo-review';
       else if (/^(src|scripts)\//.test(file) && normal.test(file) && !perf.test(file)) lane = 'vitest-normal';
       else if (file.startsWith('src/') && perf.test(file)) { lane = 'vitest-perf'; mode = 'manual'; }
       else if (/^tests\/pdf\/.+\.test\.tsx$/.test(file)) {
