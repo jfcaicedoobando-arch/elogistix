@@ -25,7 +25,7 @@ def run_capture_cases(r):
         # A metadata reader must neither execute this trigger nor export its
         # body/config/comment/policy text or the Supabase stored statement.
         r.query("CREATE FUNCTION public.test_only_capture_trigger() RETURNS trigger LANGUAGE plpgsql AS $$ BEGIN RAISE EXCEPTION '" + MARKER + "'; END $$;"
-                "ALTER FUNCTION public.test_only_capture_trigger() SET test.capture_marker='" + MARKER + "';"
+                "ALTER FUNCTION public.test_only_capture_trigger() SET search_path='" + MARKER + "';"
                 "COMMENT ON FUNCTION public.test_only_capture_trigger() IS '" + MARKER + "';"
                 "CREATE TRIGGER test_only_capture BEFORE INSERT ON drizzle.__drizzle_migrations FOR EACH ROW EXECUTE FUNCTION public.test_only_capture_trigger();"
                 "CREATE POLICY test_only_capture ON drizzle.__drizzle_migrations USING (hash<>'" + MARKER + "');"
