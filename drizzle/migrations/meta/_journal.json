@@ -134,6 +134,13 @@
       "when": 1792006262617,
       "tag": "0018_cargos_tarifario_aplica_iva",
       "breakpoints": true
+    },
+    {
+      "idx": 19,
+      "version": "7",
+      "when": 1792058404766,
+      "tag": "0019_cxp_contador_autoaprobacion",
+      "breakpoints": true
     }
   ]
 }
