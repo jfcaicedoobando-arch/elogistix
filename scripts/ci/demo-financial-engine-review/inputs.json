@@ -16,8 +16,8 @@
   },
   {
     "path": "evidence/blocked-result.json",
-    "bytes": 784,
-    "sha256": "350539c93db0b27af0c28e3d3a1a184e7fa39fddcf77865143be4c715d291fb9"
+    "bytes": 762,
+    "sha256": "6d7322d2c6df0a38b4e1a576d0441f94b9ac41ed82e51ee8f5efd80da9cb5582"
   },
   {
     "path": "evidence/local-status.json",

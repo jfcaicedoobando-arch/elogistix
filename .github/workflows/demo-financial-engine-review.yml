@@ -16,15 +16,20 @@ jobs:
     if: github.repository == 'jfcaicedoobando-arch/elogistix' && github.event.pull_request.draft == true && github.event.pull_request.head.repo.full_name == github.repository && github.event.pull_request.head.ref == 'fix/demo-financial-engine-review-20261015'
     runs-on: ubuntu-24.04
     timeout-minutes: 25
+    defaults:
+      run:
+        shell: bash
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
         with:
           ref: ${{ github.event.pull_request.head.sha }}
           persist-credentials: false
+      - name: Prepare preflight evidence
+        run: mkdir -p "$RUNNER_TEMP/financial-engine-preflight"
       - name: Offline parser and runner tests
-        run: python3 -B -I -m unittest discover -s scripts/ci/demo-financial-engine-review -p 'test_*.py'
+        run: python3 -B -I -m unittest discover -s scripts/ci/demo-financial-engine-review -p 'test_*.py' 2>&1 | tee "$RUNNER_TEMP/financial-engine-preflight/offline-tests.log"
       - name: Verify copied authentic source inputs
-        run: python3 -B -I scripts/ci/demo-financial-engine-review/offline_checks.py
+        run: python3 -B -I scripts/ci/demo-financial-engine-review/offline_checks.py 2>&1 | tee "$RUNNER_TEMP/financial-engine-preflight/source-integrity.log"
       - name: Reproduce canonical source inventory without executing SQL
         run: python3 -B -I scripts/ci/demo-financial-engine-review/extract_catalog.py --baseline supabase/schema/baseline.sql --out "$RUNNER_TEMP/financial-engine-inventory" --diagnostic
       - name: Read canonical catalog gate
@@ -53,5 +58,6 @@ jobs:
           path: |
             ${{ runner.temp }}/financial-engine-evidence
             ${{ runner.temp }}/financial-engine-inventory
+            ${{ runner.temp }}/financial-engine-preflight
           if-no-files-found: error
           retention-days: 14
