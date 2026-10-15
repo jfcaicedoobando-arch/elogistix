@@ -63,6 +63,13 @@ class Contract(unittest.TestCase):
    self.assertIn('Pull complete',(output/'docker-create.log').read_text())
   self.assertIn(['docker','start','a'*64],calls)
   self.assertEqual(sum(c[:2]==['docker','create'] for c in calls),1)
+ def test_readiness_excludes_temporary_entrypoint_server(self):
+  self.assertIn('[ "$(cat /proc/1/comm)" = postgres ] && pg_isready',runner.READY_COMMAND)
+  self.assertIn('-h /var/run/postgresql -U supabase_admin',runner.READY_COMMAND)
+  self.assertIn('[ "$i" -lt 60 ] || exit 1',runner.READY_COMMAND)
+  s=(R/'run_ci.py').read_text()
+  self.assertLess(s.index("'sh','-c',READY_COMMAND"),s.index('version=sql('))
+  self.assertEqual(s.count('CREATE ROLE postgres LOGIN NOSUPERUSER'),1)
  def test_frozen_inputs(self):runner.verify_inputs()
  def test_no_execution_without_both_real_actions_and_optin(self):
   for env,opt in [({},True),({'GITHUB_ACTIONS':'true'},True),({'GITHUB_ACTIONS':'true','DEMO_ACCEPTANCE_ISOLATED':'1'},False)]:

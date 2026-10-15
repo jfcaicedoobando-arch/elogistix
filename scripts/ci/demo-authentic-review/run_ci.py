@@ -3,6 +3,7 @@
 import argparse,hashlib,json,os,re,subprocess,sys,uuid
 from pathlib import Path
 ROOT=Path(__file__).resolve().parent
+READY_COMMAND='i=0; until [ "$(cat /proc/1/comm)" = postgres ] && pg_isready -h /var/run/postgresql -U supabase_admin; do i=$((i+1)); [ "$i" -lt 60 ] || exit 1; sleep 1; done'
 IMAGE='postgres@sha256:f3bd19c606e442c3d7bdfa8002e03fe260a1023351e0ea4598032022b68dd6e3'
 SUITES=[('authentic_producer','sql/run.sql','AUTHENTIC_PRODUCER_AND_OWNER_REGISTRY_ON_SYNTHETIC_SCHEMA')]
 UNIMPLEMENTED=['durable_dispatch','postgrest_authenticated_transport','full_main_schema_equivalence','atomic_financial_execute_checkpoint','commit_ack_reconciliation','human_authenticated_regression','multi_session_concurrency']
@@ -48,8 +49,10 @@ def run(output):
   # from informational output or an arbitrary hex line inside it.
   cid=resolve_created_container(name,token)
   inspect_owned(cid,token); command(['docker','start',cid])
-  # pg_isready is readiness only; timeout is failure, not inferred success.
-  command(['docker','exec',cid,'sh','-c','i=0; until pg_isready -h /var/run/postgresql -U supabase_admin; do i=$((i+1)); [ "$i" -lt 60 ] || exit 1; sleep 1; done'],timeout=75)
+  # The image first runs a temporary initialization server, then shuts it down.
+  # Require PID 1 to be the final postgres exec before checking the socket;
+  # this is a precondition wait, never a retry of candidate SQL or bootstrap DML.
+  command(['docker','exec',cid,'sh','-c',READY_COMMAND],timeout=75)
   def sql(db,text,user='postgres'):
    inspect_owned(cid,token)
    r=command(['docker','exec','-i',cid,'psql','-X','-h','/var/run/postgresql','-U',user,'-d',db,'-v','ON_ERROR_STOP=1','-At'],text,120,check=False)
