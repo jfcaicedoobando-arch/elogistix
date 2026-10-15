@@ -1,0 +1,79 @@
+name: Seed R3 isolated review
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+    branches: [main]
+    paths:
+      - .github/workflows/seed-r3-review.yml
+      - scripts/ci/seed-r3-review/**
+permissions:
+  contents: read
+concurrency:
+  group: seed-r3-review-${{ github.event.pull_request.number }}-${{ github.event.pull_request.head.sha }}
+  cancel-in-progress: false
+jobs:
+  base-review-required:
+    if: >-
+      github.repository == 'jfcaicedoobando-arch/elogistix' &&
+      github.event.pull_request.base.repo.full_name == 'jfcaicedoobando-arch/elogistix' &&
+      github.event.pull_request.head.repo.full_name == 'jfcaicedoobando-arch/elogistix' &&
+      github.event.pull_request.base.repo.owner.login == 'jfcaicedoobando-arch' &&
+      github.event.pull_request.head.repo.owner.login == 'jfcaicedoobando-arch' &&
+      github.event.pull_request.base.ref == 'main' &&
+      github.event.pull_request.head.ref == 'fix/seed-r3-review-20261015' &&
+      github.event.pull_request.draft == true &&
+      github.event.pull_request.base.sha != 'e383238caf130455b2991184d0cae0c29a627aca'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 1
+    steps:
+      - name: Reject changed base before checkout or container creation
+        run: |
+          set -euo pipefail
+          echo 'Base SHA changed. A new explicit review is required.'
+          exit 1
+  review:
+    if: >-
+      github.repository == 'jfcaicedoobando-arch/elogistix' &&
+      github.event.repository.full_name == 'jfcaicedoobando-arch/elogistix' &&
+      github.event.pull_request.base.repo.full_name == 'jfcaicedoobando-arch/elogistix' &&
+      github.event.pull_request.head.repo.full_name == 'jfcaicedoobando-arch/elogistix' &&
+      github.event.pull_request.base.repo.owner.login == 'jfcaicedoobando-arch' &&
+      github.event.pull_request.head.repo.owner.login == 'jfcaicedoobando-arch' &&
+      github.event.pull_request.base.ref == 'main' &&
+      github.event.pull_request.base.sha == 'e383238caf130455b2991184d0cae0c29a627aca' &&
+      github.event.pull_request.head.ref == 'fix/seed-r3-review-20261015' &&
+      github.event.pull_request.draft == true
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - name: Checkout exact reviewed PR head
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1; repository precedent
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          persist-credentials: false
+          fetch-depth: 1
+      - name: Verify immutable inputs and offline adapter guards
+        run: |
+          set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/seed-r3-preflight/logs"
+          trap 'rc=$?; printf "{\"preflight_exit_code\":%d}\n" "$rc" > "$RUNNER_TEMP/seed-r3-preflight/result.json"' EXIT
+          python3 -I scripts/ci/seed-r3-review/verify_static.py 2>&1 | tee "$RUNNER_TEMP/seed-r3-preflight/logs/static.log"
+          python3 -I -m unittest discover -s scripts/ci/seed-r3-review -p test_ci_adapter.py -v 2>&1 | tee "$RUNNER_TEMP/seed-r3-preflight/logs/offline-tests.log"
+      - name: Execute synthetic matrix in owned disposable container
+        run: |
+          set -euo pipefail
+          python3 -I scripts/ci/seed-r3-review/run_ci.py 2>&1 | tee "$RUNNER_TEMP/seed-r3-preflight/logs/runtime.log"
+      - name: Verify owned-container cleanup
+        if: always()
+        run: python3 -I scripts/ci/seed-r3-review/run_ci.py --cleanup-only
+      - name: Preserve review evidence
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2; repository precedent
+        with:
+          name: seed-r3-review-${{ github.event.pull_request.number }}-${{ github.event.pull_request.head.sha }}-${{ github.run_attempt }}
+          path: |
+            ${{ runner.temp }}/seed-r3-*/result.json
+            ${{ runner.temp }}/seed-r3-*/logs/**
+            ${{ runner.temp }}/seed-r3-*/*.json
+          retention-days: 7
+          if-no-files-found: warn

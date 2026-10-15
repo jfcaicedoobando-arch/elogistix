@@ -1,0 +1,38 @@
+{
+  "scope": "New independent, synthetic-only review lane; local preparation does not activate CI.",
+  "repository": "jfcaicedoobando-arch/elogistix",
+  "base_branch": "main",
+  "base_sha": "e383238caf130455b2991184d0cae0c29a627aca",
+  "head_branch": "fix/seed-r3-review-20261015",
+  "draft_required": true,
+  "image": "postgres@sha256:f3bd19c606e442c3d7bdfa8002e03fe260a1023351e0ea4598032022b68dd6e3",
+  "server_version_num": "170006",
+  "input_sha256": {
+    "run_isolated.py": "93ac69a3d0ae3cccbb9587ffdf07ba5751b99928d5a0ff8a4e747162731fa9f9",
+    "PROPOSAL_R3_rename_lock_admission.sql": "7f054e3071b243ca6ada6359028c66efa0ac2ba5047a8cf7133f70f1b7924d86",
+    "snapshot.sql": "8214954821e88579ff76d10979b296edc6d5c47870c22e6e2c27e01df9e67fb0",
+    "fixtures/R2.sql": "6be74b6205202a3288c654e055081fb088556ba2750f539a0e6a677bc34a19a4",
+    "fixtures/TEST_ONLY_initial_functions.sql": "7e1169e7a0aa999d6469c2d8c68ba2d448163b19d7a882c89a3f677083b62f1d",
+    "fixtures/dependencies.sql": "2adf086685863db5b86f62d7a3d1dd22c5344806687de47410c1aff538c5a7f8",
+    "fixtures/event_drift.sql": "da545e97acee5fb41504cf134af35e6d051487bb9cd389a948493c6267db0f09"
+  },
+  "transport": "Host Python; docker exec -i psql over owned private Unix socket; SQL on stdin only",
+  "matrix_equivalence": "Exact source block comparison against hash-locked run_isolated.py before container creation",
+  "coverage": [
+    "8 R2/R3 \u00d7 historical/terminal \u00d7 cost/prosrc cases",
+    "Historical transition and terminal retry",
+    "Existing view and trigger bridge OID dependencies"
+  ],
+  "not_covered": [
+    "Two-session concurrency",
+    "Production migrations or deployments"
+  ],
+  "runtime_limit_seconds": 540,
+  "command_timeout_seconds": 60,
+  "pull_timeout_seconds": 120,
+  "job_timeout_minutes": 15,
+  "artifact_retention_days": 7,
+  "cleanup": "Owned cidfile or exact-name candidate recovery; verify per-invocation random ownership token, run/name/image/labels/isolation before any mutation. Stop cluster and require status 3/no PID for test PASS; on partial initdb or failed cluster inspection stop and remove only the strictly owned container, preserve failed test status, verify stopped and absent. Never PASS before cleanup.",
+  "local_validation": "Offline mock tests only; Docker and event-trigger matrix not executed in this environment",
+  "primary_sql_errors": "Adapter additionally validates primary ERROR SQLSTATE P0001 for admission and exact primary 55000 stopped message; context-only tokens cannot pass."
+}
