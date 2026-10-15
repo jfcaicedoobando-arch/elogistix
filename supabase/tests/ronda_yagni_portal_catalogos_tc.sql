@@ -4,7 +4,7 @@
 -- Defectos cubiertos:
 --   1) client_users cross-org: la pareja (cliente_id, organization_id) debe
 --      cotejar contra clientes(id, organization_id).
---   2) navieras/puertos: sólo super_admin escribe (catálogos globales).
+--   2) catálogos globales: INSERT histórico de admins/gerente y CRUD de super_admin.
 --   3) notificaciones_cliente: sin inyección cross-org y sólo URLs /portal.
 --   4) facturas: el T/C se resuelve SIEMPRE del DOF a la fecha de emisión,
 --      tanto al insertar con un valor arbitrario como al mover la fecha.
@@ -86,26 +86,59 @@ BEGIN
 END
 $t$;
 
--- ── CASO 2 · catálogos globales sólo super_admin ───────────────────────────
+-- ── CASO 2 · catálogos globales: altas 0015, UPDATE/DELETE sólo super_admin ──
 DO $t$
-DECLARE r record; v_malas text := '';
+DECLARE
+  v_previous_search_path text := current_setting('search_path');
+  v_authenticated oid;
+  v_table_name text;
+  v_table regclass;
+  r pg_catalog.pg_policy%ROWTYPE;
+  v_insert boolean;
+  v_super boolean;
+  -- Mismo predicado normalizado que el replay inmutable de Drizzle 0015.
+  v_insert_check constant text := $expected$(( SELECT has_role(( SELECT auth.uid() AS uid), 'admin'::app_role) AS has_role) OR ( SELECT has_role(( SELECT auth.uid() AS uid), 'gerente_operaciones'::app_role) AS has_role))$expected$;
+  v_super_check constant text := $expected$( SELECT has_role(( SELECT auth.uid() AS uid), 'super_admin'::app_role) AS has_role)$expected$;
 BEGIN
-  FOR r IN
-    SELECT tablename, policyname, COALESCE(qual, '') || COALESCE(with_check, '') AS expr
-    FROM pg_policies
-    WHERE schemaname = 'public' AND tablename IN ('navieras', 'puertos')
-      AND cmd <> 'SELECT'
-  LOOP
-    IF r.expr LIKE '%gerente_operaciones%'
-       OR r.expr LIKE '%coordinador_logistico%'
-       OR r.expr LIKE '%admin_org%' THEN
-      v_malas := v_malas || ' ' || r.tablename || '/' || r.policyname;
+  PERFORM set_config('search_path', 'public, pg_catalog', true);
+  SELECT oid INTO v_authenticated FROM pg_catalog.pg_roles WHERE rolname = 'authenticated';
+  IF v_authenticated IS NULL THEN
+    RAISE EXCEPTION 'CASO 2 FALLÓ: falta el rol authenticated';
+  END IF;
+  FOREACH v_table_name IN ARRAY ARRAY['navieras', 'puertos', 'tipos_contenedor'] LOOP
+    v_table := to_regclass('public.' || v_table_name);
+    IF v_table IS NULL OR NOT COALESCE((SELECT relrowsecurity FROM pg_catalog.pg_class WHERE oid = v_table), false) THEN
+      RAISE EXCEPTION 'CASO 2 FALLÓ: falta catálogo o RLS habilitado en %', v_table_name;
+    END IF;
+    v_insert := false;
+    v_super := false;
+    FOR r IN SELECT * FROM pg_catalog.pg_policy WHERE polrelid = v_table AND polcmd <> 'r' LOOP
+      IF r.polpermissive IS DISTINCT FROM true OR r.polroles IS DISTINCT FROM ARRAY[v_authenticated]::oid[] THEN
+        RAISE EXCEPTION 'CASO 2 FALLÓ: roles o modo de policy inesperados en %/%', v_table_name, r.polname;
+      END IF;
+      IF r.polname = 'Gerente operaciones y admins dan de alta ' || v_table_name THEN
+        v_insert := true;
+        IF r.polcmd IS DISTINCT FROM 'a' OR r.polqual IS NOT NULL
+           OR pg_get_expr(r.polwithcheck, r.polrelid) IS DISTINCT FROM v_insert_check THEN
+          RAISE EXCEPTION 'CASO 2 FALLÓ: INSERT histórico alterado en %/%', v_table_name, r.polname;
+        END IF;
+      ELSIF r.polname = 'Super admin CRUD ' || v_table_name THEN
+        v_super := true;
+        IF r.polcmd IS DISTINCT FROM '*'
+           OR pg_get_expr(r.polqual, r.polrelid) IS DISTINCT FROM v_super_check
+           OR pg_get_expr(r.polwithcheck, r.polrelid) IS DISTINCT FROM v_super_check THEN
+          RAISE EXCEPTION 'CASO 2 FALLÓ: CRUD de super_admin alterado en %/%', v_table_name, r.polname;
+        END IF;
+      ELSE
+        RAISE EXCEPTION 'CASO 2 FALLÓ: policy de escritura inesperada en %/%', v_table_name, r.polname;
+      END IF;
+    END LOOP;
+    IF NOT v_insert OR NOT v_super THEN
+      RAISE EXCEPTION 'CASO 2 FALLÓ: falta policy de INSERT histórico o CRUD de super_admin en %', v_table_name;
     END IF;
   END LOOP;
-  IF v_malas <> '' THEN
-    RAISE EXCEPTION 'CASO 2 FALLÓ: roles de tenant aún escriben catálogos globales:%', v_malas;
-  END IF;
-  RAISE NOTICE 'CASO 2 OK — navieras/puertos sólo los escribe super_admin';
+  PERFORM set_config('search_path', v_previous_search_path, true);
+  RAISE NOTICE 'CASO 2 OK — altas históricas 0015 y CRUD de super_admin, sin otras policies de escritura';
 END
 $t$;
 
