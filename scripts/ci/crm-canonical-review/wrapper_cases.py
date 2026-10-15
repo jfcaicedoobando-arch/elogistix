@@ -2,7 +2,8 @@
 
 Every contract below is captured from this harness's synthetic database. This
 module accepts no DSN, private contract, external database, or transport option.
-The sequence is the fixture's verified SERIAL default; IDs are never supplied.
+Registration uses the fixture's verified SERIAL default. One adversarial case
+supplies a measured ID solely to prove rejection of an inconsistent sequence.
 """
 import copy
 import hashlib
@@ -31,6 +32,7 @@ DIRECT_CASES = (
     'direct-ledger-metadata-drift',
     'direct-supabase-history-drift',
     'direct-registered-acl-degraded',
+    'direct-registered-sequence-behind',
     'direct-target-metadata-drift',
     'direct-ledger-lock-55P03',
 )
@@ -146,7 +148,7 @@ AND l.mode='ShareRowExclusiveLock' AND l.granted;"""
 
 
 def run_wrapper_cases(r):
-    """Append and return exactly 13 named synthetic direct-wrapper checks."""
+    """Append and return exactly 14 named synthetic direct-wrapper checks."""
     start = len(r.result['checks'])
     candidate = (ROOT.parents[2] / 'drizzle/migrations/0021_crm_helpers_owner_only.sql').read_bytes()
     digest = hashlib.sha256(candidate).hexdigest()
@@ -241,6 +243,33 @@ def run_wrapper_cases(r):
         r.check(name, sqlstate='P0001', registered_row_does_not_skip_target_verification=True,
                 complete_rollback=True)
 
+    with database(r, 'direct_registered_sequence_behind') as db:
+        name = 'direct-registered-sequence-behind'
+        _setup(r, db, name)
+        contract = _capture(r, db, name + '-initial')
+        r.query(TIMEOUT + candidate.decode('utf8'), name + '-canonical-without-registration', db)
+        owner_only(r, db, name + '-owner-only')
+        measured = json.loads(r.query(sequence_state_sql(contract['sequence_name']),
+                                      name + '-measured-sequence', db).stdout)
+        require(measured == contract['sequence_state'], name + ': canonical SQL changed the ledger sequence')
+        require(type(measured['last_value']) is int and type(measured['is_called']) is bool,
+                name + ': measured sequence state has unexpected types')
+        measured_next = measured['last_value'] + int(measured['is_called'])
+        require(measured_next > max(x['id'] for x in contract['drizzle']),
+                name + ': measured next value must follow the synthetic prior history')
+        # TEST_ONLY attack: deliberately supply the observed next ID without
+        # calling nextval. This is never an operational registration convention.
+        attack = "INSERT INTO drizzle.__drizzle_migrations(id,hash,created_at) VALUES (" + str(measured_next) + ",'" + digest + "'," + str(when) + ") RETURNING to_jsonb(__drizzle_migrations);"
+        observed = json.loads(r.query(attack, name + '-test-only-explicit-id-attack', db).stdout)
+        require(observed == {'id': measured_next, 'hash': digest, 'created_at': when},
+                name + ': adversarial fixture did not insert its measured row')
+        _save(r, name + '-test-only-measured-id', {'sequence': measured, 'inserted': observed})
+        contract = _refresh_sequence(r, db, contract, name + '-sequence-refresh')
+        require(contract['sequence_state'] == measured, name + ': attack unexpectedly advanced the sequence')
+        _reject(r, db, name, contract, candidate, error='CRM_DIRECT_CONFLICT')
+        r.check(name, sqlstate='P0001', test_only_explicit_id_measured=True,
+                registered_sequence_behind_rejected=True, complete_rollback=True)
+
     with database(r, 'direct_target_metadata_drift') as db:
         name = 'direct-target-metadata-drift'
         _setup(r, db, name)
@@ -283,5 +312,5 @@ def run_wrapper_cases(r):
 
     checks = r.result['checks'][start:]
     require(tuple(x['case'] for x in checks) == DIRECT_CASES, "Wrapper case condition failed: tuple((x['case'] for x in checks)) == DIRECT_CASES")
-    require(len(checks) == 13 and all(x['status'] == 'pass' for x in checks), "Wrapper case condition failed: len(checks) == 13 and all((x['status'] == 'pass' for x in checks))")
+    require(len(checks) == 14 and all(x['status'] == 'pass' for x in checks), "Wrapper case condition failed: len(checks) == 14 and all((x['status'] == 'pass' for x in checks))")
     return checks

@@ -245,7 +245,7 @@ BEGIN
  IF v_registered THEN
    IF (SELECT count(*) FROM pg_catalog.jsonb_array_elements(v_before) WHERE value->>'hash'='""" + SHA + "' AND (value->>'created_at')::bigint=" + str(WHEN) + """
        AND (value->>'id')::integer>coalesce((SELECT max((r->>'id')::integer) FROM pg_catalog.jsonb_array_elements(v_rows) r),0)
-       AND (value->>'id')::integer<=""" + str(next_value) + """ )<>1 THEN RAISE EXCEPTION 'CRM_DIRECT_CONFLICT'; END IF;
+       AND (value->>'id')::integer<""" + str(next_value) + """ )<>1 THEN RAISE EXCEPTION 'CRM_DIRECT_CONFLICT'; END IF;
  """ + norm + """
    IF v_normal IS DISTINCT FROM v_normal_expected THEN RAISE EXCEPTION 'CRM_DIRECT_REGISTERED_METADATA'; END IF;
  """ + owner_check + """

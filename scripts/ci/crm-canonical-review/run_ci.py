@@ -335,7 +335,7 @@ def main():
         r.result['canonical_case_count']=len(names)
         run_wrapper_cases(r)
         wrapper=r.result['checks'][len(names):]
-        require(len(wrapper)==13 and len({item['case'] for item in wrapper})==13
+        require(len(wrapper)==14 and len({item['case'] for item in wrapper})==14
                 and all(item['case'].startswith('direct-') and item['status']=='pass' for item in wrapper),'Incomplete direct wrapper matrix')
         r.result['direct_wrapper']='PASS_SYNTHETIC_ONLY'
         r.result['direct_wrapper_case_count']=len(wrapper)
