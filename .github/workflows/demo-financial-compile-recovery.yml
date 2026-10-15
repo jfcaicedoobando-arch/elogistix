@@ -1,0 +1,35 @@
+name: Demo financial canonical compile recovery
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+    branches: [main]
+    paths:
+      - 'scripts/ci/demo-financial-compile-recovery/**'
+      - '.github/workflows/demo-financial-compile-recovery.yml'
+permissions:
+  contents: read
+concurrency:
+  group: demo-financial-compile-recovery-${{ github.event.pull_request.number }}
+  cancel-in-progress: false
+jobs:
+  canonical-compile:
+    if: github.repository == 'jfcaicedoobando-arch/elogistix' && github.event.pull_request.draft == true && github.event.pull_request.head.repo.full_name == github.repository && github.event.pull_request.head.ref == 'codex/demo-financial-compile-recovery-20261015' && github.event.pull_request.base.sha == 'd778b7f5a19ec61e6dccaeab32f06d990e880ef8'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          persist-credentials: false
+      - name: Offline source and isolation tests
+        run: python3 -B -I -m unittest discover -s scripts/ci/demo-financial-compile-recovery -p 'test_*.py' -v
+      - name: Compile canonical sources in owned PostgreSQL 17.6
+        run: python3 -B -I scripts/ci/demo-financial-compile-recovery/run_ci.py --output "$RUNNER_TEMP/demo-financial-compile-recovery"
+      - name: Preserve bounded compile evidence including failures
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: demo-financial-compile-recovery-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/demo-financial-compile-recovery/public/**
+          if-no-files-found: warn
+          retention-days: 14
