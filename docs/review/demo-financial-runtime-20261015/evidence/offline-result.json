@@ -1,0 +1,8 @@
+{
+  "checks": 22,
+  "passed": 22,
+  "failed": 0,
+  "coverage": "OFFLINE_SOURCE_AND_RUNNER_CONTRACT_ONLY",
+  "sql": "NOT_RUN",
+  "docker": "NOT_RUN"
+}
