@@ -1,0 +1,89 @@
+name: CRM operational event envelope synthetic review
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+    branches: [fix/crm-canonical-owner-only-20261015]
+    paths:
+      - 'scripts/ci/crm-operational-events-review/**'
+      - 'scripts/ci/crm-canonical-review/**'
+      - 'drizzle/migrations/0021_crm_helpers_owner_only.sql'
+      - 'supabase/migrations/20261015194324_crm_helpers_owner_only.sql'
+      - '.github/workflows/crm-operational-events-review.yml'
+permissions:
+  contents: read
+concurrency:
+  group: crm-operational-events-review-${{ github.event.pull_request.number }}-${{ github.event.pull_request.head.sha }}
+  cancel-in-progress: false
+jobs:
+  changed-base-requires-review:
+    if: >-
+      github.repository == 'jfcaicedoobando-arch/elogistix' &&
+      github.event.pull_request.head.repo.full_name == github.repository &&
+      github.event.pull_request.head.ref == 'codex/crm-operational-event-envelope-20261015' &&
+      github.event.pull_request.draft == true &&
+      github.event.pull_request.base.sha != '3ca13983dc08c075155da9910e4f042aae90c2fe'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 1
+    steps:
+      - name: Reject changed recorded parent before checkout or Docker
+        run: |
+          echo 'Recorded stacked PR base changed; explicit source review is required.'
+          exit 1
+  synthetic-review:
+    if: >-
+      github.repository == 'jfcaicedoobando-arch/elogistix' &&
+      github.event.repository.full_name == github.repository &&
+      github.event.pull_request.base.repo.full_name == github.repository &&
+      github.event.pull_request.head.repo.full_name == github.repository &&
+      github.event.pull_request.base.repo.owner.login == 'jfcaicedoobando-arch' &&
+      github.event.pull_request.head.repo.owner.login == 'jfcaicedoobando-arch' &&
+      github.event.pull_request.base.ref == 'fix/crm-canonical-owner-only-20261015' &&
+      github.event.pull_request.base.sha == '3ca13983dc08c075155da9910e4f042aae90c2fe' &&
+      github.event.pull_request.head.ref == 'codex/crm-operational-event-envelope-20261015' &&
+      github.event.pull_request.draft == true
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    steps:
+      - name: Checkout exact event head with no persisted credential
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # repository precedent
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          persist-credentials: false
+          fetch-depth: 1
+      - name: Validate recorded base and inherited immutable sources
+        run: |
+          set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/crm-event-preflight"
+          python3 -B scripts/ci/crm-operational-events-review/gate.py 2>&1 | tee "$RUNNER_TEMP/crm-event-preflight/gate.log"
+      - name: Offline event-envelope contracts
+        run: |
+          set -euo pipefail
+          python3 -B -m unittest discover -s scripts/ci/crm-operational-events-review -p 'test_*.py' -v 2>&1 | tee "$RUNNER_TEMP/crm-event-preflight/offline-tests.log"
+      - name: Owned disposable PostgreSQL 17.6 synthetic event review
+        run: |
+          set -euo pipefail
+          python3 -B scripts/ci/crm-operational-events-review/run_event_ci.py --output "$RUNNER_TEMP/crm-event-evidence" 2>&1 | tee "$RUNNER_TEMP/crm-event-preflight/runtime.log"
+      - name: Validate exact event capture projections against Draft 2020-12 schema
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $schema = 'scripts/ci/crm-canonical-review/operational-capture/evidence.schema.json'
+          $files = @(Get-ChildItem -LiteralPath "$env:RUNNER_TEMP/crm-event-evidence" -Filter 'projection-*.json')
+          if ($files.Count -ne 7) { throw 'Seven synthetic projections required' }
+          foreach ($file in $files) {
+            if (-not (Test-Json -Json (Get-Content -LiteralPath $file.FullName -Raw) -SchemaFile $schema -ErrorAction Stop)) {
+              throw 'Synthetic projection failed schema validation'
+            }
+          }
+          'PASS seven synthetic event projections against Draft 2020-12 schema' |
+            Tee-Object -FilePath "$env:RUNNER_TEMP/crm-event-preflight/projection-schema.log"
+      - name: Preserve synthetic results and cleanup evidence
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # repository precedent
+        with:
+          name: crm-operational-events-review-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            ${{ runner.temp }}/crm-event-preflight
+            ${{ runner.temp }}/crm-event-evidence
+          if-no-files-found: warn
+          retention-days: 14

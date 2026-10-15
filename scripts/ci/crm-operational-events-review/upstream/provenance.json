@@ -1,0 +1,35 @@
+{
+  "format": "public-upstream-source-v1",
+  "repository": "supabase/postgres",
+  "repository_url": "https://github.com/supabase/postgres",
+  "commit": "8b0ef1ef942e18493bf5c89087eff7b030c0e26d",
+  "source_path": "migrations/db/migrations/20220321174452_fix-postgrest-alter-type-event-trigger.sql",
+  "source_url": "https://github.com/supabase/postgres/blob/8b0ef1ef942e18493bf5c89087eff7b030c0e26d/migrations/db/migrations/20220321174452_fix-postgrest-alter-type-event-trigger.sql",
+  "source_raw_url": "https://raw.githubusercontent.com/supabase/postgres/8b0ef1ef942e18493bf5c89087eff7b030c0e26d/migrations/db/migrations/20220321174452_fix-postgrest-alter-type-event-trigger.sql",
+  "source_git_blob_sha1": "339def9bd8bbf2381cff6d6040bad585ec5dcc68",
+  "source_sha256": "674bfe11a9cb828c55ca7c9e00d4f4edcbcb0003d956d8866c9563810e7f0f0e",
+  "source_utf8_bytes": 1911,
+  "acquisition": "GitHub connector fetch_file at immutable ref, base64 decoded; independently verified Git blob SHA1",
+  "extraction": {
+    "function": "extensions.pgrst_ddl_watch()",
+    "method": "Literal bytes strictly between AS $$ and the next $$ of the named CREATE OR REPLACE FUNCTION; no trimming, normalization, or rewriting",
+    "byte_offset_zero_based": 305,
+    "byte_length": 729,
+    "utf8_sha256": "de987df746eb39647098459e7993bd8595e592969b0cd647828a3d13d37cffe0",
+    "local_file": "pgrst_ddl_watch.prosrc",
+    "first_bytes_hex": "0a4445434c4152450a",
+    "last_bytes_hex": "0a454e443b20"
+  },
+  "license": {
+    "spdx": "PostgreSQL",
+    "copyright": "Copyright (c) 2020, Supabase",
+    "path": "LICENSE",
+    "url": "https://github.com/supabase/postgres/blob/8b0ef1ef942e18493bf5c89087eff7b030c0e26d/LICENSE",
+    "git_blob_sha1": "ab15a1ed6a7cc34c8c22305d74c818248ca40ea4",
+    "sha256": "fd313c784c2e3c964fe043fdb7bcffa8f84627d53d2cf3a61c61586ff6c3f4c1",
+    "local_file": "LICENSE",
+    "preservation": "Unmodified upstream license retained with source"
+  },
+  "scope": "Public source provenance only. No deployment identity, operational admission, runtime result, or live database evidence is asserted.",
+  "execution_note": "The full upstream migration is preserved for provenance; test fixtures must install only the reviewed function body and explicit synthetic event trigger configuration."
+}

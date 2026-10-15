@@ -1,0 +1,4 @@
+# Preserve licensed upstream bytes, including the prosrc's significant final space.
+20220321174452_fix-postgrest-alter-type-event-trigger.sql -text
+LICENSE -text
+pgrst_ddl_watch.prosrc -text whitespace=-blank-at-eol
