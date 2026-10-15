@@ -1,0 +1,127 @@
+[
+  {
+    "path": "README.md",
+    "bytes": 4912,
+    "sha256": "773f46a378950d65c1ae299f9f3e63f2f2636655a542cfe105b2f2c99237a43c"
+  },
+  {
+    "path": "references/assertions.sql",
+    "bytes": 2383,
+    "sha256": "5d550dc807516b014d4735aa3827cfb8b2e90f8f86b9acef02f8c7aba81e8fd9"
+  },
+  {
+    "path": "references/checkpoint.sql",
+    "bytes": 43,
+    "sha256": "aee4e2d5f2214f8a1423ba976598f9fad85e1fb1bfc00fbcf5aa8f8d1687b303"
+  },
+  {
+    "path": "references/event.sql",
+    "bytes": 38,
+    "sha256": "50894cf008e12fad8117d433e8a0c7303c9f787608700278a75541c670c7ec24"
+  },
+  {
+    "path": "references/execution_receipt.sql",
+    "bytes": 50,
+    "sha256": "ceb91618d36f0dfe95b10442058ad637e76e105734cc1244ada0d707dfd200ac"
+  },
+  {
+    "path": "references/fault.sql",
+    "bytes": 3060,
+    "sha256": "7b8de4ea9e07ddad56e577b8aa9c85802f6c20ed736e410e95ac980bbbe61237"
+  },
+  {
+    "path": "references/happy.sql",
+    "bytes": 3130,
+    "sha256": "4810d007442552f855690ced27cbac7ad402fb420dbab558e5affd17cf4bffa9"
+  },
+  {
+    "path": "references/marker.sql",
+    "bytes": 39,
+    "sha256": "29df6dc83155ff055aea45a57691ac83de822b70b609211bedc21073d407546c"
+  },
+  {
+    "path": "references/producer-and-context.sql",
+    "bytes": 1864,
+    "sha256": "499331c4c7ac3d67111c836030af58e6e3cabeed67a36881a54fe7c2e58e7914"
+  },
+  {
+    "path": "references/receipt.sql",
+    "bytes": 40,
+    "sha256": "e3c353703c326a6b949b30f9b69695039e87dd39658e7d2a2d58d6c75fa61f70"
+  },
+  {
+    "path": "run_ci.py",
+    "bytes": 18249,
+    "sha256": "ec489405ec8e64bcf429dff7734ec429a3bd2a18dcad9ecf0d0179e19a907423"
+  },
+  {
+    "path": "source-pins.json",
+    "bytes": 7950,
+    "sha256": "563a685ea4e50fec9862342ea8446639c955656db89574bada4446f5e93f5556"
+  },
+  {
+    "path": "sql/assertions.sql",
+    "bytes": 3606,
+    "sha256": "f42cbf544a61af3a57d71ecb8017f27e5d28ff1835d0e60a796a4328d8f87420"
+  },
+  {
+    "path": "sql/checkpoint.sql",
+    "bytes": 43,
+    "sha256": "aee4e2d5f2214f8a1423ba976598f9fad85e1fb1bfc00fbcf5aa8f8d1687b303"
+  },
+  {
+    "path": "sql/event.sql",
+    "bytes": 38,
+    "sha256": "50894cf008e12fad8117d433e8a0c7303c9f787608700278a75541c670c7ec24"
+  },
+  {
+    "path": "sql/execution_receipt.sql",
+    "bytes": 50,
+    "sha256": "ceb91618d36f0dfe95b10442058ad637e76e105734cc1244ada0d707dfd200ac"
+  },
+  {
+    "path": "sql/fault.sql",
+    "bytes": 3487,
+    "sha256": "6b06485a0a1bed49a59d5aa9da2d829503a181548e336c943b4d7080dc13d83a"
+  },
+  {
+    "path": "sql/fixture.sql",
+    "bytes": 8452,
+    "sha256": "6ab810fbffcf81fb83b9642af789a69ba5bfa2bc5680e3bc4c4f3cc75b804ae3"
+  },
+  {
+    "path": "sql/happy.sql",
+    "bytes": 3561,
+    "sha256": "ad2759aaa898cb28ca0cddf064920c57e3e56386e443d6b95a5bf1c183c03d13"
+  },
+  {
+    "path": "sql/marker.sql",
+    "bytes": 39,
+    "sha256": "29df6dc83155ff055aea45a57691ac83de822b70b609211bedc21073d407546c"
+  },
+  {
+    "path": "sql/prepare-context.sql",
+    "bytes": 6403,
+    "sha256": "0391ef871af057ce05bba8f16936b47edada15ebb651d09d06e54d8beb2e1c0a"
+  },
+  {
+    "path": "sql/receipt.sql",
+    "bytes": 40,
+    "sha256": "e3c353703c326a6b949b30f9b69695039e87dd39658e7d2a2d58d6c75fa61f70"
+  },
+  {
+    "path": "test_fixture.py",
+    "bytes": 16578,
+    "sha256": "c602cbe5fdb5f6689124eee309b8887d93f21faead15cf4c12a0acff5d6623c3"
+  },
+  {
+    "path": "test_runner.py",
+    "bytes": 6139,
+    "sha256": "fadb09c34c651a70c5ffcb0fdc295b64f49900897b52e787e05620ea57568a31"
+  },
+  {
+    "path": "test_suites.py",
+    "bytes": 10430,
+    "sha256": "d82255351d1edfdaff2c52f2f48e5585f28445d1a4ae7e796f075a6c3b92ebd0"
+  }
+]
