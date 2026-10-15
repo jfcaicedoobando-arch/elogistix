@@ -28,11 +28,18 @@ INSERT INTO auth.users(id,email) VALUES
  ('de200000-0000-0000-0000-000000000001','qa-stop-superadmin@fixture.invalid'),
  ('de200000-0000-0000-0000-000000000002','qa-stop-foreign@fixture.invalid');
 -- Explicit synthetic application identities; no PostgreSQL role is created or altered.
-UPDATE public.user_roles SET role='super_admin' WHERE user_id='de200000-0000-0000-0000-000000000001';
-UPDATE public.user_roles SET role='admin_org' WHERE user_id='de200000-0000-0000-0000-000000000002';
+-- The post-migration CI sentinel prevents signup from bootstrapping these roles.
+INSERT INTO public.user_roles(user_id,role) VALUES
+ ('de200000-0000-0000-0000-000000000001','super_admin'),
+ ('de200000-0000-0000-0000-000000000002','admin_org')
+ON CONFLICT(user_id) DO UPDATE SET role=EXCLUDED.role;
 INSERT INTO public.organization_members(organization_id,user_id,role) VALUES
  ('de100000-0000-0000-0000-000000000001','de200000-0000-0000-0000-000000000001','admin_org'),
  ('de100000-0000-0000-0000-000000000002','de200000-0000-0000-0000-000000000002','admin_org');
+SELECT pg_temp.qa_stop_assert(
+ public.has_role('de200000-0000-0000-0000-000000000001'::uuid,'super_admin'::public.app_role)
+ AND NOT public.has_role('de200000-0000-0000-0000-000000000002'::uuid,'super_admin'::public.app_role),
+ 'synthetic legacy actor explicitly holds super_admin; foreign actor does not');
 SELECT set_config('request.jwt.claims','{"role":"service_role","sub":"de200000-0000-0000-0000-000000000001"}',true);
 
 DO $fixture$
