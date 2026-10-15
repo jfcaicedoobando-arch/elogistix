@@ -26,8 +26,9 @@ Rename locks serialize the four existing function objects within the admission t
 
 - Static Python AST/hash/structure checks: runnable with the command below; preparation checks passed. Static success is not a runtime pass.
 - Vitest contract: **6/6 local checks passed** in one test file, using already installed Vitest 5.0.2, isolated Node configuration and `--no-cache`. No dependencies were installed. This read-only static contract run is not repository-wide typecheck, the repository-pinned Vitest 5.0.3 run, CI success or database execution.
-- Prepared Docker event-trigger matrix: **NOT RUN**. The new workflow and adapter are prepared locally, not published or activated. No R3 full-pass or CI-success claim.
-- Two-session concurrency: **NOT_RUN**. Separate concurrency modules are not integrated in this first review commit and are not part of its evidence.
+- Original Docker event-trigger matrix: **10 checks passed** remotely on PR #340 at commit `ac5bb699`, using PostgreSQL 17.6 postmaster with confirmed owned-container cleanup. That result covers the original eight event-trigger cases plus transition/retry and dependency checks, not the new concurrency integration or production execution.
+- Two-session concurrency: **NOT_RUN** at runtime. `concurrency_cases.py` is now integrated locally through `Runner.psqlctl` and invoked explicitly after the original matrix, before PASS. The combined adapter/concurrency/terminal offline suite passes **63 tests**; real execution of this updated revision in Actions remains pending. Historical active-call case P1 remains omitted.
+- Terminal direct calls: **NOT_RUN** at runtime. The reviewed terminal module is integrated after concurrency and before PASS. It verifies terminal hashes before five direct invocations across four routes, including both guarded cooldown variants, while another synthetic backend holds the historical advisory lock. Exact 55000 diagnostics and unchanged tracked/auth/inventory snapshots are required. No historical seed routine is invoked.
 - Supplementary PostgreSQL 17.6 `--single` evidence: five checks passed previously: non-bootstrap operator/negative privileges; historical definition hashes without invocation; explicit-transaction rollback; four stopped hashes with OID/ACL/other observed metadata preservation; sequential terminal retry with logical equality and physical tuple changes.
 - `--single` disables event triggers. Event-trigger regression and concurrent-session checks were **NOT RUN** in that evidence. It is not production-equivalent. Server/client binaries were reported as 17.6 and system libpq as 17.11, not an entirely 17.6 dependency stack.
 
@@ -36,21 +37,22 @@ Rename locks serialize the four existing function objects within the admission t
 From the repository root:
 
 ```sh
-python3 scripts/ci/seed-r3-review/verify_static.py
+python3 -I scripts/ci/seed-r3-review/verify_static.py
+python3 -I -m unittest discover -s scripts/ci/seed-r3-review -p 'test_*.py' -v
 bun run test -- scripts/ci/seed-r3-review/contract.test.ts --project=node
 ```
 
-The second command uses only the repository's already installed dependencies. Do not fetch a new npm toolchain just to run this check. The current repository `scripts/lib/testEnvSplit.ts` discovers tests in `scripts/` and honors `@vitest-environment node`; this test follows that contract. These commands are not database tests.
+The Vitest command uses only the repository's already installed dependencies. Do not fetch a new npm toolchain just to run this check. The current repository `scripts/lib/testEnvSplit.ts` discovers tests in `scripts/` and honors `@vitest-environment node`; this test follows that contract. These commands are not database tests.
 
-## Prepared draft-only CI lane (not yet executed or published)
+## Draft-only CI lane (concurrency update prepared locally; runtime pending)
 
-The independent `.github/workflows/seed-r3-review.yml` lane is limited to a same-repository draft PR from `fix/seed-r3-review-20261015` into `main`, with base SHA `e383238caf130455b2991184d0cae0c29a627aca`. A changed base requires a fresh review; it is not silently accepted. The lane does not activate through this document or a local static check.
+The independent `.github/workflows/seed-r3-review.yml` lane is limited to a same-repository draft PR from `fix/seed-r3-review-20261015` into `main`, with base SHA `c7db22e047ff22e9059233adc86918d6b51bc39c`. This base restores exactly the original reviewed tree `88d1d5b326573e8828b42c4c492249072da498b6` following PR #341; historical source provenance below remains pinned to its original commit. A changed base requires a fresh review; it is not silently accepted. The lane does not activate through this document or a local static check.
 
 `review-contract.json` records the boundaries. `run_ci.py` uses host Python and Docker with the pinned image `postgres@sha256:f3bd19c606e442c3d7bdfa8002e03fe260a1023351e0ea4598032022b68dd6e3`, requiring PostgreSQL `server_version_num=170006`. Before container creation, it verifies immutable source hashes and exact equivalence of its copied matrix to the hash-locked original harness block. SQL goes through stdin to `docker exec -i psql` over the owned private UNIX socket. It does not require Python inside the PostgreSQL image.
 
-The planned runtime covers eight R2/R3 × historical/terminal × COST/prosrc event-trigger cases, plus clean historical transition/terminal retry and existing view/trigger-bridge dependencies. These same-transaction event-trigger cases do not constitute two-session concurrency testing. No separate concurrency modules are integrated in this first commit.
+The original matrix covers eight R2/R3 × historical/terminal × COST/prosrc event-trigger cases, plus clean historical transition/terminal retry and existing view/trigger-bridge dependencies. Those same-transaction event-trigger cases do not constitute two-session concurrency testing. The locally integrated concurrency module adds four explicit cases: prior COST writer commit, prior COST writer rollback, held R3 rollback with four blocked COST routes and unrelated DDL, and queued non-CASCADE DROP exposing the postcommit limitation. These four cases still require a real Actions run for this updated revision; offline mocks do not establish runtime coverage.
 
-The adapter limits itself to its owned container/cluster, verifies identity before cleanup, checks shutdown and PID absence, removes the owned container and verifies absence before PASS. The workflow has an always-run cleanup step and bounded diagnostic artifact retention. `test_ci_adapter.py` is an offline mock suite, not evidence that Docker or the PostgreSQL matrix ran. There is no production migration or deployment step.
+Persistent clients revalidate the owned container and PostgreSQL 17.6 non-superuser identity, use SQL on stdin and a merged diagnostic/output stream, and are independently registered for outer cleanup. The adapter reaps only those registered children before owned-cluster shutdown, including after a concurrency-module exception. It verifies identity before cleanup, checks shutdown and PID absence, removes the owned container and verifies absence before PASS. The workflow has an always-run cleanup step and bounded diagnostic artifact retention. `test_ci_adapter.py` is an offline mock suite, not evidence that Docker or the PostgreSQL matrix ran. There is no production migration or deployment step.
 
 ## Git provenance of preserved SQL bytes
 

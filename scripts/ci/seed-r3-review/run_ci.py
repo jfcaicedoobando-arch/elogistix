@@ -17,9 +17,14 @@ ROOT = Path(__file__).resolve().parent
 REPOSITORY = 'jfcaicedoobando-arch/elogistix'
 OWNER = 'jfcaicedoobando-arch'
 BRANCH = 'fix/seed-r3-review-20261015'
-BASE = 'e383238caf130455b2991184d0cae0c29a627aca'
+BASE = 'c7db22e047ff22e9059233adc86918d6b51bc39c'
 IMAGE = 'postgres@sha256:f3bd19c606e442c3d7bdfa8002e03fe260a1023351e0ea4598032022b68dd6e3'
 HASHES = {
+    'terminal_calls.py': '6121e1dc600de51fa34d1a59d29751bf91983de596540c8952b977c851e03acf',
+    'test_terminal_calls.py': '046b4165e724da6aa67c4f2fc6c6c2b4dd7eeae6713cf1075a0b50d2c3c9f117',
+
+    'concurrency_cases.py': '6fa9de94b8f482a94213c0d55bef012a8f8c54b1ee4f38f724c52c51cac6e373',
+    'test_concurrency_controls.py': '1b0276bd89920e2d110a7efd9131d574393ac543ebdec712c339691041f7d00a',
     'run_isolated.py': '93ac69a3d0ae3cccbb9587ffdf07ba5751b99928d5a0ff8a4e747162731fa9f9',
     'PROPOSAL_R3_rename_lock_admission.sql': '7f054e3071b243ca6ada6359028c66efa0ac2ba5047a8cf7133f70f1b7924d86',
     'snapshot.sql': '8214954821e88579ff76d10979b296edc6d5c47870c22e6e2c27e01df9e67fb0',
@@ -72,11 +77,12 @@ class Runner:
         self.token = uuid.uuid4().hex
         self.image_id = None
         self.counter = 0
+        self.sessions = []
         self.env = {'PATH': '/usr/bin:/bin', 'LANG': 'C', 'HOME': str(output),
                     'DOCKER_CONFIG': str(output / 'docker-config'),
                     'DOCKER_HOST': 'unix:///var/run/docker.sock'}
         self.result = {'status': 'running', 'checks': [], 'historical_seed_invocations': 0,
-                       'concurrency_two_sessions': 'NOT_RUN', 'cleanup': 'pending'}
+                       'concurrency_two_sessions': 'NOT_RUN', 'terminal_direct_calls': 'NOT_RUN', 'cleanup': 'pending'}
 
     def save(self):
         (self.output / 'result.json').write_text(json.dumps(self.result, indent=2) + '\n')
@@ -120,6 +126,57 @@ class Runner:
             elif label.startswith('stopped-'):
                 require(primary[0] == ('55000', 'LC_SEED_DEMO_CONSERVACION_PENDIENTE: reseed bloqueado hasta verificar conservación y adopción'), 'Unexpected stopped primary error')
         return response
+
+    def psqlctl(self, db, label):
+        """Open a tracked persistent client only in an owned synthetic database."""
+        require(re.fullmatch(r'qa_r3_cc_[a-z_]+', db), 'Unsafe synthetic database name')
+        require(re.fullmatch(r'cc-[a-z_]+-[ab]', label), 'Unsafe session label')
+        info = self.inspect_owned()
+        require(info['State']['Running'], 'Owned container is not running')
+        context = json.loads(self.query("SELECT jsonb_build_object('version',current_setting('server_version_num'),'user',current_user,'session',session_user,'superuser',(SELECT rolsuper FROM pg_roles WHERE rolname=current_user),'admin_member',pg_has_role(current_user,'supabase_admin','MEMBER'),'listen',current_setting('listen_addresses'));", 'persistent-context-' + label, db).stdout)
+        require(context == {'version': '170006', 'user': 'postgres', 'session': 'postgres',
+                            'superuser': False, 'admin_member': False, 'listen': ''}, 'Persistent session context mismatch')
+        args = ['docker', 'exec', '-i', self.cid, 'psql', '-X', '-w', '-qAt', '-h', '/tmp/r3/socket',
+                '-p', '5432', '-U', 'postgres', '-d', db, '-v', 'ON_ERROR_STOP=0', '-v', 'VERBOSITY=verbose']
+        # Defer Python interruption until registration; do not inherit a blocked
+        # signal mask into docker exec (the child must remain terminable).
+        pending_signals = []
+        watched = (signal.SIGTERM, signal.SIGINT, signal.SIGALRM)
+        previous_handlers = {sig: signal.getsignal(sig) for sig in watched}
+        try:
+            for sig in watched:
+                signal.signal(sig, lambda number, frame: pending_signals.append(number))
+            process = subprocess.Popen(args, stdin=subprocess.PIPE, stdout=subprocess.PIPE,
+                                       stderr=subprocess.STDOUT, text=True, bufsize=1, shell=False, env=self.env)
+            self.sessions.append(process)
+        finally:
+            for sig, handler in previous_handlers.items():
+                signal.signal(sig, handler)
+        require(not pending_signals, 'Interrupted during owned session creation')
+        return process
+
+    def close_sessions(self):
+        """Reap only Popen objects registered by this runner, before cluster shutdown."""
+        failures = []
+        for process in reversed(self.sessions):
+            try:
+                if process.poll() is None:
+                    process.terminate()
+                    try:
+                        process.wait(timeout=5)
+                    except subprocess.TimeoutExpired:
+                        process.kill()
+                        process.wait(timeout=5)
+                else:
+                    process.wait(timeout=5)
+                for stream in (process.stdin, process.stdout, process.stderr):
+                    if stream is not None and not stream.closed:
+                        stream.close()
+            except BaseException as exc:
+                failures.append(str(exc))
+        self.result['owned_psql_clients_closed'] = not failures
+        if failures:
+            self.result.update(status='failed', session_cleanup_errors=failures)
 
     def snapshot(self, db, label):
         value = json.loads(self.query((ROOT / 'snapshot.sql').read_text(), label, db).stdout)
@@ -185,6 +242,7 @@ class Runner:
         self.result['phase'] = 'cluster_started'; self.save()
 
     def cleanup(self):
+        self.close_sessions()
         if not (self.output / 'owned.cid').exists():
             found = self.docker(['ps', '-a', '--no-trunc', '--filter', 'name=^/' + self.name + '$', '--format', '{{.ID}}'], 'recover-owned-container')
             ids = found.stdout.split()
@@ -302,6 +360,24 @@ def matrix(query, snap, check, result, sqls, digest, extract_hashes, logical, SI
 # END UNCHANGED MATRIX
 
 
+def run_concurrency(runner):
+    # The module is hash-gated before Docker starts; no implicit discovery/import.
+    spec = importlib.util.spec_from_file_location('reviewed_concurrency_cases', ROOT / 'concurrency_cases.py')
+    module = importlib.util.module_from_spec(spec)
+    sys.modules[spec.name] = module
+    spec.loader.exec_module(module)
+    module.run_concurrency(runner)
+    return module
+
+
+def run_terminal_calls(runner, controls):
+    spec = importlib.util.spec_from_file_location('reviewed_terminal_calls', ROOT / 'terminal_calls.py')
+    module = importlib.util.module_from_spec(spec)
+    sys.modules[spec.name] = module
+    spec.loader.exec_module(module)
+    module.run_terminal_calls(runner, controls)
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--cleanup-only', action='store_true')
@@ -357,10 +433,18 @@ def main():
         matrix(runner.query, runner.snapshot, runner.check, runner.result,
                {'R2': (ROOT / 'fixtures/R2.sql').read_text(), 'R3': (ROOT / 'PROPOSAL_R3_rename_lock_admission.sql').read_text()},
                module.digest, module.extract_hashes, module.logical, module.SIGS)
+        controls = run_concurrency(runner)
+        require(runner.result.get('concurrency_two_sessions') == 'PASS', 'Concurrency cases incomplete')
+        run_terminal_calls(runner, controls)
+        require(runner.result.get('terminal_direct_calls') == 'PASS', 'Terminal direct calls incomplete')
         runner.result['status'] = 'checks_pass_cleanup_pending'
         passed = True
     except BaseException as exc:
         runner.result.update(status='failed', error=str(exc))
+        if runner.result.get('concurrency_two_sessions') == 'RUNNING':
+            runner.result['concurrency_two_sessions'] = 'FAILED'
+        if runner.result.get('terminal_direct_calls') == 'RUNNING':
+            runner.result['terminal_direct_calls'] = 'FAILED'
     finally:
         signal.alarm(0)
         runner.save()
@@ -369,7 +453,8 @@ def main():
         except BaseException as exc:
             passed = False
             runner.result.update(status='failed', cleanup='failed', cleanup_error=str(exc))
-        passed = passed and runner.result.get('pg_status_3_and_no_pid') is True
+        passed = (passed and runner.result.get('pg_status_3_and_no_pid') is True
+                  and runner.result.get('owned_psql_clients_closed') is True)
         runner.result['status'] = 'pass' if passed else 'failed'
         runner.save()
     require(passed, 'Review regression failed; inspect result.json and logs')

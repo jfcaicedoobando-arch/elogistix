@@ -62,7 +62,7 @@ class Gates(unittest.TestCase):
     def test_changed_hash_rejected(self):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
-            (root / 'run_isolated.py').write_text('changed')
+            (root / next(iter(ci.HASHES))).write_text('changed')
             with self.assertRaisesRegex(RuntimeError, 'hash changed'): ci.verify_sources(root)
 
     def test_version_context_rejected(self):
@@ -135,6 +135,83 @@ class Lifecycle(unittest.TestCase):
         self.assertIn('/tmp/r3/socket', call.args[0])
         self.assertNotIn('SELECT 1;', call.args[0])
 
+    def persistent_context(self):
+        return {'version': '170006', 'user': 'postgres', 'session': 'postgres', 'superuser': False, 'admin_member': False, 'listen': ''}
+
+    def test_persistent_transport_is_gated_and_registered(self):
+        self.runner.cid = 'c' * 64
+        self.runner.inspect_owned = Mock(return_value=self.info())
+        self.runner.query = Mock(return_value=completed(stdout=json.dumps(self.persistent_context())))
+        process = Mock()
+        with patch.object(ci.subprocess, 'Popen', return_value=process) as popen:
+            self.assertIs(self.runner.psqlctl('qa_r3_cc_writer_commit', 'cc-writer_commit-a'), process)
+        args = popen.call_args.args[0]; opts = popen.call_args.kwargs
+        self.assertEqual(args[:4], ['docker', 'exec', '-i', self.runner.cid])
+        self.assertIn('/tmp/r3/socket', args)
+        self.assertIn('ON_ERROR_STOP=0', args)
+        self.assertIs(opts['stderr'], subprocess.STDOUT)
+        self.assertFalse(opts['shell'])
+        self.assertTrue(opts['text'])
+        self.assertEqual(opts['bufsize'], 1)
+        self.assertEqual(self.runner.sessions, [process])
+        self.assertNotIn('PGHOST', opts['env'])
+
+    def test_persistent_invalid_names_identity_and_version_never_spawn(self):
+        with patch.object(ci.subprocess, 'Popen') as popen:
+            for db, label in [('postgres', 'cc-test-a'), ('qa_r3_cc_ok;DROP', 'cc-test-a'), ('qa_r3_cc_ok', '../log')]:
+                with self.assertRaises(RuntimeError): self.runner.psqlctl(db, label)
+            self.runner.inspect_owned = Mock(side_effect=RuntimeError('wrong owner'))
+            with self.assertRaises(RuntimeError): self.runner.psqlctl('qa_r3_cc_ok', 'cc-test-a')
+            self.runner.inspect_owned = Mock(return_value=self.info())
+            for field, value in [('version', '170007'), ('superuser', True), ('session', 'supabase_admin'), ('admin_member', True), ('listen', '*')]:
+                context = self.persistent_context(); context[field] = value
+                self.runner.query = Mock(return_value=completed(stdout=json.dumps(context)))
+                with self.assertRaises(RuntimeError): self.runner.psqlctl('qa_r3_cc_ok', 'cc-test-a')
+            popen.assert_not_called()
+
+    def test_sigterm_during_spawn_still_registers_owned_child(self):
+        self.runner.cid = 'c' * 64
+        self.runner.inspect_owned = Mock(return_value=self.info())
+        self.runner.query = Mock(return_value=completed(stdout=json.dumps(self.persistent_context())))
+        process = Mock()
+        def spawn(*args, **kwargs):
+            ci.signal.raise_signal(ci.signal.SIGTERM)
+            return process
+        old = ci.signal.getsignal(ci.signal.SIGTERM)
+        with patch.object(ci.subprocess, 'Popen', side_effect=spawn):
+            with self.assertRaisesRegex(RuntimeError, 'Interrupted during'): self.runner.psqlctl('qa_r3_cc_ok', 'cc-test-a')
+        self.assertEqual(self.runner.sessions, [process])
+        self.assertIs(ci.signal.getsignal(ci.signal.SIGTERM), old)
+
+    def test_outer_cleanup_reaps_only_registered_children_before_inspection(self):
+        process = Mock(); process.poll.return_value = None
+        process.wait.side_effect = [subprocess.TimeoutExpired('owned-client', 5), 0]
+        process.stdin = process.stdout = process.stderr = None
+        self.runner.sessions = [process]
+        order = []
+        process.terminate.side_effect = lambda: order.append('terminate')
+        process.kill.side_effect = lambda: order.append('kill')
+        def inspect():
+            order.append('inspect')
+            raise RuntimeError('stop test after clients')
+        self.runner.inspect_owned = Mock(side_effect=inspect)
+        with self.assertRaisesRegex(RuntimeError, 'stop test'): self.runner.cleanup()
+        self.assertEqual(order, ['terminate', 'kill', 'inspect'])
+        self.assertTrue(self.runner.result['owned_psql_clients_closed'])
+        self.assertEqual(process.wait.call_count, 2)
+
+    def test_client_cleanup_failure_does_not_skip_owned_container_cleanup(self):
+        process = Mock(); process.poll.side_effect = RuntimeError('client failure')
+        self.runner.sessions = [process]
+        self.runner.cid = 'c' * 64
+        info = self.info(); info['State']['Running'] = False
+        self.runner.inspect_owned = Mock(return_value=info)
+        self.runner.docker = Mock(return_value=completed())
+        self.runner.cleanup()
+        self.assertFalse(self.runner.result['owned_psql_clients_closed'])
+        self.assertEqual(self.runner.result['status'], 'failed')
+        self.assertIn('remove-owned', [c.args[1] for c in self.runner.docker.call_args_list])
+
     def test_timeout_records_logs(self):
         with patch.object(ci.subprocess, 'run', side_effect=subprocess.TimeoutExpired(['docker'], 60, b'partial', b'error')):
             with self.assertRaises(subprocess.TimeoutExpired): self.runner.command(['docker'], 'timeout')
@@ -199,12 +276,59 @@ class Lifecycle(unittest.TestCase):
         self.runner.docker = Mock(side_effect=[completed(), completed(stdout=self.runner.cid)])
         with self.assertRaisesRegex(RuntimeError, 'removal unconfirmed'): self.runner.cleanup()
 
+    def test_main_requires_concurrency_then_cleanup_before_pass(self):
+        ep = self.path / 'event.json'; ep.write_text(json.dumps(event()))
+        environment = {**env(), 'GITHUB_EVENT_PATH': str(ep), 'RUNNER_TEMP': str(self.path), 'GITHUB_RUN_ID': '1', 'GITHUB_RUN_ATTEMPT': '1'}
+        order = []
+        def concurrent(runner):
+            order.append('concurrency')
+            self.assertNotEqual(runner.result['status'], 'pass')
+            runner.result['concurrency_two_sessions'] = 'PASS'
+        def terminal(runner, controls):
+            order.append('terminal')
+            self.assertNotEqual(runner.result['status'], 'pass')
+            runner.result['terminal_direct_calls'] = 'PASS'
+        def cleanup(runner):
+            order.append('cleanup')
+            self.assertNotEqual(runner.result['status'], 'pass')
+            runner.result.update(pg_status_3_and_no_pid=True, owned_psql_clients_closed=True, cleanup='confirmed_stopped_and_removed')
+        with patch.dict(os.environ, environment), patch.object(sys, 'argv', ['run_ci.py']), \
+             patch.object(ci.subprocess, 'check_output', return_value=SHA), patch.object(ci.Runner, 'start'), \
+             patch.object(ci, 'matrix', side_effect=lambda *args: order.append('matrix')), \
+             patch.object(ci, 'run_concurrency', side_effect=concurrent), patch.object(ci, 'run_terminal_calls', side_effect=terminal), patch.object(ci.Runner, 'cleanup', cleanup), \
+             patch('builtins.print'):
+            ci.main()
+        self.assertEqual(order, ['matrix', 'concurrency', 'terminal', 'cleanup'])
+        result = json.loads((self.path / ('seed-r3-1-1-' + SHA[:12]) / 'result.json').read_text())
+        self.assertEqual(result['status'], 'pass')
+
+    def test_terminal_failure_still_reaches_outer_cleanup_and_cannot_pass(self):
+        ep = self.path / 'event.json'; ep.write_text(json.dumps(event()))
+        environment = {**env(), 'GITHUB_EVENT_PATH': str(ep), 'RUNNER_TEMP': str(self.path), 'GITHUB_RUN_ID': '1', 'GITHUB_RUN_ATTEMPT': '1'}
+        controls = object()
+        def concurrent(runner):
+            runner.result['concurrency_two_sessions'] = 'PASS'
+            return controls
+        def terminal(runner, actual_controls):
+            self.assertIs(actual_controls, controls)
+            runner.result['terminal_direct_calls'] = 'RUNNING'
+            raise RuntimeError('terminal failure')
+        with patch.dict(os.environ, environment), patch.object(sys, 'argv', ['run_ci.py']), \
+             patch.object(ci.subprocess, 'check_output', return_value=SHA), patch.object(ci.Runner, 'start'), \
+             patch.object(ci, 'matrix'), patch.object(ci, 'run_concurrency', side_effect=concurrent), \
+             patch.object(ci, 'run_terminal_calls', side_effect=terminal), patch.object(ci.Runner, 'cleanup') as cleanup:
+            with self.assertRaisesRegex(RuntimeError, 'regression failed'): ci.main()
+            cleanup.assert_called_once()
+        result = json.loads((self.path / ('seed-r3-1-1-' + SHA[:12]) / 'result.json').read_text())
+        self.assertEqual(result['status'], 'failed')
+        self.assertEqual(result['terminal_direct_calls'], 'FAILED')
+
     def test_main_requires_shutdown_evidence_even_when_checks_pass(self):
         ep = self.path / 'event.json'; ep.write_text(json.dumps(event()))
         environment = {**env(), 'GITHUB_EVENT_PATH': str(ep), 'RUNNER_TEMP': str(self.path), 'GITHUB_RUN_ID': '1', 'GITHUB_RUN_ATTEMPT': '1'}
         with patch.dict(os.environ, environment), patch.object(sys, 'argv', ['run_ci.py']), \
              patch.object(ci.subprocess, 'check_output', return_value=SHA), \
-             patch.object(ci.Runner, 'start'), patch.object(ci, 'matrix'), patch.object(ci.Runner, 'cleanup'):
+             patch.object(ci.Runner, 'start'), patch.object(ci, 'matrix'), patch.object(ci, 'run_concurrency'), patch.object(ci.Runner, 'cleanup'):
             with self.assertRaisesRegex(RuntimeError, 'regression failed'): ci.main()
         result = json.loads((self.path / ('seed-r3-1-1-' + SHA[:12]) / 'result.json').read_text())
         self.assertEqual(result['status'], 'failed')
@@ -227,7 +351,7 @@ class Lifecycle(unittest.TestCase):
         environment = {**env(), 'GITHUB_EVENT_PATH': str(ep), 'RUNNER_TEMP': str(self.path), 'GITHUB_RUN_ID': '1', 'GITHUB_RUN_ATTEMPT': '1'}
         with patch.dict(os.environ, environment), patch.object(sys, 'argv', ['run_ci.py']), \
              patch.object(ci.subprocess, 'check_output', return_value=SHA), \
-             patch.object(ci.Runner, 'start'), patch.object(ci, 'matrix'), \
+             patch.object(ci.Runner, 'start'), patch.object(ci, 'matrix'), patch.object(ci, 'run_concurrency'), \
              patch.object(ci.Runner, 'cleanup', side_effect=RuntimeError('cleanup failed')):
             with self.assertRaisesRegex(RuntimeError, 'regression failed'): ci.main()
         result = json.loads((self.path / ('seed-r3-1-1-' + SHA[:12]) / 'result.json').read_text())

@@ -22,7 +22,7 @@ jobs:
       github.event.pull_request.base.ref == 'main' &&
       github.event.pull_request.head.ref == 'fix/seed-r3-review-20261015' &&
       github.event.pull_request.draft == true &&
-      github.event.pull_request.base.sha != 'e383238caf130455b2991184d0cae0c29a627aca'
+      github.event.pull_request.base.sha != 'c7db22e047ff22e9059233adc86918d6b51bc39c'
     runs-on: ubuntu-24.04
     timeout-minutes: 1
     steps:
@@ -40,7 +40,7 @@ jobs:
       github.event.pull_request.base.repo.owner.login == 'jfcaicedoobando-arch' &&
       github.event.pull_request.head.repo.owner.login == 'jfcaicedoobando-arch' &&
       github.event.pull_request.base.ref == 'main' &&
-      github.event.pull_request.base.sha == 'e383238caf130455b2991184d0cae0c29a627aca' &&
+      github.event.pull_request.base.sha == 'c7db22e047ff22e9059233adc86918d6b51bc39c' &&
       github.event.pull_request.head.ref == 'fix/seed-r3-review-20261015' &&
       github.event.pull_request.draft == true
     runs-on: ubuntu-24.04
@@ -58,7 +58,7 @@ jobs:
           mkdir -p "$RUNNER_TEMP/seed-r3-preflight/logs"
           trap 'rc=$?; printf "{\"preflight_exit_code\":%d}\n" "$rc" > "$RUNNER_TEMP/seed-r3-preflight/result.json"' EXIT
           python3 -I scripts/ci/seed-r3-review/verify_static.py 2>&1 | tee "$RUNNER_TEMP/seed-r3-preflight/logs/static.log"
-          python3 -I -m unittest discover -s scripts/ci/seed-r3-review -p test_ci_adapter.py -v 2>&1 | tee "$RUNNER_TEMP/seed-r3-preflight/logs/offline-tests.log"
+          python3 -I -m unittest discover -s scripts/ci/seed-r3-review -p 'test_*.py' -v 2>&1 | tee "$RUNNER_TEMP/seed-r3-preflight/logs/offline-tests.log"
       - name: Execute synthetic matrix in owned disposable container
         run: |
           set -euo pipefail
