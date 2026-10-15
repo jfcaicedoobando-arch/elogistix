@@ -1,0 +1,24 @@
+{
+  "schema_version": 1,
+  "status": "PREPARED_NOT_RUN",
+  "author_fix_head": "a7aff9ff8f92852687c56d3bc05d41150b44b2ae",
+  "review_branch_base": "b66d2c2caa00d7a8d522ed7140b6a15877a0b2aa",
+  "external_directory": "scripts/ci/demo-financial-behavior-recovery/sql",
+  "external_sources": {
+    "fixture.sql": {"bytes": 8452, "sha256": "6ab810fbffcf81fb83b9642af789a69ba5bfa2bc5680e3bc4c4f3cc75b804ae3"},
+    "prepare-context.sql": {"bytes": 6403, "sha256": "0391ef871af057ce05bba8f16936b47edada15ebb651d09d06e54d8beb2e1c0a"},
+    "assertions.sql": {"bytes": 3606, "sha256": "f42cbf544a61af3a57d71ecb8017f27e5d28ff1835d0e60a796a4328d8f87420"}
+  },
+  "interfaces": [
+    "pg_temp.financial_context(context_id uuid): exactly one issued context",
+    "pg_temp.financial_snapshot() returns jsonb: all r/p table rows in five fixture schemas",
+    "pg_temp.assert_manual_sentinels() returns void: two tenant manual suppliers",
+    "demo_flow_writer.prepare_execute_checkpoint(uuid,bigint) returns jsonb",
+    "demo_financial_lab.flush_deferred() returns void: real deferred guards under selected service_role"
+  ],
+  "database": "demo_financial_compile_recovery_lab",
+  "server_version_num": "170006",
+  "execution": "author-owned isolated synthetic runner only; fresh owned database per case; same psql session for all source fragments",
+  "row_snapshot_schemas": ["public", "auth", "demo_flow_writer", "demo_fixture_identity", "financial_compile_fixture"],
+  "not_established": ["sequence rollback", "catalog and ACL invariance", "business COMMIT", "crash durability", "external authentication", "real transport", "real RLS", "cross-tenant identity retry", "independent foreign concept/payment collisions"]
+}
