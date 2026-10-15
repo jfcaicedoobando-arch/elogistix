@@ -147,5 +147,12 @@
     "replays": [
       "20261013195000_cxp_contador_autoaprobacion.sql"
     ]
+  },
+  {
+    "file": "0020_seed_r3_stopped_admission.sql",
+    "sha256": "7f054e3071b243ca6ada6359028c66efa0ac2ba5047a8cf7133f70f1b7924d86",
+    "replays": [
+      "20261015170857_seed_r3_stopped_admission.sql"
+    ]
   }
 ]

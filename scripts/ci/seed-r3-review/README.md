@@ -1,3 +1,7 @@
+# Ledger integration revision — local, runtime NOT_RUN
+
+The current local revision adds the reviewed ledger wrapper, import-safe LAB-only renderer, and 13-case ledger harness. 81 offline unit tests and additional renderer security assertions pass; no SQL/Docker runtime has been executed for this corrected revision. The prior Actions run 38778075427 failed with SQLSTATE 42809 when a sequence was read as a composite row, before the first ledger case completed; cleanup was confirmed. The correction reads explicit sequence fields and requires a new Actions run. Overall PASS requires exact ledger-case completion and confirmed owned-container cleanup before finalization. See `README_LEDGER_CASES.md` for case mapping, sequence-gap semantics, and uncovered transport/concurrency cases. The CLI is prepared for the strictly gated Actions lane; no local runtime was executed. Historical validation claims below refer to their explicitly identified prior revisions, not this ledger revision.
+
 # R3 review-only proposal
 
 **NO APLICADO / NOT APPLIED.** This directory is an inert review artifact, not a migration entrypoint. Do not move its SQL into an automatically applied migration/schema directory. Importing the read-only contract test does not start PostgreSQL, execute SQL or install software. Nothing here authorizes deployment, ledger registration, production execution or a claim of full R3 validation.
@@ -46,7 +50,7 @@ The Vitest command uses only the repository's already installed dependencies. Do
 
 ## Draft-only CI lane (concurrency update prepared locally; runtime pending)
 
-The independent `.github/workflows/seed-r3-review.yml` lane is limited to a same-repository draft PR from `fix/seed-r3-review-20261015` into `main`, with base SHA `c7db22e047ff22e9059233adc86918d6b51bc39c`. This base restores exactly the original reviewed tree `88d1d5b326573e8828b42c4c492249072da498b6` following PR #341; historical source provenance below remains pinned to its original commit. A changed base requires a fresh review; it is not silently accepted. The lane does not activate through this document or a local static check.
+The independent `.github/workflows/seed-r3-review.yml` lane is limited to a same-repository draft PR from `fix/seed-r3-ledger-review-20261015` into `main`, with base SHA `c935c2593dfd725edb3c30dcab9bd6f0439ff71b`. The reviewed current base tree is `8a54483cba5aa3b8d34086dcf11b6bc7c4e63945`; historical source provenance below remains pinned to its original commit. A changed base requires a fresh review; it is not silently accepted. The lane does not activate through this document or a local static check.
 
 `review-contract.json` records the boundaries. `run_ci.py` uses host Python and Docker with the pinned image `postgres@sha256:f3bd19c606e442c3d7bdfa8002e03fe260a1023351e0ea4598032022b68dd6e3`, requiring PostgreSQL `server_version_num=170006`. Before container creation, it verifies immutable source hashes and exact equivalence of its copied matrix to the hash-locked original harness block. SQL goes through stdin to `docker exec -i psql` over the owned private UNIX socket. It does not require Python inside the PostgreSQL image.
 
