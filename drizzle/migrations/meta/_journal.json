@@ -141,6 +141,13 @@
       "when": 1792058404766,
       "tag": "0019_cxp_contador_autoaprobacion",
       "breakpoints": true
+    },
+    {
+      "idx": 20,
+      "version": "7",
+      "when": 1792084137000,
+      "tag": "0020_seed_r3_stopped_admission",
+      "breakpoints": true
     }
   ]
 }

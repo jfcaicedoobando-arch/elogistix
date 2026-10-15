@@ -84,6 +84,9 @@ def metadata_sql(source):
     return match.group(1) + ';'
 
 
+# PostgreSQL sequences expose scalar columns but no composite row type: do not
+# pass their whole-row variable to to_jsonb (PG17 raises 42809).
+SEQUENCE_STATE_SQL = "SELECT jsonb_build_object('last_value',s.last_value,'log_cnt',s.log_cnt,'is_called',s.is_called) FROM drizzle.__drizzle_migrations_id_seq s;"
 ROWS_SQL = "SELECT coalesce(jsonb_agg(to_jsonb(d) ORDER BY d.id),'[]') FROM drizzle.__drizzle_migrations d;"
 DIGEST_SQL = "SELECT encode(sha256(convert_to(coalesce(jsonb_agg(to_jsonb(s) ORDER BY s.version),'[]')::text,'UTF8')),'hex') FROM supabase_migrations.schema_migrations s;"
 # Detailed records are retained alongside the candidate's digest contract.
@@ -102,7 +105,7 @@ def snapshot(runner, db, label, meta_sql):
               'metadata': json.loads(query(meta_sql, 'metadata')),
               'details': json.loads(query(DETAIL_SQL, 'details')),
               'supabase_digest': query(DIGEST_SQL, 'supabase-digest'),
-              'sequence_state': json.loads(query("SELECT to_jsonb(s) FROM drizzle.__drizzle_migrations_id_seq s;", 'sequence'))}
+              'sequence_state': json.loads(query(SEQUENCE_STATE_SQL, 'sequence'))}
     (runner.output / (label + '.json')).write_text(json.dumps(result, indent=2) + '\n')
     return result
 

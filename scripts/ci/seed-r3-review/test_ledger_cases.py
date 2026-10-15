@@ -124,6 +124,12 @@ class OfflineLedgerTests(unittest.TestCase):
         self.assertIn("ledger_cases='RUNNING'", source)
         self.assertNotIn('runner.check(', source)
 
+    def test_sequence_snapshot_uses_scalar_columns_not_composite(self):
+        self.assertEqual(subject.SEQUENCE_STATE_SQL, "SELECT jsonb_build_object('last_value',s.last_value,'log_cnt',s.log_cnt,'is_called',s.is_called) FROM drizzle.__drizzle_migrations_id_seq s;")
+        self.assertNotIn('to_jsonb(s)', subject.SEQUENCE_STATE_SQL)
+        source = (ROOT / 'ledger_cases.py').read_text()
+        self.assertIn("query(SEQUENCE_STATE_SQL, 'sequence')", source)
+
     def test_metadata_extractor_fail_closed(self):
         self.assertEqual(subject.metadata_sql('$ledger_metadata_sql$SELECT 1$ledger_metadata_sql$'), 'SELECT 1;')
         with self.assertRaises(AssertionError):

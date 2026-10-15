@@ -39,4 +39,8 @@ L02 injected terminal COST/prosrc drift is not repeated in this ledger subset; t
 
 ## Offline verification
 
-`python -m unittest -v test_ledger_cases.py`: 12 tests passed. They cover inert import, exact history and metadata, sequence-gap-only rollback, exact target-OID retry normalization, cleanup failure and missing-case fail-closed behavior, fault structure, deferred trigger shape and absence of a process/remote connection API. A separate no-SQL smoke import/render verified current renderer accepts qa_r3_cc_ledger_clean and binds the synthetic timestamp and tag. These checks are Python/static evidence only, never PostgreSQL execution evidence.
+`python -m unittest -v test_ledger_cases.py`: 13 tests passed. They cover inert import, exact history and metadata, sequence-gap-only rollback, exact target-OID retry normalization, cleanup failure and missing-case fail-closed behavior, fault structure, deferred trigger shape and absence of a process/remote connection API. A separate no-SQL smoke import/render verified current renderer accepts qa_r3_cc_ledger_clean and binds the synthetic timestamp and tag. These checks are Python/static evidence only, never PostgreSQL execution evidence.
+
+## CI witness correction
+
+PR342 head d200c2e, Actions run 38778075427 reached the first ledger case and failed before wrapper execution: SQLSTATE 42809, sequence has no composite type. The sequence witness now uses explicit jsonb_build_object(last_value, log_cnt, is_called) instead of to_jsonb(sequence_whole_row). The same scalar evidence is preserved; no wrapper guards changed. Added an offline SQL-shape regression test. This fix still needs a new isolated CI runtime run; the failed run had confirmed cleanup.

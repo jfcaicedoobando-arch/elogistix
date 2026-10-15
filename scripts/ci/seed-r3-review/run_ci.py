@@ -20,8 +20,8 @@ BRANCH = 'fix/seed-r3-ledger-review-20261015'
 BASE = 'c935c2593dfd725edb3c30dcab9bd6f0439ff71b'
 IMAGE = 'postgres@sha256:f3bd19c606e442c3d7bdfa8002e03fe260a1023351e0ea4598032022b68dd6e3'
 HASHES = {
-    'ledger_cases.py': 'fde97d0a84ea5d9d4f7b9ac87c95f217c03849b95c1b697ae3c82bed0cac5f9f',
-    'test_ledger_cases.py': '2fc9c008856c9d7bec0b0b524b960f746c4468d1f3e04b0cdba07363290526b2',
+    'ledger_cases.py': '4d0122d7207f78329e223eebdfab3a5bcf0fb61ed862c0bbbd7cb5867144578d',
+    'test_ledger_cases.py': '4b263629aa675b81bc165882d0e14198ab7fbf870715cb1132fbf13c1bc2a1a1',
     'render_lab_candidate.py': '8db9ae16f23fc337811dcb520512d01bc90c815a420523ff6cec9a36a4a36836',
     'test_renderer_security.py': '8e759a81900df0217916a116aeda731a0ed0928bd6c9b5b2140d54ee5b4db0a1',
     'PROPOSAL_R3_manual_ledger_wrapper.sql': '23a7795c62fa4cac04f8a2e1b804763e18b3f0af1983dd38a29a337958ee3f4e',
