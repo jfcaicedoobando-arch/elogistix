@@ -150,7 +150,8 @@ Si esta evidencia no existe, el resultado correcto permanece UNBOUND.
 | Materialización y hashes del ZIP revalidados | NOT_RUN | Fallo histórico independiente de la entrada Git. |
 | Driver instrumentado y pruebas de fallos del transporte | NOT_RUN | No hay binding implementado ni infraestructura acreditada. |
 | Continuidad física, issuer, identidad y durabilidad reales | NOT_RUN | No se accedió a infraestructura real. |
-| Lane SQL del paquete y certificación de negocio | NOT_RUN | Esta investigación no ejecuta SQL ni certifica fixtures. |
+| Lane SQL con fuentes Git originales | PASS sintético | 56 checks en Actions 38806953890; artefacto y cleanup inspeccionados por separado. |
+| Certificación de motor, issuer e identidad reales | NOT_RUN | La lane sólo usa datos y negocio sintéticos. |
 | Configuración y endpoint | PASS | No se añadió configuración ni se cambió `demo-access/index.ts`; continúa omitiendo proveedor y credenciales. |
 
 La entrega es un documento de evidencia y bloqueo. No eleva a PASS los tests

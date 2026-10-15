@@ -5,6 +5,8 @@ The input is the 12 original Git files from
 `docs/review/demo-durable-owner-adapter-20261015`. `sources.py` pins the exact
 SHA256SUMS.txt and verifies every payload. Scoped Git attributes preserve authored
 bytes. Store SHA256 is `fb7fa69c17eca7230606ecb6217086c6eb5317d75551df9efc268959f69140a7`.
+The original package's README, plan and validation files retain their authored
+source-time status; subsequent runtime results are recorded separately below.
 
 This input is independent of the historical Library ZIP transfer failure.
 No ZIP materialization/hash or TRANSFER-SHA256SUMS verification is claimed.
@@ -51,6 +53,13 @@ The original unbound business entrypoint remains absent.
 PASS requires the exact named matrix and confirmed client/cluster/container
 cleanup. Evidence includes source/workflow hashes, input/stdin/log hashes,
 role/version context, row snapshots, precise SQLSTATEs, PID/lock traces and cleanup.
+
+The inspected [Actions run 38806953890](https://github.com/jfcaicedoobando-arch/elogistix/actions/runs/38806953890)
+on `eaeeeabba1624f63081a455e529af43f1633082a` passed 56 unique checks.
+Artifact 12006303781 ZIP SHA256 is
+`4c08a0503a7005e84c6a1f38fe6182a58b9291059989ca8be72c3bed5ffbd327`.
+Byte hashes, 40 negative-state snapshot pairs, actual two-session blocking and
+owned cleanup were inspected. This is **PASS_SYNTHETIC_ONLY**.
 
 ## Boundaries
 

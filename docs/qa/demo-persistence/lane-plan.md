@@ -1,6 +1,13 @@
 # Isolated PostgreSQL17.6 store and claim lane
 
-Runtime status: **NOT_RUN until the exact Actions artifact is inspected**.
+Runtime status: **PASS_SYNTHETIC_ONLY**, 56 unique checks on
+`eaeeeabba1624f63081a455e529af43f1633082a` in
+[Actions run 38806953890](https://github.com/jfcaicedoobando-arch/elogistix/actions/runs/38806953890).
+Artifact 12006303781 was downloaded and its ZIP SHA256 verified as
+`4c08a0503a7005e84c6a1f38fe6182a58b9291059989ca8be72c3bed5ffbd327`.
+Independent inspection confirmed 40 negative-state snapshot pairs, nine owned
+container inspections, both observed races and stopped/removed cleanup.
+See the sanitized [evidence summary](runtime-evidence.json).
 The lane is implemented in `scripts/ci/demo-persistence-review`. Its input is
 the original authored Git export at `860ac59cc9b6d80887c1a7811e2c81ef8ef17ca8`.
 The historical Library failure is separate and does not block this Git contract.
