@@ -1,47 +1,68 @@
-# Demo persistence review prerequisites
+# Isolated demo persistence review
 
-This is **offline intake preparation**, not a PostgreSQL lane or operational
-driver. The exact proposal could not be materialized through the supported
-Library flow on this Windows executor. No SQL, fixture, connection configuration,
-role, grant, migration, endpoint binding, or replacement protocol is supplied.
+The input is the 12 original Git files from
+`860ac59cc9b6d80887c1a7811e2c81ef8ef17ca8`, under
+`docs/review/demo-durable-owner-adapter-20261015`. `sources.py` pins the exact
+SHA256SUMS.txt and verifies every payload. Scoped Git attributes preserve authored
+bytes. Store SHA256 is `fb7fa69c17eca7230606ecb6217086c6eb5317d75551df9efc268959f69140a7`.
 
-The requested package is `Elogistix-persistencia-propuesta.zip`, with expected SHA256
-`45ec554f587cc3a12048732254ac98bd98f09ceaf18383dde496eba6c227dfa1`.
-That hash is the **requested pin**, not an observed hash of a local file.
+This input is independent of the historical Library ZIP transfer failure.
+No ZIP materialization/hash or TRANSFER-SHA256SUMS verification is claimed.
+`intake.py` retains its separate fixed ZIP contract. Missing ZIP bytes do not
+block the verified Git-source lane.
 
-After a supported Library materialization has completed, run:
-
-```text
-python3 scripts/ci/demo-persistence-review/intake.py --zip <local-materialized-ZIP>
-```
-
-There is no pin override. The verifier reads raw bytes without extracting files,
-checks the fixed ZIP hash, requires one `TRANSFER-SHA256SUMS`, verifies every
-payload file against it, and identifies one exact `store.sql`. It accepts UTF-8
-checksum records in ordinary `sha256sum` format, with paths relative to the
-manifest's directory (optional leading `./`). Unsupported formats fail closed
-and require review of the real package, not an inferred normalization. It
-rejects traversal, case collisions, duplicate records, encrypted members,
-symlinks, missing/unlisted payloads, and bounded-size violations.
-
-This tool does not download files, repair Library metadata, attest to local
-Library identity, execute SQL, validate bindings, or certify transaction
-semantics. Its PASS is only byte integrity; SQL remains NOT_RUN and wire UNBOUND.
-The CLI returns nonzero for missing or invalid input.
+## Offline validation
 
 ```text
-python3 -m unittest discover -s scripts/ci/demo-persistence-review -p 'test_*.py' -v
+python3 -B -m unittest discover -s scripts/ci/demo-persistence-review -p 'test_*.py' -v
+node scripts/ci/test-catalog.mjs --output <inventory-output>
+node scripts/ci/test-catalog.mjs --run node-demo-durable-owner <inventory-output>
 ```
 
-Tests use **synthetic ZIPs** with an explicitly synthetic comment as `store.sql`.
-They prove rejection behavior and preservation of raw CRLF bytes. They do not
-exercise the requested package, a business engine, an issuer, or identity.
-Public-file regression tests also reject private source identifiers and local
-profile paths in this review's tracked files.
+The catalog explicitly registers and executes the original `owner.test.mjs`
+(25 synthetic tests) and five catalog regressions. Python tests cover integrity,
+rejection, metadata hygiene, event gates, binary stdin and harness parsing;
+they never start SQL or Docker. Public-file guards reject private source
+identifiers and local profile paths in tracked review files.
 
-The existing `scripts/ci/crm-acl-review` sources and workflow remain unchanged.
-Its offline suite is independently useful, but its CLI/gate and CRM SQL must not
-be invoked under a spoofed event or repurposed as this lane. See the
-[lane plan](../../../docs/qa/demo-persistence/lane-plan.md),
-[driver findings](../../../docs/qa/demo-persistence/driver-evidence.md), and
-[recorded status](../../../docs/qa/demo-persistence/status.json).
+## PostgreSQL lane
+
+Only the draft-PR Actions workflow may run `run_ci.py --output <fresh-directory>`.
+Its independent gate fixes repository, branch, base and exact head. It accepts
+no DSN, host, credentials, arbitrary image, existing container or live mode.
+It imports hash-pinned CRM infrastructure without changing its sources/workflow;
+CRM's main, gate, preparation and cases are not invoked.
+
+PostgreSQL17.6 is fixed by digest, with network none, TCP disabled, no host
+mounts/ports, read-only root, dropped privileges and limited resources. Only an
+owned socket and tmpfs fixture are used. Candidate postgres is NOSUPERUSER with
+no administrator membership or catalog writes. Roles/databases are container-local.
+
+The exact store byte buffer enters psql binary stdin and is logged unchanged,
+without setup concatenation or rewriting. Original store.mjs dispatch/ingress
+queries are exported through Node and retained verbatim inside PREPARE with
+synthetic parameters. The matrix covers natural-key uniqueness across different
+IDs/bindings, binding FKs, append-only rejection on empty/populated tables, live
+claim returns, separate committed visibility, observed two-connection races,
+and later synthetic business rollback. Business effects use an explicitly
+SYNTHETIC table without obligation uniqueness that could conceal duplication.
+The original unbound business entrypoint remains absent.
+
+PASS requires the exact named matrix and confirmed client/cluster/container
+cleanup. Evidence includes source/workflow hashes, input/stdin/log hashes,
+role/version context, row snapshots, precise SQLSTATEs, PID/lock traces and cleanup.
+
+## Boundaries
+
+Inherited startup uses fsync off and ephemeral tmpfs. Separate COMMIT visibility
+and preservation across business rollback are tested; crash/WAL/hardware,
+failover and restoration durability remain unproven. Schema-owner tests do not
+certify real ACL isolation, issuer authentication or identity. The business
+fixture does not certify an authentic engine or financial checkpoint.
+SQL tests do not bind a physical wire or certify ReadyForQuery/socket epoch.
+
+Wire remains **UNBOUND**, configuration empty and endpoint closed. The proposal
+is at-most-once with quarantine, without exactly-once or availability guarantees.
+See [status](../../../docs/qa/demo-persistence/status.json),
+[lane requirements](../../../docs/qa/demo-persistence/lane-plan.md) and
+[driver gates](../../../docs/qa/demo-persistence/driver-evidence.md).

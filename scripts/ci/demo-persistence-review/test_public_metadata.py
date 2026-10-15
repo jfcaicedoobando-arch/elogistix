@@ -9,6 +9,7 @@ ROOT = Path(__file__).resolve().parents[3]
 PUBLIC_PATHS = (
     'docs/qa/demo-persistence',
     'scripts/ci/demo-persistence-review',
+    'docs/review/demo-durable-owner-adapter-20261015',
     '.github/workflows/demo-persistence-prerequisites.yml',
 )
 PRIVATE_ID_PREFIX = 'lib' + 'file' + '_'

@@ -16,12 +16,12 @@ lockfile, la entrada HTTP y fuentes primarias públicas mediante la herramienta
 de consulta web, sin navegador interactivo. No se leyeron valores de secretos,
 archivos de entorno ni configuraciones de conexión.
 
-El coordinador reportó que el flujo soportado de Library no produjo el destino
-local del ZIP por un fallo `os.setxattr`. Por ello **no se inspeccionaron**
-`store.sql`, el owner, el protocolo ni `TRANSFER-SHA256SUMS` de la propuesta.
-La descripción del paquete y sus resultados anteriores son input reportado,
-no evidencia revalidada aquí. No se reconstruye su SQL ni su contrato desde
-esta descripción.
+El flujo histórico de Library no produjo el ZIP por un fallo `os.setxattr`;
+ese ZIP y su `TRANSFER-SHA256SUMS` siguen sin verificarse. Posteriormente se
+autorizó un contrato independiente de fuentes Git originales en
+`860ac59cc9b6d80887c1a7811e2c81ef8ef17ca8`. Sus doce archivos y once checksums
+se verifican por separado para la lane SQL. Esa entrada no materializa el ZIP
+ni satisface los gates de un wire físico o una infraestructura real.
 
 ## Fuente exacta del candidato existente
 
@@ -147,7 +147,7 @@ Si esta evidencia no existe, el resultado correcto permanece UNBOUND.
 | Base, instrucciones y lockfile inspeccionados | PASS | Checkout indicado; `.agents` ausente. |
 | Fuente primaria del driver y semántica de protocolo consultadas | PASS | Investigación estática con SHA upstream; sin tarball local verificado. |
 | `reserve()` suficiente para los gates exigidos | FAIL | No prueba epoch, barrera previa al envío ni afinidad a través del pooler. |
-| Materialización, hashes y contrato del ZIP revalidados | NOT_RUN | Entrada local ausente según reporte del coordinador. |
+| Materialización y hashes del ZIP revalidados | NOT_RUN | Fallo histórico independiente de la entrada Git. |
 | Driver instrumentado y pruebas de fallos del transporte | NOT_RUN | No hay binding implementado ni infraestructura acreditada. |
 | Continuidad física, issuer, identidad y durabilidad reales | NOT_RUN | No se accedió a infraestructura real. |
 | Lane SQL del paquete y certificación de negocio | NOT_RUN | Esta investigación no ejecuta SQL ni certifica fixtures. |

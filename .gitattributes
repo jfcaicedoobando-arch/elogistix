@@ -1,0 +1,2 @@
+# Preserve the authored review input byte-for-byte on every checkout.
+docs/review/demo-durable-owner-adapter-20261015/** -text

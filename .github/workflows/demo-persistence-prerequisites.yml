@@ -1,4 +1,4 @@
-name: Demo persistence offline prerequisites (SQL NOT_RUN)
+name: Demo persistence isolated PostgreSQL 17.6 review
 on:
   pull_request:
     types: [opened, synchronize, reopened]
@@ -6,20 +6,36 @@ on:
     paths:
       - 'scripts/ci/demo-persistence-review/**'
       - 'docs/qa/demo-persistence/**'
+      - 'docs/review/demo-durable-owner-adapter-20261015/**'
+      - 'scripts/ci/crm-acl-review/**'
       - '.github/workflows/demo-persistence-prerequisites.yml'
 permissions:
   contents: read
 jobs:
-  offline-intake-only:
+  synthetic-postgresql-review:
     if: github.repository == 'jfcaicedoobando-arch/elogistix' && github.event.pull_request.draft == true && github.event.pull_request.head.repo.full_name == github.repository && github.event.pull_request.head.ref == 'codex/persistence-pg176-quarantine'
     runs-on: ubuntu-24.04
-    timeout-minutes: 5
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
         with:
           ref: ${{ github.event.pull_request.head.sha }}
           persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: '24.19.0'
       - name: Synthetic archive integrity and rejection tests (no database)
         run: python3 -B -m unittest discover -s scripts/ci/demo-persistence-review -p 'test_*.py' -v
-      - name: Explicit scope
-        run: echo 'Offline prerequisites only. PostgreSQL lane NOT_RUN. Wire UNBOUND. No demo activation.'
+      - name: Exact Git input hashes and empty configuration
+        run: |
+          PYTHONPATH=scripts/ci/demo-persistence-review python3 -B -c 'import json; from sources import verify_sources; print(json.dumps(verify_sources(), indent=2))'
+      - name: Disposable PostgreSQL 17.6 store and claim review
+        run: python3 -B scripts/ci/demo-persistence-review/run_ci.py --output "$RUNNER_TEMP/demo-persistence-evidence"
+      - name: Preserve synthetic evidence
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: demo-persistence-review-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/demo-persistence-evidence
+          if-no-files-found: warn
+          retention-days: 14

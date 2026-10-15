@@ -1,48 +1,80 @@
 {
   "recorded_date": "2026-10-15",
-  "scope": "Prerequisites and research only; requested PostgreSQL lane remains blocked",
+  "scope": "Pinned Git-source isolated SQL review; operational wire UNBOUND",
   "repository": "jfcaicedoobando-arch/elogistix",
   "base_commit": "5d1f00d27628100a58ab166367a067ea90068b84",
   "branch": "codex/persistence-pg176-quarantine",
-  "input": {
+  "historical_zip_input": {
     "filename": "Elogistix-persistencia-propuesta.zip",
     "expected_sha256": "45ec554f587cc3a12048732254ac98bd98f09ceaf18383dde496eba6c227dfa1",
     "observed_sha256": null,
-    "final_path_exists": false,
     "supported_retry_exhausted": true,
     "first_error": "library file transfer failed: download failed",
     "retry_error": "AttributeError: module 'os' has no attribute 'setxattr'",
-    "failure_phase": "Official Library helper applying returned metadata after byte download",
-    "temporary_bytes_used": false,
     "materialization": "FAIL",
     "zip_hash_verification": "NOT_RUN",
-    "transfer_sha256sums_verification": "NOT_RUN"
+    "transfer_sha256sums_verification": "NOT_RUN",
+    "blocks_git_source_lane": false
+  },
+  "git_input": {
+    "source_commit": "860ac59cc9b6d80887c1a7811e2c81ef8ef17ca8",
+    "source_base": "5d1f00d27628100a58ab166367a067ea90068b84",
+    "directory": "docs/review/demo-durable-owner-adapter-20261015",
+    "files": 12,
+    "manifest_sha256": "d0a7c1655f9d137f7c88d5489318f42639f7c2548ec627fec7134363afbc2335",
+    "store_sha256": "fb7fa69c17eca7230606ecb6217086c6eb5317d75551df9efc268959f69140a7",
+    "raw_git_blob_equality": "PASS",
+    "all_payload_checksums": "PASS",
+    "library_zip_claim": false
   },
   "results": [
-    {"case": "local_executor_operation_cwd_head_branch", "status": "PASS"},
-    {"case": "synthetic_intake_tests", "status": "PASS", "tests": 15},
-    {"case": "public_metadata_tests", "status": "PASS", "tests": 2},
-    {"case": "crm_infrastructure_offline_tests_exact_git_blobs", "status": "PASS", "tests": 47},
-    {"case": "intake_missing_actual_input_rejected", "status": "PASS", "reported_input_status": "NOT_RUN"},
-    {"case": "exact_store_compilation_and_bindings", "status": "NOT_RUN"},
-    {"case": "logical_obligation_uniqueness_and_append_only", "status": "NOT_RUN"},
-    {"case": "durable_separate_claim_two_connection_races_later_rollback", "status": "NOT_RUN"},
-    {"case": "postgres_170006_isolation_and_cleanup", "status": "NOT_RUN", "container_created": false},
-    {"case": "reserve_alone_meets_physical_driver_requirements", "status": "FAIL"},
-    {"case": "operational_driver_fault_tests", "status": "NOT_RUN"},
-    {"case": "endpoint_binding_and_operational_config_unchanged", "status": "PASS", "scope": "Static source comparison only"}
+    {
+      "case": "original_owner_node_tests",
+      "status": "PASS",
+      "tests": 25,
+      "scope": "offline synthetic transport/store"
+    },
+    {
+      "case": "catalog_regressions_and_execution",
+      "status": "PASS",
+      "tests": 5
+    },
+    {
+      "case": "python_offline_tests",
+      "status": "PASS",
+      "tests": 29
+    },
+    {
+      "case": "exact_store_compilation_and_bindings",
+      "status": "NOT_RUN"
+    },
+    {
+      "case": "logical_obligation_uniqueness_and_append_only",
+      "status": "NOT_RUN"
+    },
+    {
+      "case": "separate_committed_claim_two_connection_races_later_rollback",
+      "status": "NOT_RUN"
+    },
+    {
+      "case": "postgres_170006_isolation_and_cleanup",
+      "status": "NOT_RUN"
+    },
+    {
+      "case": "physical_driver_and_real_issuer_identity_engine",
+      "status": "NOT_RUN"
+    }
   ],
-  "local_infrastructure_offline_note": "Initial Windows CRLF checkout caused hash/anchor failures; exact git blob bytes plus explicit writable temp directory passed 47 tests. No CRM source change is part of this delivery.",
-  "local_docker": "NOT_AVAILABLE_ON_PATH; no standard Docker installation found; no install or alternate executor attempted",
+  "runtime_evidence": null,
+  "durability_scope": "Inherited fixture has fsync off and tmpfs; commit visibility/later rollback only, not crash/WAL/failover/restore durability",
   "wire": "UNBOUND",
+  "configuration": "EMPTY",
   "required_semantics": "at-most-once with quarantine; not exactly-once or guaranteed availability",
-  "prior_reported_25_plus_4_tests_revalidated": false,
   "live_database_actions": 0,
   "demo_activated": false,
-  "blockers": [
-    "Supported Library materialization cannot apply xattrs on this Windows Python runtime; unique allowed retry exhausted",
-    "Exact store/owner/issuer/protocol contract unavailable; no substitute SQL can be certified",
-    "PostgreSQL Docker lane and case adapter are not built or executed",
-    "Missing sanitized physical topology/affinity, runtime/build, epoch/ReadyForQuery/send barrier, retry and durability evidence"
+  "remaining_gates": [
+    "Inspect exact Actions artifact, full SQL matrix and cleanup before recording runtime PASS",
+    "Physical exclusive wire, ReadyForQuery/CommandComplete, socket epoch and no reconnect/replay",
+    "Real issuer/privilege isolation, authentic business guards/engine/checkpoints, durability and read-only reconciliation"
   ]
 }

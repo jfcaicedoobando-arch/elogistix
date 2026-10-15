@@ -94,6 +94,9 @@ jobs:
       - name: Demo review offline lane (no SQL, backend or credentials)
         run: node scripts/ci/demo-review-offline.mjs reports/test-inventory.json
 
+      - name: Demo durable owner offline lane (no SQL, backend or credentials)
+        run: node scripts/ci/test-catalog.mjs --run node-demo-durable-owner reports/test-inventory.json
+
       - name: Post-deploy smoke contract (offline, no credentials)
         run: node --test scripts/ci/post-deploy-smoke.test.mjs
 
