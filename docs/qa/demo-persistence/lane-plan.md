@@ -2,7 +2,7 @@
 
 Estado al 2026-10-15: **NOT_RUN**. La lane específica de persistencia no está construida ni ejecutada. Este documento describe trabajo pendiente; no es un runner, una certificación del store ni evidencia de integración.
 
-El ZIP autorizado es `Elogistix-persistencia-propuesta.zip`, Library `libfile_c84ef6930ee48191917bc2e235168fd8`, versión 0, SHA256 `45ec554f587cc3a12048732254ac98bd98f09ceaf18383dde496eba6c227dfa1`. El intake está bloqueado en el helper soportado de Library en Windows (`os.setxattr` no disponible). No hay `store.sql` materializado y verificado en este executor. Una ruta de otro executor no satisface este requisito. No se debe reconstruir el SQL a partir de descripciones ni sustituirlo por un fixture.
+El ZIP autorizado es `Elogistix-persistencia-propuesta.zip`, SHA256 `45ec554f587cc3a12048732254ac98bd98f09ceaf18383dde496eba6c227dfa1`. El intake está bloqueado en el helper soportado de Library en Windows (`os.setxattr` no disponible). No hay `store.sql` materializado y verificado en este executor. Una ruta de otro executor no satisface este requisito. No se debe reconstruir el SQL a partir de descripciones ni sustituirlo por un fixture.
 
 La demo debe permanecer deshabilitada: [AGENTS.md, línea 33](../../../AGENTS.md) exige cierre de UI, Edge antes de Auth/SQL y rutas SQL antes de DML. La configuración del wire real debe seguir vacía y su estado **UNBOUND**. Ninguna prueba descrita aquí autoriza habilitación, despliegue, migración remota, credenciales o grants/roles reales.
 

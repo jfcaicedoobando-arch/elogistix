@@ -5,8 +5,7 @@ driver. The exact proposal could not be materialized through the supported
 Library flow on this Windows executor. No SQL, fixture, connection configuration,
 role, grant, migration, endpoint binding, or replacement protocol is supplied.
 
-The requested Library input is `libfile_c84ef6930ee48191917bc2e235168fd8`, version
-`0`, `Elogistix-persistencia-propuesta.zip`, with expected SHA256
+The requested package is `Elogistix-persistencia-propuesta.zip`, with expected SHA256
 `45ec554f587cc3a12048732254ac98bd98f09ceaf18383dde496eba6c227dfa1`.
 That hash is the **requested pin**, not an observed hash of a local file.
 
@@ -37,6 +36,8 @@ python3 -m unittest discover -s scripts/ci/demo-persistence-review -p 'test_*.py
 Tests use **synthetic ZIPs** with an explicitly synthetic comment as `store.sql`.
 They prove rejection behavior and preservation of raw CRLF bytes. They do not
 exercise the requested package, a business engine, an issuer, or identity.
+Public-file regression tests also reject private source identifiers and local
+profile paths in this review's tracked files.
 
 The existing `scripts/ci/crm-acl-review` sources and workflow remain unchanged.
 Its offline suite is independently useful, but its CLI/gate and CRM SQL must not

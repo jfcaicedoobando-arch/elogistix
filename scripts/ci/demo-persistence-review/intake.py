@@ -13,8 +13,7 @@ import re
 import stat
 import zipfile
 
-LIBRARY_FILE_ID = 'libfile_c84ef6930ee48191917bc2e235168fd8'
-LIBRARY_VERSION = 0
+PACKAGE_NAME = 'Elogistix-persistencia-propuesta.zip'
 EXPECTED_ZIP_SHA256 = '45ec554f587cc3a12048732254ac98bd98f09ceaf18383dde496eba6c227dfa1'
 MAX_ARCHIVE_BYTES = 32 * 1024 * 1024
 MAX_EXPANDED_BYTES = 32 * 1024 * 1024
@@ -119,8 +118,7 @@ def verify_bundle(path):
     require(path.is_file(), 'Supported local Library materialization is absent')
     require(path.stat().st_size <= MAX_ARCHIVE_BYTES, 'ZIP exceeds offline intake limit')
     result = _validate_archive(path.read_bytes(), EXPECTED_ZIP_SHA256)
-    result.update(expected_library_file_id=LIBRARY_FILE_ID, expected_library_version=LIBRARY_VERSION,
-                  library_metadata='NOT_VERIFIED_BY_THIS_TOOL')
+    result.update(expected_package=PACKAGE_NAME, library_metadata='NOT_VERIFIED_BY_THIS_TOOL')
     return result
 
 

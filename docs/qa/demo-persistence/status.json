@@ -4,14 +4,10 @@
   "repository": "jfcaicedoobando-arch/elogistix",
   "base_commit": "5d1f00d27628100a58ab166367a067ea90068b84",
   "branch": "codex/persistence-pg176-quarantine",
-  "executor_hostname_observed": "Asus14",
   "input": {
-    "library_file_id": "libfile_c84ef6930ee48191917bc2e235168fd8",
-    "expected_version": 0,
     "filename": "Elogistix-persistencia-propuesta.zip",
     "expected_sha256": "45ec554f587cc3a12048732254ac98bd98f09ceaf18383dde496eba6c227dfa1",
     "observed_sha256": null,
-    "local_destination": "C:\\Users\\torta\\Documents\\Codex\\2026-10-15\\task-3\\input\\Elogistix-persistencia-propuesta.zip",
     "final_path_exists": false,
     "supported_retry_exhausted": true,
     "first_error": "library file transfer failed: download failed",
@@ -25,6 +21,7 @@
   "results": [
     {"case": "local_executor_operation_cwd_head_branch", "status": "PASS"},
     {"case": "synthetic_intake_tests", "status": "PASS", "tests": 15},
+    {"case": "public_metadata_tests", "status": "PASS", "tests": 2},
     {"case": "crm_infrastructure_offline_tests_exact_git_blobs", "status": "PASS", "tests": 47},
     {"case": "intake_missing_actual_input_rejected", "status": "PASS", "reported_input_status": "NOT_RUN"},
     {"case": "exact_store_compilation_and_bindings", "status": "NOT_RUN"},
