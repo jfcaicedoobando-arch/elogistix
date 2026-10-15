@@ -112,11 +112,15 @@ SELECT coalesce((SELECT jsonb_build_object(
  AND a.application_name=""" + literal(app) + ") ,'null'::jsonb);", label, db, user='supabase_admin'))
 
 
-def wait_state(r, db, app, label, allow_wait=False, timeout=12):
+def wait_state(r, db, app, label, allow_wait=False, timeout=12, process=None):
     """Observe actual completion/lock state, with a deadline rather than sleeps."""
     deadline = time.monotonic() + timeout
     count = 0
     while time.monotonic() < deadline:
+        if process is not None:
+            returncode = process.poll()
+            if returncode is not None:
+                return {'state': 'client exited', 'client_exited': True, 'returncode': returncode}
         count += 1
         state = observed_state(r, db, app, label + '-observe-' + str(count))
         if state and state['state'] == 'idle in transaction':
@@ -127,6 +131,42 @@ def wait_state(r, db, app, label, allow_wait=False, timeout=12):
             return state
     raise AssertionError(label + ': session never reached the required observed state')
 
+
+
+def expected_competitor_error(response, label):
+    """Accept only the exact catalog-update conflict observed in PostgreSQL 17.6."""
+    require(response.returncode == 3, label + ': unexpected competitor exit code ' + str(response.returncode))
+    errors = re.findall(r'^(ERROR|FATAL):\s+([0-9A-Z]{5}):[ \t]*(.*)$', response.stdout, re.M)
+    require(errors == [('ERROR', 'XX000', 'tuple concurrently updated')],
+            label + ': unexpected competitor error: ' + response.stdout)
+    return {'outcome': 'competitor_rejected_after_wait', 'sqlstate': 'XX000',
+            'primary_message': 'tuple concurrently updated'}
+
+
+def competitor_after_wait(r, db, app, process, label):
+    """Called only after a concrete competitor lock wait was already recorded."""
+    observed = wait_state(r, db, app, label + '-ready', process=process)
+    if observed.get('client_exited') is True:
+        result = r.finish_session(process, label + '-error-result', expected=None)
+        return expected_competitor_error(result, label)
+    require(observed.get('state') == 'idle in transaction', label + ': competitor has no complete statement')
+    return {'outcome': 'competitor_ready_to_commit', 'sqlstate': None, 'primary_message': None}
+
+
+def owner_only_expected(before):
+    """Exact migration-only catalog state; preserve every unrelated field/row."""
+    expected = deepcopy(before)
+    targets = {signature.split('.')[1].split('(')[0] for signature in FUNCTIONS}
+    rows = [row for row in expected['pg_proc'] if row['proname'] in targets]
+    require(len(rows) == 2, 'Migration-only reference needs both helper rows')
+    oids = {str(row['oid']) for row in rows}
+    for row in rows:
+        row['proacl'] = ['postgres=X/postgres']
+    # PostgreSQL pg_proc has catalog OID 1255. Owner dependencies remain; only
+    # these helper ACL dependencies disappear when the non-owner grant goes.
+    expected['pg_shdepend'] = [row for row in expected['pg_shdepend']
+        if not (str(row['classid']) == '1255' and str(row['objid']) in oids and row['deptype'] == 'a')]
+    return expected
 
 def begin_session(r, db, app, statements, user='postgres'):
     return r.session('SET application_name = ' + literal(app) + ';\nBEGIN;\n'
@@ -321,7 +361,7 @@ def case11(r):
         with case_database(r, label) as db:
             if replay:
                 r.query(r.candidate, label + '-owner-only-setup', db)
-            r.snapshot(db, label + '-before')
+            before = r.snapshot(db, label + '-before')
             app = label + '-migration'
             gate = gate_holder(r, db, label + '-gate')
             install_barrier(r, db, app, point, label)
@@ -332,17 +372,21 @@ def case11(r):
             proof = r.wait_lock(label + '-competitor', db)
             finish_transaction(r, gate, label + '-open-gate')
             r.finish_session(migration, label + '-migration-result')
-            wait_state(r, db, label + '-competitor', label + '-competitor-ready')
-            # The competing transaction is still uncommitted: owner-only
-            # state must already be visible from a third connection.
+            outcome = competitor_after_wait(r, db, label + '-competitor', competitor, label + '-competitor')
             assert_owner_only(r, db, label + '-migration-committed-first')
-            finish_transaction(r, competitor, label + '-competitor-commit')
+            if outcome['outcome'] == 'competitor_ready_to_commit':
+                finish_transaction(r, competitor, label + '-competitor-commit')
+                outcome['outcome'] = 'competitor_committed_after_migration'
+                final_expected = expected
+            else:
+                final_expected = normalized_snapshot(owner_only_expected(before))
             remove_barrier(r, db, label)
             actual = normalized_snapshot(r.snapshot(db, label + '-after'))
-            require(actual == expected, label + ': incorrect serialization/final state')
+            require(actual == final_expected, label + ': incorrect serialization/final state')
             r.check(label, lock_evidence=proof, candidate_committed_first=True,
                     exact_candidate_bytes=True, event_trigger_barrier=True,
-                    replay_owner_only=replay, later_authorized_change_outside_invariant=True)
+                    replay_owner_only=replay, full_metadata_preserved=True, **outcome,
+                    later_authorized_change_outside_invariant=(outcome['outcome'] == 'competitor_committed_after_migration'))
 
 
 def assert_extra_trigger_delta(before, after, trigger_class, relation_class):
@@ -386,7 +430,7 @@ def case12(r):
     change = 'ALTER TABLE public.crm_empresas DISABLE TRIGGER trg_crm_empresa_no_borrar_cliente;'
     expected = expected_snapshot(r, label, r.candidate + '\n' + change)
     with case_database(r, label) as db:
-        r.snapshot(db, label + '-before')
+        before = r.snapshot(db, label + '-before')
         app = label + '-migration'
         gate = gate_holder(r, db, label + '-gate')
         install_barrier(r, db, app, 1, label)
@@ -396,18 +440,24 @@ def case12(r):
         proof = r.wait_lock(label + '-competitor', db)
         finish_transaction(r, gate, label + '-open-gate')
         r.finish_session(migration, label + '-migration-result')
-        wait_state(r, db, label + '-competitor', label + '-competitor-ready')
+        outcome = competitor_after_wait(r, db, label + '-competitor', competitor, label + '-competitor')
         assert_owner_only(r, db, label + '-migration-committed-first')
-        finish_transaction(r, competitor, label + '-competitor-commit')
+        if outcome['outcome'] == 'competitor_ready_to_commit':
+            finish_transaction(r, competitor, label + '-competitor-commit')
+            outcome['outcome'] = 'competitor_committed_after_migration'
+            final_expected = expected
+        else:
+            final_expected = normalized_snapshot(owner_only_expected(before))
         remove_barrier(r, db, label)
-        require(normalized_snapshot(r.snapshot(db, label + '-after')) == expected,
+        require(normalized_snapshot(r.snapshot(db, label + '-after')) == final_expected,
                 label + ': incorrect final metadata')
-        r.check(label, lock_evidence=proof, exact_candidate_bytes=True, event_trigger_barrier=True)
+        r.check(label, lock_evidence=proof, exact_candidate_bytes=True,
+                event_trigger_barrier=True, full_metadata_preserved=True, **outcome)
 
     label = 'c12-extra-trigger-different-table'
     with case_database(r, label) as db:
         r.query('CREATE TABLE public.crm_acl_ci_other (id integer);', label + '-other-table', db)
-        r.snapshot(db, label + '-before')
+        before = r.snapshot(db, label + '-before')
         app = label + '-migration'
         gate = gate_holder(r, db, label + '-gate')
         install_barrier(r, db, app, 2, label)
@@ -421,23 +471,30 @@ def case12(r):
 CREATE TRIGGER crm_acl_ci_extra BEFORE DELETE ON public.crm_acl_ci_other
 FOR EACH ROW EXECUTE FUNCTION public._crm_empresa_no_delete_fisico();
 """)
-        observed = wait_state(r, db, label + '-competitor', label + '-race', allow_wait=True)
+        observed = wait_state(r, db, label + '-competitor', label + '-race', allow_wait=True, process=competitor)
+        if observed.get('client_exited') is True:
+            failure = r.finish_session(competitor, label + '-unexpected-early-exit', expected=None)
+            raise AssertionError(label + ': competitor exited before any observed lock: ' + failure.stdout)
+        error_primary = None
         if observed['wait_event_type'] == 'Lock':
             # PostgreSQL may serialize a dependency operation. Prove ordering
             # and characterize it without claiming a global dependency freeze.
             finish_transaction(r, gate, label + '-open-gate')
             r.finish_session(migration, label + '-migration-result')
-            wait_state(r, db, label + '-competitor', label + '-competitor-ready')
+            competitor_outcome = competitor_after_wait(r, db, label + '-competitor', competitor, label + '-competitor')
             assert_owner_only(r, db, label + '-migration-committed-first')
             migrated = r.snapshot(db, label + '-migration-before-external-commit')
-            from cases import semantic
-            require(semantic(with_barrier) == semantic(migrated),
+            require(owner_only_expected(with_barrier) == migrated,
                     label + ': migration changed unexpected full-catalog metadata')
-            finish_transaction(r, competitor, label + '-competitor-commit')
-            external = r.snapshot(db, label + '-external-committed-with-barrier')
-            assert_extra_trigger_delta(migrated, external, catalog_ids['trigger'], catalog_ids['relation'])
-            outcome = 'extra_link_serialized_after_migration'
-            error = None
+            if competitor_outcome['outcome'] == 'competitor_ready_to_commit':
+                finish_transaction(r, competitor, label + '-competitor-commit')
+                external = r.snapshot(db, label + '-external-committed-with-barrier')
+                assert_extra_trigger_delta(migrated, external, catalog_ids['trigger'], catalog_ids['relation'])
+                outcome = 'extra_link_serialized_after_migration'
+            else:
+                outcome = 'extra_link_competitor_rejected_after_wait'
+            error = competitor_outcome['sqlstate']
+            error_primary = competitor_outcome.get('primary_message')
         else:
             finish_transaction(r, competitor, label + '-competitor-commit')
             expected = r.snapshot(db, label + '-expected-external-link-with-barrier')
@@ -448,8 +505,13 @@ FOR EACH ROW EXECUTE FUNCTION public._crm_empresa_no_delete_fisico();
                     label + ': full-catalog rollback lost external link or left unintended changes')
             outcome = 'concurrent_extra_link_detected_and_rolled_back'
         remove_barrier(r, db, label)
-        r.snapshot(db, label + '-after')
-        r.check(label, outcome=outcome, sqlstate=error, lock_evidence=observed,
+        final = r.snapshot(db, label + '-after')
+        if outcome == 'extra_link_competitor_rejected_after_wait':
+            require(final == owner_only_expected(before), label + ': competitor failure left unexpected metadata')
+        else:
+            base = owner_only_expected(before) if outcome == 'extra_link_serialized_after_migration' else before
+            assert_extra_trigger_delta(base, final, catalog_ids['trigger'], catalog_ids['relation'])
+        r.check(label, outcome=outcome, sqlstate=error, primary_message=error_primary, lock_evidence=observed,
                 exact_candidate_bytes=True, event_trigger_barrier=True,
                 full_metadata_preserved=True,
                 bounded_guarantee='No broad exclusion of future dependencies is asserted')

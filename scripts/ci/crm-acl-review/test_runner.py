@@ -1,7 +1,25 @@
-import json,unittest,copy
+import json,unittest,copy,io,tempfile
+from unittest.mock import Mock
 from pathlib import Path
 from run_ci import Runner,CRMRunner,gate,BASE,BRANCH,REPOSITORY,OWNER,IMAGE
 class RunnerSafety(unittest.TestCase):
+ def test_cleanup_preserves_exited_client_primary_error(self):
+  with tempfile.TemporaryDirectory() as tmp:
+   out=Path(tmp);(out/'logs').mkdir();r=Runner(out,'offline')
+   p=Mock();p.poll.return_value=3;p.wait.return_value=3;p.stdin=None;p.stderr=None;p.stdout=io.StringIO();p._crm_label='competitor'
+   p.communicate.return_value=('ERROR:  XX000: tuple concurrently updated\n',None)
+   r.sessions=[p];r.close_sessions()
+   self.assertTrue(r.result['owned_psql_clients_closed'])
+   self.assertIn('XX000',(out/'logs/cleanup-session-competitor.stdout').read_text())
+   p.terminate.assert_not_called()
+ def test_finish_exited_client_preserves_error_after_broken_pipe(self):
+  with tempfile.TemporaryDirectory() as tmp:
+   out=Path(tmp);(out/'logs').mkdir();r=CRMRunner(out,'offline')
+   p=Mock();p.stdin.close.side_effect=BrokenPipeError();p.returncode=3;p.args=[]
+   p.communicate.return_value=('ERROR:  XX000: tuple concurrently updated\n',None)
+   r.sessions=[p];result=r.finish_session(p,'failed-competitor',expected=None)
+   self.assertEqual(result.returncode,3);self.assertIn('XX000',result.stdout)
+   self.assertIsNone(p.stdin)
  def test_isolation(self):
   r=Runner(Path('/tmp/offline-do-not-run'),'offline');args=r.create_args()
   for flag in ['--network','--read-only','--cap-drop','--security-opt','--user','--tmpfs']:self.assertIn(flag,args)

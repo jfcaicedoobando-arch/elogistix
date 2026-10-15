@@ -97,7 +97,7 @@ class Runner:
     def close_sessions(self):
         """Reap only Popen objects registered by this runner, before cluster shutdown."""
         failures = []
-        for process in reversed(self.sessions):
+        for index,process in enumerate(reversed(self.sessions)):
             try:
                 if process.poll() is None:
                     process.terminate()
@@ -108,6 +108,17 @@ class Runner:
                         process.wait(timeout=5)
                 else:
                     process.wait(timeout=5)
+                # Preserve errors from clients that exited before the controller
+                # could call finish_session; never discard the primary SQLSTATE.
+                if process.stdout is not None and not process.stdout.closed:
+                    if process.stdin is not None:
+                        try:process.stdin.close()
+                        except BrokenPipeError:pass
+                        process.stdin=None
+                    out,_=process.communicate(timeout=5)
+                    label=getattr(process,'_crm_label',str(index))
+                    require(re.fullmatch(r'[A-Za-z0-9_-]+',label),'Unsafe session label')
+                    (self.output/'logs'/('cleanup-session-'+label+'.stdout')).write_text(out or '')
                 for stream in (process.stdin, process.stdout, process.stderr):
                     if stream is not None and not stream.closed:
                         stream.close()
@@ -235,6 +246,7 @@ class CRMRunner(Runner):
             for sig in watched:signal.signal(sig,lambda number,frame:pending.append(number))
             p=subprocess.Popen(self.psql_args(db,user=user),stdin=subprocess.PIPE,stdout=subprocess.PIPE,stderr=subprocess.STDOUT,text=True,bufsize=1,env=self.env)
             self.sessions.append(p)
+            p._crm_label=label
         finally:
             for sig,handler in previous.items():signal.signal(sig,handler)
         require(not pending,'Interrupted while registering owned client')
@@ -248,7 +260,10 @@ class CRMRunner(Runner):
 
     def finish_session(self,p,label,expected=0):
         require(p in self.sessions,'Unowned session')
-        p.stdin.close();p.stdin=None
+        if p.stdin is not None:
+            try:p.stdin.close()
+            except BrokenPipeError:pass
+            p.stdin=None
         try:out,_=p.communicate(timeout=40)
         except subprocess.TimeoutExpired:
             p.kill();out,_=p.communicate(timeout=10)
