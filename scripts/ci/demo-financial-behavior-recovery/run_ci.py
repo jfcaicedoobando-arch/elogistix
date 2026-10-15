@@ -151,9 +151,17 @@ def case_summary(result, suite, successful, expected):
     accepted = successful and installed and all_stages and cleanup_ok(result) and result.get("suite_markers") is True
     return {"suite": suite, "status": "PASS" if accepted else "FAIL", "catalog_compile": "PASS" if installed else "FAIL",
             "financial_behavior": "PASS" if accepted else "NOT_RUN" if result.get("stage") != "behavior-" + suite or result.get("diagnostic", {}).get("phase") in ("fixture", "prepare_context", "assertions") else "FAIL",
+            "materialization_assertions": "PASS" if result.get("materialization_assertions") is True else "NOT_RUN",
             "stage": "complete_owned_cleanup_confirmed" if accepted else result.get("stage"),
             "diagnostic": result.get("diagnostic"), "failure_type": result.get("error_type"), "stages": stages,
             "cleanup_verified": cleanup_ok(result), "cleanup": result.get("cleanup"), "cleanup_failure_type": result.get("cleanup_error_type"), "candidate": result.get("candidate")}
+
+def fault_probes_allowed(happy):
+    # A replay defect remains FAIL, but does not hide independent rollback probes
+    # after real materialization + deferred guards and verified owned cleanup.
+    return happy.get("status") == "PASS" or (
+        happy.get("materialization_assertions") == "PASS" and happy.get("cleanup_verified") is True
+        and happy.get("diagnostic", {}).get("phase") == "happy_materialized")
 
 def run_case(output, suite, frozen, compile_frozen, bundle, compile_module, infrastructure, variant):
     class BehaviorRunner(infrastructure.Runner):
@@ -174,6 +182,7 @@ def run_case(output, suite, frozen, compile_frozen, bundle, compile_module, infr
                 prefix.with_suffix(".stderr").write_bytes(stderr)
                 self.result["diagnostic"] = diagnose(stdout, stderr, label, "timeout")
                 raise RuntimeError("Synthetic SQL timeout at " + label) from None
+            self.result["materialization_assertions"] = response.stdout.decode(errors="replace").splitlines().count("FINANCIAL_MATERIALIZATION_ASSERTIONS_COMPLETE_happy") == 1
             prefix.with_suffix(".stdout").write_bytes(response.stdout)
             prefix.with_suffix(".stderr").write_bytes(response.stderr)
             if response.returncode:
@@ -256,13 +265,14 @@ def run(output, selected):
     save()
     suites = SUITES if selected == "all" else ("happy", selected) if selected != "happy" else ("happy",)
     for suite in suites:
-        if summary["cases"] and summary["cases"][0]["status"] != "PASS":
-            summary["cases"].append({"suite": suite, "status": "NOT_RUN", "reason": "happy prerequisite failed"})
+        if summary["cases"] and not fault_probes_allowed(summary["cases"][0]):
+            summary["cases"].append({"suite": suite, "status": "NOT_RUN", "reason": "materialization/deferred-guard prerequisite failed"})
         else:
             summary["cases"].append(run_case(output / suite, suite, frozen, compile_frozen, bundle, cm, infrastructure, variant))
         save()
     summary["status"] = "PASS_SYNTHETIC_ROLLBACK_ONLY" if all(c["status"] == "PASS" for c in summary["cases"]) else "FAIL"
     summary["selected_suite"] = selected
+    summary["replay"] = "FAIL" if summary["cases"][0].get("diagnostic", {}).get("phase") == "happy_materialized" else "PASS" if summary["cases"][0]["status"] == "PASS" else "NOT_RUN"
     save()
     print(json.dumps(summary))
     require(summary["status"] == "PASS_SYNTHETIC_ROLLBACK_ONLY", "Behavior or cleanup incomplete; inspect bounded evidence")

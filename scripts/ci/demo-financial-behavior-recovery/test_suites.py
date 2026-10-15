@@ -74,6 +74,24 @@ def exact_fault_contract(source):
     require("ELSE RAISE EXCEPTION 'Unknown fault target';" in source, "unknown target fails")
 
 
+def materialization_evidence_contract(source):
+    drain = "SET LOCAL ROLE service_role;\nSELECT demo_financial_lab.flush_deferred();\nRESET ROLE;"
+    marker = "SELECT 'FINANCIAL_MATERIALIZATION_ASSERTIONS_COMPLETE_happy';"
+    require(source.count(drain) == 1 and source.count(marker) == 1, "one genuine drain and positive marker")
+    ordered = [
+        "PERFORM demo_flow_writer.verify_materialized(v_run);",
+        "RAISE EXCEPTION 'Authentic materialization cardinality mismatch'",
+        "RAISE EXCEPTION 'Projection/checkpoint/marker/receipt mismatch'",
+        drain, marker, "\\echo FINANCIAL_PHASE_happy_materialized",
+        "CREATE TEMP TABLE before_replay", "AS replay \\gset",
+        "SELECT 'FINANCIAL_ASSERTIONS_COMPLETE_happy';", "ROLLBACK;",
+        "SELECT 'FINANCIAL_ROLLBACK_COMPLETE_happy';",
+    ]
+    positions = [source.find(token) for token in ordered]
+    require(all(position >= 0 for position in positions) and positions == sorted(positions),
+            "materialization assertions and real drain precede marker, strict replay and rollback")
+
+
 class FinancialBehaviorSuiteTests(unittest.TestCase):
     def test_full_snapshot_contract(self):
         snapshot_contract(read("assertions.sql"))
@@ -134,7 +152,21 @@ class FinancialBehaviorSuiteTests(unittest.TestCase):
         self.assertIn("pg_temp.financial_snapshot() IS DISTINCT FROM (SELECT body FROM before_replay)", source)
         self.assertNotIn("EXCEPTION WHEN", source)
         self.assertLess(source.index("CREATE TEMP TABLE before_replay"), source.index("AS replay \\gset"))
-        self.assertLess(source.index("AS replay \\gset"), source.index("SELECT demo_financial_lab.flush_deferred();"))
+        self.assertLess(source.index("SELECT demo_financial_lab.flush_deferred();"), source.index("AS replay \\gset"))
+
+    def test_materialization_evidence_requires_real_guard_drain_before_replay(self):
+        materialization_evidence_contract(read("happy.sql"))
+
+    def test_premature_materialization_marker_or_missing_drain_is_rejected(self):
+        source = read("happy.sql")
+        marker = "SELECT 'FINANCIAL_MATERIALIZATION_ASSERTIONS_COMPLETE_happy';"
+        for mutant in (
+            source.replace(marker, "").replace("SELECT demo_financial_lab.flush_deferred();", marker + "\nSELECT demo_financial_lab.flush_deferred();"),
+            source.replace("SELECT demo_financial_lab.flush_deferred();", "SELECT true;"),
+            source.replace("\\echo FINANCIAL_PHASE_happy_materialized", "").replace(marker, "\\echo FINANCIAL_PHASE_happy_materialized\n" + marker),
+        ):
+            with self.assertRaises(ValueError):
+                materialization_evidence_contract(mutant)
 
     def test_exact_injection_and_unrelated_error_rethrow(self):
         exact_fault_contract(read("fault.sql"))

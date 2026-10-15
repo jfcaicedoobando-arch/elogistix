@@ -2,7 +2,7 @@
 
 This stacked draft uses PR353 commit `c3a593c94f236aab01c887728c07748eb6912cae` unchanged. Its compile-only acceptance remains in PR353. This experiment does not broaden that acceptance.
 
-The new lane first attempts the real `prepare_execute_checkpoint` boundary with synthetic fixtures, then (only after a passing happy prerequisite) five rollback injections: checkpoint, marker, execution receipt, event, receipt. `--suite happy` is the initial workflow. All suites exist as executable fixtures; a suite that cannot reach its injection is NOT_RUN, never a passing rollback.
+The new lane first attempts the real `prepare_execute_checkpoint` boundary with synthetic fixtures, then five independent rollback injections after materialization/deferred-guard assertions: checkpoint, marker, execution receipt, event, receipt. The initial workflow used `--suite happy`; the next uses `--suite all`. A strict replay failure remains FAIL, but five independent rollback probes may proceed if materialization assertions plus real deferred guard drain passed and owned cleanup was verified. If that prerequisite fails, probes are NOT_RUN. A probe that fails before its intended injection never counts as a passing rollback.
 
 ## Exact inputs and isolation
 
@@ -25,3 +25,8 @@ Only public catalog metadata and bounded result JSON are uploaded. Private SQL/s
 Even a passing suite is synthetic assertions followed by ROLLBACK. It does not certify business COMMIT, WAL durability, real authentication, production RLS, HTTP ACK, retry safety or deployed transport. Wire remains UNBOUND, configuration EMPTY, external demo DISABLED. No local SQL execution, real database, secret, persistent grant, deployment or activation is part of this lane.
 
 Offline tests can run with `python -B -I -m unittest discover -s scripts/ci/demo-financial-behavior-recovery -p 'test_*.py' -v`. They do not execute SQL or Docker.
+
+## Runtime evidence ledger
+
+- `8e25beb5ce5903f466e7c254d593e5e281474e38`: [run38822371964](https://github.com/jfcaicedoobando-arch/elogistix/actions/runs/38822371964) FAIL at strict same-context replay after 13-action materialization assertions. Phase `happy_materialized`, SQLSTATE23514 `DEMO_FINANCIAL_ADOPTION_DENIED`, canonical bridge verifier line79. Owned cleanup verified. Artifact12012827944 ZIP SHA256 `47edda43c07fedc3774d3fb4e72dc8712f44ad32a864c310e9addd513b0b5321`, CRC and four JSON members independently verified.
+- The first result is not a passing full happy suite: replay failed and the post-replay guard drain/explicit rollback assertions were not reached. The next harness revision moves the same real guard drain before replay, adds a positive materialization marker and permits independent fault probes only with that evidence and cleanup. The strict replay and aggregate failure are preserved; canonical issuer/bridge remain unchanged.

@@ -61,6 +61,14 @@ class RunnerTests(unittest.TestCase):
         self.assertEqual(len(pins["compile_sources"]), 26)
         self.assertIn("sql/fixture.sql", frozen)
         self.assertNotIn(b"\\ir", r.suite_sql(frozen, "happy"))
+    def test_fault_probe_gate_keeps_replay_fail_without_hiding_independent_probes(self):
+        self.assertTrue(r.fault_probes_allowed({"status": "PASS"}))
+        partial = {"status": "FAIL", "materialization_assertions": "PASS", "cleanup_verified": True, "diagnostic": {"phase": "happy_materialized"}}
+        self.assertTrue(r.fault_probes_allowed(partial))
+        for key in ("materialization_assertions", "cleanup_verified", "diagnostic"):
+            bad = copy.deepcopy(partial); bad.pop(key)
+            with self.subTest(key=key): self.assertFalse(r.fault_probes_allowed(bad))
+        self.assertFalse(r.fault_probes_allowed({**partial, "diagnostic": {"phase": "prepare_context"}}))
     def test_variant_has_exactly_three_fixture_changes_and_derived_digest(self):
         import re
         source = r.file_bytes(r.COMPILE / "upstream/flow/sql/02-manifest.sql")

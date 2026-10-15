@@ -32,6 +32,12 @@ DO $$ DECLARE r jsonb; v_lineage uuid; v_checkpoint uuid; v_run uuid; BEGIN
  THEN RAISE EXCEPTION 'Projection/checkpoint/marker/receipt mismatch'; END IF;
  PERFORM pg_temp.assert_manual_sentinels();
 END $$;
+-- Unexpected deferred authorization or transport failures are fatal. Emit the
+-- partial materialization marker only after all genuine deferred guards drain.
+SET LOCAL ROLE service_role;
+SELECT demo_financial_lab.flush_deferred();
+RESET ROLE;
+SELECT 'FINANCIAL_MATERIALIZATION_ASSERTIONS_COMPLETE_happy';
 \echo FINANCIAL_PHASE_happy_materialized
 CREATE TEMP TABLE before_replay AS SELECT pg_temp.financial_snapshot() body;
 SET LOCAL ROLE service_role;
@@ -45,10 +51,6 @@ DO $$ BEGIN
  THEN RAISE EXCEPTION 'Replay mutated persistent rows'; END IF;
  PERFORM pg_temp.assert_manual_sentinels();
 END $$;
--- Unexpected deferred authorization or transport failures are fatal.
-SET LOCAL ROLE service_role;
-SELECT demo_financial_lab.flush_deferred();
-RESET ROLE;
 SELECT 'FINANCIAL_ASSERTIONS_COMPLETE_happy';
 ROLLBACK;
 DO $$ BEGIN
