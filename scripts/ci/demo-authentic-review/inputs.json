@@ -1,0 +1,77 @@
+[
+  {
+    "path": "sql/authentic-contract.sql",
+    "bytes": 8875,
+    "sha256": "6f6984b49932a13488ee41d05998112c4543e683ba71d7e2912881732118db59"
+  },
+  {
+    "path": "sql/bridge.sql",
+    "bytes": 8362,
+    "sha256": "69bbcd2ec825953ca4fda822ec5fde143f1f70a5120f372ee3c211e96523c5b2"
+  },
+  {
+    "path": "sql/core-owner-fixture.sql",
+    "bytes": 282,
+    "sha256": "a850f7d409b721c317001947daf6633fa3d3f0ca4680eac6670e193eed82a563"
+  },
+  {
+    "path": "sql/crm-trigger.sql",
+    "bytes": 1236,
+    "sha256": "116435b37cb0ba806438e69c050192411ea7b4fdaf275bbea4868ed355e6733b"
+  },
+  {
+    "path": "sql/identity.sql",
+    "bytes": 16101,
+    "sha256": "666a466b0b8189ef3cec661f489495b7059cfd9bbcb2492d9d221b693ea3be7f"
+  },
+  {
+    "path": "sql/manifest.sql",
+    "bytes": 2813,
+    "sha256": "5d49c6dabc0a39b2a1ba5d5e1c0f19a2112d100147d9f706ddd2d9e5093790d0"
+  },
+  {
+    "path": "sql/producer-fixture-contract.sql",
+    "bytes": 5183,
+    "sha256": "d1e4beaec6d8832fe444a9bd6b3e1ef7475b8f089b9cc061bb7ac42c13071de5"
+  },
+  {
+    "path": "sql/producer.sql",
+    "bytes": 19028,
+    "sha256": "f0a14f683ee524527ed3b7f29305bc793f7f9e3d5581b4332da72f8fb8bb55a6"
+  },
+  {
+    "path": "sql/registry.sql",
+    "bytes": 11333,
+    "sha256": "a74d69ed6d19356ba36fe27d7070a496e99c3ef5cec7a030c3b96b609a64463b"
+  },
+  {
+    "path": "sql/run.sql",
+    "bytes": 87,
+    "sha256": "5f5e128d6b1a30f9079987fe8d1984768d863e4962f6db97127a3d7793ac849f"
+  },
+  {
+    "path": "sql/runtime-guards.sql",
+    "bytes": 2492,
+    "sha256": "eb656d1d02205b9115e9bdc4512a593d0d34cd05f73bca62855055ced75cbad5"
+  },
+  {
+    "path": "sql/setup.sql",
+    "bytes": 1101,
+    "sha256": "df99f777b74550176c61baa4b4f616421671642cc8fc122cc92724095eb21f2c"
+  },
+  {
+    "path": "sql/synthetic-input.sql",
+    "bytes": 3879,
+    "sha256": "7496cf88fd7d2b7763acdbe098178b5d67bc9162c44a73ac9fcf093a7d7ae62c"
+  },
+  {
+    "path": "sql/synthetic-schema.sql",
+    "bytes": 4598,
+    "sha256": "d1fd5123a9d688a02651534ab2829ca520891439125a256735f8071fe7ad3c1a"
+  },
+  {
+    "path": "sql/writer-dependencies.sql",
+    "bytes": 876,
+    "sha256": "aff280e2ac714525f8fc026416c8ad031c20c541d169dbcaff7bcd9bb2f4d1dd"
+  }
+]
