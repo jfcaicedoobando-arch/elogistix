@@ -61,6 +61,12 @@ class RunnerTests(unittest.TestCase):
         self.assertEqual(len(pins["compile_sources"]), 26)
         self.assertIn("sql/fixture.sql", frozen)
         self.assertNotIn(b"\\ir", r.suite_sql(frozen, "happy"))
+    def test_fault_success_requires_observed_exact_injection_marker(self):
+        good = {"cleanup": "confirmed_stopped_and_removed", "shutdown_confirmed": True, "pg_status_3_and_no_pid": True,
+                "owned_psql_clients_closed": True, "suite_markers": True, "stages": [{"stage": x, "status": "PASS"} for x in ("install", "synthetic-boundary-privileges", "behavior-event")]}
+        self.assertEqual(r.case_summary(good, "event", True, ["install"])["status"], "FAIL")
+        good["injection_observed"] = True
+        self.assertEqual(r.case_summary(good, "event", True, ["install"])["status"], "PASS")
     def test_fault_probe_gate_keeps_replay_fail_without_hiding_independent_probes(self):
         self.assertTrue(r.fault_probes_allowed({"status": "PASS"}))
         partial = {"status": "FAIL", "materialization_assertions": "PASS", "cleanup_verified": True, "diagnostic": {"phase": "happy_materialized"}}

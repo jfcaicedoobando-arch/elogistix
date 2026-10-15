@@ -92,6 +92,20 @@ def materialization_evidence_contract(source):
             "materialization assertions and real drain precede marker, strict replay and rollback")
 
 
+def injection_setup_contract(source):
+    require("DO $$ DECLARE v_target text; BEGIN" in source, "local variable distinct from column")
+    require("v_target:=(SELECT i.target FROM pg_temp.financial_fault_input i);" in source,
+            "qualified fault input column")
+    require("CASE v_target" in source and "DECLARE target " not in source,
+            "dispatch uses unambiguous local variable")
+    verified_call = "SELECT demo_financial_lab.expect_financial_fault(:'context_id'::uuid,:'expected');\nRESET ROLE;"
+    observed = "SELECT 'FINANCIAL_INJECTION_OBSERVED_'||i.target FROM pg_temp.financial_fault_input i;"
+    require(source.count(observed) == 1 and verified_call + "\n" + observed in source,
+            "observed marker follows verified injection and role reset immediately")
+    require(source.index(observed) < source.index("SELECT body FROM financial_before"),
+            "separate injection evidence from subsequent snapshot assertion")
+
+
 class FinancialBehaviorSuiteTests(unittest.TestCase):
     def test_full_snapshot_contract(self):
         snapshot_contract(read("assertions.sql"))
@@ -170,6 +184,20 @@ class FinancialBehaviorSuiteTests(unittest.TestCase):
 
     def test_exact_injection_and_unrelated_error_rethrow(self):
         exact_fault_contract(read("fault.sql"))
+
+    def test_fault_target_is_unambiguous_and_observed_marker_follows_verification(self):
+        injection_setup_contract(read("fault.sql"))
+
+    def test_ambiguous_target_or_premature_observed_marker_is_rejected(self):
+        source = read("fault.sql")
+        marker = "SELECT 'FINANCIAL_INJECTION_OBSERVED_'||i.target FROM pg_temp.financial_fault_input i;"
+        for mutant in (
+            source.replace("v_target", "target").replace("i.target FROM pg_temp.financial_fault_input i", "target FROM financial_fault_input"),
+            source.replace(marker, "").replace("SELECT demo_financial_lab.expect_financial_fault", marker + "\nSELECT demo_financial_lab.expect_financial_fault"),
+            source.replace("v_target:=(SELECT i.target FROM pg_temp.financial_fault_input i);", "v_target:=(SELECT target FROM financial_fault_input);"),
+        ):
+            with self.assertRaises(ValueError):
+                injection_setup_contract(mutant)
 
     def test_catch_all_or_skipped_injection_is_rejected(self):
         source = read("fault.sql")

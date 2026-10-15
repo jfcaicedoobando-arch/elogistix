@@ -148,10 +148,11 @@ def case_summary(result, suite, successful, expected):
     stages = result.get("stages", [])
     installed = [r.get("stage") for r in stages[:len(expected)]] == expected and all(r.get("status") == "PASS" for r in stages[:len(expected)])
     all_stages = [r.get("stage") for r in stages] == [*expected, "synthetic-boundary-privileges", "behavior-" + suite] and all(r.get("status") == "PASS" for r in stages)
-    accepted = successful and installed and all_stages and cleanup_ok(result) and result.get("suite_markers") is True
+    accepted = successful and installed and all_stages and cleanup_ok(result) and result.get("suite_markers") is True and (suite == "happy" or result.get("injection_observed") is True)
     return {"suite": suite, "status": "PASS" if accepted else "FAIL", "catalog_compile": "PASS" if installed else "FAIL",
             "financial_behavior": "PASS" if accepted else "NOT_RUN" if result.get("stage") != "behavior-" + suite or result.get("diagnostic", {}).get("phase") in ("fixture", "prepare_context", "assertions") else "FAIL",
             "materialization_assertions": "PASS" if result.get("materialization_assertions") is True else "NOT_RUN",
+            "injection": "PASS" if suite != "happy" and result.get("injection_observed") is True else "NOT_RUN",
             "stage": "complete_owned_cleanup_confirmed" if accepted else result.get("stage"),
             "diagnostic": result.get("diagnostic"), "failure_type": result.get("error_type"), "stages": stages,
             "cleanup_verified": cleanup_ok(result), "cleanup": result.get("cleanup"), "cleanup_failure_type": result.get("cleanup_error_type"), "candidate": result.get("candidate")}
@@ -183,6 +184,7 @@ def run_case(output, suite, frozen, compile_frozen, bundle, compile_module, infr
                 self.result["diagnostic"] = diagnose(stdout, stderr, label, "timeout")
                 raise RuntimeError("Synthetic SQL timeout at " + label) from None
             self.result["materialization_assertions"] = response.stdout.decode(errors="replace").splitlines().count("FINANCIAL_MATERIALIZATION_ASSERTIONS_COMPLETE_happy") == 1
+            self.result["injection_observed"] = suite != "happy" and response.stdout.decode(errors="replace").splitlines().count("FINANCIAL_INJECTION_OBSERVED_" + suite) == 1
             prefix.with_suffix(".stdout").write_bytes(response.stdout)
             prefix.with_suffix(".stderr").write_bytes(response.stderr)
             if response.returncode:

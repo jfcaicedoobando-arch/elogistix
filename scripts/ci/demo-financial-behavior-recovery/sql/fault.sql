@@ -8,9 +8,9 @@ CREATE TEMP TABLE financial_fault_input AS SELECT :'fault_target'::text target;
 CREATE TEMP TABLE financial_before AS SELECT pg_temp.financial_snapshot() body;
 CREATE FUNCTION pg_temp.inject_financial_fault() RETURNS trigger LANGUAGE plpgsql AS $fn$
 BEGIN RAISE EXCEPTION 'FINANCIAL_INJECTED_%',TG_TABLE_NAME USING ERRCODE='P0T01'; END $fn$;
-DO $$ DECLARE target text; BEGIN
- target:=(SELECT target FROM financial_fault_input);
- CASE target
+DO $$ DECLARE v_target text; BEGIN
+ v_target:=(SELECT i.target FROM pg_temp.financial_fault_input i);
+ CASE v_target
  WHEN 'event' THEN CREATE TRIGGER financial_fault BEFORE INSERT ON demo_flow_writer.events FOR EACH ROW EXECUTE FUNCTION pg_temp.inject_financial_fault();
  WHEN 'receipt' THEN CREATE TRIGGER financial_fault BEFORE INSERT ON demo_flow_writer.receipts FOR EACH ROW EXECUTE FUNCTION pg_temp.inject_financial_fault();
  WHEN 'checkpoint' THEN CREATE TRIGGER financial_fault BEFORE INSERT ON demo_flow_writer.seed_checkpoints FOR EACH ROW EXECUTE FUNCTION pg_temp.inject_financial_fault();
@@ -39,6 +39,7 @@ SELECT set_config('request.jwt.claims','{"role":"service_role"}',true);
 SET LOCAL ROLE service_role;
 SELECT demo_financial_lab.expect_financial_fault(:'context_id'::uuid,:'expected');
 RESET ROLE;
+SELECT 'FINANCIAL_INJECTION_OBSERVED_'||i.target FROM pg_temp.financial_fault_input i;
 DO $$ BEGIN
  IF pg_temp.financial_snapshot() IS DISTINCT FROM (SELECT body FROM financial_before)
  THEN RAISE EXCEPTION 'Issuance/business/provenance/checkpoint rollback incomplete'; END IF;
