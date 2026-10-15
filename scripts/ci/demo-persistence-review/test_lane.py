@@ -38,7 +38,7 @@ class LaneTests(unittest.TestCase):
 
     def test_store_stdin_is_exact_bytes_and_isolation_is_inherited(self):
         # Canonical infrastructure blob, never the platform's checkout conversion.
-        blob = subprocess.check_output(['git', 'show', SOURCE_BASE + ':scripts/ci/crm-acl-review/run_ci.py'], cwd=ROOT)
+        blob = subprocess.check_output(['git', 'show', 'HEAD:scripts/ci/crm-acl-review/run_ci.py'], cwd=ROOT)
         with tempfile.TemporaryDirectory() as directory:
             out = Path(directory)
             (out / 'logs').mkdir()
