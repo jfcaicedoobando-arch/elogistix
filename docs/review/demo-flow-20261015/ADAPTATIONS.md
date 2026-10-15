@@ -4,7 +4,10 @@ This review deliberately separates executable code proposals from real operation
 configuration. No copy constitutes approval to install, register or run it.
 
 - `rpc/rpc-attempt.ts`: primitive string checks for context/scope; strict calendar
-  timestamp validator. `rpc/rpc-attempt.test.mjs`: 54 added regression cases, 98 total.
+  timestamp validator. Calendar checks are a separate pure predicate to satisfy
+  the unchanged complexity limit; syntax, time and offset checks retain their rules.
+  Timestamp cases also assert one transport call and recovery/retry behavior.
+  `rpc/rpc-attempt.test.mjs`: 54 added regression cases, 98 total.
 - `sql/01-private.sql`, `sql/04-engine.sql`, `issuer/10-issuer.sql`,
   `issuer/13-readonly-verifiers.sql`, `issuer/14-reconcile.sql`,
   `issuer/16-owner-registry.sql`, `identity/tests/bridge/prepare_identity_receipt.sql`,

@@ -7,8 +7,8 @@
     {
       "local_path": "ADAPTATIONS.md",
       "repository_path": "docs/review/demo-flow-20261015/ADAPTATIONS.md",
-      "SHA256": "3229a50ceaab489122cdfa30025165c27ce6c1dd8580bdcc8ea5f0ddb2be1998",
-      "gitblobhash": "041c04c76dd13cfe7f840dd3913234fe22f5e088"
+      "SHA256": "f296ec5307b77f2203bc6f77241d8e51752be0f38b04808e427190c5b6f34094",
+      "gitblobhash": "1ad76c10ebb61b287f714acc875e9b636706ca05"
     },
     {
       "local_path": "README.md",
@@ -127,14 +127,14 @@
     {
       "local_path": "rpc/rpc-attempt.test.mjs",
       "repository_path": "docs/review/demo-flow-20261015/rpc/rpc-attempt.test.mjs",
-      "SHA256": "2d83687fce8f6422d22d3181bba0a2df3c48a49f4eabd31410b5f254ff4b5f87",
-      "gitblobhash": "640e87f84edfc9cdf6bd7b070b2ffc3d1a128bd5"
+      "SHA256": "181933655d043da7f29365c83f29b118ed8398ead9c09075c88724c5a5fb647f",
+      "gitblobhash": "61b45f8fd21f994ce3d96cb7dc2d113c5d1fe46d"
     },
     {
       "local_path": "rpc/rpc-attempt.ts",
       "repository_path": "docs/review/demo-flow-20261015/rpc/rpc-attempt.ts",
-      "SHA256": "7c040c418a9887d235c5c52523bffb81362413c3b2b987c8dcbbee82edf6c8f3",
-      "gitblobhash": "0f60585a410c06a32da6847d6877ecf3cac0f561"
+      "SHA256": "04f24a62e2ecb2a96ab6df1e6984f9c41a8dc3afd8e251ea3350be8159ccb726",
+      "gitblobhash": "73df34e36c01e51bad6c89a0136cf28286fb5a01"
     },
     {
       "local_path": "run_offline.py",

@@ -58,7 +58,8 @@ for(const checked_at of badTimestamps) test(`reject timestamp ${JSON.stringify(c
  for(const mode of ['execute','reconcile']) {
   const s=setup();const checkpoint={...s.checkpoint,checked_at};
   s.options.writeData=checkpoint;s.options.reconcileData={classification:'complete',context_id:s.reference.contextId,checkpoint};
-  const result=await s.attempt()[mode]();assert.equal(result.outcome,'unresolved');assert.equal(result.reason,'invalid_reply');
+  const attempt=s.attempt();const result=await attempt[mode]();assert.equal(result.outcome,'unresolved');assert.equal(result.reason,'invalid_reply');
+  assert.equal(s.calls.length,1);await assert.rejects(attempt.execute(),/RECONCILE_ONLY/);assert.equal(s.calls.length,1);
  }
 });
 for(const checked_at of ['2026-10-15T18:00:00Z','2026-10-15T18:00:00.1+00:00','2026-10-15T18:00:00.123456-06:00',
@@ -68,5 +69,6 @@ for(const checked_at of ['2026-10-15T18:00:00Z','2026-10-15T18:00:00.1+00:00','2
   const s=setup();const checkpoint={...s.checkpoint,checked_at};
   s.options.writeData=checkpoint;s.options.reconcileData={classification:'complete',context_id:s.reference.contextId,checkpoint};
   const result=await s.attempt()[mode]();assert.equal(result.outcome,'committed');assert.equal(result.checkpoint.checked_at,checked_at);
+  assert.equal(result.recovered,mode==='reconcile');assert.equal(s.calls.length,1);
  }
 });

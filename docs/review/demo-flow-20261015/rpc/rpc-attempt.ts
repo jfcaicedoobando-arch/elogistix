@@ -29,12 +29,15 @@ function timestamp(value:unknown):value is string {
  if(typeof value!=='string') return false;
  const m=/^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})(?:\.\d{1,6})?(?:Z|([+-])(\d{2}):(\d{2})(?::(\d{2}))?)$/.exec(value);
  if(!m) return false;
- const year=Number(m[1]),month=Number(m[2]),day=Number(m[3]);
- const leap=year%4===0 && (year%100!==0 || year%400===0);
- const days=[31,leap?29:28,31,30,31,30,31,31,30,31,30,31];
- return year>=1 && month>=1 && month<=12 && day>=1 && day<=days[month-1] &&
+ return calendarDate(Number(m[1]),Number(m[2]),Number(m[3])) &&
   Number(m[4])<=23 && Number(m[5])<=59 && Number(m[6])<=59 &&
   (!m[7] || (Number(m[8])<=15 && Number(m[9])<=59 && Number(m[10]??0)<=59));
+}
+/** Calendar-only predicate; timestamp() separately enforces syntax, time and offset. */
+function calendarDate(year:number,month:number,day:number):boolean {
+ const leap=year%4===0 && (year%100!==0 || year%400===0);
+ const days=[31,leap?29:28,31,30,31,30,31,31,30,31,30,31];
+ return year>=1 && month>=1 && month<=12 && day>=1 && day<=days[month-1];
 }
 // Supplemental same-process guard only; durable context admission is a SQL prerequisite.
 const attempted = new Set<string>();
