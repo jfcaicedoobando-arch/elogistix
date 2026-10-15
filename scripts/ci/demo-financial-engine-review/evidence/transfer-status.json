@@ -1,10 +1,8 @@
 {
-  "library_file_id": "libfile_ca809276612481918bdb9c3435f484f1",
   "file_name": "Elogistix-esquema-financiero-propuesta.zip",
   "version": 0,
   "expected_zip_sha256": "c0e4529e174e9e6ee9277ff686533732d1e3f7dd3de3f94c4421c5d112b16143",
   "resolved": true,
-  "local_destination": "C:\\Users\\torta\\Documents\\Codex\\2026-10-15\\task-2\\proposal\\Elogistix-esquema-financiero-propuesta.zip",
   "transfer_attempts": 1,
   "transfer_exit_code": 1,
   "error": "library file transfer failed: download failed",
@@ -15,5 +13,6 @@
   "zip_read": "NOT_RUN",
   "zip_sha256": "NOT_RUN",
   "TRANSFER_SHA256SUMS": "NOT_RUN",
-  "fallback": "Pinned published GitHub source blobs; no executor change and no download URL guessed"
+  "fallback": "Pinned published GitHub source blobs; no executor change and no download URL guessed",
+  "destination_scope": "task-local executor workspace"
 }

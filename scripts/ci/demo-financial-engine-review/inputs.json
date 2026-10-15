@@ -26,8 +26,8 @@
   },
   {
     "path": "evidence/transfer-status.json",
-    "bytes": 830,
-    "sha256": "c3b52d04a86f81db96f5a794887f61c11c413c341ff3408bcfbcb6fcc1c5c1df"
+    "bytes": 686,
+    "sha256": "2fd1a42a63acba0f010597ef1eeb9ea87f0c3f4ca731d831f00838cf4579ead9"
   },
   {
     "path": "extract_catalog.py",
