@@ -214,10 +214,84 @@ class RunnerSafety(unittest.TestCase):
             with self.subTest(invalid=invalid), self.assertRaises(RuntimeError):
                 lane.node_execution_failure(SimpleNamespace(returncode=invalid, stdout='', stderr=''))
 
+    def test_exec_tmpfs_is_the_only_change_to_pinned_base_create_args(self):
+        persistence = lane.load_persistence()
+        with tempfile.TemporaryDirectory(dir=Path(__file__).resolve().parent) as directory:
+            # Read the committed blob so a Windows CRLF checkout cannot weaken or
+            # spuriously fail the exact infrastructure-byte gate. Never rewrite it.
+            source = lane.subprocess.check_output(['git', 'show', 'HEAD:scripts/ci/crm-acl-review/run_ci.py'],
+                                                 cwd=lane.ROOT)
+            self.assertEqual(hashlib.sha256(source).hexdigest(), persistence.INFRA_SHA256)
+            pinned = Path(directory) / 'pinned_infrastructure.py'
+            pinned.write_bytes(source)
+            with patch.object(persistence, 'INFRA', pinned):
+                cls = lane.runner_class(persistence)
+            runner = cls(Path(directory), 'SYNTHETIC_RUN')
+            original = super(cls, runner).create_args()
+            actual = runner.create_args()
+            self.assertEqual(len(actual), len(original))
+            self.assertEqual([(old, new) for old, new in zip(original, actual) if old != new],
+                             [(lane.BASE_TMPFS, lane.EXEC_TMPFS)])
+            self.assertEqual(lane.EXEC_TMPFS.replace(',exec,', ','), lane.BASE_TMPFS)
+            self.assertEqual(actual.count('--tmpfs'), 2)
+
+    def test_owned_inspection_requires_exact_tmpfs_options_after_parent_validation(self):
+        class Base:
+            def inspect_owned(self, recovered_cid=None):
+                self.observed_recovered_cid = recovered_cid
+                return self.info
+        persistence = SimpleNamespace(runner_class=lambda _: Base, load_infrastructure=lambda: None)
+        runner = lane.runner_class(persistence)()
+        runner.result = {}
+        runner.info = {'HostConfig': {'Tmpfs': dict(lane.EXPECTED_TMPFS)}}
+        self.assertEqual(runner.inspect_owned('SYNTHETIC_CID'), runner.info)
+        self.assertEqual(runner.observed_recovered_cid, 'SYNTHETIC_CID')
+        self.assertTrue(runner.result['runtime_tmpfs_hostconfig_verified'])
+        for options in (lane.BASE_TMPFS.split(':', 1)[1],
+                        lane.EXPECTED_TMPFS['/tmp'] + ',suid',
+                        lane.EXPECTED_TMPFS['/tmp'].replace('768m', '769m')):
+            runner.info = {'HostConfig': {'Tmpfs': dict(lane.EXPECTED_TMPFS, **{'/tmp': options})}}
+            with self.subTest(options=options), self.assertRaises(RuntimeError):
+                runner.inspect_owned()
+        runner.info = {'HostConfig': {'Tmpfs': dict(lane.EXPECTED_TMPFS, **{'/extra': 'rw'})}}
+        with self.assertRaises(RuntimeError):
+            runner.inspect_owned()
+
+    def test_mount_evidence_is_filtered_validated_and_excludes_noexec(self):
+        valid = 'rw,nosuid,nodev,relatime,size=786432k,inode64'
+        self.assertEqual(lane.runtime_mount_options(valid + '\n'), valid.split(','))
+        for value in ('', valid + '\n' + valid, valid + ',noexec', valid + ',SYNTHETIC_PRIVATE',
+                      valid.replace('nosuid,', ''), valid.replace('nodev,', ''),
+                      valid.replace('786432k', '999k'), valid + ',rw'):
+            with self.subTest(category=value), self.assertRaises(RuntimeError):
+                lane.runtime_mount_options(value)
+
+    def test_execution_surface_probes_fixed_paths_and_fails_closed_before_node(self):
+        persistence = SimpleNamespace(runner_class=lambda _: object, load_infrastructure=lambda: None)
+        for mode, options, succeeds in (('755\n', 'rw,nosuid,nodev,size=786432k', True),
+                                       ('644\n', 'rw,nosuid,nodev,size=786432k', False),
+                                       ('755\n', 'rw,nosuid,nodev,noexec,size=786432k', False)):
+            runner = lane.runner_class(persistence)()
+            runner.result = {}
+            runner.inside = Mock(side_effect=[SimpleNamespace(returncode=0, stdout=mode),
+                                             SimpleNamespace(returncode=0, stdout=options)])
+            with self.subTest(mode=mode, succeeds=succeeds):
+                if succeeds:
+                    runner.verify_runtime_execution_surface()
+                    self.assertEqual(runner.inside.call_args_list[0].args[0],
+                                     ['stat', '-c', '%a', '--', lane.CONTAINER_ROOT + '/node'])
+                    self.assertEqual(runner.inside.call_args_list[1].args[0],
+                                     ['awk', '$2 == "/tmp" && $3 == "tmpfs" {print $4}', '/proc/mounts'])
+                    self.assertTrue(runner.result['runtime_tmpfs_rw_nosuid_nodev_without_noexec'])
+                else:
+                    with self.assertRaises(RuntimeError):
+                        runner.verify_runtime_execution_surface()
+                    self.assertNotIn('runtime_tmpfs_rw_nosuid_nodev_without_noexec', runner.result)
+
     def test_runtime_install_requires_exact_node_version_before_running_cases(self):
         class Base:
-            def inspect_owned(self):
-                pass
+            def inspect_owned(self, recovered_cid=None):
+                return {'HostConfig': {'Tmpfs': dict(lane.EXPECTED_TMPFS)}}
         persistence = SimpleNamespace(runner_class=lambda _: Base, load_infrastructure=lambda: None)
         data, _ = synthetic_tar()
         manifest = lane.validate_tar(data)
@@ -240,12 +314,16 @@ class RunnerSafety(unittest.TestCase):
                 runner.counter, runner.env, runner.result = 0, {'PATH': 'SYNTHETIC'}, {'wire': 'UNBOUND'}
                 runner.inside = Mock(side_effect=[SimpleNamespace(returncode=0, stdout='', stderr=''),
                                                  SimpleNamespace(returncode=0, stdout=hashes, stderr=''),
+                                                 SimpleNamespace(returncode=0, stdout='755\n', stderr=''),
+                                                 SimpleNamespace(returncode=0, stdout='rw,nosuid,nodev,relatime,size=786432k,inode64\n', stderr=''),
                                                  SimpleNamespace(returncode=code, stdout=stdout, stderr=stderr)])
                 transfer = SimpleNamespace(returncode=0, stdout=b'', stderr=b'')
                 with patch.object(lane.subprocess, 'run', return_value=transfer):
                     if succeeds:
                         runner.install_runtime(archive, manifest)
                         self.assertEqual(runner.result['runtime_node_version'], lane.NODE_VERSION)
+                        self.assertEqual(runner.result['runtime_node_mode'], '755')
+                        self.assertTrue(runner.result['runtime_tmpfs_rw_nosuid_nodev_without_noexec'])
                         self.assertNotIn('runtime_node_failure', runner.result)
                     else:
                         with self.assertRaisesRegex(RuntimeError, '^NODE_EXECUTION_FAILED$'):
@@ -267,8 +345,8 @@ class RunnerSafety(unittest.TestCase):
 
     def test_node_invocation_is_registered_and_has_no_pg_environment(self):
         class Base:
-            def inspect_owned(self):
-                pass
+            def inspect_owned(self, recovered_cid=None):
+                return {'HostConfig': {'Tmpfs': dict(lane.EXPECTED_TMPFS)}}
         persistence = SimpleNamespace(runner_class=lambda _: Base, load_infrastructure=lambda: None)
         process = Mock()
         process.communicate.return_value = (json.dumps(synthetic_report()), '')
@@ -292,8 +370,8 @@ class RunnerSafety(unittest.TestCase):
 
     def test_nonzero_and_zero_exit_failure_reports_are_preserved_without_public_stderr(self):
         class Base:
-            def inspect_owned(self):
-                pass
+            def inspect_owned(self, recovered_cid=None):
+                return {'HostConfig': {'Tmpfs': dict(lane.EXPECTED_TMPFS)}}
         persistence = SimpleNamespace(runner_class=lambda _: Base, load_infrastructure=lambda: None)
         report = synthetic_failure_report()
         for exit_code in (1, 0):

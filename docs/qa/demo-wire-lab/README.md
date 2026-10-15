@@ -17,6 +17,12 @@ the Actions host, transferred via binary stdin, then every extracted file hash
 is checked inside the owned container. No dependency installation or outbound
 connection occurs there.
 
+The lab subclass explicitly adds `exec` only to its existing owned `/tmp`
+tmpfs so the pinned Node executable can run. It checks the exact tmpfs options,
+file execute mode and observed mount flags before running cases. The original
+CRM source, image, privileges, resource limits and host attachment prohibitions
+remain unchanged. No host mount or persistent access is added.
+
 Node 24.19.0 Linux x64 archive SHA256:
 `14b342e71204f811bde6153be8e04b62aef63c236fef92b55f9c83154b409647`.
 The `pg` 8.23.1 lock fixes all transitive packages and SRI. Installed driver

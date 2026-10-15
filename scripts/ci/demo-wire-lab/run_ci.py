@@ -26,6 +26,10 @@ PERSISTENCE_SHA256 = '09cf6d2035b14005006b656649cf2e3f5f99322eb6776f80927586c522
 SYNTHETIC_FIXTURE = Path(__file__).resolve().parent / 'synthetic_fixture.sql'
 CONTAINER_ROOT = '/tmp/crm/wire-lab'
 NODE_VERSION = 'v24.19.0'
+BASE_TMPFS = '/tmp:rw,nosuid,nodev,size=768m,mode=1777'
+EXEC_TMPFS = '/tmp:rw,nosuid,nodev,exec,size=768m,mode=1777'
+EXPECTED_TMPFS = {'/tmp': EXEC_TMPFS.split(':', 1)[1],
+                  '/var/lib/postgresql/data': 'rw,nosuid,nodev,noexec,size=1m,mode=0700'}
 SHARED_LIBRARY = re.compile(r'(?<![A-Za-z0-9_+.-])(lib[A-Za-z0-9_+.-]{0,64}\.so(?:\.[0-9]{1,5}){0,4})(?![A-Za-z0-9_+.-])')
 MAX_TAR_BYTES = 256 * 1024 * 1024
 MAX_EXPANDED_BYTES = 256 * 1024 * 1024
@@ -184,9 +188,49 @@ def node_execution_failure(result):
     return {'code': 'NODE_EXECUTION_FAILED', 'exitCode': result.returncode, 'sharedLibraryNames': libraries}
 
 
+def runtime_mount_options(stdout):
+    """Only validated options of the exact /tmp tmpfs may enter public evidence."""
+    rows = stdout.splitlines()
+    require(len(rows) == 1, 'Expected one exact /tmp tmpfs mount')
+    options = rows[0].split(',')
+    allowed = {'rw', 'nosuid', 'nodev', 'exec', 'relatime', 'noatime', 'strictatime',
+               'inode64', 'mode=1777', 'mode=01777', 'size=786432k', 'size=805306368'}
+    require(len(options) == len(set(options)) and set(options) <= allowed,
+            'Unexpected /tmp tmpfs mount options')
+    require({'rw', 'nosuid', 'nodev'} <= set(options)
+            and len(set(options) & {'size=786432k', 'size=805306368'}) == 1,
+            'Required /tmp tmpfs isolation absent')
+    return options
+
+
 def runner_class(persistence):
     base = persistence.runner_class(persistence.load_infrastructure())
     class WireLabRunner(base):
+        def create_args(self):
+            args = super().create_args()
+            require(args.count(BASE_TMPFS) == 1 and args[args.index(BASE_TMPFS) - 1] == '--tmpfs',
+                    'Pinned base /tmp tmpfs argument changed')
+            args[args.index(BASE_TMPFS)] = EXEC_TMPFS
+            return args
+
+        def inspect_owned(self, recovered_cid=None):
+            info = super().inspect_owned(recovered_cid)
+            require(info['HostConfig']['Tmpfs'] == EXPECTED_TMPFS, 'Exact lab tmpfs options mismatch')
+            self.result['runtime_tmpfs_hostconfig_verified'] = True
+            return info
+
+        def verify_runtime_execution_surface(self):
+            mode = self.inside(['stat', '-c', '%a', '--', CONTAINER_ROOT + '/node'],
+                               'wire-node-file-mode', expected=None)
+            require(mode.returncode == 0 and mode.stdout.strip() == '755', 'Node file mode mismatch')
+            self.result['runtime_node_mode'] = '755'
+            mount = self.inside(['awk', '$2 == "/tmp" && $3 == "tmpfs" {print $4}', '/proc/mounts'],
+                                'wire-tmpfs-mount-options', expected=None)
+            require(mount.returncode == 0, 'Cannot observe exact /tmp tmpfs mount')
+            options = runtime_mount_options(mount.stdout)
+            self.result.update(runtime_tmpfs_mount_options=options,
+                               runtime_tmpfs_rw_nosuid_nodev_without_noexec=True)
+
         def prepare(self):
             super().prepare()
             # The unchanged parent verifies the original business entrypoint is absent first.
@@ -235,6 +279,7 @@ def runner_class(persistence):
                                runtime_transfer='binary stdin into owned tmpfs; no mount or network',
                                runtime_extracted_file_hashes_verified=True)
             self.runtime_manifest = manifest
+            self.verify_runtime_execution_surface()
             probe = self.inside(['/usr/bin/env', '-i', 'PATH=/usr/bin:/bin', 'LANG=C', 'GITHUB_ACTIONS=true',
                                  'HOME=' + CONTAINER_ROOT, CONTAINER_ROOT + '/node', '--version'],
                                 'wire-node-version-probe', expected=None)
