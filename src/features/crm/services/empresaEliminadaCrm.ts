@@ -3,6 +3,7 @@
  * y todas sus empresas ligadas están dadas de baja (deleted_at).
  */
 import { supabase } from "@/integrations/supabase/client";
+import { CAP_REPORTE_AMPLIO } from "@/constants/queryCaps";
 
 export type VinculoEmpresa = { oportunidad_id: string; eliminada: boolean };
 
@@ -13,10 +14,9 @@ export function oportunidadesConEmpresaEliminada(vinculos: VinculoEmpresa[]): Se
 
 export async function fetchOportunidadesEmpresaEliminada(): Promise<Set<string>> {
   const { data, error } = await supabase.from("crm_oportunidad_empresa")
-    .select("oportunidad_id, crm_empresas!inner(deleted_at)").limit(5000);
+    .select("oportunidad_id, crm_empresas!inner(deleted_at)").limit(CAP_REPORTE_AMPLIO);
   if (error) throw error;
-  const filas = (data ?? []) as unknown as { oportunidad_id: string; crm_empresas: { deleted_at: string | null } | null }[];
   return oportunidadesConEmpresaEliminada(
-    filas.map((f) => ({ oportunidad_id: f.oportunidad_id, eliminada: Boolean(f.crm_empresas?.deleted_at) })),
+    (data ?? []).map((f) => ({ oportunidad_id: f.oportunidad_id, eliminada: Boolean(f.crm_empresas?.deleted_at) })),
   );
 }

@@ -16,5 +16,9 @@
   "supabase/tests/rls/_ci_service_role_only.sql": "Service-role ACL catalog consumed by RLS preflights",
   "supabase/tests/rls/_ci_verify_rls.sql": "RLS enablement preflight in rls-prepare-db.sh",
   "supabase/tests/rls/_helpers.sql": "Transaction-local helpers included by RLS suites",
+  "supabase/tests/rls/history/demo-prefreeze/test_rls_demo_seed_core_compatibility.sql": "Literal pre-freeze suite; two positive isolated clone executions required by reports/demo-guard-prefreeze/actions-result.json before 20261015050000",
+  "supabase/tests/rls/history/demo-prefreeze/test_rls_demo_seed_guard_repeatable_read.sql": "Literal pre-freeze suite; two positive isolated clone executions required by reports/demo-guard-prefreeze/actions-result.json before 20261015050000",
+  "supabase/tests/rls/history/demo-prefreeze/test_rls_demo_seed_guard_serializable.sql": "Literal pre-freeze suite; two positive isolated clone executions required by reports/demo-guard-prefreeze/actions-result.json before 20261015050000",
+  "supabase/tests/rls/history/demo-prefreeze/test_rls_demo_seed_tenant_guard.sql": "Literal pre-freeze suite; two positive isolated clone executions required by reports/demo-guard-prefreeze/actions-result.json before 20261015050000",
   "supabase/tests/selector148_disabled_gate.sql": "Serial selector148 clone contract; not a parallel guard"
 }

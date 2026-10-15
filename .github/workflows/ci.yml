@@ -86,6 +86,9 @@ jobs:
       - name: Catálogo completo de pruebas (sin ejecutar carriles manuales)
         run: node scripts/ci/test-catalog.mjs --output reports/test-inventory.json
 
+      - name: Post-deploy smoke contract (offline, no credentials)
+        run: node --test scripts/ci/post-deploy-smoke.test.mjs
+
       - name: Validate workflows (actionlint)
         if: steps.areas.outputs.workflows == 'true'
         run: bash scripts/ci/lint-workflows.sh

@@ -7,6 +7,13 @@ describe("lcCodes", () => {
     expect(translateLcCode("PGRST: LC_CXP_DESCUADRE detalle")).toMatch(/no suman el subtotal/);
     expect(translateLcCode("LC_NO_EXISTE_XYZ")).toBeNull();
   });
+  it("explica el bloqueo de seguridad demo sin exponer el detalle interno", () => {
+    const raw = "LC_SEED_DEMO_TENANT_UNSAFE: relacion no soportada public.tabla_interna";
+    const friendly = "No se pueden reiniciar los datos demo porque no se pudo verificar el aislamiento entre empresas. Solicita una revisión técnica antes de continuar.";
+    expect(translateLcCode(raw)).toBe(friendly);
+    expect(getErrorMessage(new Error(raw))).toBe(friendly);
+    expect(getErrorMessage({ code: "P0001", message: raw })).toBe(friendly);
+  });
   it("una revisión bancaria cambiada o inválida indica cargar el archivo antes de confirmar", () => {
     expect(translateLcCode("LC_IMPORTACION_REVISION_CAMBIO")).toMatch(/datos bancarios cambiaron.*carga el archivo/i);
     expect(translateLcCode("LC_IMPORTACION_REVISION_INVALIDA")).toMatch(/validar la revisión.*vuelve a cargarlo/i);

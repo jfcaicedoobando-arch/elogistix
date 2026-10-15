@@ -25,8 +25,18 @@ export const LC_CODE_MESSAGES_OPERATIVO_GENERICOS: Record<string, string> = {
     "El recargo no tiene una tarifa válida asociada. Vuelve a abrir la tarifa e inténtalo de nuevo.",
   LC_COSTEO_DEMORA_SIN_PADRE:
     "El tramo de demoras no tiene condiciones de naviera válidas asociadas. Vuelve a abrir la configuración e inténtalo de nuevo.",
+  LC_CARGOS_IVA_SCHEMA_DRIFT:
+    "No se pudo actualizar la configuración de IVA de los cargos porque la base de datos no coincide con la versión esperada. Solicita una revisión técnica antes de continuar.",
   LC_SEED_DEMO_NO_AUTORIZADO:
     "Solo un administrador global puede reiniciar los datos de la organización demo.",
+  LC_SEED_DEMO_TENANT_UNSAFE:
+    "No se pueden reiniciar los datos demo porque no se pudo verificar el aislamiento entre empresas. Solicita una revisión técnica antes de continuar.",
+  LC_SEED_DEMO_APROBADOR_REQUERIDO:
+    "No se puede preparar la demostración sin una sesión que identifique al aprobador. Solicita una revisión técnica antes de continuar.",
+  LC_SEED_DEMO_CRM_IDENTIDAD_INSEGURA:
+    "No se pueden preparar los datos de demostración porque un vínculo entre empresa CRM y cliente no es válido. Solicita una revisión técnica antes de continuar.",
+  LC_SEED_DEMO_IDENTIDAD_AMBIGUA:
+    "Hay registros de clientes o contactos duplicados o eliminados en los datos de demostración. Solicita una revisión técnica antes de continuar.",
   LC_NO_AUTENTICADO:
     "Tu sesión expiró. Vuelve a iniciar sesión e inténtalo de nuevo.",
   LC_CLIENTE_NO_VINCULADO:

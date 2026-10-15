@@ -1,41 +1,32 @@
-/**
- * 13.116.0 — Reemplaza tests de grep por checks de seguridad estructural.
- *
- * `demo-access` usa SERVICE_ROLE para crear/resetear el usuario demo. Si
- * alguno de estos checks falla, podríamos estar exponiendo admin a usuarios
- * sin auth, o cambiando el contrato del email demo y rompiendo el portal.
- */
-import { assertEquals, assertStringIncludes } from "https://deno.land/std@0.224.0/assert/mod.ts";
+/** Source contracts for the disabled demo release; no account values in fixtures. */
+import { doesNotMatch, ok } from "node:assert/strict";
 
-const indexSource = await Deno.readTextFile(new URL("./index.ts", import.meta.url));
+const adapterSource = await Deno.readTextFile(new URL("./index.ts", import.meta.url));
+const handlerSource = await Deno.readTextFile(new URL("./handler.ts", import.meta.url));
 
-Deno.test("demo-access: maneja preflight CORS antes que cualquier lógica", () => {
-  assertStringIncludes(indexSource, 'req.method === "OPTIONS"');
-  // CORS estricto compartido (política del proyecto: no wildcard).
-  assertStringIncludes(indexSource, 'from "../_shared/cors.ts"');
-  assertStringIncludes(indexSource, "corsHeaders");
+Deno.test("demo-access: keeps OPTIONS and shared public CORS", () => {
+  ok(handlerSource.includes('req.method === "OPTIONS"'));
+  ok(handlerSource.includes('from "../_shared/cors.ts"'));
 });
 
-Deno.test("demo-access: usa service role key con persistSession=false", () => {
-  // Persistir sesión con service role en edge function = leak de privilegios.
-  assertStringIncludes(indexSource, "SUPABASE_SERVICE_ROLE_KEY");
-  assertStringIncludes(indexSource, "persistSession: false");
-  assertStringIncludes(indexSource, "autoRefreshToken: false");
+Deno.test("demo-access: preserves isolated Supabase client configuration", () => {
+  ok(adapterSource.includes("SUPABASE_SERVICE_ROLE_KEY"));
+  ok(adapterSource.includes("persistSession: false"));
+  ok(adapterSource.includes("autoRefreshToken: false"));
 });
 
-Deno.test("demo-access: invoca RPCs de provisión (membership + seed)", () => {
-  // Si se quitan, la cuenta demo entra pero ve datos vacíos o ajenos.
-  assertStringIncludes(indexSource, "ensure_demo_membership");
-  assertStringIncludes(indexSource, "seed_demo_organization");
+Deno.test("demo-access: production adapter supplies neither availability nor credentials", () => {
+  doesNotMatch(adapterSource, /\bavailabilityProvider\s*:/);
+  doesNotMatch(adapterSource, /\bcredentials\s*:/);
 });
 
-Deno.test("demo-access: contrato del email demo (no regresión silenciosa)", () => {
-  assertEquals(
-    indexSource.match(/DEMO_EMAIL\s*=\s*"([^"]+)"/)?.[1],
-    "demo@librecarga.com",
-  );
+Deno.test("demo-access: handler has no literal credential fields or historical constants", () => {
+  doesNotMatch(handlerSource, /\b(?:email|password)\s*:\s*["'`]/);
+  doesNotMatch(handlerSource, /\bDEMO_(?:EMAIL|PASSWORD)\b/);
 });
 
-Deno.test("demo-access: captura excepciones con Sentry (no se pierden errores)", () => {
-  assertStringIncludes(indexSource, "captureEdgeException");
+Deno.test("demo-access: keeps Sentry reporting and existing RPC contracts behind both gates", () => {
+  ok(adapterSource.includes("captureEdgeException"));
+  ok(handlerSource.includes("ensure_demo_membership"));
+  ok(handlerSource.includes("seed_demo_organization_guarded"));
 });

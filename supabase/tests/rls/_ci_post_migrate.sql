@@ -4,6 +4,56 @@
 -- Fail before blanket grants if either disabled Pricing lineage function leaked.
 \ir _ci_check_pricing_lineage_acl.sql
 
+-- Drizzle 0017 trigger helpers are owner-only, including for service_role.
+-- Check the replay BEFORE any CI grant/revoke can hide an existing leak.
+-- Keep the assertion session-local and reuse it on the final harness state.
+CREATE FUNCTION pg_temp._ci_check_crm_empresa_owner_acl() RETURNS void
+LANGUAGE plpgsql AS $crm_empresa_owner_acl$
+DECLARE
+  v_signature text;
+  v_oid oid;
+  v_proc pg_catalog.pg_proc%ROWTYPE;
+  v_owner oid := pg_catalog.to_regrole('postgres');
+  v_role text;
+  v_found integer := 0;
+BEGIN
+  IF current_user <> 'postgres' OR session_user <> current_user OR v_owner IS NULL
+     OR pg_catalog.to_regrole('anon') IS NULL
+     OR pg_catalog.to_regrole('authenticated') IS NULL
+     OR pg_catalog.to_regrole('service_role') IS NULL THEN
+    RAISE EXCEPTION 'CI_CRM_EMPRESA_OWNER_ACL: exact owner and client roles required';
+  END IF;
+  FOREACH v_signature IN ARRAY ARRAY[
+    'public._crm_empresa_no_borrar_cliente()',
+    'public._crm_empresa_no_delete_fisico()'
+  ] LOOP
+    v_oid := pg_catalog.to_regprocedure(v_signature);
+    IF v_oid IS NULL THEN CONTINUE; END IF;
+    v_found := v_found + 1;
+    SELECT * INTO STRICT v_proc FROM pg_catalog.pg_proc WHERE oid = v_oid;
+    IF v_proc.proowner IS DISTINCT FROM v_owner OR v_proc.prokind <> 'f'
+       OR v_proc.prorettype <> 'pg_catalog.trigger'::regtype OR v_proc.prosecdef
+       OR v_proc.proacl IS NULL
+       OR (SELECT count(*) FROM pg_catalog.aclexplode(v_proc.proacl)) <> 1
+       OR EXISTS (SELECT 1 FROM pg_catalog.aclexplode(v_proc.proacl) a
+         WHERE a.grantor <> v_owner OR a.grantee <> v_owner
+           OR a.is_grantable OR a.privilege_type <> 'EXECUTE') THEN
+      RAISE EXCEPTION 'CI_CRM_EMPRESA_OWNER_ACL: exact owner-only invoker trigger required for %', v_signature;
+    END IF;
+    FOREACH v_role IN ARRAY ARRAY['anon', 'authenticated', 'service_role'] LOOP
+      IF pg_catalog.has_function_privilege(v_role, v_oid, 'EXECUTE') THEN
+        RAISE EXCEPTION 'CI_CRM_EMPRESA_OWNER_ACL: unexpected EXECUTE for % on %', v_role, v_signature;
+      END IF;
+    END LOOP;
+  END LOOP;
+  -- Both absent is the pre-0017 replay; a partial replay must fail closed.
+  IF v_found = 1 THEN
+    RAISE EXCEPTION 'CI_CRM_EMPRESA_OWNER_ACL: incomplete Drizzle 0017 replay';
+  END IF;
+END
+$crm_empresa_owner_acl$;
+SELECT pg_temp._ci_check_crm_empresa_owner_acl();
+
 -- ============================================================================
 -- Post-migración CI: relaja restricciones que dependen de GoTrue real.
 --
@@ -51,6 +101,21 @@ GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA public TO authentic
 GRANT ALL ON ALL TABLES IN SCHEMA public TO service_role;
 GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA public TO authenticated, service_role;
 GRANT EXECUTE ON ALL FUNCTIONS IN SCHEMA public TO authenticated, service_role;
+-- Undo only the CI-added EXECUTE grants on the already-verified 0017 helpers.
+-- Do not put them in _ci_service_role_only: that would grant a new privilege.
+DO $crm_empresa_owner_restore$
+DECLARE v_signature text;
+BEGIN
+  FOREACH v_signature IN ARRAY ARRAY[
+    'public._crm_empresa_no_borrar_cliente()',
+    'public._crm_empresa_no_delete_fisico()'
+  ] LOOP
+    IF pg_catalog.to_regprocedure(v_signature) IS NOT NULL THEN
+      EXECUTE format('REVOKE EXECUTE ON FUNCTION %s FROM authenticated, service_role', v_signature);
+    END IF;
+  END LOOP;
+END
+$crm_empresa_owner_restore$;
 -- The broad CI-only CRUD grant above must not reopen direct DOF writes.
 REVOKE INSERT, UPDATE, DELETE ON public.tipos_cambio_dof FROM authenticated;
 \ir _ci_check_global_catalog_acl.sql
@@ -225,3 +290,5 @@ REVOKE ALL ON FUNCTION public.crm_vincular_cotizacion_cliente_pricing(uuid,uuid,
 REVOKE ALL ON FUNCTION public.guard_cotizacion_origen_pricing() FROM PUBLIC, anon, authenticated, service_role;
 -- This final assertion fails on any direct or inherited client EXECUTE leak.
 \ir _ci_check_pricing_lineage_acl.sql
+SELECT pg_temp._ci_check_crm_empresa_owner_acl();
+DROP FUNCTION pg_temp._ci_check_crm_empresa_owner_acl();

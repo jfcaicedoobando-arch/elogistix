@@ -8,6 +8,7 @@ import { useState } from "react";
 import { Mail } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { FormDialogShell } from "@/components/shared/FormDialogShell";
+import { getErrorMessage } from "@/lib/errors";
 import { useOrganization } from "@/lib/contexts/OrganizationContext";
 import { fetchPuertos, fetchNavieras, fetchTiposContenedor } from "@/features/catalogos/services";
 import { fetchCosteoAgentes } from "@/features/costeo/services/agentes";
@@ -28,9 +29,8 @@ import { PendientesAltaSeccion } from "./AltaFaltantesPanel";
 
 interface Props { open: boolean; onOpenChange: (v: boolean) => void; onDone: () => void }
 
-const msg = (e: unknown) => (e instanceof Error ? e.message : String((e as { message?: string })?.message ?? e));
-
 interface Estado {
+  organizationId: string;
   prep: ResultadoImport;
   resumen: { proveedor: string; filas: number }[];
   conflictos: Conflicto[];
@@ -40,13 +40,20 @@ interface Estado {
   navieras: Map<string, string>;
 }
 
+function deOrganizacion<T extends { organizationId: string }>(valor: T | null, organizationId: string | null): T | null {
+  return valor?.organizationId === organizationId ? valor : null;
+}
+
 export function ExtraerCorreoDialog({ open, onOpenChange, onDone }: Props) {
   const { organizationId } = useOrganization();
-  const [estado, setEstado] = useState<Estado | null>(null);
+  const [extraccion, setEstado] = useState<Estado | null>(null);
+  const estado = deOrganizacion(extraccion, organizationId);
   const [cargando, setCargando] = useState(false);
   const [seleccion, setSeleccion] = useState<Set<number>>(new Set());
-  const [resultado, setResultado] = useState<{ creadas: number; errores: string[] } | null>(null);
-  const [faltantes, setFaltantes] = useState<Faltantes | null>(null);
+  const [resultadoImport, setResultado] = useState<{ organizationId: string; creadas: number; errores: string[] } | null>(null);
+  const resultado = deOrganizacion(resultadoImport, organizationId);
+  const [pendientes, setFaltantes] = useState<(Faltantes & { organizationId: string }) | null>(null);
+  const faltantes = deOrganizacion(pendientes, organizationId);
   const [altasHechas, setAltasHechas] = useState(0);
 
   /** Valida filas contra catálogos frescos y detecta duplicados y faltantes. */
@@ -56,13 +63,14 @@ export function ExtraerCorreoDialog({ open, onOpenChange, onDone }: Props) {
       fetchPuertos(), fetchCosteoAgentes(organizationId), fetchNavieras(), fetchTiposContenedor(), fetchCosteoRutas(organizationId),
     ]);
     const existentes = await fetchCosteoTarifas(organizationId, { estado: "todas" });
-    const prep = prepararImportacion(filas as unknown as Record<string, unknown>[], { puertos, agentes, navieras, tipos, rutas });
+    const prep = prepararImportacion(filas.map((f) => ({ ...f })), { puertos, agentes, navieras, tipos, rutas });
     const conflictos = detectarConflictos(prep.tarifas, existentes, rutas, hoyMx());
     const f = faltantesDeCatalogo(filas, { puertos, navieras });
-    setFaltantes(f.pendientes.length ? f : null); setAltasHechas(0);
+    setFaltantes(f.pendientes.length ? { ...f, organizationId } : null); setAltasHechas(0);
     setSeleccion(seleccionInicial(prep.tarifas.length, conflictos));
     const { proveedorDe, nombreAgenteDe } = mapearAgentes(agentes);
     setEstado({
+      organizationId,
       prep: { tarifas: prep.tarifas, errores: [...erroresBase, ...prep.errores] }, resumen, conflictos,
       proveedorDe, nombreAgenteDe,
       puertos: new Map(puertos.map((p): [string, string] => [p.id, p.name])),
@@ -84,7 +92,7 @@ export function ExtraerCorreoDialog({ open, onOpenChange, onDone }: Props) {
       const lectura = await leerCorreos(organizationId);
       await preparar(lectura.filas, lectura.errores, lectura.resumen);
     } catch (e) {
-      setEstado({ prep: { tarifas: [], errores: [`No se pudieron leer los correos: ${msg(e)}`] }, resumen: [], conflictos: [], proveedorDe: new Map(), nombreAgenteDe: new Map(), puertos: new Map(), navieras: new Map() });
+      setEstado({ organizationId, prep: { tarifas: [], errores: [`No se pudieron leer los correos: ${getErrorMessage(e)}`] }, resumen: [], conflictos: [], proveedorDe: new Map(), nombreAgenteDe: new Map(), puertos: new Map(), navieras: new Map() });
     } finally { setCargando(false); }
   };
 
@@ -92,7 +100,7 @@ export function ExtraerCorreoDialog({ open, onOpenChange, onDone }: Props) {
     if (!estado || !organizationId) return;
     setCargando(true);
     const res = await guardarSeleccionadas(organizationId, seleccion, estado.prep.tarifas);
-    setResultado(res); setEstado(null); setCargando(false);
+    setResultado({ ...res, organizationId }); setEstado(null); setCargando(false);
     if (res.creadas > 0) onDone();
   };
 

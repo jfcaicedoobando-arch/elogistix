@@ -36,7 +36,7 @@ export function ConceptoNavieraSelect({ value, onChange }: Props) {
         <Input aria-label="Nuevo concepto" placeholder="Agregar nuevo concepto" value={nuevo}
           onChange={(e) => setNuevo(e.target.value)}
           onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); agregar(); } }} />
-        <Button type="button" variant="outline" onClick={agregar} disabled={!nuevo.trim()}><Plus className="h-4 w-4" />Agregar</Button>
+        <Button type="button" variant="outline" onClick={agregar} disabled={!nuevo.trim()}><Plus className="size-4" />Agregar</Button>
       </div>
     </div>
   );

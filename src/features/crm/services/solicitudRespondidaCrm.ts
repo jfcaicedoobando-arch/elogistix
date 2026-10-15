@@ -3,6 +3,7 @@
  * y ninguna enviada esperando respuesta.
  */
 import { supabase } from "@/integrations/supabase/client";
+import { CAP_REPORTE_AMPLIO } from "@/constants/queryCaps";
 
 export const LLAVE_SOLICITUD_RESPONDIDA = ["crm", "pricing", "oportunidades-respondidas"] as const;
 
@@ -18,7 +19,7 @@ export function oportunidadesConSolicitudRespondida(filas: EstadoSolicitudOp[]):
 export async function fetchOportunidadesSolicitudRespondida(): Promise<Set<string>> {
   const { data, error } = await supabase.from("crm_solicitudes_pricing")
     .select("oportunidad_id, estado").is("deleted_at", null)
-    .in("estado", ["enviada", "respondida"]).not("oportunidad_id", "is", null).limit(5000);
+    .in("estado", ["enviada", "respondida"]).not("oportunidad_id", "is", null).limit(CAP_REPORTE_AMPLIO);
   if (error) throw error;
   return oportunidadesConSolicitudRespondida(data ?? []);
 }

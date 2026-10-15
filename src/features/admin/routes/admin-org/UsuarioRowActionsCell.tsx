@@ -48,12 +48,12 @@ export function UsuarioRowActionsCell({
         </DropdownMenuItem>
         {user.estado === "desactivado" ? (
           <DropdownMenuItem onClick={() => acciones.onCambiarAcceso(user, true)}>
-            <UserCheck className="h-4 w-4" />
+            <UserCheck className="size-4" />
             Reactivar acceso
           </DropdownMenuItem>
         ) : (
           <DropdownMenuItem onClick={() => acciones.onCambiarAcceso(user, false)}>
-            <Ban className="h-4 w-4" />
+            <Ban className="size-4" />
             Desactivar acceso
           </DropdownMenuItem>
         )}
