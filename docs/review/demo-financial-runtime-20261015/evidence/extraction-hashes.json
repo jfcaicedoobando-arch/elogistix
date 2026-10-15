@@ -1,0 +1,6 @@
+{
+  "sql/01-types.sql": "41c20c52b22d295af74b5315ffb090865c1018d10269cff954128e36e75b8d6f",
+  "sql/03-canonical-dependencies.sql": "93061bb2e7970482052b4adca5acd2d4383b577554a3dfc34cc499fe42ab97f2",
+  "sql/04-validator.sql": "c8863477dbfa9f04d9f609a24a62bb8c99ba391d09e7aea3798c01340387414c",
+  "sql/05-human-helper.sql": "c49ff31389db1a38f83af2843d157db03ed6bc8845178f6cf2f96aba63a4da26"
+}

@@ -1,0 +1,18 @@
+{
+  "base_commit": "70a55d4e29784fb1a78ed74f164473153bead704",
+  "baseline_git_blob": "0d45d45881096808d8dcf1ca3831559d8759f477",
+  "baseline_sha256": "a8be935dd3839a7cc0bb94873ef5dd84c452d1f7405d7b050a995dadc514d0d2",
+  "baseline_verified": "GitHub fetch_file returned matching blob SHA; contents used from local identical Git blob, not a blind historical replay",
+  "validator_git_blob": "4ae5293450880cbc5732fa18490b39f011d64c9d",
+  "human_body_sha256": "d1327ae0f1cdf0135ce5d11599921c261d17b948c524b426f6deb97553d279c0",
+  "exact_dependency_definitions": [
+    "roles_jerarquia",
+    "has_role",
+    "tc_dof_vigente",
+    "tc_para_documento",
+    "a_mxn_doc",
+    "cxp_umbral_sin_vinculo",
+    "_cxp_desvincular_por_rechazo",
+    "guard_aprobacion_proveedor_factura"
+  ]
+}
