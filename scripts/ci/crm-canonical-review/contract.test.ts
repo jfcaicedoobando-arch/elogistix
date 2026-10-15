@@ -1,9 +1,11 @@
-import { expect, test } from 'bun:test';
+// @vitest-environment node
+import { expect, test } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { scanDrizzleReplay } from '../../lib/audit-drizzle-replay';
 import { scanSecurityDefinerWithPreservedAcl } from '../../lib/audit-acl-preservation';
-const root = resolve(import.meta.dir, '../../..');
+const root = fileURLToPath(new URL('../../../', import.meta.url));
 const file='0021_crm_helpers_owner_only.sql';
 const mirror='20261015194324_crm_helpers_owner_only.sql';
 const sql=readFileSync(resolve(root,'drizzle/migrations',file),'utf8');

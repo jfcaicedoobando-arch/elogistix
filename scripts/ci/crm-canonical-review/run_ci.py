@@ -312,6 +312,7 @@ def main():
     from adapter import verify_inputs
     from cases import run_cases
     from canonical_cases import run_canonical_cases
+    from wrapper_cases import run_wrapper_cases
     ap=argparse.ArgumentParser(description='CI-only synthetic CRM ACL checks, no DSN or external container accepted')
     ap.add_argument('--output',type=Path,required=True)
     a=ap.parse_args()
@@ -322,7 +323,7 @@ def main():
     manifest=verify_inputs()
     a.output.mkdir(parents=True,exist_ok=False);(a.output/'logs').mkdir()
     r=CRMRunner(a.output,uuid.uuid4().hex)
-    r.result.update(source_commit=BASE,workflow_commit=commit,run_url='https://github.com/'+REPOSITORY+'/actions/runs/'+os.environ['GITHUB_RUN_ID'],input_manifest=manifest,limits=['Fresh helper-history fixture and upgrade only, NOT full ERP migration replay','Synthetic ledger witness is NOT operational direct wrapper','Portable semantics do not reject equivalent object recreation solely for new IDs','Synthetic fixture only; no production application','No permanent DDL freeze or broad future-dependency exclusion','Full catalog coverage limited to named snapshot sections; no physical xmin/ctid invariant'])
+    r.result.update(source_commit=BASE,workflow_commit=commit,event_base_sha=event['pull_request']['base']['sha'],event_head_sha=event['pull_request']['head']['sha'],run_url='https://github.com/'+REPOSITORY+'/actions/runs/'+os.environ['GITHUB_RUN_ID'],input_manifest=manifest,direct_wrapper='NOT_RUN',limits=['Fresh helper-history fixture and upgrade only, NOT full ERP migration replay','Synthetic serial-ledger renderer is lab-only, NOT operational direct wrapper admission','Portable semantics do not reject equivalent object recreation solely for new IDs','Synthetic fixture only; no production application','No permanent DDL freeze or broad future-dependency exclusion','Full catalog coverage limited to named snapshot sections; no physical xmin/ctid invariant'])
     def interrupted(number,frame):raise RuntimeError('Interrupted by signal '+str(number))
     for sig in (signal.SIGTERM,signal.SIGINT):signal.signal(sig,interrupted)
     r.save()
@@ -331,6 +332,13 @@ def main():
         names=[item['case'] for item in r.result['checks']]
         require(len(names)==52 and len(set(names))==52,'Incomplete or duplicate named case matrix')
         require(all(item['status']=='pass' or (item['status']=='observed_limit' and item['case'].startswith('f2-')) for item in r.result['checks']),'Unexpected case status')
+        r.result['canonical_case_count']=len(names)
+        run_wrapper_cases(r)
+        wrapper=r.result['checks'][len(names):]
+        require(len(wrapper)==13 and len({item['case'] for item in wrapper})==13
+                and all(item['case'].startswith('direct-') and item['status']=='pass' for item in wrapper),'Incomplete direct wrapper matrix')
+        r.result['direct_wrapper']='PASS_SYNTHETIC_ONLY'
+        r.result['direct_wrapper_case_count']=len(wrapper)
         r.result['concurrency_two_sessions']='NOT_RUN_CANONICAL_LANE'
         r.result['status']='checks_pass_cleanup_pending';r.save()
     except BaseException as exc:
