@@ -1,0 +1,46 @@
+name: Demo physical wire synthetic laboratory
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+    branches: [main]
+    paths:
+      - 'scripts/ci/demo-wire-lab/**'
+      - 'scripts/ci/demo-persistence-review/**'
+      - 'scripts/ci/crm-acl-review/**'
+      - 'docs/review/demo-durable-owner-adapter-20261015/**'
+      - 'docs/qa/demo-wire-lab/**'
+      - '.github/workflows/demo-wire-lab.yml'
+permissions:
+  contents: read
+jobs:
+  physical-wire-lab:
+    if: github.repository == 'jfcaicedoobando-arch/elogistix' && github.event.pull_request.draft == true && github.event.pull_request.head.repo.full_name == github.repository && github.event.pull_request.head.ref == 'codex/physical-wire-main-20261015' && github.event.pull_request.base.sha == 'd1de16b7cafda5f739511cf7cfef645a7733651a'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: '24.19.0'
+      - name: Offline laboratory guard tests
+        run: python3 -B -m unittest discover -s scripts/ci/demo-wire-lab -p 'test_*.py' -v
+      - name: Offline physical wire state machine through complete catalog
+        env:
+          LAB_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          test "$(git rev-parse HEAD)" = "$LAB_HEAD_SHA"
+          env GITHUB_SHA="$LAB_HEAD_SHA" node scripts/ci/test-catalog.mjs --output reports/test-inventory.json
+          env GITHUB_SHA="$LAB_HEAD_SHA" node scripts/ci/test-catalog.mjs --run node-demo-wire-lab reports/test-inventory.json
+      - name: Exclusive physical wire against isolated PostgreSQL 17.6
+        run: python3 -B scripts/ci/demo-wire-lab/run_ci.py --output "$RUNNER_TEMP/demo-wire-lab"
+      - name: Preserve sanitized synthetic evidence
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: demo-wire-lab-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/demo-wire-lab/public/**
+          if-no-files-found: warn
+          retention-days: 14
