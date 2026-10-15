@@ -67,6 +67,27 @@ def query_contract():
     return value
 
 
+def complete_summary(result):
+    """Classify observed SQL races only after the complete owned cleanup."""
+    require(result['status'] == 'checks_pass_cleanup_pending'
+            and result['cleanup'] == 'confirmed_stopped_and_removed'
+            and result.get('pg_status_3_and_no_pid') is True
+            and result.get('shutdown_confirmed') is True, 'Tests or owned cleanup incomplete')
+    race_names = ('sql-two-connections-claim-commit', 'sql-two-connections-claim-rollback')
+    races = [case for case in result['checks'] if case['case'] in race_names]
+    require([case['case'] for case in races] == list(race_names)
+            and all(case['status'] == 'pass' and case['first_pid'] != case['second_pid']
+                    and case['observed_wait']['wait_event_type'] == 'Lock'
+                    and case['first_pid'] in case['observed_wait']['blockers']
+                    and case['claimant_count'] == 1 and case['synthetic_business_events'] == 1
+                    for case in races), 'SQL two-session evidence incomplete')
+    result.update(status='pass', sql_lane='PASS_SYNTHETIC_ONLY', phase='complete_owned_cleanup_confirmed',
+                  concurrency_two_sessions='PASS_SYNTHETIC_SQL_ONLY',
+                  concurrency_scope={'cases': list(race_names), 'transport': 'two psql SQL sessions',
+                                     'business': 'SYNTHETIC', 'physical_owner_wire': 'NOT_RUN',
+                                     'operational_wire': 'UNBOUND'})
+
+
 def runner_class(infrastructure):
     class PersistenceRunner(infrastructure.CRMRunner):
         def compile_exact_store(self, db):
@@ -172,9 +193,7 @@ def main():
             raise
         finally:
             r.save()
-    require(r.result['status'] == 'checks_pass_cleanup_pending'
-            and r.result['cleanup'] == 'confirmed_stopped_and_removed', 'Tests or owned cleanup incomplete')
-    r.result.update(status='pass', sql_lane='PASS_SYNTHETIC_ONLY')
+    complete_summary(r.result)
     r.save()
     print(json.dumps(r.result, indent=2))
 

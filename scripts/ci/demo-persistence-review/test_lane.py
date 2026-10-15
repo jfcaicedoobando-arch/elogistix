@@ -20,6 +20,30 @@ def synthetic_event():
 
 
 class LaneTests(unittest.TestCase):
+    def test_final_summary_classifies_sql_races_and_terminal_owned_cleanup(self):
+        result = {'status': 'checks_pass_cleanup_pending', 'sql_lane': 'CHECKS_PASS_CLEANUP_PENDING',
+                  'cleanup': 'confirmed_stopped_and_removed', 'pg_status_3_and_no_pid': True,
+                  'shutdown_confirmed': True, 'phase': 'cluster_started', 'concurrency_two_sessions': 'NOT_RUN',
+                  'wire': 'UNBOUND', 'checks': [
+                      {'case': 'sql-two-connections-claim-' + suffix, 'status': 'pass', 'first_pid': 101,
+                       'second_pid': 102, 'observed_wait': {'wait_event_type': 'Lock', 'blockers': [101]},
+                       'claimant_count': 1, 'synthetic_business_events': 1} for suffix in ('commit', 'rollback')]}
+        for change in ('pending_cleanup', 'failed_race', 'missing_race', 'same_backend'):
+            invalid = copy.deepcopy(result)
+            if change == 'pending_cleanup': invalid['cleanup'] = 'pending'
+            elif change == 'failed_race': invalid['checks'][0]['status'] = 'failed'
+            elif change == 'missing_race': invalid['checks'].pop()
+            else: invalid['checks'][0]['second_pid'] = 101
+            with self.subTest(change=change), self.assertRaises(RuntimeError):
+                lane.complete_summary(invalid)
+            self.assertNotEqual(invalid['status'], 'pass')
+        lane.complete_summary(result)
+        self.assertEqual(result['status'], 'pass')
+        self.assertEqual(result['phase'], 'complete_owned_cleanup_confirmed')
+        self.assertEqual(result['concurrency_two_sessions'], 'PASS_SYNTHETIC_SQL_ONLY')
+        self.assertEqual(result['concurrency_scope']['physical_owner_wire'], 'NOT_RUN')
+        self.assertEqual(result['wire'], 'UNBOUND')
+
     def test_gate_rejects_local_fork_base_branch_and_checkout_drift(self):
         env = {'GITHUB_ACTIONS': 'true', 'GITHUB_EVENT_NAME': 'pull_request', 'GITHUB_REPOSITORY': lane.REPOSITORY}
         self.assertEqual(lane.gate(synthetic_event(), env, 'a' * 40), 'a' * 40)
