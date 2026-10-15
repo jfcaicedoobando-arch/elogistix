@@ -482,8 +482,7 @@ def _core(candidate, prepared, fault=None):
              WHERE (row->>'created_at')::pg_catalog.int8 >= __WHEN__) THEN
     RAISE EXCEPTION 'CRM_TRANSACTION_REGISTRATION_CONFLICT';
   END IF;
-  IF (v_sequence_now->>'last_value')::pg_catalog.int8 +
-      CASE WHEN (v_sequence_now->>'is_called')::pg_catalog.bool THEN 1 ELSE 0 END > 2147483647 THEN
+  IF v_next > 2147483647 THEN
     RAISE EXCEPTION 'CRM_TRANSACTION_SEQUENCE_EXHAUSTED';
   END IF;
 

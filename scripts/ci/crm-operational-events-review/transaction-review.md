@@ -90,15 +90,21 @@ does not substitute for missing code or transport evidence.
    historical evidence is needed only to resolve a specific conflicting,
    ambiguous or unreconcilable existing registration, which blocks this program
    until resolved without repairing history.
-2. **Transport contract.** The parent verifies the bounded properties exposed by
-   the read-only transport probes, then supplies documentation or isolated
+2. **Transport contract.** Before the BEGIN/COMMIT or intentional-error probe, the transport owner must
+   guarantee a request-owned initially idle connection, no outer transaction or
+   prior work, and connection-specific cleanup; otherwise that probe stays
+   NOT_RUN_PENDING_IDLE_CONTRACT. SQL observations cannot establish this
+   precondition. The parent verifies the bounded properties exposed by the
+   read-only transport probes, then supplies documentation or isolated
    equivalent tests for properties those probes cannot establish: intact one
    invocation of the complete outer DO, deadline setup before execution,
    transaction/commit/error/output handling, automatic registration behavior,
    retry policy and uncertain-response reconciliation. No session continuity
    between calls, exactly-once execution or absence of retries is inferred from
    SELECT results or matching backend PIDs. Unknown required properties block
-   application.
+   application. The [single-statement transport analysis](transport-contract.md)
+   identifies those properties and the conditional minimum supported executor;
+   it does not require exactly-once invocation or session reuse between calls.
 3. **Relevant mutator exclusion.** The parent identifies how relevant helper,
    ACL, role, event and ledger writers, direct sequence consumers, external
    appliers and queued retries are excluded, or proves a specific actor

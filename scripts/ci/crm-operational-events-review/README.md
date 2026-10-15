@@ -42,7 +42,7 @@ The experiment validates complete supplied ledger/default/sequence/index metadat
 
 Transport/session continuity, a timeout established before execution, commit and automatic-registration semantics, uncertain-response reconciliation, external writer/applier coordination and a newly authorized DDL/ACL window through independent postchecks remain separate gates. Neither an old window, a boolean assertion, statistical visibility nor a synthetic success supplies them. No real SQL, privilege change, deployment or merge is authorized by this lane.
 
-The [three read-only transport probes](transport-probes/README.md) are public query files for a separately authorized parent-run observation. They contain no DDL/DML, inspect only the calling backend and do not assume continuity between calls or automatic retry behavior. Their manifest fixes the exact public bytes. Live transport results remain NOT_RUN until the parent supplies its private observations and a sanitized report.
+The [transport analysis](transport-contract.md) distinguishes the single DO's atomicity from unknown adapter effects, deadline setup, actual RETURNING delivery and commit handling. The [public diagnostic probes](transport-probes/README.md) contain no DDL/DML or other-session observations; their manifest fixes exact bytes. BEGIN/COMMIT and intentional-error probes remain NOT_RUN while the required connection-ownership contract is unavailable. No additional probe can establish the integration's undocumented guarantees.
 
 ## Reproduce offline checks
 

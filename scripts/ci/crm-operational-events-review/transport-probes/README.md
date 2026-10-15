@@ -20,6 +20,25 @@ contract; their PIDs must never be compared as evidence of continuity.
 | 2 | `02-read-only-transaction.sql` | One successful batch: BEGIN READ ONLY, observations A/B, COMMIT, observation C. |
 | 3 | `03-error-stop.sql` | One batch without BEGIN: control result, intentional SQLSTATE 22012, terminal sentinel. |
 
+**Calls 2 and 3 MUST NOT RUN until the transport owner independently guarantees that
+this request starts on an idle connection, outside an existing transaction,
+with no prior or unrelated work, and owns the connection's cleanup after an
+error, interruption or lost response.** Record
+`NOT_RUN_PENDING_IDLE_CONTRACT` while any part of this precondition is unknown.
+Neither call 1 nor an additional SELECT can establish this transport contract.
+Do not execute either call to discover whether the precondition holds.
+
+PostgreSQL does not nest an existing transaction when it receives BEGIN: it
+issues a warning and leaves that transaction in place. The later COMMIT could
+therefore commit existing work before the parent could inspect A/B. Observing
+the expected read-only settings afterwards cannot make that earlier action
+safe. If the integration adds an outer transaction or cannot guarantee an
+initially idle, exclusively owned connection, keep call 2 unexecuted. Its
+post-response stop rules below apply only after this prerequisite is met.
+Call 3's deliberate error could abort an existing outer transaction and its
+prior work; it requires the same ownership/isolation prerequisite even though
+the probe itself contains no explicit transaction control.
+
 Call 1 must return exactly one complete `crm_transport_probe` object. Compare its
 literal UTF-8 hex, byte length and SHA256 with `manifest.json`, and require the
 terminal marker. Both encodings should be UTF8 for the intended execution
@@ -92,7 +111,7 @@ Return only a sanitized report such as:
   "admission": "NOT_ADMITTED",
   "literal_bytes": "PASS_OBSERVED|FAIL|UNKNOWN|NOT_RUN",
   "complete_query_bytes": "PASS_OBSERVED|FAIL|UNKNOWN|NOT_RUN",
-  "read_only_transaction_batch": "PASS_OBSERVED|FAIL|UNKNOWN|NOT_RUN",
+  "read_only_transaction_batch": "PASS_OBSERVED|FAIL|UNKNOWN|NOT_RUN|NOT_RUN_PENDING_IDLE_CONTRACT",
   "resultsets_and_completion": "PASS_OBSERVED|FAIL|UNKNOWN|NOT_RUN",
   "native_error_propagation": "PASS_OBSERVED|FAIL|UNKNOWN|NOT_RUN",
   "post_error_statement": "OBSERVED_CONTINUATION|NOT_OBSERVED|UNKNOWN|NOT_RUN",
@@ -124,6 +143,11 @@ defines the own virtual transaction lock, and
 [session information functions](https://www.postgresql.org/docs/17/functions-info.html#FUNCTIONS-INFO-SESSION-TABLE)
 define `current_query()` and `pg_backend_pid()`. These sources support the
 PostgreSQL interpretation, not a claim about connector behavior.
+The [BEGIN notes](https://www.postgresql.org/docs/17/sql-begin.html) describe
+the warning when a transaction is already open; the
+[COMMIT documentation](https://www.postgresql.org/docs/17/sql-commit.html)
+describes committing the current transaction. These are the basis of call 2's
+mandatory idle-connection precondition.
 
 `test_transport_probes.py` checks the public file hashes and exact UTF-8 literal,
 lexes complete statements across comments/quoted semicolons, and verifies the
