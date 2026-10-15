@@ -77,6 +77,8 @@ const WRAPPED_COVERAGE = [
   // 13.710.0 — Verificación SAT semanal (cron) para CFDI cancelados
   "supabase/functions/verificar-sat-semanal/index.ts",
   "supabase/functions/adjuntar-xml-entrante/index.ts",
+  // Extracción de tarifas del correo: usa el wrapper compartido.
+  "supabase/functions/extraer-tarifas-correo/index.ts",
 ];
 
 // Funciones intencionalmente exentas de Sentry (proxy puro, sin lógica propia

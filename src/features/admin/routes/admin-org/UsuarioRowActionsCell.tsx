@@ -1,4 +1,4 @@
-import { MoreHorizontal, KeyRound, UserMinus, Trash2 } from "lucide-react";
+import { MoreHorizontal, KeyRound, UserMinus, Trash2, Ban, UserCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -13,6 +13,7 @@ export interface UsuarioRowActions {
   onResetPassword: (user: UserRow) => void;
   onQuitarDeOrg: (user: UserRow) => void;
   onDelete: (user: UserRow) => void;
+  onCambiarAcceso: (user: UserRow, activo: boolean) => void;
 }
 
 /**
@@ -45,6 +46,17 @@ export function UsuarioRowActionsCell({
           <KeyRound className="h-4 w-4" />
           Restablecer contraseña
         </DropdownMenuItem>
+        {user.estado === "desactivado" ? (
+          <DropdownMenuItem onClick={() => acciones.onCambiarAcceso(user, true)}>
+            <UserCheck className="size-4" />
+            Reactivar acceso
+          </DropdownMenuItem>
+        ) : (
+          <DropdownMenuItem onClick={() => acciones.onCambiarAcceso(user, false)}>
+            <Ban className="size-4" />
+            Desactivar acceso
+          </DropdownMenuItem>
+        )}
         <DropdownMenuItem onClick={() => acciones.onQuitarDeOrg(user)}>
           <UserMinus className="h-4 w-4" />
           Quitar de la organización

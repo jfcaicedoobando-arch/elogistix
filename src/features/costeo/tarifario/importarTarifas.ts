@@ -18,6 +18,14 @@ export interface CatalogosImport {
 export interface TarifaImport { fila: number; input: TarifaInput; origenId: string; destinoId: string }
 export interface ResultadoImport { tarifas: TarifaImport[]; errores: string[] }
 
+/** Errores del último guardado o, si no hay, los de la revisión previa. */
+export function erroresVisibles(
+  resultado: { errores: string[] } | null | undefined,
+  estado: { prep: { errores: string[] } } | null | undefined,
+): string[] {
+  return resultado?.errores ?? estado?.prep.errores ?? [];
+}
+
 const norm = (s: unknown) => String(s ?? "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim().toLowerCase();
 
 /** Encabezado normalizado → campo. Acepta variantes comunes. */

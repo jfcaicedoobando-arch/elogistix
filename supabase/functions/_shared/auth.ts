@@ -298,6 +298,15 @@ export async function authorizeOrgRole(
 }
 
 /**
+ * Extracción de tarifas desde el buzón de Pricing (Gmail). Espejo server-side
+ * de `esRolPricing` (`src/features/crm/services/pricing/permisosPricing.ts`)
+ * y del helper SQL `_crm_es_pricing`. Mantener sincronizada.
+ */
+export const ROLES_PRICING_TARIFARIO: readonly string[] = [
+  "super_admin", "admin", "admin_org", "ejecutivo_pricing", "gerente_operaciones",
+];
+
+/**
  * v13.458.0 — Autoriza a un usuario del portal de clientes sobre un CFDI.
  * Los clientes no son miembros de la organización (no tienen fila en
  * `organization_members`), su vínculo vive en `client_users`. Se exige que el

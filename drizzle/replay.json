@@ -112,5 +112,33 @@
     "replays": [
       "20261013204000_replay_demo_seed_limpia_agentes.sql"
     ]
+  },
+  {
+    "file": "0015_catalogos_alta_gerente_admin.sql",
+    "sha256": "81f927057fc37030232c88ffc8b5e4bf51f46df6948f07fc50c57df41b0ac93c",
+    "replays": [
+      "20261014173500_replay_catalogos_alta_gerente_admin.sql"
+    ]
+  },
+  {
+    "file": "0016_crm_empresa_desde_cliente.sql",
+    "sha256": "9a1092ca7e9a59a2166140c19a182f05c562284e10db489e998cdb098d14a629",
+    "replays": [
+      "20261014202800_replay_crm_empresa_desde_cliente.sql"
+    ]
+  },
+  {
+    "file": "0017_crm_empresa_no_borrar_cliente.sql",
+    "sha256": "548be2b88fde30174ce4b90fdc333cd6f745f0948bf331907de879ee5c95bcdb",
+    "replays": [
+      "20261014202900_replay_crm_empresa_no_borrar_cliente.sql"
+    ]
+  },
+  {
+    "file": "0018_cargos_tarifario_aplica_iva.sql",
+    "sha256": "e54c5f4dce851c8d30d3c71336c315ae7b600c72a5a5cc1d5194b908cbbbadee",
+    "replays": [
+      "20261014203100_replay_cargos_tarifario_aplica_iva.sql"
+    ]
   }
 ]

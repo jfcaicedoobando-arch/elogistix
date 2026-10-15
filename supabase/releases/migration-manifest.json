@@ -72636,7 +72636,12 @@
       "20261013151000_padres_activos_recalculo_tc.sql",
       "20261013195000_cxp_contador_autoaprobacion.sql",
       "20261013204000_replay_demo_seed_limpia_agentes.sql",
-      "20261013210000_guard_demo_cleanup_tenant_graph.sql"
+      "20261013210000_guard_demo_cleanup_tenant_graph.sql",
+      "20261014173500_replay_catalogos_alta_gerente_admin.sql",
+      "20261014202800_replay_crm_empresa_desde_cliente.sql",
+      "20261014202900_replay_crm_empresa_no_borrar_cliente.sql",
+      "20261014203000_demo_seed_identidad_y_aprobacion.sql",
+      "20261014203100_replay_cargos_tarifario_aplica_iva.sql"
     ]
   }
 }

@@ -1,6 +1,6 @@
 {
   "$schema": "./audit-rpc-columns-allowlist.schema.json",
-  "note": "Hallazgos preexistentes detectados por scripts/audit-rpc-columns.ts. Cada entrada es una referencia [function|view] <nombre> <alias>.<columna> que apunta a una columna inexistente. Al arreglar la RPC/vista, eliminar la entrada correspondiente. El script NO fallará CI mientras la entrada esté aquí, pero SÍ fallará ante cualquier nueva regresión.",
+  "note": "Las cuatro entradas legacy mantienen su comportamiento anterior. Las referencias reviewed son falsos positivos verificados y sólo se aceptan con firma, SHA256 exacto de pg_get_functiondef, dependencias calculadas y columnas reales comprobadas; cualquier drift o revisión obsoleta falla.",
   "allow": [
     "function:proveedor_estado_cuenta:cc.expediente",
     "function:proveedor_estado_cuenta:cc.cliente_nombre",
@@ -12,5 +12,177 @@
     "function:proveedor_estado_cuenta:cc.cliente_nombre": "Falso positivo: `cc` es el CTE de conceptos enriquecidos (WITH cc AS ...), no public.conceptos_costo.",
     "function:proveedor_estado_cuenta_movimientos:f.folio_interno": "Falso positivo: `f` es un CTE local sobre proveedor_facturas, no public.facturas.",
     "function:proveedor_estado_cuenta_movimientos:f.folio_proveedor": "Falso positivo: `f` es un CTE local sobre proveedor_facturas, no public.facturas."
-  }
+  },
+  "reviewed": [
+    {
+      "key": "function:list_trash:t.deleted_by",
+      "signature": "public.list_trash(text, integer, integer)",
+      "definition_sha256": "426b66d2ce3a7afa3297581f2abbe684a7aff81854cf7e8c1437554479c12269",
+      "source": "supabase/migrations/20261009010100_audit148_papelera_seguros.sql",
+      "reason": "La rama seguros_embarque devuelve NULL para el actor y retorna antes del SQL dinámico genérico. t.deleted_by está dentro de ese SQL dinámico para las otras tablas permitidas; no se consulta en seguros. El scope sigue limitado a org_scope y admin/super_admin.",
+      "required_columns": [
+        {
+          "table": "seguros_embarque",
+          "column": "numero_poliza"
+        },
+        {
+          "table": "seguros_embarque",
+          "column": "organization_id"
+        },
+        {
+          "table": "seguros_embarque",
+          "column": "deleted_at"
+        }
+      ],
+      "dependencies": []
+    },
+    {
+      "key": "function:seed_demo_organization_core:c.v",
+      "signature": "public.seed_demo_organization_core()",
+      "definition_sha256": "0106a3e19d12782930d56117d437f418213b2ab68f9f8901782e2bff35637d26",
+      "source": "supabase/migrations/20261014203000_demo_seed_identidad_y_aprobacion.sql",
+      "reason": "El token C.V. sólo aparece en literales de razones sociales; no es una referencia a clientes.v. Se preservan la organización fija, el guard auth.uid y la ejecución privada del core. El seed no se ejecuta durante esta verificación.",
+      "required_columns": [
+        {
+          "table": "clientes",
+          "column": "id"
+        },
+        {
+          "table": "clientes",
+          "column": "organization_id"
+        },
+        {
+          "table": "clientes",
+          "column": "rfc"
+        }
+      ],
+      "dependencies": []
+    },
+    {
+      "key": "function:_embarque_aplicar_tarifa_decidida:c.tarifa_id",
+      "signature": "public._embarque_aplicar_tarifa_decidida(uuid, uuid, uuid)",
+      "definition_sha256": "9ed61c1dcf1d10db807c27a927e5af6a5c76a3a342a815b7f7ed71eebf0f0bf6",
+      "source": "supabase/schema/embarques/_embarque_aplicar_tarifa_decidida.sql",
+      "reason": "La referencia está en SELECT c.tarifa_id FROM public.cotizaciones c, que sí tiene tarifa_id. El mismo alias c se reutiliza después para conceptos_costo y el regex pierde el primer FROM tras la lista INTO. Se conservan las guardas de equivalencia, organización y conceptos aceptados y el EXECUTE privado.",
+      "required_columns": [
+        {
+          "table": "cotizaciones",
+          "column": "tarifa_id"
+        },
+        {
+          "table": "cotizaciones",
+          "column": "organization_id"
+        }
+      ],
+      "dependencies": []
+    },
+    {
+      "key": "function:crm_reporte_datos:e.letra_empresa_crm",
+      "signature": "public.crm_reporte_datos(uuid)",
+      "definition_sha256": "7b81aef62fefbb472e4d3d87ed0a556122b32faaa635cd8d4271715222dab8f0",
+      "source": "supabase/migrations/20261002015228_8ad2eab3-0e7f-479b-935b-4bf0b612dac6.sql",
+      "reason": "PostgreSQL resuelve e.letra_empresa_crm como public.letra_empresa_crm(e), función calculada sobre crm_empresas, no columna persistida. La dependencia delega en crm_puntaje_detalle y el reporte sigue SECURITY INVOKER y acotado a org_scope.",
+      "required_columns": [
+        {
+          "table": "crm_empresas",
+          "column": "id"
+        },
+        {
+          "table": "crm_empresas",
+          "column": "organization_id"
+        }
+      ],
+      "dependencies": [
+        {
+          "signature": "public.letra_empresa_crm(crm_empresas)",
+          "definition_sha256": "1071b2c3975ce2a4740090ca85eb6fe1c15ce12d60d6d7b841988cbf358022c3"
+        }
+      ]
+    },
+    {
+      "key": "function:crm_reporte_datos:o.letra_oportunidad_crm",
+      "signature": "public.crm_reporte_datos(uuid)",
+      "definition_sha256": "7b81aef62fefbb472e4d3d87ed0a556122b32faaa635cd8d4271715222dab8f0",
+      "source": "supabase/migrations/20261002015228_8ad2eab3-0e7f-479b-935b-4bf0b612dac6.sql",
+      "reason": "PostgreSQL resuelve o.letra_oportunidad_crm como public.letra_oportunidad_crm(o), función calculada sobre crm_oportunidades, no columna persistida. La dependencia delega en crm_puntaje_detalle y el reporte sigue SECURITY INVOKER y acotado a org_scope.",
+      "required_columns": [
+        {
+          "table": "crm_oportunidades",
+          "column": "id"
+        },
+        {
+          "table": "crm_oportunidades",
+          "column": "organization_id"
+        }
+      ],
+      "dependencies": [
+        {
+          "signature": "public.letra_oportunidad_crm(crm_oportunidades)",
+          "definition_sha256": "45aa7c5f25c91a787e621c6b7d1b56e600d05d67f914ae07381c29b2ba753c25"
+        }
+      ]
+    },
+    {
+      "key": "function:_venta_facturada_por_embarque:nc.fx",
+      "signature": "public._venta_facturada_por_embarque(uuid)",
+      "definition_sha256": "e20ef08c652e786bbd1951ce5cbef4bda20c1b0b300c00faba7633ba383e72db",
+      "source": "supabase/migrations/20261006213000_replay_audit144_nc_linaje.sql",
+      "reason": "nc.fx pertenece al CTE nc, que proyecta _nc_factor_moneda_factura(...) AS fx. El regex lo confunde con el alias nc de factura_notas_credito dentro del CTE. Se conserva el filtro f0.organization_id=p_org y el reparto por concepto/documento.",
+      "required_columns": [
+        {
+          "table": "factura_notas_credito",
+          "column": "factura_id"
+        },
+        {
+          "table": "factura_notas_credito",
+          "column": "moneda"
+        },
+        {
+          "table": "facturas",
+          "column": "organization_id"
+        }
+      ],
+      "dependencies": []
+    },
+    {
+      "key": "function:_venta_facturada_por_embarque:f.emb_directo",
+      "signature": "public._venta_facturada_por_embarque(uuid)",
+      "definition_sha256": "e20ef08c652e786bbd1951ce5cbef4bda20c1b0b300c00faba7633ba383e72db",
+      "source": "supabase/migrations/20261006213000_replay_audit144_nc_linaje.sql",
+      "reason": "f.emb_directo pertenece al CTE f, que conserva f0.*; f0 proyecta facturas.embarque_id AS emb_directo. El alias físico f de facturas tiene otro alcance. No se cambia la selección de tenant ni el reparto financiero.",
+      "required_columns": [
+        {
+          "table": "facturas",
+          "column": "embarque_id"
+        },
+        {
+          "table": "facturas",
+          "column": "organization_id"
+        }
+      ],
+      "dependencies": []
+    },
+    {
+      "key": "function:_venta_facturada_por_embarque:f.neto_doc",
+      "signature": "public._venta_facturada_por_embarque(uuid)",
+      "definition_sha256": "e20ef08c652e786bbd1951ce5cbef4bda20c1b0b300c00faba7633ba383e72db",
+      "source": "supabase/migrations/20261006213000_replay_audit144_nc_linaje.sql",
+      "reason": "f.neto_doc es una expresión proyectada por el CTE f sobre f0, no columna de facturas. La deducción de notas de crédito y el reparto conservan su cuerpo revisado y filtro de organización.",
+      "required_columns": [
+        {
+          "table": "facturas",
+          "column": "subtotal"
+        },
+        {
+          "table": "facturas",
+          "column": "total"
+        },
+        {
+          "table": "facturas",
+          "column": "organization_id"
+        }
+      ],
+      "dependencies": []
+    }
+  ]
 }

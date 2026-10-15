@@ -2,12 +2,13 @@ import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { describe, expect, it } from "vitest";
 import { scanFile } from "@/../scripts/audit-migrations";
+import { extractDumpFunction } from "@/test/helpers/extractDumpFunction";
 
 const read = (path: string) => readFileSync(resolve(process.cwd(), path), "utf8");
 const forwardFile = "20261013210000_guard_demo_cleanup_tenant_graph.sql";
 const sql = read(`supabase/migrations/${forwardFile}`);
 const baseline = read("supabase/schema/baseline.sql");
-const core = baseline.match(/CREATE FUNCTION public\.seed_demo_organization_core\([\s\S]*?\n\$\$;/)![0];
+const core = extractDumpFunction(baseline, "public.seed_demo_organization_core").body;
 const rootBlock = sql.split("v_roots := ARRAY[")[1].split("];", 1)[0];
 const roots = [...rootBlock.matchAll(/'public\.(\w+)'::regclass/g)].map((m) => m[1]);
 const globalBlock = sql.split("v_globals := array_remove(ARRAY[")[1].split("], NULL::oid)", 1)[0];
@@ -50,7 +51,9 @@ describe("forward demo cleanup fail-closed tenant graph contract", () => {
   });
   it("covers every direct DELETE root and all reviewed core mutation targets", () => {
     const coreDeletes = [...core.matchAll(/DELETE FROM public\.(\w+)/g)].map((m) => m[1]);
-    expect(coreDeletes).toHaveLength(12);
+    expect(coreDeletes).toHaveLength(10);
+    expect(coreDeletes).not.toContain("clientes");
+    expect(coreDeletes).not.toContain("contactos_cliente");
     expect(roots).toHaveLength(16);
     expect(new Set(roots).size).toBe(roots.length);
     for (const table of coreDeletes) expect(roots).toContain(table);
@@ -119,7 +122,7 @@ describe("forward demo cleanup fail-closed tenant graph contract", () => {
     const grants = (text: string) => text.match(/(?:REVOKE ALL|GRANT EXECUTE) ON FUNCTION public\.seed_demo_organization_guarded\(bigint\)[^;]+;/g);
     expect(grants(sql)).toEqual(grants(read("supabase/migrations/20261013204000_replay_demo_seed_limpia_agentes.sql")));
     expect(read("supabase/schema/security/seed_demo_organization_guarded.sql")).toBe(sql);
-    expect(baseline.match(/CREATE FUNCTION public\.seed_demo_organization_guarded\([\s\S]*?AS \$\$/)?.[0])
+    expect(extractDumpFunction(baseline, "public.seed_demo_organization_guarded").header)
       .toContain("SET row_security TO 'off'");
   });
 });

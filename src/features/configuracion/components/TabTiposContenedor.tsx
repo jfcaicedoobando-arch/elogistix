@@ -12,6 +12,8 @@ import { DataTable, defineColumns, type ColumnDef } from "@/components/shared/Da
 import { TABLE_DENSITY } from "@/components/shared/dataTable/tableTokens";
 import DoubleConfirmDeleteDialog from "@/components/shared/DoubleConfirmDeleteDialog";
 import { usePermissions } from "@/hooks/shared";
+import { useAuth } from "@/lib/contexts/AuthContext";
+import { puedeDarAltaCatalogo } from "../domain/permisosCatalogo";
 
 type TipoContenedor = { id: string; code: string; name: string; activo: boolean; activoOrg?: boolean };
 
@@ -22,6 +24,7 @@ export default function TabTiposContenedor() {
   const { data: tipos = [], isLoading, isError, error, refetch, isFetching } = useAllTiposContenedor();
   const { agregarTipo, toggleActivo, eliminarTipo } = useAdminTiposContenedor();
   const { isSuperAdmin } = usePermissions();
+  const puedeCrear = puedeDarAltaCatalogo(useAuth().effectiveRole);
   const [busqueda, setBusqueda] = useState("");
   const [nuevoCode, setNuevoCode] = useState("");
   const [nuevoName, setNuevoName] = useState("");
@@ -77,7 +80,7 @@ export default function TabTiposContenedor() {
         <CardDescription>Catálogo compartido. Enciende o apaga los tipos que quieres ver en tu empresa; no afecta a otras empresas.</CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
-        {isSuperAdmin && (
+        {puedeCrear && (
         <div className="flex flex-wrap gap-2 items-end">
           <FormField label="Código" className="space-y-1">
             <Input className="w-28" placeholder="40HC" value={nuevoCode} onChange={(e) => setNuevoCode(e.target.value)} />

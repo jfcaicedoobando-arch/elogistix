@@ -4,6 +4,7 @@ import { resolve } from "node:path";
 import { describe, expect, it } from "vitest";
 import { scanDrizzleReplay, type DrizzleReplayEntry } from "@/../scripts/lib/audit-drizzle-replay";
 import { scanFile } from "@/../scripts/audit-migrations";
+import { extractDumpFunction } from "@/test/helpers/extractDumpFunction";
 
 const sourceFile = "0014_demo_seed_limpia_agentes.sql";
 const replayFile = "20261013204000_replay_demo_seed_limpia_agentes.sql";
@@ -69,7 +70,7 @@ describe("immutable demo 0014 has a real, ACL-closed Supabase replay", () => {
     const forward = read("supabase/migrations/20261013210000_guard_demo_cleanup_tenant_graph.sql");
     expect(read("supabase/schema/security/seed_demo_organization_guarded.sql")).toBe(forward);
     const baseline = read("supabase/schema/baseline.sql");
-    const actual = baseline.match(/CREATE FUNCTION public\.seed_demo_organization_guarded\([\s\S]*?AS \$\$\n([\s\S]*?)\$\$;/)?.[1];
+    const actual = extractDumpFunction(baseline, "public.seed_demo_organization_guarded").body;
     const expected = forward.split("AS $function$\n")[1].split("$function$;")[0];
     expect(actual).toBe(expected.split("\n").filter((line) => line.trim()).join("\n") + "\n");
   });

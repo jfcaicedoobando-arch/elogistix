@@ -15,12 +15,29 @@ import { varianteEstadoEmpresa } from "@/features/crm/components/objetos/estadoE
 import { PropiedadesCard } from "@/features/crm/components/objetos/PropiedadesCard";
 import { VinculosCard } from "@/features/crm/components/objetos/VinculosCard";
 import { DesglosePuntajeCard } from "@/features/crm/components/scoring/DesglosePuntajeCard";
+import { EliminarEmpresaBoton } from "@/features/crm/components/objetos/EliminarEmpresaBoton";
+import { puedeEliminarEmpresa } from "@/features/crm/services/eliminarEmpresaCrm";
+
+function AccionesEmpresa({ id, data, estado }: {
+  id: string; data: { nombre: string; estado_crm?: string | null; cliente_id: string | null }; estado: string | null;
+}) {
+  const pasar = usePasarAProspecto();
+  return (
+    <div className="flex gap-2">
+      {puedeEliminarEmpresa(data) && <EliminarEmpresaBoton empresaId={id} nombre={data.nombre} />}
+      {(estado === "Lead" || estado === "Sospechoso") && (
+        <Button onClick={() => pasar.mutate(id)} disabled={pasar.isPending}>
+          <ArrowRight className="size-4" /> Pasar a prospecto
+        </Button>
+      )}
+    </div>
+  );
+}
 
 export default function CrmEmpresaDetalle() {
   const { id = "" } = useParams<{ id: string }>();
   const { data, isLoading, isError, refetch } = useEmpresaCrm(id);
   const { canEditCrm } = usePermissions();
-  const pasar = usePasarAProspecto();
   useDocumentTitle(data ? `Empresa · ${data.nombre}` : "Empresa");
   const estado = data ? estadoEmpresa(data) : null;
 
@@ -32,11 +49,7 @@ export default function CrmEmpresaDetalle() {
         title={data?.nombre ?? "Empresa"}
         subtitle={data ? `Alta: ${formatFechaDia(data.created_at)}` : undefined}
         badge={estado ? <Badge variant={varianteEstadoEmpresa(estado)}>{estado}</Badge> : undefined}
-        trailing={canEditCrm && (estado === "Lead" || estado === "Sospechoso") ? (
-          <Button onClick={() => pasar.mutate(id)} disabled={pasar.isPending}>
-            <ArrowRight className="size-4" /> Pasar a prospecto
-          </Button>
-        ) : undefined}
+        trailing={canEditCrm && data ? <AccionesEmpresa id={id} data={data} estado={estado} /> : undefined}
       />
       {isLoading ? <LoadingState label="Cargando empresa…" /> : isError || !data ? (
         <ErrorState title={isError ? "No se pudo cargar la empresa" : "Empresa no encontrada"}

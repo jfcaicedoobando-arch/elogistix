@@ -20,6 +20,8 @@ export interface AuthUserRow {
   created_at: string;
   last_sign_in_at: string | null;
   email_confirmed_at: string | null;
+  /** Cuenta desactivada por un administrador (bloqueo vigente). */
+  banned_until: string | null;
   /** VB-15: permite a la UI mostrar el nombre aunque el correo falle. */
   full_name: string | null;
 }
@@ -78,6 +80,7 @@ export async function listarTodosLosUsuarios(
       last_sign_in_at?: string | null;
       email_confirmed_at?: string | null;
       confirmed_at?: string | null;
+      banned_until?: string | null;
       user_metadata?: { full_name?: string | null } | null;
     }>;
     for (const u of pageUsers) {
@@ -89,6 +92,7 @@ export async function listarTodosLosUsuarios(
         // Q-05b: permiten distinguir "Invitación pendiente" de "Activo".
         last_sign_in_at: u.last_sign_in_at ?? null,
         email_confirmed_at: u.email_confirmed_at ?? u.confirmed_at ?? null,
+        banned_until: u.banned_until ?? null,
       });
     }
     if (pageUsers.length < PER_PAGE) break;

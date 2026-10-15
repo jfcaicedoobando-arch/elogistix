@@ -2595,6 +2595,28 @@ BEGIN
   RETURN NEW;
 END;
 $$;
+CREATE FUNCTION public._crm_empresa_desde_cliente() RETURNS trigger
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 'public'
+    AS $$
+DECLARE v_emp uuid;
+BEGIN
+  IF EXISTS (SELECT 1 FROM public.crm_empresas
+              WHERE cliente_id = NEW.id AND deleted_at IS NULL) THEN
+    RETURN NEW;
+  END IF;
+  SELECT id INTO v_emp FROM public.crm_empresas
+   WHERE organization_id = NEW.organization_id AND deleted_at IS NULL
+     AND cliente_id IS NULL AND upper(btrim(nombre)) = upper(btrim(NEW.nombre))
+   ORDER BY created_at LIMIT 1;
+  IF v_emp IS NOT NULL THEN
+    UPDATE public.crm_empresas SET cliente_id = NEW.id WHERE id = v_emp;
+  ELSE
+    INSERT INTO public.crm_empresas (organization_id, nombre, cliente_id, created_by)
+    VALUES (NEW.organization_id, NEW.nombre, NEW.id, auth.uid());
+  END IF;
+  RETURN NEW;
+END $$;
 CREATE FUNCTION public._crm_empresa_estado_por_cliente() RETURNS trigger
     LANGUAGE plpgsql
     SET search_path TO 'public'
@@ -2602,6 +2624,29 @@ CREATE FUNCTION public._crm_empresa_estado_por_cliente() RETURNS trigger
 BEGIN
   IF NEW.cliente_id IS NOT NULL THEN NEW.estado_crm := 'Cliente'; END IF;
   RETURN NEW;
+END $$;
+CREATE FUNCTION public._crm_empresa_no_borrar_cliente() RETURNS trigger
+    LANGUAGE plpgsql
+    SET search_path TO 'public'
+    AS $$
+BEGIN
+  IF NEW.deleted_at IS NOT NULL AND OLD.deleted_at IS NULL
+     AND (OLD.cliente_id IS NOT NULL OR OLD.estado_crm = 'Cliente') THEN
+    RAISE EXCEPTION 'LC_CRM_EMPRESA_ES_CLIENTE: una empresa que ya es cliente no se puede eliminar'
+      USING ERRCODE = '23514';
+  END IF;
+  RETURN NEW;
+END $$;
+CREATE FUNCTION public._crm_empresa_no_delete_fisico() RETURNS trigger
+    LANGUAGE plpgsql
+    SET search_path TO 'public'
+    AS $$
+BEGIN
+  IF OLD.cliente_id IS NOT NULL OR OLD.estado_crm = 'Cliente' THEN
+    RAISE EXCEPTION 'LC_CRM_EMPRESA_ES_CLIENTE: una empresa que ya es cliente no se puede eliminar'
+      USING ERRCODE = '23514';
+  END IF;
+  RETURN OLD;
 END $$;
 CREATE FUNCTION public._crm_es_pricing(p_org uuid) RETURNS boolean
     LANGUAGE sql STABLE SECURITY DEFINER
@@ -31903,7 +31948,33 @@ DECLARE
   v_emb1 uuid; v_emb2 uuid; v_emb3 uuid; v_emb4 uuid;
   v_cat uuid;
   v_pf1 uuid; v_pf2 uuid; v_pf3 uuid;
+  v_seed record;
+  v_matches integer;
 BEGIN
+  -- El seed no crea un aprobador ni suplanta al usuario del llamador.
+  IF auth.uid() IS NULL THEN
+    RAISE EXCEPTION 'LC_SEED_DEMO_APROBADOR_REQUERIDO: el seed requiere la identidad de un aprobador existente; service_role sin usuario no basta'
+      USING ERRCODE = '42501';
+  END IF;
+  PERFORM pg_advisory_xact_lock(hashtext('seed_demo_organization'));
+  LOCK TABLE ONLY public.clientes, public.crm_empresas IN SHARE ROW EXCLUSIVE MODE NOWAIT;
+  -- Claves exclusivas del seed, acotadas a demo. No matching general por nombre.
+  FOR v_seed IN SELECT rfc FROM (VALUES ('IPA950101AB1'), ('TMO880305C45'), ('APB050620XX9')) AS seed(rfc) LOOP
+    SELECT count(*) INTO v_matches FROM public.clientes
+     WHERE organization_id = v_org AND rfc = v_seed.rfc;
+    IF v_matches > 1 OR EXISTS (SELECT 1 FROM public.clientes
+        WHERE organization_id = v_org AND rfc = v_seed.rfc AND deleted_at IS NOT NULL) THEN
+      RAISE EXCEPTION 'LC_SEED_DEMO_IDENTIDAD_AMBIGUA: cliente demo duplicado o borrado para RFC %', v_seed.rfc
+        USING ERRCODE = '23514';
+    END IF;
+  END LOOP;
+  -- No reparar ni borrar empresas huérfanas existentes: se requiere revisión.
+  IF EXISTS (SELECT 1 FROM public.crm_empresas e LEFT JOIN public.clientes c ON c.id = e.cliente_id
+      WHERE e.organization_id = v_org AND e.cliente_id IS NOT NULL
+        AND (c.id IS NULL OR c.organization_id IS DISTINCT FROM v_org OR c.deleted_at IS NOT NULL)) THEN
+    RAISE EXCEPTION 'LC_SEED_DEMO_CRM_IDENTIDAD_INSEGURA: vínculo cliente huérfano, borrado o de otra organización'
+      USING ERRCODE = '23514';
+  END IF;
   -- Limpieza idempotente de la org demo (orden seguro de FKs).
   DELETE FROM public.anticipos_aplicaciones WHERE organization_id = v_org;
   DELETE FROM public.pagos_proveedor WHERE organization_id = v_org;
@@ -31914,18 +31985,28 @@ BEGIN
   DELETE FROM public.eventos_embarque WHERE organization_id = v_org;
   DELETE FROM public.embarques WHERE organization_id = v_org;
   DELETE FROM public.cotizaciones WHERE organization_id = v_org;
-  DELETE FROM public.contactos_cliente WHERE organization_id = v_org;
-  DELETE FROM public.clientes WHERE organization_id = v_org;
   DELETE FROM public.proveedores WHERE organization_id = v_org;
-  INSERT INTO public.clientes (id, organization_id, nombre, rfc, ciudad, estado, contacto, email, telefono, dias_credito)
-  VALUES (gen_random_uuid(), v_org, 'Importadora del Pacífico S.A. de C.V.', 'IPA950101AB1', 'Manzanillo', 'Colima', 'Ana Ramírez', 'ana@imppacifico.mx', '+52 314 333 1100', 30)
-  RETURNING id INTO v_cli1;
-  INSERT INTO public.clientes (id, organization_id, nombre, rfc, ciudad, estado, contacto, email, telefono, dias_credito)
-  VALUES (gen_random_uuid(), v_org, 'Textiles Monterrey S.A.', 'TMO880305C45', 'Monterrey', 'Nuevo León', 'Carlos Vega', 'cvega@textilesmty.mx', '+52 81 8000 5500', 15)
-  RETURNING id INTO v_cli2;
-  INSERT INTO public.clientes (id, organization_id, nombre, rfc, ciudad, estado, contacto, email, telefono, dias_credito)
-  VALUES (gen_random_uuid(), v_org, 'Auto Partes Bajío S. de R.L.', 'APB050620XX9', 'Silao', 'Guanajuato', 'María López', 'mlopez@apbajio.mx', '+52 472 555 0099', 45)
-  RETURNING id INTO v_cli3;
+  SELECT id INTO v_cli1 FROM public.clientes
+   WHERE organization_id = v_org AND rfc = 'IPA950101AB1' AND deleted_at IS NULL;
+  IF NOT FOUND THEN
+    INSERT INTO public.clientes (id, organization_id, nombre, rfc, ciudad, estado, contacto, email, telefono, dias_credito)
+    VALUES (gen_random_uuid(), v_org, 'Importadora del Pacífico S.A. de C.V.', 'IPA950101AB1', 'Manzanillo', 'Colima', 'Ana Ramírez', 'ana@imppacifico.mx', '+52 314 333 1100', 30)
+    RETURNING id INTO v_cli1;
+  END IF;
+  SELECT id INTO v_cli2 FROM public.clientes
+   WHERE organization_id = v_org AND rfc = 'TMO880305C45' AND deleted_at IS NULL;
+  IF NOT FOUND THEN
+    INSERT INTO public.clientes (id, organization_id, nombre, rfc, ciudad, estado, contacto, email, telefono, dias_credito)
+    VALUES (gen_random_uuid(), v_org, 'Textiles Monterrey S.A.', 'TMO880305C45', 'Monterrey', 'Nuevo León', 'Carlos Vega', 'cvega@textilesmty.mx', '+52 81 8000 5500', 15)
+    RETURNING id INTO v_cli2;
+  END IF;
+  SELECT id INTO v_cli3 FROM public.clientes
+   WHERE organization_id = v_org AND rfc = 'APB050620XX9' AND deleted_at IS NULL;
+  IF NOT FOUND THEN
+    INSERT INTO public.clientes (id, organization_id, nombre, rfc, ciudad, estado, contacto, email, telefono, dias_credito)
+    VALUES (gen_random_uuid(), v_org, 'Auto Partes Bajío S. de R.L.', 'APB050620XX9', 'Silao', 'Guanajuato', 'María López', 'mlopez@apbajio.mx', '+52 472 555 0099', 45)
+    RETURNING id INTO v_cli3;
+  END IF;
   INSERT INTO public.proveedores (organization_id, nombre, tipo, pais, rfc, contacto, email, telefono, moneda_preferida, categoria)
   VALUES (v_org, 'Agente Aduanal Pacífico', 'Agente Aduanal'::tipo_proveedor, 'México', 'AAP890101XX1', 'Lic. Pérez', 'gerencia@aapacifico.mx', '+52 314 222 1010', 'MXN'::moneda, 'Logistico'::categoria_proveedor)
   RETURNING id INTO v_prov1;
@@ -31935,10 +32016,26 @@ BEGIN
   INSERT INTO public.proveedores (organization_id, nombre, tipo, pais, rfc, contacto, email, telefono, moneda_preferida, categoria)
   VALUES (v_org, 'Ocean Forwarders China Ltd.', 'Agente de Carga'::tipo_proveedor, 'China', '', 'Lily Chen', 'lily@oceanfwd.cn', '+86 21 5500 9090', 'USD'::moneda, 'Logistico'::categoria_proveedor)
   RETURNING id INTO v_prov3;
-  INSERT INTO public.contactos_cliente (organization_id, cliente_id, nombre, email, telefono)
-  VALUES (v_org, v_cli1, 'Ana Ramírez', 'ana@imppacifico.mx', '+52 314 333 1100');
-  INSERT INTO public.contactos_cliente (organization_id, cliente_id, nombre, email, telefono)
-  VALUES (v_org, v_cli2, 'Carlos Vega', 'cvega@textilesmty.mx', '+52 81 8000 5500');
+  SELECT count(*) INTO v_matches FROM public.contactos_cliente
+   WHERE organization_id = v_org AND cliente_id = v_cli1 AND email = 'ana@imppacifico.mx';
+  IF v_matches > 1 THEN
+    RAISE EXCEPTION 'LC_SEED_DEMO_IDENTIDAD_AMBIGUA: contacto demo duplicado'
+      USING ERRCODE = '23514';
+  END IF;
+  IF v_matches = 0 THEN
+    INSERT INTO public.contactos_cliente (organization_id, cliente_id, nombre, email, telefono)
+    VALUES (v_org, v_cli1, 'Ana Ramírez', 'ana@imppacifico.mx', '+52 314 333 1100');
+  END IF;
+  SELECT count(*) INTO v_matches FROM public.contactos_cliente
+   WHERE organization_id = v_org AND cliente_id = v_cli2 AND email = 'cvega@textilesmty.mx';
+  IF v_matches > 1 THEN
+    RAISE EXCEPTION 'LC_SEED_DEMO_IDENTIDAD_AMBIGUA: contacto demo duplicado'
+      USING ERRCODE = '23514';
+  END IF;
+  IF v_matches = 0 THEN
+    INSERT INTO public.contactos_cliente (organization_id, cliente_id, nombre, email, telefono)
+    VALUES (v_org, v_cli2, 'Carlos Vega', 'cvega@textilesmty.mx', '+52 81 8000 5500');
+  END IF;
   INSERT INTO public.embarques (
     id, organization_id, expediente, cliente_id, cliente_nombre, modo, tipo, shipper, consignatario,
     descripcion_mercancia, peso_kg, volumen_m3, piezas, incoterm, estado, operador,
@@ -32032,7 +32129,7 @@ BEGIN
     v_org, v_prov1, 'Agente Aduanal Pacífico', v_emb2,
     'AAP-2026-0458', 'AAP890101XX1', CURRENT_DATE - 40, CURRENT_DATE - 10, 30,
     'MXN'::moneda, 30000, 4800, 34800, 'Vigente'::estado_proveedor_factura,
-    'aprobada'::estado_aprobacion_factura_proveedor, now(),
+    'pendiente'::estado_aprobacion_factura_proveedor, NULL,
     v_cat, 'manual', 'Honorarios y maniobras aduanales DEMO-2026-002'
   ) RETURNING id INTO v_pf1;
   INSERT INTO public.proveedor_facturas_conceptos
@@ -32040,6 +32137,9 @@ BEGIN
   VALUES
     (v_org, v_pf1, 'Honorarios agenciamiento aduanal', 1, 22000),
     (v_org, v_pf1, 'Maniobras en puerto', 1, 8000);
+  -- Aprobar sólo después de conceptos; el RPC valida actor, tenant y versión.
+  PERFORM public.aprobar_factura_proveedor(v_pf1, true, NULL,
+    (SELECT updated_at FROM public.proveedor_facturas WHERE id = v_pf1 AND organization_id = v_org));
   -- (2) VIGENTE
   INSERT INTO public.proveedor_facturas (
     organization_id, proveedor_id, proveedor_nombre, embarque_id,
@@ -32050,13 +32150,16 @@ BEGIN
     v_org, v_prov2, 'Transportes Terrestres del Norte', v_emb1,
     'TTN-88213', 'TTN010101AA2', CURRENT_DATE - 5, CURRENT_DATE + 25, 30,
     'MXN'::moneda, 12500, 2000, 14500, 'Vigente'::estado_proveedor_factura,
-    'aprobada'::estado_aprobacion_factura_proveedor, now(),
+    'pendiente'::estado_aprobacion_factura_proveedor, NULL,
     v_cat, 'manual', 'Flete Manzanillo-CDMX DEMO-2026-001'
   ) RETURNING id INTO v_pf2;
   INSERT INTO public.proveedor_facturas_conceptos
     (organization_id, proveedor_factura_id, descripcion, cantidad, monto)
   VALUES
     (v_org, v_pf2, 'Flete terrestre contenedor 40HC', 1, 12500);
+  -- Aprobar sólo después de conceptos; el RPC valida actor, tenant y versión.
+  PERFORM public.aprobar_factura_proveedor(v_pf2, true, NULL,
+    (SELECT updated_at FROM public.proveedor_facturas WHERE id = v_pf2 AND organization_id = v_org));
   -- (3) PARCIALMENTE PAGADA
   INSERT INTO public.proveedor_facturas (
     organization_id, proveedor_id, proveedor_nombre, embarque_id,
@@ -32067,7 +32170,7 @@ BEGIN
     v_org, v_prov3, 'Ocean Forwarders China Ltd.', v_emb4,
     'OFC-INV-7720', CURRENT_DATE - 20, CURRENT_DATE + 25, 45,
     'MXN'::moneda, 50000, 8000, 58000, 'Vigente'::estado_proveedor_factura,
-    'aprobada'::estado_aprobacion_factura_proveedor, now(),
+    'pendiente'::estado_aprobacion_factura_proveedor, NULL,
     v_cat, 'manual', 'Flete marítimo + THC DEMO-2026-004'
   ) RETURNING id INTO v_pf3;
   INSERT INTO public.proveedor_facturas_conceptos
@@ -32075,6 +32178,9 @@ BEGIN
   VALUES
     (v_org, v_pf3, 'Flete marítimo CNTAO-MXZLO', 1, 46000),
     (v_org, v_pf3, 'THC origen/destino', 1, 4000);
+  -- Aprobar sólo después de conceptos; el RPC valida actor, tenant y versión.
+  PERFORM public.aprobar_factura_proveedor(v_pf3, true, NULL,
+    (SELECT updated_at FROM public.proveedor_facturas WHERE id = v_pf3 AND organization_id = v_org));
   INSERT INTO public.pagos_proveedor (
     organization_id, proveedor_factura_id, fecha_pago, monto, moneda,
     metodo_pago, referencia, notas
@@ -32088,7 +32194,7 @@ CREATE FUNCTION public.seed_demo_organization_guarded(p_skip_ms bigint DEFAULT 6
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
     SET row_security TO 'off'
-    AS $$
+    AS $_$
 DECLARE
   v_ultimo timestamptz;
   v_org constant uuid := 'de100000-0000-0000-0000-000000000001'::uuid;
@@ -32336,7 +32442,7 @@ BEGIN
   ON CONFLICT (id) DO UPDATE SET last_seeded_at = excluded.last_seeded_at;
   RETURN true;
 END;
-$$;
+$_$;
 CREATE FUNCTION public.seed_presupuesto_categorias(p_organization_id uuid) RETURNS void
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
@@ -35957,6 +36063,7 @@ CREATE TABLE public.costeo_cargos_fob_agente (
     created_at timestamp with time zone DEFAULT now() NOT NULL,
     updated_at timestamp with time zone DEFAULT now() NOT NULL,
     deleted_at timestamp with time zone,
+    aplica_iva boolean DEFAULT false NOT NULL,
     CONSTRAINT costeo_cargos_fob_agente_moneda_check CHECK ((moneda = ANY (ARRAY['USD'::text, 'MXN'::text, 'EUR'::text]))),
     CONSTRAINT costeo_cargos_fob_agente_monto_check CHECK ((monto >= (0)::numeric))
 );
@@ -35972,6 +36079,7 @@ CREATE TABLE public.costeo_cargos_locales_naviera (
     created_at timestamp with time zone DEFAULT now() NOT NULL,
     updated_at timestamp with time zone DEFAULT now() NOT NULL,
     deleted_at timestamp with time zone,
+    aplica_iva boolean DEFAULT false NOT NULL,
     CONSTRAINT costeo_cargos_locales_naviera_moneda_check CHECK ((moneda = ANY (ARRAY['USD'::text, 'MXN'::text, 'EUR'::text]))),
     CONSTRAINT costeo_cargos_locales_naviera_monto_check CHECK ((monto >= (0)::numeric))
 );
@@ -38462,6 +38570,7 @@ CREATE TRIGGER trg_cierre_financiero BEFORE INSERT OR DELETE OR UPDATE ON public
 CREATE TRIGGER trg_cierre_financiero BEFORE INSERT OR DELETE OR UPDATE ON public.pagos_proveedor FOR EACH ROW EXECUTE FUNCTION public.tg_bloquear_financiero_embarque_cerrado();
 CREATE TRIGGER trg_cierre_financiero BEFORE INSERT OR DELETE OR UPDATE ON public.proveedor_facturas FOR EACH ROW EXECUTE FUNCTION public.tg_bloquear_financiero_embarque_cerrado();
 CREATE TRIGGER trg_cliente_documentos_updated_at BEFORE UPDATE ON public.cliente_documentos FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
+CREATE TRIGGER trg_clientes_crm_empresa AFTER INSERT ON public.clientes FOR EACH ROW WHEN ((new.deleted_at IS NULL)) EXECUTE FUNCTION public._crm_empresa_desde_cliente();
 CREATE TRIGGER trg_clientes_email_unico BEFORE INSERT OR UPDATE OF email ON public.clientes FOR EACH ROW EXECUTE FUNCTION public._assert_email_unico_org();
 CREATE TRIGGER trg_clientes_nombre_mayusculas BEFORE INSERT OR UPDATE OF nombre ON public.clientes FOR EACH ROW EXECUTE FUNCTION public._normalizar_razon_social();
 CREATE TRIGGER trg_clientes_normaliza_campos BEFORE INSERT OR UPDATE OF nombre, email, rfc ON public.clientes FOR EACH ROW EXECUTE FUNCTION public.trg_clientes_normaliza_campos();
@@ -38514,6 +38623,8 @@ CREATE TRIGGER trg_crm_criterio_etapa_misma_org BEFORE INSERT OR UPDATE OF etapa
 CREATE TRIGGER trg_crm_cumplimiento_misma_org BEFORE INSERT OR UPDATE OF oportunidad_id, criterio_id, organization_id ON public.crm_oportunidad_criterios FOR EACH ROW EXECUTE FUNCTION public._crm_cumplimiento_misma_org();
 CREATE TRIGGER trg_crm_cuotas_updated_at BEFORE UPDATE ON public.crm_cuotas_vendedor FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
 CREATE TRIGGER trg_crm_empresa_estado_por_cliente BEFORE INSERT OR UPDATE OF cliente_id ON public.crm_empresas FOR EACH ROW EXECUTE FUNCTION public._crm_empresa_estado_por_cliente();
+CREATE TRIGGER trg_crm_empresa_no_borrar_cliente BEFORE UPDATE OF deleted_at ON public.crm_empresas FOR EACH ROW EXECUTE FUNCTION public._crm_empresa_no_borrar_cliente();
+CREATE TRIGGER trg_crm_empresa_no_delete_fisico BEFORE DELETE ON public.crm_empresas FOR EACH ROW EXECUTE FUNCTION public._crm_empresa_no_delete_fisico();
 CREATE TRIGGER trg_crm_etapa_criterios_updated_at BEFORE UPDATE ON public.crm_etapa_criterios FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
 CREATE TRIGGER trg_crm_etapa_motivo_misma_org BEFORE INSERT OR UPDATE OF etapa_id, motivo_perdida_id, organization_id ON public.crm_oportunidades FOR EACH ROW EXECUTE FUNCTION public._crm_oportunidad_etapa_motivo_misma_org();
 CREATE TRIGGER trg_crm_etapas_updated_at BEFORE UPDATE ON public.crm_etapas_pipeline FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
@@ -39390,6 +39501,9 @@ CREATE POLICY "Fiscal write refacturaciones" ON public.refacturaciones FOR INSER
   WHERE ((om.user_id = ( SELECT auth.uid() AS uid)) AND (om.organization_id = refacturaciones.organization_id) AND (om.role = ANY (ARRAY['admin_org'::public.app_role, 'admin'::public.app_role, 'contador'::public.app_role, 'auxiliar_contable'::public.app_role]))))))));
 CREATE POLICY "Gerencia administra metas" ON public.crm_metas_actividad TO authenticated USING ((((organization_id = ( SELECT public.current_user_org_id() AS current_user_org_id)) OR ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'super_admin'::public.app_role) AS has_role)) AND (( SELECT public.has_role(( SELECT auth.uid() AS uid), 'admin'::public.app_role) AS has_role) OR ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'admin_org'::public.app_role) AS has_role) OR ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'gerente_comercial'::public.app_role) AS has_role) OR ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'super_admin'::public.app_role) AS has_role)))) WITH CHECK ((((organization_id = ( SELECT public.current_user_org_id() AS current_user_org_id)) OR ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'super_admin'::public.app_role) AS has_role)) AND (( SELECT public.has_role(( SELECT auth.uid() AS uid), 'admin'::public.app_role) AS has_role) OR ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'admin_org'::public.app_role) AS has_role) OR ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'gerente_comercial'::public.app_role) AS has_role) OR ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'super_admin'::public.app_role) AS has_role))));
 CREATE POLICY "Gerencia administra presupuesto" ON public.crm_presupuesto_mensual TO authenticated USING ((((organization_id = ( SELECT public.current_user_org_id() AS current_user_org_id)) OR ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'super_admin'::public.app_role) AS has_role)) AND (( SELECT public.has_role(( SELECT auth.uid() AS uid), 'admin'::public.app_role) AS has_role) OR ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'admin_org'::public.app_role) AS has_role) OR ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'gerente_comercial'::public.app_role) AS has_role) OR ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'super_admin'::public.app_role) AS has_role)))) WITH CHECK ((((organization_id = ( SELECT public.current_user_org_id() AS current_user_org_id)) OR ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'super_admin'::public.app_role) AS has_role)) AND (( SELECT public.has_role(( SELECT auth.uid() AS uid), 'admin'::public.app_role) AS has_role) OR ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'admin_org'::public.app_role) AS has_role) OR ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'gerente_comercial'::public.app_role) AS has_role) OR ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'super_admin'::public.app_role) AS has_role))));
+CREATE POLICY "Gerente operaciones y admins dan de alta navieras" ON public.navieras FOR INSERT TO authenticated WITH CHECK ((( SELECT public.has_role(( SELECT auth.uid() AS uid), 'admin'::public.app_role) AS has_role) OR ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'gerente_operaciones'::public.app_role) AS has_role)));
+CREATE POLICY "Gerente operaciones y admins dan de alta puertos" ON public.puertos FOR INSERT TO authenticated WITH CHECK ((( SELECT public.has_role(( SELECT auth.uid() AS uid), 'admin'::public.app_role) AS has_role) OR ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'gerente_operaciones'::public.app_role) AS has_role)));
+CREATE POLICY "Gerente operaciones y admins dan de alta tipos_contenedor" ON public.tipos_contenedor FOR INSERT TO authenticated WITH CHECK ((( SELECT public.has_role(( SELECT auth.uid() AS uid), 'admin'::public.app_role) AS has_role) OR ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'gerente_operaciones'::public.app_role) AS has_role)));
 CREATE POLICY "Gestion leads in-org insert crm_leads" ON public.crm_leads FOR INSERT TO authenticated WITH CHECK ((public.is_org_member(organization_id) AND public.rls_tenant_scope_ok(organization_id) AND public.has_any_role_in_org(( SELECT auth.uid() AS uid), ARRAY['admin'::public.app_role, 'gerente_comercial'::public.app_role], organization_id)));
 CREATE POLICY "Gestion leads in-org select crm_leads" ON public.crm_leads FOR SELECT TO authenticated USING ((public.is_org_member(organization_id) AND public.rls_tenant_scope_ok(organization_id) AND public.has_any_role_in_org(( SELECT auth.uid() AS uid), ARRAY['admin'::public.app_role, 'gerente_comercial'::public.app_role], organization_id)));
 CREATE POLICY "Gestion leads in-org update crm_leads" ON public.crm_leads FOR UPDATE TO authenticated USING ((public.is_org_member(organization_id) AND public.rls_tenant_scope_ok(organization_id) AND public.has_any_role_in_org(( SELECT auth.uid() AS uid), ARRAY['admin'::public.app_role, 'gerente_comercial'::public.app_role], organization_id))) WITH CHECK ((public.is_org_member(organization_id) AND public.rls_tenant_scope_ok(organization_id) AND public.has_any_role_in_org(( SELECT auth.uid() AS uid), ARRAY['admin'::public.app_role, 'gerente_comercial'::public.app_role], organization_id)));
@@ -40158,8 +40272,12 @@ REVOKE ALL ON FUNCTION public._crm_criterio_etapa_misma_org() FROM PUBLIC;
 GRANT ALL ON FUNCTION public._crm_criterio_etapa_misma_org() TO service_role;
 REVOKE ALL ON FUNCTION public._crm_cumplimiento_misma_org() FROM PUBLIC;
 GRANT ALL ON FUNCTION public._crm_cumplimiento_misma_org() TO service_role;
+REVOKE ALL ON FUNCTION public._crm_empresa_desde_cliente() FROM PUBLIC;
+GRANT ALL ON FUNCTION public._crm_empresa_desde_cliente() TO service_role;
 REVOKE ALL ON FUNCTION public._crm_empresa_estado_por_cliente() FROM PUBLIC;
 GRANT ALL ON FUNCTION public._crm_empresa_estado_por_cliente() TO service_role;
+REVOKE ALL ON FUNCTION public._crm_empresa_no_borrar_cliente() FROM PUBLIC;
+REVOKE ALL ON FUNCTION public._crm_empresa_no_delete_fisico() FROM PUBLIC;
 REVOKE ALL ON FUNCTION public._crm_es_pricing(p_org uuid) FROM PUBLIC;
 GRANT ALL ON FUNCTION public._crm_es_pricing(p_org uuid) TO authenticated;
 GRANT ALL ON FUNCTION public._crm_es_pricing(p_org uuid) TO service_role;
