@@ -28,6 +28,8 @@ jobs:
       - name: Offline laboratory guard tests
         run: python3 -B -m unittest discover -s scripts/ci/demo-wire-lab -p 'test_*.py' -v
       - name: Offline physical wire state machine through complete catalog
+        env:
+          GITHUB_SHA: ${{ github.event.pull_request.head.sha }}
         run: |
           node scripts/ci/test-catalog.mjs --output reports/test-inventory.json
           node scripts/ci/test-catalog.mjs --run node-demo-wire-lab reports/test-inventory.json
