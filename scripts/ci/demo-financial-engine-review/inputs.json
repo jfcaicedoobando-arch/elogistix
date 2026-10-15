@@ -1,0 +1,207 @@
+[
+  {
+    "path": "catalog-status.json",
+    "bytes": 656,
+    "sha256": "dc27a39f572e68a3b4b56f98bbd4d0810a64ad8091ec481a01516990641df8ed"
+  },
+  {
+    "path": "CATALOG_REVIEW.md",
+    "bytes": 4469,
+    "sha256": "a8904c162af216ffc3e015f421d6afd864b4e1d88bd45dd78fb40d7b178c04ff"
+  },
+  {
+    "path": "dependency_report.json",
+    "bytes": 473410,
+    "sha256": "25e617fb1d5f6719c0c5cee772f8be11a7d8696776a26ed2c27f11388aef0d6e"
+  },
+  {
+    "path": "evidence/blocked-result.json",
+    "bytes": 784,
+    "sha256": "350539c93db0b27af0c28e3d3a1a184e7fa39fddcf77865143be4c715d291fb9"
+  },
+  {
+    "path": "evidence/local-status.json",
+    "bytes": 1528,
+    "sha256": "d53be8bc2ce45becdada843e48fef3e39d7c8062f08c2b0a9dc4930c30af68e3"
+  },
+  {
+    "path": "evidence/transfer-status.json",
+    "bytes": 830,
+    "sha256": "c3b52d04a86f81db96f5a794887f61c11c413c341ff3408bcfbcb6fcc1c5c1df"
+  },
+  {
+    "path": "extract_catalog.py",
+    "bytes": 16514,
+    "sha256": "f43ecd420e03caf3ab9fdf47dcc0047d16a28bf94d02a78929885e20bb6714f5"
+  },
+  {
+    "path": "offline_checks.py",
+    "bytes": 2224,
+    "sha256": "7d8093535498e6884ed3716892c29708686b5bddf0edd2bed503df950ed42973"
+  },
+  {
+    "path": "README.md",
+    "bytes": 5328,
+    "sha256": "854017d2781c474bbfab23b1c252f81d11479322151fafbec2deeb9c7846fcee"
+  },
+  {
+    "path": "run_ci.py",
+    "bytes": 17211,
+    "sha256": "cbf4380e86709f8d1ae9d018085c5b432215c5fe0ca2647ac2ac22202ccbb4c5"
+  },
+  {
+    "path": "source-map.json",
+    "bytes": 6921,
+    "sha256": "b7318d426389c4da99f117c76385ef6529ba437e9c08a2387a280ac26d331cd0"
+  },
+  {
+    "path": "source-review.json",
+    "bytes": 3247,
+    "sha256": "c8c0030454d5e7d88474b40bd3c2dda880f3d03925ed2241cec2781f4f4749d8"
+  },
+  {
+    "path": "sql/assertions.sql",
+    "bytes": 2383,
+    "sha256": "5d550dc807516b014d4735aa3827cfb8b2e90f8f86b9acef02f8c7aba81e8fd9"
+  },
+  {
+    "path": "sql/canonical-fixture.sql",
+    "bytes": 280,
+    "sha256": "7d8b9844a1a44bf8a5fbd722db34c84b2993f133c78690fd45fe7906e5d18c54"
+  },
+  {
+    "path": "sql/catalog.sql",
+    "bytes": 226,
+    "sha256": "db39ef0090a07f5d1fda8d4a644285a5e4888ea629a6e94e678778a08686bdd7"
+  },
+  {
+    "path": "sql/checkpoint.sql",
+    "bytes": 43,
+    "sha256": "aee4e2d5f2214f8a1423ba976598f9fad85e1fb1bfc00fbcf5aa8f8d1687b303"
+  },
+  {
+    "path": "sql/event.sql",
+    "bytes": 38,
+    "sha256": "50894cf008e12fad8117d433e8a0c7303c9f787608700278a75541c670c7ec24"
+  },
+  {
+    "path": "sql/execution_receipt.sql",
+    "bytes": 50,
+    "sha256": "ceb91618d36f0dfe95b10442058ad637e76e105734cc1244ada0d707dfd200ac"
+  },
+  {
+    "path": "sql/fault.sql",
+    "bytes": 3060,
+    "sha256": "7b8de4ea9e07ddad56e577b8aa9c85802f6c20ed736e410e95ac980bbbe61237"
+  },
+  {
+    "path": "sql/happy.sql",
+    "bytes": 3130,
+    "sha256": "4810d007442552f855690ced27cbac7ad402fb420dbab558e5affd17cf4bffa9"
+  },
+  {
+    "path": "sql/marker.sql",
+    "bytes": 39,
+    "sha256": "29df6dc83155ff055aea45a57691ac83de822b70b609211bedc21073d407546c"
+  },
+  {
+    "path": "sql/producer-and-context.sql",
+    "bytes": 1864,
+    "sha256": "499331c4c7ac3d67111c836030af58e6e3cabeed67a36881a54fe7c2e58e7914"
+  },
+  {
+    "path": "sql/receipt.sql",
+    "bytes": 40,
+    "sha256": "e3c353703c326a6b949b30f9b69695039e87dd39658e7d2a2d58d6c75fa61f70"
+  },
+  {
+    "path": "sql/setup.sql",
+    "bytes": 1806,
+    "sha256": "ff1fbeae318144cbb7fe9c4418aa0a38d00b8d5f9ba1d25e6550c69d884f4174"
+  },
+  {
+    "path": "test_extract_catalog.py",
+    "bytes": 5057,
+    "sha256": "e89e1e1ca88c75ac4d31d1d1dced5a298078b0c5fe0c555e38eb3f8b2037fa76"
+  },
+  {
+    "path": "test_isolation.py",
+    "bytes": 20362,
+    "sha256": "4a1c390179ca11084cad6f997385f1387dbc719052aca8ce58e14c3c9b7ecd63"
+  },
+  {
+    "path": "upstream/authentic/bridge.sql",
+    "bytes": 8362,
+    "sha256": "69bbcd2ec825953ca4fda822ec5fde143f1f70a5120f372ee3c211e96523c5b2"
+  },
+  {
+    "path": "upstream/authentic/core-owner-fixture.sql",
+    "bytes": 282,
+    "sha256": "a850f7d409b721c317001947daf6633fa3d3f0ca4680eac6670e193eed82a563"
+  },
+  {
+    "path": "upstream/authentic/identity.sql",
+    "bytes": 16101,
+    "sha256": "666a466b0b8189ef3cec661f489495b7059cfd9bbcb2492d9d221b693ea3be7f"
+  },
+  {
+    "path": "upstream/authentic/producer.sql",
+    "bytes": 19028,
+    "sha256": "f0a14f683ee524527ed3b7f29305bc793f7f9e3d5581b4332da72f8fb8bb55a6"
+  },
+  {
+    "path": "upstream/flow/issuer/10-issuer.sql",
+    "bytes": 9929,
+    "sha256": "8c739036ea948163d83617d6f59068f5b414a641c251c7ac4115be82b3d0a81e"
+  },
+  {
+    "path": "upstream/flow/issuer/11-atomic-entry.sql",
+    "bytes": 6570,
+    "sha256": "a2093b45e37c922f0505e496581381b4b5a3d105d3f0e583d694ef92e9c47cb3"
+  },
+  {
+    "path": "upstream/flow/issuer/12-approval-main.sql",
+    "bytes": 10603,
+    "sha256": "ee528767111b8352196f2d40629342b00bbcceedc4b5f2ecbdadc88c7477e583"
+  },
+  {
+    "path": "upstream/flow/issuer/13-readonly-verifiers.sql",
+    "bytes": 7742,
+    "sha256": "15ff74c47b4b33840fceb5ec918f25749f9c9c4ef761c61a976b438a60f81dcd"
+  },
+  {
+    "path": "upstream/flow/issuer/14-reconcile.sql",
+    "bytes": 5461,
+    "sha256": "f2345eb19c532a0cce48042bc8afa6f27d58ff60796b7c6dc930be44f0aa50a1"
+  },
+  {
+    "path": "upstream/flow/issuer/15-rpc-boundary.sql",
+    "bytes": 4236,
+    "sha256": "9656003b716ea2c60ec90b7a4de9dc1b21743c46a0ef1199f2522f9831979799"
+  },
+  {
+    "path": "upstream/flow/issuer/16-owner-registry.sql",
+    "bytes": 11333,
+    "sha256": "a74d69ed6d19356ba36fe27d7070a496e99c3ef5cec7a030c3b96b609a64463b"
+  },
+  {
+    "path": "upstream/flow/sql/01-private.sql",
+    "bytes": 16972,
+    "sha256": "e78412eb7e0efe59749c7f7077b8955df5752a4a8d911a02822ddf56c57dd9a2"
+  },
+  {
+    "path": "upstream/flow/sql/02-manifest.sql",
+    "bytes": 2811,
+    "sha256": "be3e506d347121bba52fd4bb14ea3d5d5984bde51f720185a5054c2a63ecef63"
+  },
+  {
+    "path": "upstream/flow/sql/04-engine.sql",
+    "bytes": 28344,
+    "sha256": "44460cb9e8e4028ad02e3eb2485ca451ab9489208f84b9c2a85917d45a642f1d"
+  },
+  {
+    "path": "upstream/flow/sql/06-simulation-guards.sql",
+    "bytes": 2312,
+    "sha256": "44f88ad264f1c2e0bd89577fe1dcdd24e3b11a017b78c4b26ad911147e7012a3"
+  }
+]

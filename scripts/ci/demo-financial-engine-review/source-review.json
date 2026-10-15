@@ -1,0 +1,60 @@
+{
+  "repository": "jfcaicedoobando-arch/elogistix",
+  "commit": "5d1f00d27628100a58ab166367a067ea90068b84",
+  "baseline": {
+    "path": "supabase/schema/baseline.sql",
+    "git_blob_sha1": "0d45d45881096808d8dcf1ca3831559d8759f477",
+    "sha256": "a8be935dd3839a7cc0bb94873ef5dd84c452d1f7405d7b050a995dadc514d0d2",
+    "bytes": 2340163,
+    "last_changed_commit": "bb948408f291a994d1d452001b81cf0180296ad4",
+    "last_changed_at": "2026-10-15T05:59:11Z",
+    "retrieval": "GitHub connector fetch_blob; fetch_file Contents returned empty for this large file"
+  },
+  "forward_review": {
+    "comparison": "bb948408f291a994d1d452001b81cf0180296ad4...5d1f00d27628100a58ab166367a067ea90068b84",
+    "status": "ahead",
+    "ahead_by": 35,
+    "behind_by": 0,
+    "only_changed_supabase_migration": {
+      "path": "supabase/migrations/20261015170857_seed_r3_stopped_admission.sql",
+      "git_blob_sha1": "aba179247720104d1ddb575ce30878a527ba6dfd",
+      "bytes": 51434,
+      "reviewed_definition_targets": [
+        "public._seed_demo_limpiar_financiero",
+        "public.seed_demo_organization_core",
+        "public.seed_demo_organization",
+        "public.seed_demo_organization_guarded"
+      ],
+      "scope": "Stopped demo definitions and metadata-preserving admission checks; no financial-function body changed",
+      "execution": "NOT_RUN",
+      "included_in_extracted_catalog": false
+    },
+    "note": "This source review does not replay a migration or certify any deployed database. Drizzle 0019 mirrors the existing Contador approval change; baseline already contains its current human body."
+  },
+  "instructions": {
+    "AGENTS.md": "Read at the pinned commit. Demo remains disabled; no historical seed restoration or flag/request activation.",
+    ".agents/skills": "Absent: Contents 404 and the complete non-truncated Git tree contains no .agents entry."
+  },
+  "source_catalog_drift": [
+    {
+      "manifest_path": "docs/review/demo-flow-20261015/sql/02-manifest.sql",
+      "engine_path": "docs/review/demo-flow-20261015/sql/04-engine.sql",
+      "fixture": "ofc-parcial.payment",
+      "manifest_literals": ["Synthetic", "SYNTHETIC-PAYMENT-1", "Synthetic payment"],
+      "engine_literals": ["Transferencia", "DEMO-PAGO-001", "Pago parcial demo"],
+      "canonical_column": "public.pagos_proveedor.metodo_pago text DEFAULT 'Transferencia'::text NOT NULL",
+      "required_resolution": "Adapt only an explicitly versioned package-local manifest copy, recompute every dependent digest, and record before/after hashes. Do not edit shared review packages."
+    },
+    {
+      "paths": [
+        "docs/review/demo-financial-runtime-20261015/prepared/happy_path.sql",
+        "docs/review/demo-financial-runtime-20261015/prepared/checkpoint_rollback.sql"
+      ],
+      "conflict": "Prepared tests reject rolbypassrls, while 01-private requires owner rolsuper OR rolbypassrls.",
+      "required_resolution": "Bootstrap an explicitly labeled synthetic NOSUPERUSER BYPASSRLS owner in the disposable container, preserve the private installer guard, and adapt only laboratory assertions. This proves neither RLS nor real identity."
+    }
+  ],
+  "runtime": "NOT_RUN",
+  "full_schema_equivalence": "NOT_RUN",
+  "real_transport": "NOT_RUN"
+}

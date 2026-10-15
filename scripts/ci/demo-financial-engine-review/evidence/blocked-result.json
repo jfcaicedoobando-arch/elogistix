@@ -1,0 +1,22 @@
+{
+  "overall": "BLOCKED",
+  "financial_engine": "NOT_RUN",
+  "synthetic_auth": "NOT_RUN",
+  "synthetic_auth_scope": "SEPARATE_EXISTING_LANE",
+  "real_transport": "NOT_RUN",
+  "real_identity": "NOT_RUN",
+  "rls": "NOT_RUN",
+  "owner_fixture": "demo_financial_fixture_owner NOSUPERUSER BYPASSRLS; SYNTHETIC LAB IDENTITY",
+  "source_commit": "5d1f00d27628100a58ab166367a067ea90068b84",
+  "image": "postgres@sha256:f3bd19c606e442c3d7bdfa8002e03fe260a1023351e0ea4598032022b68dd6e3",
+  "expected_postgres_version_num": "170006",
+  "demo": "DISABLED",
+  "suites": [],
+  "cleanup_verified": false,
+  "cleanup": {
+    "verified": false,
+    "status": "NOT_RUN",
+    "container_not_created": true
+  },
+  "failure": "Canonical catalog closure incomplete: engine NOT_RUN"
+}

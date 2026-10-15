@@ -1,0 +1,17 @@
+{
+  "schema_version": 1,
+  "complete": false,
+  "canonical_closure_complete": false,
+  "fixtures_complete": false,
+  "source_commit": "5d1f00d27628100a58ab166367a067ea90068b84",
+  "status": "BLOCKED",
+  "blockers": [
+    "Library proposal transfer failed; ZIP SHA256 and TRANSFER-SHA256SUMS NOT_RUN",
+    "Lexical canonical dependency inventory requires dynamic SQL, external fixture and support-table INSERT closure review",
+    "Canonical two-tenant financial fixture and PG17.6 install/behavior have not run"
+  ],
+  "financial_engine": "NOT_RUN",
+  "synthetic_auth": "SEPARATE_PR345_EVIDENCE_ONLY",
+  "real_transport": "NOT_RUN",
+  "demo": "DISABLED"
+}

@@ -1,0 +1,57 @@
+name: Demo financial engine isolated review
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, converted_to_draft]
+    branches: [main]
+    paths:
+      - 'scripts/ci/demo-financial-engine-review/**'
+      - '.github/workflows/demo-financial-engine-review.yml'
+permissions:
+  contents: read
+concurrency:
+  group: demo-financial-engine-review-${{ github.event.pull_request.number }}
+  cancel-in-progress: false
+jobs:
+  financial-engine-lab:
+    if: github.repository == 'jfcaicedoobando-arch/elogistix' && github.event.pull_request.draft == true && github.event.pull_request.head.repo.full_name == github.repository && github.event.pull_request.head.ref == 'fix/demo-financial-engine-review-20261015'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          persist-credentials: false
+      - name: Offline parser and runner tests
+        run: python3 -B -I -m unittest discover -s scripts/ci/demo-financial-engine-review -p 'test_*.py'
+      - name: Verify copied authentic source inputs
+        run: python3 -B -I scripts/ci/demo-financial-engine-review/offline_checks.py
+      - name: Reproduce canonical source inventory without executing SQL
+        run: python3 -B -I scripts/ci/demo-financial-engine-review/extract_catalog.py --baseline supabase/schema/baseline.sql --out "$RUNNER_TEMP/financial-engine-inventory" --diagnostic
+      - name: Read canonical catalog gate
+        id: catalog
+        run: |
+          python3 -B -I - <<'PY'
+          import json, os
+          from pathlib import Path
+          gate=json.loads(Path('scripts/ci/demo-financial-engine-review/catalog-status.json').read_text())
+          ready=all(gate.get(k) is True for k in ('complete','canonical_closure_complete','fixtures_complete'))
+          with open(os.environ['GITHUB_OUTPUT'],'a') as f:
+              print('ready='+str(ready).lower(),file=f)
+          PY
+      - name: Acquire pinned image before isolated execution
+        if: steps.catalog.outputs.ready == 'true'
+        run: docker --host unix:///var/run/docker.sock pull postgres@sha256:f3bd19c606e442c3d7bdfa8002e03fe260a1023351e0ea4598032022b68dd6e3
+      - name: Require canonical closure, then execute disposable PostgreSQL 17.6
+        env:
+          DEMO_ACCEPTANCE_ISOLATED: '1'
+        run: python3 -B -I scripts/ci/demo-financial-engine-review/run_ci.py --execute-disposable --output "$RUNNER_TEMP/financial-engine-evidence"
+      - name: Preserve separated evidence including BLOCKED status
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: demo-financial-engine-review-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            ${{ runner.temp }}/financial-engine-evidence
+            ${{ runner.temp }}/financial-engine-inventory
+          if-no-files-found: error
+          retention-days: 14

@@ -1,0 +1,153 @@
+{
+  "source_commit": "5d1f00d27628100a58ab166367a067ea90068b84",
+  "files": [
+    {
+      "path": "docs/review/demo-flow-20261015/sql/01-private.sql",
+      "destination": "upstream/flow/sql/01-private.sql",
+      "blob_sha": "23093a265a53287aa65a153922df3085c90220cb",
+      "adaptations": [],
+      "bytes": 16972,
+      "sha256": "e78412eb7e0efe59749c7f7077b8955df5752a4a8d911a02822ddf56c57dd9a2",
+      "packaged_sha256": "e78412eb7e0efe59749c7f7077b8955df5752a4a8d911a02822ddf56c57dd9a2"
+    },
+    {
+      "path": "docs/review/demo-flow-20261015/sql/02-manifest.sql",
+      "destination": "upstream/flow/sql/02-manifest.sql",
+      "blob_sha": "8bea4e402aafe8e506a731ed4c0cce713d298fb1",
+      "adaptations": [
+        {
+          "old": "\"method\":\"Synthetic\"",
+          "new": "\"method\":\"Transferencia\""
+        },
+        {
+          "old": "\"reference\":\"SYNTHETIC-PAYMENT-1\"",
+          "new": "\"reference\":\"DEMO-PAGO-001\""
+        },
+        {
+          "old": "\"notes\":\"Synthetic payment\"",
+          "new": "\"notes\":\"Pago parcial demo\""
+        }
+      ],
+      "bytes": 2813,
+      "sha256": "5d49c6dabc0a39b2a1ba5d5e1c0f19a2112d100147d9f706ddd2d9e5093790d0",
+      "packaged_sha256": "be3e506d347121bba52fd4bb14ea3d5d5984bde51f720185a5054c2a63ecef63"
+    },
+    {
+      "path": "docs/review/demo-flow-20261015/sql/04-engine.sql",
+      "destination": "upstream/flow/sql/04-engine.sql",
+      "blob_sha": "5b06190de1af981d07a28b047cd1bcaa645ca5cc",
+      "adaptations": [],
+      "bytes": 28344,
+      "sha256": "44460cb9e8e4028ad02e3eb2485ca451ab9489208f84b9c2a85917d45a642f1d",
+      "packaged_sha256": "44460cb9e8e4028ad02e3eb2485ca451ab9489208f84b9c2a85917d45a642f1d"
+    },
+    {
+      "path": "docs/review/demo-flow-20261015/sql/06-simulation-guards.sql",
+      "destination": "upstream/flow/sql/06-simulation-guards.sql",
+      "blob_sha": "7aa37a61f25365bbc722c8bca06a79bc0d60c603",
+      "adaptations": [],
+      "bytes": 2312,
+      "sha256": "44f88ad264f1c2e0bd89577fe1dcdd24e3b11a017b78c4b26ad911147e7012a3",
+      "packaged_sha256": "44f88ad264f1c2e0bd89577fe1dcdd24e3b11a017b78c4b26ad911147e7012a3"
+    },
+    {
+      "path": "docs/review/demo-flow-20261015/issuer/10-issuer.sql",
+      "destination": "upstream/flow/issuer/10-issuer.sql",
+      "blob_sha": "44bbf7f72807efb9a33516ea522d8d0f037b6505",
+      "adaptations": [],
+      "bytes": 9929,
+      "sha256": "8c739036ea948163d83617d6f59068f5b414a641c251c7ac4115be82b3d0a81e",
+      "packaged_sha256": "8c739036ea948163d83617d6f59068f5b414a641c251c7ac4115be82b3d0a81e"
+    },
+    {
+      "path": "docs/review/demo-flow-20261015/issuer/11-atomic-entry.sql",
+      "destination": "upstream/flow/issuer/11-atomic-entry.sql",
+      "blob_sha": "42ac0a5a263a9b3414657c0146c7bf6d09202332",
+      "adaptations": [],
+      "bytes": 6570,
+      "sha256": "a2093b45e37c922f0505e496581381b4b5a3d105d3f0e583d694ef92e9c47cb3",
+      "packaged_sha256": "a2093b45e37c922f0505e496581381b4b5a3d105d3f0e583d694ef92e9c47cb3"
+    },
+    {
+      "path": "docs/review/demo-flow-20261015/issuer/12-approval-main.sql",
+      "destination": "upstream/flow/issuer/12-approval-main.sql",
+      "blob_sha": "da04314e839476197c05f7b9f958170c77655673",
+      "adaptations": [],
+      "bytes": 10603,
+      "sha256": "ee528767111b8352196f2d40629342b00bbcceedc4b5f2ecbdadc88c7477e583",
+      "packaged_sha256": "ee528767111b8352196f2d40629342b00bbcceedc4b5f2ecbdadc88c7477e583"
+    },
+    {
+      "path": "docs/review/demo-flow-20261015/issuer/13-readonly-verifiers.sql",
+      "destination": "upstream/flow/issuer/13-readonly-verifiers.sql",
+      "blob_sha": "ebc1ca7ea87d6aa082b6619fccc4af7a1b794004",
+      "adaptations": [],
+      "bytes": 7742,
+      "sha256": "15ff74c47b4b33840fceb5ec918f25749f9c9c4ef761c61a976b438a60f81dcd",
+      "packaged_sha256": "15ff74c47b4b33840fceb5ec918f25749f9c9c4ef761c61a976b438a60f81dcd"
+    },
+    {
+      "path": "docs/review/demo-flow-20261015/issuer/14-reconcile.sql",
+      "destination": "upstream/flow/issuer/14-reconcile.sql",
+      "blob_sha": "213684eb0d1cc54c756c15700a6e6e83fffa5bf8",
+      "adaptations": [],
+      "bytes": 5461,
+      "sha256": "f2345eb19c532a0cce48042bc8afa6f27d58ff60796b7c6dc930be44f0aa50a1",
+      "packaged_sha256": "f2345eb19c532a0cce48042bc8afa6f27d58ff60796b7c6dc930be44f0aa50a1"
+    },
+    {
+      "path": "docs/review/demo-flow-20261015/issuer/15-rpc-boundary.sql",
+      "destination": "upstream/flow/issuer/15-rpc-boundary.sql",
+      "blob_sha": "749fd6abf87b56530aedfc2ddde44d008bcb805c",
+      "adaptations": [],
+      "bytes": 4236,
+      "sha256": "9656003b716ea2c60ec90b7a4de9dc1b21743c46a0ef1199f2522f9831979799",
+      "packaged_sha256": "9656003b716ea2c60ec90b7a4de9dc1b21743c46a0ef1199f2522f9831979799"
+    },
+    {
+      "path": "docs/review/demo-flow-20261015/issuer/16-owner-registry.sql",
+      "destination": "upstream/flow/issuer/16-owner-registry.sql",
+      "blob_sha": "7b8060d3669e7c71cf0cb8f828a4ad314c8f1254",
+      "adaptations": [],
+      "bytes": 11333,
+      "sha256": "a74d69ed6d19356ba36fe27d7070a496e99c3ef5cec7a030c3b96b609a64463b",
+      "packaged_sha256": "a74d69ed6d19356ba36fe27d7070a496e99c3ef5cec7a030c3b96b609a64463b"
+    },
+    {
+      "path": "scripts/ci/demo-authentic-review/sql/core-owner-fixture.sql",
+      "destination": "upstream/authentic/core-owner-fixture.sql",
+      "blob_sha": "633f4a06b35990bcef684416df269d7d5a8be31f",
+      "adaptations": [],
+      "bytes": 282,
+      "sha256": "a850f7d409b721c317001947daf6633fa3d3f0ca4680eac6670e193eed82a563",
+      "packaged_sha256": "a850f7d409b721c317001947daf6633fa3d3f0ca4680eac6670e193eed82a563"
+    },
+    {
+      "path": "scripts/ci/demo-authentic-review/sql/identity.sql",
+      "destination": "upstream/authentic/identity.sql",
+      "blob_sha": "8d166a8ded732de4861bcad2f5ae7f713a3d5cf7",
+      "adaptations": [],
+      "bytes": 16101,
+      "sha256": "666a466b0b8189ef3cec661f489495b7059cfd9bbcb2492d9d221b693ea3be7f",
+      "packaged_sha256": "666a466b0b8189ef3cec661f489495b7059cfd9bbcb2492d9d221b693ea3be7f"
+    },
+    {
+      "path": "scripts/ci/demo-authentic-review/sql/bridge.sql",
+      "destination": "upstream/authentic/bridge.sql",
+      "blob_sha": "9728b864af8a9cb7bc6eebaf61e750e068e3da75",
+      "adaptations": [],
+      "bytes": 8362,
+      "sha256": "69bbcd2ec825953ca4fda822ec5fde143f1f70a5120f372ee3c211e96523c5b2",
+      "packaged_sha256": "69bbcd2ec825953ca4fda822ec5fde143f1f70a5120f372ee3c211e96523c5b2"
+    },
+    {
+      "path": "scripts/ci/demo-authentic-review/sql/producer.sql",
+      "destination": "upstream/authentic/producer.sql",
+      "blob_sha": "0eef8bcef4cf4eec32315bdd2e44b697f2d119be",
+      "adaptations": [],
+      "bytes": 19028,
+      "sha256": "f0a14f683ee524527ed3b7f29305bc793f7f9e3d5581b4332da72f8fb8bb55a6",
+      "packaged_sha256": "f0a14f683ee524527ed3b7f29305bc793f7f9e3d5581b4332da72f8fb8bb55a6"
+    }
+  ]
+}

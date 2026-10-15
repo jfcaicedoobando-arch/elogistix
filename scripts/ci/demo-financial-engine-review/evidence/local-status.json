@@ -1,0 +1,48 @@
+{
+  "offline_tests": {
+    "status": "PASS",
+    "count": 32,
+    "groups": {
+      "extractor": 9,
+      "runner_mocked_isolation": 23
+    },
+    "real_postgresql": false
+  },
+  "canonical_source": {
+    "status": "PASS",
+    "bytes": 2340163,
+    "sha256": "a8be935dd3839a7cc0bb94873ef5dd84c452d1f7405d7b050a995dadc514d0d2",
+    "git_blob": "0d45d45881096808d8dcf1ca3831559d8759f477"
+  },
+  "financial_engine": "NOT_RUN",
+  "canonical_closure": "BLOCKED",
+  "synthetic_human_auth": {
+    "status": "NOT_RERUN",
+    "reference": "PR345 separate synthetic helper evidence"
+  },
+  "real_transport": "NOT_RUN",
+  "rls_and_real_identity": "NOT_RUN",
+  "demo": "DISABLED",
+  "local_executor": {
+    "filesystem_read_write": "PASS",
+    "direct_clone": "FAIL: getaddrinfo() thread failed to start",
+    "docker": "UNAVAILABLE",
+    "psql": "UNAVAILABLE",
+    "wsl": "NOT_INSTALLED",
+    "initial_combined_tests": "PermissionError from default TEMP outside writable roots; stopped access; successful run used explicit task-owned test-temp"
+  },
+  "published_sources": {
+    "verified_git_blobs": 72,
+    "packaged_authentic_sql_inputs": 15,
+    "integrity": "PASS",
+    "only_adaptation": "Manifest payment literals reconciled to authentic engine; source-map records exact changes"
+  },
+  "canonical_inventory": {
+    "tables": 71,
+    "functions": 189,
+    "root_triggers": 85,
+    "transitive_triggers": 125,
+    "reproduction_sha256": "25e617fb1d5f6719c0c5cee772f8be11a7d8696776a26ed2c27f11388aef0d6e",
+    "complete": false
+  }
+}
