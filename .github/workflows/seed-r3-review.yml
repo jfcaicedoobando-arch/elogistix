@@ -20,9 +20,9 @@ jobs:
       github.event.pull_request.base.repo.owner.login == 'jfcaicedoobando-arch' &&
       github.event.pull_request.head.repo.owner.login == 'jfcaicedoobando-arch' &&
       github.event.pull_request.base.ref == 'main' &&
-      github.event.pull_request.head.ref == 'fix/seed-r3-review-20261015' &&
+      github.event.pull_request.head.ref == 'fix/seed-r3-ledger-review-20261015' &&
       github.event.pull_request.draft == true &&
-      github.event.pull_request.base.sha != 'c7db22e047ff22e9059233adc86918d6b51bc39c'
+      github.event.pull_request.base.sha != 'c935c2593dfd725edb3c30dcab9bd6f0439ff71b'
     runs-on: ubuntu-24.04
     timeout-minutes: 1
     steps:
@@ -40,8 +40,8 @@ jobs:
       github.event.pull_request.base.repo.owner.login == 'jfcaicedoobando-arch' &&
       github.event.pull_request.head.repo.owner.login == 'jfcaicedoobando-arch' &&
       github.event.pull_request.base.ref == 'main' &&
-      github.event.pull_request.base.sha == 'c7db22e047ff22e9059233adc86918d6b51bc39c' &&
-      github.event.pull_request.head.ref == 'fix/seed-r3-review-20261015' &&
+      github.event.pull_request.base.sha == 'c935c2593dfd725edb3c30dcab9bd6f0439ff71b' &&
+      github.event.pull_request.head.ref == 'fix/seed-r3-ledger-review-20261015' &&
       github.event.pull_request.draft == true
     runs-on: ubuntu-24.04
     timeout-minutes: 15

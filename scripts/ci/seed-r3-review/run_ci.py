@@ -16,10 +16,18 @@ import textwrap
 ROOT = Path(__file__).resolve().parent
 REPOSITORY = 'jfcaicedoobando-arch/elogistix'
 OWNER = 'jfcaicedoobando-arch'
-BRANCH = 'fix/seed-r3-review-20261015'
-BASE = 'c7db22e047ff22e9059233adc86918d6b51bc39c'
+BRANCH = 'fix/seed-r3-ledger-review-20261015'
+BASE = 'c935c2593dfd725edb3c30dcab9bd6f0439ff71b'
 IMAGE = 'postgres@sha256:f3bd19c606e442c3d7bdfa8002e03fe260a1023351e0ea4598032022b68dd6e3'
 HASHES = {
+    'ledger_cases.py': 'fde97d0a84ea5d9d4f7b9ac87c95f217c03849b95c1b697ae3c82bed0cac5f9f',
+    'test_ledger_cases.py': '2fc9c008856c9d7bec0b0b524b960f746c4468d1f3e04b0cdba07363290526b2',
+    'render_lab_candidate.py': '8db9ae16f23fc337811dcb520512d01bc90c815a420523ff6cec9a36a4a36836',
+    'test_renderer_security.py': '8e759a81900df0217916a116aeda731a0ed0928bd6c9b5b2140d54ee5b4db0a1',
+    'PROPOSAL_R3_manual_ledger_wrapper.sql': '23a7795c62fa4cac04f8a2e1b804763e18b3f0af1983dd38a29a337958ee3f4e',
+    'PROPOSAL_ledger_metadata_readonly.sql': '865dbed17e07bbd6bf9615938e3cf8c6383dbca849350a8854b4fec605f1f449',
+    'expected-drizzle-preimage.json': '11ecc9142e3a3d79be4f05b5b0b0b230251bcaf8b303c233305873cfc7cf5b98',
+
     'terminal_calls.py': 'ef2e686b8794890e0751a06ab8e09929c34407c2d4f1d9c0f4ddf4abc18ad7a5',
     'test_terminal_calls.py': '046b4165e724da6aa67c4f2fc6c6c2b4dd7eeae6713cf1075a0b50d2c3c9f117',
 
@@ -82,7 +90,7 @@ class Runner:
                     'DOCKER_CONFIG': str(output / 'docker-config'),
                     'DOCKER_HOST': 'unix:///var/run/docker.sock'}
         self.result = {'status': 'running', 'checks': [], 'historical_seed_invocations': 0,
-                       'concurrency_two_sessions': 'NOT_RUN', 'terminal_direct_calls': 'NOT_RUN', 'cleanup': 'pending'}
+                       'concurrency_two_sessions': 'NOT_RUN', 'terminal_direct_calls': 'NOT_RUN', 'ledger_cases': 'NOT_RUN', 'cleanup': 'pending'}
 
     def save(self):
         (self.output / 'result.json').write_text(json.dumps(self.result, indent=2) + '\n')
@@ -381,6 +389,24 @@ def run_terminal_calls(runner, controls):
     module.run_terminal_calls(runner, controls)
 
 
+
+def run_ledger_cases(runner, controls):
+    # All these inputs must be added to HASHES after explicit review, before enabling runtime.
+    for filename in ('ledger_cases.py', 'render_lab_candidate.py'):
+        require(filename in HASHES, 'Ledger input has not been reviewed: ' + filename)
+    spec = importlib.util.spec_from_file_location('reviewed_ledger_renderer', ROOT / 'render_lab_candidate.py')
+    renderer = importlib.util.module_from_spec(spec)
+    sys.modules[spec.name] = renderer
+    spec.loader.exec_module(renderer)
+    spec = importlib.util.spec_from_file_location('reviewed_ledger_cases', ROOT / 'ledger_cases.py')
+    module = importlib.util.module_from_spec(spec)
+    sys.modules[spec.name] = module
+    spec.loader.exec_module(module)
+    module.run_ledger_cases(runner, controls, renderer)
+    require(runner.result.get('ledger_cases') == 'checks_pass_cleanup_pending', 'Ledger cases incomplete')
+    return module
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--cleanup-only', action='store_true')
@@ -428,6 +454,7 @@ def main():
     signal.signal(signal.SIGALRM, interrupted)
     signal.alarm(540)
     passed = False
+    ledger_module = None
     try:
         runner.start()
         spec = importlib.util.spec_from_file_location('reviewed_matrix_helpers', ROOT / 'run_isolated.py')
@@ -440,6 +467,7 @@ def main():
         require(runner.result.get('concurrency_two_sessions') == 'PASS', 'Concurrency cases incomplete')
         run_terminal_calls(runner, controls)
         require(runner.result.get('terminal_direct_calls') == 'PASS', 'Terminal direct calls incomplete')
+        ledger_module = run_ledger_cases(runner, controls)
         runner.result['status'] = 'checks_pass_cleanup_pending'
         passed = True
     except BaseException as exc:
@@ -448,6 +476,8 @@ def main():
             runner.result['concurrency_two_sessions'] = 'FAILED'
         if runner.result.get('terminal_direct_calls') == 'RUNNING':
             runner.result['terminal_direct_calls'] = 'FAILED'
+        if runner.result.get('ledger_cases') == 'RUNNING':
+            runner.result['ledger_cases'] = 'FAILED'
     finally:
         signal.alarm(0)
         runner.save()
@@ -458,6 +488,16 @@ def main():
             runner.result.update(status='failed', cleanup='failed', cleanup_error=str(exc))
         passed = (passed and runner.result.get('pg_status_3_and_no_pid') is True
                   and runner.result.get('owned_psql_clients_closed') is True)
+        if passed:
+            try:
+                require(ledger_module is not None, 'Ledger finalizer missing')
+                ledger_module.finalize_ledger_result(runner.result)
+                require(runner.result.get('ledger_cases') == 'PASS', 'Ledger finalization incomplete')
+            except BaseException as exc:
+                passed = False
+                runner.result.update(ledger_cases='FAILED', error=str(exc))
+        elif runner.result.get('ledger_cases') == 'checks_pass_cleanup_pending':
+            runner.result['ledger_cases'] = 'FAILED'
         runner.result['status'] = 'pass' if passed else 'failed'
         runner.save()
     require(passed, 'Review regression failed; inspect result.json and logs')

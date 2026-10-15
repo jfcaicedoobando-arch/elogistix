@@ -299,6 +299,16 @@ class Lifecycle(unittest.TestCase):
             order.append('terminal')
             self.assertNotEqual(runner.result['status'], 'pass')
             runner.result['terminal_direct_calls'] = 'PASS'
+        def ledger(runner, controls):
+            order.append('ledger')
+            runner.result['ledger_cases'] = 'checks_pass_cleanup_pending'
+            module = Mock()
+            def finalize(result):
+                order.append('ledger-finalize')
+                self.assertEqual(result['cleanup'], 'confirmed_stopped_and_removed')
+                result['ledger_cases'] = 'PASS'
+            module.finalize_ledger_result.side_effect = finalize
+            return module
         def cleanup(runner):
             order.append('cleanup')
             self.assertNotEqual(runner.result['status'], 'pass')
@@ -306,10 +316,10 @@ class Lifecycle(unittest.TestCase):
         with patch.dict(os.environ, environment), patch.object(sys, 'argv', ['run_ci.py']), \
              patch.object(ci.subprocess, 'check_output', return_value=SHA), patch.object(ci.Runner, 'start'), \
              patch.object(ci, 'matrix', side_effect=lambda *args: order.append('matrix')), \
-             patch.object(ci, 'run_concurrency', side_effect=concurrent), patch.object(ci, 'run_terminal_calls', side_effect=terminal), patch.object(ci.Runner, 'cleanup', cleanup), \
+             patch.object(ci, 'run_concurrency', side_effect=concurrent), patch.object(ci, 'run_terminal_calls', side_effect=terminal), patch.object(ci, 'run_ledger_cases', side_effect=ledger), patch.object(ci.Runner, 'cleanup', cleanup), \
              patch('builtins.print'):
             ci.main()
-        self.assertEqual(order, ['matrix', 'concurrency', 'terminal', 'cleanup'])
+        self.assertEqual(order, ['matrix', 'concurrency', 'terminal', 'ledger', 'cleanup', 'ledger-finalize'])
         result = json.loads((self.path / ('seed-r3-1-1-' + SHA[:12]) / 'result.json').read_text())
         self.assertEqual(result['status'], 'pass')
 

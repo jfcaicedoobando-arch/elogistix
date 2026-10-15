@@ -2,8 +2,8 @@
   "scope": "New independent, synthetic-only review lane; local preparation does not activate CI.",
   "repository": "jfcaicedoobando-arch/elogistix",
   "base_branch": "main",
-  "base_sha": "c7db22e047ff22e9059233adc86918d6b51bc39c",
-  "head_branch": "fix/seed-r3-review-20261015",
+  "base_sha": "c935c2593dfd725edb3c30dcab9bd6f0439ff71b",
+  "head_branch": "fix/seed-r3-ledger-review-20261015",
   "draft_required": true,
   "image": "postgres@sha256:f3bd19c606e442c3d7bdfa8002e03fe260a1023351e0ea4598032022b68dd6e3",
   "server_version_num": "170006",
@@ -18,7 +18,14 @@
     "concurrency_cases.py": "6fa9de94b8f482a94213c0d55bef012a8f8c54b1ee4f38f724c52c51cac6e373",
     "test_concurrency_controls.py": "1b0276bd89920e2d110a7efd9131d574393ac543ebdec712c339691041f7d00a",
     "terminal_calls.py": "ef2e686b8794890e0751a06ab8e09929c34407c2d4f1d9c0f4ddf4abc18ad7a5",
-    "test_terminal_calls.py": "046b4165e724da6aa67c4f2fc6c6c2b4dd7eeae6713cf1075a0b50d2c3c9f117"
+    "test_terminal_calls.py": "046b4165e724da6aa67c4f2fc6c6c2b4dd7eeae6713cf1075a0b50d2c3c9f117",
+    "ledger_cases.py": "fde97d0a84ea5d9d4f7b9ac87c95f217c03849b95c1b697ae3c82bed0cac5f9f",
+    "test_ledger_cases.py": "2fc9c008856c9d7bec0b0b524b960f746c4468d1f3e04b0cdba07363290526b2",
+    "render_lab_candidate.py": "8db9ae16f23fc337811dcb520512d01bc90c815a420523ff6cec9a36a4a36836",
+    "test_renderer_security.py": "8e759a81900df0217916a116aeda731a0ed0928bd6c9b5b2140d54ee5b4db0a1",
+    "PROPOSAL_R3_manual_ledger_wrapper.sql": "23a7795c62fa4cac04f8a2e1b804763e18b3f0af1983dd38a29a337958ee3f4e",
+    "PROPOSAL_ledger_metadata_readonly.sql": "865dbed17e07bbd6bf9615938e3cf8c6383dbca849350a8854b4fec605f1f449",
+    "expected-drizzle-preimage.json": "11ecc9142e3a3d79be4f05b5b0b0b230251bcaf8b303c233305873cfc7cf5b98"
   },
   "transport": "Host Python with shell=False; docker exec -i over owned private Unix socket. Persistent psql uses constant in-container sh -c exec \"$@\" 2>&1 wrapper with positional argv, merging descriptors BEFORE Docker stream multiplexing; SQL stays on stdin, never shell-interpolated. Registered-child cleanup precedes cluster shutdown.",
   "matrix_equivalence": "Exact source block comparison against hash-locked run_isolated.py before container creation",
@@ -29,12 +36,15 @@
     "Two persistent sessions: prior COST writer commit rejection and rollback transition",
     "Held R3 rollback: four COST DDL waits plus unrelated function DDL allowed",
     "Queued non-CASCADE cleanup DROP: observed lock, postcommit limit and partial-state fail-closed rejection",
-    "Five verified-terminal direct calls across four routes, including guarded zero/nonzero cooldown, while a separate backend holds the historical seed advisory lock; exact 55000 and unchanged tracked/auth/inventory snapshots"
+    "Five verified-terminal direct calls across four routes, including guarded zero/nonzero cooldown, while a separate backend holds the historical seed advisory lock; exact 55000 and unchanged tracked/auth/inventory snapshots",
+    "13 synthetic ledger cases, all pending real PostgreSQL runtime; overall PASS requires ledger finalization after confirmed cleanup"
   ],
   "not_covered": [
     "Historical guarded routine already loaded/running (P1 omitted; no historical business routine invoked)",
     "Production migrations or deployments",
-    "Postcommit prevention of privileged owner DDL"
+    "Postcommit prevention of privileged owner DDL",
+    "Ledger runtime uncovered cases are reported individually in ledger_uncovered",
+    "Production remote transport and external applier exclusion"
   ],
   "runtime_limit_seconds": 540,
   "command_timeout_seconds": 60,
@@ -42,6 +52,6 @@
   "job_timeout_minutes": 15,
   "artifact_retention_days": 7,
   "cleanup": "Owned cidfile or exact-name candidate recovery; verify per-invocation random ownership token, run/name/image/labels/isolation before any mutation. Stop cluster and require status 3/no PID for test PASS; on partial initdb or failed cluster inspection stop and remove only the strictly owned container, preserve failed test status, verify stopped and absent. Never PASS before cleanup. Every registered persistent client is terminated/reaped before owned-cluster shutdown, even on module exceptions; failed client cleanup forbids PASS.",
-  "local_validation": "Offline mocks plus a local synthetic pipe-order/argument-literal test; no local Docker or PostgreSQL execution. The prior integrated Actions attempt failed on marker/error stream order; this corrected revision requires a fresh real run. Imports and mocks are not runtime evidence.",
+  "local_validation": "80 offline tests plus renderer security assertions pass on this ledger integration revision; no local SQL/Docker runtime. CLI prepared for strictly gated Actions. Prior runtime evidence does not cover this ledger revision.",
   "primary_sql_errors": "Adapter additionally validates primary ERROR SQLSTATE P0001 for admission and exact primary 55000 stopped message; context-only tokens cannot pass."
 }
