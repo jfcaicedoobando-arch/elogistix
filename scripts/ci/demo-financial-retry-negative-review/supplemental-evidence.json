@@ -1,0 +1,115 @@
+{
+  "schema_version": 1,
+  "status": "PASS_OFFLINE_ONLY",
+  "original_delivery_head": "fd3a2fcb940dc122fda7be242afda05a053dd61d",
+  "original_nine_files": "PASS_BYTE_IDENTICAL",
+  "author_fix_head": "a7aff9ff8f92852687c56d3bc05d41150b44b2ae",
+  "offline_tests": {
+    "passed": 53,
+    "failed": 0,
+    "original": 14,
+    "additional": 39,
+    "command": "python -B -I -m unittest discover -s scripts/ci/demo-financial-retry-negative-review -p test_*.py -v"
+  },
+  "external_sources": "PASS_EXACT_BYTES_AND_SHA256",
+  "rendered_suites": [
+    {
+      "case_id": "foreign_bound_concept_id",
+      "phase": "fresh",
+      "expected_sqlstate": "23514",
+      "expected_message": "DEMO_FINANCIAL_ADOPTION_DENIED",
+      "bytes": 54230,
+      "sha256": "64d4e22485b11d1a9a13272899ae6e5ef71ec388c8e97adeebe301a26cbb1ddb",
+      "native_sql": "NOT_RUN"
+    },
+    {
+      "case_id": "foreign_bound_payment_id",
+      "phase": "fresh",
+      "expected_sqlstate": "23514",
+      "expected_message": "DEMO_FINANCIAL_ADOPTION_DENIED",
+      "bytes": 58761,
+      "sha256": "480d69272b77f01af5b2971d88cbc243a8b9e240b49614a6dae1d7a56c2ba77f",
+      "native_sql": "NOT_RUN"
+    },
+    {
+      "case_id": "tenant_authority_reassignment",
+      "phase": "materialized",
+      "expected_sqlstate": "42501",
+      "expected_message": "DEMO_SPONSOR_MEMBERSHIP_REQUIRED",
+      "bytes": 47328,
+      "sha256": "a731168ebf647bd58eb205b12232863e611b79a47288049815f974ccfe829bbb",
+      "native_sql": "NOT_RUN"
+    },
+    {
+      "case_id": "sequence_nontransactional_control",
+      "category": "TEMP_SEQUENCE_CALIBRATION_NOT_A_DENIAL",
+      "expected_transition": "17/uncalled -> 24/called -> 24/called after outer ROLLBACK",
+      "bytes": 29575,
+      "sha256": "4c9f4f42fca5e2c42c7bd568666839dfef6bec7e8d69d5e8059e8f45d1f32f92",
+      "native_sql": "NOT_RUN"
+    }
+  ],
+  "new_source_files": {
+    "delivery-lock.json": {
+      "bytes": 1374,
+      "sha256": "106fda7e6a5434ba7fee5afb7e5213b0fddadcfb5a35ca11a8f010f7b2586380"
+    },
+    "sequence_observation.py": {
+      "bytes": 18861,
+      "sha256": "b8fcf34bfe654c66a5a79afc273ff05fd9ce37b0e05ed50f14355e3b1e723dae"
+    },
+    "SUPPLEMENT.md": {
+      "bytes": 7475,
+      "sha256": "6c29f71a213fcb677b1915731e6143d18e8fbfee0dec456385bcb66e41310833"
+    },
+    "supplemental_adoption_cases.py": {
+      "bytes": 20561,
+      "sha256": "2121f7e97590c92aab58435dd6c7aeaf630e0b291dc69988592bd635909a85de"
+    },
+    "supplemental_suite.py": {
+      "bytes": 9567,
+      "sha256": "4939fe37e5ff50c71e50b5e193b36d51186de2a5026d9e3ac9023c043ee2e148"
+    },
+    "supplemental_tenant_cases.py": {
+      "bytes": 10333,
+      "sha256": "c60dbb8d942dccec4d0c62955455a2735895530c97a96feeafeb22f0803db9fb"
+    },
+    "test_sequence_observation.py": {
+      "bytes": 12913,
+      "sha256": "4f148ec1f71112bcf8fdb7938503534d905e57bb68209bea7966452bbce97a38"
+    },
+    "test_supplemental_adoption_cases.py": {
+      "bytes": 10432,
+      "sha256": "45539278ac41cbcc3bb3cd0bc0529ccfcd4e8836438d07c5bbd5415c03e9a6c5"
+    },
+    "test_supplemental_suite.py": {
+      "bytes": 8149,
+      "sha256": "06c331a5196952f53be6cfc36e959c40d64bb8e7741d6542c310896534827cd3"
+    },
+    "test_supplemental_tenant_cases.py": {
+      "bytes": 5396,
+      "sha256": "416a0e794542e2b8e2ffea5664e3bc0ce160902aecd84c8afb077d3db17cf558"
+    }
+  },
+  "blocked_cases": [
+    {
+      "id": "supplemental_attested_tenant_identity_switch",
+      "phase": "materialized",
+      "category": "tenant_identity",
+      "status": "BLOCKED",
+      "reason": "The legal membership reassignment tests loss of authority for the context's original tenant. It cannot turn that context into another tenant's context: tenant CHECKs and immutable admission/run/lineage provenance prevent that transition. No second tenant context or real external caller authentication is provided by the existing fixture."
+    }
+  ],
+  "native_sql": "NOT_RUN",
+  "business_commit": "NOT_RUN",
+  "operational_admission": "NOT_ADMITTED",
+  "sequence_rollback": "NOT_ASSERTED",
+  "observer_limits": [
+    "Sequence observations do not establish transactional rollback or absence of nextval calls.",
+    "Cached consumption can leave observed last_value/is_called unchanged.",
+    "Catalog metadata and sequence state are separate, non-atomic reads; changes are not attributed to an RPC.",
+    "Qualified names identify observations; same-name replacement is not excluded and OIDs are not emitted.",
+    "The calling runner must establish ownership, native execution, source pins and cleanup."
+  ],
+  "review": "Independent canonical source and PostgreSQL17 control-flow reviews found no blockers; not native SQL execution."
+}
