@@ -11,6 +11,18 @@ const normal = /\.(?:test|spec)\.tsx?$/;
 const perf = /\.perf(?:\.test)?\.tsx?$/;
 const candidate = /(?:\.(?:test|spec)\.[cm]?[jt]sx?|_test\.[cm]?[jt]sx?|\.perf\.tsx?)$/;
 
+export const DEMO_PREFREEZE_EVIDENCE = 'reports/demo-guard-prefreeze/actions-result.json';
+const DEMO_PREFREEZE_MIGRATION = '20261015050000_disable_demo_reseed.sql';
+// Literal a58228a suites remain executable history, before the disabled forward.
+export const DEMO_PREFREEZE_SOURCES = Object.freeze({
+  'supabase/tests/rls/history/demo-prefreeze/test_rls_demo_seed_core_compatibility.sql': 'e0668c846c41821483303ba5db78bc7c491557e7f294f1544055638f50ef191d',
+  'supabase/tests/rls/history/demo-prefreeze/test_rls_demo_seed_tenant_guard.sql': '73f5772584bd7e28da732605217e5917b77661592e1dbf2a7ea0185e5b345e22',
+  'supabase/tests/rls/history/demo-prefreeze/test_rls_demo_seed_guard_repeatable_read.sql': 'a27e9238b1689ff8cd47045681f933e03ac758d9b45a16b8b2cf92f2294cf860',
+  'supabase/tests/rls/history/demo-prefreeze/test_rls_demo_seed_guard_serializable.sql': 'cd05fcb331c27b34db6554befbf63e783bacac9689d118ce46cf57546d9555d0',
+});
+const DEMO_PREFREEZE_CONCURRENCY = 'scripts/ci/demo-guard/concurrency.py';
+const DEMO_PREFREEZE_CONCURRENCY_SHA256 = '01250f665e0bd3456c9272cc23616f94a296a0244fdf4a20aabc0af1660c87a0';
+
 export function assertExactPaths(expected, actual, label) {
   if (!expected.length || !actual.length) throw new Error(`${label}: empty selection`);
   for (const [name, values] of [['expected', expected], ['actual', actual]]) {
@@ -45,6 +57,7 @@ export function classifyFiles(files, guards, sqlSupport) {
     } else if (candidate.test(file)) {
       // Exact npm-test target; unrelated/new CJS tests must still fail closed.
       if (file === 'scripts/ci/selector148/tests/profile.test.cjs') lane = 'node-selector148';
+      else if (file === 'scripts/ci/post-deploy-smoke.test.mjs') lane = 'node-post-deploy-smoke';
       else if (/^(src|scripts)\//.test(file) && normal.test(file) && !perf.test(file)) lane = 'vitest-normal';
       else if (file.startsWith('src/') && perf.test(file)) { lane = 'vitest-perf'; mode = 'manual'; }
       else if (/^tests\/pdf\/.+\.test\.tsx$/.test(file)) {
@@ -58,7 +71,8 @@ export function classifyFiles(files, guards, sqlSupport) {
       else if (file === 'e2e/visual/specs/shared-ui.spec.ts') { lane = 'playwright-visual'; mode = 'manual'; }
       else throw new Error(`Test has no execution lane: ${file}`);
     }
-    if (lane) entries.push({ path: file, lane, mode, ...(reason ? { reason } : {}) });
+    if (lane) entries.push({ path: file, lane, mode, ...(reason ? { reason } : {}),
+      ...(Object.hasOwn(DEMO_PREFREEZE_SOURCES, file) ? { verificationEvidence: DEMO_PREFREEZE_EVIDENCE } : {}) });
   }
   for (const lane of ['vitest-normal', 'vitest-perf', 'sql-guards', 'sql-rls', 'sql-support', 'deno', 'deno-smoke', 'pdf-real', 'playwright-staging', 'playwright-isolated', 'playwright-visual']) {
     if (!entries.some(entry => entry.lane === lane)) throw new Error(`Empty execution lane: ${lane}`);
@@ -95,6 +109,53 @@ export function validateRlsEvidence(catalog, tsv) {
   return { sha: catalog.sha, files: rows.length, durationMs: rows.reduce((sum, row) => sum + Number(row[2]), 0) };
 }
 
+export function validatePrefreezeEvidence(catalog, evidence, root = process.cwd()) {
+  const require = (condition, message) => {
+    if (!condition) throw new Error(`Demo prefreeze evidence: ${message}`);
+  };
+  const expected = Object.keys(DEMO_PREFREEZE_SOURCES);
+  const historical = catalog.entries.filter(entry => Object.hasOwn(DEMO_PREFREEZE_SOURCES, entry.path));
+  assertExactPaths(expected, historical.map(entry => entry.path), 'Demo prefreeze catalog');
+  for (const entry of historical) {
+    require(entry.lane === 'sql-support' && entry.mode === 'support'
+      && entry.verificationEvidence === DEMO_PREFREEZE_EVIDENCE, 'historical suite lost its mandatory evidence binding');
+    require(entry.sha256 === DEMO_PREFREEZE_SOURCES[entry.path], `historical source drift: ${entry.path}`);
+  }
+  require(evidence?.schemaVersion === 1 && evidence.sha === catalog.sha, 'source identity mismatch');
+  require(evidence.phase === 'pre-forward' && evidence.beforeMigration === DEMO_PREFREEZE_MIGRATION,
+    'execution must precede the exact disabled forward');
+  require(evidence.status === 'passed' && evidence.sourcePreserved === true, 'execution/source preservation did not pass');
+  const positiveOid = value => Number.isSafeInteger(value) && value > 0;
+  const namedDatabase = (value, prefix) => typeof value === 'string' && value.length === prefix.length + 32
+    && value.startsWith(prefix) && /^[a-f0-9]+$/.test(value.slice(prefix.length));
+  const checkpoint = evidence.checkpoint;
+  require(checkpoint?.executions === 1 && checkpoint.created === true && checkpoint.dropped === true
+    && positiveOid(checkpoint.oid) && namedDatabase(checkpoint.database, 'demo_guard_checkpoint_'),
+  'one created and removed pre-forward checkpoint is required');
+  const clones = evidence.cloneRuns;
+  require(Array.isArray(clones) && clones.length === 2, 'two fresh clone runs are required');
+  for (const clone of clones) {
+    require(clone?.status === 'passed' && clone.dropped === true && positiveOid(clone.oid)
+      && namedDatabase(clone.database, 'demo_guard_race_'), 'clone execution/removal did not pass');
+  }
+  require(new Set(clones.map(clone => clone.database)).size === 2
+    && new Set([checkpoint.oid, ...clones.map(clone => clone.oid)]).size === 3,
+  'checkpoint and clones must have distinct identities');
+  require(Array.isArray(evidence.files), 'historical execution list is absent');
+  assertExactPaths(expected, evidence.files.map(file => file.path), 'Demo prefreeze execution');
+  const verifyRun = (run, expectedPath, sha256) => {
+    require(run?.path === expectedPath && run.sha256 === sha256, `execution source mismatch: ${expectedPath}`);
+    require(run.status === 'passed' && run.exitCode === 0 && run.executions === 2
+      && Number.isFinite(run.durationMs) && run.durationMs >= 0,
+    `both positive executions are required: ${expectedPath}`);
+  };
+  for (const file of evidence.files) verifyRun(file, file.path, DEMO_PREFREEZE_SOURCES[file.path]);
+  require(hash(fs.readFileSync(path.join(root, DEMO_PREFREEZE_CONCURRENCY))) === DEMO_PREFREEZE_CONCURRENCY_SHA256,
+    'original concurrency source drift');
+  verifyRun(evidence.concurrency, DEMO_PREFREEZE_CONCURRENCY, DEMO_PREFREEZE_CONCURRENCY_SHA256);
+  return { sha: catalog.sha, files: expected.length, executions: expected.length * 2, concurrencyExecutions: 2, checkpoints: 1, clones: 2 };
+}
+
 export function writeJson(file, data) {
   fs.mkdirSync(path.dirname(file), { recursive: true });
   fs.writeFileSync(file, `${JSON.stringify(data, null, 2)}\n`);
@@ -107,11 +168,16 @@ if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.me
       writeJson(process.argv[3], catalog);
       console.log(JSON.stringify({ sha: catalog.sha, treeDigest: catalog.treeDigest, counts: catalog.counts }));
     } else if (process.argv[2] === '--verify-rls' && process.argv.length === 4) {
-      console.log(JSON.stringify(validateRlsEvidence(catalog, fs.readFileSync(process.argv[3], 'utf8'))));
+      const rls = validateRlsEvidence(catalog, fs.readFileSync(process.argv[3], 'utf8'));
+      const prefreeze = catalog.entries.some(entry => Object.hasOwn(DEMO_PREFREEZE_SOURCES, entry.path))
+        ? { prefreeze: validatePrefreezeEvidence(catalog, JSON.parse(fs.readFileSync(DEMO_PREFREEZE_EVIDENCE, 'utf8'))) } : {};
+      console.log(JSON.stringify({ ...rls, ...prefreeze }));
+    } else if (process.argv[2] === '--verify-prefreeze' && process.argv.length === 4) {
+      console.log(JSON.stringify(validatePrefreezeEvidence(catalog, JSON.parse(fs.readFileSync(process.argv[3], 'utf8')))));
     } else if (process.argv[2] === '--list' && process.argv.length === 4) {
       const entries = catalog.entries.filter(entry => entry.lane === process.argv[3]);
       if (!entries.length) throw new Error(`Unknown/empty lane: ${process.argv[3]}`);
       console.log(entries.map(entry => entry.path).join('\n'));
-    } else throw new Error('Usage: node scripts/ci/test-catalog.mjs --output FILE | --list LANE | --verify-rls FILE');
+    } else throw new Error('Usage: node scripts/ci/test-catalog.mjs --output FILE | --list LANE | --verify-rls FILE | --verify-prefreeze FILE');
   } catch (error) { console.error(error.message); process.exitCode = 1; }
 }

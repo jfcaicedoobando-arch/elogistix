@@ -38,6 +38,10 @@ BEGIN
       USING ERRCODE = 'P0001';
   END IF;
 
+  -- Provisional fail-closed stop: conservation/adoption is not verified.
+  -- No flag or skip window may enable destructive reseeding in this release.
+  RAISE EXCEPTION 'LC_SEED_DEMO_CONSERVACION_PENDIENTE: reseed bloqueado hasta verificar conservación y adopción'
+    USING ERRCODE = '55000';
   PERFORM pg_advisory_xact_lock(hashtext('seed_demo_organization'));
 
   SELECT last_seeded_at INTO v_ultimo FROM public.demo_seed_state WHERE id = true;
@@ -268,9 +272,5 @@ BEGIN
   RETURN true;
 END;
 $function$;
-
--- Preserve the historical service_role-only execution contract.
-REVOKE ALL ON FUNCTION public.seed_demo_organization_guarded(bigint) FROM PUBLIC;
-REVOKE ALL ON FUNCTION public.seed_demo_organization_guarded(bigint) FROM anon;
-REVOKE ALL ON FUNCTION public.seed_demo_organization_guarded(bigint) FROM authenticated;
+REVOKE ALL ON FUNCTION public.seed_demo_organization_guarded(bigint) FROM PUBLIC, anon, authenticated;
 GRANT EXECUTE ON FUNCTION public.seed_demo_organization_guarded(bigint) TO service_role;

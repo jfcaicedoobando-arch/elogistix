@@ -5338,6 +5338,10 @@ CREATE FUNCTION public._seed_demo_limpiar_financiero() RETURNS void
 DECLARE
   v_org uuid := 'de100000-0000-0000-0000-000000000001'::uuid;
 BEGIN
+  -- Provisional fail-closed stop: conservation/adoption is not verified.
+  -- No flag or skip window may enable destructive reseeding in this release.
+  RAISE EXCEPTION 'LC_SEED_DEMO_CONSERVACION_PENDIENTE: reseed bloqueado hasta verificar conservación y adopción'
+    USING ERRCODE = '55000';
   PERFORM set_config('app.seed_demo', '1', true);
   -- Los REPs vivos bloquean el borrado de pagos: en demo se limpian primero.
   UPDATE public.pagos_factura
@@ -31929,6 +31933,10 @@ BEGIN
     RAISE EXCEPTION 'LC_SEED_DEMO_NO_AUTORIZADO: solo service_role o super_admin'
       USING ERRCODE = 'P0001';
   END IF;
+  -- Provisional fail-closed stop: conservation/adoption is not verified.
+  -- No flag or skip window may enable destructive reseeding in this release.
+  RAISE EXCEPTION 'LC_SEED_DEMO_CONSERVACION_PENDIENTE: reseed bloqueado hasta verificar conservación y adopción'
+    USING ERRCODE = '55000';
   -- Candado de transacción: un solo re-sembrado a la vez.
   PERFORM pg_advisory_xact_lock(hashtext('seed_demo_organization'));
   -- Ola 4 (H7): antes el reseed fallaba por FK si alguien había operado en la
@@ -31956,6 +31964,10 @@ BEGIN
     RAISE EXCEPTION 'LC_SEED_DEMO_APROBADOR_REQUERIDO: el seed requiere la identidad de un aprobador existente; service_role sin usuario no basta'
       USING ERRCODE = '42501';
   END IF;
+  -- Provisional fail-closed stop: conservation/adoption is not verified.
+  -- No flag or skip window may enable destructive reseeding in this release.
+  RAISE EXCEPTION 'LC_SEED_DEMO_CONSERVACION_PENDIENTE: reseed bloqueado hasta verificar conservación y adopción'
+    USING ERRCODE = '55000';
   PERFORM pg_advisory_xact_lock(hashtext('seed_demo_organization'));
   LOCK TABLE ONLY public.clientes, public.crm_empresas IN SHARE ROW EXCLUSIVE MODE NOWAIT;
   -- Claves exclusivas del seed, acotadas a demo. No matching general por nombre.
@@ -32227,6 +32239,10 @@ BEGIN
     RAISE EXCEPTION 'LC_SEED_DEMO_NO_AUTORIZADO: solo service_role o super_admin'
       USING ERRCODE = 'P0001';
   END IF;
+  -- Provisional fail-closed stop: conservation/adoption is not verified.
+  -- No flag or skip window may enable destructive reseeding in this release.
+  RAISE EXCEPTION 'LC_SEED_DEMO_CONSERVACION_PENDIENTE: reseed bloqueado hasta verificar conservación y adopción'
+    USING ERRCODE = '55000';
   PERFORM pg_advisory_xact_lock(hashtext('seed_demo_organization'));
   SELECT last_seeded_at INTO v_ultimo FROM public.demo_seed_state WHERE id = true;
   IF v_ultimo IS NOT NULL

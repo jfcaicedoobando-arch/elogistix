@@ -67,11 +67,11 @@ describe("immutable demo 0014 has a real, ACL-closed Supabase replay", () => {
     expect(checks(scanFile(replayFile, replay + "\nGRANT EXECUTE ON FUNCTION public.seed_demo_organization_guarded(bigint) TO PUBLIC;"))).toContain("H6");
   });
   it("aligns canonical SQL and the expected normalized dump body exactly", () => {
-    const forward = read("supabase/migrations/20261013210000_guard_demo_cleanup_tenant_graph.sql");
-    expect(read("supabase/schema/security/seed_demo_organization_guarded.sql")).toBe(forward);
+    const forward = read("supabase/migrations/20261015050000_disable_demo_reseed.sql");
+    expect(extractDumpFunction(read("supabase/schema/security/seed_demo_organization_guarded.sql"), "public.seed_demo_organization_guarded").body).toBe(extractDumpFunction(forward, "public.seed_demo_organization_guarded").body);
     const baseline = read("supabase/schema/baseline.sql");
     const actual = extractDumpFunction(baseline, "public.seed_demo_organization_guarded").body;
-    const expected = forward.split("AS $function$\n")[1].split("$function$;")[0];
+    const expected = extractDumpFunction(forward, "public.seed_demo_organization_guarded").body;
     expect(actual).toBe(expected.split("\n").filter((line) => line.trim()).join("\n") + "\n");
   });
   it("uses a unique, forward timestamp and includes it in the active release", () => {

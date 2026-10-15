@@ -28,6 +28,8 @@ export const LC_CODE_MESSAGES: Record<string, string> = {
   ...LC_CODE_MESSAGES_CRM,
   ...LC_CODE_MESSAGES_CLIENTES,
   ...LC_CODE_MESSAGES_PORTAL,
+  LC_SEED_DEMO_CONSERVACION_PENDIENTE:
+    "La demo no está disponible en esta versión. Puedes contactarnos para conocer Libre Carga.",
   LC_PROFORMA_CANCELADA:
     "Esta proforma está cancelada. Crea una nueva proforma para continuar; el histórico se conserva.",
   LC_ANTICIPO_APLICACION_INCONSISTENTE:

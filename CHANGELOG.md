@@ -1,5 +1,15 @@
 # Changelog
 
+## [13.824.84] - Unreleased
+
+### Acceso demo deshabilitado temporalmente
+
+- Presenta «Demo no disponible» sin abrir ni enviar el formulario demo, registrar leads por ese flujo, iniciar sesión o navegar al ERP. Conserva la captación comercial restante.
+- El endpoint demo devuelve 503 saneado antes de Auth, membresía o SQL; conserva OPTIONS y el contrato CORS público. No conecta un proveedor de disponibilidad.
+- Agrega una migración forward atómica que bloquea las cuatro rutas de regeneración/limpieza antes de cualquier DML, con verificación exacta de cuerpos, owner, firma y ACL y preservación de metadata. Su presencia no acredita aplicación a una base.
+- Conserva datos y sesiones existentes: esta release no revoca sesiones, cambia cuentas, activa organizaciones ni habilita regeneración. No incluye escritor ni preparador de identidad pendientes.
+- Prepara comprobación Deno canónica aislada y adapta el smoke manual al contrato 503 sin credenciales; los smoke que necesitan login quedan explícitamente fuera de ese contrato. No se ejecuta el workflow mutante en esta entrega.
+
 ## [13.824.83] - Unreleased
 
 ### Análisis, navegación y lectura del crédito de proveedores

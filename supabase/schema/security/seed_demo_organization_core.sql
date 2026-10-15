@@ -19,6 +19,10 @@ BEGIN
     RAISE EXCEPTION 'LC_SEED_DEMO_APROBADOR_REQUERIDO: el seed requiere la identidad de un aprobador existente; service_role sin usuario no basta'
       USING ERRCODE = '42501';
   END IF;
+  -- Provisional fail-closed stop: conservation/adoption is not verified.
+  -- No flag or skip window may enable destructive reseeding in this release.
+  RAISE EXCEPTION 'LC_SEED_DEMO_CONSERVACION_PENDIENTE: reseed bloqueado hasta verificar conservación y adopción'
+    USING ERRCODE = '55000';
   PERFORM pg_advisory_xact_lock(hashtext('seed_demo_organization'));
   LOCK TABLE ONLY public.clientes, public.crm_empresas IN SHARE ROW EXCLUSIVE MODE NOWAIT;
   -- Claves exclusivas del seed, acotadas a demo. No matching general por nombre.

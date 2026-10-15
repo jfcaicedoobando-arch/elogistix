@@ -99,7 +99,7 @@ class Transport(unittest.TestCase):
             root = Path(temp)
             suites = root / 'supabase/tests/rls'
             suites.mkdir(parents=True)
-            for name in ['demo_seed_core_compatibility', 'ordinary']:
+            for name in ['demo_seed_disabled', 'ordinary']:
                 (suites / ('test_rls_' + name + '.sql')).write_text('BEGIN;\nROLLBACK;\n')
             adapter = root / 'scripts/ci/demo-guard/run-compat-actions.py'
             adapter.parent.mkdir(parents=True)

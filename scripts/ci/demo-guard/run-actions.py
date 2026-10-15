@@ -31,6 +31,32 @@ def clone_identity_sql(name):
             "FROM pg_database WHERE datname=" + m.literal(name) + ';')
 
 
+
+def run_disabled_matrix(context):
+    """Effective release contract: real blocked functions, no core/helper stubs."""
+    context.evidence_dir.mkdir(parents=True)
+    sql=(ROOT/'supabase/tests/rls/test_rls_demo_seed_disabled.sql').read_text()
+    require('CREATE OR REPLACE FUNCTION public.' not in sql,'Never replace protected routes in tests')
+    (context.evidence_dir/'matrix.sql').write_text(sql)
+    stdout,stderr=context.query(sql,'disabled-real-four-routes',timeout=120)
+    (context.evidence_dir/'stdout.log').write_text(stdout)
+    (context.evidence_dir/'stderr.log').write_text(stderr)
+    rows=[json.loads(line) for line in stdout.splitlines() if line.startswith('{')]
+    result=rows[-1] if rows else {}
+    require(result.get('calls')==45 and result.get('attempted_DML')==0 and result.get('routes')==4
+      and result.get('core_or_helper_stubbed') is False,'All 45 explicit blocks and zero DML are mandatory')
+    return {'status':'pass','contract':'disabled-release','result':result}
+
+
+def run_persisted_matrix(context):
+    """Commit fixtures/rejections, then verify from an independent connection."""
+    spec=importlib.util.spec_from_file_location('demo_disabled_persisted',HERE/'persisted-disabled.py')
+    module=importlib.util.module_from_spec(spec);sys.modules[spec.name]=module;spec.loader.exec_module(module)
+    result=module.run_persisted(context)
+    require(result.get('status')=='pass','Persisted three-connection verification must pass')
+    return result
+
+
 def main():
     require(os.environ.get('GITHUB_ACTIONS')=='true' and os.environ.get('ISOLATED_QA_DB')=='1'
             and os.environ.get('DEMO_GUARD_DISPOSABLE')=='1','Explicit isolated GitHub Actions service required')
@@ -39,7 +65,8 @@ def main():
     require(os.environ.get('POSTGRES_IMAGE')==PIN,'Unexpected service image pin')
     require(not any(os.environ.get(k) for k in ('DATABASE_URL','SUPABASE_DB_URL','PGSERVICE','PGSERVICEFILE','PGHOSTADDR')),
             'Ambient remote/database routing refused')
-    m.verify_source(ROOT)
+    expected_source='0265f9e21ae1063b60ea8954d478989aa4543e4c4b3ee8351f07ea3e931897a0'
+    require(__import__('hashlib').sha256((ROOT/'supabase/schema/security/seed_demo_organization_guarded.sql').read_bytes()).hexdigest()==expected_source,'Disabled guard source drift')
     out=ROOT/'reports/demo-guard-concurrency'
     require(not out.exists(),'Fresh evidence directory required')
     out.mkdir(parents=True)
@@ -79,7 +106,7 @@ def main():
             return p.stdout
         fingerprint_sql="SELECT jsonb_build_object('body',md5(prosrc),'metadata',md5(to_jsonb(p)::text)) FROM pg_proc p WHERE oid='public.seed_demo_organization_guarded(bigint)'::regprocedure;"
         baseline=m.one_json(query('postgres',fingerprint_sql,'source-before'),'source-before')
-        require(baseline['body']==m.EXPECTED_BODY_MD5,'Reviewed demo guard migration postimage is not applied')
+        require(baseline['body']=='d008dcf3ccc43874c0c9aaa5a9a89c09','Reviewed demo guard migration postimage is not applied')
         record['source_function']=baseline
         source_context=m.Context(argv('postgres'),env,out,'postgres',commit)
         source_before=m.fingerprint(source_context)
@@ -104,7 +131,9 @@ def main():
                     created_oid=int(query('template1',"SELECT oid FROM pg_database WHERE datname="+m.literal(name)+';',f'clone-{iteration}-oid').strip())
                     item['oid']=created_oid
                     record.update(status='running',runtime_tested=True);save()
-                    result=m.run_concurrency(m.Context(argv(name),env,out/f'run-{iteration}',name,commit))
+                    context=m.Context(argv(name),env,out/f'run-{iteration}',name,commit)
+                    result=run_disabled_matrix(context)
+                    item['persisted']=run_persisted_matrix(context)
                     item['status']=result['status']
                 finally:
                     # Only the random name allocated above is eligible for

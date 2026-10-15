@@ -39,9 +39,9 @@
     {
       "key": "function:seed_demo_organization_core:c.v",
       "signature": "public.seed_demo_organization_core()",
-      "definition_sha256": "0106a3e19d12782930d56117d437f418213b2ab68f9f8901782e2bff35637d26",
-      "source": "supabase/migrations/20261014203000_demo_seed_identidad_y_aprobacion.sql",
-      "reason": "El token C.V. sólo aparece en literales de razones sociales; no es una referencia a clientes.v. Se preservan la organización fija, el guard auth.uid y la ejecución privada del core. El seed no se ejecuta durante esta verificación.",
+      "definition_sha256": "ada215207892b4b7b817b2a8a726e9604df9df81386afa70041ea18d69c38140",
+      "source": "supabase/migrations/20261015050000_disable_demo_reseed.sql",
+      "reason": "El token C.V. sólo aparece en literales de razones sociales; no es una referencia a clientes.v. Se preservan la organización fija, el guard auth.uid y la ejecución privada del core. El seed no se ejecuta durante esta verificación. La release deshabilitada añade rechazo incondicional antes del lock/DML; la falsa referencia sigue sólo en literales.",
       "required_columns": [
         {
           "table": "clientes",

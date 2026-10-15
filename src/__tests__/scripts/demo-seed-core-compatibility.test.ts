@@ -18,8 +18,9 @@ describe("demo core compatibility forward reconstruction", () => {
   });
 
   it("aligns the canonical core and generated dump with the new effective migration", () => {
-    expect(read("supabase/schema/security/seed_demo_organization_core.sql")).toBe(forward);
-    const expected = forward.split("AS $function$\n")[1].split("$function$;")[0];
+    const effective = read("supabase/migrations/20261015050000_disable_demo_reseed.sql");
+    expect(extractDumpFunction(read("supabase/schema/security/seed_demo_organization_core.sql"), "public.seed_demo_organization_core").body).toBe(extractDumpFunction(effective, "public.seed_demo_organization_core").body);
+    const expected = extractDumpFunction(effective, "public.seed_demo_organization_core").body;
     const actual = extractDumpFunction(read("supabase/schema/baseline.sql"), "public.seed_demo_organization_core");
     expect(actual.body).toBe(expected.split("\n").filter((line) => line.trim()).join("\n") + "\n");
     expect(actual.header).toContain("SECURITY DEFINER");

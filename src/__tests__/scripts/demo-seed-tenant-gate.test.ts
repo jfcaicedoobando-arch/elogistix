@@ -121,7 +121,7 @@ describe("forward demo cleanup fail-closed tenant graph contract", () => {
     expect(sql).not.toMatch(/set_config|ALTER\s+(?:ROLE|TABLE)|DISABLE\s+TRIGGER|BYPASSRLS|OWNER TO/i);
     const grants = (text: string) => text.match(/(?:REVOKE ALL|GRANT EXECUTE) ON FUNCTION public\.seed_demo_organization_guarded\(bigint\)[^;]+;/g);
     expect(grants(sql)).toEqual(grants(read("supabase/migrations/20261013204000_replay_demo_seed_limpia_agentes.sql")));
-    expect(read("supabase/schema/security/seed_demo_organization_guarded.sql")).toBe(sql);
+    expect(extractDumpFunction(read("supabase/schema/security/seed_demo_organization_guarded.sql"), "public.seed_demo_organization_guarded").body).toBe(extractDumpFunction(read("supabase/migrations/20261015050000_disable_demo_reseed.sql"), "public.seed_demo_organization_guarded").body);
     expect(extractDumpFunction(baseline, "public.seed_demo_organization_guarded").header)
       .toContain("SET row_security TO 'off'");
   });

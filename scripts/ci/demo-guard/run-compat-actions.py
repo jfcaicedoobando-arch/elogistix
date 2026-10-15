@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Stream one unchanged rollback-only suite into the exact owned Actions service.
+"""Stream the final real-function block suite into the exact Actions service.
 
 Uses the local-socket/temporary-config verification pattern of run-actions.py.
 No discovery, containers, pulls, URLs, grants or changes to the SQL guard.
@@ -13,7 +13,7 @@ import sys
 import tempfile
 
 ROOT = Path(__file__).resolve().parents[3]
-SUITE = ROOT / 'supabase/tests/rls/test_rls_demo_seed_core_compatibility.sql'
+SUITE = ROOT / 'supabase/tests/rls/test_rls_demo_seed_disabled.sql'
 PIN = 'postgres@sha256:66b6a97eac1771fc78bd201b918b4253859f436c6913aeede97bd5366cce89ae'
 PREFLIGHT = b"""SELECT json_build_object('database',current_database(),
  'current_user',current_user,'session_user',session_user,'server_addr',inet_server_addr(),

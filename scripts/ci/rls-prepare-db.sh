@@ -16,6 +16,8 @@ CUTOFF_ENV="supabase/schema/squash/cutoff.env"
 
 AUD54_FORWARD="20261009005400_audit54_cierre_cxc_saldo_real.sql"
 audit54_runtime_checked=0
+DEMO_FREEZE_FORWARD="20261015050000_disable_demo_reseed.sql"
+demo_prefreeze_checked=0
 
 # The mandatory Actions SQL job tests AUD54 against the actual pre-forward
 # replay state. Clone a schema-only checkpoint once, never replay history twice.
@@ -173,6 +175,18 @@ for f in $(printf '%s\n' supabase/migrations/*.sql | LC_ALL=C sort); do
     replay_profile_begin replay_dispatch
   fi
 
+  # Exactly one checkpoint of the current replay, immediately before freeze.
+  # Historical positives run only in owned clones; final functions are never
+  # replaced by old definitions. Any missing evidence aborts before the forward.
+  if [[ "${DEMO_PREFREEZE_CI:-}" == 1 && "$base" == "$DEMO_FREEZE_FORWARD" ]]; then
+    [[ "$demo_prefreeze_checked" == 0 ]] || { echo "::error::Demo pre-freeze checkpoint repeated"; exit 1; }
+    replay_profile_begin checkpoint/demo_prefreeze
+    python3 scripts/ci/demo-guard/run-prefreeze-actions.py
+    node scripts/ci/test-catalog.mjs --verify-prefreeze reports/demo-guard-prefreeze/actions-result.json
+    replay_profile_begin replay_dispatch
+    demo_prefreeze_checked=1
+  fi
+
   echo "▶ $base"
   replay_profile_begin "migration/$base"
   if stub_extensiones "$f" | "${PSQL[@]}" --single-transaction; then
@@ -187,6 +201,10 @@ replay_profile_begin replay_final_check
 
 if [[ "${AUD54_CI:-}" == 1 && "$audit54_runtime_checked" != 1 ]]; then
   echo "::error::AUD54 runtime checkpoint was not executed before its forward"
+  exit 1
+fi
+if [[ "${DEMO_PREFREEZE_CI:-}" == 1 && "$demo_prefreeze_checked" != 1 ]]; then
+  echo "::error::Demo historical positives were not executed before the freeze forward"
   exit 1
 fi
 

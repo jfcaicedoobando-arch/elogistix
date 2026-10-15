@@ -74,11 +74,33 @@ class Contracts(unittest.TestCase):
   sql=(HERE/'fixture.sql').read_text()
   self.assertIn("INSERT INTO public.clientes(id,organization_id,nombre,email)",sql)
   self.assertIn("'demo-customer-'||customer||'@example.invalid'",sql)
- def test_shared_fixture_matches_single_session_suite(self):
+ def test_effective_disabled_suite_never_replaces_protected_functions(self):
   root=HERE.parents[2]
-  def block(sql):return sql.split('DO $fixture$',1)[1].split('$fixture$;',1)[0]
-  self.assertEqual(block((HERE/'fixture.sql').read_text()),
-                   block((root/'supabase/tests/rls/test_rls_demo_seed_tenant_guard.sql').read_text()))
+  sql=(root/'supabase/tests/rls/test_rls_demo_seed_disabled.sql').read_text()
+  self.assertNotIn('CREATE OR REPLACE FUNCTION public.',sql)
+  self.assertIn('count(*)=45',sql)
+  self.assertIn('qa_stop_dml_attempts',sql)
+  self.assertIn('attempted DML despite eventual rollback',sql)
+  self.assertIn('run_disabled_matrix', (HERE/'run-actions.py').read_text())
+  self.assertNotIn('result=m.run_concurrency', (HERE/'run-actions.py').read_text())
+ def test_final_snapshot_isolation_matrices_are_exact_real_function_contract(self):
+  root=HERE.parents[2];base=(root/'supabase/tests/rls/test_rls_demo_seed_disabled.sql').read_text()
+  for suffix,level in [('repeatable_read','REPEATABLE READ'),('serializable','SERIALIZABLE')]:
+   sql=(root/f'supabase/tests/rls/test_rls_demo_seed_disabled_{suffix}.sql').read_text()
+   self.assertEqual(sql,base.replace('BEGIN;\n','BEGIN;\nSET TRANSACTION ISOLATION LEVEL '+level+';\n',1))
+   self.assertNotIn('CREATE OR REPLACE FUNCTION public.',sql)
+ def test_both_phases_and_persisted_verification_are_required(self):
+  final=(HERE/'run-actions.py').read_text()
+  self.assertLess(final.index('result=run_disabled_matrix(context)'),final.index("item['persisted']=run_persisted_matrix(context)"))
+  self.assertIn("result.get('status')=='pass'",final)
+  historical=(HERE/'run-prefreeze-actions.py').read_text()
+  self.assertIn('result = m.run_concurrency(',historical)
+  self.assertIn("for iteration in (1,2)",historical)
+  self.assertIn("checkpoint['executions'] = 1",historical)
+  workflow=(HERE.parents[2]/'.github/workflows/rls-tests.yml').read_text()
+  self.assertIn("DEMO_PREFREEZE_CI: '1'",workflow)
+  self.assertIn('DEMO_GUARD_POSTGRES_SERVICE_ID: ${{ job.services.postgres.id }}',workflow)
+  self.assertIn('python3 scripts/ci/demo-guard/test_persisted.py',workflow)
  def test_graph_catalog_discovery(self):
   sql=(HERE/'graph.sql').read_text()
   self.assertIn('WITH RECURSIVE',sql);self.assertIn("fk.contype = 'f'",sql)
