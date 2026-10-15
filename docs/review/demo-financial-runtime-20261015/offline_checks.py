@@ -30,6 +30,10 @@ class Contracts(unittest.TestCase):
   self.assertNotIn('pull_request_target',text)
   self.assertNotIn('secrets.',text)
   self.assertNotIn('write-all',text)
+ def test_conditional_expression_is_parenthesized(self):
+  source=(ROOT/'sql/06-behavior.sql').read_text()
+  self.assertIn("IS DISTINCT FROM (CASE WHEN approve THEN 'aprobada' ELSE 'rechazada' END) THEN",source)
+  self.assertNotIn('IS DISTINCT FROM CASE WHEN',source)
  def test_inputs(self): runner.verify_inputs()
  def test_no_runtime_on_plan(self):
   with patch.object(runner,'command',side_effect=AssertionError('unexpected process')),patch('sys.argv',['run_ci.py']):runner.main()

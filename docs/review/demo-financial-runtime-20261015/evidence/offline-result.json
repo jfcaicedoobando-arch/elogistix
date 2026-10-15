@@ -1,6 +1,6 @@
 {
-  "checks": 22,
-  "passed": 22,
+  "checks": 23,
+  "passed": 23,
   "failed": 0,
   "coverage": "OFFLINE_SOURCE_AND_RUNNER_CONTRACT_ONLY",
   "sql": "NOT_RUN",

@@ -17,7 +17,7 @@
   {
     "path": "evidence/offline-result.json",
     "bytes": 150,
-    "sha256": "5300f4db2aa337b38951556ddd1e4cd21ffbfc8a8765fd3e57b0634916cf75e1"
+    "sha256": "3a4229c5ef5a90c2918c0c51bcab2b428e4c62de43ba764c2c55d32907f37a60"
   },
   {
     "path": "evidence/source-pins.json",
@@ -31,8 +31,8 @@
   },
   {
     "path": "offline_checks.py",
-    "bytes": 5899,
-    "sha256": "8f795585bcc9a5ae571655cccbd9f18fd6e37a189381f5f5cb5713fecbe96d39"
+    "bytes": 6167,
+    "sha256": "d27cd33946d8785091d91dd9fbda8e4c6d35cd37f21c4d18892b57d05e5449d3"
   },
   {
     "path": "prepared/checkpoint_rollback.sql",
@@ -76,8 +76,8 @@
   },
   {
     "path": "sql/06-behavior.sql",
-    "bytes": 8451,
-    "sha256": "5d92eeb988083d4581cef55f0c79a39884541861bea4c2a82aecbb2194486511"
+    "bytes": 8453,
+    "sha256": "19c7cb3ec4ca663211b094dc6d8c8c88f3ecb572c9a506fad7e3da5ee87037d1"
   },
   {
     "path": "sql/run.sql",

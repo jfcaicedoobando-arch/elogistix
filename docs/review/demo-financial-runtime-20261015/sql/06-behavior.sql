@@ -82,7 +82,7 @@ BEGIN
  IF caught THEN
  IF financial_fixture.snapshot() IS DISTINCT FROM before_call THEN RAISE EXCEPTION 'Rejected call changed persistent rows'; END IF;
  ELSE
- IF result.aprobada_por IS DISTINCT FROM u OR result.aprobada_at IS NULL OR result.estado_aprobacion::text IS DISTINCT FROM CASE WHEN approve THEN 'aprobada' ELSE 'rechazada' END THEN RAISE EXCEPTION 'Human approval result invalid'; END IF;
+ IF result.aprobada_por IS DISTINCT FROM u OR result.aprobada_at IS NULL OR result.estado_aprobacion::text IS DISTINCT FROM (CASE WHEN approve THEN 'aprobada' ELSE 'rechazada' END) THEN RAISE EXCEPTION 'Human approval result invalid'; END IF;
  IF (SELECT count(*) FROM public.bitacora_actividad WHERE usuario_id=u AND entidad_id=f)<>1 THEN RAISE EXCEPTION 'Missing audit row'; END IF;
  IF NOT approve AND (result.estado::text<>'Cancelada' OR result.embarque_id IS NOT NULL OR EXISTS(SELECT 1 FROM public.proveedor_facturas_conceptos WHERE proveedor_factura_id=f)) THEN RAISE EXCEPTION 'Rejection did not unlink'; END IF;
  IF p_case='valid_rejection' AND (
