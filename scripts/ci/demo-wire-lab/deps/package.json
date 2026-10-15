@@ -1,0 +1,7 @@
+{
+  "name": "elogistix-synthetic-wire-lab",
+  "private": true,
+  "version": "0.0.0",
+  "description": "Actions-only synthetic PostgreSQL physical wire review",
+  "dependencies": { "pg": "8.23.1" }
+}

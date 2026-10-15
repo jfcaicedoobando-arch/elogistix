@@ -1,0 +1,15 @@
+{
+  "scope": "SYNTHETIC_ACTIONS_LAB_ONLY",
+  "operational_wire": "UNBOUND",
+  "deployment_configuration": "EMPTY",
+  "endpoint": "CLOSED",
+  "physical_runtime": "NOT_RUN_AT_INITIAL_COMMIT",
+  "offline_node_tests": "21_PASS",
+  "offline_python_tests": "12_PASS",
+  "driver": "pg@8.23.1",
+  "driver_source_commit": "0980cefebe0ae461da8883703be049fe13ca96cf",
+  "sql_store_sha256": "fb7fa69c17eca7230606ecb6217086c6eb5317d75551df9efc268959f69140a7",
+  "crash_recovery": "NOT_RUN",
+  "real_issuer_identity_engine_acl_pooler": "NOT_RUN",
+  "guarantee": "at-most-once with quarantine; no availability or exactly-once guarantee"
+}
