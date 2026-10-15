@@ -2,7 +2,7 @@
 
 Status: **specification only; NOT_ADMITTED**. The parent already holds the captures and can provide the relevant existing projections in the private coordination thread. This document defines those projections and their review rules; it does not ask the user to collect them again. No captured value, instance name, object identity, observed hash, history row or contact belongs in this public document, repository, PR, workflow input or artifact.
 
-The operational comparator, event-policy admission and executable registration envelope are still missing. `evidence.ingest()` checks projection coherence and always returns NOT_ADMITTED. `envelope.render_review_proposal()` always raises before payload execution. Neither result changes the LAB renderer or admits a target.
+The transaction-bound operational comparator, event-policy admission and executable registration envelope are still missing. `evidence.ingest()` checks projection coherence; `comparator.compare()` checks permitted deltas between supplied complete bundles. Both always return NOT_ADMITTED. An offline match does not approve the preimage, authenticate its completeness or bind it to a locked execution transaction. `envelope.render_review_proposal()` always raises before payload execution. None of these results changes the LAB renderer or admits a target.
 
 ## Version and API boundary
 
@@ -79,7 +79,7 @@ Derive the target postimage from the fully validated preimage with these exact r
 4. Require every other scoped node, commitment, comment/label, source/configuration, function owner/identity, trigger link, role/membership, ledger definition, event definition and dependency to match the reviewed preimage exactly, with order and multiplicity preserved. Recompute commitments using the same server-side projection and formatting semantics; a differently formatted Python JSON hash is not a replacement.
 5. If absent, register exactly one row with the public hash/when through the verified existing ID default and capture its actual `INSERT RETURNING` row. Never supply max-plus-one, an explicit ID, setval or a guessed sequence result. Verify prior full rows unchanged, exact one-row delta, supported measured sequence transition, and unchanged full Supabase commitments. If already registered, require unique exact identity plus the complete target/event/history/sequence postcondition; no repair, repeat payload execution, extra row or sequence allocation is allowed.
 
-The future comparator must lock/recheck measured identities and recapture these projections in the execution transaction, fail closed on drift/contention, and recheck terminal state after insertion. Canonical bytes execute unchanged inside that same transaction. Rollback evidence must distinguish transactional state from nontransactional sequence gaps. This algorithm is a requirement, not implemented by the current review proposal.
+The future operational comparator must lock/recheck measured identities and recapture these projections in the execution transaction, fail closed on drift/contention, and recheck terminal state after insertion. Canonical bytes execute unchanged inside that same transaction. Rollback evidence must distinguish transactional state from nontransactional sequence gaps. The inert offline comparator tests the supplied-state delta rules; the current review proposal does not implement transaction-bound capture, locking, application or registration.
 
 ## Activity, transport, window and decision boundary
 

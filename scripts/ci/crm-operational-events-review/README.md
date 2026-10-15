@@ -1,4 +1,4 @@
-# Public event-handler experiments and prospective envelope
+# Public event-handler experiments and inert delta review
 
 This is a separate review lane stacked on PR 346 at recorded base `3ca13983dc08c075155da9910e4f042aae90c2fe`. It changes no canonical migration, mirror, existing lab renderer or proposal fence. A newer main or parent tip is not a replacement for that recorded base; any retargeting requires a fresh source review and new event pin.
 
@@ -24,13 +24,19 @@ The seven operational-capture projections are also executed in read-only transac
 
 `evidence.py` performs offline coherence checks through a required caller-supplied projection-schema validator. It never opens a connection, attests a target, proves a common snapshot or admits application. A coherent digest is not source authentication. Redacted history preimages that cannot be independently reconciled are rejected instead of reconstructed. Client-session visibility and non-client worker observations are reported separately; neither implies an empty queue or a DDL/ACL window.
 
+`comparator.py` is an inert comparison of supplied before/after bundles. It checks the permitted helper ACL/dependency delta, unchanged scoped metadata and Supabase commitments, and the exact Drizzle row delta against a supplied measured `INSERT RETURNING` row. Separate outcomes cover successful registration, registered verification without allocation, and rollback after insertion with a sequence gap. It never connects, executes SQL, renders an application envelope or accepts an admission flag. Matching inputs do not establish that either capture is complete, authentic, independently approved, refreshed under locks or from the same execution transaction. Every result remains NOT_ADMITTED.
+
+The additional owned-fixture comparator cases use complete server-generated projections and an actual offline Draft 2020-12 validator. Their registration witness comes from the real synthetic default/RETURNING path. Reduced offline test doubles are separately labelled and cannot stand in for those schema/runtime checks. Runtime results are NOT_RUN until the corresponding current-head artifact confirms them.
+
+The offline comparison API is `compare(before_bundle, after_bundle, outcome=..., returned_row=..., validate_projection=...)`. Both bundles use the complete existing nine-key review protocol. `outcome` is exactly `applied`, `registered_read_only` or `rolled_back_after_insert`. The applied and rollback observations require the actual three-field `RETURNING` object with integer `id`/`created_at` and string `hash`; registered verification forbids a returning row. The supported sequence observation is the ordinary ascending `int4` serial convention with increment/cache one and no cycle. Unknown default semantics still require separate review even when references and observed arithmetic match. Nothing in this API requests an ID, allocates it or admits execution.
+
 `envelope.py` is an unconditionally aborting review proposal. Its first executable statement raises `CRM_OPERATIONAL_NOT_ADMITTED`; no flag can enable it. The later exact-byte payload demonstration is unreachable. It accepts only the public protocol marker, never private captures or credentials, and has no ledger DML. It is deliberately not a completed operational renderer. The existing lab renderer separately continues rejecting event-trigger profiles.
 
 ## Remaining implementation and operational gates
 
 The [minimum private contract specification](private-contract-spec.md) defines the exact existing projection fields, review order and permitted postimage. Its field list is not an approved policy or window.
 
-A real candidate still needs a separately reviewed private contract and comparator using the exact server-side projections. It must bind identities, all semantic commitments, role capabilities, event definitions and their complete reviewed call/effect graph. Only the two permitted helper ACL removals and their exact service-role dependency changes may normalize; removing complete ACL or privilege sections is not preservation.
+A real candidate still needs a separately reviewed private contract and transaction-bound comparator using the exact server-side projections. The offline delta comparison does not bind its inputs to an actual execution or supply semantic approval. Operational review must bind identities, all semantic commitments, role capabilities, event definitions and their complete reviewed call/effect graph. Only the two permitted helper ACL removals and their exact service-role dependency changes may normalize; removing complete ACL or privilege sections is not preservation.
 
 The candidate must validate complete fresh ledger/default/sequence/index metadata, lock and recapture in a reviewed order, execute the unchanged payload, register exactly one default-generated Drizzle row and preserve Supabase history. Existing exact registration must verify all postconditions without repair, another DDL execution or sequence allocation. Rollback must distinguish transactional state from sequence gaps. The public proposal does not implement this missing operational registration/comparison protocol or manufacture private preimages.
 

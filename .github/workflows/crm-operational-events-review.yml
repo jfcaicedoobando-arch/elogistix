@@ -59,7 +59,7 @@ jobs:
         run: |
           set -euo pipefail
           python3 -B -m unittest discover -s scripts/ci/crm-operational-events-review -p 'test_*.py' -v 2>&1 | tee "$RUNNER_TEMP/crm-event-preflight/offline-tests.log"
-      - name: Owned disposable PostgreSQL 17.6 synthetic event review
+      - name: Owned disposable PostgreSQL 17.6 synthetic event and comparator review
         run: |
           set -euo pipefail
           python3 -B scripts/ci/crm-operational-events-review/run_event_ci.py --output "$RUNNER_TEMP/crm-event-evidence" 2>&1 | tee "$RUNNER_TEMP/crm-event-preflight/runtime.log"
@@ -77,6 +77,27 @@ jobs:
           }
           'PASS seven synthetic event projections against Draft 2020-12 schema' |
             Tee-Object -FilePath "$env:RUNNER_TEMP/crm-event-preflight/projection-schema.log"
+          $comparatorRoot = "$env:RUNNER_TEMP/crm-event-evidence/comparator-bundles"
+          $bundles = @(Get-ChildItem -LiteralPath $comparatorRoot -Recurse -File -Filter 'bundle.json')
+          $comparatorFiles = @(Get-ChildItem -LiteralPath $comparatorRoot -Recurse -File -Filter 'projection-*.json')
+          if ($bundles.Count -ne 6 -or $comparatorFiles.Count -ne 48) {
+            throw 'Six complete synthetic comparator bundles and 48 projections required'
+          }
+          foreach ($file in $comparatorFiles) {
+            if (-not (Test-Json -Json (Get-Content -LiteralPath $file.FullName -Raw) -SchemaFile $schema -ErrorAction Stop)) {
+              throw 'Synthetic comparator projection failed independent schema validation'
+            }
+          }
+          $summaries = @(Get-ChildItem -LiteralPath "$env:RUNNER_TEMP/crm-event-evidence" -File -Filter 'comparator-*-summary.json')
+          if ($summaries.Count -ne 3) { throw 'Three synthetic comparator summaries required' }
+          foreach ($file in $summaries) {
+            $summary = Get-Content -LiteralPath $file.FullName -Raw | ConvertFrom-Json
+            if ($summary.admission -ne 'NOT_ADMITTED' -or $summary.comparison -ne 'MATCHED_DECLARED_DELTA_REVIEW_ONLY') {
+              throw 'Synthetic comparator summary claimed admission or did not match its declared delta'
+            }
+          }
+          'PASS 48 synthetic comparator projections independently against Draft 2020-12 schema; six bundles and three NOT_ADMITTED summaries' |
+            Tee-Object -FilePath "$env:RUNNER_TEMP/crm-event-preflight/comparator-schema.log"
       - name: Preserve synthetic results and cleanup evidence
         if: always()
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # repository precedent
