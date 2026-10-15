@@ -16,13 +16,16 @@ HERE = Path(__file__).resolve().parent
 ROOT = HERE.parents[2]
 COMPILE = ROOT / "scripts/ci/demo-financial-compile-recovery"
 COMPILE_SHA = "c3a593c94f236aab01c887728c07748eb6912cae"
-BASE_BRANCH = "codex/demo-financial-compile-recovery-20261015"
+BASE_BRANCH = "main"
+EVENT_BASE = "b66d2c2caa00d7a8d522ed7140b6a15877a0b2aa"
 BRANCH = "codex/demo-financial-behavior-recovery-20261015"
 REPOSITORY = "jfcaicedoobando-arch/elogistix"
 DATABASE = "demo_financial_compile_recovery_lab"
 INFRA = ROOT / "scripts/ci/crm-acl-review/run_ci.py"
 INFRA_SHA = "a364f833851080d9b290fca35fa7925514dc898979359e55c411f0eef57e7816"
-SUITES = ("happy", "checkpoint", "marker", "execution_receipt", "event", "receipt")
+FAULT_SUITES = ("checkpoint", "marker", "execution_receipt", "event", "receipt")
+SUITES = ("happy", *FAULT_SUITES, "retry_security")
+PROPOSALS = ("original", "retry-corrected")
 
 def require(value, message):
     if not value:
@@ -102,6 +105,29 @@ def laboratory_manifest(original):
                   "changes": changes, "original_declared_manifest_digest": declared.decode(), "variant_derived_json_digest": derived,
                   "digest_rule": "SHA256 of exact embedded UTF8 JSON bytes after three fixture substitutions"}
 
+def function_body(body):
+    declaration = re.search(rb"CREATE(?: OR REPLACE)? FUNCTION demo_flow_writer\.prepare_authorized_run\(p_context_id uuid\).*?AS (\$[a-zA-Z_]*\$)(.*?)\1;", body, re.S)
+    require(declaration is not None, "Proposed function body missing")
+    return declaration.group(2)
+
+def correction_input(frozen, compile_frozen):
+    original = compile_frozen["upstream/flow/issuer/10-issuer.sql"]
+    patch = frozen["sql/replay-correction.sql"]
+    old_hash, new_hash = sha(function_body(original)), sha(function_body(patch))
+    require(old_hash != new_hash, "Correction must differ explicitly")
+    def check(expected):
+        return ("DO $guard$ BEGIN IF NOT EXISTS(SELECT 1 FROM pg_proc WHERE oid='demo_flow_writer.prepare_authorized_run(uuid)'::regprocedure "
+                "AND proowner=current_user::regrole::oid AND NOT prosecdef AND prolang=(SELECT oid FROM pg_language WHERE lanname='plpgsql') "
+                "AND proconfig=ARRAY['search_path=pg_catalog'] AND encode(sha256(convert_to(prosrc,'UTF8')),'hex')='" + expected + "') "
+                "THEN RAISE EXCEPTION 'PROPOSED_RETRY_CORRECTION_SOURCE_CONFLICT'; END IF; END $guard$;\n").encode()
+    installed = check(old_hash) + patch + b"\n" + check(new_hash) + b"SELECT 'FINANCIAL_PROPOSED_RETRY_CORRECTION_VERIFIED';\n"
+    return installed, {"scope": "ISOLATED_PROPOSED_SAME_CONTEXT_RETRY_CORRECTION_NOT_HISTORICAL_SOURCE", "source_commit": COMPILE_SHA,
+                       "source_path": "scripts/ci/demo-financial-compile-recovery/upstream/flow/issuer/10-issuer.sql",
+                       "source_sha256": sha(original), "source_function_body_sha256": old_hash,
+                       "correction_path": "sql/replay-correction.sql", "correction_sha256": sha(patch),
+                       "corrected_function_body_sha256": new_hash, "installed_stdin_sha256": sha(installed),
+                       "new_purpose_replay_adapter": "HOLD_UNCHANGED"}
+
 def gate(event, env, head):
     require(env.get("GITHUB_ACTIONS") == "true", "Actions only; local SQL/Docker forbidden")
     require(env.get("GITHUB_EVENT_NAME") == "pull_request" and env.get("GITHUB_REPOSITORY") == REPOSITORY, "Owned PR event required")
@@ -110,7 +136,7 @@ def gate(event, env, head):
     for side in ("head", "base"):
         require(pr[side]["repo"]["full_name"] == REPOSITORY and pr[side]["repo"]["owner"]["login"] == "jfcaicedoobando-arch", "Foreign repository")
     require(pr["draft"] is True and pr["head"]["ref"] == BRANCH, "Exact draft branch required")
-    require(pr["base"]["ref"] == BASE_BRANCH and pr["base"]["sha"] == COMPILE_SHA, "Compile base changed; explicit review required")
+    require(pr["base"]["ref"] == BASE_BRANCH and pr["base"]["sha"] == EVENT_BASE, "Reviewed event base changed; explicit review required")
     require(re.fullmatch("[0-9a-f]{40}", head) and head == pr["head"]["sha"], "Exact head required")
 
 def expand_sql(frozen, path, stack=()):
@@ -144,15 +170,16 @@ def cleanup_ok(result):
     return (result.get("cleanup") == "confirmed_stopped_and_removed" and result.get("shutdown_confirmed") is True
             and result.get("pg_status_3_and_no_pid") is True and result.get("owned_psql_clients_closed") is True)
 
-def case_summary(result, suite, successful, expected):
+def case_summary(result, suite, successful, expected, proposal="original"):
     stages = result.get("stages", [])
     installed = [r.get("stage") for r in stages[:len(expected)]] == expected and all(r.get("status") == "PASS" for r in stages[:len(expected)])
-    all_stages = [r.get("stage") for r in stages] == [*expected, "synthetic-boundary-privileges", "behavior-" + suite] and all(r.get("status") == "PASS" for r in stages)
-    accepted = successful and installed and all_stages and cleanup_ok(result) and result.get("suite_markers") is True and (suite == "happy" or result.get("injection_observed") is True)
+    correction_stage = ["proposed-same-context-retry-correction"] if proposal == "retry-corrected" else []
+    all_stages = [r.get("stage") for r in stages] == [*expected, *correction_stage, "synthetic-boundary-privileges", "behavior-" + suite] and all(r.get("status") == "PASS" for r in stages)
+    accepted = successful and installed and all_stages and cleanup_ok(result) and result.get("suite_markers") is True and (suite not in FAULT_SUITES or result.get("injection_observed") is True)
     return {"suite": suite, "status": "PASS" if accepted else "FAIL", "catalog_compile": "PASS" if installed else "FAIL",
             "financial_behavior": "PASS" if accepted else "NOT_RUN" if result.get("stage") != "behavior-" + suite or result.get("diagnostic", {}).get("phase") in ("fixture", "prepare_context", "assertions") else "FAIL",
             "materialization_assertions": "PASS" if result.get("materialization_assertions") is True else "NOT_RUN",
-            "injection": "PASS" if suite != "happy" and result.get("injection_observed") is True else "NOT_RUN",
+            "injection": "PASS" if suite in FAULT_SUITES and result.get("injection_observed") is True else "NOT_RUN",
             "stage": "complete_owned_cleanup_confirmed" if accepted else result.get("stage"),
             "diagnostic": result.get("diagnostic"), "failure_type": result.get("error_type"), "stages": stages,
             "cleanup_verified": cleanup_ok(result), "cleanup": result.get("cleanup"), "cleanup_failure_type": result.get("cleanup_error_type"), "candidate": result.get("candidate")}
@@ -164,7 +191,7 @@ def fault_probes_allowed(happy):
         happy.get("materialization_assertions") == "PASS" and happy.get("cleanup_verified") is True
         and happy.get("diagnostic", {}).get("phase") == "happy_materialized")
 
-def run_case(output, suite, frozen, compile_frozen, bundle, compile_module, infrastructure, variant):
+def run_case(output, suite, frozen, compile_frozen, bundle, compile_module, infrastructure, variant, proposal, correction):
     class BehaviorRunner(infrastructure.Runner):
         def install(self, body, label, db=DATABASE, user="postgres"):
             require(db in ("postgres", DATABASE) and user in ("postgres", "supabase_admin"), "Non-fixture target")
@@ -184,7 +211,7 @@ def run_case(output, suite, frozen, compile_frozen, bundle, compile_module, infr
                 self.result["diagnostic"] = diagnose(stdout, stderr, label, "timeout")
                 raise RuntimeError("Synthetic SQL timeout at " + label) from None
             self.result["materialization_assertions"] = response.stdout.decode(errors="replace").splitlines().count("FINANCIAL_MATERIALIZATION_ASSERTIONS_COMPLETE_happy") == 1
-            self.result["injection_observed"] = suite != "happy" and response.stdout.decode(errors="replace").splitlines().count("FINANCIAL_INJECTION_OBSERVED_" + suite) == 1
+            self.result["injection_observed"] = suite in FAULT_SUITES and response.stdout.decode(errors="replace").splitlines().count("FINANCIAL_INJECTION_OBSERVED_" + suite) == 1
             prefix.with_suffix(".stdout").write_bytes(response.stdout)
             prefix.with_suffix(".stderr").write_bytes(response.stderr)
             if response.returncode:
@@ -217,6 +244,9 @@ def run_case(output, suite, frozen, compile_frozen, bundle, compile_module, infr
             r.install(variant if path == "upstream/flow/sql/02-manifest.sql" else compile_frozen[path], "installer-" + str(i + 1).zfill(2))
         verified = r.install(compile_module.expected_sql(bundle.manifest) + compile_frozen["sql/verify-install.sql"], "verify-install")
         require(verified.splitlines().count("FINANCIAL_COMPILE_INSTALL_VERIFIED") == 1, "Install marker missing")
+        if proposal == "retry-corrected":
+            correction_output = r.install(correction, "proposed-same-context-retry-correction")
+            require(correction_output.splitlines().count("FINANCIAL_PROPOSED_RETRY_CORRECTION_VERIFIED") == 1, "Correction marker missing")
         r.install(b"GRANT USAGE ON SCHEMA demo_flow_writer TO service_role;GRANT EXECUTE ON FUNCTION demo_flow_writer.prepare_execute_checkpoint(uuid,bigint) TO service_role;", "synthetic-boundary-privileges")
         outcome = r.install(suite_sql(frozen, suite), "behavior-" + suite)
         for marker in ("FINANCIAL_ASSERTIONS_COMPLETE_", "FINANCIAL_ROLLBACK_COMPLETE_"):
@@ -232,9 +262,9 @@ def run_case(output, suite, frozen, compile_frozen, bundle, compile_module, infr
             r.result.update(cleanup_error_type=type(error).__name__, cleanup="failed_verification")
         finally:
             r.save()
-    return case_summary(r.result, suite, successful, compile_module.EXPECTED_STAGES)
+    return case_summary(r.result, suite, successful, compile_module.EXPECTED_STAGES, proposal)
 
-def run(output, selected):
+def run(output, selected, proposal="original"):
     require(os.environ.get("GITHUB_ACTIONS") == "true", "Actions-only behavior; no local SQL/Docker")
     event = json.loads(Path(os.environ["GITHUB_EVENT_PATH"]).read_text())
     head = subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=ROOT, text=True).strip()
@@ -242,6 +272,8 @@ def run(output, selected):
     frozen, pins = verify_inputs()
     cm = module("financial_behavior_compile", COMPILE / "run_ci.py")
     compile_frozen = cm.verify_inputs()
+    require(proposal in PROPOSALS, "Unknown proposal")
+    correction, correction_evidence = correction_input(frozen, compile_frozen) if proposal == "retry-corrected" else (None, None)
     variant, variant_evidence = laboratory_manifest(compile_frozen["upstream/flow/sql/02-manifest.sql"])
     catalog = module("financial_behavior_catalog", COMPILE / "catalog.py")
     infrastructure = module("financial_behavior_golden", INFRA)
@@ -252,11 +284,13 @@ def run(output, selected):
     output.mkdir(parents=True, exist_ok=False)
     public = output / "public"
     public.mkdir()
+    if correction_evidence:
+        (public / "proposed-retry-correction.json").write_text(json.dumps(correction_evidence, indent=2) + "\n")
     (public / "laboratory-manifest-variant.json").write_text(json.dumps(variant_evidence, indent=2) + "\n")
     (public / "catalog-manifest.json").write_text(json.dumps(bundle.manifest, indent=2) + "\n")
     (public / "dependency-report.json").write_text(json.dumps(bundle.report, indent=2) + "\n")
     summary = {"scope": "AUTHENTIC_ENGINE_EXPLICIT_LAB_MANIFEST_VARIANT_SYNTHETIC_FIXTURES_ASSERTIONS_THEN_ROLLBACK", "status": "FAIL", "workflow_commit": head,
-               "compile_commit": COMPILE_SHA, "catalog_sha256": pins["catalog_sha256"], "validation_sha256": pins["validation_sha256"],
+               "proposal": proposal, "event_base": EVENT_BASE, "compile_commit": COMPILE_SHA, "catalog_sha256": pins["catalog_sha256"], "validation_sha256": pins["validation_sha256"],
                "complete": False, "canonical_closure_complete": False, "fixtures_complete": False,
                "real_identity": "NOT_RUN", "real_authentication": "NOT_RUN", "runtime_acl_rls": "NOT_RUN", "business_commit": "NOT_RUN",
                "operational_wire": "UNBOUND", "configuration": "EMPTY", "demo": "DISABLED", "live_database_actions": 0,
@@ -265,12 +299,13 @@ def run(output, selected):
     def save():
         (public / "result.json").write_text(json.dumps(summary, indent=2) + "\n")
     save()
-    suites = SUITES if selected == "all" else ("happy", selected) if selected != "happy" else ("happy",)
+    available = SUITES if proposal == "retry-corrected" else ("happy", *FAULT_SUITES)
+    suites = available if selected == "all" else ("happy", selected) if selected != "happy" else ("happy",)
     for suite in suites:
         if summary["cases"] and not fault_probes_allowed(summary["cases"][0]):
             summary["cases"].append({"suite": suite, "status": "NOT_RUN", "reason": "materialization/deferred-guard prerequisite failed"})
         else:
-            summary["cases"].append(run_case(output / suite, suite, frozen, compile_frozen, bundle, cm, infrastructure, variant))
+            summary["cases"].append(run_case(output / suite, suite, frozen, compile_frozen, bundle, cm, infrastructure, variant, proposal, correction))
         save()
     summary["status"] = "PASS_SYNTHETIC_ROLLBACK_ONLY" if all(c["status"] == "PASS" for c in summary["cases"]) else "FAIL"
     summary["selected_suite"] = selected
@@ -284,12 +319,13 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--output", type=Path, required=True)
     parser.add_argument("--suite", choices=(*SUITES, "all"), default="happy")
+    parser.add_argument("--proposal", choices=PROPOSALS, default="original")
     args = parser.parse_args()
     def interrupted(number, frame):
         raise RuntimeError("Interrupted by signal " + str(number))
     for sig in (signal.SIGTERM, signal.SIGINT):
         signal.signal(sig, interrupted)
-    run(args.output, args.suite)
+    run(args.output, args.suite, args.proposal)
 
 if __name__ == "__main__":
     main()

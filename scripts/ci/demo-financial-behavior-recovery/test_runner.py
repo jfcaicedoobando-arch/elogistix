@@ -18,7 +18,7 @@ class RunnerTests(unittest.TestCase):
         repo = {"full_name": r.REPOSITORY, "owner": {"login": "jfcaicedoobando-arch"}}
         return {"action": "opened", "repository": repo, "pull_request": {"draft": True,
             "head": {"repo": repo, "ref": r.BRANCH, "sha": "a" * 40},
-            "base": {"repo": repo, "ref": r.BASE_BRANCH, "sha": r.COMPILE_SHA}}}
+            "base": {"repo": repo, "ref": r.BASE_BRANCH, "sha": r.EVENT_BASE}}}
     def test_gate_rejects_local_before_any_subprocess(self):
         with patch.dict(r.os.environ, {}, clear=True), patch.object(r.subprocess, "check_output") as cmd:
             with self.assertRaises(RuntimeError): r.run(HERE / "never-created", "happy")
@@ -26,7 +26,7 @@ class RunnerTests(unittest.TestCase):
     def test_gate_binds_full_pr_identity(self):
         env = {"GITHUB_ACTIONS": "true", "GITHUB_EVENT_NAME": "pull_request", "GITHUB_REPOSITORY": r.REPOSITORY}
         r.gate(self.event(), env, "a" * 40)
-        mutations = [("draft", False), ("base_sha", "b" * 40), ("base_ref", "main"), ("head_ref", "main"), ("foreign", "foreign/repo")]
+        mutations = [("draft", False), ("base_sha", "b" * 40), ("base_ref", "unreviewed"), ("head_ref", "main"), ("foreign", "foreign/repo")]
         for key, value in mutations:
             event = copy.deepcopy(self.event())
             if key == "draft": event["pull_request"][key] = value
@@ -92,6 +92,17 @@ class RunnerTests(unittest.TestCase):
         self.assertEqual(restored_bytes, source)
         self.assertEqual(r.sha(variant), evidence["variant_sha256"])
         with self.assertRaises(RuntimeError): r.laboratory_manifest(source + b"-- mutation")
+    def test_correction_preserves_historical_body_pin_and_verifies_both_descriptors(self):
+        frozen, _ = r.verify_inputs()
+        cm = r.module("correction_source_test", r.COMPILE / "run_ci.py")
+        installed, evidence = r.correction_input(frozen, cm.verify_inputs())
+        self.assertEqual(evidence["source_function_body_sha256"], "7714ae2d6814df546d30c9abfcab3a4eaa51176b5887e4d5f1b2e169788664b1")
+        self.assertNotEqual(evidence["corrected_function_body_sha256"], evidence["source_function_body_sha256"])
+        self.assertIn(evidence["source_function_body_sha256"].encode(), installed)
+        self.assertIn(evidence["corrected_function_body_sha256"].encode(), installed)
+        self.assertEqual(installed.count(b"AND proowner=current_user::regrole::oid AND NOT prosecdef"), 2)
+        self.assertEqual(evidence["new_purpose_replay_adapter"], "HOLD_UNCHANGED")
+        self.assertEqual(r.sha(installed), evidence["installed_stdin_sha256"])
     def test_inventory_rejects_path_escape_and_hash_drift(self):
         with tempfile.TemporaryDirectory(dir=HERE) as tmp:
             root = Path(tmp); (root / "a").write_bytes(b"a")

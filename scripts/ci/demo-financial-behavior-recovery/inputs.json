@@ -1,8 +1,8 @@
 [
   {
     "path": "README.md",
-    "bytes": 6837,
-    "sha256": "161bdfced20f7386f7529eb29224deff25cc79469d954236c8d329fe27aa09c7"
+    "bytes": 10809,
+    "sha256": "e1e3c87a0ef6520d75f238a6e83db665df68e4bc0b806369136705a53ddc549d"
   },
   {
     "path": "references/assertions.sql",
@@ -51,8 +51,8 @@
   },
   {
     "path": "run_ci.py",
-    "bytes": 19530,
-    "sha256": "31327b8d9151c903cae93d225f3c1399a97bbf220fb178b79511f3cd677725be"
+    "bytes": 22658,
+    "sha256": "b9be018fa4d55a9467f4248214af6ec8a16e2d7aa62cf47ffbf68fc8d77006e1"
   },
   {
     "path": "source-pins.json",
@@ -110,14 +110,34 @@
     "sha256": "e3c353703c326a6b949b30f9b69695039e87dd39658e7d2a2d58d6c75fa61f70"
   },
   {
+    "path": "sql/replay-correction.sql",
+    "bytes": 17846,
+    "sha256": "aa8b64875e58626645974de6cfe575a45af719ecbc20773bfe6b414269b607e2"
+  },
+  {
+    "path": "sql/retry_security.sql",
+    "bytes": 10262,
+    "sha256": "b9c1e7acddef0a0fb396582dd1f9e19ae376877e42c74ca44c0acb3ee2d3f0e5"
+  },
+  {
     "path": "test_fixture.py",
     "bytes": 16578,
     "sha256": "c602cbe5fdb5f6689124eee309b8887d93f21faead15cf4c12a0acff5d6623c3"
   },
   {
+    "path": "test_replay_correction.py",
+    "bytes": 13186,
+    "sha256": "42d3f16fb1e901e9d1684d5f28ee3d118827a7a63ea993ec4428b11b0b7facfc"
+  },
+  {
+    "path": "test_retry_security.py",
+    "bytes": 14928,
+    "sha256": "e99cedb91d54ceb120cf5efc0c8f0f6901eca7f00a109b5e0fb4260d5aeea60b"
+  },
+  {
     "path": "test_runner.py",
-    "bytes": 7446,
-    "sha256": "51814486d400e5db4b7bc04430350e23ed81a7a36a7e126bb40b8712359cae22"
+    "bytes": 8415,
+    "sha256": "8bf5905acf31a27eff9a040f401623ef33354830fc4aef94600607f5a169f68d"
   },
   {
     "path": "test_suites.py",
