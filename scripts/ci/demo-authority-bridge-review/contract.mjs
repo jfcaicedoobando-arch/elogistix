@@ -187,8 +187,14 @@ function record(value) {
 /** Classifies a DECLARED history snapshot; absence/exact match never permits INSERT or business. */
 export function classifyDeclaredIssuance(proposal, history) {
   const p = record(proposal);
-  requireThat(Array.isArray(history), 'HOLD_HISTORY_SCHEMA');
-  const rows = history.map(record);
+  requireThat(Array.isArray(history) && Object.getPrototypeOf(history) === Array.prototype
+    && Reflect.ownKeys(history).length === history.length + 1, 'HOLD_HISTORY_SCHEMA');
+  const rows = [];
+  for (let index = 0; index < history.length; index++) {
+    const item = Object.getOwnPropertyDescriptor(history, String(index));
+    requireThat(item && Object.hasOwn(item, 'value') && item.enumerable, 'HOLD_HISTORY_SCHEMA');
+    rows.push(record(item.value));
+  }
   for (const key of [naturalKey, r => JSON.stringify([r.deployment, r.contextId]),
     r => JSON.stringify([r.deployment, r.obligationId])]) {
     requireThat(new Set(rows.map(key)).size === rows.length, 'HOLD_HISTORY_AMBIGUOUS');

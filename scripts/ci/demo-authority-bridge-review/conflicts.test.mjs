@@ -78,6 +78,17 @@ test('history uniqueness violations are held instead of choosing an arbitrary pr
   assert.throws(() => classifyDeclaredIssuance(row, [row, changed.row]), /^Error: HOLD_HISTORY_AMBIGUOUS$/);
 });
 
+test('history must be a dense plain JSON array, never sparse, extended or accessor-driven', async () => {
+  const {row} = await syntheticIssuance();
+  const hidden = [row]; Object.defineProperty(hidden, 'hidden', {value: true});
+  const symbol = [row]; symbol[Symbol('SYNTHETIC')] = true;
+  const getter = [row]; Object.defineProperty(getter, '0', {get() {throw Error('GETTER_MUST_NOT_RUN');}});
+  const inherited = [row]; Object.setPrototypeOf(inherited, {synthetic: true});
+  for (const bad of [new Array(1), hidden, symbol, getter, inherited]) {
+    assert.throws(() => classifyDeclaredIssuance(row, bad), /^Error: HOLD_HISTORY_SCHEMA$/);
+  }
+});
+
 test('deployment is a partition, not a free caller override', async () => {
   const original = await syntheticIssuance(), e = syntheticSnapshots();
   e.deployment = e.restoreState.deployment = e.protectedAuthority.deployment = 'SYNTHETIC_OTHER_DEPLOYMENT';

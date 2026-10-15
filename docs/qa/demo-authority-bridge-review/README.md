@@ -143,8 +143,8 @@ Run the focused package with Node 24.19.0 and no dependencies:
 node --test scripts/ci/demo-authority-bridge-review/*.test.mjs
 ```
 
-Local focused result: **67/67 PASS, zero skips**, consisting of 42 binding,
-16 conflict and 9 integration/source/census tests. This local workspace contains
+Local focused result: **68/68 PASS, zero skips**, consisting of 42 binding,
+17 conflict and 9 integration/source/census tests. This local workspace contains
 selected verified files, not a full checkout. Its census regression is explicitly
 representative, not a claimed full-repository local census. Twelve canonical
 source pins are verified against SHA256, Git blob identity and byte count; only
