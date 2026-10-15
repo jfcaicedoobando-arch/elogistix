@@ -1,0 +1,202 @@
+{
+  "review_commit": "fd3a2fcb940dc122fda7be242afda05a053dd61d",
+  "integration_commit": "bd07f5488babb770d226f91f05abfcb1a2cb68d8",
+  "author_fix_head": "a7aff9ff8f92852687c56d3bc05d41150b44b2ae",
+  "files": [
+    {
+      "path": "scripts/ci/demo-financial-retry-negative-review/README.md",
+      "bytes": 6318,
+      "sha256": "056ffe77a98712fc618b73a7d583699264cb619ec2877166d2aaa3078efdbc11"
+    },
+    {
+      "path": "scripts/ci/demo-financial-retry-negative-review/adoption_cases.py",
+      "bytes": 6088,
+      "sha256": "cc7518a30b6ce82edd31357aa0b155d7c8c7cc724c48e7da426f85eb551cc47a"
+    },
+    {
+      "path": "scripts/ci/demo-financial-retry-negative-review/authority_cases.py",
+      "bytes": 16412,
+      "sha256": "30c5b11351606f4b30f6493c3da5b2b67b88614b59db7bc6a3e1f41acbda5f38"
+    },
+    {
+      "path": "scripts/ci/demo-financial-retry-negative-review/contract.json",
+      "bytes": 1703,
+      "sha256": "8d43f4eea1b17345fa76251e78b5dd7c17db2b9ca42f544e19b5c3c25fd8807b"
+    },
+    {
+      "path": "scripts/ci/demo-financial-retry-negative-review/offline-evidence.json",
+      "bytes": 4937,
+      "sha256": "340addb17d5a74a5cc11541532824bcba9401b861acedb3419bd7fd314931a9d"
+    },
+    {
+      "path": "scripts/ci/demo-financial-retry-negative-review/origin_materialization_cases.py",
+      "bytes": 9919,
+      "sha256": "6212828414faa1ea6a105881a7e314d3f51a8169b3c271f78763b51429535022"
+    },
+    {
+      "path": "scripts/ci/demo-financial-retry-negative-review/suite.py",
+      "bytes": 10697,
+      "sha256": "9fc663562820b6ccc640ca868a886dfcc4a610545e9e4ed7abce8a48493b9ccf"
+    },
+    {
+      "path": "scripts/ci/demo-financial-retry-negative-review/test_origin_adoption_cases.py",
+      "bytes": 5077,
+      "sha256": "18e68955089bdb2b008621b673b8d9b4d02898df5ff65fdbe7b1672cbd588c05"
+    },
+    {
+      "path": "scripts/ci/demo-financial-retry-negative-review/test_suite.py",
+      "bytes": 5813,
+      "sha256": "3be33c3eef21bbf4ac55f646bac9e59d05aaefc6e96db580b17864baa10cae1f"
+    },
+    {
+      "path": "scripts/ci/demo-financial-behavior-recovery/README.md",
+      "bytes": 10809,
+      "sha256": "e1e3c87a0ef6520d75f238a6e83db665df68e4bc0b806369136705a53ddc549d"
+    },
+    {
+      "path": "scripts/ci/demo-financial-behavior-recovery/inputs.json",
+      "bytes": 4174,
+      "sha256": "7dd7f32225584fc4fac6022bef5801514e35325cc0d60da9e15b30466cc54f6b"
+    },
+    {
+      "path": "scripts/ci/demo-financial-behavior-recovery/references/assertions.sql",
+      "bytes": 2383,
+      "sha256": "5d550dc807516b014d4735aa3827cfb8b2e90f8f86b9acef02f8c7aba81e8fd9"
+    },
+    {
+      "path": "scripts/ci/demo-financial-behavior-recovery/references/checkpoint.sql",
+      "bytes": 43,
+      "sha256": "aee4e2d5f2214f8a1423ba976598f9fad85e1fb1bfc00fbcf5aa8f8d1687b303"
+    },
+    {
+      "path": "scripts/ci/demo-financial-behavior-recovery/references/event.sql",
+      "bytes": 38,
+      "sha256": "50894cf008e12fad8117d433e8a0c7303c9f787608700278a75541c670c7ec24"
+    },
+    {
+      "path": "scripts/ci/demo-financial-behavior-recovery/references/execution_receipt.sql",
+      "bytes": 50,
+      "sha256": "ceb91618d36f0dfe95b10442058ad637e76e105734cc1244ada0d707dfd200ac"
+    },
+    {
+      "path": "scripts/ci/demo-financial-behavior-recovery/references/fault.sql",
+      "bytes": 3060,
+      "sha256": "7b8de4ea9e07ddad56e577b8aa9c85802f6c20ed736e410e95ac980bbbe61237"
+    },
+    {
+      "path": "scripts/ci/demo-financial-behavior-recovery/references/happy.sql",
+      "bytes": 3130,
+      "sha256": "4810d007442552f855690ced27cbac7ad402fb420dbab558e5affd17cf4bffa9"
+    },
+    {
+      "path": "scripts/ci/demo-financial-behavior-recovery/references/marker.sql",
+      "bytes": 39,
+      "sha256": "29df6dc83155ff055aea45a57691ac83de822b70b609211bedc21073d407546c"
+    },
+    {
+      "path": "scripts/ci/demo-financial-behavior-recovery/references/producer-and-context.sql",
+      "bytes": 1864,
+      "sha256": "499331c4c7ac3d67111c836030af58e6e3cabeed67a36881a54fe7c2e58e7914"
+    },
+    {
+      "path": "scripts/ci/demo-financial-behavior-recovery/references/receipt.sql",
+      "bytes": 40,
+      "sha256": "e3c353703c326a6b949b30f9b69695039e87dd39658e7d2a2d58d6c75fa61f70"
+    },
+    {
+      "path": "scripts/ci/demo-financial-behavior-recovery/run_ci.py",
+      "bytes": 22734,
+      "sha256": "1eadd1ebe1858863a17407d9961a7747d905cb2cf3b2a09d906a73c5424ef147"
+    },
+    {
+      "path": "scripts/ci/demo-financial-behavior-recovery/source-pins.json",
+      "bytes": 7950,
+      "sha256": "563a685ea4e50fec9862342ea8446639c955656db89574bada4446f5e93f5556"
+    },
+    {
+      "path": "scripts/ci/demo-financial-behavior-recovery/sql/assertions.sql",
+      "bytes": 3606,
+      "sha256": "f42cbf544a61af3a57d71ecb8017f27e5d28ff1835d0e60a796a4328d8f87420"
+    },
+    {
+      "path": "scripts/ci/demo-financial-behavior-recovery/sql/checkpoint.sql",
+      "bytes": 43,
+      "sha256": "aee4e2d5f2214f8a1423ba976598f9fad85e1fb1bfc00fbcf5aa8f8d1687b303"
+    },
+    {
+      "path": "scripts/ci/demo-financial-behavior-recovery/sql/event.sql",
+      "bytes": 38,
+      "sha256": "50894cf008e12fad8117d433e8a0c7303c9f787608700278a75541c670c7ec24"
+    },
+    {
+      "path": "scripts/ci/demo-financial-behavior-recovery/sql/execution_receipt.sql",
+      "bytes": 50,
+      "sha256": "ceb91618d36f0dfe95b10442058ad637e76e105734cc1244ada0d707dfd200ac"
+    },
+    {
+      "path": "scripts/ci/demo-financial-behavior-recovery/sql/fault.sql",
+      "bytes": 3592,
+      "sha256": "6613ff2d22c8ba4db94685a42accef6bd203128fdb569abebc61173ecdbd62a6"
+    },
+    {
+      "path": "scripts/ci/demo-financial-behavior-recovery/sql/fixture.sql",
+      "bytes": 8452,
+      "sha256": "6ab810fbffcf81fb83b9642af789a69ba5bfa2bc5680e3bc4c4f3cc75b804ae3"
+    },
+    {
+      "path": "scripts/ci/demo-financial-behavior-recovery/sql/happy.sql",
+      "bytes": 3712,
+      "sha256": "815c9060a6eec78ac02b446ea056183973c550f29bf28d1408788f73b775f723"
+    },
+    {
+      "path": "scripts/ci/demo-financial-behavior-recovery/sql/marker.sql",
+      "bytes": 39,
+      "sha256": "29df6dc83155ff055aea45a57691ac83de822b70b609211bedc21073d407546c"
+    },
+    {
+      "path": "scripts/ci/demo-financial-behavior-recovery/sql/prepare-context.sql",
+      "bytes": 6403,
+      "sha256": "0391ef871af057ce05bba8f16936b47edada15ebb651d09d06e54d8beb2e1c0a"
+    },
+    {
+      "path": "scripts/ci/demo-financial-behavior-recovery/sql/receipt.sql",
+      "bytes": 40,
+      "sha256": "e3c353703c326a6b949b30f9b69695039e87dd39658e7d2a2d58d6c75fa61f70"
+    },
+    {
+      "path": "scripts/ci/demo-financial-behavior-recovery/sql/replay-correction.sql",
+      "bytes": 17846,
+      "sha256": "aa8b64875e58626645974de6cfe575a45af719ecbc20773bfe6b414269b607e2"
+    },
+    {
+      "path": "scripts/ci/demo-financial-behavior-recovery/sql/retry_security.sql",
+      "bytes": 10262,
+      "sha256": "b9c1e7acddef0a0fb396582dd1f9e19ae376877e42c74ca44c0acb3ee2d3f0e5"
+    },
+    {
+      "path": "scripts/ci/demo-financial-behavior-recovery/test_fixture.py",
+      "bytes": 16578,
+      "sha256": "c602cbe5fdb5f6689124eee309b8887d93f21faead15cf4c12a0acff5d6623c3"
+    },
+    {
+      "path": "scripts/ci/demo-financial-behavior-recovery/test_replay_correction.py",
+      "bytes": 13186,
+      "sha256": "42d3f16fb1e901e9d1684d5f28ee3d118827a7a63ea993ec4428b11b0b7facfc"
+    },
+    {
+      "path": "scripts/ci/demo-financial-behavior-recovery/test_retry_security.py",
+      "bytes": 14928,
+      "sha256": "e99cedb91d54ceb120cf5efc0c8f0f6901eca7f00a109b5e0fb4260d5aeea60b"
+    },
+    {
+      "path": "scripts/ci/demo-financial-behavior-recovery/test_runner.py",
+      "bytes": 8964,
+      "sha256": "147f6b527e00b178fd9aa0187f0d21fefe6bef7efe64024203202fa4f36a3971"
+    },
+    {
+      "path": "scripts/ci/demo-financial-behavior-recovery/test_suites.py",
+      "bytes": 14310,
+      "sha256": "909f84cca6b8291df56a7a8c6813cab06c891c833d5738f4fc77c95c8c4f6ed6"
+    }
+  ]
+}
