@@ -154,5 +154,12 @@
     "replays": [
       "20261015170857_seed_r3_stopped_admission.sql"
     ]
+  },
+  {
+    "file": "0021_crm_helpers_owner_only.sql",
+    "sha256": "32173fdde2d456d6d9da8f46b54e38f4535b699b3ca36d921f93f444105fecc6",
+    "replays": [
+      "20261015194324_crm_helpers_owner_only.sql"
+    ]
   }
 ]

@@ -1,0 +1,37 @@
+name: CRM canonical owner-only replay
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+    branches: [main]
+    paths:
+      - 'scripts/ci/crm-canonical-review/**'
+      - 'drizzle/migrations/0021_crm_helpers_owner_only.sql'
+      - 'supabase/migrations/20261015194324_crm_helpers_owner_only.sql'
+      - '.github/workflows/crm-canonical-owner-only.yml'
+permissions:
+  contents: read
+concurrency:
+  group: crm-canonical-review-${{ github.event.pull_request.number }}
+  cancel-in-progress: false
+jobs:
+  synthetic-review:
+    if: github.repository == 'jfcaicedoobando-arch/elogistix' && github.event.pull_request.draft == true && github.event.pull_request.head.repo.full_name == github.repository && github.event.pull_request.head.ref == 'fix/crm-canonical-owner-only-20261015'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          persist-credentials: false
+      - name: Offline harness tests
+        run: python3 -m unittest discover -s scripts/ci/crm-canonical-review -p 'test_*.py' -v
+      - name: Disposable PostgreSQL 17.6 review
+        run: python3 scripts/ci/crm-canonical-review/run_ci.py --output "$RUNNER_TEMP/crm-acl-evidence"
+      - name: Preserve synthetic evidence
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: crm-canonical-review-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/crm-acl-evidence
+          if-no-files-found: warn
+          retention-days: 14

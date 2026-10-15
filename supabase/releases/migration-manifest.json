@@ -74182,7 +74182,8 @@
       "20261014203000_demo_seed_identidad_y_aprobacion.sql",
       "20261014203100_replay_cargos_tarifario_aplica_iva.sql",
       "20261015050000_disable_demo_reseed.sql",
-      "20261015170857_seed_r3_stopped_admission.sql"
+      "20261015170857_seed_r3_stopped_admission.sql",
+      "20261015194324_crm_helpers_owner_only.sql"
     ]
   }
 }

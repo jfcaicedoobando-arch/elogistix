@@ -1,0 +1,8 @@
+{
+  "files": {
+    "inputs/fixture.sql": "dcdcf15c0f9c3b71d5ae4721bef20afc91158f98bdb60cedd93372631ff31631",
+    "inputs/sources/0017_crm_empresa_no_borrar_cliente.sql": "548be2b88fde30174ce4b90fdc333cd6f745f0948bf331907de879ee5c95bcdb",
+    "inputs/sources/0018_cargos_tarifario_aplica_iva.sql": "e54c5f4dce851c8d30d3c71336c315ae7b600c72a5a5cc1d5194b908cbbbadee",
+    "inputs/sources/0016_crm_empresa_desde_cliente.sql": "9a1092ca7e9a59a2166140c19a182f05c562284e10db489e998cdb098d14a629"
+  }
+}
