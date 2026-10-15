@@ -29,10 +29,11 @@ jobs:
         run: python3 -B -m unittest discover -s scripts/ci/demo-wire-lab -p 'test_*.py' -v
       - name: Offline physical wire state machine through complete catalog
         env:
-          GITHUB_SHA: ${{ github.event.pull_request.head.sha }}
+          LAB_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
         run: |
-          node scripts/ci/test-catalog.mjs --output reports/test-inventory.json
-          node scripts/ci/test-catalog.mjs --run node-demo-wire-lab reports/test-inventory.json
+          test "$(git rev-parse HEAD)" = "$LAB_HEAD_SHA"
+          env GITHUB_SHA="$LAB_HEAD_SHA" node scripts/ci/test-catalog.mjs --output reports/test-inventory.json
+          env GITHUB_SHA="$LAB_HEAD_SHA" node scripts/ci/test-catalog.mjs --run node-demo-wire-lab reports/test-inventory.json
       - name: Exclusive physical wire against isolated PostgreSQL 17.6
         run: python3 -B scripts/ci/demo-wire-lab/run_ci.py --output "$RUNNER_TEMP/demo-wire-lab"
       - name: Preserve sanitized synthetic evidence
