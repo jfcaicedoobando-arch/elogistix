@@ -2,6 +2,9 @@
 import copy,re
 from contextlib import contextmanager
 F=['public._crm_empresa_no_borrar_cliente()','public._crm_empresa_no_delete_fisico()']
+# PostgreSQL rejects RETURNS trigger functions with declared arguments (42P13).
+# A legal scalar overload establishes signature drift without failing fixture setup.
+SIGNATURE_DRIFT_SQL='DROP FUNCTION '+F[0]+' CASCADE;CREATE FUNCTION public._crm_empresa_no_borrar_cliente(integer) RETURNS integer LANGUAGE sql AS $$ SELECT $1 $$;'
 @contextmanager
 def database(r,name):
  db=r.clone(name)
@@ -58,7 +61,7 @@ def run_cases(r):
  'empty_acl':'REVOKE EXECUTE ON FUNCTION '+F[0]+' FROM postgres,service_role;',
  'missing_owner':'REVOKE EXECUTE ON FUNCTION '+F[0]+' FROM postgres;',
  'recreated':'DROP FUNCTION '+F[0]+' CASCADE;CREATE FUNCTION '+F[0]+' RETURNS trigger LANGUAGE plpgsql AS $$ BEGIN RETURN NEW; END $$;',
- 'signature':'DROP FUNCTION '+F[0]+' CASCADE;CREATE FUNCTION public._crm_empresa_no_borrar_cliente(integer) RETURNS trigger LANGUAGE plpgsql AS $$ BEGIN RETURN NEW; END $$;',
+ 'signature':SIGNATURE_DRIFT_SQL,
  'unexpected_grantor':'GRANT EXECUTE ON FUNCTION '+F[0]+' TO service_role WITH GRANT OPTION;SET ROLE service_role;GRANT EXECUTE ON FUNCTION '+F[0]+' TO synthetic_other;RESET ROLE;',
  'trigger_type':'DROP TRIGGER trg_crm_empresa_no_borrar_cliente ON crm_empresas;CREATE TRIGGER trg_crm_empresa_no_borrar_cliente AFTER UPDATE OF deleted_at ON crm_empresas FOR EACH ROW EXECUTE FUNCTION '+F[0]+';',
  'trigger_attr':'DROP TRIGGER trg_crm_empresa_no_borrar_cliente ON crm_empresas;CREATE TRIGGER trg_crm_empresa_no_borrar_cliente BEFORE UPDATE OF nombre ON crm_empresas FOR EACH ROW EXECUTE FUNCTION '+F[0]+';',

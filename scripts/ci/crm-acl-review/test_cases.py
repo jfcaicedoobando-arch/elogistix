@@ -1,6 +1,10 @@
 import copy,unittest
-from cases import semantic
+from cases import semantic,SIGNATURE_DRIFT_SQL
 class SnapshotTests(unittest.TestCase):
+ def test_signature_drift_fixture_is_a_legal_scalar_overload(self):
+  self.assertIn('_crm_empresa_no_borrar_cliente(integer) RETURNS integer LANGUAGE sql',SIGNATURE_DRIFT_SQL)
+  self.assertNotIn('RETURNS trigger',SIGNATURE_DRIFT_SQL)
+  self.assertIn('DROP FUNCTION public._crm_empresa_no_borrar_cliente() CASCADE;',SIGNATURE_DRIFT_SQL)
  def sample(self):return {'pg_proc':[{'oid':'1','proname':'_crm_empresa_no_borrar_cliente','proacl':['postgres=X/postgres','service_role=X/postgres'],'prosrc':'body'},{'oid':'2','proname':'unrelated','proacl':['PUBLIC=X/postgres']}],'pg_shdepend':[{'classid':'1255','objid':'1','deptype':'a'},{'classid':'1255','objid':'2','deptype':'a'}],'pg_trigger':[{'oid':'10'}]}
  def test_target_acl_only(self):
   a=self.sample();b=copy.deepcopy(a);b['pg_proc'][0]['proacl']=['postgres=X/postgres'];b['pg_shdepend'].pop(0)
