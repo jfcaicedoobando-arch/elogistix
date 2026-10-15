@@ -1,0 +1,253 @@
+{
+  "schemaVersion": 1,
+  "status": "PASS_SYNTHETIC_ONLY",
+  "scope": "SYNTHETIC_ACTIONS_LAB_ONLY",
+  "code_head": "9084f0249900491b50d944f34caf075d7a6ad2d3",
+  "main_base": "d1de16b7cafda5f739511cf7cfef645a7733651a",
+  "run_url": "https://github.com/jfcaicedoobando-arch/elogistix/actions/runs/38813587064",
+  "artifact_id": 12009084011,
+  "artifact_sha256": "f1f230ca2c300e9e00c3bf4723dc1bf7c56f63fb5bed52f37e7ccb59fe2243dc",
+  "artifact_crc": "PASS",
+  "artifact_files": [
+    "result.json",
+    "runtime.json",
+    "timeline.json",
+    "runtime-manifest.json"
+  ],
+  "cases": [
+    {
+      "case": "empty_config_zero_transport",
+      "status": "PASS",
+      "evidence": {
+        "transportsOpened": 0
+      }
+    },
+    {
+      "case": "claim_commit_then_business_same_socket",
+      "status": "PASS",
+      "evidence": {
+        "claimObservedByIndependentBackendBeforeBusiness": true,
+        "socketEpochs": 1,
+        "outcome": "business_commit_acknowledged",
+        "claims": 1,
+        "effects": 1
+      }
+    },
+    {
+      "case": "duplicate_sealed",
+      "status": "PASS",
+      "evidence": {
+        "claims": 1,
+        "effects": 1,
+        "additionalEffects": 0
+      }
+    },
+    {
+      "case": "missing_dispatch_sealed",
+      "status": "PASS",
+      "evidence": {
+        "claims": 0,
+        "effects": 0
+      }
+    },
+    {
+      "case": "business_sql_error_claim_retained",
+      "status": "PASS",
+      "evidence": {
+        "claims": 1,
+        "effects": 0,
+        "duplicate": "sealed",
+        "rollback": "observed after transport close"
+      }
+    },
+    {
+      "case": "claim_commit_ack_uncertain",
+      "status": "PASS",
+      "evidence": {
+        "claims": 1,
+        "effects": 0,
+        "injection": "close at first COMMIT CommandComplete before accepting ReadyForQuery",
+        "duplicate": "sealed"
+      }
+    },
+    {
+      "case": "business_commit_ack_uncertain",
+      "status": "PASS",
+      "evidence": {
+        "claims": 1,
+        "effects": 1,
+        "injection": "close at second COMMIT CommandComplete before accepting ReadyForQuery",
+        "duplicate": "sealed",
+        "additionalEffects": 0
+      }
+    },
+    {
+      "case": "close_after_claim_no_business",
+      "status": "PASS",
+      "evidence": {
+        "claims": 1,
+        "effects": 0,
+        "socketWritesAfterClose": 0
+      }
+    },
+    {
+      "case": "sql_error_terminal_no_replay",
+      "status": "PASS",
+      "evidence": {
+        "subsequentSocketWrites": 0,
+        "retry": "rejected before write"
+      }
+    }
+  ],
+  "protocol": {
+    "queries": 93,
+    "unique_socket_epochs": 12,
+    "distinct_disposable_backends": 12,
+    "timeline_events": 917,
+    "socket_write_admissions": 477,
+    "command_complete_messages": 91,
+    "ready_for_query_admitted": 101,
+    "completed_query_frames": "one Parse/Bind/Describe/Execute/Sync each",
+    "happy_commands": [
+      "BEGIN",
+      "SET",
+      "INSERT",
+      "COMMIT",
+      "BEGIN",
+      "SELECT",
+      "COMMIT"
+    ],
+    "happy_ready_statuses": [
+      "T",
+      "T",
+      "T",
+      "I",
+      "T",
+      "T",
+      "I"
+    ],
+    "claim_seen_by_independent_backend_before_business": true,
+    "commit_fault_ordinals": [
+      4,
+      7
+    ],
+    "accepted_ready_or_writes_after_fault": 0,
+    "observed_sqlstates": [
+      "P0001",
+      "22012"
+    ],
+    "writes_after_terminal": 0,
+    "each_socket_connects": 1,
+    "each_socket_confirmed_closes": 1,
+    "timeline_sha256": "c4b0aeb23bddaf006c1642823b6f4bb4315cd27688254574e2ff764f21c4a98e"
+  },
+  "provenance": {
+    "input_manifest": {
+      "source_commit": "860ac59cc9b6d80887c1a7811e2c81ef8ef17ca8",
+      "source_base": "5d1f00d27628100a58ab166367a067ea90068b84",
+      "source_route": "pinned Git files; not Library ZIP materialization",
+      "manifest_sha256": "d0a7c1655f9d137f7c88d5489318f42639f7c2548ec627fec7134363afbc2335",
+      "store_sha256": "fb7fa69c17eca7230606ecb6217086c6eb5317d75551df9efc268959f69140a7",
+      "files": {
+        "README.md": "0193d3b6c4b1664b2a368e82b789498f52f94007d9a650d3b162f61e654ba948",
+        "RUNTIME_PLAN.md": "048cb8f5db2d506b6dac3cd97d131b45e46a99963339ec74799adc47da6a1717",
+        "SHA256SUMS.txt": "d0a7c1655f9d137f7c88d5489318f42639f7c2548ec627fec7134363afbc2335",
+        "config.example.json": "d9d756fa4d8792eb70442659cb106244f8d89b2e839fcab511a9740675a21565",
+        "driver.mjs": "82305d90a131339c3170dd2fdc48f46410b6a58a268bb72b798ffedcc5bcac6b",
+        "issuer.mjs": "5d78d058a336f4eb21fa715d45844d86aa41c046f462c1670610084229e172d1",
+        "owner.mjs": "e16d06f030bf53aea860325448041e2b3e9cd84ff152ea4bb281709a6d786504",
+        "owner.test.mjs": "0b8d2c5e4acd367668460fa21f18098d63a519751cf417e4da35ab39985ad7cb",
+        "store.mjs": "a0aac72315944475b014019e312253619b42ee30dc0ba1040ec6d86f53432b45",
+        "store.sql": "fb7fa69c17eca7230606ecb6217086c6eb5317d75551df9efc268959f69140a7",
+        "tests.tap": "133223861fb1bf20a059895b4500e23b8ce44361c8f557743590c56bac644579",
+        "validation.json": "4526c5cf332862174aa1a0ae8f0036c021b8af3bad20abf8d7a5f7a1658056c0"
+      },
+      "wire": "UNBOUND",
+      "configuration": "EMPTY"
+    },
+    "store_file_sha256": "fb7fa69c17eca7230606ecb6217086c6eb5317d75551df9efc268959f69140a7",
+    "store_stdin_sha256": "fb7fa69c17eca7230606ecb6217086c6eb5317d75551df9efc268959f69140a7",
+    "store_log_sha256": "fb7fa69c17eca7230606ecb6217086c6eb5317d75551df9efc268959f69140a7",
+    "crm_infrastructure_sha256_pin": "a364f833851080d9b290fca35fa7925514dc898979359e55c411f0eef57e7816",
+    "postgres_image_pin": "postgres@sha256:f3bd19c606e442c3d7bdfa8002e03fe260a1023351e0ea4598032022b68dd6e3",
+    "persistence_runner_sha256": "09cf6d2035b14005006b656649cf2e3f5f99322eb6776f80927586c522c204fe",
+    "runtime_tar_sha256": "3af3ae49a8e97c7ef10c5dd87f0002d0e1c9bd828c73b98918ed8676d9ac2ff7",
+    "runtime_files": 148,
+    "extracted_file_hashes_verified": true,
+    "node": {
+      "version": "24.19.0",
+      "archive_sha256": "14b342e71204f811bde6153be8e04b62aef63c236fef92b55f9c83154b409647",
+      "official_url": "https://nodejs.org/dist/v24.19.0/node-v24.19.0-linux-x64.tar.xz"
+    },
+    "driver": {
+      "name": "pg",
+      "version": "8.23.1",
+      "git_commit": "0980cefebe0ae461da8883703be049fe13ca96cf",
+      "npm_integrity": "sha512-aL96AHANtWjPLDOLqnhx+ngp9+UK7ETEU8VJrDCGvsSSi/mGLcWYsS6Herg7lmaBJe4uwrfqsa7gTEFaSizDoQ==",
+      "audited_source_git_blobs": {
+        "lib/client.js": "2b13c1de74ce2742e521eb2ef71803b1da579439",
+        "lib/connection.js": "85f3113a19a2f2e017630e58211c07ff04ad01ef",
+        "lib/query.js": "3b93cb5bade3b5c3ac77ffe9a54086853d1a6b1a",
+        "lib/result.js": "329fbf9fc615874e725d55a1026b4715414928fe",
+        "lib/stream.js": "edc3018332d999139e6b6573230e8c0553650bc0",
+        "lib/connection-parameters.js": "37987fd688a49d10327aef1ab21fa7dea43b8389"
+      }
+    },
+    "dependency_lock_sha256": "6e9d1546028b52af8f846aeac3482b78e8bf6fbf6173d221fc203b8a5584bfe8"
+  },
+  "isolation": {
+    "candidate_context": {
+      "user": "postgres",
+      "fsync": "off",
+      "listen": "",
+      "address": null,
+      "session": "postgres",
+      "version": "170006",
+      "superuser": false,
+      "sync_commit": "on",
+      "admin_member": false,
+      "catalog_write": false
+    },
+    "node_version": "v24.19.0",
+    "node_mode": "755",
+    "tmpfs_mount_options": [
+      "rw",
+      "nosuid",
+      "nodev",
+      "relatime",
+      "size=786432k",
+      "inode64"
+    ],
+    "hostconfig_tmpfs_verified": true,
+    "network": "none",
+    "host_ports_mounts_dsn": "ABSENT",
+    "read_only_root": true,
+    "exec_delta": "only existing owned /tmp tmpfs; original CRM source unchanged"
+  },
+  "cleanup": {
+    "cleanup": "confirmed_stopped_and_removed",
+    "phase": "complete_owned_cleanup_confirmed",
+    "shutdown_confirmed": true,
+    "pg_status_3_and_no_pid": true,
+    "owned_node_clients_reaped": true,
+    "owned_psql_clients_closed": true
+  },
+  "transport_closes_confirmed": true,
+  "independent_reviews": {
+    "protocol_semantics": "PASS_SYNTHETIC_ONLY",
+    "provenance_privacy_cleanup": "PASS_SYNTHETIC_ONLY",
+    "blockers": [],
+    "basis": "public JSON, exact source blobs and gate code; private raw Docker logs and tar binary excluded"
+  },
+  "configuration": "EMPTY",
+  "endpoint": "CLOSED",
+  "operational_wire": "UNBOUND",
+  "sql_races_this_lane": "NOT_RUN",
+  "limitations": [
+    "Synthetic issuer, authentication, guard and business fixture only",
+    "No pooler, failover, TLS, credentials, production identity or engine certification",
+    "Deterministic COMMIT acknowledgment injection; not arbitrary network-loss coverage",
+    "fsync off on disposable tmpfs; crash recovery and durable storage NOT_RUN",
+    "At-most-once with quarantine; no exactly-once or availability guarantee"
+  ]
+}

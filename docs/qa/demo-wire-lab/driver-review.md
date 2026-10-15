@@ -167,13 +167,16 @@ a real peer FIN terminally. Those IPC tests use an explicitly synthetic policy;
 they do not simulate a PostgreSQL server. Each confirms server/socket closure,
 and Unix fixture directories are removed after server cleanup.
 All 22 passed locally on Node v24.19.0/Windows with zero skips. The Linux UDS
-variants remain to be exercised by Actions after this correction.
+variants also passed without skips in [Actions 38813587064](https://github.com/jfcaicedoobando-arch/elogistix/actions/runs/38813587064)
+at `9084f0249900491b50d944f34caf075d7a6ad2d3` (24 including catalog regressions).
 
 The public factory gate is also tested in a child process with an explicit
 minimal non-Actions environment. The tests load no pg, execute no SQL and use
 no external network. They do not certify PostgreSQL framing or physical owner
-continuity; that proof still requires a successful separately authorized
-disposable Actions lane and its exact artifact after this correction.
+continuity. The separately authorized disposable lane passed nine physical
+synthetic cases at that exact head. Its four-JSON artifact was downloaded,
+hash/CRC checked and independently audited for protocol semantics, provenance,
+privacy and cleanup. See [recorded runtime evidence](runtime-evidence.json).
 
 The fixture's fsync-off/tmpfs PostgreSQL setup cannot establish crash, WAL,
 restore or failover durability. A direct laboratory UDS says nothing about a
