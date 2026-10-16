@@ -76,6 +76,12 @@ jobs:
           HEAD_SHA: ${{ github.sha }}
         run: bash scripts/ci/detect-areas.sh
 
+      - name: Setup Node for detector and offline contracts
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: '24.22.0'
+          package-manager-cache: false
+
       - name: Validate native shard plan
         id: shards
         env:
@@ -85,11 +91,6 @@ jobs:
 
       - name: Catálogo completo de pruebas (sin ejecutar carriles manuales)
         run: node scripts/ci/test-catalog.mjs --output reports/test-inventory.json
-
-      - name: Node 24 for review-only protocol tests
-        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
-        with:
-          node-version: '24.19.0'
 
       - name: Demo review offline lane (no SQL, backend or credentials)
         run: node scripts/ci/demo-review-offline.mjs reports/test-inventory.json
@@ -108,6 +109,14 @@ jobs:
 
       - name: Post-deploy smoke contract (offline, no credentials)
         run: node --test scripts/ci/post-deploy-smoke.test.mjs
+
+      - name: Setup Bun for package script contracts
+        uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
+        with:
+          bun-version: '1.4.0'
+
+      - name: Package script contracts (offline, stubbed commands)
+        run: node --test scripts/ci/package-scripts.test.mjs
 
       - name: Validate workflows (actionlint)
         if: steps.areas.outputs.workflows == 'true'
@@ -390,6 +399,13 @@ jobs:
           pattern: vitest-evidence-*-of-${{ needs.detector.outputs.shard_count }}-attempt-*
           path: reports/ci-evidence
           merge-multiple: false
+
+      - name: Setup Node for shard evidence verification
+        if: needs.tests.result == 'success'
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: '24.22.0'
+          package-manager-cache: false
 
       - name: Verificar unión exacta de archivos y casos
         if: needs.tests.result == 'success'
