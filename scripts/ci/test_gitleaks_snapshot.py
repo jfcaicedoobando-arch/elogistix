@@ -607,6 +607,9 @@ class ArtifactDigestAllowlistConfigTests(unittest.TestCase):
         def allowed(path, line):
             return bool(re.search(allowlist["paths"][0], path) and re.search(allowlist["regexes"][0], line))
         self.assertTrue(allowed(self.artifact_path, self.line()))
+        # v8.24.3 location.startLineIndex points at the preceding newline.
+        self.assertTrue(allowed(self.artifact_path, "\n" + self.line()))
+        self.assertTrue(allowed(self.artifact_path, "\r\n" + self.line() + "\r\n"))
         for path in ("other.json", self.artifact_path + ".bak", "backup/" + self.artifact_path):
             self.assertFalse(allowed(path, self.line()))
         for line in (self.line().replace(self.artifact_digest, "0" * 64),
@@ -628,6 +631,7 @@ class RealArtifactDigestAllowlistTests(RealSQLAllowlistTests):
         path = ArtifactDigestAllowlistConfigTests.artifact_path
         line = ArtifactDigestAllowlistConfigTests.line() + "\n"
         self.scan_case(path, line, expected_leak=False)
+        self.scan_case(path, '{\n  "id": 12014284809,\n' + line + '}\n', expected_leak=False)
         for wrong_path in ("other.json", path + ".bak", "backup/" + path):
             with self.subTest(path=wrong_path):
                 self.scan_case(wrong_path, line, expected_leak=True)

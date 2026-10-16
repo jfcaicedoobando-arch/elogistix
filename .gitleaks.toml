@@ -39,4 +39,5 @@ description = "Verified historical Actions artifact 12014284809 ZIP digest; exac
 condition = "AND"
 paths = ['''^scripts/ci/demo-financial-retry-negative-review/origin-v2-evidence\.json$''']
 regexTarget = "line"
-regexes = ['''^[ \t]*"api[_]sha256": "8b45e68934272812c51c75579c3c6f0b2c9602e057d653254b4f9605e2182607",[ \t]*(?:\r?\n)?$''']
+# v8.24.3 location.go includes the preceding newline in finding.Line.
+regexes = ['''^(?:\r?\n)?[ \t]*"api[_]sha256": "8b45e68934272812c51c75579c3c6f0b2c9602e057d653254b4f9605e2182607",[ \t]*(?:\r?\n)?$''']

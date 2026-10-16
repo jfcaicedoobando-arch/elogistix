@@ -1,5 +1,10 @@
 [
   {
+    "path": "gitleaks-digest-native-evidence.json",
+    "bytes": 1900,
+    "sha256": "2880ba25575cc7892be01a421ed711baf65601745e3e89a50782e8bea979f00c"
+  },
+  {
     "path": "README.md",
     "bytes": 5308,
     "sha256": "8117d034b9dd76c80ec9bbf7e23c8742ff700d27152947f5a1fd433cf28fd1d6"
