@@ -132,6 +132,12 @@ jobs:
           # No se hace push/fetch autenticado.
           persist-credentials: false
 
+      - name: Setup Node
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: '24.22.0'
+          package-manager-cache: false
+
       - name: Catálogo completo de pruebas
         run: node scripts/ci/test-catalog.mjs --output reports/rls-evidence/inventory.json
 
@@ -152,7 +158,7 @@ jobs:
         run: bash scripts/ci/receivable155/run-ci.sh
 
       - name: Dependencia mínima del runner serial selector148
-        # Node/npm are provided by ubuntu-24.04; use a separate exact lockfile,
+        # Node/npm use the pinned setup above; use a separate exact lockfile,
         # no root frontend install and no lifecycle scripts.
         run: |
           node -e "require('node:assert/strict')(Number(process.versions.node.split('.')[0]) >= 20)"

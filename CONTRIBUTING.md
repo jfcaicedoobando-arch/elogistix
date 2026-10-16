@@ -1,12 +1,13 @@
 # Contribuir a Libre Carga
 
-Revisado el **2026-09-26**. Leer [arquitectura](ARCHITECTURE.md),
+Revisado el **2026-10-16**. Leer [arquitectura](ARCHITECTURE.md),
 [guías](docs/README.md) y [CI](docs/ops/ci.md).
 
 ## Preparación y cambios
 
-Node.js ≥22.12.0; Bun 1.4.0 para paridad con CI.
-Instalar con `bun install --frozen-lockfile`. Trabajar en rama/PR de alcance
+Node.js ≥22.22.0 es el mínimo de compatibilidad por Router 8. Para paridad
+con CI, usar Node 24.22.0 y Bun 1.4.0 (`packageManager: bun@1.4.0`).
+Instalar con `bun install --frozen-lockfile --ignore-scripts`. Trabajar en rama/PR de alcance
 explícito y conservar cambios ajenos.
 
 No subir contraseñas, service-role keys, `.env.e2e` o documentos fiscales de clientes.
@@ -28,6 +29,12 @@ bun run typecheck
 Elegir pruebas y lint focales durante implementación. Suite completa CI/RLS
 en GitHub Actions; no repetirla tras cada commit en Lovable.
 Knip, coverage, benchmarks y E2E son diagnósticos separados.
+
+`bun run ci:local` ejecuta en orden lint sin warnings, typecheck, Knip, tests
+normales y build. Incluye Knip como diagnóstico local bloqueante; no reproduce
+los guards DB, Deno, RLS ni el agregador de Actions. `bun run test:ci` ejecuta
+tests sin coverage y admite filtros/shards. `test:coverage:merge` requiere blobs
+previos en `.vitest-reports`; ver [contratos de comandos](docs/ops/ci.md#comandos-locales-y-coverage).
 
 UI: 1280×720 y 691×763, claro/oscuro, teclado y modales.
 Docs: rutas, enlaces, comandos existentes y consistencia con el código.

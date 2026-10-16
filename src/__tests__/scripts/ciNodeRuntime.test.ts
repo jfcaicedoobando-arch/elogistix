@@ -26,6 +26,13 @@ const normalizedWorkflow = (source: string) => source.replace(
   /(uses: actions\/(?:checkout|setup-node|upload-artifact))@[^\r\n]+/g,
   "$1@REVIEWED_OFFICIAL_ACTION",
 );
+const historicalNodeWorkflows = [
+  "demo-persistence-prerequisites.yml",
+  "demo-wire-lab.yml",
+  "demo-authority-entry-review.yml",
+];
+const jobs = (source: string) => [...source.matchAll(/^ {2}([\w-]+):\s*\n([\s\S]*?)(?=^ {2}[\w-]+:\s*\n|(?![\s\S]))/gm)]
+  .map(([, name, body]) => ({ name, body }));
 
 describe("Node 24 workflow migration", () => {
   it("pins the installed LTS independently of the Actions runtime and Bun", () => {
@@ -58,6 +65,51 @@ describe("Node 24 workflow migration", () => {
     expect(keys).not.toContain("-eslint-bun");
   });
 
+  it("selects the job runtime before every direct Node command", () => {
+    const nodeJobs: string[] = [];
+    for (const file of workflows) {
+      for (const { name, body } of jobs(read(path.join(".github/workflows", file)))) {
+        const command = body.match(/^\s+(?:-\s+)?(?:run:\s*)?(?:env [^\n]*? )?node(?:\s|$)/m);
+        if (!command) continue;
+        nodeJobs.push(`${file}:${name}`);
+        const composite = body.indexOf("uses: ./.github/actions/setup-bun");
+        const explicit = body.indexOf("uses: actions/setup-node@");
+        const selected = composite >= 0 ? composite : explicit;
+        expect(selected, `${file}:${name} must set up Node before its first command`).toBeGreaterThanOrEqual(0);
+        expect(selected, `${file}:${name} must not inherit the runner's Node`).toBeLessThan(command.index!);
+        if (composite < 0) {
+          const version = historicalNodeWorkflows.includes(file) ? "24.19.0" : "24.22.0";
+          expect(body).toContain(`node-version: '${version}'`);
+          if (version === "24.22.0") expect(body).toContain("package-manager-cache: false");
+        }
+      }
+    }
+    expect(nodeJobs).toEqual(expect.arrayContaining([
+      "ci.yml:detector", "ci.yml:ci-success", "rls-tests.yml:rls-tests-result",
+      "post-deploy-smoke.yml:smoke", "nc-publica-replay-review.yml:minimal-replay",
+      "nc-publica-replay-review.yml:full-replay-baseline",
+    ]));
+  });
+
+  it("sets up detector Node unconditionally before shard planning and inventory", () => {
+    const detector = jobs(ci).find(job => job.name === "detector")!.body;
+    const setupStep = detector.split("      - name: Setup Node for detector")[1].split("      - name:")[0];
+    expect(setupStep).toContain("node-version: '24.22.0'");
+    expect(setupStep).not.toMatch(/\bif:/);
+    const nodeSetup = detector.indexOf("uses: actions/setup-node@");
+    for (const command of ["node scripts/ci/vitest-shard-plan.mjs", "node scripts/ci/test-catalog.mjs --output"])
+      expect(nodeSetup).toBeLessThan(detector.indexOf(command));
+  });
+
+  it("sets up evidence verification under the same success condition without installing dependencies", () => {
+    const aggregate = jobs(ci).find(job => job.name === "ci-success")!.body;
+    const setupStep = aggregate.split("      - name: Setup Node for shard evidence verification")[1].split("      - name:")[0];
+    expect(setupStep).toContain("if: needs.tests.result == 'success'");
+    expect(setupStep).toContain("node-version: '24.22.0'");
+    expect(aggregate).not.toContain("uses: ./.github/actions/setup-bun");
+    expect(aggregate).toMatch(/name: Verificar unión exacta de archivos y casos\s+if: needs\.tests\.result == 'success'\s+run: node scripts\/ci\/verify-test-evidence\.mjs/);
+  });
+
   it("uses SHA-pinned current official actions throughout active workflows", () => {
     const sources = [...workflows.map(file => read(path.join(".github/workflows", file))), setup];
     for (const [name, expected] of Object.entries(officialPins)) {
@@ -75,8 +127,14 @@ describe("Node 24 workflow migration", () => {
       const normalized = normalizedWorkflow(read(path.join(".github/workflows", file)));
       expect(createHash("sha256").update(normalized).digest("hex")).toBe(expected);
     }
-    for (const file of ["ci.yml", "demo-persistence-prerequisites.yml", "demo-wire-lab.yml", "demo-authority-entry-review.yml"]) {
+    for (const file of historicalNodeWorkflows) {
       expect(read(path.join(".github/workflows", file))).toContain("node-version: '24.19.0'");
     }
+    expect(ci).not.toContain("24.19.0");
+    expect(read("scripts/ci/demo-wire-lab/stage.py")).toContain("NODE_VERSION = '24.19.0'");
+    expect(read("scripts/ci/demo-wire-lab/runtime.mjs")).toContain("assert.equal(process.version, 'v24.19.0')");
+    expect(read("scripts/ci/demo-wire-lab/run_ci.py")).toContain("NODE_VERSION = 'v24.19.0'");
+    expect(read(".github/workflows/rls-tests.yml")).toContain("Number(process.versions.node.split('.')[0]) >= 20");
+    expect(read(".github/workflows/nc-publica-replay-review.yml")).toContain('Number(process.versions.node.split(".")[0]) >= 22');
   });
 });

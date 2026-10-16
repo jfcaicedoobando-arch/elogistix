@@ -141,7 +141,7 @@ export default function CxpPorPagar() {
             controlledSort={paged.controlledSort}
             onSortChange={paged.setSort}
             pagination={{ ...paged.pagination, hideWhenSinglePage: true }}
-            getRowHref={(r) => `/cxp?factura=${r.factura_id}`}
+            getRowHref={(r) => `/compras/facturas/${r.factura_id}`}
             getRowAriaLabel={(r) => `Factura ${r.folio_proveedor ?? ""} de ${r.proveedor_nombre ?? ""}`}
             emptyIcon={Inbox}
             emptyMessage="Sin facturas pendientes de pago"
