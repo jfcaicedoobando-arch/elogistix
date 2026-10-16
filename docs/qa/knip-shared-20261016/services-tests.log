@@ -1,0 +1,41 @@
+(!) Your Vite config uses features that are unsupported by `configLoader: 'native'`, which is planned to become the default in a future major version of Vite:
+  - `__dirname` (vitest.config.ts:15:14). Use `import.meta.dirname` instead
+  - import "./scripts/lib/testEnvSplit" without a file extension (vitest.config.ts:3:41). Add the file extension
+  - import "./vitest.shared" without a file extension (vitest.config.ts:9:8). Add the file extension
+Set `VITE_CONFIG_NATIVE_IGNORE_WARNING=true` to suppress this warning.
+[vite:react-swc] We recommend switching to `@vitejs/plugin-react` for improved performance as no swc plugins are used. More information at https://vite.dev/rolldown
+[vite:react-swc] We recommend switching to `@vitejs/plugin-react` for improved performance as no swc plugins are used. More information at https://vite.dev/rolldown
+[vite:react-swc] We recommend switching to `@vitejs/plugin-react` for improved performance as no swc plugins are used. More information at https://vite.dev/rolldown
+
+ RUN  v5.0.3 C:/Users/torta/Documents/Codex/2026-10-16/task-14/elogistix
+
+ Γ£ô |jsdom| src/features/marketing/__tests__/demoAccessDisabled.test.tsx (15 tests) 529ms
+   Γ£ô release con acceso demo no disponible (15)
+     Γ£ô deshabilita el CTA aunque label sea undefined 363ms
+ Γ£ô |jsdom| src/lib/contexts/__tests__/OrganizationContext.superAdmin.test.tsx (7 tests) 1921ms
+   Γ£ô OrganizationContext ┬╖ super admin sin organizaci├│n (7)
+     Γ£ô 35: cambio efectivo invalida descarga y reporte antes del roundtrip al servidor 1147ms
+     Γ£ô clears short-lived data again after the server finishes switching tenant 318ms
+ Γ£ô |jsdom| src/hooks/shared/__tests__/useTableFilters.test.tsx (4 tests) 74ms
+ Γ£ô |jsdom| src/features/catalogos/hooks/__tests__/useTiposContenedor.test.tsx (2 tests) 185ms
+ Γ£ô |jsdom| src/lib/contexts/__tests__/OrganizationContext.test.tsx (2 tests) 1796ms
+   Γ£ô OrganizationContext (2)
+     Γ£ô provee valores por defecto para usuario sin sesi├│n 1752ms
+ Γ£ô |jsdom| src/features/catalogos/hooks/__tests__/useNavieras.test.tsx (2 tests) 165ms
+ Γ£ô |jsdom| src/features/catalogos/hooks/__tests__/usePuertos.test.tsx (2 tests) 276ms
+stderr | src/features/admin/services/usuario/__tests__/usuario.test.ts > services/usuario > createUserViaEdgeFunction lanza si body trae error
+[traducirMensajeEdge] motivo no catalogado del proveedor de identidad: bad
+
+ Γ£ô |node| src/features/admin/services/usuario/__tests__/usuario.test.ts (15 tests) 31ms
+ Γ£ô |node| src/features/admin/services/usuario/__tests__/usuarioOrgScope.test.ts (7 tests) 22ms
+ Γ£ô |jsdom| src/hooks/shared/__tests__/useTableFilters.pageReset.test.tsx (2 tests) 93ms
+ Γ£ô |node| src/features/catalogos/services/__tests__/catalogoOrgVisibilidad.test.ts (5 tests) 17ms
+ Γ£ô |node| src/features/admin/services/organization/__tests__/index.test.ts (15 tests) 41ms
+ Γ£ô |node| src/__tests__/architecture/barril-sin-logica.test.ts (2 tests) 134ms
+ Γ£ô |node| src/features/catalogos/services/__tests__/index.test.ts (2 tests) 13ms
+ Γ£ô |node| src/features/admin/services/usuario/__tests__/estadoDesactivado.test.ts (2 tests) 40ms
+
+ Test Files  15 passed (15)
+      Tests  84 passed (84)
+   Start at  17:05:28
+   Duration  25.13s (environment 49%, setup 18%, tests 12%, import 12%, transform 7%, worker 1%)

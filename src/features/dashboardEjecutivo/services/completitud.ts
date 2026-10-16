@@ -14,11 +14,6 @@ export function completitudEjecutiva(snapshot: Base) {
   };
 }
 
-/** No convertir totales parciales en mensajes de certeza ni semáforos. */
-export function ratiosDisponibles(eerrIncompleto: boolean, flujoIncompleto: boolean): boolean {
-  return !eerrIncompleto && !flujoIncompleto;
-}
-
 export function sinVariacionesIncompletas(
   kpis: SnapshotEjecutivo['kpis'], actual: SnapshotEjecutivo['eerrPeriodo'], previo?: SnapshotEjecutivo['eerrPeriodo'],
 ): SnapshotEjecutivo['kpis'] {

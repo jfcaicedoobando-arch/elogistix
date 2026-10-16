@@ -22,5 +22,4 @@ export * from './useDocumentTitle';
 export * from './useCargaExpirada';
 export { useVolver } from "./useVolver";
 export { useRecentPages } from "./useRecentPages";
-export { useTableFilters } from "./useTableFilters";
-export type { ChipItem, TableFiltersState } from "./useTableFilters";
+export type { ChipItem } from "./useTableFilters";

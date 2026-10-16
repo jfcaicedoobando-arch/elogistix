@@ -3,14 +3,9 @@
  * Sólo orquesta cache: la consulta vive en el servicio `miembrosAsignables`.
  */
 import { useQuery } from "@tanstack/react-query";
-import {
-  fetchMiembrosAsignables,
-  type ResponsableOption,
-} from "@/features/auditoria/services/miembrosAsignables";
+import { fetchMiembrosAsignables } from "@/features/auditoria/services/miembrosAsignables";
 import { useOrganization } from "@/lib/contexts/OrganizationContext";
 import { queryKeys } from "@/lib/query";
-
-export type { ResponsableOption };
 
 export function useOrgMembersAsignables() {
   const { organizationId } = useOrganization();

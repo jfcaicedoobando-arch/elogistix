@@ -1,0 +1,49 @@
+$ knip --no-progress
+[sentry] SENTRY_AUTH_TOKEN ausente: sourcemaps NO se subir├ín a Sentry. Los stack traces de producci├│n quedar├ín minificados. Configura el token en Workspace Settings ΓåÆ Build Secrets.
+[sentry] SENTRY_AUTH_TOKEN ausente: sourcemaps NO se subir├ín a Sentry. Los stack traces de producci├│n quedar├ín minificados. Configura el token en Workspace Settings ΓåÆ Build Secrets.
+[sentry] SENTRY_AUTH_TOKEN ausente: sourcemaps NO se subir├ín a Sentry. Los stack traces de producci├│n quedar├ín minificados. Configura el token en Workspace Settings ΓåÆ Build Secrets.
+[sentry] SENTRY_AUTH_TOKEN ausente: sourcemaps NO se subir├ín a Sentry. Los stack traces de producci├│n quedar├ín minificados. Configura el token en Workspace Settings ΓåÆ Build Secrets.
+Unused exports (31)
+DOCS_OBLIGATORIOS                                     src/features/cliente/hooks/useNuevoClienteController.ts:13:19
+EMPTY_CLIENTE                                         src/features/cliente/hooks/useNuevoClienteController.ts:13:38
+fetchTarifaVigentePorId                     function  src/features/costeo/services/topTarifas.ts:87:23
+useCotizacionesPendientesReaprobacion       function  src/features/cotizacion/hooks/usePendientesReaprobacion.ts:16:17
+fetchCotizacionSello                                  src/features/cotizacion/services/index.ts:18:3
+buildConceptosFromCostos                              src/features/cotizacion/services/index.ts:57:10
+fetchCotizacionSello                        function  src/features/cotizacion/services/queries.ts:174:23
+ICP_ESTATUS                                           src/features/crm/domain/leads/icp.ts:30:14
+HORAS_POR_COMPLEJIDAD                                 src/features/crm/services/pricing/tiposPricing.ts:24:14
+propagarConversionProspectoCRM                        src/features/crm/services/vincularCotizacion/index.ts:13:10
+subirFacturaEntrante                                  src/features/cxp/services/facturasEntrantes.ts:26:3
+cargoEnMxn                                            src/features/cxp/services/index.ts:27:10
+cargoEnMonedaCuenta                                   src/features/cxp/services/index.ts:27:22
+ERROR_TC_REQUERIDO                                    src/features/cxp/services/index.ts:27:43
+STEP_LABELS                                           src/features/embarques/domain/embarqueWizardSchemas.ts:19:28
+esEstadoEmbarqueContable                    function  src/features/embarques/domain/estadosContables.ts:11:17
+ivaDeFila                                             ΓÇªbarques/hooks/useDialogGenerarProformaController.helpers.ts:22:10
+sincronizarContenedores                svc            src/features/embarques/services/contenedores/index.ts:8:3
+FacturaConRepsVivosError                              src/features/facturacion/services/facturapi.ts:55:10
+esRespuestaPendiente                                  src/features/facturacion/services/timbradoPendiente.ts:25:14
+TIPO_PAGO_LABELS                                      src/features/tesoreria/domain/libroPagos.ts:18:34
+TOLERANCIA_MONTO_MXN                                  src/features/tesoreria/domain/tolerancia.ts:6:3
+TOLERANCIA_MONTO_POR_MONEDA                           src/features/tesoreria/domain/tolerancia.ts:7:3
+CRM_CONFIG                                            src/lib/access/permissionMatrix.ts:151:3
+CRM_TOMAR_LEAD                                        src/lib/access/permissionMatrix.ts:152:3
+CRM_GESTION_TODOS_LEADS                               src/lib/access/permissionMatrix.ts:153:3
+CRM_CREAR_LEAD                                        src/lib/access/permissionMatrix.ts:154:3
+CRM_STAFF_REGISTROS                                   src/lib/access/permissionMatrix.ts:155:3
+CRM_REASIGNAR_VENDEDOR                                src/lib/access/permissionMatrix.ts:157:3
+Leads                                                 src/routes/appRoutes.lazy.ts:87:14
+CrmProspectos                                         src/routes/appRoutes.lazy.ts:89:14
+Unused exported types (9)
+FrecuenciaCotizacion          type       src/features/cotizacion/domain/frecuencias.ts:16:13
+CotizacionUpdateGuard         interface  src/features/cotizacion/hooks/wizard/useCotizacionUpdateGuard.ts:47:18
+CotizacionCostosSnapshot      type       src/features/cotizacion/services/index.ts:37:15
+UpsertCostosResult            type       src/features/cotizacion/services/index.ts:37:41
+EstadoHigiene                 type       src/features/crm/services/higiene.ts:9:15
+NuevaFacturaProveedorPayload  type       src/features/cxp/services/proveedorFacturas.ts:153:8
+OrigenAceptacion              type       src/features/proformas/components/ProformaEstadoBadges.tsx:18:15
+TraspasoFormState             type       src/features/tesoreria/hooks/useTraspasoForm.ts:17:15
+PermisosCrmResueltos          type       src/lib/access/permissionMatrix.ts:160:15
+Configuration hints (1)
+.css    knip.json  Compiled extension excluded by project (imports not followed)

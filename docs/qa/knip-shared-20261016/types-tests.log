@@ -1,0 +1,78 @@
+(!) Your Vite config uses features that are unsupported by `configLoader: 'native'`, which is planned to become the default in a future major version of Vite:
+  - `__dirname` (vitest.config.ts:15:14). Use `import.meta.dirname` instead
+  - import "./scripts/lib/testEnvSplit" without a file extension (vitest.config.ts:3:41). Add the file extension
+  - import "./vitest.shared" without a file extension (vitest.config.ts:9:8). Add the file extension
+Set `VITE_CONFIG_NATIVE_IGNORE_WARNING=true` to suppress this warning.
+[vite:react-swc] We recommend switching to `@vitejs/plugin-react` for improved performance as no swc plugins are used. More information at https://vite.dev/rolldown
+[vite:react-swc] We recommend switching to `@vitejs/plugin-react` for improved performance as no swc plugins are used. More information at https://vite.dev/rolldown
+[vite:react-swc] We recommend switching to `@vitejs/plugin-react` for improved performance as no swc plugins are used. More information at https://vite.dev/rolldown
+
+ RUN  v5.0.3 C:/Users/torta/Documents/Codex/2026-10-16/task-14/elogistix
+
+ Γ£ô |jsdom| src/components/shared/dataTable/__tests__/rowNav.test.ts (10 tests) 72ms
+ Γ£ô |jsdom| src/components/shared/dataTable/__tests__/DataTable.regression.test.tsx (8 tests) 1295ms
+   Γ£ô DataTable ΓÇö server-side sort (patr├│n Embarques/Cotizaciones) (4)
+     Γ£ô preserves contradictory server order through clicks and controlled rerenders 308ms
+ Γ£ô |jsdom| src/components/shared/dataTable/__tests__/DataTable.selectionMode.test.tsx (5 tests) 1616ms
+   Γ£ô DataTable ΓÇö modo selecci├│n (5)
+     Γ£ô sin selecci├│n la fila sigue siendo un enlace navegable 517ms
+ Γ£ô |jsdom| src/components/shared/dataTable/__tests__/DataTable.e2e.test.tsx (11 tests) 1891ms
+   Γ£ô DataTable E2E ΓÇö filtro + orden + paginaci├│n (5)
+     Γ£ô filtro externo reduce filas visibles y resetea a p├ígina 0 654ms
+ Γ£ô |jsdom| src/components/shared/dataTable/__tests__/DataTable.virtual.test.tsx (10 tests) 1839ms
+   Γ£ô DataTable ΓÇö ColumnDef nativo (Fase 2) (2)
+     Γ£ô dispara onSortChange con id de columna nativo 409ms
+   Γ£ô DataTable - orden cliente real con sortFn auto (4)
+     Γ£ô ordena cliente asc/desc en DOM y restaura el orden recibido 332ms
+ Γ£ô |jsdom| src/components/shared/dataTable/__tests__/DataTable.keyboardSorting.test.tsx (10 tests) 2547ms
+   Γ£ô DataTable - activaci├│n sem├íntica del orden (10)
+     Γ£ô client: Enter avanza una sola vez y conserva el foco durante asc/desc/none 927ms
+     Γ£ô client: click avanza una sola vez y conserva el foco durante asc/desc/none 337ms
+stderr | src/features/reportes/routes/__tests__/Reportes.estados.test.tsx > Reportes ΓÇö ramas excluyentes > shows methodology and warning outside the clamped description, with the real monthly-close link
+A suspended resource finished loading inside a test, but the event was not wrapped in act(...).
+
+When testing, code that resolves suspended data should be wrapped into act(...):
+
+act(() => {
+  /* finish loading suspended data */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+A suspended resource finished loading inside a test, but the event was not wrapped in act(...).
+
+When testing, code that resolves suspended data should be wrapped into act(...):
+
+act(() => {
+  /* finish loading suspended data */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+
+ Γ£ô |jsdom| src/components/shared/dataTable/__tests__/rowHandlers.auxClick.test.ts (4 tests) 91ms
+ Γ£ô |jsdom| src/features/reportes/routes/__tests__/Reportes.estados.test.tsx (4 tests) 463ms
+ Γ£ô |node| src/components/shared/dataTable/__tests__/sortingFns.test.ts (4 tests) 12ms
+ Γ£ô |jsdom| src/hooks/shared/__tests__/useColumnVisibility.test.tsx (4 tests) 115ms
+ Γ£ô |node| src/features/reportes/domain/__tests__/reportesFilters.test.ts (6 tests) 21ms
+ Γ£ô |jsdom| src/components/shared/dataTable/__tests__/columnBuilders.test.tsx (7 tests) 758ms
+   Γ£ô columnBuilders (7)
+     Γ£ô preserves actual normalized-money ordering in both directions, including existing missing-value behavior 586ms
+ Γ£ô |jsdom| src/components/shared/dataTable/__tests__/ResponsiveDataTable.mobileAria.test.tsx (3 tests) 601ms
+   Γ£ô ResponsiveDataTable ┬╖ nombre accesible del bot├│n m├│vil (3)
+     Γ£ô aplica getRowAriaLabel al bot├│n y conserva el registro de onRowClick 364ms
+ Γ£ô |jsdom| src/components/shared/__tests__/DataTable.isError.test.tsx (2 tests) 474ms
+   Γ£ô DataTable ┬╖ isError branch (2)
+     Γ£ô muestra ErrorStateInline con Reintentar cuando isError=true 390ms
+ Γ£ô |node| src/components/shared/dataTable/__tests__/gridTemplate.test.ts (5 tests) 13ms
+ Γ£ô |node| src/features/auditoria/utils/__tests__/diffFields.extra.test.ts (17 tests) 44ms
+ Γ£ô |node| src/features/auditoria/utils/__tests__/diffFields.test.ts (12 tests) 46ms
+ Γ£ô |node| src/features/auditoria/utils/__tests__/diffConceptos.test.ts (4 tests) 42ms
+ Γ£ô |node| src/features/facturacion/domain/__tests__/facturaKpis.vencimiento.test.ts (10 tests) 46ms
+ Γ£ô |node| src/features/proformas/domain/__tests__/proformaKpis.test.ts (3 tests) 30ms
+ Γ£ô |node| src/features/facturacion/domain/__tests__/facturaKpis.notasCredito.test.ts (3 tests) 27ms
+
+ Test Files  21 passed (21)
+      Tests  142 passed (142)
+   Start at  17:05:36
+   Duration  22.39s (import 45%, environment 27%, setup 13%, tests 8%, transform 6%, worker 1%)
