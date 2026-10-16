@@ -93,7 +93,8 @@ describe("useRadixPointerEventsRescue lifecycle", () => {
     document.body.append(wrapper);
     await mutateBody(lockBody);
     act(() => vi.advanceTimersByTime(100));
-    expectLocked();
+    expect(document.body.style.pointerEvents).toBe("none");
+    expect(document.body).toHaveAttribute("data-scroll-locked", "1");
   });
 
   it("rechecks an overlay opened while the rescue is pending", async () => {
@@ -104,11 +105,13 @@ describe("useRadixPointerEventsRescue lifecycle", () => {
     overlay.setAttribute("data-state", "open");
     document.body.append(overlay);
     act(() => vi.advanceTimersByTime(50));
-    expectLocked();
+    expect(document.body.style.pointerEvents).toBe("none");
+    expect(document.body).toHaveAttribute("data-scroll-locked", "1");
     overlay.remove();
     await mutateBody(() => document.body.setAttribute("data-scroll-locked", "1"));
     act(() => vi.advanceTimersByTime(50));
-    expectUnlocked();
+    expect(document.body.style.pointerEvents).toBe("");
+    expect(document.body).not.toHaveAttribute("data-scroll-locked");
   });
 
   it("cancels the pending rescue on unmount and stops observing", async () => {
