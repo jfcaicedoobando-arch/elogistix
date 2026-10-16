@@ -3,6 +3,7 @@
   "private": true,
   "version": "0.0.0",
   "type": "module",
+  "packageManager": "bun@1.4.0",
   "engines": {
     "node": ">=22.22.0"
   },
@@ -24,7 +25,7 @@
     "preview": "vite preview",
     "test": "NODE_OPTIONS=\"--max-old-space-size=8192\" vitest run",
     "ci:fast": "bash scripts/ci-fast.sh",
-    "test:ci": "bun run test:coverage:merge",
+    "test:ci": "bun run test",
     "test:shard": "NODE_OPTIONS=\"--max-old-space-size=8192\" vitest run",
     "test:watch": "vitest",
     "test:fast": "NODE_OPTIONS=\"--max-old-space-size=8192\" vitest run --exclude='**/canaries/**' --exclude='**/pdfLeak*' --exclude='src/**/*.perf.test.tsx' --exclude='src/**/*.perf.ts'",
@@ -72,7 +73,7 @@
     "e2e:staging": "playwright test",
     "e2e:provision-multi-tenant": "tsx scripts/e2e/provision-multi-tenant.ts",
     "e2e:seed": "tsx scripts/e2e/seed-demo.ts",
-    "ci:local": "bun run lint && bun run lint:unused && bun run test && bun run build"
+    "ci:local": "bun run lint -- --max-warnings=0 && bun run typecheck && bun run lint:unused && bun run test:ci && bun run build"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",
@@ -146,7 +147,7 @@
     "@testing-library/jest-dom": "^7.0.1",
     "@testing-library/react": "^16.3.3",
     "@types/file-saver": "^2.0.7",
-    "@types/node": "^26.6.5",
+    "@types/node": "^24.19.2",
     "@types/react": "19.3.0",
     "@types/react-dom": "19.3.0",
     "@vitejs/plugin-react-swc": "^4.3.3",

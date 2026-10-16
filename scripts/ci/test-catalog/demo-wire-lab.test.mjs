@@ -20,7 +20,8 @@ test('general CI runs offline wire tests unconditionally after the complete inve
   const start = ci.indexOf('      - name: Demo physical wire state machine offline lane');
   const end = ci.indexOf('      - name: Post-deploy smoke contract', start);
   assert.ok(start > ci.indexOf('test-catalog.mjs --output reports/test-inventory.json'));
-  assert.ok(start > ci.indexOf("node-version: '24.19.0'"));
+  const nodeSetup = ci.indexOf("node-version: '24.22.0'");
+  assert.ok(nodeSetup >= 0 && nodeSetup < start);
   assert.ok(end > start);
   assert.match(ci.slice(start, end), /--run node-demo-wire-lab reports\/test-inventory.json/);
   assert.doesNotMatch(ci.slice(start, end), /\bif:|continue-on-error/);

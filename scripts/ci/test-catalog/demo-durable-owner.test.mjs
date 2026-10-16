@@ -61,7 +61,8 @@ test('CI executes the owner lane through the catalog after inventory and Node se
   const start = ci.indexOf('      - name: Demo durable owner offline lane');
   const end = ci.indexOf('      - name: Post-deploy smoke contract', start);
   assert.ok(start > ci.indexOf('test-catalog.mjs --output reports/test-inventory.json'));
-  assert.ok(start > ci.indexOf("node-version: '24.19.0'"));
+  const nodeSetup = ci.indexOf("node-version: '24.22.0'");
+  assert.ok(nodeSetup >= 0 && nodeSetup < start);
   assert.ok(end > start);
   const step = ci.slice(start, end);
   assert.match(step, /node scripts\/ci\/test-catalog\.mjs --run node-demo-durable-owner reports\/test-inventory\.json/);

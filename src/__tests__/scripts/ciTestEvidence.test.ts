@@ -72,6 +72,28 @@ describe("CI catalog: effective discovery", () => {
     }
   });
 
+  it("routes the exact package script contract to an unconditional detector step after Node and Bun setup", () => {
+    const files = catalog.entries.filter(entry => entry.lane === "node-package-scripts");
+    expect(files).toEqual([expect.objectContaining({ path: "scripts/ci/package-scripts.test.mjs", mode: "automatic" })]);
+    const detector = source(".github/workflows/ci.yml").split("  detector:\n")[1].split("  lint:\n")[0];
+    const command = "run: node --test scripts/ci/package-scripts.test.mjs";
+    const step = detector.split("      - name: Package script contracts")[1].split("      - name:")[0];
+    expect(step).toContain(command);
+    expect(step).not.toMatch(/\bif:|continue-on-error/);
+    const nodeSetup = detector.indexOf("node-version: '24.22.0'");
+    expect(nodeSetup).toBeGreaterThanOrEqual(0);
+    expect(nodeSetup).toBeLessThan(detector.indexOf(command));
+    const bunStep = detector.split("      - name: Setup Bun for package script contracts")[1].split("      - name:")[0];
+    expect(bunStep).toContain("uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0");
+    expect(bunStep).toContain("bun-version: '1.4.0'");
+    expect(bunStep).not.toMatch(/\bif:|bun install|actions\/cache/);
+    expect(detector.indexOf("bun-version: '1.4.0'")).toBeLessThan(detector.indexOf(command));
+    const guards = catalog.entries.filter(entry => entry.lane === "sql-guards").map(entry => entry.path);
+    const support = Object.fromEntries(catalog.entries.filter(entry => entry.lane === "sql-support").map(entry => [entry.path, entry.reason]));
+    expect(() => classifyFiles([...catalog.entries.map(entry => entry.path), "scripts/ci/unregistered-package.test.mjs"], guards, support))
+      .toThrow(/no execution lane/);
+  });
+
   it("fails closed for new unmatched SQL, script tests, missing and duplicate guards", () => {
     const files = catalog.entries.map(entry => entry.path);
     const guards = catalog.entries.filter(entry => entry.lane === "sql-guards").map(entry => entry.path);
