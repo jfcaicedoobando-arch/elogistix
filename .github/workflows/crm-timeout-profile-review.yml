@@ -1,0 +1,89 @@
+name: CRM 120s timeout profile synthetic review
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+    branches: [codex/crm-committed-state-observation]
+    paths:
+      - 'scripts/ci/crm-timeout-profile-review/**'
+      - '.github/workflows/crm-timeout-profile-review.yml'
+permissions:
+  contents: read
+concurrency:
+  group: crm-timeout-profile-${{ github.event.pull_request.number }}-${{ github.event.pull_request.head.sha }}
+  cancel-in-progress: false
+jobs:
+  changed-base-requires-review:
+    if: >-
+      github.repository == 'jfcaicedoobando-arch/elogistix' &&
+      github.event.pull_request.head.repo.full_name == github.repository &&
+      github.event.pull_request.head.ref == 'codex/crm-timeout-profile-120s-lab' &&
+      github.event.pull_request.draft == true &&
+      github.event.pull_request.base.sha != '8589793b1c013ef1adc5bb1e4496e87ae3ad037b'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 1
+    steps:
+      - name: Reject changed recorded base before checkout or Docker
+        run: exit 1
+  synthetic-review:
+    if: >-
+      github.repository == 'jfcaicedoobando-arch/elogistix' &&
+      github.event.repository.full_name == github.repository &&
+      github.event.pull_request.base.repo.full_name == github.repository &&
+      github.event.pull_request.head.repo.full_name == github.repository &&
+      github.event.pull_request.base.repo.owner.login == 'jfcaicedoobando-arch' &&
+      github.event.pull_request.head.repo.owner.login == 'jfcaicedoobando-arch' &&
+      github.event.pull_request.base.ref == 'codex/crm-committed-state-observation' &&
+      github.event.pull_request.base.sha == '8589793b1c013ef1adc5bb1e4496e87ae3ad037b' &&
+      github.event.pull_request.head.ref == 'codex/crm-timeout-profile-120s-lab' &&
+      github.event.pull_request.draft == true
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    steps:
+      - name: Checkout exact event head without persisted credentials
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          persist-credentials: false
+          fetch-depth: 1
+      - name: Validate inherited pins and offline contracts
+        run: |
+          set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/crm-timeout-preflight"
+          python3 -B scripts/ci/crm-timeout-profile-review/timeout_gate.py 2>&1 | tee "$RUNNER_TEMP/crm-timeout-preflight/gate.log"
+          python3 -B -m unittest discover -s scripts/ci/crm-operational-events-review -p 'test_*.py' -v 2>&1 | tee "$RUNNER_TEMP/crm-timeout-preflight/inherited-tests.log"
+          python3 -B -m unittest discover -s scripts/ci/crm-timeout-profile-review -p 'test_*.py' -v 2>&1 | tee "$RUNNER_TEMP/crm-timeout-preflight/profile-tests.log"
+      - name: Owned network-disabled PostgreSQL 17.6 timeout cases
+        run: |
+          set -euo pipefail
+          python3 -B scripts/ci/crm-timeout-profile-review/run_timeout_ci.py --output "$RUNNER_TEMP/crm-timeout-evidence" 2>&1 | tee "$RUNNER_TEMP/crm-timeout-preflight/runtime.log"
+      - name: Independently validate complete projection artifacts
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $root = "$env:RUNNER_TEMP/crm-timeout-evidence/timeout-evidence"
+          $bundles = @(Get-ChildItem -LiteralPath $root -Recurse -File -Filter 'bundle.json')
+          $projections = @(Get-ChildItem -LiteralPath $root -Recurse -File -Filter 'projection-*.json')
+          if ($bundles.Count -ne 26 -or $projections.Count -ne 208) { throw 'Incomplete owned timeout matrix' }
+          foreach ($file in $projections) {
+            if (-not (Test-Json -Json (Get-Content -LiteralPath $file.FullName -Raw) -SchemaFile 'scripts/ci/crm-canonical-review/operational-capture/evidence.schema.json' -ErrorAction Stop)) {
+              throw 'Invalid projection'
+            }
+          }
+          $summaries = @(Get-ChildItem -LiteralPath $root -File -Filter '*-summary.json')
+          if ($summaries.Count -ne 3) { throw 'Three committed observations required' }
+          foreach ($file in $summaries) {
+            $summary = Get-Content -LiteralPath $file.FullName -Raw | ConvertFrom-Json
+            if ($summary.admission -ne 'NOT_ADMITTED' -or $summary.retry_permission -ne 'NOT_GRANTED') { throw 'Unsafe summary' }
+          }
+          'PASS 208 projections, 26 bundles, three NOT_ADMITTED observations' |
+            Tee-Object -FilePath "$env:RUNNER_TEMP/crm-timeout-preflight/projection-schema.log"
+      - name: Preserve synthetic evidence and cleanup status
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d26962f4752f3646cd9
+        with:
+          name: crm-timeout-profile-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            ${{ runner.temp }}/crm-timeout-preflight
+            ${{ runner.temp }}/crm-timeout-evidence
+          if-no-files-found: warn
+          retention-days: 14
