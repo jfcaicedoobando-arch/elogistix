@@ -38,5 +38,5 @@ regexes = ['''^auth\.users u ON u\.id = (?:fe2\.enviado_por|fe3\.subido_por|fe4\
 description = "Verified historical Actions artifact 12014284809 ZIP digest; exact JSON context only"
 condition = "AND"
 paths = ['''^scripts/ci/demo-financial-retry-negative-review/origin-v2-evidence\.json$''']
-regexTarget = "match"
-regexes = ['''^"api[_]sha256": "8b45e68934272812c51c75579c3c6f0b2c9602e057d653254b4f9605e2182607"$''']
+regexTarget = "line"
+regexes = ['''^[ \t]*"api[_]sha256": "8b45e68934272812c51c75579c3c6f0b2c9602e057d653254b4f9605e2182607",[ \t]*(?:\r?\n)?$''']

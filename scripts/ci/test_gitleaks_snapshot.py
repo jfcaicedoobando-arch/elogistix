@@ -468,7 +468,7 @@ class SQLAllowlistConfigTests(unittest.TestCase):
         # existing allowlists. Never disable rules or substitute weaker rules.
         self.assertEqual(set(rule), {"id", "allowlists"})
         self.assertEqual(rule["id"], "generic-api-key")
-        self.assertEqual(len(rule["allowlists"]), 1)
+        self.assertEqual(len(rule["allowlists"]), 2)
         allowlist = rule["allowlists"][0]
         self.assertEqual(set(allowlist), {
             "description", "condition", "paths", "regexTarget", "regexes",
@@ -587,6 +587,60 @@ class SQLFixtureConstructionTests(unittest.TestCase):
         serialized = json.dumps(cases, sort_keys=True).encode()
         self.assertEqual(hashlib.sha256(serialized).hexdigest(),
                          "17714809ec61e2d6fd7077e105c0d8917a1822d6e0e9bc561e3552410eeac06f")
+
+
+class ArtifactDigestAllowlistConfigTests(unittest.TestCase):
+    artifact_path = "scripts/ci/demo-financial-retry-negative-review/origin-v2-evidence.json"
+    artifact_digest = "8b45e68934272812c51c75579c3c6f0b2c9602e057d653254b4f9605e2182607"
+
+    @classmethod
+    def line(cls):
+        return '    "api' + '_sha256": "' + cls.artifact_digest + '",'
+
+    def test_exact_path_and_full_line_are_both_required(self):
+        allowlist = tomllib.loads(CONFIG.decode())["rules"][0]["allowlists"][1]
+        self.assertEqual(set(allowlist), {"description", "condition", "paths", "regexTarget", "regexes"})
+        self.assertEqual(allowlist["condition"], "AND")
+        self.assertEqual(allowlist["regexTarget"], "line")
+        self.assertEqual(len(allowlist["paths"]), 1)
+        self.assertEqual(len(allowlist["regexes"]), 1)
+        def allowed(path, line):
+            return bool(re.search(allowlist["paths"][0], path) and re.search(allowlist["regexes"][0], line))
+        self.assertTrue(allowed(self.artifact_path, self.line()))
+        for path in ("other.json", self.artifact_path + ".bak", "backup/" + self.artifact_path):
+            self.assertFalse(allowed(path, self.line()))
+        for line in (self.line().replace(self.artifact_digest, "0" * 64),
+                     self.line().replace("_sha256", "_key"),
+                     self.line() + " injected", self.line().replace('",', '"'),
+                     "prefix" + self.line()):
+            self.assertFalse(allowed(self.artifact_path, line))
+
+
+@unittest.skipUnless(REAL_BINARY, "Gitleaks not installed locally; real controls are required in CI")
+class RealArtifactDigestAllowlistTests(RealSQLAllowlistTests):
+    # Inherit only the common scanner fixture; avoid repeating the SQL test set.
+    test_real_each_verified_join_is_allowed_only_in_exact_baseline = None
+    test_real_mutated_sql_context_is_not_allowlisted = None
+    test_real_synthetic_credential_literals_in_baseline_are_detected = None
+    test_real_other_default_rule_remains_active_in_baseline = None
+
+    def test_real_verified_digest_is_allowed_only_in_exact_json_context(self):
+        path = ArtifactDigestAllowlistConfigTests.artifact_path
+        line = ArtifactDigestAllowlistConfigTests.line() + "\n"
+        self.scan_case(path, line, expected_leak=False)
+        for wrong_path in ("other.json", path + ".bak", "backup/" + path):
+            with self.subTest(path=wrong_path):
+                self.scan_case(wrong_path, line, expected_leak=True)
+        digest = ArtifactDigestAllowlistConfigTests.artifact_digest
+        # A different inert digest and wrong field/context must stay detectable.
+        other_digest = hashlib.sha256(b"synthetic-other-artifact-digest").hexdigest()
+        for content in (line.replace(digest, other_digest),
+                        line.replace("_sha256", "_key"),
+                        line.rstrip() + " injected\n"):
+            with self.subTest(mutated_context=True):
+                self.scan_case(path, content, expected_leak=True)
+        canary = "".join(("Q8z4V2n9", "B7x5L3p6", "R1s0T4m8"))
+        self.scan_case(path, line + "api" + "_key = '" + canary + "'\n", expected_leak=True)
 
 
 if __name__ == "__main__":
