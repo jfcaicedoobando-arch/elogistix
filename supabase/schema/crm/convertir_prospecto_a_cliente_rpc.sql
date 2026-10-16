@@ -34,7 +34,7 @@ DECLARE
   v_regimen text; v_uso text; v_forma text; v_metodo text;
   v_coherente boolean;
   v_empresa uuid; v_org_inicial uuid; v_op_inicial uuid; v_lead_inicial uuid;
-  v_empresa_ids uuid[];
+  v_empresa_ids uuid[]; v_empresa_esperada uuid[];
 BEGIN
   IF auth.uid() IS NULL THEN
     RAISE EXCEPTION 'LC_SESION_REQUERIDA' USING ERRCODE = '42501';
@@ -43,8 +43,7 @@ BEGIN
   SELECT organization_id, es_prospecto, cliente_id, estado::text, oportunidad_id
     INTO v_org, v_es_prospecto, v_cliente_id, v_estado, v_oportunidad_id
   FROM public.cotizaciones
-  WHERE id = p_cotizacion_id AND deleted_at IS NULL
-  ;
+  WHERE id = p_cotizacion_id AND deleted_at IS NULL;
   IF v_org IS NULL THEN
     RAISE EXCEPTION 'LC_COTIZACION_NO_ENCONTRADA';
   END IF;
@@ -65,6 +64,7 @@ BEGIN
   SELECT lead_id INTO v_lead_inicial FROM public.crm_oportunidades
     WHERE id = v_op_inicial AND organization_id = v_org AND deleted_at IS NULL;
   v_empresa := public._crm_empresa_para_conversion(v_org, v_lead_inicial, v_op_inicial);
+  v_empresa_esperada := CASE WHEN v_empresa IS NULL THEN NULL ELSE ARRAY[v_empresa] END;
   PERFORM 1 FROM public.crm_leads WHERE id = v_lead_inicial FOR UPDATE;
   SELECT organization_id, es_prospecto, cliente_id, estado::text, oportunidad_id
     INTO v_org, v_es_prospecto, v_cliente_id, v_estado, v_oportunidad_id
@@ -79,7 +79,7 @@ BEGIN
     UNION
     SELECT empresa_id FROM public.crm_oportunidad_empresa WHERE oportunidad_id = v_op_inicial
   ) targets;
-  IF v_empresa_ids IS DISTINCT FROM CASE WHEN v_empresa IS NULL THEN NULL::uuid[] ELSE ARRAY[v_empresa] END
+  IF v_empresa_ids IS DISTINCT FROM v_empresa_esperada
      OR EXISTS (SELECT 1 FROM public.crm_oportunidad_empresa
                  WHERE oportunidad_id = v_op_inicial AND organization_id IS DISTINCT FROM v_org) THEN
     RAISE EXCEPTION 'LC_CONVERSION_INCONSISTENTE';
@@ -166,7 +166,7 @@ BEGIN
     UNION
     SELECT empresa_id FROM public.crm_oportunidad_empresa WHERE oportunidad_id = v_op_inicial
   ) targets;
-  IF v_empresa_ids IS DISTINCT FROM CASE WHEN v_empresa IS NULL THEN NULL::uuid[] ELSE ARRAY[v_empresa] END
+  IF v_empresa_ids IS DISTINCT FROM v_empresa_esperada
      OR EXISTS (SELECT 1 FROM public.crm_oportunidad_empresa
                  WHERE oportunidad_id = v_op_inicial AND organization_id IS DISTINCT FROM v_org) THEN
     RAISE EXCEPTION 'LC_CONVERSION_INCONSISTENTE';

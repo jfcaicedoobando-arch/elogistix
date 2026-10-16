@@ -39,7 +39,7 @@ class Contracts(unittest.TestCase):
         self.assertIn('original_verify()', (HERE/'run-actions.py').read_text(encoding='utf-8'))
     def test_full_identity_equality_and_claim_serialization(self):
         sql=(ROOT/'supabase/schema/crm/convertir_prospecto_a_cliente_rpc.sql').read_text(encoding='utf-8')
-        self.assertEqual(sql.count('v_empresa_ids IS DISTINCT FROM CASE'),2)
+        self.assertEqual(sql.count('v_empresa_ids IS DISTINCT FROM v_empresa_esperada'),2)
         helper=(ROOT/'supabase/schema/crm/_crm_empresa_para_conversion.sql').read_text(encoding='utf-8')
         self.assertIn('v_emp.lead_origen_id IS DISTINCT FROM p_lead',helper)
         self.assertIn('ORDER BY empresa_id FOR SHARE',helper)

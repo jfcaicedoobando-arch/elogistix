@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Reuse the strict PR366 adapter; no alternate connection or SQL input."""
 import importlib.util
+import json
 from pathlib import Path
 import re
 import sys
@@ -32,7 +33,11 @@ def verify_sources():
     return migration
 adapter.verify_sources=verify_sources
 adapter.EVIDENCE_SUBDIR='reports/crm-cliente-concurrency'
-adapter.m.run_concurrency=lambda context: cases.run(context,adapter.m)
+def run_cases(context):
+    result=cases.run(context,adapter.m)
+    print(json.dumps({'database':context.database,'status':result['status'],'cases':result['cases']}),flush=True)
+    return result
+adapter.m.run_concurrency=run_cases
 if __name__=='__main__':
     adapter.main()
 
