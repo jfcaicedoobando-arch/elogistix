@@ -5,7 +5,7 @@ import { BrowserRouter, Link, Route, Routes, useLocation, useNavigate, useParams
 import { NuqsAdapter } from "nuqs/adapters/react-router/v8";
 import { RedirectPreserveSearch } from "@/routes/RedirectPreserveSearch";
 import { useVolver } from "@/hooks/shared/useVolver";
-import { useCxpDeepLinks } from "@/features/cxp/hooks/useCxpDeepLinks";
+import { useCxpDeepLinks } from "@/features/cxp/hooks";
 import type { FacturaCxP } from "@/features/cxp/services";
 import CxpPorPagar from "../CxpPorPagar";
 
@@ -25,9 +25,13 @@ const fixture = vi.hoisted(() => ({
 vi.mock("@/features/bandejas/hooks/useBandejas", () => ({
   useCxpPorPagar: () => ({ data: fixture.rows, isLoading: false, isError: false, refetch: vi.fn() }),
 }));
-vi.mock("@/features/cxp/hooks", () => ({
-  useProgramarPagoLote: () => ({ programar: vi.fn(), isRunning: false, progreso: null }),
-}));
+vi.mock("@/features/cxp/hooks", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("@/features/cxp/hooks")>();
+  return {
+    ...actual,
+    useProgramarPagoLote: () => ({ programar: vi.fn(), isRunning: false, progreso: null }),
+  };
+});
 vi.mock("@/hooks/shared/usePermissions", () => ({ usePermissions: () => ({ canPagarProveedor: true }) }));
 vi.mock("@/hooks/shared", async () => ({ useIsMobile: () => false, ...await import("@/hooks/shared/useCargaExpirada") }));
 vi.mock("../_sections/CxpPorPagarDialogs", () => ({ CxpPorPagarDialogs: () => null }));
