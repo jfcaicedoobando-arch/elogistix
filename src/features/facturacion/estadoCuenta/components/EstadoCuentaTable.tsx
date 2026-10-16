@@ -29,6 +29,8 @@ interface Props {
   error?: unknown;
   onRetry?: () => void;
   isFetching?: boolean;
+  /** Existe una respuesta correcta del listado, aunque los filtros no muestren filas. */
+  hasData?: boolean;
   facturaHref: (facturaId: string) => string;
   sort: SortEstadoCuenta;
   onSort: (key: OrdenEstadoCuenta) => void;
@@ -55,6 +57,7 @@ export function EstadoCuentaTable({
   error,
   onRetry,
   isFetching,
+  hasData = false,
   facturaHref,
   sort,
   onSort,
@@ -84,7 +87,7 @@ export function EstadoCuentaTable({
           error={error}
           onRetry={() => onRetry?.()}
           retrying={isFetching}
-          hasPreviousData={grupos.length > 0}
+          hasPreviousData={hasData}
         />
       )}
 

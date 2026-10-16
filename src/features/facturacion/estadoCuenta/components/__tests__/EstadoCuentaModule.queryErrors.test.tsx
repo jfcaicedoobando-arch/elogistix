@@ -11,7 +11,10 @@ vi.mock("../../hooks/useEstadoCuentaDateRange", () => ({ useEstadoCuentaDateRang
 vi.mock("../EstadoCuentaKpiCards", () => ({ EstadoCuentaKpiCards: ({ loading }: { loading: boolean }) =>
   <div>{loading ? "Cargando totales" : "Totales del cliente"}</div> }));
 vi.mock("../EstadoCuentaAgingBar", () => ({ EstadoCuentaAgingBar: () => <div>Antigüedad del cliente</div> }));
-vi.mock("../EstadoCuentaFilters", () => ({ EstadoCuentaFilters: () => <div>Filtros de consulta</div> }));
+vi.mock("../EstadoCuentaFilters", () => ({ EstadoCuentaFilters: ({ busqueda, onBusquedaChange }: {
+  busqueda: string; onBusquedaChange: (value: string) => void;
+}) => <div>Filtros de consulta<input aria-label="Buscar movimientos" value={busqueda}
+  onChange={event => onBusquedaChange(event.target.value)} /></div> }));
 vi.mock("../EstadoCuentaTableHead", () => ({ EstadoCuentaTableHead: () => null }));
 vi.mock("../EstadoCuentaGrupoMoneda", () => ({ EstadoCuentaGrupoMoneda: ({ grupo }: { grupo: { filas: FacturaEstadoCuenta[] } }) =>
   <tr><td>{grupo.filas.map(f => f.numero).join(",")}</td></tr> }));
@@ -77,12 +80,35 @@ describe("Estado de cuenta: error, vacío y vigencia del listado", () => {
     expect(screen.queryByRole("alert")).not.toBeInTheDocument();
   });
 
-  it("un fallo posterior a vacío correcto no vuelve a presentarse como vacío", () => {
-    h.query.mockReturnValue(query({ isError: true }));
-    render(<EstadoCuentaModule {...props} />);
-    expect(screen.getByRole("alert")).toBeVisible();
+  it("un refresco fallido con caché vacía avisa que los totales y aging previos no están actualizados", () => {
+    const view = render(<EstadoCuentaModule {...props} defaultSoloConSaldo />);
+    expect(screen.getByText(/Sin movimientos/)).toBeVisible();
+    h.query.mockReturnValue(query({ isError: true, hasData: true }));
+    view.rerender(<EstadoCuentaModule {...props} defaultSoloConSaldo />);
+    expect(screen.getByRole("alert")).toHaveTextContent("no están actualizados");
+    expect(screen.getByText("Totales del cliente")).toBeVisible();
+    expect(screen.getByText("Antigüedad del cliente")).toBeVisible();
     expect(screen.queryByText(/Sin movimientos/)).not.toBeInTheDocument();
     expectNoExports();
+  });
+
+  it("una búsqueda sin coincidencias conserva el aviso de caché desactualizada al fallar el refresco", () => {
+    h.query.mockReturnValue(query({ rows: [row] }));
+    const view = render(<EstadoCuentaModule {...props} defaultSoloConSaldo />);
+    fireEvent.change(screen.getByRole("textbox", { name: "Buscar movimientos" }), {
+      target: { value: "sin-coincidencias" },
+    });
+    expect(screen.queryByText("F-1")).not.toBeInTheDocument();
+    expect(screen.getByText(/Sin movimientos/)).toBeVisible();
+    h.query.mockReturnValue(query({ rows: [row], isError: true, hasData: true }));
+    view.rerender(<EstadoCuentaModule {...props} defaultSoloConSaldo />);
+    expect(screen.getByRole("alert")).toHaveTextContent("no están actualizados");
+    expect(screen.getByText("Totales del cliente")).toBeVisible();
+    expect(screen.getByText("Antigüedad del cliente")).toBeVisible();
+    expect(screen.queryByText(/Sin movimientos/)).not.toBeInTheDocument();
+    expectNoExports();
+    fireEvent.click(screen.getByRole("button", { name: "Reintentar" }));
+    expect(h.retry).toHaveBeenCalledOnce();
   });
 
   it("propaga la carga de KPIs y no presenta su respaldo local como totales remotos", () => {

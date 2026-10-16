@@ -87,6 +87,7 @@ export function EstadoCuentaModule({
         error={v.error}
         onRetry={() => void v.refetch()}
         isFetching={v.isFetching}
+        hasData={v.hasData}
         facturaHref={facturaHref}
         sort={v.sort}
         onSort={v.onSort}
