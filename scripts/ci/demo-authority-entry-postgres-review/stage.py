@@ -69,9 +69,11 @@ def stage_runtime(output, golden_stage, frozen):
     (tree / 'source').mkdir()
     for name in ('driver.mjs', 'owner.mjs', 'issuer.mjs', 'store.mjs'):
         (tree / 'source' / name).write_bytes(frozen[OWNER + name])
-    for path in [*(OWNER + name for name in MODULES), CONTRACT]:
+    for path in [*(OWNER + name for name in MODULES), CONTRACT,
+                 *(path for path in frozen if path.endswith('.sql'))]:
         target = tree / 'repo' / path; target.parent.mkdir(parents=True, exist_ok=True)
         target.write_bytes(frozen[path])
+    (tree / 'entry-fixture.sql').write_bytes((HERE / 'fixture.sql').read_bytes())
     (tree / 'authority-runtime.mjs').write_bytes((HERE / 'runtime.mjs').read_bytes())
     files = {}
     tar_path = output / 'runtime.tar'

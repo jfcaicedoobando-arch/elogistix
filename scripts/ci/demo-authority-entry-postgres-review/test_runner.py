@@ -66,12 +66,21 @@ class EntryTests(unittest.TestCase):
             call.assert_not_called()
 
     def test_source_inventory_and_golden_loading(self):
-        self.assertEqual(len(self.frozen), 27)
+        self.assertEqual(len(self.frozen), 29)
         self.assertEqual(self.frozen['scripts/ci/demo-authentic-review/sql/registry.sql'],
                          (lane.ROOT / 'docs/review/demo-flow-20261015/issuer/16-owner-registry.sql').read_bytes())
         self.assertTrue(self.golden.load_persistence().load_infrastructure().IMAGE.endswith('f3bd19c606e442c3d7bdfa8002e03fe260a1023351e0ea4598032022b68dd6e3'))
         self.assertEqual(self.golden_stage.PG_VERSION, '8.23.1')
         self.assertEqual(self.golden_stage.NODE_VERSION, '24.19.0')
+
+    def test_original_sql_includes_staged_and_pinned(self):
+        source = self.frozen[lane.SQL_ROOT + 'synthetic-schema.sql'].decode()
+        for name in ('runtime-guards.sql', 'crm-trigger.sql'):
+            self.assertIn('\\ir ' + name, source)
+            self.assertIn(lane.SQL_ROOT + name, self.frozen)
+        implementation = (lane.HERE / 'run_ci.py').read_text()
+        self.assertIn("['-f', target]", implementation)
+        self.assertLess(implementation.index('runner.install_runtime(archive, manifest)'), implementation.index('runner.prepare(frozen);'))
 
     def test_source_drift_rejected(self):
         with tempfile.TemporaryDirectory() as directory:

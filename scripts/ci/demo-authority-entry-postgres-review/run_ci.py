@@ -26,6 +26,7 @@ INSTALL = [SQL_ROOT + name + '.sql' for name in ('synthetic-schema', 'core-owner
     'writer-dependencies', 'manifest', 'identity', 'registry', 'bridge', 'producer')]
 INSTALL += ['docs/review/demo-authority-provider-20261016/issuer/17-protected-occurrence.sql',
             'docs/review/demo-authority-provider-20261016/issuer/18-authority-reader.sql', OWNER + 'store.sql']
+INCLUDES = (SQL_ROOT + 'runtime-guards.sql', SQL_ROOT + 'crm-trigger.sql')
 CASES = ('empty_configuration_zero_transport', 'authentic_issuance_commit_same_socket_transaction',
     'identical_committed_record_only_no_execution', 'conflict_binding_mismatch_no_commit',
     'conflict_obligation_id_mismatch_no_commit', 'revoked_authority_terminal_quarantine',
@@ -75,12 +76,17 @@ def verify_sources(root=ROOT):
         require(len(data) == row['bytes'] and hashlib.sha256(data).hexdigest() == row['sha256']
             and hashlib.sha1(b'blob ' + str(len(data)).encode() + b'\0' + data).hexdigest() == row['gitBlobSha1'], 'Source drift: ' + relative)
         frozen[relative] = data
-    required = {*INSTALL, *(OWNER + n for n in ('driver.mjs', 'issuer.mjs', 'owner.mjs', 'store.mjs',
+    required = {*INSTALL, *INCLUDES, *(OWNER + n for n in ('driver.mjs', 'issuer.mjs', 'owner.mjs', 'store.mjs',
                 'authority-provider.mjs', 'issuer-entry.mjs')), 'scripts/ci/demo-authority-bridge-review/contract.mjs',
                 *(GOLDEN + n for n in ('lab_wire.mjs', 'runtime.mjs', 'run_ci.py', 'stage.py', 'deps/package.json', 'deps/package-lock.json')),
                 'scripts/ci/demo-persistence-review/run_ci.py', 'scripts/ci/demo-persistence-review/sources.py',
                 'scripts/ci/crm-acl-review/run_ci.py'}
     require(set(frozen) == required, 'Exact source inventory required')
+    for source in [*INSTALL, *INCLUDES]:
+        for included in re.findall(r'(?m)^\\ir[ \t]+([^ \t\r\n]+)[ \t]*$', frozen[source].decode()):
+            require('/' not in included and re.fullmatch(r'[a-z-]+\.sql', included), 'Unsafe SQL include')
+            target = str(PurePosixPath(source).parent / included)
+            require(target in frozen, 'Missing pinned SQL include')
     return frozen
 
 
@@ -114,16 +120,22 @@ def parse_report(stdout, golden, token=None):
 def runner_class(golden):
     base = golden.runner_class(golden.load_persistence())
     class EntryRunner(base):
-        def install_exact(self, body, label):
+        def install_exact(self, body, label, runtime_path):
             self.inspect_owned(); self.counter += 1
             prefix = self.output / 'logs' / f'{self.counter:03d}-{label}'
             prefix.with_suffix('.sql').write_bytes(body)
-            response = subprocess.run(self.psql_args(self.database), input=body, capture_output=True,
+            checksum = hashlib.sha256(body).hexdigest()
+            require(self.runtime_manifest['files'].get(runtime_path) == checksum, 'Unstaged SQL source')
+            target = golden.CONTAINER_ROOT + '/' + runtime_path
+            observed = self.inside(['sha256sum', '--', target], 'verify-' + label).stdout.strip()
+            require(observed == checksum + '  ' + target, 'Staged SQL bytes changed')
+            # -f preserves the original \\ir relative-file semantics; no SQL is rewritten.
+            response = subprocess.run(self.psql_args(self.database) + ['-f', target], capture_output=True,
                                       env=self.env, timeout=60)
             prefix.with_suffix('.stdout').write_bytes(response.stdout)
             prefix.with_suffix('.stderr').write_bytes(response.stderr)
             require(response.returncode == 0, 'INSTALL_FAILED_' + label)
-            self.result['installed'].append({'stage': label, 'stdin_sha256': hashlib.sha256(body).hexdigest()})
+            self.result['installed'].append({'stage': label, 'executed_file_sha256': checksum})
             return response.stdout.decode()
 
         def prepare(self, frozen):
@@ -144,8 +156,8 @@ def runner_class(golden):
                 'listen': '', 'address': None, 'fsync': 'off', 'public_tables': 0}, 'Fixture preflight mismatch')
             self.result['context'] = context
             for index, path in enumerate(INSTALL):
-                self.install_exact(frozen[path], 'authentic-' + str(index + 1).zfill(2))
-            installed = self.install_exact((HERE / 'fixture.sql').read_bytes(), 'entry-fixture')
+                self.install_exact(frozen[path], 'authentic-' + str(index + 1).zfill(2), 'repo/' + path)
+            installed = self.install_exact((HERE / 'fixture.sql').read_bytes(), 'entry-fixture', 'entry-fixture.sql')
             require(installed.splitlines().count('AUTHORITY_ENTRY_FIXTURE_READY') == 1, 'Fixture marker missing')
             require(self.query("SELECT to_regprocedure('demo_owner_review.unbound_business_entrypoint(uuid,bigint)') IS NULL;",
                 'unbound-business', self.database).stdout.strip() == 't', 'Business must remain absent')
@@ -212,8 +224,8 @@ def main():
     started = False; runner.save()
     try:
         archive, manifest = stage.stage_runtime(private / 'stage', golden_stage, frozen)
-        started = True; runner.start(); runner.prepare(frozen)
-        runner.install_runtime(archive, manifest); runner.run_entry_cases()
+        started = True; runner.start(); runner.install_runtime(archive, manifest)
+        runner.prepare(frozen); runner.run_entry_cases()
         runner.result.update(status='checks_pass_cleanup_pending', integration='CHECKS_PASS_CLEANUP_PENDING')
     except BaseException as error:
         runner.result.update(status='failed', integration='FAIL', error_type=type(error).__name__)

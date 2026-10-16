@@ -180,8 +180,9 @@ try {
     outcome(await instance.api.issue({contextId: value.context_id}), 'quarantine');
     assert.ok(events('rollback').some(e => e.event === 'protocol-command' && e.tag === 'INSERT 0 1'));
     assert.equal(events('rollback').some(e => e.event === 'protocol-command' && e.command === 'COMMIT'), false);
+    await waitFor(async () => !(await backend(instance.wire.metadata().backendPid)));
     assert.deepEqual(await counts(value.context_id), {issuance: 0, claims: 0, observations: 0});
-    return {...await terminal(instance, value.context_id, 'rollback'), rolledBackIssuanceAndAudit: true};
+    return {...await terminal(instance, value.context_id, 'rollback'), backendExitedBeforeObservation: true, rolledBackIssuanceAndAudit: true};
   });
   await check('uncertain_commit_ack_terminal_no_second_wire', async () => {
     const value = await seed('uncertain'), instance = entry('uncertain', {fault: {closeAfterCommitCommand: 1}});

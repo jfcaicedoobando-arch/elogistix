@@ -76,6 +76,12 @@
       "sha256": "a850f7d409b721c317001947daf6633fa3d3f0ca4680eac6670e193eed82a563"
     },
     {
+      "path": "scripts/ci/demo-authentic-review/sql/crm-trigger.sql",
+      "bytes": 1236,
+      "gitBlobSha1": "f5488857f82ba6ee1dbf8bf541bffc4c6c56f6b3",
+      "sha256": "116435b37cb0ba806438e69c050192411ea7b4fdaf275bbea4868ed355e6733b"
+    },
+    {
       "path": "scripts/ci/demo-authentic-review/sql/identity.sql",
       "bytes": 16101,
       "gitBlobSha1": "8d166a8ded732de4861bcad2f5ae7f713a3d5cf7",
@@ -98,6 +104,12 @@
       "bytes": 11333,
       "gitBlobSha1": "7b8060d3669e7c71cf0cb8f828a4ad314c8f1254",
       "sha256": "a74d69ed6d19356ba36fe27d7070a496e99c3ef5cec7a030c3b96b609a64463b"
+    },
+    {
+      "path": "scripts/ci/demo-authentic-review/sql/runtime-guards.sql",
+      "bytes": 2492,
+      "gitBlobSha1": "96ed30f4c8d713831d966871a314b6dcd9e3d2c0",
+      "sha256": "eb656d1d02205b9115e9bdc4512a593d0d34cd05f73bca62855055ced75cbad5"
     },
     {
       "path": "scripts/ci/demo-authentic-review/sql/synthetic-schema.sql",

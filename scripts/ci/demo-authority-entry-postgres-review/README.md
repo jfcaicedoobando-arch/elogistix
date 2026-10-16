@@ -10,9 +10,11 @@ historical golden runners, their gates, or their source pins.
 
 The exact `authority-provider.mjs`, `issuer-entry.mjs`, `createIssuer`, `ISSUE_SQL`,
 mapper and dedicated driver are imported at their original relative paths.
-Twenty-seven inputs are pinned by byte length, SHA256 and Git blob SHA1.
+Twenty-nine inputs are pinned by byte length, SHA256 and Git blob SHA1.
 SQL16, producer, receipt/identity bridge and other original SQL dependencies are
-installed as separate **unmodified byte streams**. SQL17/18 and the original
+installed as separate **unmodified, hash-verified files**. Original \ir includes
+(runtime-guards.sql and crm-trigger.sql) are pinned and staged beside their
+parent SQL, then psql -f preserves their relative resolution. SQL17/18 and the original
 store are installed afterward. All table data, principals and catalogs are
 synthetic and exist only in this runner's fresh owned database.
 
@@ -54,7 +56,8 @@ business function from the earlier golden test is **never installed**.
    same entry instance, including later requests with another context.
 7. Naturally expired authority does the same; no source timestamp is rewritten.
 8. Closing after successful INSERT but before the history read rolls back both
-   the issuance and its transactional observation row.
+   the issuance and its transactional observation row. The test waits for the
+   entry backend to disappear from pg_stat_activity before checking absence.
 9. Deterministic destruction at COMMIT CommandComplete before accepting
    ReadyForQuery leaves an independently observable committed row but returns
    quarantine. The entry never rereads it or opens another wire.
@@ -104,7 +107,16 @@ public JSON: status, runtime cases, protocol timeline and runtime/source hashes.
 Staging binaries, dependency tree, ownership token and raw SQL/Docker/error logs
 remain private. A failed case or incomplete cleanup cannot become final PASS.
 
-Initial local verification: 12 Python gates/composition tests, 28 unchanged entry
+Initial local verification: 13 Python gates/composition tests, 28 unchanged entry
 Node tests pass. The unchanged golden wire tests have 19 PASS and three local
 IPC cases blocked by this environment’s listen EPERM; CI runs all 22 intact.
 PostgreSQL integration is **NOT_RUN locally**; inspect the exact workflow-head artifact for runtime results.
+
+### Initial failed attempt retained
+
+HEAD `3e07c44f4319620a6dcd7f548795ffa000d26507`, run 38837462496:
+offline steps passed, but PostgreSQL installation failed at synthetic-schema
+before any entry runtime case. The original \ir dependencies were missing from
+the first staging composition. The correction pins and stages both unchanged
+include files and executes the original source with psql -f. No guard/trigger
+was removed or rewritten. This failed run remains FAIL, not runtime evidence.
