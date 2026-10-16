@@ -76,17 +76,22 @@ SELECT pg_temp.expect_reject(format('INSERT INTO demo_flow_writer.occurrence_con
  FROM second_authority s CROSS JOIN public.authority_test_result t;
 -- A genuinely issued legacy SQL16 context is not silently normalized to ms.
 -- Repeated clock samples only find an inexact native timestamp; no stored row is altered.
-CREATE TEMP TABLE legacy_context AS SELECT demo_flow_writer.issue_scheduler_context(
- '30000000-0000-4000-8000-000000000001',receipt_id,300) context_id FROM public.authority_test_receipt;
-DO $$ DECLARE c demo_flow_writer.server_admissions; BEGIN
- SELECT a.* INTO STRICT c FROM demo_flow_writer.server_admissions a JOIN legacy_context t USING(context_id);
- IF c.issued_at=date_trunc('milliseconds',c.issued_at) AND c.not_before=date_trunc('milliseconds',c.not_before) AND c.expires_at=date_trunc('milliseconds',c.expires_at) THEN
-  RAISE EXCEPTION 'Legacy sample unexpectedly exactly ms; no precision evidence'; END IF;
+CREATE TEMP TABLE legacy_context(context_id uuid);
+DO $$ DECLARE c demo_flow_writer.server_admissions; ctx uuid; attempt integer; BEGIN
+ FOR attempt IN 1..10 LOOP
+  SELECT demo_flow_writer.issue_scheduler_context(
+   '30000000-0000-4000-8000-000000000001',receipt_id,300) INTO ctx FROM public.authority_test_receipt;
+  SELECT * INTO STRICT c FROM demo_flow_writer.server_admissions WHERE context_id=ctx;
+  IF c.issued_at<>date_trunc('milliseconds',c.issued_at) OR c.not_before<>date_trunc('milliseconds',c.not_before) OR c.expires_at<>date_trunc('milliseconds',c.expires_at) THEN
+   INSERT INTO legacy_context VALUES(ctx); RETURN;
+  END IF;
+ END LOOP;
+ RAISE EXCEPTION 'Legacy samples unexpectedly exactly ms; no precision evidence';
 END $$;
 INSERT INTO demo_flow_writer.occurrence_context_bindings SELECT s.authority_id,c.context_id,current_user::regrole::oid FROM second_authority s CROSS JOIN legacy_context c;
 SELECT pg_temp.expect_reject(format('SELECT demo_flow_writer.read_authority(%L)',context_id),'DEMO_AUTHORITY_TIMESTAMP_PRECISION') FROM legacy_context;
 ROLLBACK;
--- Exact expiry is strict and an expired binding cannot mint another context.
+-- Authority expiry is strict; an expired authority cannot mint another context.
 BEGIN;
 CREATE TEMP TABLE expiring_authority AS SELECT demo_flow_writer.register_occurrence(
  'SYNTHETIC_AUTHORITY_REVIEW','SYNTHETIC_SEMANTIC_FAMILY','EXPIRING_FIXTURE_OCCURRENCE',
@@ -97,5 +102,40 @@ CREATE TEMP TABLE expiring_authority AS SELECT demo_flow_writer.register_occurre
 SELECT demo_flow_writer.issue_bound_context(authority_id) FROM expiring_authority;
 SELECT pg_sleep(2.1);
 SELECT pg_temp.expect_reject(format('SELECT demo_flow_writer.issue_bound_context(%L)',authority_id),'DEMO_AUTHORITY_EXPIRED_OR_EARLY') FROM expiring_authority;
+ROLLBACK;
+-- A separate short context expires while its authority and all approvals remain
+-- valid. This is an explicit owner-created consumer fixture, not a claim that the
+-- new issuer accepts custom TTLs. No existing immutable admission is altered.
+BEGIN;
+CREATE TEMP TABLE live_authority AS SELECT demo_flow_writer.register_occurrence(
+ 'SYNTHETIC_AUTHORITY_REVIEW','SYNTHETIC_SEMANTIC_FAMILY','SHORT_CONTEXT_FIXTURE_OCCURRENCE',
+ '70000000-0000-4000-8000-000000000001',receipt_id,0,
+ date_trunc('milliseconds',clock_timestamp())-interval '1 minute',
+ date_trunc('milliseconds',clock_timestamp())+interval '10 minutes','FIXTURE ONLY') authority_id
+ FROM public.authority_test_receipt;
+CREATE TEMP TABLE short_context AS
+WITH inserted AS (
+ INSERT INTO demo_flow_writer.server_admissions(scheduler_approval_id,transport_id,scheduler_snapshot,transport_snapshot,
+ identity_receipt_id,identity_version,identity_sha256,issued_by_owner,issued_at,not_before,expires_at)
+ SELECT c.scheduler_approval_id,c.transport_id,c.scheduler_snapshot,c.transport_snapshot,
+ c.identity_receipt_id,c.identity_version,c.identity_sha256,current_user::regrole::oid,t.tick,t.tick,t.tick+interval '2 seconds'
+ FROM demo_flow_writer.server_admissions c JOIN public.authority_test_result r USING(context_id)
+ CROSS JOIN (SELECT date_trunc('milliseconds',clock_timestamp()) tick) t
+ RETURNING context_id,expires_at
+) SELECT * FROM inserted;
+INSERT INTO demo_flow_writer.occurrence_context_bindings
+ SELECT a.authority_id,c.context_id,current_user::regrole::oid FROM live_authority a CROSS JOIN short_context c;
+DO $$ BEGIN PERFORM demo_flow_writer.read_authority(context_id) FROM short_context; END $$;
+CREATE TEMP TABLE context_count AS SELECT count(*) n FROM demo_flow_writer.server_admissions;
+SELECT pg_sleep(2.1);
+DO $$ BEGIN PERFORM demo_flow_writer.checked_occurrence(authority_id) FROM live_authority; END $$;
+SELECT pg_temp.expect_reject(format('SELECT demo_flow_writer.read_authority(%L)',context_id),'DEMO_BOUND_CONTEXT_CONFLICT_OR_EXPIRED') FROM short_context;
+SELECT pg_temp.expect_reject(format('SELECT demo_flow_writer.issue_bound_context(%L)',authority_id),'DEMO_BOUND_CONTEXT_CONFLICT_OR_EXPIRED') FROM live_authority;
+DO $$ BEGIN
+ IF (SELECT count(*) FROM demo_flow_writer.server_admissions)<>(SELECT n FROM context_count)
+  OR EXISTS(SELECT 1 FROM short_context c JOIN demo_flow_writer.server_admissions a USING(context_id) WHERE a.expires_at<>c.expires_at)
+  OR (SELECT b.context_id FROM demo_flow_writer.occurrence_context_bindings b JOIN live_authority a USING(authority_id))<>(SELECT context_id FROM short_context) THEN
+  RAISE EXCEPTION 'Expired context was replaced or extended'; END IF;
+END $$;
 ROLLBACK;
 SELECT 'AUTHORITY_NATIVE_ASSERTIONS_COMPLETE';
