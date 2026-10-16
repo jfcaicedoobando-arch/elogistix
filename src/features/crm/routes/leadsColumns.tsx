@@ -35,7 +35,7 @@ export function makeLeadsColumns(
     {
       id: "empresa", header: "Empresa",
       accessorFn: (l) => l.empresa, enableSorting: true,
-      sortingFn: sortByString<CrmLeadRow>((l) => l.empresa),
+      sortFn: sortByString<CrmLeadRow>((l) => l.empresa),
       meta: { width: COL_W.ruta, className: "font-medium whitespace-nowrap", sticky: true },
       cell: ({ row }) => toTitleCase(row.original.empresa),
     },

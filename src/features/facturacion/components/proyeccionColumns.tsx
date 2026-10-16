@@ -20,7 +20,7 @@ export const proyeccionColumns: ColumnDef<GrupoProyeccion, unknown>[] = defineCo
     header: "Expediente",
     accessorFn: (g) => g.expediente,
     enableSorting: true,
-    sortingFn: sortByString<GrupoProyeccion>((g) => g.expediente),
+    sortFn: sortByString<GrupoProyeccion>((g) => g.expediente),
     meta: { width: COL_W.folio, sticky: true, className: "font-mono font-medium whitespace-nowrap" },
     cell: ({ row }) => (
       <span className="inline-flex items-center gap-1.5">
@@ -44,7 +44,7 @@ export const proyeccionColumns: ColumnDef<GrupoProyeccion, unknown>[] = defineCo
     header: "Cliente",
     accessorFn: (g) => g.cliente_nombre,
     enableSorting: true,
-    sortingFn: sortByString<GrupoProyeccion>((g) => g.cliente_nombre),
+    sortFn: sortByString<GrupoProyeccion>((g) => g.cliente_nombre),
     meta: { width: COL_W.ruta, className: "max-w-[240px] truncate" },
     cell: ({ row }) => (
       <Hint label={toTitleCase(row.original.cliente_nombre)}>
@@ -57,7 +57,7 @@ export const proyeccionColumns: ColumnDef<GrupoProyeccion, unknown>[] = defineCo
     header: "Operador",
     accessorFn: (g) => g.operador,
     enableSorting: true,
-    sortingFn: sortByString<GrupoProyeccion>((g) => g.operador),
+    sortFn: sortByString<GrupoProyeccion>((g) => g.operador),
     meta: { width: COL_W.monto, className: "truncate text-body" },
     cell: ({ row }) => row.original.operador || <span className="text-muted-foreground">—</span>,
   },
@@ -66,7 +66,7 @@ export const proyeccionColumns: ColumnDef<GrupoProyeccion, unknown>[] = defineCo
     header: "ETA",
     accessorFn: (g) => g.eta ?? "",
     enableSorting: true,
-    sortingFn: sortByDate<GrupoProyeccion>((g) => g.eta),
+    sortFn: sortByDate<GrupoProyeccion>((g) => g.eta),
     meta: { width: COL_W.fecha, className: "text-body-sm whitespace-nowrap" },
     cell: ({ row }) => (row.original.eta ? formatDate(row.original.eta) : "—"),
   },
@@ -88,7 +88,7 @@ export const proyeccionColumns: ColumnDef<GrupoProyeccion, unknown>[] = defineCo
     header: "Venta USD",
     accessorFn: (g) => g.ventaUsd,
     enableSorting: true,
-    sortingFn: sortByNumber<GrupoProyeccion>((g) => g.ventaUsd),
+    sortFn: sortByNumber<GrupoProyeccion>((g) => g.ventaUsd),
     meta: { width: COL_W.monto, align: "right", className: "tabular-nums whitespace-nowrap" },
     cell: ({ row }) => formatCurrency(row.original.ventaUsd, "USD"),
   },
@@ -97,7 +97,7 @@ export const proyeccionColumns: ColumnDef<GrupoProyeccion, unknown>[] = defineCo
     header: "Venta MXN",
     accessorFn: (g) => g.ventaMxn,
     enableSorting: true,
-    sortingFn: sortByNumber<GrupoProyeccion>((g) => g.ventaMxn),
+    sortFn: sortByNumber<GrupoProyeccion>((g) => g.ventaMxn),
     meta: { width: COL_W.monto, align: "right", className: "tabular-nums whitespace-nowrap" },
     cell: ({ row }) => formatCurrency(row.original.ventaMxn, "MXN"),
   },
@@ -114,7 +114,7 @@ export const proyeccionColumns: ColumnDef<GrupoProyeccion, unknown>[] = defineCo
     header: "Costo MXN",
     accessorFn: (g) => g.costoMxn,
     enableSorting: true,
-    sortingFn: sortByNumber<GrupoProyeccion>((g) => g.costoMxn),
+    sortFn: sortByNumber<GrupoProyeccion>((g) => g.costoMxn),
     meta: { width: COL_W.monto, align: "right", className: "tabular-nums whitespace-nowrap text-muted-foreground" },
     cell: ({ row }) => formatCurrency(row.original.costoMxn, "MXN"),
   },
@@ -123,7 +123,7 @@ export const proyeccionColumns: ColumnDef<GrupoProyeccion, unknown>[] = defineCo
     header: "Utilidad MXN",
     accessorFn: (g) => g.profitMxn,
     enableSorting: true,
-    sortingFn: sortByNumber<GrupoProyeccion>((g) => g.profitMxn),
+    sortFn: sortByNumber<GrupoProyeccion>((g) => g.profitMxn),
     meta: { width: COL_W.monto, align: "right", className: "tabular-nums font-medium whitespace-nowrap" },
     cell: ({ row }) => (
       <span className={cn(row.original.profitMxn < 0 ? "text-destructive" : "text-success")}>
@@ -136,7 +136,7 @@ export const proyeccionColumns: ColumnDef<GrupoProyeccion, unknown>[] = defineCo
     header: "%",
     accessorFn: (g) => g.margenPct,
     enableSorting: true,
-    sortingFn: sortByNumber<GrupoProyeccion>((g) => g.margenPct),
+    sortFn: sortByNumber<GrupoProyeccion>((g) => g.margenPct),
     meta: { width: COL_W.tiny, align: "right", className: "tabular-nums text-body-sm" },
     cell: ({ row }) => <MargenTexto pct={row.original.margenPct} umbrales={UMBRAL_MARGEN_OPERATIVO} />,
   },
@@ -145,7 +145,7 @@ export const proyeccionColumns: ColumnDef<GrupoProyeccion, unknown>[] = defineCo
     header: "Estado",
     accessorFn: (g) => g.estado,
     enableSorting: true,
-    sortingFn: sortByString<GrupoProyeccion>((g) => g.estado),
+    sortFn: sortByString<GrupoProyeccion>((g) => g.estado),
     meta: { width: COL_W.fecha },
     cell: ({ row }) =>
       row.original.estado === "Facturado" ? (

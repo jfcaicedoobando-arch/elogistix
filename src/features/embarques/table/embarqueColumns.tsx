@@ -54,7 +54,7 @@ export function buildEmbarqueColumns({
       header: "Expediente",
       accessorFn: (e) => e.expediente,
       enableSorting: true,
-      sortingFn: sortByNumber<EmbarqueRow>((e) => expedienteConsecutivo(e.expediente)),
+      sortFn: sortByNumber<EmbarqueRow>((e) => expedienteConsecutivo(e.expediente)),
       meta: { width: COL_W.monto, className: "font-medium whitespace-nowrap", sticky: true },
       cell: ({ row }) => {
         const e = row.original;

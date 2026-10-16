@@ -88,7 +88,6 @@ export function buildSelectionColumn({
         );
       },
       meta: { align: "center" },
-      size: 40,
     },
   ])[0];
 }

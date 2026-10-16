@@ -31,14 +31,14 @@ const columns: ColumnDef<EmbarqueMesSiguiente, unknown>[] = defineColumns<Embarq
   {
     id: "expediente", header: "Expediente",
     accessorFn: (e) => e.expediente, enableSorting: true,
-    sortingFn: sortByString<EmbarqueMesSiguiente>((e) => e.expediente),
+    sortFn: sortByString<EmbarqueMesSiguiente>((e) => e.expediente),
     meta: { className: "font-medium", sticky: true },
     cell: ({ row }) => row.original.expediente,
   },
   {
     id: "cliente", header: "Cliente",
     accessorFn: (e) => e.cliente_nombre, enableSorting: true,
-    sortingFn: sortByString<EmbarqueMesSiguiente>((e) => e.cliente_nombre),
+    sortFn: sortByString<EmbarqueMesSiguiente>((e) => e.cliente_nombre),
     meta: { className: "max-w-[180px] truncate" },
     cell: ({ row }) => (
       <Hint label={row.original.cliente_nombre}>
@@ -63,7 +63,7 @@ const columns: ColumnDef<EmbarqueMesSiguiente, unknown>[] = defineColumns<Embarq
   {
     id: "contenedor", header: "Contenedor",
     accessorFn: (e) => e.contenedor, enableSorting: true,
-    sortingFn: sortByString<EmbarqueMesSiguiente>((e) => e.contenedor),
+    sortFn: sortByString<EmbarqueMesSiguiente>((e) => e.contenedor),
     meta: { className: "font-mono whitespace-nowrap" },
     // VB-20/VB-30: placeholder vacío unificado (em dash), no guion ASCII.
     cell: ({ row }) => row.original.contenedor || <span className="text-muted-foreground">{PLACEHOLDER_VACIO}</span>,
@@ -71,7 +71,7 @@ const columns: ColumnDef<EmbarqueMesSiguiente, unknown>[] = defineColumns<Embarq
   {
     id: "eta", header: "ETA",
     accessorFn: (e) => e.eta, enableSorting: true,
-    sortingFn: sortByDate<EmbarqueMesSiguiente>((e) => e.eta),
+    sortFn: sortByDate<EmbarqueMesSiguiente>((e) => e.eta),
     cell: ({ row }) => row.original.eta ? formatDate(row.original.eta) : PLACEHOLDER_VACIO,
   },
   statusColumn<EmbarqueMesSiguiente>({
@@ -83,7 +83,7 @@ const columns: ColumnDef<EmbarqueMesSiguiente, unknown>[] = defineColumns<Embarq
   {
     id: "profit", header: "Utilidad MXN",
     accessorFn: (e) => e.profitMXN, enableSorting: true,
-    sortingFn: sortByNumber<EmbarqueMesSiguiente>((e) => e.profitMXN),
+    sortFn: sortByNumber<EmbarqueMesSiguiente>((e) => e.profitMXN),
     meta: { className: "text-right tabular-nums", headerClassName: "text-right" },
     cell: ({ row }) => {
       const e = row.original;

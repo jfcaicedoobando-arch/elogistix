@@ -16,7 +16,7 @@ export function buildProformaImportesColumns(): ColumnDef<ProformaConFactura, un
       header: `Total ${moneda}`,
       accessorFn: importe,
       enableSorting: true,
-      sortingFn: sortByNumber<ProformaConFactura>(importe),
+      sortFn: sortByNumber<ProformaConFactura>(importe),
       meta: { width: COL_W.monto, align: "right", className: "tabular-nums whitespace-nowrap" },
       cell: ({ row }) => row.original.totales_origen === "encabezado_sin_detalle"
         ? <Hint label="Importe guardado. El detalle de conceptos no está disponible."><span>{formatNumber(importe(row.original), { decimals: 2 })}</span></Hint>

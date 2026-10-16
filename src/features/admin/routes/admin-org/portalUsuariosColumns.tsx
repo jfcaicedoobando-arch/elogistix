@@ -41,7 +41,7 @@ export function usePortalUsuarioColumns<T extends PortalUserRow>({
           header: "Email",
           accessorFn: (u) => u.email,
           enableSorting: true,
-          sortingFn: (a, b) =>
+          sortFn: (a, b) =>
             (a.original.email ?? "").localeCompare(b.original.email ?? "", "es-MX", {
               sensitivity: "base",
             }),
@@ -65,7 +65,7 @@ export function usePortalUsuarioColumns<T extends PortalUserRow>({
           header: vinculadoLabel(tipo),
           accessorFn: (u) => getVinculadoNombre(u, tipo),
           enableSorting: true,
-          sortingFn: (a, b) =>
+          sortFn: (a, b) =>
             getVinculadoNombre(a.original, tipo).localeCompare(
               getVinculadoNombre(b.original, tipo),
               "es-MX",
@@ -81,7 +81,7 @@ export function usePortalUsuarioColumns<T extends PortalUserRow>({
           header: () => <span className="whitespace-nowrap">Fecha de alta</span>,
           accessorFn: (u) => u.created_at,
           enableSorting: true,
-          sortingFn: sortByDate<T>((u) => u.created_at),
+          sortFn: sortByDate<T>((u) => u.created_at),
           meta: {
             width: "w-[1%] whitespace-nowrap",
             className: "text-body-sm text-muted-foreground whitespace-nowrap",

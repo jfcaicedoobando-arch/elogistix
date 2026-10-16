@@ -21,7 +21,7 @@ function esClickEnCheckbox(target: EventTarget | null): boolean {
   return target instanceof Element && !!target.closest('[role="checkbox"]');
 }
 
-export function buildSelectionColumn<T>(): ColumnDef<T, unknown> {
+export function buildSelectionColumn<T extends object>(): ColumnDef<T, unknown> {
   return defineColumns<T>([
     {
       id: "__select",
@@ -39,7 +39,7 @@ export function buildSelectionColumn<T>(): ColumnDef<T, unknown> {
             className="flex h-9 w-full cursor-pointer items-center justify-center"
           >
             <Checkbox
-              checked={some ? "indeterminate" : all}
+              checked={all ? true : some ? "indeterminate" : false}
               onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
               aria-label="Seleccionar todas las filas visibles"
             />

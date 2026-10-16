@@ -1,5 +1,5 @@
 import { useCallback, useMemo, useState } from "react";
-import type { OnChangeFn, RowSelectionState, Updater } from "@tanstack/react-table";
+import type { OnChangeFn, RowSelectionState, Updater } from "@/components/shared/dataTable/tanstackTypes";
 
 /**
  * useRowSelection — estado controlado de selección multi-fila para DataTable.
@@ -24,7 +24,7 @@ export interface RowSelectionApi {
   selectedCount: number;
 }
 
-function resolve<T>(updater: Updater<T>, prev: T): T {
+function resolve<T extends object>(updater: Updater<T>, prev: T): T {
   return typeof updater === "function" ? (updater as (p: T) => T)(prev) : updater;
 }
 

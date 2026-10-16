@@ -101,7 +101,7 @@ export function buildComisionesColumns(): ColumnDef<ComisionDevengada, unknown>[
         domain: "comision",
         accessor: (c) => c.estado,
       }),
-      sortingFn: sortByString<ComisionDevengada>((c) => c.estado),
+      sortFn: sortByString<ComisionDevengada>((c) => c.estado),
       meta: { width: COL_W.fecha },
     },
     {

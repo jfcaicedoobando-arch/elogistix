@@ -5,7 +5,7 @@
  */
 import { describe, it, expect, vi, afterEach } from "vitest";
 import { render, cleanup } from "@testing-library/react";
-import type { Row } from "@tanstack/react-table";
+import type { Row } from "@/components/shared/dataTable/tanstackTypes";
 import type { Virtualizer, VirtualItem } from "@tanstack/react-virtual";
 import { VirtualRowsContainer } from "@/components/shared/VirtualRowsContainer";
 

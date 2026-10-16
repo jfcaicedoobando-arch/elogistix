@@ -1,5 +1,5 @@
 import React from "react";
-import type { Table as TanstackTable } from "@tanstack/react-table";
+import type { Table as TanstackTable } from "@/components/shared/dataTable/tanstackTypes";
 import type { LucideIcon } from "lucide-react";
 import { Table, TableFooter } from "@/components/ui/table";
 import { DataTableHeaderRow } from "@/components/shared/dataTable/DataTableHeaderRow";
@@ -8,7 +8,7 @@ import { useHorizontalScrollEdges } from "@/components/shared/dataTable/useHoriz
 import { HorizontalScrollFades } from "@/components/shared/dataTable/HorizontalScrollFades";
 import type { TableDensity } from "@/components/shared/dataTable/types";
 
-interface DataTableContentProps<T> {
+interface DataTableContentProps<T extends object> {
   table: TanstackTable<T>;
   tableClassName: string;
   striped: boolean;
@@ -34,7 +34,7 @@ interface DataTableContentProps<T> {
   onHorizontalOverflowChange?: (overflowing: boolean) => void;
 }
 
-export function DataTableContent<T>(props: DataTableContentProps<T>) {
+export function DataTableContent<T extends object>(props: DataTableContentProps<T>) {
   const {
     table, tableClassName, striped, bordered, hoverable, stickyHeader,
     density, isLoading, skeletonRows, emptyMessage, emptyHint, emptyIcon,

@@ -4,7 +4,7 @@
  *
  * Para columna de acciones ver `./actionsColumn`.
  */
-import type { ColumnDef } from "@tanstack/react-table";
+import type { ColumnDef } from "@/components/shared/dataTable/tanstackTypes";
 import { StatusBadge } from "@/components/shared/StatusBadge";
 import type { StatusDomain } from "@/lib/status/statusRegistry";
 import { formatCurrency } from "@/lib/formatters/numbers";
@@ -16,9 +16,9 @@ import { Hint } from "@/components/shared/Hint";
 export { actionsColumn } from "./actionsColumn";
 ;
 
-type Getter<T, V> = (row: T) => V;
+type Getter<T extends object, V> = (row: T) => V;
 
-export interface StatusColumnOpts<T> {
+export interface StatusColumnOpts<T extends object> {
   id?: string;
   header?: string;
   domain: StatusDomain;
@@ -26,7 +26,7 @@ export interface StatusColumnOpts<T> {
   showIcon?: boolean;
 }
 
-export function statusColumn<T>({
+export function statusColumn<T extends object>({
   id = "estado",
   header = "Estado",
   domain,
@@ -44,13 +44,13 @@ export function statusColumn<T>({
   };
 }
 
-export interface ClientColumnOpts<T> {
+export interface ClientColumnOpts<T extends object> {
   id?: string;
   header?: string;
   accessor: Getter<T, string | null | undefined>;
 }
 
-export function clientColumn<T>({
+export function clientColumn<T extends object>({
   id = "cliente",
   header = "Cliente",
   accessor,
@@ -70,7 +70,7 @@ export function clientColumn<T>({
   };
 }
 
-export interface MoneyColumnOpts<T> {
+export interface MoneyColumnOpts<T extends object> {
   id?: string;
   header?: string;
   accessor: Getter<T, number | null | undefined>;
@@ -83,7 +83,7 @@ export interface MoneyColumnOpts<T> {
   headerTooltip?: string;
 }
 
-export function moneyColumn<T>({
+export function moneyColumn<T extends object>({
   id = "monto",
   header = "Monto",
   accessor,
@@ -118,7 +118,7 @@ export function moneyColumn<T>({
     // valores no convertibles de forma confiable se envían al final.
     ...(normalizar
       ? {
-          sortingFn: (rowA, rowB) => {
+          sortFn: (rowA, rowB) => {
             const a = normalizar(rowA.original);
             const b = normalizar(rowB.original);
             const fa = a == null || !Number.isFinite(a) ? Number.POSITIVE_INFINITY : a;
@@ -130,14 +130,14 @@ export function moneyColumn<T>({
   };
 }
 
-export interface DateColumnOpts<T> {
+export interface DateColumnOpts<T extends object> {
   id?: string;
   header?: string;
   accessor: Getter<T, string | null | undefined>;
   format?: string;
 }
 
-export function dateColumn<T>({
+export function dateColumn<T extends object>({
   id = "fecha",
   header = "Fecha",
   accessor,

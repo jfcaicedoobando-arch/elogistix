@@ -17,7 +17,7 @@ export function useProformasListadoTable(args: {
     sortMode: "client",
     getRowId: (row) => row.id,
   });
-  const orden = table.getState().sorting[0];
+  const orden = table.state.sorting[0];
   return {
     data: table.getRowModel().rows
       .slice(args.page * args.pageSize, (args.page + 1) * args.pageSize)

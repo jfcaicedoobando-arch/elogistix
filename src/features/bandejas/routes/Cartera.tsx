@@ -9,6 +9,7 @@
  */
 import { errorCobroPuePrevio } from "@/features/facturacion/domain/pueCobroPrevio";
 import { useMemo, useState } from "react";
+import type { RowSelectionState } from "@/components/shared/dataTable/tanstackTypes";
 import { Card, CardContent } from "@/components/ui/card";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
@@ -38,7 +39,7 @@ import { carteraEmptyState } from "./_sections/carteraEmptyState";
 export default function Cartera() {
   useDocumentTitle("Cobranza");
   const [recordatorio, setRecordatorio] = useState<FacturaRecordatorio | null>(null);
-  const [rowSelection, setRowSelection] = useState<Record<string, boolean>>({});
+  const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
   const [loteOpen, setLoteOpen] = useState(false);
   // RFE-04 (Ola 11): /cartera admite gerentes de sólo lectura, pero la RPC
   // `registrar_pago_cliente_lote` rechaza con 42501 a quien no está en

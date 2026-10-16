@@ -1,6 +1,8 @@
 import * as React from "react";
 import { describe, it, expect, vi } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { render, screen, fireEvent, within } from "@testing-library/react";
+import { MemoryRouter } from "react-router";
+import { DataTable, defineColumns } from "@/components/shared/DataTable";
 import {
   statusColumn,
   clientColumn,
@@ -36,6 +38,27 @@ function renderCell(colDef: ReturnType<typeof statusColumn<Row>>, row: Row) {
 }
 
 describe("columnBuilders", () => {
+  it("preserves actual normalized-money ordering in both directions, including existing missing-value behavior", () => {
+    type Amount = { id: string; amount: number | null | undefined };
+    const records: Amount[] = [
+      { id: "missing-null", amount: null }, { id: "high", amount: 20 },
+      { id: "missing-undefined", amount: undefined }, { id: "low", amount: 10 },
+      { id: "infinite", amount: Infinity },
+    ];
+    const columns = defineColumns<Amount>([
+      { id: "id", header: "ID", accessorFn: row => row.id, enableSorting: false },
+      moneyColumn<Amount>({ accessor: () => 0, normalizar: row => row.amount }),
+    ]);
+    render(<MemoryRouter><DataTable columns={columns} data={records} rowKey={row => row.id}
+      initialSort={{ key: "monto", dir: "asc" }} /></MemoryRouter>);
+    const order = () => screen.getAllByRole("row").slice(1)
+      .map(row => within(row).getAllByRole("cell")[0].textContent);
+    expect(order()).toEqual(["low", "high", "missing-null", "missing-undefined", "infinite"]);
+    // Existing v8 contract: numeric desc-first cycles asc -> none -> desc.
+    fireEvent.click(screen.getByRole("columnheader", { name: /Monto/ }));
+    fireEvent.click(screen.getByRole("columnheader", { name: /Monto/ }));
+    expect(order()).toEqual(["missing-null", "missing-undefined", "infinite", "high", "low"]);
+  });
   it("statusColumn renderiza StatusBadge con el estado", () => {
     const col = statusColumn<Row>({
       domain: "factura",

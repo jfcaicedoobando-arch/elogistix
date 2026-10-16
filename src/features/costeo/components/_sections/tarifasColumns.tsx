@@ -25,7 +25,7 @@ export function buildTarifasColumns(deps: TarifasColumnsDeps): ColumnDef<TarifaR
       id: "ruta",
       header: "Ruta",
       accessorFn: (t) => etiquetaRutaCompleta(origenDe(t), destinoDe(t)),
-      sortingFn: sortByString((t) => etiquetaRutaCompleta(origenDe(t), destinoDe(t))),
+      sortFn: sortByString((t) => etiquetaRutaCompleta(origenDe(t), destinoDe(t))),
       enableSorting: true,
       meta: { sticky: true, width: COL_W.ruta, className: "text-body" },
       cell: ({ row }) => (
@@ -51,7 +51,7 @@ export function buildTarifasColumns(deps: TarifasColumnsDeps): ColumnDef<TarifaR
       id: "agente",
       header: "Agente / Naviera",
       accessorFn: (t) => t.agente_nombre,
-      sortingFn: sortByString((t) => t.agente_nombre),
+      sortFn: sortByString((t) => t.agente_nombre),
       enableSorting: true,
       meta: { width: COL_W.texto },
       cell: ({ row }) => (
@@ -76,7 +76,7 @@ export function buildTarifasColumns(deps: TarifasColumnsDeps): ColumnDef<TarifaR
       id: "flete",
       header: "Flete",
       accessorFn: (t) => Number(t.flete_base),
-      sortingFn: sortByNumber((t) => Number(t.flete_base)),
+      sortFn: sortByNumber((t) => Number(t.flete_base)),
       enableSorting: true,
       // MR-UI-02: Flete y Recargos se ocultan bajo 2xl (<1536 px) para que
       // Ruta, Estado y Acciones quepan en 1280×720; el desglose sigue
@@ -92,7 +92,7 @@ export function buildTarifasColumns(deps: TarifasColumnsDeps): ColumnDef<TarifaR
       id: "recargos",
       header: "Recargos",
       accessorFn: (t) => t.recargos_total,
-      sortingFn: sortByNumber((t) => t.recargos_total),
+      sortFn: sortByNumber((t) => t.recargos_total),
       enableSorting: true,
       meta: {
         align: "right",
@@ -105,7 +105,7 @@ export function buildTarifasColumns(deps: TarifasColumnsDeps): ColumnDef<TarifaR
       id: "total",
       header: "Total USD",
       accessorFn: (t) => t.total_comparable,
-      sortingFn: sortByNumber((t) => t.total_comparable),
+      sortFn: sortByNumber((t) => t.total_comparable),
       enableSorting: true,
       meta: { width: COL_W.monto, align: "right", className: "tabular-nums" },
       cell: ({ row }) => <TotalTarifaCell t={row.original} mejorPorGrupo={mejorPorGrupo} />,
@@ -114,7 +114,7 @@ export function buildTarifasColumns(deps: TarifasColumnsDeps): ColumnDef<TarifaR
       id: "vigencia",
       header: "Vigencia",
       accessorFn: (t) => t.vigente_hasta,
-      sortingFn: sortByDate((t) => t.vigente_hasta),
+      sortFn: sortByDate((t) => t.vigente_hasta),
       enableSorting: true,
       // MR-UI-02: se muestra desde 2xl; en pantallas menores el resumen de
       // vigencia aparece bajo la Ruta.

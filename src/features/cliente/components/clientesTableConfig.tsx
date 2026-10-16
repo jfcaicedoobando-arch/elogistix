@@ -6,7 +6,7 @@
  * navegación de fila (`onRowClick` en `Clientes.tsx` ya va a `/clientes/:id`).
  */
 import { COL_W } from "@/components/shared/dataTable/columnWidths";
-import type { ColumnDef } from "@tanstack/react-table";
+import type { ColumnDef } from "@/components/shared/dataTable/tanstackTypes";
 import { sortByString } from "@/components/shared/dataTable/sortingFns";
 import { toTitleCase, formatPhoneMx, correctSpanishPlace, formatCurrency } from "@/lib/formatters";
 import { Badge } from "@/components/ui/badge";
@@ -31,7 +31,7 @@ export function buildClientesColumns(): ColumnDef<ClienteRow, unknown>[] {
       header: "Nombre",
       accessorFn: (c) => c.nombre,
       enableSorting: true,
-      sortingFn: sortByString<ClienteRow>((c) => c.nombre),
+      sortFn: sortByString<ClienteRow>((c) => c.nombre),
       meta: { width: COL_W.texto, className: "font-medium", sticky: true },
       cell: ({ row }) => {
         const nombre = toTitleCase(row.original.nombre ?? "");
@@ -59,7 +59,7 @@ export function buildClientesColumns(): ColumnDef<ClienteRow, unknown>[] {
       header: "RFC",
       accessorFn: (c) => c.rfc,
       enableSorting: true,
-      sortingFn: sortByString<ClienteRow>((c) => c.rfc),
+      sortFn: sortByString<ClienteRow>((c) => c.rfc),
       // Se oculta en <md porque en móvil ya se muestra en la mobile card.
       meta: { width: COL_W.folio, className: "text-xs font-mono hidden md:table-cell", headerClassName: "hidden md:table-cell" },
       cell: ({ row }) => (row.original.rfc || "").toUpperCase(),
@@ -69,7 +69,7 @@ export function buildClientesColumns(): ColumnDef<ClienteRow, unknown>[] {
       header: "Ciudad",
       accessorFn: (c) => c.ciudad,
       enableSorting: true,
-      sortingFn: sortByString<ClienteRow>((c) => c.ciudad),
+      sortFn: sortByString<ClienteRow>((c) => c.ciudad),
       meta: { width: COL_W.nombre, className: "text-xs" },
       cell: ({ row }) => {
         const ciudad = correctSpanishPlace(row.original.ciudad);

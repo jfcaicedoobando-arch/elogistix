@@ -47,13 +47,13 @@ function makeRows(n: number): Row[] {
 
 const cols: ColumnDef<Row, unknown>[] = defineColumns<Row>([
   { id: "numero", header: "Número", accessorFn: (r) => r.numero, enableSorting: true,
-    sortingFn: sortByString<Row>((r) => r.numero), cell: ({ row }) => row.original.numero,
+    sortFn: sortByString<Row>((r) => r.numero), cell: ({ row }) => row.original.numero,
     meta: { width: "180px" } },
   { id: "cliente", header: "Cliente", accessorFn: (r) => r.cliente, enableSorting: true,
-    sortingFn: sortByString<Row>((r) => r.cliente), cell: ({ row }) => row.original.cliente,
+    sortFn: sortByString<Row>((r) => r.cliente), cell: ({ row }) => row.original.cliente,
     meta: { width: "160px" } },
   { id: "total", header: "Total", accessorFn: (r) => r.total, enableSorting: true,
-    sortingFn: sortByNumber<Row>((r) => r.total), cell: ({ row }) => row.original.total,
+    sortFn: sortByNumber<Row>((r) => r.total), cell: ({ row }) => row.original.total,
     meta: { width: "120px", align: "right" } },
   { id: "etd", header: "ETD", accessorFn: (r) => r.etd,
     cell: ({ row }) => row.original.etd, meta: { width: "140px" } },

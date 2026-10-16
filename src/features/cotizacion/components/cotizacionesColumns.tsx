@@ -137,7 +137,7 @@ export function buildCotizacionesColumns(params: BuildParams): ColumnDef<Cotizac
       cell: ({ row }) => <SubtotalCotizacionCell cotizacion={row.original} />,
       // FIX 10: ordenar por equivalente en MXN evita mezclar montos nominales
       // de MXN y USD; sin TC confiable el valor queda al final.
-      sortingFn: (a, b) => {
+      sortFn: (a, b) => {
         const va = normalizarSubtotalesMxn(subtotalesDeFila(a.original), params.usdMxn, params.eurMxn);
         const vb = normalizarSubtotalesMxn(subtotalesDeFila(b.original), params.usdMxn, params.eurMxn);
         const fa = va == null || !Number.isFinite(va) ? Number.POSITIVE_INFINITY : va;

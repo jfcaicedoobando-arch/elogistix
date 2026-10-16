@@ -18,7 +18,7 @@ export const huecoFacturacionColumns: ColumnDef<FilaHueco, unknown>[] = defineCo
     header: "Expediente",
     accessorFn: (f) => f.expediente,
     enableSorting: true,
-    sortingFn: sortByString<FilaHueco>((f) => f.expediente),
+    sortFn: sortByString<FilaHueco>((f) => f.expediente),
     meta: { width: COL_W.folio, sticky: true, className: "font-mono font-medium whitespace-nowrap" },
     cell: ({ row }) => row.original.expediente || "—",
   },
@@ -27,7 +27,7 @@ export const huecoFacturacionColumns: ColumnDef<FilaHueco, unknown>[] = defineCo
     header: "Cliente",
     accessorFn: (f) => f.cliente_nombre,
     enableSorting: true,
-    sortingFn: sortByString<FilaHueco>((f) => f.cliente_nombre),
+    sortFn: sortByString<FilaHueco>((f) => f.cliente_nombre),
     meta: { width: COL_W.ruta, className: "max-w-[260px] truncate" },
     cell: ({ row }) => (
       <Hint label={toTitleCase(row.original.cliente_nombre)}>
@@ -40,7 +40,7 @@ export const huecoFacturacionColumns: ColumnDef<FilaHueco, unknown>[] = defineCo
     header: "Operador",
     accessorFn: (f) => f.operador,
     enableSorting: true,
-    sortingFn: sortByString<FilaHueco>((f) => f.operador),
+    sortFn: sortByString<FilaHueco>((f) => f.operador),
     meta: { width: COL_W.monto, className: "truncate text-body" },
     cell: ({ row }) => row.original.operador || <span className="text-muted-foreground">—</span>,
   },
@@ -49,7 +49,7 @@ export const huecoFacturacionColumns: ColumnDef<FilaHueco, unknown>[] = defineCo
     header: "ETA",
     accessorFn: (f) => f.eta,
     enableSorting: true,
-    sortingFn: sortByDate<FilaHueco>((f) => f.eta),
+    sortFn: sortByDate<FilaHueco>((f) => f.eta),
     meta: { width: COL_W.fecha, className: "text-body-sm whitespace-nowrap" },
     cell: ({ row }) => formatDate(row.original.eta),
   },
@@ -58,7 +58,7 @@ export const huecoFacturacionColumns: ColumnDef<FilaHueco, unknown>[] = defineCo
     header: "BL",
     accessorFn: (f) => f.bl_master ?? f.bl_house ?? "",
     enableSorting: true,
-    sortingFn: sortByString<FilaHueco>((f) => f.bl_master ?? f.bl_house ?? ""),
+    sortFn: sortByString<FilaHueco>((f) => f.bl_master ?? f.bl_house ?? ""),
     meta: { width: COL_W.nombre, className: "font-mono text-body-sm whitespace-nowrap" },
     cell: ({ row }) => {
       const m = row.original.bl_master?.trim();
@@ -81,7 +81,7 @@ export const huecoFacturacionColumns: ColumnDef<FilaHueco, unknown>[] = defineCo
     header: "Días desde ETA",
     accessorFn: (f) => f.diasDesdeEta,
     enableSorting: true,
-    sortingFn: sortByNumber<FilaHueco>((f) => f.diasDesdeEta),
+    sortFn: sortByNumber<FilaHueco>((f) => f.diasDesdeEta),
     meta: { width: COL_W.monto, align: "center" },
     cell: ({ row }) => {
       const d = row.original.diasDesdeEta;
@@ -110,7 +110,7 @@ export const huecoFacturacionColumns: ColumnDef<FilaHueco, unknown>[] = defineCo
     header: "Venta USD",
     accessorFn: (f) => f.ventaUsd,
     enableSorting: true,
-    sortingFn: sortByNumber<FilaHueco>((f) => f.ventaUsd),
+    sortFn: sortByNumber<FilaHueco>((f) => f.ventaUsd),
     meta: { width: COL_W.monto, align: "right", className: "tabular-nums whitespace-nowrap" },
     cell: ({ row }) => formatCurrency(row.original.ventaUsd, "USD"),
   },
@@ -119,7 +119,7 @@ export const huecoFacturacionColumns: ColumnDef<FilaHueco, unknown>[] = defineCo
     header: "Venta MXN",
     accessorFn: (f) => f.ventaMxn,
     enableSorting: true,
-    sortingFn: sortByNumber<FilaHueco>((f) => f.ventaMxn),
+    sortFn: sortByNumber<FilaHueco>((f) => f.ventaMxn),
     meta: { width: COL_W.monto, align: "right", className: "tabular-nums whitespace-nowrap font-medium" },
     cell: ({ row }) => formatCurrency(row.original.ventaMxn, "MXN"),
   },

@@ -2,7 +2,7 @@
  * `actionsColumn` — helper para columna de acciones (dropdown) tipada.
  * Extraído de `columnBuilders.tsx` para respetar Power of 10 (<=200 líneas).
  */
-import type { ColumnDef } from "@tanstack/react-table";
+import type { ColumnDef } from "@/components/shared/dataTable/tanstackTypes";
 import type { ReactNode } from "react";
 import { MoreHorizontal } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -14,7 +14,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
 
-export interface ActionItem<T> {
+export interface ActionItem<T extends object> {
   label: string;
   icon?: ReactNode;
   onSelect: (row: T) => void;
@@ -22,13 +22,13 @@ export interface ActionItem<T> {
   variant?: "default" | "destructive";
 }
 
-export interface ActionsColumnOpts<T> {
+export interface ActionsColumnOpts<T extends object> {
   id?: string;
   header?: string;
   items: (row: T) => ActionItem<T>[];
 }
 
-export function actionsColumn<T>({
+export function actionsColumn<T extends object>({
   id = "actions",
   header = "",
   items,

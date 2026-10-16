@@ -17,7 +17,7 @@
  */
 import type React from "react";
 import { type LucideIcon } from "lucide-react";
-import type { Table } from "@tanstack/react-table";
+import type { Table } from "@/components/shared/dataTable/tanstackTypes";
 import { useSafeNavigate } from "./useSafeNavigate";
 import { TableBody } from "@/components/ui/table";
 import { DENSITY_CELL, type TableDensity } from "./types";
@@ -26,7 +26,7 @@ import { DataTableBodyEmpty } from "./DataTableBodyEmpty";
 import { DataTableRow } from "./DataTableRow";
 import "./columnMeta";
 
-interface Props<T> {
+interface Props<T extends object> {
   table: Table<T>;
   isLoading: boolean;
   skeletonRows: number;
@@ -53,7 +53,7 @@ interface Props<T> {
   selectionMode?: boolean;
 }
 
-export function DataTableBody<T>({
+export function DataTableBody<T extends object>({
   table, isLoading, skeletonRows, density, striped, hoverable, bordered,
   emptyMessage, emptyHint, emptyIcon, emptyState,
   rowClassName, onRowClick, onRowMouseEnter, getRowHref, getRowAriaLabel,

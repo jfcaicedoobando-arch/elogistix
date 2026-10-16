@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 import type { LucideIcon } from "lucide-react";
-import type { ColumnDef, OnChangeFn, RowSelectionState, VisibilityState, TableOptions } from "@tanstack/react-table";
+import type { ColumnDef, OnChangeFn, RowSelectionState, VisibilityState, TableOptions } from "@/components/shared/dataTable/tanstackTypes";
 import { useNavigate } from "react-router";
 import { DataTable } from "@/components/shared/DataTable";
 import { ErrorStateInline } from "@/components/empty/ErrorStateInline";
@@ -33,7 +33,7 @@ import type {
  * móvil (no aplican a una lista de tarjetas). `isError`/`onRetry` y `footer`
  * sí se replican en móvil para no perder el estado de error ni los totales.
  */
-interface Props<T> {
+interface Props<T extends object> {
   columns: ReadonlyArray<ColumnDef<T, unknown>>;
   data: T[];
   isLoading?: boolean;
@@ -77,7 +77,7 @@ interface Props<T> {
   emptyIcon?: ReactNode | LucideIcon;
 }
 
-export function ResponsiveDataTable<T>(props: Props<T>) {
+export function ResponsiveDataTable<T extends object>(props: Props<T>) {
   const {
     data, isLoading, isError, onRetry, emptyMessage = "Sin resultados", emptyState, onRowClick,
     getRowHref, getRowAriaLabel,

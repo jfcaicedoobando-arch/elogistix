@@ -1,10 +1,11 @@
 import { memo, useCallback } from "react";
 import { cn } from "@/lib/utils";
-import { flexRender, type Row } from "@tanstack/react-table";
+import { flexRender } from "@tanstack/react-table";
+import type { Row } from "@/components/shared/dataTable/tanstackTypes";
 import { ALIGN_CLASS, type ColumnAlign } from "@/components/shared/dataTable/types";
 import "@/components/shared/dataTable/columnMeta";
 
-interface VirtualRowProps<T> {
+interface VirtualRowProps<T extends object> {
   row: Row<T>;
   index: number;
   start: number;
@@ -33,7 +34,7 @@ interface VirtualRowProps<T> {
  * Los estilos en línea son dinámicos por diseño (posición calculada por el
  * virtualizer y plantilla de columnas): no se pueden expresar con clases.
  */
-function VirtualRowInner<T>({
+function VirtualRowInner<T extends object>({
   row, index, start, cellPad, gridTemplate,
   striped, hoverable, onRowClick, rowClassName, measureRef,
 }: VirtualRowProps<T>) {
@@ -77,7 +78,7 @@ function VirtualRowInner<T>({
   );
 }
 
-function areEqual<T>(prev: VirtualRowProps<T>, next: VirtualRowProps<T>): boolean {
+function areEqual<T extends object>(prev: VirtualRowProps<T>, next: VirtualRowProps<T>): boolean {
   return (
     prev.row === next.row &&
     prev.index === next.index &&
@@ -93,6 +94,6 @@ function areEqual<T>(prev: VirtualRowProps<T>, next: VirtualRowProps<T>): boolea
 }
 
 // React.memo no preserva genéricos: casteo controlado al tipo público.
-export const VirtualRow = memo(VirtualRowInner, areEqual) as <T>(
+export const VirtualRow = memo(VirtualRowInner, areEqual) as <T extends object>(
   props: VirtualRowProps<T>,
 ) => ReturnType<typeof VirtualRowInner<T>>;

@@ -13,7 +13,7 @@ export function buildAdminOrganizacionesColumns(): ColumnDef<OrgRow, unknown>[] 
       header: "Nombre",
       accessorFn: (o) => o.nombre,
       enableSorting: true,
-      sortingFn: sortByString<OrgRow>((o) => o.nombre),
+      sortFn: sortByString<OrgRow>((o) => o.nombre),
       meta: { width: COL_W.texto, className: "font-medium whitespace-nowrap", sticky: true },
       cell: ({ row }) => toTitleCase(row.original.nombre),
     },

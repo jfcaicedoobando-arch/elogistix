@@ -75,7 +75,7 @@ export function buildProformasColumns({
       header: "# Proforma",
       accessorFn: (p) => p.numero,
       enableSorting: true,
-      sortingFn: sortByString<ProformaConFactura>((p) => p.numero),
+      sortFn: sortByString<ProformaConFactura>((p) => p.numero),
       meta: { width: COL_W.monto, className: "font-medium whitespace-nowrap", sticky: true },
       cell: ({ row }) => row.original.numero,
     },
@@ -84,7 +84,7 @@ export function buildProformasColumns({
       header: "Expediente",
       accessorFn: (p) => p.expediente,
       enableSorting: true,
-      sortingFn: sortByString<ProformaConFactura>((p) => p.expediente),
+      sortFn: sortByString<ProformaConFactura>((p) => p.expediente),
       meta: { width: COL_W.folio, className: "whitespace-nowrap" },
       // P1 (auditoría v13.823.143 · bug 1): las proformas de embarques sin folio
       // dejaban la celda vacía. Se muestra el fallback canónico y se enlaza al
@@ -110,7 +110,7 @@ export function buildProformasColumns({
       header: "Cliente",
       accessorFn: (p) => p.cliente_nombre,
       enableSorting: true,
-      sortingFn: sortByString<ProformaConFactura>((p) => p.cliente_nombre),
+      sortFn: sortByString<ProformaConFactura>((p) => p.cliente_nombre),
       meta: { width: COL_W.ruta, className: "max-w-[220px] truncate" },
       cell: ({ row }) => <Hint label={toTitleCase(row.original.cliente_nombre)}><span>{toTitleCase(row.original.cliente_nombre)}</span></Hint>,
     },
@@ -119,7 +119,7 @@ export function buildProformasColumns({
       header: "Operador",
       accessorFn: (p) => p.operador ?? "",
       enableSorting: true,
-      sortingFn: sortByString<ProformaConFactura>((p) => p.operador),
+      sortFn: sortByString<ProformaConFactura>((p) => p.operador),
       // Oculto en tableta (<xl) para eliminar scroll horizontal en /proformas.
       meta: { width: COL_W.monto, className: "text-body-sm whitespace-nowrap hidden xl:table-cell", headerClassName: "hidden xl:table-cell" },
       cell: ({ row }) => row.original.operador ? nombreDesdeEmail(row.original.operador) : <span className="text-muted-foreground">—</span>,
@@ -129,7 +129,7 @@ export function buildProformasColumns({
       header: "Fecha",
       accessorFn: (p) => p.fecha_emision,
       enableSorting: true,
-      sortingFn: sortByDate<ProformaConFactura>((p) => p.fecha_emision),
+      sortFn: sortByDate<ProformaConFactura>((p) => p.fecha_emision),
       meta: { width: COL_W.fecha, className: "text-body-sm whitespace-nowrap" },
       cell: ({ row }) => formatDate(row.original.fecha_emision),
     },
@@ -141,7 +141,7 @@ export function buildProformasColumns({
       // Se ordena por un rank numérico para que agrupe por criticidad.
       accessorFn: (p) => rankEstadoUnificado(p),
       enableSorting: true,
-      sortingFn: (a, b) => rankEstadoUnificado(a.original) - rankEstadoUnificado(b.original),
+      sortFn: (a, b) => rankEstadoUnificado(a.original) - rankEstadoUnificado(b.original),
       meta: { width: COL_W.monto },
       cell: ({ row }) => {
         const p = row.original;

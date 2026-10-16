@@ -1,5 +1,5 @@
 import { useRef, useState } from "react";
-import type { ColumnDef } from "@tanstack/react-table";
+import type { ColumnDef } from "@/components/shared/dataTable/tanstackTypes";
 import { useVirtualTableState } from "@/components/shared/dataTable/useVirtualTableState";
 import { VirtualRow } from "@/components/shared/VirtualRow";
 import { VirtualTimeline } from "@/components/shared/bitacora/VirtualTimeline";
