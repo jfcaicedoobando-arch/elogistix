@@ -5,5 +5,5 @@
  */
 export type { FieldDiff } from "@/lib/domain/auditDiff";
 export { diffFields, SENSITIVE_FIELDS } from "@/lib/domain/auditDiff";
-export type { ConceptoLike, ConceptosDiff } from "@/lib/domain/auditDiffConceptos";
+export type { ConceptoLike } from "@/lib/domain/auditDiffConceptos";
 export { diffConceptos } from "@/lib/domain/auditDiffConceptos";

@@ -1,0 +1,39 @@
+(!) Your Vite config uses features that are unsupported by `configLoader: 'native'`, which is planned to become the default in a future major version of Vite:
+  - `__dirname` (vitest.config.ts:15:14). Use `import.meta.dirname` instead
+  - import "./scripts/lib/testEnvSplit" without a file extension (vitest.config.ts:3:41). Add the file extension
+  - import "./vitest.shared" without a file extension (vitest.config.ts:9:8). Add the file extension
+Set `VITE_CONFIG_NATIVE_IGNORE_WARNING=true` to suppress this warning.
+[vite:react-swc] We recommend switching to `@vitejs/plugin-react` for improved performance as no swc plugins are used. More information at https://vite.dev/rolldown
+[vite:react-swc] We recommend switching to `@vitejs/plugin-react` for improved performance as no swc plugins are used. More information at https://vite.dev/rolldown
+[vite:react-swc] We recommend switching to `@vitejs/plugin-react` for improved performance as no swc plugins are used. More information at https://vite.dev/rolldown
+
+ RUN  v5.0.3 C:/Users/torta/Documents/Codex/2026-10-16/task-14/elogistix
+
+ Γ£ô |node| src/lib/domain/__tests__/documentoEstados.test.ts (15 tests) 12ms
+ Γ£ô |node| src/features/dashboardEjecutivo/services/__tests__/kpis.eficiencia.test.ts (24 tests) 25ms
+ Γ£ô |jsdom| src/features/dashboardEjecutivo/components/__tests__/BandaKPIs.periodo.test.tsx (2 tests) 458ms
+ Γ£ô |jsdom| src/features/dashboardEjecutivo/components/__tests__/BandaKPIsEficiencia.test.tsx (5 tests) 635ms
+   Γ£ô financial efficiency UI ┬╖ honest unavailable states (3)
+     Γ£ô shows N/D for each metric/currency, dates, method and approved policies 319ms
+ Γ£ô |jsdom| src/features/facturacion/components/__tests__/UsoCfdiIngresoSelect.test.tsx (3 tests) 911ms
+   Γ£ô selecci├│n de uso CFDI de ingreso (3)
+     Γ£ô mantiene G03 heredado visible para 616 con motivo y s├│lo ofrece S01 465ms
+ Γ£ô |jsdom| src/features/dashboardEjecutivo/components/__tests__/BandaKPIsEficiencia.sourceFocus.test.tsx (1 test) 656ms
+   Γ£ô financial focus ┬╖ real hook with mocked source reads (1)
+     Γ£ô preserves focus through source failure/recovery and organization loading without retained diagnostics 605ms
+ Γ£ô |jsdom| src/features/dashboardEjecutivo/components/__tests__/BandaKPIs.valuacion.test.tsx (5 tests) 817ms
+ Γ£ô |node| src/lib/domain/__tests__/etiquetaCicloProforma.test.ts (9 tests) 13ms
+ Γ£ô |node| src/features/facturacion/utils/__tests__/usoCfdiTimbrado.test.ts (5 tests) 15ms
+ Γ£ô |node| src/lib/financial/__tests__/usoCfdiFiscal.test.ts (17 tests) 21ms
+ Γ£ô |node| src/lib/domain/__tests__/proformaEstados.cancelada.test.ts (5 tests) 13ms
+ Γ£ô |jsdom| src/features/dashboardEjecutivo/components/__tests__/BandaKPIsEficiencia.focus.test.tsx (14 tests) 1730ms
+   Γ£ô financial analysis ┬╖ stable focus through source transitions (14)
+     Γ£ô moves removed summary focus to the same region on error, preserving it on recovery 495ms
+ Γ£ô |node| src/features/dashboardEjecutivo/services/__tests__/kpis.variaciones.test.ts (6 tests) 29ms
+ Γ£ô |jsdom| src/features/dashboardEjecutivo/services/__tests__/exportValuacion.test.tsx (2 tests) 99ms
+ Γ£ô |node| src/features/dashboardEjecutivo/domain/__tests__/valuacion.audit.test.ts (6 tests) 19ms
+
+ Test Files  15 passed (15)
+      Tests  119 passed (119)
+   Start at  17:05:22
+   Duration  13.08s (environment 40%, import 31%, setup 17%, tests 7%, transform 4%, worker 1%)

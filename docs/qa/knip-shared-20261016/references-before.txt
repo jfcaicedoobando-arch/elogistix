@@ -1,0 +1,216 @@
+docs/changelog-archive-v13.md:1687:- **chore(arquitectura)**: el servicio de usuarios se dividió en `listado.ts` y `mutaciones.ts` (límite de 200 líneas) y el tipo `DocumentoKpi` se movió a `src/lib/domain/documentoKpis.ts` para que `lib/` no importe de `components/`.
+docs/changelog-archive-v13.md:1709:- **Técnico.** Nuevos bloques compartidos (`DocumentoLayout`, `DocumentoStatusStepper`, `DocumentoKpiStrip`, `DocumentoTabs`) y lógica de ciclo de vida centralizada en `src/lib/domain/documentoEstados.ts`.
+docs/changelog-archive-v13.md:5308:- **CI · Baselines de auditoría verdes de nuevo**: fix de las 3 reglas que rompió el step "Lint, typecheck, unused code & build" tras los cambios de captación de leads. (1) Jerarquía Pages→Hooks→Services→Lib: `getAttribution` y `Attribution` se movieron a nuevo módulo `src/features/marketing/lib/attribution.ts`; `useUtmParams.ts` queda como hook puro; `demoLeads.ts` importa desde `lib` (no de `hooks`). (2) Cast baseline (0 HIGH / 0 CRITICAL): eliminado `JSON.parse(raw) as Partial<Attribution>` — ahora se parsea a `unknown`, se valida `typeof === "object"` y se proyectan sólo las llaves conocidas con `typeof === "string"`. (3) Power of 10 #4 (≤200 líneas): `Onboarding.tsx` (203→193) extrayendo la validación pura a `src/features/onboarding/lib/onboardingValidation.ts`; `DemoAccessDialog.tsx` (201→194) extrayendo el schema Zod a `src/features/marketing/lib/demoAccessSchema.ts`. Sin cambios de UX ni de contrato de RPC.
+docs/changelog-archive-v13.md:6299:  - `useTableFilters.test.tsx`: cambió `NuqsAdapter` (adapter de React puro que lee `window.location`) por `withNuqsTestingAdapter`, eliminando el `ReferenceError: location is not defined` en el shard 4/20 tras el teardown de jsdom.
+docs/changelog-archive-v13.md:6542:  - Nuevo primitivo `useServerPagedList` (`src/hooks/shared/useServerPagedList.ts`) — combina `useTableFilters` (nuqs) + orden controlado (`sort` / `dir` en URL) + `useQuery` con `{rows, count}`. Contrato listo para paginación real en RPC (`p_from/p_to/p_sort_*`).
+docs/changelog-archive-v13.md:6981:  - **Cotizaciones**: `PageContainer`, `UnifiedFiltersBar` + `useTableFilters`, `StatusBadge domain="cotizacion"`, `DeleteConfirmDialog`, `clientColumn`/`moneyColumn`/`dateColumn`/`actionsColumn` compartidos. 397 tests en verde.
+docs/changelog-archive-v13.md:7000:  - `src/hooks/shared/useTableFilters.ts` + `src/components/shared/filters/UnifiedFiltersBar.tsx` (superset de `useListPageState` con rango de fechas y chips activos derivados; barra estándar Search + primary + Sheet + chips + "Limpiar todo").
+docs/changelog-archive-v13.md:8576:- **refactor(admin) español en verbos mixtos (Paso 9, subset conservador)**: tras auditar consumidores reales (30+ archivos, 6 tests), se renombraron los 3 identificadores con mezcla más jarring de verbo inglés + sustantivo español. `acknowledgeAlerta` → `reconocerAlerta` (`features/admin/services/observability.ts` + 3 consumers). `setOrganizationActivo` → `establecerOrganizacionActiva` (`features/admin/services/organizations.ts` + 2 tests). `getRoleLabel` → `obtenerEtiquetaRol` (`features/admin/domain/roles/roleCatalog.ts` + 7 consumers incluyendo el re-export legacy en `lib/ui/uiMappings.ts`). Sin cambios funcionales. Tests: 160/160 verdes. **Deuda explícita registrada como no-se-hace**: renombre masivo de tipos/interfaces (`AdminOrgStats`, `OrgRow`, `OrganizationRow`, `GlobalUserRow`, etc.) y campos (`totalOrgs`, `totalUsers`) se descartó: tocaría 30+ archivos y 6 test files por estética; además `OrgRow` y `OrganizationRow` no son duplicados (shapes distintos: uno con `created_at` para CRUD admin, otro con `logo_url` para listado activo). Cierra auditoría arquitectónica.
+docs/table9-migration.md:23:SortingFn, TableOptions y VisibilityState) están ligados a esas features. Las filas
+docs/table9-migration.md:24:son objetos, conforme a v9. VisibilityState representa ColumnVisibilityState y la
+src/components/shared/DataTable.tsx:2:import type { ColumnDef, OnChangeFn, RowSelectionState, VisibilityState, TableOptions } from "@/components/shared/dataTable/tanstackTypes";
+src/components/shared/DataTable.tsx:13:export type { ColumnDef, VisibilityState } from "@/components/shared/dataTable/tanstackTypes";
+src/components/shared/DataTable.tsx:65:  columnVisibility?: VisibilityState;
+src/components/shared/DataTable.tsx:66:  onColumnVisibilityChange?: OnChangeFn<VisibilityState>;
+src/components/shared/dataTable/ResponsiveDataTable.tsx:3:import type { ColumnDef, OnChangeFn, RowSelectionState, VisibilityState, TableOptions } from "@/components/shared/dataTable/tanstackTypes";
+src/components/shared/dataTable/ResponsiveDataTable.tsx:66:  columnVisibility?: VisibilityState;
+src/components/shared/dataTable/ResponsiveDataTable.tsx:67:  onColumnVisibilityChange?: OnChangeFn<VisibilityState>;
+src/components/shared/dataTable/tanstackTypes.ts:4:  ColumnVisibilityState,
+src/components/shared/dataTable/tanstackTypes.ts:15:export type VisibilityState = ColumnVisibilityState;
+src/components/shared/dataTable/useTableInstance.ts:16:import type { ColumnDef, TableOptions, OnChangeFn, RowSelectionState, SortingState, Updater, VisibilityState } from "@/components/shared/dataTable/tanstackTypes";
+src/components/shared/dataTable/useTableInstance.ts:40:  columnVisibility?: VisibilityState;
+src/components/shared/dataTable/useTableInstance.ts:41:  onColumnVisibilityChange?: OnChangeFn<VisibilityState>;
+src/components/shared/documento/DocumentoDetalleShell.tsx:11:import { DocumentoKpiStrip } from "@/components/shared/documento/DocumentoKpiStrip";
+src/components/shared/documento/DocumentoDetalleShell.tsx:13:import type { DocumentoKpi } from "@/lib/domain/documentoKpis";
+src/components/shared/documento/DocumentoDetalleShell.tsx:19:  kpis?: DocumentoKpi[];
+src/components/shared/documento/DocumentoDetalleShell.tsx:37:      {kpis && kpis.length > 0 ? <DocumentoKpiStrip kpis={kpis} /> : null}
+src/components/shared/documento/DocumentoKpiStrip.tsx:6:import type { DocumentoKpi } from "@/lib/domain/documentoKpis";
+src/components/shared/documento/DocumentoKpiStrip.tsx:8:export type { DocumentoKpi };
+src/components/shared/documento/DocumentoKpiStrip.tsx:10:const TONE_CLASS: Record<NonNullable<DocumentoKpi["tone"]>, string> = {
+src/components/shared/documento/DocumentoKpiStrip.tsx:18:  kpis: DocumentoKpi[];
+src/components/shared/documento/DocumentoKpiStrip.tsx:22:export function DocumentoKpiStrip({ kpis, className }: Props) {
+src/features/admin/services/organization/index.ts:2:export { getSuperAdminOrg, listActiveOrganizations, setSuperAdminOrg } from "@/services/organization";
+src/features/admin/services/organization/index.ts:3:export type { OrganizationRow } from "@/services/organization";
+src/features/admin/services/usuario/mutaciones.auth.ts:14:export async function getAuthToken(): Promise<string | undefined> {
+src/features/auditoria/hooks/useOrgMembersAsignables.ts:8:  type ResponsableOption,
+src/features/auditoria/hooks/useOrgMembersAsignables.ts:13:export type { ResponsableOption };
+src/features/auditoria/services/miembrosAsignables.ts:16:export interface ResponsableOption {
+src/features/auditoria/services/miembrosAsignables.ts:29:): Promise<ResponsableOption[]> {
+src/features/auditoria/utils/__tests__/diffFields.extra.test.ts:7:  type ConceptoLike,
+src/features/auditoria/utils/__tests__/diffFields.extra.test.ts:88:    const after: ConceptoLike[] = [{ concepto: "Flete", monto: 500, moneda: "USD" }];
+src/features/auditoria/utils/__tests__/diffFields.extra.test.ts:95:    const before: ConceptoLike[] = [{ concepto: "Aduana", monto: 300, moneda: "MXN" }];
+src/features/auditoria/utils/__tests__/diffFields.extra.test.ts:102:    const before: ConceptoLike[] = [{ concepto: "Handling", monto: 100, moneda: "USD" }];
+src/features/auditoria/utils/__tests__/diffFields.extra.test.ts:103:    const after: ConceptoLike[]  = [{ concepto: "Handling", monto: 200, moneda: "USD" }];
+src/features/auditoria/utils/__tests__/diffFields.extra.test.ts:112:    const lista: ConceptoLike[] = [{ concepto: "Flete", monto: 500, moneda: "MXN" }];
+src/features/auditoria/utils/diffConceptos.ts:5:export type { ConceptoLike, ConceptosDiff } from "@/lib/domain/auditDiffConceptos";
+src/features/auditoria/utils/diffFields.ts:8:export type { ConceptoLike, ConceptosDiff } from "@/lib/domain/auditDiffConceptos";
+src/features/bandejas/components/__tests__/CxpPorPagarFiltersBar.draft.test.tsx:4:import { useTableFilters } from "@/hooks/shared/useTableFilters";
+src/features/bandejas/components/__tests__/CxpPorPagarFiltersBar.draft.test.tsx:18:  const list = useTableFilters({ defaultFilters: { moneda: "todas", vencidas: "todas" } });
+src/features/catalogos/services/__tests__/catalogoOrgVisibilidad.test.ts:23:import { fetchDesactivadosOrg, setActivoOrg } from "../catalogoOrgVisibilidad";
+src/features/catalogos/services/__tests__/catalogoOrgVisibilidad.test.ts:39:describe("setActivoOrg", () => {
+src/features/catalogos/services/__tests__/catalogoOrgVisibilidad.test.ts:42:    await setActivoOrg("puertos", "p1", false);
+src/features/catalogos/services/__tests__/catalogoOrgVisibilidad.test.ts:48:    await expect(setActivoOrg("navieras", "n1", false)).resolves.toBeUndefined();
+src/features/catalogos/services/__tests__/catalogoOrgVisibilidad.test.ts:54:    await expect(setActivoOrg("navieras", "n1", false)).rejects.toMatchObject({
+src/features/catalogos/services/__tests__/catalogoOrgVisibilidad.test.ts:63:    await setActivoOrg("tipos_contenedor", "t1", true);
+src/features/catalogos/services/__tests__/catalogoOrgVisibilidad.test.ts:70:describe("fetchDesactivadosOrg", () => {
+src/features/catalogos/services/__tests__/catalogoOrgVisibilidad.test.ts:73:    const set = await fetchDesactivadosOrg("puertos");
+src/features/catalogos/services/catalogoOrgVisibilidad.ts:14:export type CatalogoOrg = "puertos" | "navieras" | "tipos_contenedor";
+src/features/catalogos/services/catalogoOrgVisibilidad.ts:17:export async function fetchDesactivadosOrg(catalogo: CatalogoOrg): Promise<Set<string>> {
+src/features/catalogos/services/catalogoOrgVisibilidad.ts:29:export async function setActivoOrg(
+src/features/catalogos/services/catalogoOrgVisibilidad.ts:30:  catalogo: CatalogoOrg,
+src/features/catalogos/services/index.ts:10:export type { CatalogoOrg } from "./catalogoOrgVisibilidad";
+src/features/catalogos/services/index.ts:11:export { fetchDesactivadosOrg, setActivoOrg } from "./catalogoOrgVisibilidad";
+src/features/catalogos/services/navieras.ts:10:import { fetchDesactivadosOrg, setActivoOrg } from "./catalogoOrgVisibilidad";
+src/features/catalogos/services/navieras.ts:18:  const apagados = await fetchDesactivadosOrg("navieras");
+src/features/catalogos/services/navieras.ts:30:  await setActivoOrg("navieras", id, activo);
+src/features/catalogos/services/puertos.ts:9:import { fetchDesactivadosOrg, setActivoOrg } from "./catalogoOrgVisibilidad";
+src/features/catalogos/services/puertos.ts:16:  const apagados = await fetchDesactivadosOrg("puertos");
+src/features/catalogos/services/puertos.ts:27:  await setActivoOrg("puertos", id, activo);
+src/features/catalogos/services/tiposContenedor.ts:13:import { fetchDesactivadosOrg, setActivoOrg } from "./catalogoOrgVisibilidad";
+src/features/catalogos/services/tiposContenedor.ts:26:  const apagados = await fetchDesactivadosOrg("tipos_contenedor");
+src/features/catalogos/services/tiposContenedor.ts:45:  await setActivoOrg("tipos_contenedor", id, activo);
+src/features/cliente/hooks/__tests__/useRentabilidadClientes.test.tsx:7:vi.mock("@/services/organization", () => ({ getSuperAdminOrg: vi.fn().mockResolvedValue("org-sintetica") }));
+src/features/cliente/hooks/__tests__/useRentabilidadClientes.test.tsx:8:import { getSuperAdminOrg } from "@/services/organization";
+src/features/cliente/hooks/__tests__/useRentabilidadClientes.test.tsx:13:  vi.mocked(getSuperAdminOrg).mockReset().mockResolvedValue("org-sintetica");
+src/features/cliente/hooks/__tests__/useRentabilidadClientes.test.tsx:35:    vi.mocked(getSuperAdminOrg).mockResolvedValueOnce("org-sintetica").mockResolvedValueOnce("otra-org-sintetica");
+src/features/cliente/hooks/__tests__/useRentabilidadClientes.test.tsx:44:    vi.mocked(getSuperAdminOrg).mockReturnValueOnce(new Promise<string>((resolve) => { finish = resolve; }));
+src/features/cliente/hooks/__tests__/useRentabilidadClientes.test.tsx:46:    await waitFor(() => expect(getSuperAdminOrg).toHaveBeenCalledOnce());
+src/features/cliente/hooks/useRentabilidadClientes.ts:5:import { getSuperAdminOrg } from "@/services/organization";
+src/features/cliente/hooks/useRentabilidadClientes.ts:35:      const serverOrg = await getSuperAdminOrg();
+src/features/cliente/hooks/useRentabilidadClientes.ts:43:      // encabezado local mientras setSuperAdminOrg todavía está pendiente.
+src/features/cliente/hooks/useRentabilidadClientes.ts:47:      assertTenant(await getSuperAdminOrg());
+src/features/cliente/routes/Clientes.tsx:13:import { useTableFilters } from "@/hooks/shared/useTableFilters";
+src/features/cliente/routes/Clientes.tsx:51:  } = useTableFilters({ defaultFilters: {}, defaultPageSize: 50, pageSizeOptions: [50, 100, 200, 500] });
+src/features/cotizacion/components/__tests__/CotizacionesFiltersBar.draft.test.tsx:4:import { useTableFilters } from "@/hooks/shared/useTableFilters";
+src/features/cotizacion/components/__tests__/CotizacionesFiltersBar.draft.test.tsx:33:  const list = useTableFilters({ defaultFilters: defaults });
+src/features/cxp/components/DialogDetallePagosProveedor.sections.tsx:3: * v13.349.0: los KPIs viven ahora en `DocumentoKpiStrip`; este archivo
+src/features/cxp/components/__tests__/capturaFacturaValidacionPasos.test.tsx:19:vi.mock("../_sections/PasoDocumento", () => ({ PasoDocumento: () => <p>Documento conservado</p> }));
+src/features/cxp/components/_sections/CapturaFacturaPasosBody.tsx:8:import { PasoDocumento } from "./PasoDocumento";
+src/features/cxp/components/_sections/CapturaFacturaPasosBody.tsx:18:type Autocarga = Parameters<typeof PasoDocumento>[0]["autocarga"];
+src/features/cxp/components/_sections/CapturaFacturaPasosBody.tsx:28:  keyRenglonSospechoso: Parameters<typeof PasoDocumento>[0]["keyRenglonSospechoso"];
+src/features/cxp/components/_sections/CapturaFacturaPasosBody.tsx:57:        <PasoDocumento
+src/features/cxp/components/_sections/PasoDocumento.tsx:68:export function PasoDocumento({
+src/features/cxp/domain/facturaProveedorKpis.ts:5:import type { DocumentoKpi } from "@/lib/domain/documentoKpis";
+src/features/cxp/domain/facturaProveedorKpis.ts:9:export function buildKpisFacturaProveedor(f: FacturaCxP): DocumentoKpi[] {
+src/features/cxp/hooks/useCxpPageState.ts:7: * canónico `useTableFilters` (nuqs) — la URL `/compras/facturas?q=…&estatus=…`
+src/features/cxp/hooks/useCxpPageState.ts:13:import { useTableFilters } from "@/hooks/shared/useTableFilters";
+src/features/cxp/hooks/useCxpPageState.ts:48:  const tf = useTableFilters<CxpFiltrosUrl>({
+src/features/dashboardEjecutivo/components/kpiValuacion.ts:8:export function runwayIncompleto(kpis: KPIsEjecutivos): boolean {
+src/features/dashboardEjecutivo/components/kpiValuacion.ts:12:export function eficienciaIncompleta(kpis: KPIsEjecutivos): boolean {
+src/features/dashboardEjecutivo/services/completitud.ts:18:export function ratiosDisponibles(eerrIncompleto: boolean, flujoIncompleto: boolean): boolean {
+src/features/embarques/components/EmbarquesFiltros.tsx:13:import type { ChipItem } from "@/hooks/shared/useTableFilters";
+src/features/embarques/hooks/useEditarEmbarqueWizard.helpers.ts:6:import type { ConceptosDiff } from "@/lib/domain/auditDiffConceptos";
+src/features/embarques/hooks/useEditarEmbarqueWizard.helpers.ts:59:  cambiosVenta: ConceptosDiff;
+src/features/embarques/hooks/useEditarEmbarqueWizard.helpers.ts:60:  cambiosCosto: ConceptosDiff;
+src/features/embarques/hooks/useEditarEmbarqueWizard.save.ts:18:import type { ConceptoLike } from "@/lib/domain/auditDiffConceptos";
+src/features/embarques/hooks/useEditarEmbarqueWizard.save.ts:34:  conceptosVentaDb: ConceptoLike[];
+src/features/embarques/hooks/useEditarEmbarqueWizard.save.ts:35:  conceptosCostoDb: ConceptoLike[];
+src/features/facturacion/components/TabFacturasEmitidas.tsx:24:import type { ChipItem } from "@/hooks/shared/useTableFilters";
+src/features/facturacion/components/bandejas/BandejaShell.tsx:17:import type { ChipItem } from "@/hooks/shared/useTableFilters";
+src/features/facturacion/domain/facturaKpis.ts:6:import type { DocumentoKpi } from "@/lib/domain/documentoKpis";
+src/features/facturacion/domain/facturaKpis.ts:15:export function buildKpisFactura(factura: FacturaKpisInput, saldo?: number, cobrado = 0): DocumentoKpi[] {
+src/features/marketing/hooks/useUtmParams.ts:4: * pulsa "Probar demo". La utilidad pura `getAttribution` vive en
+src/features/marketing/lib/attribution.ts:43:export function getAttribution(): Attribution {
+src/features/proformas/domain/proformaKpis.ts:7:import type { DocumentoKpi } from "@/lib/domain/documentoKpis";
+src/features/proformas/domain/proformaKpis.ts:19:export function buildKpisProforma(input: ProformaKpiInput): DocumentoKpi[] {
+src/features/reportes/cartera/hooks/__tests__/carteraBusinessDay.test.tsx:12:vi.mock("@/services/organization", () => ({ getSuperAdminOrg: async () => "org-a" }));
+src/features/reportes/cartera/hooks/__tests__/useCarteraSnapshot.test.tsx:11:vi.mock("@/services/organization", () => ({ getSuperAdminOrg: async () => mocks.serverOrg }));
+src/features/reportes/cartera/services/__tests__/carteraDescargas.lifecycle.test.tsx:9:vi.mock("@/services/organization", () => ({ getSuperAdminOrg: vi.fn() }));
+src/features/reportes/cartera/services/__tests__/carteraDescargas.test.tsx:13:vi.mock("@/services/organization", () => ({ getSuperAdminOrg: vi.fn() }));
+src/features/reportes/cartera/services/__tests__/carteraSnapshot.test.ts:8:vi.mock("@/services/organization", () => ({ getSuperAdminOrg: mocks.serverOrg }));
+src/features/reportes/cartera/services/carteraSnapshot.ts:5:import { getSuperAdminOrg } from "@/services/organization";
+src/features/reportes/cartera/services/carteraSnapshot.ts:26:  const organizationId = await getSuperAdminOrg();
+src/features/reportes/components/ReportesTablaClientes.tsx:12:import type { SortField } from "../domain/reportesFilters";
+src/features/reportes/components/ReportesTablaClientes.tsx:13:export type { SortField } from "../domain/reportesFilters";
+src/features/reportes/components/ReportesTablaClientes.tsx:28:  sortField: SortField;
+src/features/reportes/components/ReportesTablaClientes.tsx:30:  onSort: (field: SortField) => void;
+src/features/reportes/components/ReportesTablaClientes.tsx:35:const SORT_KEYS: SortField[] = ["venta_usd", "costo_usd", "profit_usd", "margen"];
+src/features/reportes/components/ReportesTablaClientes.tsx:66:              if (key && SORT_KEYS.includes(key as SortField)) onSort(key as SortField);
+src/features/reportes/domain/reportesFilters.ts:4:export type SortField = "profit_usd" | "venta_usd" | "costo_usd" | "margen";
+src/features/reportes/domain/reportesFilters.ts:7:const SORT_FIELDS: SortField[] = ["profit_usd", "venta_usd", "costo_usd", "margen"];
+src/features/reportes/domain/reportesFilters.ts:14:  sortField: SortField;
+src/features/reportes/domain/reportesFilters.ts:32:  const sortField = params.get("sort") as SortField;
+src/features/reportes/hooks/__tests__/useReportes.tenantScope.test.tsx:10:  getSuperAdminOrg: async () => mocks.serverOrg, setSuperAdminOrg: mocks.saveOrg,
+src/features/reportes/hooks/useReportesFilters.ts:5:import type { SortField } from "../domain/reportesFilters";
+src/features/reportes/hooks/useReportesFilters.ts:29:  const handleSort = (field: SortField) => update({
+src/hooks/shared/__tests__/useTableFilters.pageReset.test.tsx:5:import { useTableFilters } from "@/hooks/shared/useTableFilters";
+src/hooks/shared/__tests__/useTableFilters.pageReset.test.tsx:18:describe("useTableFilters · M12 reset de página al cambiar el rango de fechas", () => {
+src/hooks/shared/__tests__/useTableFilters.pageReset.test.tsx:21:      () => useTableFilters({ defaultFilters: {} as Record<string, string> }),
+src/hooks/shared/__tests__/useTableFilters.pageReset.test.tsx:31:      () => useTableFilters({ defaultFilters: {} as Record<string, string> }),
+src/hooks/shared/__tests__/useTableFilters.test.tsx:5:import { useTableFilters } from "@/hooks/shared/useTableFilters";
+src/hooks/shared/__tests__/useTableFilters.test.tsx:18:describe("useTableFilters", () => {
+src/hooks/shared/__tests__/useTableFilters.test.tsx:22:        useTableFilters({
+src/hooks/shared/__tests__/useTableFilters.test.tsx:36:        useTableFilters({
+src/hooks/shared/__tests__/useTableFilters.test.tsx:51:      () => useTableFilters({ defaultFilters: {} as Record<string, string> }),
+src/hooks/shared/__tests__/useTableFilters.test.tsx:68:        useTableFilters({
+src/hooks/shared/index.ts:25:export { useTableFilters } from "./useTableFilters";
+src/hooks/shared/index.ts:26:export type { ChipItem, TableFiltersState } from "./useTableFilters";
+src/hooks/shared/useClientPagedList.ts:15:import { useTableFilters, type UseTableFiltersOpts, type ChipItem } from "@/hooks/shared/useTableFilters";
+src/hooks/shared/useClientPagedList.ts:83:  const f = useTableFilters<TFilters>({ defaultFilters, filterLabels, defaultPageSize, pageSizeOptions });
+src/hooks/shared/useServerPagedList.ts:5: *  - `useTableFilters` (URL sync vía nuqs: q, page, ps, filtros, from/to)
+src/hooks/shared/useServerPagedList.ts:22:import { useTableFilters, type UseTableFiltersOpts } from "@/hooks/shared/useTableFilters";
+src/hooks/shared/useServerPagedList.ts:96:  const filtersState = useTableFilters<TFilters>({
+src/hooks/shared/useTableFilters.ts:2: * `useTableFilters<TFilters>` — extiende `useListPageState` con rango de
+src/hooks/shared/useTableFilters.ts:31:export interface TableFiltersState<TFilters extends Record<string, string>> {
+src/hooks/shared/useTableFilters.ts:53:export function useTableFilters<TFilters extends Record<string, string>>({
+src/hooks/shared/useTableFilters.ts:58:}: UseTableFiltersOpts<TFilters>): TableFiltersState<TFilters> {
+src/lib/contexts/__tests__/OrganizationContext.superAdmin.test.tsx:25:const setSuperAdminOrg = vi.fn(async (_id: string | null) => undefined);
+src/lib/contexts/__tests__/OrganizationContext.superAdmin.test.tsx:28:  setSuperAdminOrg: (id: string | null) => setSuperAdminOrg(id),
+src/lib/contexts/__tests__/OrganizationContext.superAdmin.test.tsx:30:  getSuperAdminOrg: vi.fn(async () => null),
+src/lib/contexts/__tests__/OrganizationContext.superAdmin.test.tsx:58:    setSuperAdminOrg.mockClear();
+src/lib/contexts/__tests__/OrganizationContext.superAdmin.test.tsx:81:    setSuperAdminOrg.mockImplementationOnce(() => new Promise<undefined>((resolve) => { finish = () => resolve(undefined); }));
+src/lib/contexts/__tests__/OrganizationContext.superAdmin.test.tsx:116:    await waitFor(() => expect(setSuperAdminOrg).toHaveBeenCalledWith(null));
+src/lib/contexts/__tests__/OrganizationContext.superAdmin.test.tsx:126:    await waitFor(() => expect(setSuperAdminOrg).toHaveBeenCalledWith("org-b"));
+src/lib/contexts/__tests__/OrganizationContext.superAdmin.test.tsx:133:    expect(setSuperAdminOrg).toHaveBeenCalledWith("org-a");
+src/lib/contexts/__tests__/OrganizationContext.test.tsx:19:  getSuperAdminOrg: vi.fn(async () => null),
+src/lib/contexts/__tests__/OrganizationContext.test.tsx:20:  setSuperAdminOrg: vi.fn(async () => undefined),
+src/lib/contexts/organization/useSuperAdminOrgs.ts:9:  getSuperAdminOrg,
+src/lib/contexts/organization/useSuperAdminOrgs.ts:11:  setSuperAdminOrg,
+src/lib/contexts/organization/useSuperAdminOrgs.ts:52:        const serverId = await getSuperAdminOrg().catch((err: unknown) => {
+src/lib/contexts/organization/useSuperAdminOrgs.ts:65:        await setSuperAdminOrg(siguiente).catch((err: unknown) =>
+src/lib/contexts/organization/useSuperAdminOrgs.ts:92:      void setSuperAdminOrg(id)
+src/lib/documentoResumen.ts:1:export interface PasoDocumento {
+src/lib/documentoResumen.ts:7:  pasos: PasoDocumento[];
+src/lib/documentoResumen.ts:29:  pasos: PasoDocumento[],
+src/lib/domain/auditDiffConceptos.ts:10:export interface ConceptoLike {
+src/lib/domain/auditDiffConceptos.ts:20:export interface ConceptosDiff {
+src/lib/domain/auditDiffConceptos.ts:32:function keyOf(c: ConceptoLike): string {
+src/lib/domain/auditDiffConceptos.ts:38:function montoTotal(c: ConceptoLike): number {
+src/lib/domain/auditDiffConceptos.ts:45:function resumen(c: ConceptoLike): string {
+src/lib/domain/auditDiffConceptos.ts:51:function nombreOf(c: ConceptoLike): string {
+src/lib/domain/auditDiffConceptos.ts:55:function compararConcepto(cb: ConceptoLike, ca: ConceptoLike, out: ConceptosDiff): void {
+src/lib/domain/auditDiffConceptos.ts:63:function agruparPorClave(lista: ConceptoLike[] | null | undefined): Map<string, ConceptoLike[]> {
+src/lib/domain/auditDiffConceptos.ts:64:  const out = new Map<string, ConceptoLike[]>();
+src/lib/domain/auditDiffConceptos.ts:74:function diffBucket(antes: ConceptoLike[], despues: ConceptoLike[], out: ConceptosDiff): void {
+src/lib/domain/auditDiffConceptos.ts:101:  before: ConceptoLike[] | null | undefined,
+src/lib/domain/auditDiffConceptos.ts:102:  after: ConceptoLike[] | null | undefined,
+src/lib/domain/auditDiffConceptos.ts:103:): ConceptosDiff {
+src/lib/domain/auditDiffConceptos.ts:106:  const out: ConceptosDiff = { agregados: 0, eliminados: 0, modificados: 0, detalle: [] };
+src/lib/domain/documentoEstados.ts:8:import type { EstadoDocumentoResumen, PasoDocumento } from "@/lib/documentoResumen";
+src/lib/domain/documentoEstados.ts:10:export type { EstadoDocumentoResumen, PasoDocumento } from "@/lib/documentoResumen";
+src/lib/domain/documentoEstados.ts:14:const PASOS_EMITIDA: PasoDocumento[] = [
+src/lib/domain/documentoEstados.ts:21:const PASOS_RECIBIDA: PasoDocumento[] = [
+src/lib/domain/documentoEstados.ts:108:export type { EstadoProformaInput } from "@/lib/proformaEstados";
+src/lib/domain/documentoKpis.ts:11:export interface DocumentoKpi {
+src/lib/domain/documentoKpis.ts:18:export interface DocumentoKpiInput {
+src/lib/domain/documentoKpis.ts:35:export function buildKpisDocumento(input: DocumentoKpiInput): DocumentoKpi[] {
+src/lib/domain/etiquetaCicloProforma.ts:44:export function facturaEnPreparacion(f: FacturaCicloLite): boolean {
+src/lib/financial/usoCfdiFiscal.ts:3:export type { ReceptorUsoCfdi, IssueUsoCfdi } from "../../../supabase/functions/_shared/usoCfdiFiscal";
+src/lib/proformaEstados.ts:2:import type { EstadoDocumentoResumen, PasoDocumento } from "@/lib/documentoResumen";
+src/lib/proformaEstados.ts:4:const PASOS_PROFORMA: PasoDocumento[] = [
+src/lib/proformaEstados.ts:11:const PASOS_PROFORMA_INTERNA: PasoDocumento[] = [
+src/lib/proformaEstados.ts:17:export interface EstadoProformaInput {
+src/lib/proformaEstados.ts:38:function resumenProformaInterna(input: EstadoProformaInput): EstadoDocumentoResumen {
+src/lib/proformaEstados.ts:51:function resumenProformaCliente(input: EstadoProformaInput): EstadoDocumentoResumen {
+src/lib/proformaEstados.ts:70:export function resumenProforma(input: EstadoProformaInput): EstadoDocumentoResumen {
+src/services/organization/index.ts:19:export type OrganizationRow = z.infer<typeof organizationRowSchema>;
+src/services/organization/index.ts:21:export async function listActiveOrganizations(): Promise<OrganizationRow[]> {
+src/services/organization/index.ts:40:export async function setSuperAdminOrg(organizationId: string | null): Promise<void> {
+src/services/organization/index.ts:50:export async function getSuperAdminOrg(): Promise<string | null> {
+supabase/functions/_shared/usoCfdiFiscal.ts:24:export interface IssueUsoCfdi {
+supabase/functions/_shared/usoCfdiFiscal.ts:35:function validarUsoIngreso(uso: string): IssueUsoCfdi | null {
+supabase/functions/_shared/usoCfdiFiscal.ts:44:function validarUsoPersona(uso: string, rfc: string): IssueUsoCfdi | null {
+supabase/functions/_shared/usoCfdiFiscal.ts:52:function validarRegimenGenerico(rfc: string, regimen: string): IssueUsoCfdi | null {
+supabase/functions/_shared/usoCfdiFiscal.ts:60:function validarUsoRegimen(uso: string, regimen: string): IssueUsoCfdi | null {
+supabase/functions/_shared/usoCfdiFiscal.ts:71:export function validarUsoCfdiIngreso(p: ReceptorUsoCfdi): IssueUsoCfdi[] {
+supabase/functions/_shared/usoCfdiFiscal.ts:73:  const issues: IssueUsoCfdi[] = [];

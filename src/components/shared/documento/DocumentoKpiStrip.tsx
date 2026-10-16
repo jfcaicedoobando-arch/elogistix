@@ -5,8 +5,6 @@
 import { cn } from "@/lib/utils";
 import type { DocumentoKpi } from "@/lib/domain/documentoKpis";
 
-export type { DocumentoKpi };
-
 const TONE_CLASS: Record<NonNullable<DocumentoKpi["tone"]>, string> = {
   default: "text-foreground",
   success: "text-success",

@@ -10,7 +10,7 @@ import type { DataTablePagination, TableDensity, SortDir } from "@/components/sh
 // API pública estable (componente + helpers) — allowlisted en eslint react-refresh override.
 export type {    SortDir } from "@/components/shared/dataTable/types";
 export { defineColumns } from "@/components/shared/dataTable/defineColumns";
-export type { ColumnDef, VisibilityState } from "@/components/shared/dataTable/tanstackTypes";
+export type { ColumnDef } from "@/components/shared/dataTable/tanstackTypes";
 
 
 interface DataTableProps<T extends object> {
