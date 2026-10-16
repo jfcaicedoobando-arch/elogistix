@@ -2651,7 +2651,7 @@ END $$;
 CREATE FUNCTION public._crm_empresa_proteger_creador() RETURNS trigger
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
-    AS $
+    AS $$
 DECLARE v_uid uuid := auth.uid();
 BEGIN
   -- Historical migrations and trusted backend producers may attribute records
@@ -2684,7 +2684,7 @@ BEGIN
     RAISE EXCEPTION 'LC_CRM_EMPRESA_CREADOR_PROTEGIDO' USING ERRCODE = '42501';
   END IF;
   RETURN NEW;
-END $;
+END $$;
 CREATE FUNCTION public._crm_es_pricing(p_org uuid) RETURNS boolean
     LANGUAGE sql STABLE SECURITY DEFINER
     SET search_path TO 'public'

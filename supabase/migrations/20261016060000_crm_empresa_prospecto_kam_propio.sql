@@ -45,7 +45,13 @@ BEGIN
   IF EXISTS (SELECT 1 FROM pg_trigger t WHERE t.tgrelid = 'public.crm_empresas'::regclass
     AND t.tgname = 'trg_crm_empresa_proteger_creador'
     AND (v_guard IS NULL OR t.tgfoid <> v_guard OR t.tgenabled <> 'O'
-      OR pg_get_triggerdef(t.oid) <> 'CREATE TRIGGER trg_crm_empresa_proteger_creador BEFORE INSERT OR DELETE OR UPDATE OF id, created_by ON public.crm_empresas FOR EACH ROW EXECUTE FUNCTION public._crm_empresa_proteger_creador()')) THEN
+      OR NOT (t.tgtype = 31 AND t.tgnargs = 0 AND NOT t.tgisinternal
+      AND t.tgconstraint = 0 AND NOT t.tgdeferrable AND NOT t.tginitdeferred
+      AND t.tgqual IS NULL AND t.tgoldtable IS NULL AND t.tgnewtable IS NULL
+      AND t.tgargs = ''::bytea AND t.tgparentid = 0
+      AND t.tgattr::text = (
+        (SELECT attnum::text FROM pg_attribute WHERE attrelid = t.tgrelid AND attname = 'id')
+        || ' ' || (SELECT attnum::text FROM pg_attribute WHERE attrelid = t.tgrelid AND attname = 'created_by'))))) THEN
     RAISE EXCEPTION 'CRM_PROSPECTO_KAM_PREFLIGHT: unexpected attribution trigger';
   END IF;
 END;
@@ -212,12 +218,23 @@ BEGIN
   END IF;
   IF NOT EXISTS (SELECT 1 FROM pg_trigger t JOIN pg_proc p ON p.oid = t.tgfoid
     WHERE t.tgrelid = 'public.crm_empresas'::regclass AND t.tgname = 'trg_crm_empresa_proteger_creador'
-      AND t.tgenabled = 'O' AND pg_get_triggerdef(t.oid) = 'CREATE TRIGGER trg_crm_empresa_proteger_creador BEFORE INSERT OR DELETE OR UPDATE OF id, created_by ON public.crm_empresas FOR EACH ROW EXECUTE FUNCTION public._crm_empresa_proteger_creador()'
+      AND t.tgenabled = 'O' AND (t.tgtype = 31 AND t.tgnargs = 0 AND NOT t.tgisinternal
+      AND t.tgconstraint = 0 AND NOT t.tgdeferrable AND NOT t.tginitdeferred
+      AND t.tgqual IS NULL AND t.tgoldtable IS NULL AND t.tgnewtable IS NULL
+      AND t.tgargs = ''::bytea AND t.tgparentid = 0
+      AND t.tgattr::text = (
+        (SELECT attnum::text FROM pg_attribute WHERE attrelid = t.tgrelid AND attname = 'id')
+        || ' ' || (SELECT attnum::text FROM pg_attribute WHERE attrelid = t.tgrelid AND attname = 'created_by')))
       AND md5(p.prosrc) = '99382bc36dc09e275e1950eabc65e554' AND p.proowner = 'postgres'::regrole
       AND p.prosecdef AND p.proconfig = ARRAY['search_path=public']::text[]
       AND (SELECT array_agg(a::text ORDER BY a::text) FROM unnest(p.proacl) a)
         = ARRAY['postgres=X/postgres','service_role=X/postgres']::text[]) THEN
-    RAISE EXCEPTION 'CRM_PROSPECTO_KAM_POSTCHECK: invalid attribution guard or trigger';
+    RAISE EXCEPTION 'CRM_PROSPECTO_KAM_POSTCHECK: invalid attribution guard or trigger'
+      USING DETAIL = (SELECT jsonb_build_object('source_md5', md5(p.prosrc), 'owner', pg_get_userbyid(p.proowner),
+        'acl', p.proacl, 'config', p.proconfig, 'trigger', pg_get_triggerdef(t.oid),
+        'type', t.tgtype, 'columns', t.tgattr::text)::text
+        FROM pg_trigger t JOIN pg_proc p ON p.oid = t.tgfoid
+        WHERE t.tgrelid = 'public.crm_empresas'::regclass AND t.tgname = 'trg_crm_empresa_proteger_creador');
   END IF;
 END;
 $postcheck$;
