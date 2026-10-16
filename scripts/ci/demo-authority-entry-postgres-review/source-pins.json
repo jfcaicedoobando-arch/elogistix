@@ -1,0 +1,169 @@
+{
+  "base": "6674a1b9b80982ba7bc9f566ab5f7473bfe7d0a3",
+  "admission": "NOT_ADMITTED",
+  "scope": "UNCHANGED_AUTHENTIC_SOURCES_AND_GOLDEN_INFRASTRUCTURE",
+  "sources": [
+    {
+      "path": "docs/review/demo-authority-provider-20261016/issuer/17-protected-occurrence.sql",
+      "bytes": 12572,
+      "gitBlobSha1": "23e8ff7e37ccaa6ec22c58ead48ae3aef382863e",
+      "sha256": "2247bbefff93b349e05e7bfcbf69b091d6df6ee92c09cf883a521ebf16f7463d"
+    },
+    {
+      "path": "docs/review/demo-authority-provider-20261016/issuer/18-authority-reader.sql",
+      "bytes": 11037,
+      "gitBlobSha1": "6dc3af490d3efa30ab16a8eab6fd5e7047c710c0",
+      "sha256": "1ac325ba20b284c03e7d085c3a0a23f8637d02893eb88da1bedf55a8999301e8"
+    },
+    {
+      "path": "docs/review/demo-durable-owner-adapter-20261015/authority-provider.mjs",
+      "bytes": 2346,
+      "gitBlobSha1": "60c8f82581da8b23076c7707ba25cbc102a6711a",
+      "sha256": "a13923e6d668794e7ef2b3f898e827c9976cdb4638bee8b7eb1470446b77d897"
+    },
+    {
+      "path": "docs/review/demo-durable-owner-adapter-20261015/driver.mjs",
+      "bytes": 2202,
+      "gitBlobSha1": "b166630236fcc2d3baa61b68fa155a8aa290dc91",
+      "sha256": "82305d90a131339c3170dd2fdc48f46410b6a58a268bb72b798ffedcc5bcac6b"
+    },
+    {
+      "path": "docs/review/demo-durable-owner-adapter-20261015/issuer-entry.mjs",
+      "bytes": 6284,
+      "gitBlobSha1": "858d6f968eacd20f953da917836759fdb6d966be",
+      "sha256": "2a3e36f55240c984471a6f35a12cc8cc4d976e03228b36086afeae70aa147973"
+    },
+    {
+      "path": "docs/review/demo-durable-owner-adapter-20261015/issuer.mjs",
+      "bytes": 1833,
+      "gitBlobSha1": "21aabf95836cd3385e0410b1c4d0afc136af45ed",
+      "sha256": "5d78d058a336f4eb21fa715d45844d86aa41c046f462c1670610084229e172d1"
+    },
+    {
+      "path": "docs/review/demo-durable-owner-adapter-20261015/owner.mjs",
+      "bytes": 2641,
+      "gitBlobSha1": "a8485df9c881604766d2976910b4366375f23b75",
+      "sha256": "e16d06f030bf53aea860325448041e2b3e9cd84ff152ea4bb281709a6d786504"
+    },
+    {
+      "path": "docs/review/demo-durable-owner-adapter-20261015/store.mjs",
+      "bytes": 1684,
+      "gitBlobSha1": "03019204a5df6678260f9b05d1bb9f3afe09e842",
+      "sha256": "a0aac72315944475b014019e312253619b42ee30dc0ba1040ec6d86f53432b45"
+    },
+    {
+      "path": "docs/review/demo-durable-owner-adapter-20261015/store.sql",
+      "bytes": 2599,
+      "gitBlobSha1": "55d8709e29ae5b0b14f3aa82dc86cec4b93b9bd0",
+      "sha256": "fb7fa69c17eca7230606ecb6217086c6eb5317d75551df9efc268959f69140a7"
+    },
+    {
+      "path": "scripts/ci/crm-acl-review/run_ci.py",
+      "bytes": 20758,
+      "gitBlobSha1": "d9a5f43be6ff365150487dbff5366b01ddbaed85",
+      "sha256": "a364f833851080d9b290fca35fa7925514dc898979359e55c411f0eef57e7816"
+    },
+    {
+      "path": "scripts/ci/demo-authentic-review/sql/bridge.sql",
+      "bytes": 8362,
+      "gitBlobSha1": "9728b864af8a9cb7bc6eebaf61e750e068e3da75",
+      "sha256": "69bbcd2ec825953ca4fda822ec5fde143f1f70a5120f372ee3c211e96523c5b2"
+    },
+    {
+      "path": "scripts/ci/demo-authentic-review/sql/core-owner-fixture.sql",
+      "bytes": 282,
+      "gitBlobSha1": "633f4a06b35990bcef684416df269d7d5a8be31f",
+      "sha256": "a850f7d409b721c317001947daf6633fa3d3f0ca4680eac6670e193eed82a563"
+    },
+    {
+      "path": "scripts/ci/demo-authentic-review/sql/identity.sql",
+      "bytes": 16101,
+      "gitBlobSha1": "8d166a8ded732de4861bcad2f5ae7f713a3d5cf7",
+      "sha256": "666a466b0b8189ef3cec661f489495b7059cfd9bbcb2492d9d221b693ea3be7f"
+    },
+    {
+      "path": "scripts/ci/demo-authentic-review/sql/manifest.sql",
+      "bytes": 2813,
+      "gitBlobSha1": "8bea4e402aafe8e506a731ed4c0cce713d298fb1",
+      "sha256": "5d49c6dabc0a39b2a1ba5d5e1c0f19a2112d100147d9f706ddd2d9e5093790d0"
+    },
+    {
+      "path": "scripts/ci/demo-authentic-review/sql/producer.sql",
+      "bytes": 19028,
+      "gitBlobSha1": "0eef8bcef4cf4eec32315bdd2e44b697f2d119be",
+      "sha256": "f0a14f683ee524527ed3b7f29305bc793f7f9e3d5581b4332da72f8fb8bb55a6"
+    },
+    {
+      "path": "scripts/ci/demo-authentic-review/sql/registry.sql",
+      "bytes": 11333,
+      "gitBlobSha1": "7b8060d3669e7c71cf0cb8f828a4ad314c8f1254",
+      "sha256": "a74d69ed6d19356ba36fe27d7070a496e99c3ef5cec7a030c3b96b609a64463b"
+    },
+    {
+      "path": "scripts/ci/demo-authentic-review/sql/synthetic-schema.sql",
+      "bytes": 4598,
+      "gitBlobSha1": "cd1b6937043d21f28e5396a8a95ad2f9086c7e03",
+      "sha256": "d1fd5123a9d688a02651534ab2829ca520891439125a256735f8071fe7ad3c1a"
+    },
+    {
+      "path": "scripts/ci/demo-authentic-review/sql/writer-dependencies.sql",
+      "bytes": 876,
+      "gitBlobSha1": "2eaabc687c22f2291a67e58f2b5d5e195738922e",
+      "sha256": "aff280e2ac714525f8fc026416c8ad031c20c541d169dbcaff7bcd9bb2f4d1dd"
+    },
+    {
+      "path": "scripts/ci/demo-authority-bridge-review/contract.mjs",
+      "bytes": 13081,
+      "gitBlobSha1": "cedc3c74e47f8ed8fd5f5d80e8b8fe94172813cb",
+      "sha256": "8531d10fdb07692bbac2c40ae519ffd7b818cbf30ed22c39f4fca4aaf5e32aff"
+    },
+    {
+      "path": "scripts/ci/demo-persistence-review/run_ci.py",
+      "bytes": 11705,
+      "gitBlobSha1": "59eb55a3abf10719002b6403b57608369e407176",
+      "sha256": "09cf6d2035b14005006b656649cf2e3f5f99322eb6776f80927586c522c204fe"
+    },
+    {
+      "path": "scripts/ci/demo-persistence-review/sources.py",
+      "bytes": 2625,
+      "gitBlobSha1": "f540df3c9889221d01dd339bd7c5386cb4b38618",
+      "sha256": "3294ef933bb659b0c3f8bef879f93f86ec09ebd6a0bc58a0191c9363705ad7ff"
+    },
+    {
+      "path": "scripts/ci/demo-wire-lab/deps/package-lock.json",
+      "bytes": 5666,
+      "gitBlobSha1": "17e446ab9876d6470b15f98469bff93a2e00c98a",
+      "sha256": "6e9d1546028b52af8f846aeac3482b78e8bf6fbf6173d221fc203b8a5584bfe8"
+    },
+    {
+      "path": "scripts/ci/demo-wire-lab/deps/package.json",
+      "bytes": 199,
+      "gitBlobSha1": "cef82f0a11a8df95827e5036d052f12a13404b24",
+      "sha256": "fd18a563f7fdcd84f18b73d37ee059b539b2a5696dd594ec29cfb784d66832ba"
+    },
+    {
+      "path": "scripts/ci/demo-wire-lab/lab_wire.mjs",
+      "bytes": 17557,
+      "gitBlobSha1": "bb956c16c9247e2afa93550533e56a15838d38a1",
+      "sha256": "356257a56485f68ff91d69e6a2bbb0d1571d043f6b2b32da9fe93f63a33f4e96"
+    },
+    {
+      "path": "scripts/ci/demo-wire-lab/run_ci.py",
+      "bytes": 24281,
+      "gitBlobSha1": "0d82f8c3b5f00c90825d70529e98a3c8b98d01f7",
+      "sha256": "9a8217a288327461aa981246ac8e93f49634a9937953836333e10e1899cc57e8"
+    },
+    {
+      "path": "scripts/ci/demo-wire-lab/runtime.mjs",
+      "bytes": 10856,
+      "gitBlobSha1": "2c6dda3cbb58289e86893d763ff7c5e3be7e0c71",
+      "sha256": "fe3145f9281e870c234fbcbc6c95756eb942dc36e993d1b68ef8fb6bc1030450"
+    },
+    {
+      "path": "scripts/ci/demo-wire-lab/stage.py",
+      "bytes": 6845,
+      "gitBlobSha1": "3cf464924c63879b49baa5c244b11a428cec4fe5",
+      "sha256": "9bafb1e2e21007112fc5b20cf498a5614f25a0bf0e87313cad54c11214f6a5f8"
+    }
+  ]
+}

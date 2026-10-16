@@ -1,0 +1,44 @@
+name: Authority entry PostgreSQL isolated review
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+    branches: [main]
+    paths:
+      - 'scripts/ci/demo-authority-entry-postgres-review/**'
+      - '.github/workflows/demo-authority-entry-postgres-review.yml'
+permissions:
+  contents: read
+concurrency:
+  group: authority-entry-postgres-${{ github.event.pull_request.number }}
+  cancel-in-progress: false
+jobs:
+  authentic-entry-postgres:
+    if: github.repository == 'jfcaicedoobando-arch/elogistix' && github.event.pull_request.draft == true && github.event.pull_request.head.repo.full_name == github.repository && github.event.pull_request.head.ref == 'review/authority-entry-postgres-20261016' && github.event.pull_request.base.sha == '6674a1b9b80982ba7bc9f566ab5f7473bfe7d0a3'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: '24.19.0'
+      - name: Offline original entry contracts and golden wire
+        run: |
+          node --test scripts/ci/demo-authority-entry-review/test_*.mjs
+          node --test scripts/ci/demo-wire-lab/lab_wire.test.mjs
+      - name: Offline integration gates and source pins
+        run: python3 -B -m unittest discover -s scripts/ci/demo-authority-entry-postgres-review -p 'test_*.py' -v
+      - name: Authentic issuer entry on isolated PostgreSQL 17.6
+        env:
+          AUTHORITY_ENTRY_ISOLATED: '1'
+        run: python3 -B scripts/ci/demo-authority-entry-postgres-review/run_ci.py --execute-disposable --output "$RUNNER_TEMP/authority-entry-postgres"
+      - name: Preserve sanitized isolated integration evidence
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: authority-entry-postgres-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/authority-entry-postgres/public/**
+          if-no-files-found: warn
+          retention-days: 14
