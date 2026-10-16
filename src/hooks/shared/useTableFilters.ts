@@ -22,6 +22,8 @@ export interface ChipItem {
 export interface UseTableFiltersOpts<TFilters extends Record<string, string>> {
   defaultFilters: TFilters;
   defaultPageSize?: number;
+  /** Tamaños admitidos por el listado y su selector de paginación. */
+  pageSizeOptions?: readonly number[];
   /** Etiquetas legibles por clave para mostrar chips. */
   filterLabels?: Partial<Record<keyof TFilters, string>>;
 }
@@ -51,9 +53,10 @@ export interface TableFiltersState<TFilters extends Record<string, string>> {
 export function useTableFilters<TFilters extends Record<string, string>>({
   defaultFilters,
   defaultPageSize = DEFAULT_PAGE_SIZE,
+  pageSizeOptions,
   filterLabels,
 }: UseTableFiltersOpts<TFilters>): TableFiltersState<TFilters> {
-  const base = useListPageState<TFilters>(defaultFilters, defaultPageSize);
+  const base = useListPageState<TFilters>(defaultFilters, defaultPageSize, pageSizeOptions);
   // RG20 (Ola 3): `base` es un objeto nuevo cada render; usarlo como
   // dependencia hacía inestables estos callbacks. Se extraen las piezas.
   const { page, setPage } = base;

@@ -12,7 +12,12 @@
  * montar. No hay regresión funcional.
  */
 import type { QueryClient } from "@tanstack/react-query";
-import { queryPersister, shouldDehydrateCatalogQuery } from "./queryClient";
+import {
+  PERSISTED_CATALOG_BUSTER,
+  PERSISTED_CATALOG_MAX_AGE,
+  queryPersister,
+  shouldDehydrateCatalogQuery,
+} from "./queryClient";
 
 let started = false;
 
@@ -21,20 +26,22 @@ export async function bootstrapQueryPersister(client: QueryClient): Promise<void
   started = true;
   try {
     const { persistQueryClient } = await import("@tanstack/react-query-persist-client");
-    // SAFE-CAST: react-query-persist-client trae su propia copia tipada de
-    // QueryClient (sub-dependencia de query-core). En runtime es el mismo
-    // objeto; el cast evita el conflicto de tipos de la marca privada.
-    persistQueryClient({
-      queryClient: client as unknown as Parameters<typeof persistQueryClient>[0]["queryClient"],
+    const [, restored] = persistQueryClient({
+      queryClient: client,
       persister: queryPersister,
-      maxAge: 24 * 60 * 60 * 1000, // 24h
+      maxAge: PERSISTED_CATALOG_MAX_AGE,
+      // Descarta snapshots del contrato anterior (IVA u operaciones pausadas).
+      buster: PERSISTED_CATALOG_BUSTER,
       dehydrateOptions: {
         shouldDehydrateQuery: (query) =>
           shouldDehydrateCatalogQuery(query.queryKey, query.state.status),
+        shouldDehydrateMutation: () => false,
       },
     });
+    // La restauración es asíncrona; también puede fallar al leer/borrar storage.
+    await restored;
   } catch {
-    // Persist es una optimización; si falla el chunk, la app sigue 100%
+    // Persist es una optimización; si falla el chunk/storage, la app sigue 100%
     // funcional sin caché entre sesiones.
   }
 }

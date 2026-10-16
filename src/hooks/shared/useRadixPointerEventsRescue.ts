@@ -11,7 +11,7 @@
  * Radix abierto en el DOM, los retiramos. Si Radix vuelve a abrir un
  * overlay, los reaplica él mismo.
  *
- * Cleanup obligatorio del observer (regla Power of 10).
+ * Cleanup obligatorio del observer y del rescate pendiente (regla Power of 10).
  */
 import { useEffect } from "react";
 
@@ -27,35 +27,40 @@ function hasOpenOverlay(): boolean {
   return document.querySelector(OPEN_OVERLAY_SELECTOR) !== null;
 }
 
-function rescueIfStuck(): void {
-  const body = document.body;
-  if (!body) return;
-  const locked =
-    body.style.pointerEvents === "none" ||
-    body.hasAttribute("data-scroll-locked");
-  if (!locked) return;
-  if (hasOpenOverlay()) return;
-  // Defer un tick: Radix puede estar abriendo otro overlay en el mismo frame.
-  setTimeout(() => {
-    if (hasOpenOverlay()) return;
-    if (document.body.style.pointerEvents === "none") {
-      document.body.style.pointerEvents = "";
-    }
-    if (document.body.hasAttribute("data-scroll-locked")) {
-      document.body.removeAttribute("data-scroll-locked");
-    }
-  }, 50);
-}
-
 export function useRadixPointerEventsRescue(): void {
   useEffect(() => {
+    const body = document.body;
+    let mounted = true;
+    let pendingRescue: ReturnType<typeof setTimeout> | undefined;
+
+    function rescueIfStuck(): void {
+      if (!mounted || pendingRescue !== undefined) return;
+      const locked =
+        body.style.pointerEvents === "none" ||
+        body.hasAttribute("data-scroll-locked");
+      if (!locked || hasOpenOverlay()) return;
+      // Radix puede abrir otro overlay antes del rescate: verificar de nuevo.
+      pendingRescue = setTimeout(() => {
+        pendingRescue = undefined;
+        if (!mounted || hasOpenOverlay()) return;
+        if (body.style.pointerEvents === "none") {
+          body.style.pointerEvents = "";
+        }
+        if (body.hasAttribute("data-scroll-locked")) {
+          body.removeAttribute("data-scroll-locked");
+        }
+      }, 50);
+    }
+
     const observer = new MutationObserver(rescueIfStuck);
-    observer.observe(document.body, {
+    observer.observe(body, {
       attributes: true,
       attributeFilter: ["style", "data-scroll-locked"],
     });
     return () => {
+      mounted = false;
       observer.disconnect();
+      if (pendingRescue !== undefined) clearTimeout(pendingRescue);
     };
   }, []);
 }

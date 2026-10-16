@@ -191,7 +191,7 @@ jobs:
           if-no-files-found: warn
 
   virtualization:
-    name: Isolated virtualization (4 cases, Chromium and Firefox)
+    name: Isolated virtualization and table keyboard (8 cases, Chromium and Firefox)
     runs-on: ubuntu-24.04
     timeout-minutes: 20
     steps:
@@ -255,12 +255,12 @@ jobs:
         run: |
           set -euo pipefail
           node node_modules/eslint/bin/eslint.js --no-cache e2e/visual/virtualization 2>&1 | tee reports/virtualization/lint.log
-      - name: Check all 4 browser cases with a fresh isolated build
+      - name: Check all 8 browser cases with a fresh isolated build
         shell: bash
         run: |
           set -euo pipefail
           node node_modules/@playwright/test/cli.js test --config e2e/visual/virtualization/playwright.config.ts 2>&1 | tee reports/virtualization/browser.log
-      - name: Require all 4 cases without skips or retries
+      - name: Require all 8 cases without skips or retries
         if: always()
         shell: bash
         run: |
@@ -268,8 +268,8 @@ jobs:
           node --input-type=module <<'JS'
           import { readFileSync } from "node:fs";
           const { stats } = JSON.parse(readFileSync("reports/virtualization/results.json", "utf8"));
-          if (stats.expected !== 4 || stats.unexpected !== 0 || stats.skipped !== 0 || stats.flaky !== 0) {
-            throw new Error(`Expected 4 passing GUI cases with no skips/retries: ${JSON.stringify(stats)}`);
+          if (stats.expected !== 8 || stats.unexpected !== 0 || stats.skipped !== 0 || stats.flaky !== 0) {
+            throw new Error(`Expected 8 passing GUI cases with no skips/retries: ${JSON.stringify(stats)}`);
           }
           JS
       - name: Upload only synthetic virtualization evidence
@@ -280,5 +280,59 @@ jobs:
           path: |
             test-results/virtualization/
             reports/virtualization/
+          retention-days: 3
+          if-no-files-found: warn
+
+  dependency-audit:
+    name: Isolated dependency lifecycle and persistence (4 cases)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          persist-credentials: false
+      - uses: ./.github/actions/setup-bun
+      - name: Install lockfile Playwright Chromium and system dependencies
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p reports/dependency-audit
+          node node_modules/@playwright/test/cli.js install --with-deps chromium 2>&1 | tee reports/dependency-audit/browser-install.log
+      - name: Typecheck isolated dependency fixture and tests
+        shell: bash
+        run: |
+          set -euo pipefail
+          node node_modules/typescript/bin/tsc -p e2e/visual/dependency-audit/tsconfig.json 2>&1 | tee reports/dependency-audit/typecheck.log
+      - name: Lint isolated dependency fixture and tests
+        shell: bash
+        run: |
+          set -euo pipefail
+          node node_modules/eslint/bin/eslint.js --no-cache e2e/visual/dependency-audit 2>&1 | tee reports/dependency-audit/lint.log
+      - name: Check all 4 dependency browser cases with a fresh isolated build
+        shell: bash
+        run: |
+          set -euo pipefail
+          node node_modules/@playwright/test/cli.js test --config e2e/visual/dependency-audit/playwright.config.ts 2>&1 | tee reports/dependency-audit/browser.log
+      - name: Require all 4 dependency cases without skips or retries
+        if: always()
+        shell: bash
+        run: |
+          set -euo pipefail
+          node --input-type=module <<'JS'
+          import { readFileSync } from "node:fs";
+          const { stats, errors } = JSON.parse(readFileSync("reports/dependency-audit/browser.json", "utf8"));
+          if (stats.expected !== 4 || stats.unexpected !== 0 || stats.skipped !== 0 || stats.flaky !== 0 || !Array.isArray(errors) || errors.length !== 0) {
+            throw new Error(`Expected 4 passing dependency GUI cases with no skips/retries/errors: ${JSON.stringify({ stats, errors })}`);
+          }
+          JS
+      - name: Upload only synthetic dependency audit evidence
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: isolated-ui-dependency-audit
+          path: |
+            test-results/dependency-audit/
+            reports/dependency-audit/
           retention-days: 3
           if-no-files-found: warn

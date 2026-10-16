@@ -43,17 +43,21 @@ export const queryClient = new QueryClient({
 });
 
 /**
- * Persister para catálogos verdaderamente estáticos (tasa IVA vigente y tipos
- * de cambio del día, que se re-consultan por su propio staleTime aunque estén
- * hidratados). B-015 (v13.320.41): se removieron `tipos_contenedor`,
+ * Sólo se persisten tipos de cambio públicos, que se re-consultan por su
+ * propio staleTime aunque estén hidratados. `tasa_iva` era un vestigio:
+ * useTasaIVA devuelve una constante desde 13.170.0.
+ * B-015 (v13.320.41): se removieron `tipos_contenedor`,
  * `navieras`, `puertos` y `configuracion` porque son administrables y quedaban
  * congelados en localStorage hasta 24 h tras editarlos en la app. Ahora se
  * refetchean al primer montaje de cada sesión.
  */
-const CATALOG_KEYS = new Set([
-  "tasa_iva",
-  "exchange-rates",
-]);
+export const PERSISTED_CATALOG_MAX_AGE = 24 * 60 * 60 * 1000;
+export const PERSISTED_CATALOG_BUSTER = "exchange-rates-only-v2";
+
+// El GC no debe borrar las tasas inactivas antes que el snapshot persistido.
+// El prefijo incluye hoy, fecha histórica y DOF por fecha; no cambia staleTime
+// ni amplía la retención global de datos operativos (5 minutos).
+queryClient.setQueryDefaults(["exchange-rates"], { gcTime: PERSISTED_CATALOG_MAX_AGE });
 
 export const queryPersister = createSyncStoragePersister({
   storage: getStorageRef("local"),
@@ -62,6 +66,5 @@ export const queryPersister = createSyncStoragePersister({
 });
 
 export const shouldDehydrateCatalogQuery = (queryKey: unknown, status: string) => {
-  const root = String((queryKey as unknown[])?.[0] ?? "");
-  return CATALOG_KEYS.has(root) && status === "success";
+  return Array.isArray(queryKey) && queryKey[0] === "exchange-rates" && status === "success";
 };

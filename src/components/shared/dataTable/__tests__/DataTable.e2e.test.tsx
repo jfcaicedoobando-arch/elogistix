@@ -134,14 +134,14 @@ describe("DataTable E2E — filtro + orden + paginación", () => {
     fireEvent.click(screen.getByRole("button", { name: "Siguiente" }));
     expect(screen.getByTestId("page-state").textContent).toMatch(/page=1/);
 
-    fireEvent.click(screen.getByRole("columnheader", { name: /Cliente/ }));
+    fireEvent.click(screen.getByRole("button", { name: /Cliente/ }));
     expect(screen.getByTestId("sort-state").textContent).toBe("cliente|asc");
     expect(screen.getByTestId("page-state").textContent).toMatch(/page=0/);
   });
 
   it("ciclo de orden asc → desc → null se refleja en el estado", () => {
     render(<EmbarquesHarness />);
-    const header = () => screen.getByRole("columnheader", { name: /Cliente/ });
+    const header = () => screen.getByRole("button", { name: /Cliente/ });
     fireEvent.click(header());
     expect(screen.getByTestId("sort-state").textContent).toBe("cliente|asc");
     fireEvent.click(header());
@@ -164,7 +164,7 @@ describe("DataTable E2E — filtro + orden + paginación", () => {
         sortMode="server" controlledSort={{ key: "total", dir: "desc" }} onSortChange={onSortChange} />,
     );
     expect(order()).toEqual(["EMB-001", "EMB-003", "EMB-002"]);
-    fireEvent.click(screen.getByRole("columnheader", { name: /Cliente/ }));
+    fireEvent.click(screen.getByRole("button", { name: /Cliente/ }));
     expect(onSortChange).toHaveBeenLastCalledWith("cliente", "asc");
     expect(order()).toEqual(["EMB-001", "EMB-003", "EMB-002"]);
     rerender(
@@ -172,7 +172,7 @@ describe("DataTable E2E — filtro + orden + paginación", () => {
         sortMode="server" controlledSort={{ key: "total", dir: "asc" }} onSortChange={onSortChange} />,
     );
     expect(order()).toEqual(["EMB-002", "EMB-001", "EMB-003"]);
-    fireEvent.click(screen.getByRole("columnheader", { name: /Total/ }));
+    fireEvent.click(screen.getByRole("button", { name: /Total/ }));
     expect(onSortChange).toHaveBeenLastCalledWith(null, "asc");
     expect(order()).toEqual(["EMB-002", "EMB-001", "EMB-003"]);
   });
@@ -185,9 +185,9 @@ describe("DataTable — accesibilidad de headers ordenables", () => {
     const numero = screen.getByRole("columnheader", { name: /Número/ });
     expect(cliente.getAttribute("aria-sort")).toBe("none");
     expect(numero.getAttribute("aria-sort")).toBe("none");
-    fireEvent.click(cliente);
+    fireEvent.click(within(cliente).getByRole("button"));
     expect(cliente.getAttribute("aria-sort")).toBe("ascending");
-    fireEvent.click(cliente);
+    fireEvent.click(within(cliente).getByRole("button"));
     expect(cliente.getAttribute("aria-sort")).toBe("descending");
     // scope="col" en headers
     expect(cliente.getAttribute("scope")).toBe("col");

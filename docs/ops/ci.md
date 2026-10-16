@@ -28,6 +28,8 @@ manual permite elegir **5/8/10/14** shards; PR/push usan **14**.
 Ver [contrato de shards y paralelismo](../ci-shard-benchmark.md#contrato-de-configuración).
 
 - Frontend: typecheck, build, límites de bundle y sourcemaps.
+  El wrapper de bundle conserva los checks JS y añade un
+  [presupuesto CSS raw/gzip/Brotli](../ci/css-size-budget-20261016.md).
 - DB: manifiesto, schema, schema-functions, migraciones, replay-mirror y rpc-sync.
 - Edge: Deno **2.9.7 estable fijado**, `*_test.ts` salvo smoke; typecheck habilitado.
 - Vitest: `bun run test -- --shard=i/N` (i de 1 a N; N = 14 por defecto),
@@ -82,8 +84,11 @@ El job `checks` ejecuta `bun run typecheck:ci` cuando hay frontend, incluso
 con un hit de caché. El runner valida el grafo raíz de dos proyectos
 independientes con `incremental` y `noEmit`, comprueba `tsconfig.app.json` y
 `tsconfig.node.json`, y usa `tsc -b --force` si el grafo no está soportado o
-necesita reproducir un fallo con el contrato de build. Se mantienen `strict`,
-`skipLibCheck` y las opciones de comprobación existentes.
+la configuración es inválida, o necesita reproducir un fallo con el contrato
+de build. Los cambios de configuración que el parser admite dentro del grafo
+compatible siguen comprobándose con `tsc -p`; un cambio de configuración no
+implica siempre fallback. Se mantienen `strict`, `skipLibCheck` y las opciones
+de comprobación existentes.
 
 Los dos archivos `tsconfig.app.tsbuildinfo` y `tsconfig.node.tsbuildinfo`
 viven en **`.cache/tsc`**, fuera de `node_modules`. Sólo `checks` restaura y
@@ -99,6 +104,12 @@ los tipos actuales sean correctos. Un checkout con mtimes distintos debe
 volver a comprobar el contenido. Las cachés de dependencias, ESLint, Bun y
 Playwright conservan sus políticas. Ver [medición y límites](../ci/typescript-cache-20261016.md)
 para distinguir frío de TypeScript, frío del SO y tiempos reales de Actions.
+En `67ac599`, tres réplicas de `typecheck:ci` dieron medianas de 60.8587 s sin
+estado TS, 6.6568 s sin cambios y 32.5428 s con un cambio de cuerpo equivalente.
+El run `38955742577` confirmó miss/save y luego hit por prefijo/check/save;
+su checker pasó de 69.435 s a 5.908 s entre marcadores de log de dos runners.
+Es una observación del ciclo de caché, sin prometer ahorro global o sostenido
+de CI ni atribuir esos tiempos a la integración posterior de `main`.
 
 ### Actions oficiales y compatibilidad del runner
 

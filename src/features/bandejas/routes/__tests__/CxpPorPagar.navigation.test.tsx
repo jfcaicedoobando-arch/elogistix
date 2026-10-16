@@ -10,7 +10,7 @@ import type { FacturaCxP } from "@/features/cxp/services";
 import CxpPorPagar from "../CxpPorPagar";
 
 const fixture = vi.hoisted(() => ({
-  rows: [2, 3, 4, 5].map((n) => ({
+  rows: Array.from({ length: 12 }, (_, index) => index + 2).map((n) => ({
     factura_id: `synthetic-fp-${String(n).padStart(6, "0")}`,
     proveedor_id: "synthetic-provider", proveedor_nombre: "Proveedor sintetico",
     proveedor_origen: "agente", folio_proveedor: `FP-${String(n).padStart(6, "0")}`,
@@ -36,7 +36,7 @@ vi.mock("@/hooks/shared/usePermissions", () => ({ usePermissions: () => ({ canPa
 vi.mock("@/hooks/shared", async () => ({ useIsMobile: () => false, ...await import("@/hooks/shared/useCargaExpirada") }));
 vi.mock("../_sections/CxpPorPagarDialogs", () => ({ CxpPorPagarDialogs: () => null }));
 
-const PAY_URL = "/compras/por-pagar?q=Proveedor&moneda=MXN&vencidas=no&page=1&ps=2&sort=folio&dir=asc";
+const PAY_URL = "/compras/por-pagar?q=Proveedor&moneda=MXN&vencidas=no&page=1&ps=10&sort=folio&dir=asc";
 const INVOICE_URL = "/compras/facturas?q=Proveedor&page=1";
 // The real deep-link hook only reads id; no service is called by this harness.
 const INVOICES = fixture.rows.map((row) => ({ id: row.factura_id })) as FacturaCxP[];
@@ -100,7 +100,7 @@ afterEach(() => {
 });
 
 describe("CxpPorPagar - history returns to the originating filtered page", () => {
-  for (const folio of ["FP-000005", "FP-000004"]) {
+  for (const folio of ["FP-000013", "FP-000012"]) {
     for (const back of ["Browser back", "Volver"]) {
       it(`${back} returns ${folio} to the exact Por pagar URL`, async () => {
         show(PAY_URL);

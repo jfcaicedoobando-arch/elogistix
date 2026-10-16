@@ -48,7 +48,7 @@ export default function Clientes() {
     activeChips,
     activeCount,
     resetAll,
-  } = useTableFilters({ defaultFilters: {}, defaultPageSize: 50 });
+  } = useTableFilters({ defaultFilters: {}, defaultPageSize: 50, pageSizeOptions: [50, 100, 200, 500] });
 
   // `?nuevo=1` abre el alta directo (lo usa el CRM al ganar una oportunidad).
   const [dialogOpen, setDialogOpen] = useState(
