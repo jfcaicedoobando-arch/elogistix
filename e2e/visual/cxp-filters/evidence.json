@@ -1,0 +1,264 @@
+{
+  "baselineCommit": "7feb1fd730bff13c790b944096d17f7a30ee9e4b",
+  "branch": "codex/cxp-filter-focus",
+  "recordedUtc": "2026-10-16T17:21:21.713Z",
+  "node": "v24.22.0",
+  "platform": "win32",
+  "chromium": "156.0.8078.4",
+  "productFile": "src/features/cxp/components/CxpFiltros.tsx",
+  "productGitBlob": "22d58c5567e24f21c4e91dde748e4be3a558b755",
+  "baseline": {
+    "mobileX": "Failed toBeFocused after close",
+    "desktopX": "Failed original DOM node identity after close",
+    "unitStableTrigger": "2 expected failures, selected by test name; 15 other tests not selected",
+    "earlierV3Commit": "b1e3e00f15c8870feebc0b7085701589f4b6081f",
+    "earlierMobileComparison": "BODY at 350/1000ms, 2/2 per version"
+  },
+  "fixed": {
+    "gui": {
+      "startTime": "2026-10-16T17:18:00.360Z",
+      "duration": 59273.663,
+      "expected": 12,
+      "skipped": 0,
+      "unexpected": 0,
+      "flaky": 0
+    },
+    "unitFiles": 5,
+    "unitTests": 30,
+    "unitFailed": 0,
+    "appTypecheckExit": 0,
+    "fixtureTypecheckExit": 0,
+    "changedLintExit": 0,
+    "fullLintExit": 0,
+    "appBuildExit": 0
+  },
+  "layout": [
+    {
+      "device": "mobile",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "baselineSha": "7feb1fd730bff13c790b944096d17f7a30ee9e4b",
+      "rect": {
+        "x": 278.65625,
+        "y": 56,
+        "width": 95.34375,
+        "height": 44
+      },
+      "baselineRect": {
+        "x": 278.65625,
+        "y": 56,
+        "width": 95.34375,
+        "height": 44
+      },
+      "geometryIdentical": true,
+      "pngBytesIdentical": true,
+      "pixelComparison": "0 pixels differ at threshold 0",
+      "blocked": [],
+      "exactRgbaChangedPixels": 0,
+      "maxChannelDelta": 0,
+      "firstChangedPoints": [],
+      "baselineSha256": "4e902ba3729fa7d33eef8ef9c5846e73c9483a4c4b0a092faa1c4cfe0326bafd",
+      "fixedSha256": "4e902ba3729fa7d33eef8ef9c5846e73c9483a4c4b0a092faa1c4cfe0326bafd"
+    },
+    {
+      "device": "desktop",
+      "viewport": {
+        "width": 1280,
+        "height": 900
+      },
+      "baselineSha": "7feb1fd730bff13c790b944096d17f7a30ee9e4b",
+      "rect": {
+        "x": 1168.65625,
+        "y": 66,
+        "width": 95.34375,
+        "height": 40
+      },
+      "baselineRect": {
+        "x": 1168.65625,
+        "y": 66,
+        "width": 95.34375,
+        "height": 40
+      },
+      "geometryIdentical": true,
+      "pngBytesIdentical": false,
+      "pixelComparison": "2 pixels (ratio 0.01 of all image pixels) are different.",
+      "blocked": [],
+      "exactRgbaChangedPixels": 31,
+      "maxChannelDelta": 1,
+      "firstChangedPoints": [
+        {
+          "x": 17,
+          "y": 68
+        },
+        {
+          "x": 18,
+          "y": 68
+        },
+        {
+          "x": 1261,
+          "y": 68
+        },
+        {
+          "x": 1262,
+          "y": 68
+        },
+        {
+          "x": 16,
+          "y": 69
+        },
+        {
+          "x": 17,
+          "y": 69
+        },
+        {
+          "x": 1262,
+          "y": 69
+        },
+        {
+          "x": 1263,
+          "y": 69
+        },
+        {
+          "x": 16,
+          "y": 70
+        },
+        {
+          "x": 17,
+          "y": 70
+        },
+        {
+          "x": 1262,
+          "y": 70
+        },
+        {
+          "x": 1263,
+          "y": 70
+        },
+        {
+          "x": 16,
+          "y": 71
+        },
+        {
+          "x": 17,
+          "y": 71
+        },
+        {
+          "x": 1262,
+          "y": 71
+        },
+        {
+          "x": 1263,
+          "y": 71
+        },
+        {
+          "x": 16,
+          "y": 100
+        },
+        {
+          "x": 17,
+          "y": 100
+        },
+        {
+          "x": 1262,
+          "y": 100
+        },
+        {
+          "x": 1263,
+          "y": 100
+        }
+      ],
+      "baselineSha256": "154cb5af0019c6987f791eafe402b113b16c76b7231b447bfe4ba3f5ba8019c0",
+      "fixedSha256": "092179970b9705ccde69586e90be258b791d514a92224d08f6388e443ade4d10"
+    }
+  ],
+  "artifacts": {
+    "baselineMobile": {
+      "localRelativePath": "evidence/cxp-fix/baseline-mobile/baseline-results.json",
+      "sha256": "ba6418e6de28a1d1ac15299c7207dfd34a51a7317e14c3970a601d020d13fa6e"
+    },
+    "baselineDesktop": {
+      "localRelativePath": "evidence/cxp-fix/baseline-desktop/results.json",
+      "sha256": "6283ec3c5040a333f8633b0b525e2972e5090cc4fecd51492a2ae6af88834370"
+    },
+    "baselineUnit": {
+      "localRelativePath": "evidence/cxp-fix/unit-baseline.log",
+      "sha256": "e32f24f162738aea41b84e1ed0eac693c6494b4d217bff1fc31afd1c2720cac3"
+    },
+    "fixedGui": {
+      "localRelativePath": "focus-main-7feb/reports/cxp-filters/results.json",
+      "sha256": "9c968d7e4ba4159cc3924c4c91391efa75fc7f479bb338770e1af6fe4c5c8601"
+    },
+    "fixedGuiLog": {
+      "localRelativePath": "focus-main-7feb/reports/cxp-filters/browser-final.log",
+      "sha256": "4b88a947aedb4283ee021f9539a2f0ffca26acf835ead98b67ca9806976b7fcc"
+    },
+    "fixedUnitLog": {
+      "localRelativePath": "focus-main-7feb/reports/cxp-filters/unit.log",
+      "sha256": "cffed13b07dc155fde6f8884662f1c7e6dfe5baf6ba7fe425c34e65a2559666a"
+    },
+    "appBuildLog": {
+      "localRelativePath": "focus-main-7feb/reports/cxp-filters/app-build.log",
+      "sha256": "daf4abe02c7e1b0a3bce950b811737905242abcf5a1e747eb81695339350db28"
+    },
+    "appTypecheckLog": {
+      "localRelativePath": "focus-main-7feb/reports/cxp-filters/typecheck.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "fixtureTypecheckLog": {
+      "localRelativePath": "focus-main-7feb/reports/cxp-filters/fixture-typecheck-final.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "changedLintLog": {
+      "localRelativePath": "focus-main-7feb/reports/cxp-filters/lint-changed.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "fullLintLog": {
+      "localRelativePath": "focus-main-7feb/reports/cxp-filters/lint-final.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  },
+  "limits": [
+    "Isolated synthetic component data; no authenticated ERP/database access",
+    "Local GUI coverage is Chromium on Windows only; CI Linux results are separate",
+    "No full local unit rerun; 30 targeted cases and full CI configured",
+    "No shared browser, deployment, migration or snapshot changes",
+    "32/35 additional catalog checks passed locally; 3 existing Unix shell harness cases cannot spawn bash on this Windows runtime; Linux CI validates them separately"
+  ],
+  "catalogFollowup": {
+    "initialCi": {
+      "commit": "a11f1aca9413c0b0551e6325b1bf3fa45e593d60",
+      "run": 38939368142,
+      "job": 117102824587,
+      "failure": "Test has no execution lane: e2e/visual/cxp-filters/specs/focus.spec.ts"
+    },
+    "fix": "Register only the exact focus.spec.ts path as automatic playwright-isolated",
+    "catalogCommandExit": 0,
+    "catalogNormalFiles": 2436,
+    "catalogIsolatedSpecFiles": 4,
+    "scriptLintExit": 0,
+    "localCatalogTests": {
+      "files": 2,
+      "passed": 32,
+      "failed": 3,
+      "reason": "Existing RLS shell harness tests spawn bash; this Windows MinGit runtime has no bash executable. GUI/CxP tests are unaffected."
+    },
+    "initialLinuxGui": {
+      "commit": "a11f1aca9413c0b0551e6325b1bf3fa45e593d60",
+      "run": 38939368627,
+      "job": 117102827631,
+      "buildAnd12CaseGuard": "success"
+    },
+    "artifacts": [
+      {
+        "localRelativePath": "focus-main-7feb/reports/cxp-filters/catalog.json",
+        "sha256": "4bc92cf4edd818b476b717d1190698d7d47d4d63c045bc13d8a9aae727439de8"
+      },
+      {
+        "localRelativePath": "focus-main-7feb/reports/cxp-filters/catalog-tests.log",
+        "sha256": "e4c0803f56f3eb202e068f03357ecdf3558fb205874d236c4f67f31204392217"
+      }
+    ]
+  }
+}

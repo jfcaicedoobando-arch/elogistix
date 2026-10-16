@@ -2,6 +2,8 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { useState, type ComponentProps } from "react";
 import { fireEvent, render, screen } from "@testing-library/react";
 import { CxpFiltros } from "../CxpFiltros";
+const viewport = vi.hoisted(() => ({ mobile: false }));
+vi.mock("@/hooks/shared/useIsMobile", () => ({ useIsMobile: () => viewport.mobile }));
 
 vi.mock("@/features/proveedor/hooks", () => ({
   useProveedoresLite: () => ({ data: [{ id: "p1", nombre: "Proveedor 1" }] }),
@@ -50,10 +52,25 @@ function Host({ start = initial }: { start?: Values }) {
 const query = () => screen.getByTestId("query").textContent;
 const editDate = () => fireEvent.change(screen.getAllByRole("textbox", { name: "Fecha" })[0],
   { target: { value: "2026-10-16" } });
-beforeEach(() => vi.clearAllMocks());
+beforeEach(() => { vi.clearAllMocks(); viewport.mobile = false; });
 
-describe.each([0, 1])("CxP facturas · trigger %s (móvil/escritorio)", (trigger) => {
-  const open = () => fireEvent.click(screen.getAllByRole("button", { name: /^Filtros/ })[trigger]);
+describe.each([true, false])("CxP facturas - mobile %s", (mobile) => {
+  beforeEach(() => { viewport.mobile = mobile; });
+  const open = () => fireEvent.click(screen.getByRole("button", { name: /^Filtros/ }));
+
+  it("keeps one trigger connected while opening, editing and closing", () => {
+    render(<Host />);
+    const trigger = screen.getByRole("button", { name: /^Filtros/ });
+    expect(trigger).toHaveTextContent(mobile ? "8" : "7");
+    for (let cycle = 0; cycle < 2; cycle++) {
+      open();
+      editDate();
+      expect(trigger.isConnected).toBe(true);
+      fireEvent.click(screen.getByRole("button", { name: "Cancelar" }));
+      expect(screen.getByRole("button", { name: /^Filtros/ })).toBe(trigger);
+    }
+    expect(commit).not.toHaveBeenCalled();
+  });
 
   it.each(["Cancelar", "Cerrar", "Escape"])("no aplica al editar y cerrar por %s; reabrir renueva", (close) => {
     render(<Host />);
@@ -126,13 +143,13 @@ describe.each([0, 1])("CxP facturas · trigger %s (móvil/escritorio)", (trigger
 
 it("búsqueda, origen y chips externos siguen vivos; reabrir toma el origen vigente", () => {
   render(<Host />);
-  fireEvent.change(screen.getAllByRole("searchbox")[1], { target: { value: "folio" } });
+  fireEvent.change(screen.getByRole("searchbox"), { target: { value: "folio" } });
   expect(query()).toContain('"search":"folio"');
   fireEvent.click(screen.getByRole("button", { name: "Nacional" }));
   expect(commit.mock.calls).toEqual([["origen", "Nacional"]]);
   fireEvent.click(screen.getByRole("button", { name: "Quitar filtro Moneda" }));
   expect(commit).toHaveBeenLastCalledWith("moneda", "todas");
-  fireEvent.click(screen.getAllByRole("button", { name: /^Filtros/ })[1]);
+  fireEvent.click(screen.getByRole("button", { name: /^Filtros/ }));
   editDate();
   fireEvent.click(screen.getByRole("button", { name: "Cancelar" }));
   expect(query()).toContain('"origen":"Nacional"');
