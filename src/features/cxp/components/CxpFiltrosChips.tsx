@@ -116,7 +116,7 @@ export function CxpFiltrosChips(p: CxpFiltrosChipsProps) {
             type="button"
             onClick={chip.onRemove}
             aria-label={`Quitar filtro ${chip.label}`}
-            className="ml-0.5 inline-flex h-4 w-4 items-center justify-center rounded-sm hover:bg-background/60 focus:outline-none focus:ring-1 focus:ring-ring"
+            className="ml-0.5 inline-flex h-4 w-4 items-center justify-center rounded-sm hover:bg-background/60 focus:outline-hidden focus:ring-1 focus:ring-ring"
           >
             <X className="h-3 w-3" />
           </button>

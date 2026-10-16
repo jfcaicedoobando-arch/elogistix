@@ -22,7 +22,7 @@ export function useAgenteGarantiasColumns(
           id: "naviera",
           header: "Naviera",
           accessorFn: (f) => f.naviera_nombre,
-          sortingFn: sortByString((f) => f.naviera_nombre),
+          sortFn: sortByString((f) => f.naviera_nombre),
           enableSorting: true,
           meta: { sticky: true, className: "font-medium" },
           cell: ({ row }) => <div>
@@ -52,7 +52,7 @@ export function useAgenteGarantiasColumns(
           id: "diaslibres",
           header: "Días libres",
           accessorFn: (f) => f.condicion?.dias_libres_demoras_default ?? null,
-          sortingFn: sortByNumber((f) => f.condicion?.dias_libres_demoras_default ?? null),
+          sortFn: sortByNumber((f) => f.condicion?.dias_libres_demoras_default ?? null),
           enableSorting: true,
           meta: { align: "right", className: "tabular-nums" },
           cell: ({ row }) => row.original.condicion?.dias_libres_demoras_default ?? "—",

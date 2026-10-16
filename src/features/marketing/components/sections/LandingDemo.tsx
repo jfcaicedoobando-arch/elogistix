@@ -49,7 +49,7 @@ export function LandingDemo() {
               <span className="flex h-20 w-20 items-center justify-center rounded-full bg-accent/20 ring-1 ring-accent/40">
                 <PlayCircle className="h-10 w-10 text-accent" />
               </span>
-              <p className="text-lg font-semibold">Demo en producción</p>
+              <p className="text-lg font-semibold">Conoce Libre Carga</p>
               <p className="max-w-md text-center text-sm text-primary-foreground/75">
                 Estamos grabando el recorrido oficial. Mientras tanto, podemos darte una demo guiada en vivo.
               </p>

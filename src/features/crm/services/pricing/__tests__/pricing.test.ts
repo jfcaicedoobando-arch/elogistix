@@ -43,3 +43,15 @@ describe("reglas de Pricing", () => {
     expect(esRolPricing("vendedor")).toBe(false);
   });
 });
+
+import { datosCopiaSolicitud } from "../copiaSolicitud";
+describe("copiar solicitud", () => {
+  it("copia datos de una cancelada sin folio, estado ni reloj", () => {
+    const s = { id: "x", folio: "OCT260010", estado: "cancelada", enviada_at: "a", vence_at: "b", respondida_at: null,
+      tarifa_tarifario_id: "t", servicio: "Marítimo", pol: "CNSHA", oportunidad_id: "o" } as never;
+    const d = datosCopiaSolicitud(s) as Record<string, unknown>;
+    expect(d).toMatchObject({ servicio: "Marítimo", pol: "CNSHA", oportunidad_id: "o" });
+    expect(d.folio).toBe("");
+    for (const k of ["id", "estado", "enviada_at", "vence_at", "tarifa_tarifario_id"]) expect(d).not.toHaveProperty(k);
+  });
+});

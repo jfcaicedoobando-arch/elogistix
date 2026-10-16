@@ -72,7 +72,8 @@ export function DatePickerMx({
 
   return (
     <div className={cn(pickerRootClass, className)}>
-      <Hint label={title ?? PICKER_AYUDA_TECLADO}>
+      <Hint label={title ?? PICKER_AYUDA_TECLADO}
+        className="max-w-[min(24rem,calc(100vw-2rem))] whitespace-normal [overflow-wrap:anywhere]">
       <div
         role="group"
         aria-label={title}
@@ -125,7 +126,7 @@ export function DatePickerMx({
           aria-invalid={showError || undefined}
           aria-describedby={describedBy}
 
-          className="flex-1 min-w-0 bg-transparent text-body outline-none placeholder:text-muted-foreground disabled:cursor-not-allowed"
+          className="flex-1 min-w-0 bg-transparent text-body outline-hidden placeholder:text-muted-foreground disabled:cursor-not-allowed"
         />
 
         {text && !disabled && !readOnly && (

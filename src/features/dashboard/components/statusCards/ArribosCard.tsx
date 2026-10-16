@@ -107,7 +107,7 @@ export function ArribosCard({ arribosEsteMes, isLoading, hideFinancials = false 
       <CardContent className="p-4">
         <div className="grid grid-cols-1 2xl:grid-cols-[auto_minmax(0,1fr)_auto] 2xl:items-center gap-4 min-w-0">
           <div className="flex items-center gap-2 shrink-0">
-            <div className="p-2 rounded-lg bg-gradient-to-br from-primary to-primary/80">
+            <div className="p-2 rounded-lg bg-linear-to-br/srgb from-primary to-primary/80">
               <CalendarDays className="h-4 w-4 text-primary-foreground" />
             </div>
             <SectionHeading as="h3" className="inline-flex">Arribos este mes</SectionHeading>

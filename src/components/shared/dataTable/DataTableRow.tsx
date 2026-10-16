@@ -2,7 +2,8 @@
  * Una fila de `DataTableBody`. Se extrajo del cuerpo de la tabla para respetar
  * el límite de complejidad ciclomática (ESLint 16) y mantener el body legible.
  */
-import { flexRender, type Cell, type Row } from "@tanstack/react-table";
+import { flexRender } from "@tanstack/react-table";
+import type { Cell, Row } from "@/components/shared/dataTable/tanstackTypes";
 import type { NavigateFunction } from "react-router";
 import { TableCell, TableRow } from "@/components/ui/table";
 import { cn } from "@/lib/utils";
@@ -20,7 +21,7 @@ const STICKY_LEFT =
 const STICKY_RIGHT =
   "sticky right-0 z-sticky bg-background [tr:nth-child(even)_&]:bg-muted border-l border-border/60";
 
-interface Props<T> {
+interface Props<T extends object> {
   row: Row<T>;
   cellPad: string;
   borderCell: string;
@@ -35,7 +36,7 @@ interface Props<T> {
   getRowAriaLabel?: (item: T) => string;
 }
 
-export function DataTableRow<T>({
+export function DataTableRow<T extends object>({
   row, cellPad, borderCell, striped, hoverable, selectionMode, navigate,
   rowClassName, onRowClick, onRowMouseEnter, getRowHref, getRowAriaLabel,
 }: Props<T>) {
@@ -81,13 +82,13 @@ function rowClasses({ clickable, navigable, seleccionable, striped, hoverable }:
   return cn(
     clickable && "cursor-pointer",
     (navigable || seleccionable)
-      && "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset",
+      && "focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset",
     !striped && "even:bg-transparent",
     !hoverable && "hover:bg-transparent",
   );
 }
 
-function DataTableCell<T>({
+function DataTableCell<T extends object>({
   cell, cellPad, borderCell,
 }: {
   cell: Cell<T, unknown>;

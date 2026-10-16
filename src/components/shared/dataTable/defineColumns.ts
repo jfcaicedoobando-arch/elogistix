@@ -1,7 +1,7 @@
 /**
  * Helper tipado para definir columnas nativas de TanStack Table sin perder
- * la inferencia de `T`. Equivale a `ColumnDef<T>[]` pero con la augmentación
- * de meta (`columnMeta.ts`) cargada automáticamente.
+ * la inferencia de `T`. Los tipos están vinculados a las features y metadatos
+ * locales de la tabla, sin augmentación global ni adaptador legacy.
  *
  * Uso recomendado para nuevos call-sites (Fase 2 del refactor):
  *
@@ -13,11 +13,10 @@
  *       meta: { width: "w-[130px]", sticky: true } },
  *   ]);
  */
-import type { ColumnDef } from "@tanstack/react-table";
-import "./columnMeta";
+import type { ColumnDef } from "@/components/shared/dataTable/tanstackTypes";
 
-export function defineColumns<T>(cols: ColumnDef<T, unknown>[]): ColumnDef<T, unknown>[] {
+export function defineColumns<T extends object>(cols: ColumnDef<T, unknown>[]): ColumnDef<T, unknown>[] {
   return cols;
 }
 
-export type { ColumnDef } from "@tanstack/react-table";
+export type { ColumnDef } from "@/components/shared/dataTable/tanstackTypes";

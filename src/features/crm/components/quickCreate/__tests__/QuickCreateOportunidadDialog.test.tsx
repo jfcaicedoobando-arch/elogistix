@@ -4,9 +4,11 @@
  */
 import type React from "react";
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen, fireEvent, waitFor } from "@testing-library/react";
+import { act, render, screen, fireEvent, waitFor } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import QuickCreateOportunidadDialog from "@/features/crm/components/quickCreate/QuickCreateOportunidadDialog";
+import { crm } from "@/features/crm/queryKeys";
+import type { OrigenEmpresa } from "@/features/crm/services/origenEmpresaCrm";
 
 const mutateAsync = vi.fn(async (_input: Record<string, unknown>) => ({ id: "op-1" }));
 const notifyError = vi.fn();
@@ -38,18 +40,31 @@ vi.mock("@/components/ui/select", () => ({
 }));
 vi.mock("@/features/crm/components/nuevaOportunidad/OportunidadEmpresaField", () => ({
   OportunidadEmpresaField: ({ onChange }: { onChange: (e: { id: string; nombre: string }) => void }) => (
-    <button type="button" onClick={() => onChange({ id: "empresa-1", nombre: "Acme" })}>elegir-empresa</button>
+    <><button type="button" onClick={() => onChange({ id: "empresa-1", nombre: "Acme" })}>elegir-empresa</button>
+    <button type="button" onClick={() => onChange({ id: "empresa-2", nombre: "Empresa B" })}>elegir-B</button></>
   ),
 }));
 
-function montar() {
-  const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+function montar(onMore = vi.fn(), qc = new QueryClient({ defaultOptions: { queries: { retry: false } } })) {
   render(
     <QueryClientProvider client={qc}>
-      <QuickCreateOportunidadDialog open onOpenChange={vi.fn()} onCreated={vi.fn()} onMore={vi.fn()} />
+      <QuickCreateOportunidadDialog open onOpenChange={vi.fn()} onCreated={vi.fn()} onMore={onMore} />
     </QueryClientProvider>,
   );
 }
+
+function diferido() {
+  let resolve!: (value: OrigenEmpresa) => void;
+  let reject!: (error: Error) => void;
+  const promise = new Promise<OrigenEmpresa>((res, rej) => { resolve = res; reject = rej; });
+  return { promise, resolve, reject };
+}
+function completar() {
+  fireEvent.change(screen.getByLabelText(/Nombre/i), { target: { value: "Operación" } });
+  fireEvent.click(screen.getByRole("button", { name: "elegir-empresa" }));
+  fireEvent.change(screen.getByLabelText(/Valor estimado/i), { target: { value: "10" } });
+}
+const enviarFormulario = () => fireEvent.submit(screen.getByLabelText(/Nombre/i).closest("form")!);
 
 describe("QuickCreateOportunidadDialog", () => {
   beforeEach(() => {
@@ -69,7 +84,7 @@ describe("QuickCreateOportunidadDialog", () => {
     fireEvent.change(screen.getByLabelText(/Nombre/i), { target: { value: "Op nueva" } });
     fireEvent.click(screen.getByRole("button", { name: "elegir-empresa" }));
     fireEvent.change(screen.getByTestId("etapa"), { target: { value: "e-neg" } });
-    expect(screen.getByRole("status")).toHaveTextContent("valor estimado");
+    expect(screen.getByText(/Falta: valor estimado/)).toHaveAttribute("role", "status");
     fireEvent.change(screen.getByLabelText(/Valor estimado/i), { target: { value: "1500" } });
     await waitFor(() => expect(screen.getByRole("button", { name: "Crear" })).toBeEnabled());
     fireEvent.click(screen.getByRole("button", { name: "Crear" }));
@@ -95,5 +110,56 @@ describe("QuickCreateOportunidadDialog", () => {
     montar();
     expect(screen.getByText("Configura al menos una etapa abierta en el pipeline")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Crear" })).toBeDisabled();
+  });
+
+  it("A→B y late A: Enter/submit pendiente bloqueado, Más campos lleva origen null", async () => {
+    const a = diferido(), b = diferido(), onMore = vi.fn();
+    origenMock.mockImplementation((id: string) => id === "empresa-1" ? a.promise : b.promise);
+    montar(onMore); completar();
+    enviarFormulario();
+    expect(mutateAsync).not.toHaveBeenCalled();
+    fireEvent.click(screen.getByRole("button", { name: "elegir-B" }));
+    fireEvent.click(screen.getByRole("button", { name: /Más campos/ }));
+    expect(onMore).toHaveBeenLastCalledWith(expect.objectContaining({ empresa: { id: "empresa-2", nombre: "Empresa B" }, origen: null }));
+    await act(async () => b.resolve({ ok: true, origen: { tipo: "cliente", id: "cliente-B", nombre: "Cliente B" } }));
+    await waitFor(() => expect(screen.getByRole("button", { name: "Crear" })).toBeEnabled());
+    await act(async () => a.resolve({ ok: true, origen: { tipo: "cliente", id: "cliente-A", nombre: "Cliente A" } }));
+    enviarFormulario();
+    await waitFor(() => expect(mutateAsync).toHaveBeenCalledWith(expect.objectContaining({
+      empresa_id: "empresa-2", cliente_id: "cliente-B", lead_id: null,
+    })));
+  });
+
+  it("error accesible bloquea Enter; reintento habilita sólo al resolver", async () => {
+    const next = diferido();
+    origenMock.mockRejectedValueOnce(new Error("Error de red")).mockReturnValue(next.promise);
+    montar(); completar();
+    expect(await screen.findByRole("alert")).toHaveTextContent("No se pudo consultar");
+    enviarFormulario();
+    expect(mutateAsync).not.toHaveBeenCalled();
+    fireEvent.click(screen.getByRole("button", { name: "Reintentar consulta de origen" }));
+    await waitFor(() => expect(screen.getByRole("status")).toHaveTextContent("Consultando"));
+    enviarFormulario();
+    expect(mutateAsync).not.toHaveBeenCalled();
+    await act(async () => next.resolve({ ok: true, origen: { tipo: "cliente", id: "cliente-A", nombre: "Cliente" } }));
+    await waitFor(() => expect(screen.getByRole("button", { name: "Crear" })).toBeEnabled());
+    enviarFormulario();
+    await waitFor(() => expect(mutateAsync).toHaveBeenCalledTimes(1));
+  });
+
+  it("caché con refetch pendiente/fallido no envía ni transporta un origen viejo", async () => {
+    const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+    qc.setQueryData(crm.origenEmpresa("empresa-1"), { ok: true, origen: { tipo: "cliente", id: "viejo", nombre: "Viejo" } });
+    const next = diferido(), onMore = vi.fn();
+    origenMock.mockReturnValue(next.promise);
+    montar(onMore, qc); completar();
+    enviarFormulario();
+    fireEvent.click(screen.getByRole("button", { name: /Más campos/ }));
+    expect(onMore).toHaveBeenLastCalledWith(expect.objectContaining({ origen: null }));
+    expect(mutateAsync).not.toHaveBeenCalled();
+    await act(async () => next.reject(new Error("Error refetch")));
+    expect(await screen.findByRole("alert")).toHaveTextContent("No se pudo consultar");
+    enviarFormulario();
+    expect(mutateAsync).not.toHaveBeenCalled();
   });
 });

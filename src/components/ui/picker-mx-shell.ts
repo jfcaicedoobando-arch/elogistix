@@ -32,7 +32,7 @@ export interface PickerTriggerState {
 /** Clases del contenedor/trigger de un picker MX. */
 export function pickerTriggerClass({ showError, disabled, empty }: PickerTriggerState): string {
   return [
-    "inline-flex w-full items-center gap-1 rounded-md border border-input bg-background px-3 text-body shadow-sm",
+    "inline-flex w-full items-center gap-1 rounded-md border border-input bg-background px-3 text-body shadow-xs",
     FIELD_HEIGHT_CLASS,
     FIELD_STATE_WITHIN_CLASS,
     showError ? "border-destructive focus-within:border-destructive focus-within:ring-destructive/40" : "",

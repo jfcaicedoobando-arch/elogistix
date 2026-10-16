@@ -15,17 +15,16 @@ import { PageHeader } from "@/components/shared/PageHeader";
 import { Seo } from "@/components/shared/Seo";
 import { pluralizar } from "@/lib/format/pluralizar";
 import DoubleConfirmDeleteDialog from "@/components/shared/DoubleConfirmDeleteDialog";
-import { UnifiedFiltersBar } from "@/components/shared/filters/UnifiedFiltersBar";
+import { CotizacionesFiltersBar } from "@/features/cotizacion/components/CotizacionesFiltersBar";
 import { CargaGuard } from "@/components/shared/states/CargaGuard";
 import { useCotizacionesPageController } from "@/features/cotizacion/hooks";
 import { buildCotizacionesColumns } from "@/features/cotizacion/components/cotizacionesColumns";
-import { EstadoSelect, ClienteSelect, SegmentoTabs } from "@/features/cotizacion/components/CotizacionesFilterSelects";
+import { SegmentoTabs } from "@/features/cotizacion/components/CotizacionesFilterSelects";
 import { CotizacionesPageActions } from "@/features/cotizacion/components/CotizacionesPageActions";
 import { usePermissions } from "@/hooks/shared";
 import { useTcInicial } from "@/features/catalogos/hooks/useTcInicial";
 import { TABLE_DENSITY } from "@/components/shared/dataTable/tableTokens";
 import { CotizacionesBannerOrigen } from "@/features/cotizacion/components/CotizacionesBannerOrigen";
-import { CotizacionesSecondaryFilters } from "@/features/cotizacion/components/CotizacionesSecondaryFilters";
 
 export default function Cotizaciones() {
   const c = useCotizacionesPageController();
@@ -64,13 +63,6 @@ export default function Cotizaciones() {
     ],
   );
 
-  const primaryFilters = (
-    <>
-      <EstadoSelect value={c.filterEstado} onChange={(v) => c.setFilter("estado", v)} />
-      <ClienteSelect value={c.filterCliente} onChange={(v) => c.setFilter("cliente", v)} clientes={c.clientes} />
-    </>
-  );
-
   return (
     <PageContainer width="wide">
       <Seo title="Cotizaciones · Libre Carga" description="Consulta, filtra y da seguimiento a tus cotizaciones." />
@@ -102,24 +94,7 @@ export default function Cotizaciones() {
 
       <Card>
         <CardContent className="p-4">
-          <UnifiedFiltersBar
-            search={c.search}
-            onSearchChange={c.setSearch}
-            searchPlaceholder="Buscar por folio, cliente o mercancía…"
-            primary={primaryFilters}
-            secondary={
-              <CotizacionesSecondaryFilters
-                soloAceptadasSinEmbarque={c.soloAceptadasSinEmbarque}
-                totalAceptadasSinEmbarque={c.totalAceptadasSinEmbarque}
-                filterSinCostos={c.filterSinCostos}
-                incluirInactivas={c.incluirInactivas}
-                setFilter={c.setFilter}
-              />
-            }
-            chips={c.activeChips}
-            activeCount={c.activeCount}
-            onClearAll={c.resetAll}
-          />
+          <CotizacionesFiltersBar {...c} />
         </CardContent>
       </Card>
 

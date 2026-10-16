@@ -1,0 +1,77 @@
+{
+  "schema_version": 1,
+  "provider_version": 2,
+  "original_delivery_head": "fd3a2fcb940dc122fda7be242afda05a053dd61d",
+  "author_fix_head": "a7aff9ff8f92852687c56d3bc05d41150b44b2ae",
+  "original_files": {
+    "README.md": {
+      "bytes": 6318,
+      "sha256": "056ffe77a98712fc618b73a7d583699264cb619ec2877166d2aaa3078efdbc11"
+    },
+    "adoption_cases.py": {
+      "bytes": 6088,
+      "sha256": "cc7518a30b6ce82edd31357aa0b155d7c8c7cc724c48e7da426f85eb551cc47a"
+    },
+    "authority_cases.py": {
+      "bytes": 16412,
+      "sha256": "30c5b11351606f4b30f6493c3da5b2b67b88614b59db7bc6a3e1f41acbda5f38"
+    },
+    "contract.json": {
+      "bytes": 1703,
+      "sha256": "8d43f4eea1b17345fa76251e78b5dd7c17db2b9ca42f544e19b5c3c25fd8807b"
+    },
+    "offline-evidence.json": {
+      "bytes": 4937,
+      "sha256": "340addb17d5a74a5cc11541532824bcba9401b861acedb3419bd7fd314931a9d"
+    },
+    "origin_materialization_cases.py": {
+      "bytes": 9919,
+      "sha256": "6212828414faa1ea6a105881a7e314d3f51a8169b3c271f78763b51429535022"
+    },
+    "suite.py": {
+      "bytes": 10697,
+      "sha256": "9fc663562820b6ccc640ca868a886dfcc4a610545e9e4ed7abce8a48493b9ccf"
+    },
+    "test_origin_adoption_cases.py": {
+      "bytes": 5077,
+      "sha256": "18e68955089bdb2b008621b673b8d9b4d02898df5ff65fdbe7b1672cbd588c05"
+    },
+    "test_suite.py": {
+      "bytes": 5813,
+      "sha256": "3be33c3eef21bbf4ac55f646bac9e59d05aaefc6e96db580b17864baa10cae1f"
+    }
+  },
+  "authentic_schema_sources": {
+    "authentic/identity.sql": {
+      "bytes": 16101,
+      "sha256": "666a466b0b8189ef3cec661f489495b7059cfd9bbcb2492d9d221b693ea3be7f"
+    },
+    "authentic/producer.sql": {
+      "bytes": 19028,
+      "sha256": "f0a14f683ee524527ed3b7f29305bc793f7f9e3d5581b4332da72f8fb8bb55a6"
+    },
+    "flow/issuer/16-owner-registry.sql": {
+      "bytes": 11333,
+      "sha256": "a74d69ed6d19356ba36fe27d7070a496e99c3ef5cec7a030c3b96b609a64463b"
+    },
+    "authentic/bridge.sql": {
+      "bytes": 8362,
+      "sha256": "69bbcd2ec825953ca4fda822ec5fde143f1f70a5120f372ee3c211e96523c5b2"
+    }
+  },
+  "affected_cases": [
+    "mutable_supplier_origin_drift",
+    "materialized_invoice_folio_drift"
+  ],
+  "historical_native_run": {
+    "run_id": 38826041062,
+    "head": "21b5fae8e9fb7e072f21ae9478e0f6df6d7e4f35",
+    "passed": 7,
+    "failed_before_mutation": 2,
+    "failure_sqlstate": "42703",
+    "failure_message": "column a.identity_receipt_id does not exist",
+    "expected_denials_for_affected_cases": "NOT_RUN"
+  },
+  "corrected_native_status": "NOT_RUN",
+  "runtime_dependencies": "The nine first-delivery files plus this versioned correction; supplemental 7d38dc8ad files are not required."
+}

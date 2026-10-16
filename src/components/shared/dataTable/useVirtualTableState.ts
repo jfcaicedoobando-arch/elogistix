@@ -18,7 +18,7 @@
  */
 import { useCallback, useMemo, type RefObject } from "react";
 import { useVirtualizer, type Virtualizer } from "@tanstack/react-virtual";
-import type { ColumnDef, Row, Table } from "@tanstack/react-table";
+import type { ColumnDef, Row, Table } from "@/components/shared/dataTable/tanstackTypes";
 import { useTableInstance } from "@/components/shared/dataTable/useTableInstance";
 import { FLEX_COL, gridTemplateFromWidths } from "@/components/shared/dataTable/gridTemplate";
 
@@ -29,7 +29,7 @@ function measureByBoundingRect(el: HTMLElement): number {
   return el?.getBoundingClientRect().height ?? 0;
 }
 
-interface Args<T> {
+interface Args<T extends object> {
   data: T[];
   columns: ReadonlyArray<ColumnDef<T, unknown>>;
   rowKey: (item: T) => string;
@@ -38,7 +38,7 @@ interface Args<T> {
   overscan: number;
 }
 
-export interface VirtualTableState<T> {
+export interface VirtualTableState<T extends object> {
   table: Table<T>;
   rows: Row<T>[];
   virtualizer: Virtualizer<HTMLDivElement, HTMLElement>;
@@ -46,7 +46,7 @@ export interface VirtualTableState<T> {
   gridTemplate: string;
 }
 
-export function useVirtualTableState<T>({
+export function useVirtualTableState<T extends object>({
   data,
   columns,
   rowKey,
@@ -56,7 +56,7 @@ export function useVirtualTableState<T>({
 }: Args<T>): VirtualTableState<T> {
   // getRowId estable: si `rowKey` cambia de identidad por render, TanStack
   // no recrea filas porque el id resultante es el mismo, pero estabilizamos
-  // la función para evitar trabajo extra en useReactTable.
+  // la función para evitar trabajo extra en useTable.
   const getRowId = useCallback(
     (row: T, index: number) => rowKey(row) ?? String(index),
     [rowKey],

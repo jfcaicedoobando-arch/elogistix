@@ -33,9 +33,9 @@ import {
   type DataTablePagination,
   type TableDensity,
 } from "@/components/shared/dataTable/types";
-import type { ColumnDef } from "@tanstack/react-table";
+import type { ColumnDef } from "@/components/shared/dataTable/tanstackTypes";
 
-interface VirtualDataTableProps<T> {
+interface VirtualDataTableProps<T extends object> {
   columns: ReadonlyArray<ColumnDef<T, unknown>>;
   data: T[];
   isLoading?: boolean;
@@ -73,13 +73,13 @@ const DEFAULTS = {
   overscan: 8,
 };
 
-function withDefaults<T>(props: VirtualDataTableProps<T>) {
+function withDefaults<T extends object>(props: VirtualDataTableProps<T>) {
   const cleaned = omitUndefined(props);
   return { ...DEFAULTS, ...cleaned } as VirtualDataTableProps<T> &
     Required<Pick<typeof DEFAULTS, keyof typeof DEFAULTS>>;
 }
 
-export function VirtualDataTable<T>(props: VirtualDataTableProps<T>) {
+export function VirtualDataTable<T extends object>(props: VirtualDataTableProps<T>) {
   const {
     columns, data, rowKey, rowClassName, onRowClick, pagination, className,
     isError, onRetry, isLoading, emptyMessage, skeletonRows, density, striped, hoverable,

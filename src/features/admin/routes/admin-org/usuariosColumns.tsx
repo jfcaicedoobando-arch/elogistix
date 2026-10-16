@@ -3,7 +3,7 @@ import { Badge } from "@/components/ui/badge";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { defineColumns, type ColumnDef } from "@/components/shared/DataTable";
 import { sortByDate } from "@/components/shared/dataTable/sortingFns";
-import type { Row, SortingFn } from "@tanstack/react-table";
+import type { Row, SortingFn } from "@/components/shared/dataTable/tanstackTypes";
 import type { UserRow } from "@/features/admin/hooks/usuario";
 import type { AppRole } from "@/types/appRole";
 import { formatDate, formatDateTimeShort } from "@/lib/formatters";
@@ -45,7 +45,7 @@ export function useUsuarioColumns({
           header: "Usuario",
           accessorFn: (u) => u.email,
           enableSorting: true,
-          sortingFn: (a, b) =>
+          sortFn: (a, b) =>
             (a.original.email ?? "").localeCompare(b.original.email ?? "", "es-MX", {
               sensitivity: "base",
             }),
@@ -75,7 +75,7 @@ export function useUsuarioColumns({
           header: "Rol",
           accessorFn: (u) => u.role,
           enableSorting: true,
-          sortingFn: sortByRoleHierarchy,
+          sortFn: sortByRoleHierarchy,
           meta: { width: COL_W.texto },
           cell: ({ row }) => (
             <ChangeRoleCell
@@ -98,7 +98,7 @@ export function useUsuarioColumns({
           header: () => <span className="whitespace-nowrap">Fecha de registro</span>,
           accessorFn: (u) => u.created_at,
           enableSorting: true,
-          sortingFn: sortByDate<UserRow>((u) => u.created_at),
+          sortFn: sortByDate<UserRow>((u) => u.created_at),
           meta: {
             width: "w-[1%] whitespace-nowrap",
             className: "text-body-sm text-muted-foreground whitespace-nowrap",

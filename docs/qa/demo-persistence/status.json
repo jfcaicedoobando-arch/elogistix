@@ -1,0 +1,101 @@
+{
+  "recorded_date": "2026-10-15",
+  "scope": "Pinned Git-source isolated SQL review; operational wire UNBOUND",
+  "repository": "jfcaicedoobando-arch/elogistix",
+  "base_commit": "5d1f00d27628100a58ab166367a067ea90068b84",
+  "branch": "codex/persistence-pg176-quarantine",
+  "historical_zip_input": {
+    "filename": "Elogistix-persistencia-propuesta.zip",
+    "expected_sha256": "45ec554f587cc3a12048732254ac98bd98f09ceaf18383dde496eba6c227dfa1",
+    "observed_sha256": null,
+    "supported_retry_exhausted": true,
+    "first_error": "library file transfer failed: download failed",
+    "retry_error": "AttributeError: module 'os' has no attribute 'setxattr'",
+    "materialization": "FAIL",
+    "zip_hash_verification": "NOT_RUN",
+    "transfer_sha256sums_verification": "NOT_RUN",
+    "blocks_git_source_lane": false
+  },
+  "git_input": {
+    "source_commit": "860ac59cc9b6d80887c1a7811e2c81ef8ef17ca8",
+    "source_base": "5d1f00d27628100a58ab166367a067ea90068b84",
+    "directory": "docs/review/demo-durable-owner-adapter-20261015",
+    "files": 12,
+    "manifest_sha256": "d0a7c1655f9d137f7c88d5489318f42639f7c2548ec627fec7134363afbc2335",
+    "store_sha256": "fb7fa69c17eca7230606ecb6217086c6eb5317d75551df9efc268959f69140a7",
+    "raw_git_blob_equality": "PASS",
+    "all_payload_checksums": "PASS",
+    "library_zip_claim": false
+  },
+  "results": [
+    {
+      "case": "original_owner_node_tests",
+      "status": "PASS",
+      "tests": 25,
+      "scope": "offline synthetic transport/store"
+    },
+    {
+      "case": "catalog_regressions_and_execution",
+      "status": "PASS",
+      "tests": 5
+    },
+    {
+      "case": "python_offline_tests",
+      "status": "PASS",
+      "tests": 29
+    },
+    {
+      "case": "exact_store_compilation_and_bindings",
+      "status": "PASS",
+      "scope": "SYNTHETIC SQL fixture only"
+    },
+    {
+      "case": "logical_obligation_uniqueness_and_append_only",
+      "status": "PASS",
+      "scope": "SYNTHETIC SQL fixture only"
+    },
+    {
+      "case": "separate_committed_claim_two_connection_races_later_rollback",
+      "status": "PASS",
+      "scope": "SYNTHETIC SQL fixture only"
+    },
+    {
+      "case": "postgres_170006_isolation_and_cleanup",
+      "status": "PASS",
+      "scope": "SYNTHETIC SQL fixture only"
+    },
+    {
+      "case": "physical_driver_and_real_issuer_identity_engine",
+      "status": "NOT_RUN"
+    }
+  ],
+  "runtime_evidence": {
+    "summary": "runtime-evidence.json",
+    "workflow_commit": "eaeeeabba1624f63081a455e529af43f1633082a",
+    "run_id": 38806953890,
+    "run_url": "https://github.com/jfcaicedoobando-arch/elogistix/actions/runs/38806953890",
+    "artifact_id": 12006303781,
+    "artifact_zip_sha256": "4c08a0503a7005e84c6a1f38fe6182a58b9291059989ca8be72c3bed5ffbd327",
+    "checks": 56,
+    "status": "PASS_SYNTHETIC_ONLY",
+    "cleanup": "confirmed_stopped_and_removed"
+  },
+  "durability_scope": "Inherited fixture has fsync off and tmpfs; commit visibility/later rollback only, not crash/WAL/failover/restore durability",
+  "wire": "UNBOUND",
+  "configuration": "EMPTY",
+  "required_semantics": "at-most-once with quarantine; not exactly-once or guaranteed availability",
+  "live_database_actions": 0,
+  "demo_activated": false,
+  "remaining_gates": [
+    "Physical exclusive wire, ReadyForQuery/CommandComplete, socket epoch and no reconnect/replay",
+    "Real issuer/privilege isolation, authentic business guards/engine/checkpoints, durability and read-only reconciliation"
+  ],
+  "owner_catalog_ci": {
+    "run_id": 38806953840,
+    "job_id": 116670874322,
+    "tests": 30,
+    "status": "PASS",
+    "original_owner_tests": 25
+  },
+  "disposable_sql_executed": true
+}

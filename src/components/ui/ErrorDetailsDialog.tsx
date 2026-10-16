@@ -57,7 +57,7 @@ export function ErrorDetailsDialog() {
   return (
     <>
       {!report && recoverable && (
-        <Button size="sm" variant="outline" className="fixed bottom-4 left-4 z-40 rounded-full shadow-sm"
+        <Button size="sm" variant="outline" className="fixed bottom-4 left-4 z-40 rounded-full shadow-xs"
           onClick={() => openErrorReport(recoverable)}><FileJson className="h-4 w-4 mr-2" />Ver último diagnóstico</Button>
       )}
       <Dialog open={report !== null} onOpenChange={(open) => { if (!open) closeErrorReport(); }}>

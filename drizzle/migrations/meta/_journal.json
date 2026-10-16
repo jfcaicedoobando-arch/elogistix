@@ -99,6 +99,55 @@
       "when": 1791483611085,
       "tag": "0013_proveedor_alta_provisional",
       "breakpoints": true
+    },
+    {
+      "idx": 14,
+      "version": "7",
+      "when": 1791920332681,
+      "tag": "0014_demo_seed_limpia_agentes",
+      "breakpoints": true
+    },
+    {
+      "idx": 15,
+      "version": "7",
+      "when": 1791994106303,
+      "tag": "0015_catalogos_alta_gerente_admin",
+      "breakpoints": true
+    },
+    {
+      "idx": 16,
+      "version": "7",
+      "when": 1792001438191,
+      "tag": "0016_crm_empresa_desde_cliente",
+      "breakpoints": true
+    },
+    {
+      "idx": 17,
+      "version": "7",
+      "when": 1792001672033,
+      "tag": "0017_crm_empresa_no_borrar_cliente",
+      "breakpoints": true
+    },
+    {
+      "idx": 18,
+      "version": "7",
+      "when": 1792006262617,
+      "tag": "0018_cargos_tarifario_aplica_iva",
+      "breakpoints": true
+    },
+    {
+      "idx": 19,
+      "version": "7",
+      "when": 1792058404766,
+      "tag": "0019_cxp_contador_autoaprobacion",
+      "breakpoints": true
+    },
+    {
+      "idx": 20,
+      "version": "7",
+      "when": 1792084137000,
+      "tag": "0020_seed_r3_stopped_admission",
+      "breakpoints": true
     }
   ]
 }

@@ -1,0 +1,37 @@
+name: Demo human approval isolated review
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, converted_to_draft]
+    branches: [main]
+    paths:
+      - 'docs/review/demo-financial-runtime-20261015/**'
+      - '.github/workflows/demo-human-approval-review.yml'
+permissions:
+  contents: read
+concurrency:
+  group: demo-human-approval-review-${{ github.event.pull_request.number }}
+  cancel-in-progress: false
+jobs:
+  synthetic-human-helper:
+    if: github.repository == 'jfcaicedoobando-arch/elogistix' && github.event.pull_request.draft == true && github.event.pull_request.head.repo.full_name == github.repository && github.event.pull_request.head.ref == 'fix/demo-human-approval-review-20261015'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          persist-credentials: false
+      - name: Offline financial harness contracts
+        run: python3 -I docs/review/demo-financial-runtime-20261015/offline_checks.py
+      - name: Exact helper on synthetic auth context and PostgreSQL 17.6 NOSU
+        env:
+          DEMO_ACCEPTANCE_ISOLATED: '1'
+        run: python3 -I docs/review/demo-financial-runtime-20261015/run_ci.py --execute-disposable --output "$RUNNER_TEMP/demo-human-approval-evidence"
+      - name: Preserve synthetic evidence
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: demo-human-approval-review-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/demo-human-approval-evidence
+          if-no-files-found: warn
+          retention-days: 14

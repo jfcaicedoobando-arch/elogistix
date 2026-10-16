@@ -2,25 +2,13 @@ import type { Config } from "tailwindcss";
 import tailwindcssAnimate from "tailwindcss-animate";
 
 export default {
-  darkMode: ["class"],
+  darkMode: "class",
   content: ["./pages/**/*.{ts,tsx}", "./components/**/*.{ts,tsx}", "./app/**/*.{ts,tsx}", "./src/**/*.{ts,tsx}"],
   prefix: "",
   theme: {
-    container: {
-      center: true,
-      padding: "2rem",
-      screens: {
-        "2xl": "1400px",
-      },
-    },
     extend: {
-      // v13.423.0 — Breakpoint por ALTO de pantalla. Las laptops de 720-768 px
-      // dejan muy poco cuerpo útil en los modales largos (captura de facturas):
-      // con `short:` se compactan ayudas y descripciones sin tocar el diseño
-      // de las pantallas grandes.
-      screens: {
-        short: { raw: "(max-height: 800px)" },
-      },
+      // short: remains a max-height:800px variant in src/tailwind-compat.css.
+      // Keeping it out of width screens avoids invalid v4 container media.
 
       fontFamily: {
         sans: ["Inter", "sans-serif"],

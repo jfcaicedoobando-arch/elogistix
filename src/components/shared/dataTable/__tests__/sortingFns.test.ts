@@ -15,11 +15,11 @@ describe("sortingFns — colación es-MX y nulls al final", () => {
   interface NR { n: number | null }
   interface DR { d: string | null }
   const mkS = (v: string | null) =>
-    ({ original: { v } } as unknown as import("@tanstack/react-table").Row<SR>);
+    ({ original: { v } } as unknown as import("@/components/shared/dataTable/tanstackTypes").Row<SR>);
   const mkN = (n: number | null) =>
-    ({ original: { n } } as unknown as import("@tanstack/react-table").Row<NR>);
+    ({ original: { n } } as unknown as import("@/components/shared/dataTable/tanstackTypes").Row<NR>);
   const mkD = (d: string | null) =>
-    ({ original: { d } } as unknown as import("@tanstack/react-table").Row<DR>);
+    ({ original: { d } } as unknown as import("@/components/shared/dataTable/tanstackTypes").Row<DR>);
 
   it("colación es-MX (acentos y mayúsculas insensibles)", () => {
     expect(esCollator.compare("árbol", "banana")).toBeLessThan(0);

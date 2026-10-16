@@ -8,7 +8,7 @@
  * - `DENSITY_ROW_MIN_H` fija el alto por densidad → cero salto vertical.
  * - anchos de la barra varían por columna con un patrón determinista.
  */
-import type { Table } from "@tanstack/react-table";
+import type { Table } from "@/components/shared/dataTable/tanstackTypes";
 import { Skeleton } from "@/components/ui/skeleton";
 import { TableBody, TableCell, TableRow } from "@/components/ui/table";
 import { cn } from "@/lib/utils";
@@ -20,7 +20,7 @@ import "./columnMeta";
 
 const BAR_WIDTHS = ["w-3/5", "w-4/5", "w-2/3", "w-3/4", "w-1/2", "w-5/6"];
 
-interface Props<T> {
+interface Props<T extends object> {
   table: Table<T>;
   skeletonRows: number;
   density: TableDensity;
@@ -28,7 +28,7 @@ interface Props<T> {
   bordered: boolean;
 }
 
-export function DataTableBodySkeleton<T>({
+export function DataTableBodySkeleton<T extends object>({
   table, skeletonRows, density, striped, bordered,
 }: Props<T>) {
   const leafColumns = table.getAllLeafColumns();

@@ -47,7 +47,7 @@ export function SidebarUserMenu({
             className={cn(
               "flex items-center gap-2 w-full rounded-md p-2 text-left",
               "hover:bg-sidebar-accent/15 transition-colors",
-              "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sidebar-ring",
+              "focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-sidebar-ring",
               collapsed && "justify-center p-1.5",
             )}
             aria-label="Menú de usuario"

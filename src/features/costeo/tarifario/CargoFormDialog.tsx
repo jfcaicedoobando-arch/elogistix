@@ -6,10 +6,12 @@ import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
 import { costeo } from "../queryKeys";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { FormDialogShell } from "@/components/shared/FormDialogShell";
 import { listarEntidadesCargo, guardarCargo, type CargoTarifario, type TipoCargo } from "./cargosService";
+import { ConceptoNavieraSelect } from "./ConceptoNavieraSelect";
 
 interface Props {
   tipo: TipoCargo;
@@ -19,14 +21,27 @@ interface Props {
   onSaved: () => void;
 }
 
+function valoresIniciales(tipo: TipoCargo, cargo: CargoTarifario | null) {
+  const fob = tipo === "fob";
+  return {
+    entidad: cargo?.entidad_id ?? "",
+    concepto: cargo?.concepto ?? (fob ? "Cargos FOB" : "Revalidación"),
+    monto: cargo ? String(cargo.monto) : "",
+    moneda: cargo?.moneda ?? (fob ? "USD" : "MXN"),
+    unidad: cargo?.unidad ?? "",
+    aplicaIva: cargo?.aplica_iva ?? false,
+  };
+}
 
 export function CargoFormDialog({ tipo, orgId, cargo, onClose, onSaved }: Props) {
   const { data: entidades = [] } = useQuery({ queryKey: costeo.tarifario.entidades(tipo), queryFn: () => listarEntidadesCargo(tipo) });
-  const [entidad, setEntidad] = useState(cargo?.entidad_id ?? "");
-  const [concepto, setConcepto] = useState(cargo?.concepto ?? (tipo === "fob" ? "Cargos FOB" : "Revalidación"));
-  const [monto, setMonto] = useState(cargo ? String(cargo.monto) : "");
-  const [moneda, setMoneda] = useState(cargo?.moneda ?? (tipo === "fob" ? "USD" : "MXN"));
-  const [unidad, setUnidad] = useState(cargo?.unidad ?? "");
+  const ini = valoresIniciales(tipo, cargo);
+  const [entidad, setEntidad] = useState(ini.entidad);
+  const [concepto, setConcepto] = useState(ini.concepto);
+  const [monto, setMonto] = useState(ini.monto);
+  const [moneda, setMoneda] = useState(ini.moneda);
+  const [unidad, setUnidad] = useState(ini.unidad);
+  const [aplicaIva, setAplicaIva] = useState(ini.aplicaIva);
   const [busy, setBusy] = useState(false);
 
   const guardar = async () => {
@@ -37,7 +52,7 @@ export function CargoFormDialog({ tipo, orgId, cargo, onClose, onSaved }: Props)
     }
     setBusy(true);
     try {
-      await guardarCargo(tipo, orgId, { entidad_id: entidad, concepto: concepto.trim(), monto: n, moneda, unidad: unidad.trim() || null }, cargo?.id);
+      await guardarCargo(tipo, orgId, { entidad_id: entidad, concepto: concepto.trim(), monto: n, moneda, unidad: unidad.trim() || null, aplica_iva: aplicaIva }, cargo?.id);
       notifySuccess(undefined, { title: "Cargo guardado" });
       onSaved();
       onClose();
@@ -60,7 +75,9 @@ export function CargoFormDialog({ tipo, orgId, cargo, onClose, onSaved }: Props)
             <SelectContent>{entidades.map((e) => <SelectItem key={e.id} value={e.id}>{e.nombre}</SelectItem>)}</SelectContent>
           </Select>
         </div>
-        <div className="space-y-1 md:col-span-2"><Label htmlFor="cargo-concepto">Concepto</Label><Input id="cargo-concepto" value={concepto} onChange={(e) => setConcepto(e.target.value)} /></div>
+        {tipo === "fob"
+          ? <div className="space-y-1 md:col-span-2"><Label htmlFor="cargo-concepto">Concepto</Label><Input id="cargo-concepto" value={concepto} onChange={(e) => setConcepto(e.target.value)} /></div>
+          : <div className="md:col-span-2"><ConceptoNavieraSelect value={concepto} onChange={setConcepto} /></div>}
         <div className="space-y-1"><Label htmlFor="cargo-monto">Monto</Label><Input id="cargo-monto" inputMode="decimal" value={monto} onChange={(e) => setMonto(e.target.value)} /></div>
         <div className="space-y-1">
           <Label>Currency</Label>
@@ -70,6 +87,10 @@ export function CargoFormDialog({ tipo, orgId, cargo, onClose, onSaved }: Props)
           </Select>
         </div>
         <div className="space-y-1 md:col-span-2"><Label htmlFor="cargo-unidad">Unidad</Label><Input id="cargo-unidad" placeholder="Por contenedor, por BL…" value={unidad} onChange={(e) => setUnidad(e.target.value)} /></div>
+        <div className="flex items-center gap-2 md:col-span-2">
+          <Checkbox id="cargo-iva" checked={aplicaIva} onCheckedChange={(v) => setAplicaIva(v === true)} />
+          <Label htmlFor="cargo-iva">Aplica IVA (se suma al monto en la lista)</Label>
+        </div>
       </div>
     </FormDialogShell>
   );

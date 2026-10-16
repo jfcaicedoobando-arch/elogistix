@@ -32,7 +32,7 @@ export function buildFacturaColumns(): ColumnDef<Factura, unknown>[] {
     {
       id: "numero", header: "# Factura",
       accessorFn: (f) => f.numero, enableSorting: true,
-      sortingFn: sortByString<Factura>((f) => f.numero),
+      sortFn: sortByString<Factura>((f) => f.numero),
       meta: { width: COL_W.monto, className: "font-medium whitespace-nowrap", sticky: true },
       cell: ({ row }) => {
         const numero = row.original.numero ?? "";
@@ -91,7 +91,7 @@ export function buildFacturaColumns(): ColumnDef<Factura, unknown>[] {
     {
       id: "vencimiento", header: "Vencimiento",
       accessorFn: (f) => f.fecha_vencimiento, enableSorting: true,
-      sortingFn: sortByDate<Factura>((f) => f.fecha_vencimiento),
+      sortFn: sortByDate<Factura>((f) => f.fecha_vencimiento),
       // Oculto en tableta (<xl).
       meta: { width: COL_W.fecha, className: "text-body-sm whitespace-nowrap hidden xl:table-cell", headerClassName: "hidden xl:table-cell" },
       cell: ({ row }) => formatDate(row.original.fecha_vencimiento),

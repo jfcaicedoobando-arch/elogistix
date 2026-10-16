@@ -9,7 +9,7 @@ import { LoadingState } from "@/components/shared/states/LoadingState";
 import { ErrorState } from "@/components/shared/states/ErrorState";
 import { TABLE_DENSITY } from "@/components/shared/dataTable/tableTokens";
 import OportunidadKanban from "@/features/crm/components/OportunidadKanban";
-import type { ColumnDef } from "@tanstack/react-table";
+import type { ColumnDef } from "@/components/shared/dataTable/tanstackTypes";
 import type { CrmEtapaRow, CrmOportunidadRow } from "@/features/crm/hooks";
 import { OportunidadMobileCard } from "@/features/crm/components/OportunidadMobileCard";
 

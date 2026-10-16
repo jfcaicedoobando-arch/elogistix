@@ -10,7 +10,7 @@ import { UNRESOLVED_EMAIL } from "./constants";
 import { logger } from "@/lib/observability/logger";
 
 /** Estado de la cuenta dentro de la organización (Q-05b). */
-export type EstadoInvitacion = "activo" | "pendiente" | "desconocido";
+export type EstadoInvitacion = "activo" | "pendiente" | "desactivado" | "desconocido";
 
 export interface UserRow {
   user_id: string;
@@ -41,13 +41,15 @@ interface ListUsersRow {
   created_at: string;
   last_sign_in_at?: string | null;
   email_confirmed_at?: string | null;
+  banned_until?: string | null;
   /** VB-15: la edge function expone `user_metadata.full_name` (opcional). */
   full_name?: string | null;
 }
 
 /** Deriva el estado de invitación a partir de las señales de auth. */
-function derivarEstado(row: ListUsersRow | undefined): EstadoInvitacion {
+export function derivarEstado(row: ListUsersRow | undefined, ahora = Date.now()): EstadoInvitacion {
   if (!row) return "desconocido";
+  if (row.banned_until && Date.parse(row.banned_until) > ahora) return "desactivado";
   if (row.last_sign_in_at) return "activo";
   if (row.email_confirmed_at) return "activo";
   return "pendiente";

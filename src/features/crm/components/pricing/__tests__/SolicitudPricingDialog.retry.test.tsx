@@ -39,6 +39,7 @@ vi.mock("../AdjuntosPendientes", () => ({
 vi.mock("../AdjuntosSolicitudPricing", () => ({ AdjuntosSolicitudPricing: () => null }));
 import { SolicitudPricingDialog } from "../SolicitudPricingDialog";
 import { purgeSessionCache } from "@/lib/auth/purgeSessionCache";
+import { setAuthSnapshot } from "@/lib/auth/authSnapshot";
 
 const borrador: SolicitudPricingRow = {
   id: "s1", organization_id: "org1", oportunidad_id: "o1", solicitante_id: "u1", created_by: "u1",
@@ -59,35 +60,28 @@ function Harness({ clienteNombre = "Cliente" }: { clienteNombre?: string }) {
       oportunidadId="o1" clienteNombre={clienteNombre} solicitud={solicitud} />
   </QueryClientProvider>;
 }
-function SesionHarness({ open = true, oportunidadId = "o1", solicitud = null }: {
-  open?: boolean; oportunidadId?: string; solicitud?: SolicitudPricingRow | null;
-}) {
-  return <QueryClientProvider client={client}>
-    <SolicitudPricingDialog open={open} onOpenChange={mocks.cambio}
-      oportunidadId={oportunidadId} solicitud={solicitud} />
-  </QueryClientProvider>;
-}
-function diferido<T>() {
-  let resolve!: (value: T) => void;
-  let reject!: (reason: unknown) => void;
-  const promise = new Promise<T>((si, no) => { resolve = si; reject = no; });
-  return { promise, resolve, reject };
-}
 function completar() {
   fireEvent.change(screen.getByLabelText("Servicio"), { target: { value: "Marítimo" } });
   fireEvent.change(screen.getByLabelText("Origen"), { target: { value: "Shanghai" } });
   fireEvent.change(screen.getByLabelText("Destino"), { target: { value: "Manzanillo" } });
 }
-function enviar() { fireEvent.click(screen.getByRole("button", { name: "Enviar a Pricing" })); }
+function enviar() { fireEvent.click(screen.getByRole("button", { name: "Revisar tarifario" })); }
 function form() { return screen.getByLabelText("Servicio").closest("form")!; }
-async function parcial() {
-  services.enviarSolicitud.mockRejectedValueOnce(new Error("LC_PRICING_INCOMPLETA"));
-  render(<Harness />); completar(); enviar();
-  await screen.findByRole("status");
-  await waitFor(() => expect(screen.getByRole("button", { name: "Enviar a Pricing" })).toBeEnabled());
+function diferido<T>() {
+  let resolve!: (value: T) => void; let reject!: (error: Error) => void;
+  const promise = new Promise<T>((si, no) => { resolve = si; reject = no; });
+  return { promise, resolve, reject };
+}
+function SesionHarness({ open = true, oportunidadId = "o1", solicitud = null }: {
+  open?: boolean; oportunidadId?: string; solicitud?: SolicitudPricingRow | null;
+}) {
+  return <QueryClientProvider client={client}>
+    <SolicitudPricingDialog open={open} onOpenChange={mocks.cambio} oportunidadId={oportunidadId} solicitud={solicitud} />
+  </QueryClientProvider>;
 }
 beforeEach(() => {
   contexto.userId = "u1"; contexto.organizationId = "org1";
+  setAuthSnapshot({ userId: "u1", email: null, organizationId: "org1", organizationName: null, role: "operador", effectiveRole: "operador" });
   for (const fn of Object.values(services)) fn.mockReset().mockResolvedValue(undefined);
   for (const fn of Object.values(mocks)) fn.mockReset();
   services.crearSolicitud.mockImplementation(async (datos: SolicitudPricingInsert) => ({ ...borrador, ...datos, id: "s1", folio: "SP1" }));
@@ -99,260 +93,174 @@ beforeEach(() => {
 });
 afterEach(() => { cleanup(); client.clear(); });
 
-describe("recuperación del guardado parcial de Pricing", () => {
-  it("INSERT exitoso y envío fallido conserva captura, caché y un estado honesto", async () => {
-    await parcial();
-    expect(services.crearSolicitud).toHaveBeenCalledTimes(1);
-    expect(services.enviarSolicitud).toHaveBeenCalledWith("s1");
-    expect(screen.getByRole("dialog")).toBeInTheDocument();
-    expect(screen.getByLabelText("Origen")).toHaveValue("Shanghai");
-    expect(screen.getByRole("status")).toHaveTextContent("La solicitud se guardó, pero no se confirmó el envío");
-    expect(client.getQueryData(keys.solicitud("s1"))).toMatchObject({ id: "s1", estado: "borrador", folio: "SP1" });
-    expect(client.getQueryData(keys.oportunidad("o1"))).toEqual([expect.objectContaining({ id: "s1" })]);
-    expect(mocks.cambio).not.toHaveBeenCalled();
-    expect(mocks.success).not.toHaveBeenCalled();
-  });
-
-  it("reintentar Enviar actualiza la misma solicitud con las correcciones y cierra", async () => {
-    await parcial();
-    fireEvent.change(screen.getByLabelText("Origen"), { target: { value: "Ningbo" } });
-    enviar();
-    await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
-    expect(services.crearSolicitud).toHaveBeenCalledTimes(1);
-    expect(services.actualizarSolicitud).toHaveBeenCalledWith("s1", expect.objectContaining({ origen: "Ningbo" }));
-    expect(services.enviarSolicitud.mock.calls).toEqual([["s1"], ["s1"]]);
-    expect(mocks.success).toHaveBeenCalledWith(undefined, { title: "Solicitud enviada a Pricing" });
-  });
-
-  it("otro fallo al reintentar conserva el ID también para Guardar borrador", async () => {
-    await parcial();
-    services.enviarSolicitud.mockRejectedValueOnce(new Error("falló de nuevo"));
-    enviar();
-    await waitFor(() => expect(services.enviarSolicitud).toHaveBeenCalledTimes(2));
-    await waitFor(() => expect(screen.getByRole("button", { name: "Guardar borrador" })).toBeEnabled());
-    fireEvent.click(screen.getByRole("button", { name: "Guardar borrador" }));
+describe("Revisar tarifario antes de enviar a Pricing", () => {
+  it("guarda el borrador sin enviarlo a Pricing y cierra", async () => {
+    render(<Harness />); completar(); enviar();
     await waitFor(() => expect(mocks.cambio).toHaveBeenCalledWith(false));
     expect(services.crearSolicitud).toHaveBeenCalledTimes(1);
-    expect(services.actualizarSolicitud.mock.calls.map(([id]) => id)).toEqual(["s1", "s1"]);
+    expect(services.enviarSolicitud).not.toHaveBeenCalled();
   });
-
-  it("un cambio de nombre durante la misma sesión no pierde ID, captura ni archivos", async () => {
-    services.enviarSolicitud.mockRejectedValueOnce(new Error("falló enviar"));
-    const view = render(<Harness />); completar();
-    const archivo = new File(["1"], "pendiente.pdf");
-    fireEvent.change(screen.getByLabelText("Archivos"), { target: { files: [archivo] } });
-    enviar(); await screen.findByRole("status");
-    view.rerender(<Harness clienteNombre="Cliente actualizado" />);
-    expect(screen.getByLabelText("Origen")).toHaveValue("Shanghai");
-    expect(screen.getByText("pendiente.pdf")).toBeInTheDocument();
-    fireEvent.click(screen.getByRole("button", { name: "Guardar borrador" }));
-    await waitFor(() => expect(mocks.cambio).toHaveBeenCalledWith(false));
-    expect(services.crearSolicitud).toHaveBeenCalledTimes(1);
-    expect(services.actualizarSolicitud).toHaveBeenCalledWith("s1", expect.anything());
-    expect(mocks.subir).toHaveBeenCalledWith("org1", "s1", archivo);
-  });
-
-  it("Guardar borrador después del fallo reutiliza ID y sube los archivos pendientes", async () => {
-    services.enviarSolicitud.mockRejectedValueOnce(new Error("falló enviar"));
-    render(<Harness />); completar();
-    const archivo = new File(["contenido de prueba"], "cotizacion.pdf");
-    fireEvent.change(screen.getByLabelText("Archivos"), { target: { files: [archivo] } });
-    enviar(); await screen.findByRole("status");
-    expect(screen.getByText("cotizacion.pdf")).toBeInTheDocument();
-    expect(mocks.subir).not.toHaveBeenCalled();
-    fireEvent.click(screen.getByRole("button", { name: "Guardar borrador" }));
-    await waitFor(() => expect(mocks.cambio).toHaveBeenCalledWith(false));
-    expect(services.crearSolicitud).toHaveBeenCalledTimes(1);
-    expect(services.actualizarSolicitud).toHaveBeenCalledWith("s1", expect.anything());
-    expect(services.enviarSolicitud).toHaveBeenCalledTimes(1);
-    expect(mocks.subir).toHaveBeenCalledWith("org1", "s1", archivo);
-    expect(mocks.success).toHaveBeenCalledWith(undefined, { title: "Borrador guardado" });
-  });
-
-  it("dos submits en el mismo turno hacen un INSERT y bloquean cierre durante el envío", async () => {
-    let insertar!: (row: SolicitudPricingRow) => void;
-    let terminarEnvio!: () => void;
-    services.crearSolicitud.mockReturnValueOnce(new Promise<SolicitudPricingRow>((resolve) => { insertar = resolve; }));
-    services.enviarSolicitud.mockReturnValueOnce(new Promise<void>((resolve) => { terminarEnvio = resolve; }));
+  it("dos submits en el mismo turno hacen un solo INSERT", async () => {
     render(<Harness />); completar();
     act(() => { fireEvent.submit(form()); fireEvent.submit(form()); });
-    await waitFor(() => expect(services.crearSolicitud).toHaveBeenCalledTimes(1));
-    await act(async () => insertar(borrador));
-    await waitFor(() => expect(services.enviarSolicitud).toHaveBeenCalledTimes(1));
-    expect(screen.getByRole("dialog")).toHaveAttribute("aria-busy", "true");
-    fireEvent.click(screen.getByRole("button", { name: "Cerrar" }));
-    fireEvent.keyDown(screen.getByRole("dialog"), { key: "Escape" });
-    expect(mocks.cambio).not.toHaveBeenCalled();
-    expect(screen.queryByRole("alertdialog")).not.toBeInTheDocument();
-    await act(async () => terminarEnvio());
-    await waitFor(() => expect(mocks.cambio).toHaveBeenCalledTimes(1));
-  });
-
-  it("mantiene bloqueo de submits y cierre hasta terminar de adjuntar", async () => {
-    let terminarAdjunto!: () => void;
-    mocks.subir.mockReturnValueOnce(new Promise<void>((resolve) => { terminarAdjunto = resolve; }));
-    render(<Harness />); completar();
-    fireEvent.change(screen.getByLabelText("Archivos"), { target: { files: [new File(["1"], "uno.pdf")] } });
-    fireEvent.click(screen.getByRole("button", { name: "Guardar borrador" }));
-    await waitFor(() => expect(mocks.subir).toHaveBeenCalledTimes(1));
-    fireEvent.submit(form());
-    fireEvent.click(screen.getByRole("button", { name: "Cerrar" }));
-    expect(screen.getByRole("dialog")).toHaveAttribute("aria-busy", "true");
+    await waitFor(() => expect(mocks.cambio).toHaveBeenCalledWith(false));
     expect(services.crearSolicitud).toHaveBeenCalledTimes(1);
-    expect(services.actualizarSolicitud).not.toHaveBeenCalled();
-    expect(mocks.cambio).not.toHaveBeenCalled();
-    await act(async () => terminarAdjunto());
-    await waitFor(() => expect(mocks.cambio).toHaveBeenCalledTimes(1));
   });
 
-  it("cerrar tras el parcial y reabrir el borrador usa el ID de la caché", async () => {
-    await parcial();
-    fireEvent.click(screen.getByRole("button", { name: "Cerrar" }));
-    expect(screen.queryByRole("alertdialog")).not.toBeInTheDocument();
-    await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
+  it("un guardado rechazado conserva captura y archivos para reintentar sin enviar", async () => {
+    services.crearSolicitud.mockRejectedValueOnce(new Error("sin conexión"));
+    render(<Harness />); completar();
+    const archivo = new File(["1"], "pendiente.pdf");
+    fireEvent.change(screen.getByLabelText("Archivos"), { target: { files: [archivo] } });
+    enviar();
+    await waitFor(() => expect(mocks.error).toHaveBeenCalledTimes(1));
+    await waitFor(() => expect(screen.getByRole("button", { name: "Revisar tarifario" })).toBeEnabled());
+    expect(screen.getByLabelText("Origen")).toHaveValue("Shanghai");
+    expect(screen.getByText("pendiente.pdf")).toBeInTheDocument();
+    expect(mocks.cambio).not.toHaveBeenCalled(); expect(mocks.subir).not.toHaveBeenCalled();
+    fireEvent.change(screen.getByLabelText("Origen"), { target: { value: "Ningbo" } });
+    enviar();
+    await waitFor(() => expect(mocks.cambio).toHaveBeenCalledWith(false));
+    expect(services.crearSolicitud).toHaveBeenCalledTimes(2);
+    expect(services.crearSolicitud).toHaveBeenLastCalledWith(expect.objectContaining({ origen: "Ningbo" }));
+    expect(mocks.subir).toHaveBeenCalledWith("org1", "s1", archivo);
+    expect(services.enviarSolicitud).not.toHaveBeenCalled();
+  });
+
+  it("reintentar la edición fallida conserva el ID y no inserta otra solicitud", async () => {
+    services.actualizarSolicitud.mockRejectedValueOnce(new Error("sin conexión"));
+    render(<SesionHarness solicitud={borrador} />);
+    fireEvent.change(screen.getByLabelText("Origen"), { target: { value: "Ningbo" } });
+    enviar();
+    await waitFor(() => expect(mocks.error).toHaveBeenCalledTimes(1));
+    await waitFor(() => expect(screen.getByRole("button", { name: "Revisar tarifario" })).toBeEnabled());
+    enviar();
+    await waitFor(() => expect(mocks.cambio).toHaveBeenCalledWith(false));
+    expect(services.actualizarSolicitud.mock.calls.map(([id]) => id)).toEqual(["s1", "s1"]);
+    expect(services.crearSolicitud).not.toHaveBeenCalled(); expect(services.enviarSolicitud).not.toHaveBeenCalled();
+  });
+
+  it("mantiene bloqueo de cierre y submits durante la subida secuencial de adjuntos", async () => {
+    const primero = diferido<void>(); const segundo = diferido<void>();
+    mocks.subir.mockReturnValueOnce(primero.promise).mockReturnValueOnce(segundo.promise);
+    render(<Harness />); completar();
+    const archivos = [new File(["1"], "uno.pdf"), new File(["2"], "dos.pdf")];
+    fireEvent.change(screen.getByLabelText("Archivos"), { target: { files: archivos } });
+    enviar();
+    await waitFor(() => expect(mocks.subir).toHaveBeenCalledTimes(1));
+    fireEvent.submit(form()); fireEvent.click(screen.getByRole("button", { name: "Cerrar" }));
+    fireEvent.keyDown(screen.getByRole("dialog"), { key: "Escape" });
+    expect(screen.getByRole("dialog")).toHaveAttribute("aria-busy", "true");
+    expect(mocks.cambio).not.toHaveBeenCalled(); expect(services.crearSolicitud).toHaveBeenCalledTimes(1);
+    await act(async () => primero.resolve());
+    await waitFor(() => expect(mocks.subir).toHaveBeenCalledTimes(2));
+    expect(mocks.subir.mock.calls).toEqual(archivos.map((f) => ["org1", "s1", f]));
+    expect(mocks.cambio).not.toHaveBeenCalled();
+    await act(async () => segundo.resolve());
+    await waitFor(() => expect(mocks.cambio).toHaveBeenCalledTimes(1));
+    expect(services.enviarSolicitud).not.toHaveBeenCalled();
+  });
+
+  it("informa el fallo de adjunto y conserva el borrador persistido sin enviarlo", async () => {
+    mocks.subir.mockRejectedValueOnce(new Error("archivo rechazado"));
+    render(<Harness />); completar();
+    fireEvent.change(screen.getByLabelText("Archivos"), { target: { files: [new File(["1"], "uno.pdf"), new File(["2"], "dos.pdf")] } });
+    enviar();
+    await waitFor(() => expect(mocks.cambio).toHaveBeenCalledWith(false));
+    expect(mocks.subir).toHaveBeenCalledTimes(1);
+    expect(mocks.error).toHaveBeenCalledWith(undefined, expect.objectContaining({ method: "CRM_PRICING_ADJUNTO" }));
+    expect(client.getQueryData(keys.solicitud("s1"))).toMatchObject({ id: "s1", estado: "borrador" });
+    expect(services.enviarSolicitud).not.toHaveBeenCalled();
+  });
+
+  it("reabrir el borrador guardado reutiliza su ID; Nueva solicitud inicia otra captura", async () => {
+    render(<Harness />); completar(); enviar();
+    await waitFor(() => expect(mocks.cambio).toHaveBeenCalledTimes(1));
     fireEvent.click(screen.getByRole("button", { name: "Editar borrador" }));
     expect(screen.getByRole("dialog")).toHaveTextContent("Solicitud SP1");
-    expect(screen.queryByRole("status")).not.toBeInTheDocument();
-    enviar(); await waitFor(() => expect(mocks.cambio).toHaveBeenCalledTimes(2));
-    expect(services.crearSolicitud).toHaveBeenCalledTimes(1);
+    enviar();
+    await waitFor(() => expect(mocks.cambio).toHaveBeenCalledTimes(2));
     expect(services.actualizarSolicitud).toHaveBeenCalledWith("s1", expect.anything());
-  });
-
-  it("Nueva solicitud tras cerrar inicia una sesión limpia, sin reutilizar el borrador previo", async () => {
-    await parcial();
-    fireEvent.click(screen.getByRole("button", { name: "Cerrar" }));
-    await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
     fireEvent.click(screen.getByRole("button", { name: "Nueva solicitud" }));
     expect(screen.getByLabelText("Origen")).toHaveValue("");
-    expect(screen.queryByRole("status")).not.toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: "Guardar borrador" }));
-    await waitFor(() => expect(services.crearSolicitud).toHaveBeenCalledTimes(2));
-    expect(services.actualizarSolicitud).not.toHaveBeenCalled();
-  });
-
-  it.each(["ediciones", "archivos"])("confirmar descarte de %s pendientes no elimina el borrador guardado", async (pendiente) => {
-    await parcial();
-    if (pendiente === "ediciones") fireEvent.change(screen.getByLabelText("Origen"), { target: { value: "sin guardar" } });
-    else fireEvent.change(screen.getByLabelText("Archivos"), { target: { files: [new File(["1"], "sin-subir.pdf")] } });
-    fireEvent.click(screen.getByRole("button", { name: "Cerrar" }));
-    expect(screen.getByRole("alertdialog")).toBeInTheDocument();
-    expect(mocks.cambio).not.toHaveBeenCalled();
-    fireEvent.click(screen.getByRole("button", { name: "Descartar" }));
-    await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
-    expect(client.getQueryData(keys.solicitud("s1"))).toMatchObject({ origen: "Shanghai" });
-    expect(services.cancelarSolicitud).not.toHaveBeenCalled();
-    expect(mocks.subir).not.toHaveBeenCalled();
+    await waitFor(() => expect(mocks.cambio).toHaveBeenCalledTimes(3));
+    expect(services.crearSolicitud).toHaveBeenCalledTimes(2); expect(services.enviarSolicitud).not.toHaveBeenCalled();
   });
 });
 
-describe("aislamiento de operaciones entre sesiones de Pricing", () => {
-  const cambios = ["oportunidad", "organización", "usuario", "solicitud", "reapertura"] as const;
-  it.each(cambios.flatMap((cambio) => [
-    { cambio, falla: true }, { cambio, falla: false },
-  ]))("ignora el resultado anterior al cambiar $cambio (fallo=$falla)", async ({ cambio, falla }) => {
-    const envio = diferido<void>();
-    services.enviarSolicitud.mockReturnValueOnce(envio.promise);
-    const view = render(<SesionHarness />); completar();
-    fireEvent.change(screen.getByLabelText("Archivos"), { target: { files: [new File(["1"], "anterior.pdf")] } });
-    enviar();
-    await waitFor(() => expect(services.enviarSolicitud).toHaveBeenCalledWith("s1"));
+describe("aislamiento de la revisión del tarifario", () => {
+  const cambios = ["oportunidad", "organización", "usuario", "solicitud", "reapertura", "purga"] as const;
+  function cambiar(cambio: typeof cambios[number]) {
     if (cambio === "organización") contexto.organizationId = "org2";
     if (cambio === "usuario") contexto.userId = "u2";
-    if (cambio === "reapertura") view.rerender(<SesionHarness open={false} />);
-    const oportunidadId = cambio === "oportunidad" ? "o2" : "o1";
-    const solicitud = cambio === "solicitud" ? { ...borrador, id: "s2", folio: "SP2" } : null;
-    view.rerender(<SesionHarness oportunidadId={oportunidadId} solicitud={solicitud} />);
-    expect(screen.getByLabelText("Origen")).toHaveValue(solicitud ? "Shanghai" : "");
-    expect(screen.queryByText("anterior.pdf")).not.toBeInTheDocument();
-    completar();
-    fireEvent.change(screen.getByLabelText("Origen"), { target: { value: "Otra sesión" } });
-    await act(async () => { if (falla) envio.reject(new Error("falló el envío antiguo")); else envio.resolve(); });
-    expect(screen.getByRole("dialog")).not.toHaveAttribute("aria-busy", "true");
-    expect(screen.getByLabelText("Origen")).toHaveValue("Otra sesión");
-    expect(screen.queryByRole("status")).not.toBeInTheDocument();
-    expect(mocks.cambio).not.toHaveBeenCalled();
-    expect(mocks.subir).not.toHaveBeenCalled();
-    services.crearSolicitud.mockImplementationOnce(async (datos: SolicitudPricingInsert) => ({ ...borrador, ...datos, id: "s2" }));
-    fireEvent.click(screen.getByRole("button", { name: "Guardar borrador" }));
-    await waitFor(() => expect(mocks.cambio).toHaveBeenCalledWith(false));
-    const datos = expect.objectContaining({ oportunidad_id: oportunidadId, organization_id: contexto.organizationId,
-      solicitante_id: solicitud?.solicitante_id ?? contexto.userId, origen: "Otra sesión" });
-    if (solicitud) expect(services.actualizarSolicitud).toHaveBeenCalledWith("s2", datos);
-    else {
-      expect(services.crearSolicitud).toHaveBeenLastCalledWith(datos);
-      expect(services.actualizarSolicitud).not.toHaveBeenCalled();
-    }
-    expect(services.enviarSolicitud).toHaveBeenCalledTimes(1);
-  });
+    if (cambio === "purga") purgeSessionCache(client);
+  }
+  it.each(cambios.flatMap((cambio) => [false, true].map((falla) => ({ cambio, falla }))))(
+    "ignora el guardado anterior al cambiar $cambio (fallo=$falla)", async ({ cambio, falla }) => {
+      const alta = diferido<SolicitudPricingRow>();
+      services.crearSolicitud.mockReturnValueOnce(alta.promise);
+      const view = render(<SesionHarness />); completar();
+      fireEvent.change(screen.getByLabelText("Archivos"), { target: { files: [new File(["1"], "anterior.pdf")] } });
+      enviar(); await waitFor(() => expect(services.crearSolicitud).toHaveBeenCalledTimes(1));
+      act(() => cambiar(cambio));
+      if (cambio === "reapertura") view.rerender(<SesionHarness open={false} />);
+      const oportunidadId = cambio === "oportunidad" ? "o2" : "o1";
+      const solicitud = cambio === "solicitud" ? { ...borrador, id: "s2" } : null;
+      view.rerender(<SesionHarness oportunidadId={oportunidadId} solicitud={solicitud} />);
+      completar(); fireEvent.change(screen.getByLabelText("Origen"), { target: { value: "Otra sesión" } });
+      await act(async () => { if (falla) alta.reject(new Error("guardado anterior")); else alta.resolve(borrador); });
+      expect(screen.getByLabelText("Origen")).toHaveValue("Otra sesión");
+      expect(screen.queryByText("anterior.pdf")).not.toBeInTheDocument();
+      expect(screen.getByRole("dialog")).not.toHaveAttribute("aria-busy", "true");
+      expect(mocks.cambio).not.toHaveBeenCalled(); expect(mocks.subir).not.toHaveBeenCalled();
+      expect(mocks.success).not.toHaveBeenCalled(); expect(mocks.error).not.toHaveBeenCalled();
+      expect(client.getQueryData(keys.solicitud("s1"))).toBeUndefined();
+      enviar(); await waitFor(() => expect(mocks.cambio).toHaveBeenCalledWith(false));
+      if (solicitud) expect(services.actualizarSolicitud).toHaveBeenCalledWith("s2", expect.objectContaining({ origen: "Otra sesión" }));
+      else expect(services.crearSolicitud).toHaveBeenLastCalledWith(expect.objectContaining({ origen: "Otra sesión", oportunidad_id: oportunidadId, organization_id: contexto.organizationId }));
+      expect(services.enviarSolicitud).not.toHaveBeenCalled();
+    },
+  );
 
-  it.each([true, false])("el finally antiguo no libera el bloqueo de la operación nueva (fallo=%s)", async (falla) => {
-    const envio = diferido<void>();
-    const altaNueva = diferido<SolicitudPricingRow>();
-    services.enviarSolicitud.mockReturnValueOnce(envio.promise);
+  it.each([false, true])("el finally antiguo no libera la operación nueva (fallo=%s)", async (falla) => {
+    const vieja = diferido<SolicitudPricingRow>(); const nueva = diferido<SolicitudPricingRow>();
+    services.crearSolicitud.mockReturnValueOnce(vieja.promise).mockReturnValueOnce(nueva.promise);
     const view = render(<SesionHarness />); completar(); enviar();
-    await waitFor(() => expect(services.enviarSolicitud).toHaveBeenCalledTimes(1));
-    view.rerender(<SesionHarness oportunidadId="o2" />); completar();
-    services.crearSolicitud.mockReturnValueOnce(altaNueva.promise);
-    act(() => { fireEvent.submit(form()); fireEvent.submit(form()); });
+    await waitFor(() => expect(services.crearSolicitud).toHaveBeenCalledTimes(1));
+    view.rerender(<SesionHarness oportunidadId="o2" />); completar(); enviar();
     await waitFor(() => expect(services.crearSolicitud).toHaveBeenCalledTimes(2));
-    await act(async () => { if (falla) envio.reject(new Error("envío anterior")); else envio.resolve(); });
+    await act(async () => { if (falla) vieja.reject(new Error("anterior")); else vieja.resolve(borrador); });
+    fireEvent.submit(form()); fireEvent.click(screen.getByRole("button", { name: "Cerrar" }));
     expect(screen.getByRole("dialog")).toHaveAttribute("aria-busy", "true");
-    fireEvent.submit(form());
-    fireEvent.click(screen.getByRole("button", { name: "Cerrar" }));
-    expect(services.crearSolicitud).toHaveBeenCalledTimes(2);
-    expect(services.actualizarSolicitud).not.toHaveBeenCalled();
-    expect(mocks.cambio).not.toHaveBeenCalled();
-    await act(async () => altaNueva.resolve({ ...borrador, id: "s2", oportunidad_id: "o2" }));
+    expect(services.crearSolicitud).toHaveBeenCalledTimes(2); expect(mocks.cambio).not.toHaveBeenCalled();
+    await act(async () => nueva.resolve({ ...borrador, id: "s2", oportunidad_id: "o2" }));
     await waitFor(() => expect(mocks.cambio).toHaveBeenCalledTimes(1));
-    expect(services.enviarSolicitud.mock.calls).toEqual([["s1"], ["s2"]]);
+    expect(services.enviarSolicitud).not.toHaveBeenCalled();
   });
 
-  it.each([true, false])("interrumpir adjuntos no continúa el lote ni cambia la sesión nueva (fallo=%s)", async (falla) => {
-    const adjunto = diferido<void>();
-    mocks.subir.mockReturnValueOnce(adjunto.promise);
-    const view = render(<SesionHarness />); completar();
-    fireEvent.change(screen.getByLabelText("Archivos"), { target: { files: [new File(["1"], "uno.pdf"), new File(["2"], "dos.pdf")] } });
-    fireEvent.click(screen.getByRole("button", { name: "Guardar borrador" }));
-    await waitFor(() => expect(mocks.subir).toHaveBeenCalledTimes(1));
-    view.rerender(<SesionHarness oportunidadId="o2" />); completar();
-    fireEvent.change(screen.getByLabelText("Archivos"), { target: { files: [new File(["3"], "nuevo.pdf")] } });
-    await act(async () => { if (falla) adjunto.reject(new Error("adjunto anterior")); else adjunto.resolve(); });
-    expect(mocks.subir).toHaveBeenCalledTimes(1);
-    expect(mocks.error).not.toHaveBeenCalled();
-    expect(mocks.cambio).not.toHaveBeenCalled();
-    expect(screen.getByLabelText("Origen")).toHaveValue("Shanghai");
-    expect(screen.getByText("nuevo.pdf")).toBeInTheDocument();
-    expect(screen.getByRole("dialog")).not.toHaveAttribute("aria-busy", "true");
-  });
-
-  it.each(["oportunidad", "organización"])("no reutiliza una solicitud incompatible al cambiar %s", async (cambio) => {
+  it.each((["oportunidad", "usuario", "purga"] as const).flatMap((cambio) => [false, true].map((falla) => ({ cambio, falla }))))(
+    "detiene adjuntos al cambiar $cambio (fallo=$falla)", async ({ cambio, falla }) => {
+      const adjunto = diferido<void>(); mocks.subir.mockReturnValueOnce(adjunto.promise);
+      const view = render(<SesionHarness />); completar();
+      fireEvent.change(screen.getByLabelText("Archivos"), { target: { files: [new File(["1"], "uno.pdf"), new File(["2"], "dos.pdf")] } });
+      enviar(); await waitFor(() => expect(mocks.subir).toHaveBeenCalledTimes(1));
+      act(() => cambiar(cambio));
+      view.rerender(<SesionHarness oportunidadId={cambio === "oportunidad" ? "o2" : "o1"} />);
+      completar(); fireEvent.change(screen.getByLabelText("Origen"), { target: { value: "Nueva captura" } });
+      await act(async () => { if (falla) adjunto.reject(new Error("anterior")); else adjunto.resolve(); });
+      expect(mocks.subir).toHaveBeenCalledTimes(1); expect(mocks.error).not.toHaveBeenCalled(); expect(mocks.cambio).not.toHaveBeenCalled();
+      expect(screen.getByLabelText("Origen")).toHaveValue("Nueva captura");
+      expect(screen.getByRole("dialog")).not.toHaveAttribute("aria-busy", "true");
+    },
+  );
+  it.each(["oportunidad", "organización"] as const)("rechaza una solicitud incompatible por %s", async (cambio) => {
     const view = render(<SesionHarness solicitud={borrador} />);
-    if (cambio === "organización") contexto.organizationId = "org2";
-    const oportunidadId = cambio === "oportunidad" ? "o2" : "o1";
-    view.rerender(<SesionHarness oportunidadId={oportunidadId} solicitud={borrador} />);
+    act(() => cambiar(cambio));
+    view.rerender(<SesionHarness solicitud={borrador} oportunidadId={cambio === "oportunidad" ? "o2" : "o1"} />);
     expect(screen.getByLabelText("Origen")).toHaveValue("");
-    expect(screen.getByRole("dialog")).toHaveTextContent("Nueva solicitud a Pricing");
     fireEvent.click(screen.getByRole("button", { name: "Guardar borrador" }));
     await waitFor(() => expect(mocks.cambio).toHaveBeenCalledWith(false));
-    expect(services.actualizarSolicitud).not.toHaveBeenCalled();
-    expect(services.crearSolicitud).toHaveBeenCalledWith(expect.objectContaining({ oportunidad_id: oportunidadId,
-      organization_id: contexto.organizationId, solicitante_id: contexto.userId }));
-  });
-
-  it("una purga revoca también la sesión del diálogo aunque conserve usuario y organización", async () => {
-    const insert = diferido<SolicitudPricingRow>();
-    services.crearSolicitud.mockReturnValueOnce(insert.promise);
-    render(<SesionHarness />); completar(); enviar();
-    await waitFor(() => expect(services.crearSolicitud).toHaveBeenCalledTimes(1));
-    await act(async () => purgeSessionCache(client));
-    expect(screen.getByLabelText("Origen")).toHaveValue("");
-    expect(screen.getByRole("button", { name: "Guardar borrador" })).toBeEnabled();
-    await act(async () => insert.resolve(borrador));
-    expect(screen.getByLabelText("Origen")).toHaveValue("");
-    expect(screen.queryByRole("status")).not.toBeInTheDocument();
-    expect(mocks.cambio).not.toHaveBeenCalled();
-    expect(mocks.success).not.toHaveBeenCalled(); expect(mocks.error).not.toHaveBeenCalled();
-    expect(services.enviarSolicitud).not.toHaveBeenCalled();
-    expect(client.getQueryData(keys.solicitud("s1"))).toBeUndefined();
+    expect(services.actualizarSolicitud).not.toHaveBeenCalled(); expect(services.crearSolicitud).toHaveBeenCalledTimes(1);
   });
 });

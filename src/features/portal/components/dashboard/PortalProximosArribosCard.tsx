@@ -82,7 +82,7 @@ function ArriboRow({ e }: { e: ArriboItem }) {
       className={cn(nav.className, "flex items-center justify-between p-3 rounded-lg border hover:bg-muted/50 transition-colors group")}
     >
       <div className="flex items-center gap-3 min-w-0">
-        <ModoIcon modo={e.modo} size={16} circle className="flex-shrink-0" />
+        <ModoIcon modo={e.modo} size={16} circle className="shrink-0" />
         <div className="min-w-0">
           <p className="font-medium text-body truncate font-mono tabular-nums">{labelExpediente(e.expediente, e.id, e.estado)}</p>
           <p className="text-body-sm text-muted-foreground truncate">
@@ -90,7 +90,7 @@ function ArriboRow({ e }: { e: ArriboItem }) {
           </p>
         </div>
       </div>
-      <div className="text-right flex-shrink-0 ml-2">
+      <div className="text-right shrink-0 ml-2">
         <p className={cn("text-body-sm font-semibold tabular-nums", etaProximityClass(e.eta))}>
           {e.eta ? formatDate(e.eta, "dd MMM") : "—"}
         </p>

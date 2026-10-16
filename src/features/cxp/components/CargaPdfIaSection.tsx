@@ -22,7 +22,7 @@ export function CargaPdfIaSection({ categorias, onParsed, pdfReady }: Props) {
   return (
     <div className="p-4 space-y-3">
       <div className="flex items-start gap-2 rounded-md bg-primary/5 border border-primary/20 px-3 py-2 text-body-sm text-muted-foreground">
-        <Sparkles className="h-4 w-4 text-primary flex-shrink-0 mt-0.5" />
+        <Sparkles className="h-4 w-4 text-primary shrink-0 mt-0.5" />
         <span>
           Sube el PDF de la factura del proveedor extranjero. La IA extraerá folio, fechas,
           moneda, subtotales y conceptos. <strong>Siempre revisa los campos antes de guardar.</strong>

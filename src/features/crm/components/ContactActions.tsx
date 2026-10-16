@@ -32,7 +32,7 @@ export default function ContactActions({ email, telefono, plantillaCtx }: Props)
         <Mail className="h-4 w-4 text-muted-foreground shrink-0" />
         {email ? (
           <>
-            <a href={`mailto:${email}`} className="text-primary hover:underline truncate rounded-sm focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none">{email}</a>
+            <a href={`mailto:${email}`} className="text-primary hover:underline truncate rounded-sm focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-hidden">{email}</a>
             <Hint label="Copiar email">
               <Button size="icon" variant="ghost" className="min-h-11 min-w-11 md:h-6 md:w-6 md:min-h-0 md:min-w-0" onClick={() => copy(email, "Correo")} aria-label="Copiar correo">
                 <Copy className="h-3 w-3" />
@@ -56,7 +56,7 @@ export default function ContactActions({ email, telefono, plantillaCtx }: Props)
         <Phone className="h-4 w-4 text-muted-foreground shrink-0" />
         {telefono ? (
           <>
-            <a href={`tel:${telefono}`} className="text-primary hover:underline rounded-sm focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none">{telefono}</a>
+            <a href={`tel:${telefono}`} className="text-primary hover:underline rounded-sm focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-hidden">{telefono}</a>
             <Hint label="Copiar teléfono">
               <Button size="icon" variant="ghost" className="min-h-11 min-w-11 md:h-6 md:w-6 md:min-h-0 md:min-w-0" onClick={() => copy(telefono, "Teléfono")} aria-label="Copiar teléfono">
                 <Copy className="h-3 w-3" />

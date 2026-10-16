@@ -56,7 +56,7 @@ export function TimelineEstadosCard({ conteoPorEstado, isLoading }: Props) {
                       border border-border bg-card text-muted-foreground
                       transition-colors
                       hover:border-primary/40 hover:bg-primary/10 hover:text-primary cursor-pointer
-                      focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background
+                      focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background
                     "
                   >
                     <Icon className="h-4 w-4 sm:h-[18px] sm:w-[18px]" aria-hidden="true" />

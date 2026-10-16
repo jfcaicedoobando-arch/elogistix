@@ -1,0 +1,46 @@
+{
+  "status": "supplementary_single_user_pass",
+  "scope": "SUPPLEMENTARY_SINGLE_USER_ONLY",
+  "event_trigger_tests": "NOT_RUN_DISABLED_IN_SINGLE_USER",
+  "concurrency_tests": "NOT_RUN",
+  "production_equivalence": false,
+  "historical_seed_invocations": 0,
+  "R3_sha256": "7f054e3071b243ca6ada6359028c66efa0ac2ba5047a8cf7133f70f1b7924d86",
+  "fixtures_sha256": {
+    "initial": "7e1169e7a0aa999d6469c2d8c68ba2d448163b19d7a882c89a3f677083b62f1d",
+    "dependencies": "2adf086685863db5b86f62d7a3d1dd22c5344806687de47410c1aff538c5a7f8"
+  },
+  "checks": [
+    "PG170006 non-bootstrap owner and negative privileges",
+    "historical definition hashes; no historical function invocation",
+    "explicit transaction failure rolls back R3 and all snapshotted state",
+    "four stopped hashes and OID/ACL/all other snapshotted metadata preserved",
+    "sequential terminal retry logically identical; physical tuple versions changed"
+  ],
+  "context": {
+    "version": "170006",
+    "role_oid": 13897,
+    "rolsuper": false,
+    "admin_member": false,
+    "current_user": "postgres",
+    "is_superuser": "off",
+    "session_user": "postgres",
+    "bootstrap_oid": 10,
+    "catalog_write": false
+  },
+  "final_four_hashes": {
+    "seed_demo_organization_core()": "2a10ee2adc61ec165240c49023eae6e851006da93ab1194396ba6e4649256da2",
+    "seed_demo_organization_guarded(bigint)": "6fb31a558e69b76e4673ca0b040a330e1f8c5c3045c8fec6ca6465f633f2b62e",
+    "_seed_demo_limpiar_financiero()": "e64b1166ddfda818de43dd74cc19e7ab3afe3009e5099eb86301cb2fc9c5926e",
+    "seed_demo_organization()": "f13fadcb38f78b0c2a48b25e2905701fa8d74be18751aece5b082eb88c85f02c"
+  },
+  "retry_physical_changes": [
+    "seed_demo_organization_core",
+    "seed_demo_organization_guarded",
+    "_seed_demo_limpiar_financiero",
+    "seed_demo_organization"
+  ],
+  "cleanup": "all_processes_reaped_new_cluster_removed",
+  "evidence_note": "Sanitized summary of a prior supplementary single-user run; not produced by this review package. No event-trigger or concurrent-session execution. Not a full R3 or CI pass.",
+  "client_library_provenance": "Server/client binaries reported as PostgreSQL 17.6; system libpq reported as 17.11. Not an entirely 17.6 dependency stack."
+}

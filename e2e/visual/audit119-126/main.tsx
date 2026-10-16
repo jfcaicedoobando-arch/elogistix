@@ -1,6 +1,6 @@
 import { createRoot } from "react-dom/client";
 import { AuditFixture } from "./AuditFixture";
-import "@/index.css";
+import "../index.css";
 
 const params = new URLSearchParams(location.search);
 document.documentElement.classList.toggle("dark", params.get("theme") === "dark");

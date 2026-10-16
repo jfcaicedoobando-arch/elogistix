@@ -5,13 +5,14 @@
  * pinta el indicador visual.
  */
 import { ArrowUp, ArrowDown, ArrowUpDown } from "lucide-react";
-import { flexRender, type Table } from "@tanstack/react-table";
+import { flexRender } from "@tanstack/react-table";
+import type { Table } from "@/components/shared/dataTable/tanstackTypes";
 import { TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { cn } from "@/lib/utils";
 import { ALIGN_CLASS, type ColumnAlign } from "./types";
 import "./columnMeta";
 
-interface Props<T> {
+interface Props<T extends object> {
   table: Table<T>;
   striped: boolean;
   bordered: boolean;
@@ -19,7 +20,7 @@ interface Props<T> {
   stickyHeader?: boolean;
 }
 
-export function DataTableHeaderRow<T>({ table, striped, bordered, stickyHeader = false }: Props<T>) {
+export function DataTableHeaderRow<T extends object>({ table, striped, bordered, stickyHeader = false }: Props<T>) {
   const borderCell = bordered ? "border-r last:border-r-0" : "";
 
   return (

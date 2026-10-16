@@ -27,4 +27,4 @@ export function activableConTeclado(onActivate: () => void) {
 
 /** Clases de anillo de foco para elementos activables por teclado. */
 export const FOCUS_RING =
-  "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2";
+  "focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2";

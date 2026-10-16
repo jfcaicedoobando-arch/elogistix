@@ -97,7 +97,7 @@ function showUpdatingOverlay(): void {
     "fixed inset-0 z-50 flex items-center justify-center bg-background/90 p-6 text-foreground";
   const card = document.createElement("div");
   card.className =
-    "rounded-lg border border-border bg-card px-6 py-4 text-center shadow-sm";
+    "rounded-lg border border-border bg-card px-6 py-4 text-center shadow-xs";
   const msg = document.createElement("p");
   msg.className = "text-sm font-medium";
   msg.textContent = "Hay una versión nueva disponible. Actualizando…";

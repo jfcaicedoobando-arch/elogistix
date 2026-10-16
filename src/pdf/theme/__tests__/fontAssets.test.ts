@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { existsSync, readFileSync } from "node:fs";
 import { resolve } from "node:path";
+import postcss from "postcss";
 import { COLORS, FONTS } from "../tokens";
 
 describe("PDF brand contract", () => {
@@ -15,7 +16,14 @@ describe("PDF brand contract", () => {
     expect(readFileSync(resolve("public/licenses/inter/OFL.txt"), "utf8")).toBe(readFileSync(resolve("src/pdf/assets/Inter-OFL.txt"), "utf8"));
   });
   it("keeps app brand hues and readable text instead of pale labels", () => {
-    const css = readFileSync(resolve("src/index.css"), "utf8");
+    const css = readFileSync(resolve("src/styles.css"), "utf8");
+    const appEntry = readFileSync(resolve("src/index.css"), "utf8");
+    const visualEntry = readFileSync(resolve("e2e/visual/index.css"), "utf8");
+    const importsCss = (entry: string, target: string) => postcss.parse(entry).nodes.some(
+      node => node.type === "atrule" && node.name === "import" && node.params === `"${target}"`,
+    );
+    expect(importsCss(appEntry, "./styles.css")).toBe(true);
+    expect(importsCss(visualEntry, "../../src/styles.css")).toBe(true);
     expect(css).toContain("--primary: 216 47% 20%");
     expect(css).toContain("--accent: 221 83% 53%");
     expect(COLORS.primary).toBe("#1B2E4B");

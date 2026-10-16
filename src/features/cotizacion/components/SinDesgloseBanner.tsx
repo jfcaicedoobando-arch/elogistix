@@ -28,7 +28,7 @@ export function SinDesgloseBanner({ onCargarCostos, className }: Props) {
           </AlertDescription>
         </div>
         {onCargarCostos && (
-          <Button size="sm" variant="outline" onClick={onCargarCostos} className="flex-shrink-0">
+          <Button size="sm" variant="outline" onClick={onCargarCostos} className="shrink-0">
             Cargar costos
           </Button>
         )}

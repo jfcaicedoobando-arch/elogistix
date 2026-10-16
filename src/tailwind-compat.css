@@ -1,0 +1,95 @@
+/* Height variant stays independent of width breakpoints/container generation. */
+@custom-variant short (@media (max-height: 800px));
+
+/* Preserve the v3 container contract; v4 no longer reads theme.container. */
+@utility container {
+  margin-inline: auto;
+  padding-inline: 2rem;
+  @media (width >= 0px) {
+    max-width: none;
+  }
+  @media (width >= 1400px) {
+    max-width: 1400px;
+  }
+}
+
+/* v3 spaces the following visible sibling. In v4 the preceding child owns
+   the margin, which collapses label/input spacing when the label is inline. */
+@utility space-y-* {
+  & > :not([hidden]) ~ :not([hidden]) {
+    --compat-space-y: calc(var(--spacing) * --value(number));
+    --compat-space-y: --value([length], [percentage]);
+    --tw-space-y-reverse: 0;
+    margin-top: calc(var(--compat-space-y) * (1 - var(--tw-space-y-reverse)));
+    margin-bottom: calc(var(--compat-space-y) * var(--tw-space-y-reverse));
+  }
+}
+
+@utility space-x-* {
+  & > :not([hidden]) ~ :not([hidden]) {
+    --compat-space-x: calc(var(--spacing) * --value(number));
+    --compat-space-x: --value([length], [percentage]);
+    --tw-space-x-reverse: 0;
+    margin-left: calc(var(--compat-space-x) * (1 - var(--tw-space-x-reverse)));
+    margin-right: calc(var(--compat-space-x) * var(--tw-space-x-reverse));
+  }
+}
+
+@utility space-y-reverse {
+  & > :not([hidden]) ~ :not([hidden]) {
+    --tw-space-y-reverse: 1;
+  }
+}
+
+@utility space-x-reverse {
+  & > :not([hidden]) ~ :not([hidden]) {
+    --tw-space-x-reverse: 1;
+  }
+}
+
+/* The aging grid uses divide-x/divide-y with lg:divide-y-0. Keep the
+   original leading borders, including when a breakpoint removes one axis. */
+@utility divide-x {
+  & > :not([hidden]) ~ :not([hidden]) { border-left-width: 1px; border-right-width: 0; }
+}
+
+@utility divide-y {
+  & > :not([hidden]) ~ :not([hidden]) { border-top-width: 1px; border-bottom-width: 0; }
+}
+
+@utility divide-x-* {
+  & > :not([hidden]) ~ :not([hidden]) {
+    border-left-width: calc(--value(integer) * 1px);
+    border-left-width: --value([length]);
+    border-right-width: 0;
+  }
+}
+
+@utility divide-y-* {
+  & > :not([hidden]) ~ :not([hidden]) {
+    border-top-width: calc(--value(integer) * 1px);
+    border-top-width: --value([length]);
+    border-bottom-width: 0;
+  }
+}
+
+/* After the generated utilities, cancel only the v4 preceding-child defaults.
+   Zero specificity lets explicit child margins/borders keep their v3 priority. */
+@layer utilities {
+  :where([class*="space-y-"] > :not(:last-child)) {
+    margin-block-start: 0;
+    margin-block-end: 0;
+  }
+  :where([class*="space-x-"] > :not(:last-child)) {
+    margin-inline-start: 0;
+    margin-inline-end: 0;
+  }
+  :where([class*="divide-y"] > :not(:last-child)) {
+    border-block-start-width: 0;
+    border-block-end-width: 0;
+  }
+  :where([class*="divide-x"] > :not(:last-child)) {
+    border-inline-start-width: 0;
+    border-inline-end-width: 0;
+  }
+}

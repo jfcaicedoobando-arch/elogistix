@@ -3,6 +3,7 @@ import { QueryClient, QueryClientProvider, QueryObserver, type QueryKey } from "
 import type { ReactNode } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { crmPricingKeys as keys } from "@/features/crm/queryKeys.performance";
+import { LLAVE_SOLICITUD_RESPONDIDA } from "@/features/crm/services/solicitudRespondidaCrm";
 import { OPCION_VACIA, type SolicitudPricingInsert } from "@/features/crm/services/pricing/tiposPricing";
 
 const services = vi.hoisted(() => ({
@@ -46,6 +47,7 @@ function activeQueries() {
     otrasOpciones: observe(keys.opciones("s2")), otrasRespuestas: observe(keys.tarifasRespuesta("s2")),
     usuarios: observe(keys.usuarios), tarifas: observe(keys.tarifas),
     adjuntos: observe(["crm", "pricing", "adjuntos", "s2"]),
+    respondidas: observe(LLAVE_SOLICITUD_RESPONDIDA),
   };
 }
 function expectReads(reads: ReturnType<typeof activeQueries>, refreshed: (keyof typeof reads)[]) {
@@ -68,7 +70,7 @@ describe("invalidación acotada de Pricing", () => {
     const reads = activeQueries();
     const { result } = renderHook(useGuardarSolicitud, { wrapper: Wrapper });
     await act(() => result.current.mutateAsync({ datos, enviar }));
-    expectReads(reads, ["solicitud", "oportunidad", "bandeja", "otraPagina"]);
+    expectReads(reads, ["solicitud", "oportunidad", "bandeja", "otraPagina", "respondidas"]);
     expect(services.enviarSolicitud).toHaveBeenCalledTimes(enviar ? 1 : 0);
   });
 
@@ -80,7 +82,7 @@ describe("invalidación acotada de Pricing", () => {
       await expect(result.current.mutateAsync({ id: "s1", datos, enviar: true })).rejects.toThrow("LC_PRICING_INCOMPLETA");
     });
     expect(services.actualizarSolicitud).toHaveBeenCalledWith("s1", datos);
-    expectReads(reads, ["solicitud", "oportunidad", "bandeja", "otraPagina"]);
+    expectReads(reads, ["solicitud", "oportunidad", "bandeja", "otraPagina", "respondidas"]);
     await waitFor(() => expect(result.current.isError).toBe(true));
     expect(result.current.error).toBeInstanceOf(ErrorEnvioSolicitudPricing);
     expect(result.current.error).toMatchObject({ solicitudId: "s1" });
@@ -107,6 +109,7 @@ describe("invalidación acotada de Pricing", () => {
     expect(invalidar.mock.calls).toEqual([
       [{ queryKey: keys.solicitud("s1"), exact: true }],
       [{ queryKey: keys.bandejas }],
+      [{ queryKey: LLAVE_SOLICITUD_RESPONDIDA }],
       [{ queryKey: keys.oportunidad("o1"), exact: true }],
     ]);
     expect(notifySuccess).not.toHaveBeenCalled();
@@ -131,7 +134,7 @@ describe("invalidación acotada de Pricing", () => {
     const reads = activeQueries();
     const { result } = renderHook(useAccionSolicitud, { wrapper: Wrapper });
     await act(() => result.current.mutateAsync({ id: "s1", oportunidadId: "o1", accion }));
-    expectReads(reads, ["solicitud", "oportunidad", "bandeja", "otraPagina", "opciones", "respuestas"]);
+    expectReads(reads, ["solicitud", "oportunidad", "bandeja", "otraPagina", "opciones", "respuestas", "respondidas"]);
   });
 
   it("guardar opción hace una sola lectura y no refresca solicitudes ni catálogos", async () => {
@@ -184,6 +187,58 @@ describe("invalidación acotada de Pricing", () => {
 });
 
 describe("vigencia de la mutación de Pricing después de limpiar sesión", () => {
+  it.each(["usuario", "purga", "limpieza directa", "vista"].flatMap((cambio) =>
+    [false, true].map((falla) => ({ cambio, falla }))))("envío final ignora respuesta tardía: $cambio (fallo=$falla)", async ({ cambio, falla }) => {
+    const envio = diferido<void>();
+    services.enviarSolicitud.mockReturnValueOnce(envio.promise);
+    const invalidar = vi.spyOn(client, "invalidateQueries");
+    const callbacks = { onSuccess: vi.fn(), onError: vi.fn(), onSettled: vi.fn() };
+    let vigente = true;
+    const { result } = renderHook(useAccionSolicitud, { wrapper: Wrapper });
+    let completada!: Promise<unknown>;
+    act(() => { completada = result.current.mutateAsync({ id: "s1", oportunidadId: "o1", accion: "enviar", vigente: () => vigente }, callbacks).catch((error: unknown) => error); });
+    await waitFor(() => expect(services.enviarSolicitud).toHaveBeenCalledTimes(1));
+    if (cambio === "usuario") setAuthSnapshot({ ...auth, userId: "u2" });
+    if (cambio === "purga") purgeSessionCache(client);
+    if (cambio === "limpieza directa") client.clear();
+    if (cambio === "vista") vigente = false;
+    const nueva = { id: "s2", organization_id: "org2" };
+    client.setQueryData(keys.solicitud("s2"), nueva);
+    await act(async () => {
+      if (falla) envio.reject(new Error("falló envío anterior")); else envio.resolve();
+      expect(await completada).toBeInstanceOf(AuthOperationChangedError);
+    });
+    expect(client.getQueryData(keys.solicitud("s2"))).toEqual(nueva);
+    expect(invalidar).not.toHaveBeenCalled();
+    expect(notifySuccess).not.toHaveBeenCalled(); expect(notifyError).not.toHaveBeenCalled();
+    for (const callback of Object.values(callbacks)) expect(callback).not.toHaveBeenCalled();
+  });
+
+  it("el envío final detiene invalidaciones y callbacks si la primera purga la sesión", async () => {
+    const invalidar = vi.spyOn(client, "invalidateQueries").mockImplementationOnce(async () => { purgeSessionCache(client); });
+    const callbacks = { onSuccess: vi.fn(), onError: vi.fn(), onSettled: vi.fn() };
+    const { result } = renderHook(useAccionSolicitud, { wrapper: Wrapper });
+    await act(async () => {
+      await result.current.mutateAsync({ id: "s1", oportunidadId: "o1", accion: "enviar" }, callbacks);
+    });
+    expect(invalidar).toHaveBeenCalledTimes(1);
+    expect(notifySuccess).not.toHaveBeenCalled(); expect(notifyError).not.toHaveBeenCalled();
+    for (const callback of Object.values(callbacks)) expect(callback).not.toHaveBeenCalled();
+  });
+
+  it("el envío final fallido admite reintento explícito sin retries automáticos", async () => {
+    client.setDefaultOptions({ mutations: { retry: 2, retryDelay: 0 } });
+    services.enviarSolicitud.mockRejectedValueOnce(new Error("sin conexión"));
+    const { result } = renderHook(useAccionSolicitud, { wrapper: Wrapper });
+    await act(async () => {
+      await expect(result.current.mutateAsync({ id: "s1", oportunidadId: "o1", accion: "enviar" })).rejects.toThrow("sin conexión");
+    });
+    expect(services.enviarSolicitud).toHaveBeenCalledTimes(1);
+    await act(() => result.current.mutateAsync({ id: "s1", oportunidadId: "o1", accion: "enviar" }));
+    expect(services.enviarSolicitud.mock.calls).toEqual([["s1"], ["s1"]]);
+    expect(services.crearSolicitud).not.toHaveBeenCalled();
+  });
+
   it.each(["organización", "usuario", "purga", "tenant", "limpieza directa"])("INSERT tardío no repuebla caché ni envía después de cambiar %s", async (cambio) => {
     if (cambio === "tenant") {
       setAuthSnapshot({ ...auth, organizationId: null, role: "super_admin", effectiveRole: "super_admin" });

@@ -17,6 +17,7 @@ import {
 import { useClientesForSelect } from "@/features/cliente/hooks";
 import OportunidadFormFields from "@/features/crm/components/nuevaOportunidad/OportunidadFormFields";
 import { useNuevaOportunidadSubmit } from "@/features/crm/hooks/useNuevaOportunidadSubmit";
+import { useOrigenClienteForzado } from "@/features/crm/hooks/useOrigenClienteForzado";
 import { faltantesOportunidadForm } from "@/features/crm/domain/oportunidadFormPayload";
 import type { RefRow } from "@/features/crm/services/objetosCrm";
 
@@ -74,8 +75,9 @@ export default function NuevaOportunidadDialog({
   const etapaSel = etapas.find((e) => e.id === form.etapa_id);
   const esGanada = (etapaSel as { tipo?: string } | undefined)?.tipo === "ganada";
 
+  const origenEmpresa = useOrigenClienteForzado(form, open && !isEdit, setForm);
   const { handleSubmit, pendingTotal } = useNuevaOportunidadSubmit({
-    form, esGanada, isEdit, oportunidad, autoActividad, markClean, onOpenChange, onSaved,
+    form, origenEmpresa, esGanada, isEdit, oportunidad, autoActividad, markClean, onOpenChange, onSaved,
   });
   // Sucio total: el formulario más la casilla de actividad automática (sólo
   // relevante al crear). Habilita la confirmación de descarte del shell.
@@ -91,7 +93,7 @@ export default function NuevaOportunidadDialog({
       onConfirm={handleSubmit}
       confirmLabel={isEdit ? "Guardar cambios" : "Crear oportunidad"}
       loading={pendingTotal}
-      disabled={faltantes.length > 0}
+      disabled={faltantes.length > 0 || (!isEdit && !origenEmpresa.listo)}
     />
   );
 
@@ -123,6 +125,7 @@ export default function NuevaOportunidadDialog({
         etapas={etapas}
         clientes={clientes}
         isEdit={isEdit}
+        origenEmpresa={origenEmpresa}
         autoActividad={autoActividad}
         setAutoActividad={setAutoActividad}
       />

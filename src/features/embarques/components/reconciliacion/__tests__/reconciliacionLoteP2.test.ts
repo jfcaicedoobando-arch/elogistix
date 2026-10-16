@@ -1,5 +1,7 @@
 import { describe, it, expect } from "vitest";
-import { createTable, getCoreRowModel, getSortedRowModel } from "@tanstack/react-table";
+// @vitest-environment jsdom
+import { renderHook } from "@testing-library/react";
+import { useTableInstance } from "@/components/shared/dataTable/useTableInstance";
 import {
   construirFilaReconciliacion,
   construirResumen,
@@ -53,16 +55,13 @@ describe("Orden de Δ", () => {
   it("pendiente al final sin -100%", () => {
     const data = [fila("Pend", "MXN", 100, 0, { sin_factura: true }), fila("Alto", "MXN", 100, 150), fila("Bajo", "MXN", 100, 90)];
     expect(clavePctOrden(data[0], data[0].delta_cot_vs_real.pct)).toBeUndefined();
-    const table = createTable<FilaReconciliacion3C>({
+    const { result } = renderHook(() => useTableInstance({
       data,
       columns: [{ id: "d", accessorFn: (f) => clavePctOrden(f, f.delta_cot_vs_real.pct), sortUndefined: "last" }],
-      getCoreRowModel: getCoreRowModel(),
-      getSortedRowModel: getSortedRowModel(),
-      state: { sorting: [{ id: "d", desc: false }], columnPinning: {}, columnVisibility: {} },
-      onStateChange: () => {},
-      renderFallbackValue: null,
-    });
-    expect(table.getSortedRowModel().rows.map((r) => r.original.concepto)).toEqual(["Bajo", "Alto", "Pend"]);
+      sortMode: "client",
+      initialSort: { key: "d", dir: "asc" },
+    }));
+    expect(result.current.getRowModel().rows.map((r) => r.original.concepto)).toEqual(["Bajo", "Alto", "Pend"]);
   });
 });
 

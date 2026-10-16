@@ -26,7 +26,7 @@ export const proveedorColumns: ColumnDef<ProveedorListItem, unknown>[] = defineC
     header: "Nombre",
     accessorFn: (p) => p.nombre,
     enableSorting: true,
-    sortingFn: sortByString<ProveedorListItem>((p) => p.nombre),
+    sortFn: sortByString<ProveedorListItem>((p) => p.nombre),
     meta: { width: COL_W.texto, className: "max-w-[280px] font-medium" },
     cell: ({ row }) => {
       const nombre = toTitleCase(row.original.nombre ?? "");
@@ -41,7 +41,7 @@ export const proveedorColumns: ColumnDef<ProveedorListItem, unknown>[] = defineC
   },
   { id: "tipo", header: "Tipo", meta: { width: COL_W.estado }, cell: ({ row }) => <span className="text-body">{row.original.tipo ?? "—"}</span> },
   { id: "origen", header: "Origen", meta: { width: COL_W.short, className: "hidden xl:table-cell", headerClassName: "hidden xl:table-cell" }, cell: ({ row }) => <OrigenBadge origen={row.original.origen_proveedor} /> },
-  { id: "rfc", header: "RFC / Tax ID", accessorFn: (p) => decodeHtmlEntities(p.rfc), enableSorting: true, sortingFn: sortByString<ProveedorListItem>((p) => decodeHtmlEntities(p.rfc)), meta: { width: COL_W.folio, className: "text-body-sm font-mono hidden md:table-cell", headerClassName: "hidden md:table-cell" }, cell: ({ row }) => decodeHtmlEntities(row.original.rfc) },
+  { id: "rfc", header: "RFC / Tax ID", accessorFn: (p) => decodeHtmlEntities(p.rfc), enableSorting: true, sortFn: sortByString<ProveedorListItem>((p) => decodeHtmlEntities(p.rfc)), meta: { width: COL_W.folio, className: "text-body-sm font-mono hidden md:table-cell", headerClassName: "hidden md:table-cell" }, cell: ({ row }) => decodeHtmlEntities(row.original.rfc) },
   { id: "contacto", header: "Contacto", meta: { width: COL_W.nombre, className: "text-body-sm hidden xl:table-cell", headerClassName: "hidden xl:table-cell" }, cell: ({ row }) => row.original.contacto ? <Hint label={row.original.contacto}><span>{toTitleCase(row.original.contacto)}</span></Hint> : null },
   { id: "moneda", header: "Moneda", meta: { width: COL_W.tiny, className: "text-body-sm hidden xl:table-cell", headerClassName: "hidden xl:table-cell" }, cell: ({ row }) => row.original.moneda_preferida },
 ]);

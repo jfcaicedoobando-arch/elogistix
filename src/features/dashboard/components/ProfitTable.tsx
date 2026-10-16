@@ -60,14 +60,14 @@ function construirColumnas(verCostos: boolean): ColumnDef<EmbarqueConProfit, unk
   {
     id: "profit", header: "Utilidad MXN",
     accessorFn: (e) => e.profitMXN, enableSorting: true,
-    sortingFn: sortByNumber<EmbarqueConProfit>((e) => e.profitMXN),
+    sortFn: sortByNumber<EmbarqueConProfit>((e) => e.profitMXN),
     meta: { className: "text-right font-semibold tabular-nums", headerClassName: "text-right" },
     cell: ({ row }) => <MoneyWithBreakdown e={row.original} value={row.original.profitMXN} />,
   },
   {
     id: "margen", header: "Margen",
     accessorFn: (e) => e.margenMXN, enableSorting: true,
-    sortingFn: sortByNumber<EmbarqueConProfit>((e) => e.margenMXN),
+    sortFn: sortByNumber<EmbarqueConProfit>((e) => e.margenMXN),
     meta: { className: "text-right", headerClassName: "text-right" },
     cell: ({ row }) => (
       <MargenBadge pct={row.original.margenMXN} umbrales={UMBRAL_MARGEN_COTIZACION} className="text-label" />

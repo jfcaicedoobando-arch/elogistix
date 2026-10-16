@@ -1,0 +1,26 @@
+# Native adapter for immutable independent retry review
+
+This adapter executes the nine exact PR357 cases from `fd3a2fcb940dc122fda7be242afda05a053dd61d`, cherry-picked unchanged as `bd07f5488babb770d226f91f05abfcb1a2cb68d8`. It preserves all 30 files of the author fix `a7aff9ff8f92852687c56d3bc05d41150b44b2ae` and all nine reviewer files. `source-pins.json` freezes their Git LF bytes, lengths and SHA256; `inputs.json` freezes this complete new adapter. The original reviewer PREPARED/NOT_RUN evidence stays immutable. Runtime acceptance is a separate artifact.
+
+Only the same-repository exact draft PR354 branch/head with reviewed main base `b66d2c2caa00d7a8d522ed7140b6a15877a0b2aa` can reach Docker. The unchanged golden CRM infrastructure uses PG17.6 by digest, network none, no ports/mounts/DSN, socket-only cluster, NOSUPERUSER/BYPASSRLS candidate owner and independently verified owned cleanup. Every case creates its own fresh owned container/database and revalidates the exact catalog, canonical function bodies and empty installation before fixtures.
+
+The adapter reuses exactly the explicitly labelled laboratory manifest variant and proposed same-context issuer correction from a7aff9ff. The source/variant/function/patch hashes are published independently. No canonical historical source, author fixture, reviewer source, owner, trigger, role definition or proposed function is edited for a negative case. Disposable candidate roles and minimal boundary grants match the previously measured synthetic lab; they do not establish a real ACL or identity.
+
+The reviewer receives all three exact author SQL fragments once, in a single native psql invocation, followed by one case suffix. Its ordered-marker/error/exit-code parser returns only ASSERTIONS_OBSERVED_PENDING_OWNED_CLEANUP. This adapter grants PASS only after that actual invocation, all 24 expected stages and ownership-safe shutdown/client closure/no PID/container removal. Native stdout/stderr remain private runner logs; only bounded SQLSTATE/phase/expected denial metadata, source hashes and cleanup results are public.
+
+The nine cases are: foreign invoice UUID collision; disabled scheduler; disabled transport; inactive organization; scheduler manifest drift; shortened run expiry; immutable tenant run-rebinding guard; supplier origin drift; materialized invoice folio drift. The run-rebinding test proves its mutation trigger, not an RPC with a swapped tenant. Eight materialized cases must first prove a successful unchanged retry. All cases preserve full table rows/manual sentinels after denial and outer rollback.
+
+Scope is table-row rollback only. Sequences, full catalogs/ACLs, real authentication/RLS, business COMMIT, crash durability and deployed transport remain NOT_ESTABLISHED or NOT_RUN. Independent concept/payment collisions and cross-tenant identity retry are explicitly pending complementary inputs. Configuration EMPTY, wire UNBOUND, external demo DISABLED. The separate `demo-financial-commit-review` work is not part of this adapter or its acceptance.
+
+Preparation status: offline checks only until the native Actions artifact confirms per-case results. No local SQL/Docker mode exists.
+
+## Exact supplemental source and separate execution group
+
+Source `7d38dc8ad3959b853d7fe60a556f671c60a5b244` adds eleven files and preserves the original nine. It is integrated unchanged as `02a4ed7846b82738b1f23840567f4193860ad9ed`; the complete external inventory is now50 (30 author +20 reviewer), all pinned. `--group original` keeps the nine historical cases; `--group supplement` executes only three new denial cases plus a separate TEMP-sequence calibration in four fresh clusters. It does not repeat the prior nine processes. Native sequence captures are reported as observations; TEMP17→24→24 calibration is not fixture sequence rollback or causality proof.
+
+Original runtime38826041062 at21b5fae8 yielded7PASS/2FAIL42703 before mutation, nine cleanups verified; its artifact12014284809 SHA2568b45e68934272812c51c75579c3c6f0b2c9602e057d653254b4f9605e2182607 is independently verified. Both drift cases require a corrected reviewer version because `_origin_snapshot` shadows outer server-admission alias `a` with inner preparation-admission alias `a`. Their intended denials remain NOT_RUN; no source or guard is rewritten to hide that result.
+
+
+## Version2 origin correction, separate pair only
+
+Reviewer commit `a3a6de1e31d239b6a563261c7b6cd695d5e158cf` adds seven files only, integrated exactly as `63317ad7d92c3138c720ca43ceaea3b28f966b05`. Inventory57 freezes 30 author files and all27 reviewer files, preserving previous delivery locks and native failures. `--group corrected` explicitly loads suite_v2.py, validates all nine original IDs/order and provider version2, then runs only mutable_supplier_origin_drift and materialized_invoice_folio_drift in two fresh clusters. Its own inspect_result requires the authentic read-only schema-binding probe between positive retry and mutation. Seven unaffected renders are compared byte-for-byte offline and are not repeated in this native group. Expected denials remain 23514 DEMO_ADMITTED_SUPPLIER_DRIFT and PT409 DEMO_DOCUMENT_DIVERGED. Previous 42703 failures remain historical FAIL; these corrected denials remain NOT_RUN until a new native artifact.

@@ -4,6 +4,7 @@ BEGIN
   UPDATE public.crm_empresas e
      SET estado_crm = CASE WHEN NEW.estado::text = 'Convertido' THEN 'Cliente' ELSE 'Prospecto' END
    WHERE e.lead_origen_id = NEW.id AND e.organization_id = NEW.organization_id
+     AND e.deleted_at IS NULL
      AND e.estado_crm <> 'Cliente'
      AND NEW.estado::text IN ('Prospecto','Calificado','Pendiente de alta','Convertido');
   RETURN NEW;

@@ -119,7 +119,8 @@ function SesionSolicitudPricing({ open, onOpenChange, oportunidadId, clienteNomb
         description: "Ábrela de nuevo y vuelve a adjuntarlo.", error: e, method: "CRM_PRICING_ADJUNTO" });
     }
   };
-  const onSubmit = (e: FormEvent<HTMLFormElement>) => { e.preventDefault(); void ejecutar(true); };
+  // El envío final se hace desde el detalle, tras revisar el tarifario.
+  const onSubmit = (e: FormEvent<HTMLFormElement>) => { e.preventDefault(); void ejecutar(false); };
   const completa = solicitudCompleta(datos);
 
   return (
@@ -144,7 +145,7 @@ function SesionSolicitudPricing({ open, onOpenChange, oportunidadId, clienteNomb
           </Button>
           <Button type="submit" form={FORM_ID} disabled={!completa || busy}
             title={completa ? undefined : "Falta Service, origen (o POL) y destino (o POD)"}>
-            {busy ? "Guardando…" : "Enviar a Pricing"}
+            {busy ? "Guardando…" : "Revisar tarifario"}
           </Button>
         </>
       }

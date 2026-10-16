@@ -94,7 +94,7 @@ export function MultiRutaSelect({ rutas, value, onChange, invalid, id }: Props) 
           </Button>
         </PopoverTrigger>
         <PopoverContent
-          className="w-[--radix-popover-trigger-width] p-0"
+          className="w-[var(--radix-popover-trigger-width)] p-0"
           align="start"
           onWheel={(e) => e.stopPropagation()}
         >

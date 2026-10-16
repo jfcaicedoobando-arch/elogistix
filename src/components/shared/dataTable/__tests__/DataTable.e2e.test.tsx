@@ -36,19 +36,19 @@ const cols: ColumnDef<EmbarqueRow, unknown>[] = defineColumns<EmbarqueRow>([
   {
     id: "numero", header: "Número", enableSorting: true,
     accessorFn: (r) => r.numero,
-    sortingFn: sortByString<EmbarqueRow>((r) => r.numero),
+    sortFn: sortByString<EmbarqueRow>((r) => r.numero),
     cell: ({ row }) => row.original.numero,
   },
   {
     id: "cliente", header: "Cliente", enableSorting: true,
     accessorFn: (r) => r.cliente,
-    sortingFn: sortByString<EmbarqueRow>((r) => r.cliente),
+    sortFn: sortByString<EmbarqueRow>((r) => r.cliente),
     cell: ({ row }) => row.original.cliente,
   },
   {
     id: "total", header: "Total", enableSorting: true,
     accessorFn: (r) => r.total,
-    sortingFn: sortByNumber<EmbarqueRow>((r) => r.total),
+    sortFn: sortByNumber<EmbarqueRow>((r) => r.total),
     cell: ({ row }) => row.original.total,
     meta: { align: "right" },
   },
@@ -150,25 +150,31 @@ describe("DataTable E2E — filtro + orden + paginación", () => {
     expect(screen.getByTestId("sort-state").textContent).toBe("null|asc");
   });
 
-  it("respeta el orden del servidor: no re-ordena `data` en cliente", () => {
-    // Server devuelve por total desc; sólo damos la página relevante.
+  it("preserves contradictory server order through clicks and controlled rerenders", () => {
     const serverPage: EmbarqueRow[] = [
-      { id: "e4", numero: "EMB-004", cliente: "ACME", total: 4200 },
+      { id: "e1", numero: "EMB-001", cliente: "ACME", total: 1500 },
+      { id: "e3", numero: "EMB-003", cliente: "Initech", total: 900 },
       { id: "e2", numero: "EMB-002", cliente: "Globex", total: 2300 },
     ];
-    render(
-      <DataTable
-        columns={cols}
-        data={serverPage}
-        rowKey={(r) => r.id}
-        sortMode="server"
-        controlledSort={{ key: "total", dir: "desc" }}
-        onSortChange={vi.fn()}
-      />,
+    const onSortChange = vi.fn();
+    const order = () => screen.getAllByRole("row").slice(1)
+      .map(row => within(row).getAllByRole("cell")[0].textContent);
+    const { rerender } = render(
+      <DataTable columns={cols} data={serverPage} rowKey={row => row.id}
+        sortMode="server" controlledSort={{ key: "total", dir: "desc" }} onSortChange={onSortChange} />,
     );
-    const rows = screen.getAllByRole("row");
-    expect(within(rows[1]).getByText("EMB-004")).toBeInTheDocument();
-    expect(within(rows[2]).getByText("EMB-002")).toBeInTheDocument();
+    expect(order()).toEqual(["EMB-001", "EMB-003", "EMB-002"]);
+    fireEvent.click(screen.getByRole("columnheader", { name: /Cliente/ }));
+    expect(onSortChange).toHaveBeenLastCalledWith("cliente", "asc");
+    expect(order()).toEqual(["EMB-001", "EMB-003", "EMB-002"]);
+    rerender(
+      <DataTable columns={cols} data={[serverPage[2], serverPage[0], serverPage[1]]} rowKey={row => row.id}
+        sortMode="server" controlledSort={{ key: "total", dir: "asc" }} onSortChange={onSortChange} />,
+    );
+    expect(order()).toEqual(["EMB-002", "EMB-001", "EMB-003"]);
+    fireEvent.click(screen.getByRole("columnheader", { name: /Total/ }));
+    expect(onSortChange).toHaveBeenLastCalledWith(null, "asc");
+    expect(order()).toEqual(["EMB-002", "EMB-001", "EMB-003"]);
   });
 });
 

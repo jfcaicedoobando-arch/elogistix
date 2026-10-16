@@ -1,3 +1,4 @@
+export { useAccionSolicitud } from "./useAccionSolicitud";
 import { crmPricingKeys } from "@/features/crm/queryKeys.performance";
 import { useInvalidarSolicitud } from "./useInvalidarSolicitud";
 /**
@@ -8,9 +9,9 @@ import { AuthOperationChangedError, captureAuthOperationScope } from "@/lib/auth
 import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
 import { listarTarifasParaPricing } from "@/features/crm/services/pricing/tarifasParaPricing";
 import {
-  actualizarSolicitud, cancelarSolicitud, crearSolicitud, eliminarOpcion, enviarSolicitud,
+  actualizarSolicitud, crearSolicitud, eliminarOpcion, enviarSolicitud,
   guardarOpcion, listarBandejaPricing, listarOpciones, listarSolicitudesOportunidad,
-  listarUsuariosOrg, obtenerSolicitud, responderSolicitud,
+  listarUsuariosOrg, obtenerSolicitud,
 } from "@/features/crm/services/pricing/pricingCrm";
 import { mensajeErrorPricing, type SolicitudPricingInsert, type SolicitudPricingRow } from "@/features/crm/services/pricing/tiposPricing";
 
@@ -150,26 +151,6 @@ export function useGuardarSolicitud() {
     mutate: (input: GuardarSolicitudInput, options?: MutateOptions<string, Error, GuardarSolicitudInput>) => mutation.mutate(preparar(input), proteger(options)),
     mutateAsync: (input: GuardarSolicitudInput, options?: MutateOptions<string, Error, GuardarSolicitudInput>) => mutation.mutateAsync(preparar(input), proteger(options)),
   };
-}
-
-export function useAccionSolicitud() {
-  const qc = useQueryClient();
-  const invalidar = useInvalidarSolicitud();
-  return useMutation({
-    mutationFn: ({ id, accion }: { id: string; oportunidadId: string | null; accion: "enviar" | "responder" | "cancelar" }) =>
-      accion === "enviar" ? enviarSolicitud(id) : accion === "responder" ? responderSolicitud(id) : cancelarSolicitud(id),
-    onSuccess: (_d, v) => {
-      const t = { enviar: "Solicitud enviada", responder: "Respuesta enviada al solicitante", cancelar: "Solicitud cancelada" };
-      notifySuccess(undefined, { title: t[v.accion] });
-      void Promise.all([
-        invalidar(v.id, v.oportunidadId),
-        qc.invalidateQueries({ queryKey: crmPricingKeys.opciones(v.id), exact: true }),
-        // Traer la respuesta final antes de detener el polling al cambiar de estado.
-        qc.invalidateQueries({ queryKey: crmPricingKeys.tarifasRespuesta(v.id), exact: true }),
-      ]);
-    },
-    onError: onError,
-  });
 }
 
 export function useGuardarOpcion() {

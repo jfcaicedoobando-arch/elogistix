@@ -32,6 +32,7 @@ import { CxcAgingActionBar, CxcAgingKpiRow } from "./CxcAgingDrillDownDialog.par
 import { CxcAgingDrillDownMobileCard } from "./CxcAgingDrillDownMobileCard";
 import { clasificarAFecha } from "@/lib/aging/reportScope";
 import { buildCxcAgingDrillDownColumns } from "./cxcAgingDrillDownColumns";
+import { FinancialQueryError } from "@/components/shared/FinancialQueryError";
 
 interface Props {
   cliente: CxcAgingRow | null;
@@ -45,10 +46,12 @@ function CxcAgingDrillDownBody({
   cliente, open, onOpenChange, cubetaInicial = "todas", fechaReferencia = todayLocalISO(),
 }: Props) {
   const [cubeta, setCubeta] = useState<CubetaAging | "todas">(cubetaInicial);
-  const { data: facturas = [], isLoading } = useCobranza(
+  const { data: facturas = [], isLoading, isLoadingError, isRefetchError, error, refetch, isFetching } = useCobranza(
     cliente ? { cliente_id: cliente.cliente_id } : {},
   );
   const columns = useMemo(() => buildCxcAgingDrillDownColumns(), []);
+  // useCobranza.isError incluye KPIs ajenos al detalle; estas flags son del listado.
+  const listIsError = isLoadingError || isRefetchError;
 
   const abiertas = useMemo(
     () =>
@@ -62,8 +65,10 @@ function CxcAgingDrillDownBody({
     if (cubeta === "todas") return abiertas;
     return abiertas.filter((f) => bucketDeDias(f.dias_vencido) === cubeta);
   }, [abiertas, cubeta]);
+  const exportDisabled = listIsError || isLoading || isFetching || filtradas.length === 0;
 
   function exportar() {
+    if (exportDisabled) return;
     const headers = ["Factura", "Expediente", "Emisión", "Vencimiento", "Días vencido", "Antigüedad", "Moneda", "Saldo", "Fecha para antigüedad", "Filtro de cubeta"];
     const lines = filtradas.map((f) =>
       [
@@ -109,25 +114,36 @@ function CxcAgingDrillDownBody({
             cubeta={cubeta}
             onChange={setCubeta}
             onExport={exportar}
-            exportDisabled={filtradas.length === 0}
-            exportCount={filtradas.length}
+            exportDisabled={exportDisabled}
+            exportCount={listIsError ? 0 : filtradas.length}
           />
 
           <div className="flex-1 overflow-y-auto">
-            <ResponsiveDataTable<FacturaCobranza>
-              columns={columns}
-              data={filtradas}
-              isLoading={isLoading}
-              rowKey={(f) => f.id}
-              getRowHref={(f) => `/facturacion/${f.id}`}
-              getRowAriaLabel={(f) => `Ver factura ${f.numero}`}
-              emptyMessage="Sin facturas con saldo"
-              emptyHint="Este cliente no tiene facturas abiertas en esta cubeta."
-              striped
-              hoverable
-              density={TABLE_DENSITY.embebida}
-              mobileCard={(row) => <CxcAgingDrillDownMobileCard row={row} />}
-            />
+            {listIsError && (
+              <FinancialQueryError
+                title="No se pudieron cargar las facturas con saldo"
+                error={error}
+                onRetry={refetch}
+                retrying={isFetching}
+                hasPreviousData={filtradas.length > 0}
+              />
+            )}
+            {(!listIsError || filtradas.length > 0) && (
+              <ResponsiveDataTable<FacturaCobranza>
+                columns={columns}
+                data={filtradas}
+                isLoading={isLoading}
+                rowKey={(f) => f.id}
+                getRowHref={(f) => `/facturacion/${f.id}`}
+                getRowAriaLabel={(f) => `Ver factura ${f.numero}`}
+                emptyMessage="Sin facturas con saldo"
+                emptyHint="Este cliente no tiene facturas abiertas en esta cubeta."
+                striped
+                hoverable
+                density={TABLE_DENSITY.embebida}
+                mobileCard={(row) => <CxcAgingDrillDownMobileCard row={row} />}
+              />
+            )}
           </div>
 
           <div className="px-6 py-3 border-t flex justify-end bg-background">
@@ -147,3 +163,4 @@ export function CxcAgingDrillDownDialog(props: Props) {
   const identity = `${props.cliente?.cliente_id}:${props.cliente?.moneda}:${props.open}:${props.cubetaInicial ?? "todas"}:${props.fechaReferencia}`;
   return <CxcAgingDrillDownBody key={identity} {...props} />;
 }
+

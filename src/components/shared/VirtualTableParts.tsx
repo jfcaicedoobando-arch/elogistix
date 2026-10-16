@@ -1,15 +1,16 @@
 import { cn } from "@/lib/utils";
 import { Skeleton, SkeletonGroup } from "@/components/ui/skeleton";
 import { Inbox } from "lucide-react";
-import { flexRender, type Table } from "@tanstack/react-table";
+import { flexRender } from "@tanstack/react-table";
+import type { Table } from "@/components/shared/dataTable/tanstackTypes";
 import { ALIGN_CLASS, type ColumnAlign } from "@/components/shared/dataTable/types";
 import { EmptyStateInline } from "@/components/empty/EmptyStateInline";
 import "@/components/shared/dataTable/columnMeta";
 
-export function VirtualHeaderRow<T>({ table, gridTemplate }: { table: Table<T>; gridTemplate: string }) {
+export function VirtualHeaderRow<T extends object>({ table, gridTemplate }: { table: Table<T>; gridTemplate: string }) {
   return (
     <div
-      className="sticky top-0 z-10 grid bg-muted/60 backdrop-blur-sm text-body-sm font-medium text-muted-foreground border-b"
+      className="sticky top-0 z-10 grid bg-muted/60 backdrop-blur-xs text-body-sm font-medium text-muted-foreground border-b"
       style={{ gridTemplateColumns: gridTemplate }}
       role="row"
     >
@@ -32,7 +33,7 @@ export function VirtualHeaderRow<T>({ table, gridTemplate }: { table: Table<T>; 
   );
 }
 
-export function SkeletonRows<T>({ count, table, gridTemplate, cellPad }: { count: number; table: Table<T>; gridTemplate: string; cellPad: string }) {
+export function SkeletonRows<T extends object>({ count, table, gridTemplate, cellPad }: { count: number; table: Table<T>; gridTemplate: string; cellPad: string }) {
   const cols = table.getAllLeafColumns();
   // Anchos variables por columna+fila para que no parezca una rejilla rígida
   // (mismo criterio que `DataTableBody`).

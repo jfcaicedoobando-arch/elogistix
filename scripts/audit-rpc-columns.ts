@@ -25,6 +25,7 @@
 import { execFileSync } from "node:child_process";
 import { readFileSync, existsSync } from "node:fs";
 import path from "node:path";
+import { definitionDigest, findingKey, matchesReview, parseReviewInventory, type Finding, type ReviewInventory, type SqlObject } from "./lib/rpcColumnsReview";
 
 // ---------- Helpers psql ----------
 // Devuelve filas como arrays de strings. La consulta DEBE producir texto ya
@@ -58,17 +59,16 @@ function loadColumns(): ColMap {
 }
 
 // ---------- 2. Cargar definiciones de RPCs y vistas ----------
-interface SqlObject { kind: "function" | "view"; name: string; body: string; }
-
 function loadFunctions(): SqlObject[] {
-  const rows = psqlJson<{ name: string; body: string }>(`
-    SELECT p.proname AS name, pg_get_functiondef(p.oid) AS body
+  const rows = psqlJson<{ name: string; body: string; signature: string }>(`
+    SELECT p.proname AS name, pg_get_functiondef(p.oid) AS body,
+           format('%I.%I(%s)', n.nspname, p.proname, pg_catalog.oidvectortypes(p.proargtypes)) AS signature
       FROM pg_proc p
       JOIN pg_namespace n ON n.oid = p.pronamespace
      WHERE n.nspname = 'public'
        AND p.prokind = 'f'
   `);
-  return rows.map((r) => ({ kind: "function" as const, name: r.name, body: r.body ?? "" }));
+  return rows.map((r) => ({ kind: "function" as const, name: r.name, body: r.body ?? "", signature: r.signature }));
 }
 
 function loadViews(): SqlObject[] {
@@ -153,8 +153,6 @@ function extractAliases(body: string, tables: ColMap): Map<string, Set<string>> 
 }
 
 // ---------- 4. Buscar alias.columna ilegales ----------
-interface Finding { kind: string; name: string; alias: string; tables: string[]; column: string; }
-
 const SYSTEM_COLS = new Set(["*", "ctid", "xmin", "xmax", "cmin", "cmax", "tableoid", "oid"]);
 
 function auditObject(obj: SqlObject, tables: ColMap): Finding[] {
@@ -181,7 +179,8 @@ function auditObject(obj: SqlObject, tables: ColMap): Finding[] {
     const key = `${obj.kind}:${obj.name}:${alias}.${column}`;
     if (seen.has(key)) continue;
     seen.add(key);
-    found.push({ kind: obj.kind, name: obj.name, alias, tables: [...candidates], column });
+    found.push({ kind: obj.kind, name: obj.name, alias, tables: [...candidates], column,
+      signature: obj.signature, definition_sha256: definitionDigest(obj.body) });
   }
   return found;
 }
@@ -190,20 +189,10 @@ function auditObject(obj: SqlObject, tables: ColMap): Finding[] {
 // Formato de cada entrada: "<kind>:<name>:<alias>.<column>".
 // Preexistentes conocidos se listan en scripts/audit-rpc-columns-allowlist.json
 // para no romper CI mientras se planea el fix.
-function loadAllowlist(): Set<string> {
+function loadAllowlist(): ReviewInventory {
   const p = path.join(process.cwd(), "scripts/audit-rpc-columns-allowlist.json");
-  if (!existsSync(p)) return new Set();
-  try {
-    const parsed = JSON.parse(readFileSync(p, "utf8")) as { allow?: string[] };
-    return new Set(parsed.allow ?? []);
-  } catch (e) {
-    console.error(`audit:rpc-columns — allowlist inválido en ${p}:`, e);
-    return new Set();
-  }
-}
-
-function findingKey(f: Finding): string {
-  return `${f.kind}:${f.name}:${f.alias}.${f.column}`;
+  if (!existsSync(p)) return { allow: [], reviewed: [] };
+  return parseReviewInventory(JSON.parse(readFileSync(p, "utf8")));
 }
 
 // ---------- 6. Main ----------
@@ -224,22 +213,26 @@ async function main() {
     process.exit(0);
   }
   const tables = loadColumns();
-  const allowed = loadAllowlist();
+  const inventory = loadAllowlist();
+  const allowed = new Set(inventory.allow);
   const objects = [...loadFunctions(), ...loadViews()];
   const raw: Finding[] = [];
   for (const obj of objects) raw.push(...auditObject(obj, tables));
 
   const knownPreexisting = raw.filter((f) => allowed.has(findingKey(f)));
-  const newFindings = raw.filter((f) => !allowed.has(findingKey(f)));
+  const reviewedFindings = raw.filter((f) => inventory.reviewed.some((review) => matchesReview(review, f, objects, tables)));
+  const newFindings = raw.filter((f) => !allowed.has(findingKey(f)) && !reviewedFindings.includes(f));
 
   // Reporta entradas de allow-list que ya no producen hallazgo — hay que limpiarlas.
   const stillPresent = new Set(raw.map(findingKey));
   const stale = [...allowed].filter((k) => !stillPresent.has(k));
+  const reviewDrift = inventory.reviewed.filter((review) => !raw.some((f) => matchesReview(review, f, objects, tables)));
 
   console.log(
     `audit:rpc-columns — ${objects.length} objetos escaneados. ` +
       `${knownPreexisting.length} preexistente(s) en allow-list, ` +
-      `${newFindings.length} nuevo(s), ${stale.length} entrada(s) obsoleta(s).`,
+      `${reviewedFindings.length} referencia(s) legítima(s) verificadas, ${newFindings.length} nuevo(s), ` +
+      `${stale.length} entrada(s) obsoleta(s), ${reviewDrift.length} revisión(es) con drift.`,
   );
 
   if (knownPreexisting.length > 0) {
@@ -254,7 +247,12 @@ async function main() {
     for (const k of stale) console.error(`  · ${k}`);
   }
 
-  if (newFindings.length === 0 && stale.length === 0) {
+  if (reviewDrift.length) {
+    console.error("✗ Revisiones RPC ausentes o distintas de su firma, definición, dependencias o columnas verificadas:");
+    for (const review of reviewDrift) console.error(`  · ${review.key}`);
+  }
+
+  if (newFindings.length === 0 && stale.length === 0 && reviewDrift.length === 0) {
     console.log("✓ Sin regresiones.");
     return;
   }

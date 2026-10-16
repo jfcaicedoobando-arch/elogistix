@@ -1,0 +1,349 @@
+"""Strict, committed CRM client races. Uses the existing owned-clone transport."""
+import json
+from pathlib import Path
+import re
+import uuid
+
+PAYLOAD = {'nombre': 'Different legal name', 'rfc': 'XAXX010101000',
+           'contacto': 'Synthetic contact', 'email': 'fixture@test.invalid', 'telefono': '5555555555',
+           'cp': '06600', 'regimen_fiscal': '601', 'uso_cfdi_default': 'G03',
+           'forma_pago_default': '99', 'metodo_pago_default': 'PPD', 'direccion': 'Synthetic address'}
+
+HELPER = r"""
+CREATE FUNCTION pg_temp.client_case(kind text, target uuid, payload jsonb)
+RETURNS jsonb LANGUAGE plpgsql SECURITY INVOKER AS $helper$
+DECLARE result jsonb;
+BEGIN
+ IF current_user <> 'authenticated' OR auth.uid() IS NULL OR auth.role() <> 'authenticated'
+   OR public.org_scope() IS NULL THEN RAISE EXCEPTION 'BAD_TEST_AUTH'; END IF;
+ BEGIN
+  CASE kind
+   WHEN 'create' THEN
+     SELECT to_jsonb(c) INTO result FROM public.crear_clientes(jsonb_build_array(payload)) c;
+   WHEN 'convert' THEN result := public.convertir_prospecto_a_cliente_rpc(target,payload);
+   WHEN 'kam' THEN result := pg_temp.invoke(target,auth.uid(),public.org_scope())->'value';
+   WHEN 'delete' THEN UPDATE public.crm_empresas SET deleted_at=clock_timestamp() WHERE id=target;
+   WHEN 'unlink' THEN DELETE FROM public.crm_oportunidad_empresa WHERE oportunidad_id=target;
+   WHEN 'claim' THEN
+     INSERT INTO public.crm_empresas(organization_id,nombre,lead_origen_id)
+       VALUES(public.org_scope(),'Late lead identity',target);
+   WHEN 'combined' THEN
+     UPDATE public.crm_empresas SET cliente_id=gen_random_uuid(),deleted_at=clock_timestamp() WHERE id=target;
+   WHEN 'clear' THEN UPDATE public.crm_empresas SET cliente_id=NULL WHERE id=target;
+   WHEN 'clear_delete' THEN
+     UPDATE public.crm_empresas SET cliente_id=NULL,estado_crm='Lead',deleted_at=clock_timestamp() WHERE id=target;
+   WHEN 'demote' THEN UPDATE public.crm_empresas SET estado_crm='Lead' WHERE id=target;
+   WHEN 'insert_deleted' THEN
+     INSERT INTO public.crm_empresas(organization_id,nombre,estado_crm,deleted_at)
+       VALUES(public.org_scope(),'Invalid synthetic company','Cliente',clock_timestamp());
+   ELSE RAISE EXCEPTION 'UNKNOWN_TEST_CASE';
+  END CASE;
+  RETURN jsonb_build_object('value',result,'caller',current_user,'subject',auth.uid());
+ EXCEPTION WHEN OTHERS THEN
+  RETURN jsonb_build_object('error',SQLERRM,'state',SQLSTATE,'caller',current_user,'subject',auth.uid());
+ END;
+END $helper$;
+"""
+
+def run(context, m):
+    m.require(context.database.startswith('crm_prospecto_kam_'), 'Owned adapter clone required')
+    h = m.Harness(context)
+    record = {'status': 'running', 'source_commit': context.source_commit, 'cases': [], 'events': []}
+    def case_session(f, label, kam=False):
+        s = m.Session(h,label)
+        s.execute(HELPER)
+        actor = dict(f)
+        if not kam:
+            actor['actor'] = f.get('writer',f['actor'])
+        s.begin(actor)
+        return s
+    def call(s, kind, target=None, payload=None, wait=True):
+        sql = 'SELECT pg_temp.client_case(' + m.literal(kind) + ',' + (
+            m.literal(target) + '::uuid' if target else 'NULL') + ',' + m.literal(json.dumps(payload or PAYLOAD)) + '::jsonb);'
+        s.start(sql)
+        return result(s) if wait else None
+    def result(s):
+        r = m.one_json(s.finish(),s.label)
+        m.require(r['caller']=='authenticated' and r['subject']==s.actor, 'Wrong test identity')
+        h.events.append({'session':s.label,'outcome':r})
+        return r
+    def ok(r):
+        m.require('error' not in r, 'Unexpected rejection: '+str(r))
+        return r['value']
+    def denied(r, code=None):
+        m.require('error' in r and (code is None or code in r['error']), 'Expected controlled rejection: '+str(r))
+    def writer(f):
+        f['writer'] = str(uuid.uuid4())
+        q=m.literal
+        roles=h.query("BEGIN; INSERT INTO auth.users(id,email) VALUES ("+q(f['writer'])+","+q(f['writer']+'@test.invalid')+"); "
+                "INSERT INTO public.organization_members(organization_id,user_id,role) VALUES ("+q(f['org'])+","+q(f['writer'])+",'customer_service'); "
+                "UPDATE public.organization_members SET role='contador' WHERE user_id="+q(f['writer'])+"; "
+                "INSERT INTO public.user_roles(user_id,role) VALUES ("+q(f['writer'])+",'contador') ON CONFLICT (user_id) DO UPDATE SET role=EXCLUDED.role; "
+                "SELECT jsonb_build_object('membership',(SELECT role FROM public.organization_members WHERE user_id="+q(f['writer'])+" AND organization_id="+q(f['org'])+"),'global',(SELECT role FROM public.user_roles WHERE user_id="+q(f['writer'])+")); COMMIT;",'writer')
+        m.require(roles=={'membership':'contador','global':'contador'},'Exact writer mirrors required')
+    def seed(quote=False):
+        f,_=h.seed()
+        if quote:
+            s=case_session(f,'prepare-kam-'+str(h.sequence),kam=True)
+            op=s.call()
+            s.commit()
+            s.close()
+            f['op']=op['oportunidad_id']
+            f['quote']=str(uuid.uuid4())
+            q=m.literal
+            created=h.query("BEGIN; INSERT INTO public.cotizaciones(id,organization_id,folio,modo,tipo,oportunidad_id,es_prospecto,prospecto_empresa,created_by) VALUES ("+
+                    ','.join((q(f['quote']),q(f['org']),q('CRM-QA-'+f['quote']),q('Marítimo'),q('Importación'),q(f['op']),"true",q('Prospecto identity'),q(f['actor'])))+"); "
+                    "UPDATE public.cotizaciones SET estado='Aceptada' WHERE id="+q(f['quote'])+"; "
+                    "SELECT jsonb_build_object('lead',lead_id) FROM public.crm_oportunidades WHERE id="+q(f['op'])+"; COMMIT;",'quote-fixture')
+            f['lead']=created['lead']
+        writer(f)
+        return f
+    def snap(f,label):
+        value=h.snapshot(f,label)
+        value['quotes']=h.query("SELECT jsonb_build_object('rows',coalesce(jsonb_agg(to_jsonb(c)||jsonb_build_object('__ctid',c.ctid::text,'__xmin',c.xmin::text) ORDER BY c.id),'[]'::jsonb)) FROM public.cotizaciones c WHERE organization_id="+m.literal(f['org'])+';',label+'-quotes')['rows']
+        return value
+    def client_company(after,f,cid):
+        rows=[r for r in after['companies'] if r['cliente_id']==cid]
+        m.require(len(rows)==1 and rows[0]['id']==f['company'] and rows[0]['deleted_at'] is None
+                  and rows[0]['estado_crm']=='Cliente','Missing or duplicated exact destination')
+    def done(name):
+        record['cases'].append(name)
+
+    try:
+        # Two independent creates finish while an old homonym is locked.
+        f=seed()
+        q=m.literal
+        h.query("INSERT INTO public.crm_empresas(organization_id,nombre,created_by) VALUES ("+
+                q(f['org'])+",'KAM concurrency company',"+q(f['actor'])+"); SELECT jsonb_build_object('ok',true);",'homonym')
+        before=snap(f,'independent-before')
+        a,b=case_session(f,'independent-A'),case_session(f,'independent-B')
+        m.require(a.execute("SELECT id FROM public.crm_empresas WHERE id="+q(f['company'])+" FOR UPDATE;")==[f['company']],
+                  'Old homonym must actually be locked')
+        p=dict(PAYLOAD,nombre='  KAM concurrency company  ')
+        ca=ok(call(a,'create',payload=dict(p,email='first@test.invalid')))['id']
+        cb=ok(call(b,'create',payload=dict(p,email='second@test.invalid')))['id'] # Must finish before A releases the old company.
+        m.require(ca!=cb,'Independent clients collapsed')
+        a.commit(); b.commit()
+        after=snap(f,'independent-after')
+        m.require(len(after['clients'])==2 and len(after['companies'])==len(before['companies'])+2,'Independent counts')
+        for old in before['companies']:
+            m.require(old in after['companies'],'Old homonym physically rewritten')
+        for cid in (ca,cb):
+            m.require(len([r for r in after['companies'] if r['cliente_id']==cid])==1,'Lost independent link')
+        done('independent_homonyms_no_old_row_lock')
+
+        # New client must bind the exact company before the INSERT trigger.
+        f=seed(True)
+        before=snap(f,'explicit-before')
+        s=case_session(f,'explicit')
+        c=ok(call(s,'convert',f['quote']))
+        m.require(c['creado'] is True,'Expected new client')
+        s.commit()
+        after=snap(f,'explicit-after')
+        client_company(after,f,c['cliente_id'])
+        m.require(len(after['companies'])==len(before['companies']),'Duplicate automatic company')
+        s=case_session(f,'explicit-retry')
+        retry=ok(call(s,'convert',f['quote']))
+        m.require(retry['cliente_id']==c['cliente_id'] and retry['sin_cambios'] is True,'Wrong retry')
+        s.commit()
+        m.require(snap(f,'explicit-retry-after')==after,'Retry physically rewrote rows')
+        for kind in ('clear','clear_delete','demote','delete'):
+            s=case_session(f,'guard-'+kind)
+            denied(call(s,kind,f['company']),'LC_CRM_EMPRESA_ES_CLIENTE'); s.commit()
+        done('explicit_new_identity_retry_and_clear_then_delete')
+
+        # RFC reuse must also bind the exact target, without duplicating a company.
+        f=seed(True)
+        p=dict(PAYLOAD,rfc='AAA010101AAA')
+        s=case_session(f,'rfc-create')
+        existing=ok(call(s,'create',payload=p))['id']; s.commit()
+        before=snap(f,'rfc-before')
+        s=case_session(f,'rfc-convert')
+        converted=ok(call(s,'convert',f['quote'],p)); s.commit()
+        m.require(converted['cliente_id']==existing and converted['creado'] is False,'RFC reuse lost')
+        after=snap(f,'rfc-after')
+        m.require(len(after['clients'])==1 and len(after['companies'])==len(before['companies']),'RFC reuse duplicated rows')
+        target=next(r for r in after['companies'] if r['id']==f['company'])
+        m.require(target['cliente_id']==existing and target['created_by']==f['actor'],'RFC target attribution changed')
+        done('rfc_reuse_exact_target')
+
+        # Same explicit identity: serialize, then the waiter is a physical no-op.
+        f=seed(True)
+        a,b=case_session(f,'same-A'),case_session(f,'same-B')
+        first=ok(call(a,'convert',f['quote']))
+        call(b,'convert',f['quote'],wait=False)
+        h.wait_blocked(b,a)
+        a.commit()
+        second=ok(result(b))
+        committed=snap(f,'same-first-committed')
+        m.require(second['cliente_id']==first['cliente_id'] and second['sin_cambios'] is True,'Waiter did not reuse conversion')
+        b.commit()
+        m.require(snap(f,'same-both-committed')==committed,'Waiter changed persisted rows')
+        client_company(committed,f,first['cliente_id'])
+        done('same_identity_two_committed_conversions')
+
+        # Both orders of association/deletion must be checked after the real wait.
+        for delete_first in (True,False):
+            f=seed(True)
+            before=snap(f,'delete-order-before-'+str(delete_first))
+            a,b=case_session(f,'delete-A-'+str(delete_first)),case_session(f,'delete-B-'+str(delete_first))
+            if delete_first:
+                ok(call(a,'delete',f['company']))
+                call(b,'convert',f['quote'],wait=False)
+            else:
+                first=ok(call(a,'convert',f['quote']))
+                call(b,'delete',f['company'],wait=False)
+            h.wait_blocked(b,a); a.commit()
+            denied(result(b),'LC_CRM_EMPRESA_NO_ENCONTRADA' if delete_first else 'LC_CRM_EMPRESA_ES_CLIENTE')
+            b.commit()
+            after=snap(f,'delete-order-after-'+str(delete_first))
+            if delete_first:
+                m.require(after['clients']==before['clients'],'Deleted target created a client')
+                m.require(next(r for r in after['companies'] if r['id']==f['company'])['cliente_id'] is None,'Deleted target linked')
+            else:
+                client_company(after,f,first['cliente_id'])
+            done('delete_before_association' if delete_first else 'association_before_delete')
+
+        # PR366 stays exercised with a true KAM; neither lock order deadlocks.
+        for kam_first in (True,False):
+            f=seed(True)
+            kam=case_session(f,'kam-'+str(kam_first),kam=True)
+            conv=case_session(f,'kam-conv-'+str(kam_first))
+            if kam_first:
+                r=kam.call()
+                m.require(r['sin_cambios'] is True,'Existing KAM opportunity expected')
+                call(conv,'convert',f['quote'],wait=False)
+                h.wait_blocked(conv,kam); kam.commit()
+                c=ok(result(conv)); conv.commit()
+            else:
+                c=ok(call(conv,'convert',f['quote']))
+                call(kam,'kam',f['company'],wait=False)
+                h.wait_blocked(kam,conv); conv.commit()
+                committed=snap(f,'conversion-before-kam')
+                denied(result(kam),'LC_CRM_EMPRESA_YA_CLIENTE'); kam.commit()
+                m.require(snap(f,'kam-rejected-after')==committed,'Rejected KAM rewrote rows')
+            if kam_first:
+                m.require(r['oportunidad_id']==f['op'] and r['sin_cambios'] is True,'KAM lineage changed')
+            client_company(snap(f,'kam-final-'+str(kam_first)),f,c['cliente_id'])
+            done('kam_before_conversion' if kam_first else 'conversion_before_kam')
+
+        # Sole opportunity identity disappears before the converter can retain it.
+        f=seed(True); q=m.literal
+        h.query("UPDATE public.crm_empresas SET lead_origen_id=NULL WHERE id="+q(f['company'])+"; SELECT jsonb_build_object('ok',true);",'sole-link')
+        before=snap(f,'unlink-before')
+        a,b=case_session(f,'unlink-A'),case_session(f,'unlink-B')
+        ok(call(a,'unlink',f['op']))
+        call(b,'convert',f['quote'],wait=False)
+        h.wait_blocked(b,a); a.commit()
+        denied(result(b),'LC_CONVERSION_INCONSISTENTE'); b.commit()
+        after=snap(f,'unlink-after')
+        for key in before:
+            if key!='links':
+                m.require(before[key]==after[key],'Disappeared identity wrote '+key)
+        m.require(not after['links'],'Original link deletion did not commit')
+        done('original_link_disappears_before_lock')
+
+        # Converter must retain that sole link while blocked on its lead.
+        f=seed(True); q=m.literal
+        h.query("UPDATE public.crm_empresas SET lead_origen_id=NULL WHERE id="+q(f['company'])+"; SELECT jsonb_build_object('ok',true);",'retain-link')
+        holder=case_session(f,'lead-holder',kam=True)
+        m.require(holder.execute("SELECT id FROM public.crm_leads WHERE id="+q(f['lead'])+" FOR UPDATE;")==[f['lead']],'Lead holder did not lock')
+        conv,unlink=case_session(f,'waiting-converter'),case_session(f,'waiting-unlink')
+        call(conv,'convert',f['quote'],wait=False); h.wait_blocked(conv,holder)
+        call(unlink,'unlink',f['op'],wait=False); h.wait_blocked(unlink,conv)
+        holder.commit(); c=ok(result(conv)); conv.commit()
+        ok(result(unlink)); unlink.commit()
+        client_company(snap(f,'retained-link-final'),f,c['cliente_id'])
+        done('original_link_retained_across_dependent_wait')
+
+        # A late company claim must queue behind the same lead lock, including
+        # the legacy no-company path. No advisory-lock or table-wide lock needed.
+        for has_target in (True,False):
+            f=seed(True); q=m.literal
+            sql="UPDATE public.crm_empresas SET lead_origen_id=NULL WHERE id="+q(f['company'])+"; "
+            if not has_target:
+                sql+="DELETE FROM public.crm_oportunidad_empresa WHERE oportunidad_id="+q(f['op'])+"; "
+            h.query(sql+"SELECT jsonb_build_object('ok',true);",'late-claim-fixture')
+            before=snap(f,'late-claim-before-'+str(has_target))
+            holder=case_session(f,'quote-holder-'+str(has_target),kam=True)
+            m.require(holder.execute("SELECT id FROM public.cotizaciones WHERE id="+q(f['quote'])+" FOR UPDATE;")==[f['quote']],'Quote holder did not lock')
+            conv,claim=case_session(f,'late-converter-'+str(has_target)),case_session(f,'late-claim-'+str(has_target))
+            call(conv,'convert',f['quote'],wait=False); h.wait_blocked(conv,holder)
+            call(claim,'claim',f['lead'],wait=False); h.wait_blocked(claim,conv)
+            holder.commit(); c=ok(result(conv)); conv.commit()
+            denied(result(claim),'LC_CONVERSION_INCONSISTENTE'); claim.commit()
+            after=snap(f,'late-claim-after-'+str(has_target))
+            if has_target:
+                client_company(after,f,c['cliente_id'])
+                m.require(len(after['companies'])==len(before['companies']),'Late company appeared')
+            else:
+                m.require(len(after['companies'])==len(before['companies'])+1,'Default company missing or duplicate')
+                m.require(len([r for r in after['companies'] if r['cliente_id']==c['cliente_id']])==1,'No-target conversion duplicated company')
+                m.require(next(r for r in before['companies'] if r['id']==f['company']) in after['companies'],'No-target conversion changed old company')
+            done('late_lead_claim_waits_'+str(has_target))
+
+        # A claim that wins the lead lock invalidates the cached sole-link identity.
+        f=seed(True); q=m.literal
+        h.query("UPDATE public.crm_empresas SET lead_origen_id=NULL WHERE id="+q(f['company'])+"; SELECT jsonb_build_object('ok',true);",'claim-wins-fixture')
+        a,b=case_session(f,'claim-wins-A'),case_session(f,'claim-wins-B')
+        ok(call(a,'claim',f['lead']))
+        call(b,'convert',f['quote'],wait=False); h.wait_blocked(b,a)
+        a.commit(); denied(result(b),'LC_CONVERSION_INCONSISTENTE'); b.commit()
+        m.require(not snap(f,'claim-wins-final')['clients'],'Conflicting late identity created a client')
+        done('lead_claim_wins_before_conversion')
+
+        # Invalid destinations and combined NEW state are rejected without writes.
+        for mutation in ('deleted','cross_org','ambiguous','conflict','wrong_lead'):
+            f=seed(True); q=m.literal
+            if mutation=='deleted':
+                sql="UPDATE public.crm_empresas SET deleted_at=clock_timestamp() WHERE id="+q(f['company'])+";"
+            elif mutation=='cross_org':
+                sql="UPDATE public.crm_empresas SET lead_origen_id=NULL,organization_id="+q(f['other_org'])+" WHERE id="+q(f['company'])+";"
+            elif mutation=='ambiguous':
+                extra=str(uuid.uuid4())
+                sql="INSERT INTO public.crm_empresas(id,organization_id,nombre,created_by) VALUES ("+q(extra)+","+q(f['org'])+",'Same display name',"+q(f['actor'])+"); "
+                sql+="INSERT INTO public.crm_oportunidad_empresa(organization_id,oportunidad_id,empresa_id) VALUES ("+q(f['org'])+","+q(f['op'])+","+q(extra)+");"
+            elif mutation=='wrong_lead':
+                wrong=str(uuid.uuid4())
+                sql="INSERT INTO public.crm_leads(id,organization_id,empresa,estado,vendedor_id) VALUES ("+q(wrong)+","+q(f['org'])+",'Other explicit lead','Prospecto',"+q(f['actor'])+"); "
+                sql+="UPDATE public.crm_empresas SET lead_origen_id="+q(wrong)+" WHERE id="+q(f['company'])+";"
+            else:
+                s=case_session(f,'conflict-create'); cid=ok(call(s,'create'))['id'];s.commit()
+                sql="UPDATE public.crm_empresas SET cliente_id="+q(cid)+" WHERE id="+q(f['company'])+";"
+            h.query(sql+" SELECT jsonb_build_object('ok',true);",'mutate-'+mutation)
+            before=snap(f,'invalid-before-'+mutation)
+            s=case_session(f,'invalid-'+mutation)
+            denied(call(s,'convert',f['quote']),{'deleted':'LC_CRM_EMPRESA_NO_ENCONTRADA',
+                   'cross_org':'LC_ORG_AJENA','ambiguous':'LC_CONVERSION_INCONSISTENTE',
+                   'conflict':'LC_CONVERSION_INCONSISTENTE','wrong_lead':'LC_CONVERSION_INCONSISTENTE'}[mutation]);s.commit()
+            m.require(snap(f,'invalid-after-'+mutation)==before,'Rejected conversion wrote rows')
+            if mutation=='deleted':
+                h.query("UPDATE public.crm_leads SET estado='Convertido' WHERE id=(SELECT lead_id FROM public.crm_oportunidades WHERE id="+q(f['op'])+"); SELECT jsonb_build_object('ok',true);",'deleted-lead-sync')
+                m.require(snap(f,'deleted-company-after-lead-sync')['companies']==before['companies'],
+                          'Lead propagation changed a deleted company')
+            done('reject_'+mutation)
+        f=seed()
+        for kind in ('combined','insert_deleted'):
+            s=case_session(f,'new-guard-'+kind)
+            denied(call(s,kind,f['company']),'LC_CRM_EMPRESA_ES_CLIENTE');s.commit()
+        done('guard_new_deleted_customer')
+
+        # Replay and runtime must not change PR366 owner/security/body/ACL.
+        record.update(status='pass',both_committed=True)
+    except BaseException as error:
+        record.update(status='fail',error_type=type(error).__name__,error=str(error))
+        raise
+    finally:
+        cleanup_errors=[]
+        for s in h.sessions:
+            try:
+                s.close()
+            except BaseException as error:
+                cleanup_errors.append(str(error))
+        if cleanup_errors:
+            record.update(status='fail',cleanup_errors=cleanup_errors)
+        record['events']=h.events
+        (h.out/'result.json').write_text(json.dumps(record,indent=2)+'\n')
+        m.require(not cleanup_errors,'Session cleanup failed')
+    return record
+

@@ -16,14 +16,14 @@ export const FIELD_HEIGHT_CLASS = "h-11 md:h-10";
 
 /** Superficie: borde, radio, fondo, padding y sombra. */
 export const FIELD_SURFACE_CLASS =
-  "w-full rounded-md border border-input bg-background px-3 py-2 shadow-sm";
+  "w-full rounded-md border border-input bg-background px-3 py-2 shadow-xs";
 
 /** Estados interactivos: hover, anillo de foco y deshabilitado. */
 // VB-34: los controles con `aria-invalid` (error de validación inline) se
 // dibujan con borde/anillo destructivo, no con el azul de foco.
 export const FIELD_STATE_CLASS =
   "ring-offset-background transition-colors placeholder:text-muted-foreground " +
-  "hover:border-ring/40 focus-visible:outline-none focus-visible:ring-2 " +
+  "hover:border-ring/40 focus-visible:outline-hidden focus-visible:ring-2 " +
   "focus-visible:ring-ring/40 focus-visible:ring-offset-0 focus-visible:border-ring " +
   "aria-invalid:border-destructive aria-invalid:focus-visible:ring-destructive/40 " +
   "disabled:cursor-not-allowed disabled:opacity-50";
@@ -34,7 +34,7 @@ export const FIELD_STATE_CLASS =
  */
 export const FIELD_STATE_RADIX_CLASS =
   "ring-offset-background transition-colors placeholder:text-muted-foreground " +
-  "hover:border-ring/40 focus:outline-none focus:ring-2 focus:ring-ring/40 " +
+  "hover:border-ring/40 focus:outline-hidden focus:ring-2 focus:ring-ring/40 " +
   "focus:ring-offset-0 focus:border-ring " +
   "aria-invalid:border-destructive aria-invalid:focus:ring-destructive/40 " +
   "disabled:cursor-not-allowed disabled:opacity-50";
@@ -57,6 +57,6 @@ export const FIELD_ERROR_CLASS = "text-body-sm text-destructive";
  * anillo pegado al borde se recorta visualmente.
  */
 export const FIELD_FOCUS_RING_COMPACT_CLASS =
-  "ring-offset-background focus-visible:outline-none focus-visible:ring-2 " +
+  "ring-offset-background focus-visible:outline-hidden focus-visible:ring-2 " +
   "focus-visible:ring-ring focus-visible:ring-offset-2 " +
   "disabled:cursor-not-allowed disabled:opacity-50";

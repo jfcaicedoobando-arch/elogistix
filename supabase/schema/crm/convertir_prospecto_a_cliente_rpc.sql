@@ -33,6 +33,8 @@ DECLARE
   v_ciudad text; v_estado_dir text;
   v_regimen text; v_uso text; v_forma text; v_metodo text;
   v_coherente boolean;
+  v_empresa uuid; v_org_inicial uuid; v_op_inicial uuid; v_lead_inicial uuid;
+  v_empresa_ids uuid[]; v_empresa_esperada uuid[];
 BEGIN
   IF auth.uid() IS NULL THEN
     RAISE EXCEPTION 'LC_SESION_REQUERIDA' USING ERRCODE = '42501';
@@ -41,8 +43,7 @@ BEGIN
   SELECT organization_id, es_prospecto, cliente_id, estado::text, oportunidad_id
     INTO v_org, v_es_prospecto, v_cliente_id, v_estado, v_oportunidad_id
   FROM public.cotizaciones
-  WHERE id = p_cotizacion_id AND deleted_at IS NULL
-  FOR UPDATE;
+  WHERE id = p_cotizacion_id AND deleted_at IS NULL;
   IF v_org IS NULL THEN
     RAISE EXCEPTION 'LC_COTIZACION_NO_ENCONTRADA';
   END IF;
@@ -56,6 +57,32 @@ BEGIN
         ARRAY['admin','admin_org','operador','contador','super_admin']::app_role[],
         v_org) THEN
     RAISE EXCEPTION 'LC_CLIENTE_SIN_PERMISO' USING ERRCODE = '42501';
+  END IF;
+
+  -- Resolver y bloquear la empresa ANTES de lead/oportunidad (orden de PR366).
+  v_org_inicial := v_org; v_op_inicial := v_oportunidad_id;
+  SELECT lead_id INTO v_lead_inicial FROM public.crm_oportunidades
+    WHERE id = v_op_inicial AND organization_id = v_org AND deleted_at IS NULL;
+  v_empresa := public._crm_empresa_para_conversion(v_org, v_lead_inicial, v_op_inicial);
+  v_empresa_esperada := CASE WHEN v_empresa IS NULL THEN NULL ELSE ARRAY[v_empresa] END;
+  PERFORM 1 FROM public.crm_leads WHERE id = v_lead_inicial FOR UPDATE;
+  SELECT organization_id, es_prospecto, cliente_id, estado::text, oportunidad_id
+    INTO v_org, v_es_prospecto, v_cliente_id, v_estado, v_oportunidad_id
+    FROM public.cotizaciones WHERE id = p_cotizacion_id AND deleted_at IS NULL FOR UPDATE;
+  IF NOT FOUND OR v_org IS DISTINCT FROM v_org_inicial
+    OR v_oportunidad_id IS DISTINCT FROM v_op_inicial THEN
+    RAISE EXCEPTION 'LC_CONVERSION_INCONSISTENTE';
+  END IF;
+  -- Igualdad completa: un conjunto vacío también invalida un destino cacheado.
+  SELECT array_agg(DISTINCT id ORDER BY id) INTO v_empresa_ids FROM (
+    SELECT id FROM public.crm_empresas WHERE lead_origen_id = v_lead_inicial
+    UNION
+    SELECT empresa_id FROM public.crm_oportunidad_empresa WHERE oportunidad_id = v_op_inicial
+  ) targets;
+  IF v_empresa_ids IS DISTINCT FROM v_empresa_esperada
+     OR EXISTS (SELECT 1 FROM public.crm_oportunidad_empresa
+                 WHERE oportunidad_id = v_op_inicial AND organization_id IS DISTINCT FROM v_org) THEN
+    RAISE EXCEPTION 'LC_CONVERSION_INCONSISTENTE';
   END IF;
 
   ------------------------------------------------------------------
@@ -89,7 +116,9 @@ BEGIN
         );
     END IF;
 
-    IF v_coherente THEN
+    IF v_coherente AND (v_empresa IS NULL OR EXISTS (
+      SELECT 1 FROM public.crm_empresas WHERE id = v_empresa AND deleted_at IS NULL
+        AND organization_id = v_org AND cliente_id = v_cliente_id)) THEN
       SELECT nombre INTO v_nombre FROM public.clientes WHERE id = v_cliente_id;
       RETURN jsonb_build_object(
         'cliente_id', v_cliente_id, 'nombre', v_nombre, 'creado', false,
@@ -128,6 +157,19 @@ BEGIN
   FOR UPDATE;
   IF v_op_org IS NULL THEN
     RAISE EXCEPTION 'LC_OPORTUNIDAD_NO_ENCONTRADA';
+  END IF;
+  IF v_lead_id IS DISTINCT FROM v_lead_inicial THEN
+    RAISE EXCEPTION 'LC_CONVERSION_INCONSISTENTE';
+  END IF;
+  SELECT array_agg(DISTINCT id ORDER BY id) INTO v_empresa_ids FROM (
+    SELECT id FROM public.crm_empresas WHERE lead_origen_id = v_lead_inicial
+    UNION
+    SELECT empresa_id FROM public.crm_oportunidad_empresa WHERE oportunidad_id = v_op_inicial
+  ) targets;
+  IF v_empresa_ids IS DISTINCT FROM v_empresa_esperada
+     OR EXISTS (SELECT 1 FROM public.crm_oportunidad_empresa
+                 WHERE oportunidad_id = v_op_inicial AND organization_id IS DISTINCT FROM v_org) THEN
+    RAISE EXCEPTION 'LC_CONVERSION_INCONSISTENTE';
   END IF;
   IF v_op_org <> v_org THEN
     RAISE EXCEPTION 'LC_ORG_AJENA' USING ERRCODE = '42501';
@@ -212,17 +254,26 @@ BEGIN
     SELECT id, nombre INTO v_cliente_id, v_nombre_canonico
     FROM public.clientes
     WHERE organization_id = v_org AND upper(btrim(rfc)) = v_rfc AND deleted_at IS NULL
-    LIMIT 1;
+    LIMIT 1 FOR SHARE;
   END IF;
 
   IF v_cliente_id IS NULL THEN
     BEGIN
+      v_cliente_id := gen_random_uuid();
+      IF v_empresa IS NOT NULL THEN
+        -- cliente_id no tiene FK en este esquema. La reserva y el INSERT son
+        -- atómicos; un conflicto RFC revierte ambos dentro de este subbloque.
+        UPDATE public.crm_empresas SET cliente_id = v_cliente_id
+          WHERE id = v_empresa AND organization_id = v_org AND deleted_at IS NULL
+            AND cliente_id IS NULL;
+        IF NOT FOUND THEN RAISE EXCEPTION 'LC_CONVERSION_INCONSISTENTE'; END IF;
+      END IF;
       INSERT INTO public.clientes (
-        organization_id, nombre, contacto, email, telefono, rfc,
+        id, organization_id, nombre, contacto, email, telefono, rfc,
         direccion, ciudad, estado, cp,
         regimen_fiscal, uso_cfdi_default, forma_pago_default, metodo_pago_default
       ) VALUES (
-        v_org, v_nombre, v_contacto, v_email, v_telefono, v_rfc,
+        v_cliente_id, v_org, v_nombre, v_contacto, v_email, v_telefono, v_rfc,
         COALESCE(v_direccion, ''), COALESCE(v_ciudad, ''), COALESCE(v_estado_dir, ''), v_cp,
         v_regimen, v_uso, v_forma, v_metodo
       )
@@ -235,10 +286,17 @@ BEGIN
       SELECT id, nombre INTO v_cliente_id, v_nombre_canonico
       FROM public.clientes
       WHERE organization_id = v_org AND upper(btrim(rfc)) = v_rfc AND deleted_at IS NULL
-      LIMIT 1;
+      LIMIT 1 FOR SHARE;
       IF v_cliente_id IS NULL THEN RAISE; END IF;
       v_creado := false;
     END;
+  END IF;
+
+  IF v_empresa IS NOT NULL AND NOT v_creado THEN
+    UPDATE public.crm_empresas SET cliente_id = v_cliente_id
+      WHERE id = v_empresa AND organization_id = v_org AND deleted_at IS NULL
+        AND (cliente_id IS NULL OR cliente_id = v_cliente_id);
+    IF NOT FOUND THEN RAISE EXCEPTION 'LC_CONVERSION_INCONSISTENTE'; END IF;
   END IF;
 
   v_nombre_canonico := COALESCE(NULLIF(btrim(COALESCE(v_nombre_canonico, '')), ''), v_nombre);

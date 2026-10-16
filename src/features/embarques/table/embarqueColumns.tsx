@@ -54,7 +54,7 @@ export function buildEmbarqueColumns({
       header: "Expediente",
       accessorFn: (e) => e.expediente,
       enableSorting: true,
-      sortingFn: sortByNumber<EmbarqueRow>((e) => expedienteConsecutivo(e.expediente)),
+      sortFn: sortByNumber<EmbarqueRow>((e) => expedienteConsecutivo(e.expediente)),
       meta: { width: COL_W.monto, className: "font-medium whitespace-nowrap", sticky: true },
       cell: ({ row }) => {
         const e = row.original;
@@ -80,7 +80,7 @@ export function buildEmbarqueColumns({
                 <TooltipTrigger asChild>
                   {/* R257-04: `tabIndex`/`aria-label` para que el detalle de la
                       ruta también sea alcanzable por teclado y lector. */}
-                  <span tabIndex={0} aria-label={detalle} className="block truncate rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+                  <span tabIndex={0} aria-label={detalle} className="block truncate rounded focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring">
                     {labelExpediente(e.expediente, e.id, e.estado)}
                   </span>
                 </TooltipTrigger>
@@ -93,7 +93,7 @@ export function buildEmbarqueColumns({
               <TooltipProvider delayDuration={200}>
                 <Tooltip>
                   <TooltipTrigger asChild>
-                    <AlertTriangle className="h-3.5 w-3.5 text-warning flex-shrink-0" />
+                    <AlertTriangle className="h-3.5 w-3.5 text-warning shrink-0" />
                   </TooltipTrigger>
                   <TooltipContent>
                     <p className="text-body-sm">{docInfo.pendientes} doc(s) pendientes</p>

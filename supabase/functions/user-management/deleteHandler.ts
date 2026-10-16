@@ -37,18 +37,28 @@ export async function handleDelete(ctx: HandlerCtx, admin: AdminAccess): Promise
       });
       return errorResponse("El usuario no pertenece a tu organización", 403, cors);
     }
-    const { data: targetRoles } = await adminClient
-      .from("user_roles")
-      .select("role")
-      .eq("user_id", user_id);
-    const targetIsSuperAdmin = (targetRoles ?? []).some((r: { role: string }) => r.role === "super_admin");
-    if (targetIsSuperAdmin) {
-      log.finish(403, "privesc_blocked_super_admin", {
+    try {
+      const { data: targetRoles, error: rolesError } = await adminClient
+        .from("user_roles")
+        .select("role")
+        .eq("user_id", user_id);
+      if (rolesError) throw rolesError;
+      const targetIsSuperAdmin = (targetRoles ?? []).some((r: { role: string }) => r.role === "super_admin");
+      if (targetIsSuperAdmin) {
+        log.finish(403, "privesc_blocked_super_admin", {
+          user_id: callerId,
+          organization_id: admin.orgId,
+          payload: { target_user_id: user_id },
+        });
+        return errorResponse("No tienes permiso para eliminar a un super administrador", 403, cors);
+      }
+    } catch (error) {
+      log.finish(500, "target_roles_lookup_failed", {
         user_id: callerId,
         organization_id: admin.orgId,
-        payload: { target_user_id: user_id },
+        payload: { target_user_id: user_id, error: error instanceof Error ? error.message : error },
       });
-      return errorResponse("No tienes permiso para eliminar a un super administrador", 403, cors);
+      return errorResponse(mensajeSeguro(null), 500, cors);
     }
   }
 

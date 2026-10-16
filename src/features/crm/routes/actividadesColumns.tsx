@@ -25,7 +25,7 @@ export const baseActividadColumns: ColumnDef<CrmActividadRow, unknown>[] = defin
   },
   {
     id: "asunto", header: "Asunto", meta: { className: "max-w-52 font-medium" },
-    cell: ({ row }) => <Hint label={row.original.asunto}><span tabIndex={0} className="block truncate rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">{row.original.asunto}</span></Hint>,
+    cell: ({ row }) => <Hint label={row.original.asunto}><span tabIndex={0} className="block truncate rounded focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring">{row.original.asunto}</span></Hint>,
   },
   {
     id: "entidad", header: "Entidad", meta: { width: COL_W.nombre, className: "text-body-sm" },

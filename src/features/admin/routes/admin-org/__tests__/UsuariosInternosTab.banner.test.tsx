@@ -24,6 +24,7 @@ vi.mock("@/features/admin/hooks/usuario", () => ({
   useDeleteUser: () => ({ mutateAsync: vi.fn(), isPending: false }),
   useQuitarDeOrganizacion: () => ({ mutateAsync: vi.fn(), isPending: false }),
   useResetPasswordUsuario: () => ({ mutate: vi.fn(), isPending: false }),
+  useCambiarAccesoUsuario: () => ({ mutate: vi.fn(), isPending: false }),
   useUsuariosOrgScope: () => "org-1",
 }));
 

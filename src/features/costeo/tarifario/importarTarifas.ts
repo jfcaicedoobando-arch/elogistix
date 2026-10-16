@@ -18,6 +18,14 @@ export interface CatalogosImport {
 export interface TarifaImport { fila: number; input: TarifaInput; origenId: string; destinoId: string }
 export interface ResultadoImport { tarifas: TarifaImport[]; errores: string[] }
 
+/** Errores del último guardado o, si no hay, los de la revisión previa. */
+export function erroresVisibles(
+  resultado: { errores: string[] } | null | undefined,
+  estado: { prep: { errores: string[] } } | null | undefined,
+): string[] {
+  return resultado?.errores ?? estado?.prep.errores ?? [];
+}
+
 const norm = (s: unknown) => String(s ?? "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim().toLowerCase();
 
 /** Encabezado normalizado → campo. Acepta variantes comunes. */
@@ -62,8 +70,10 @@ function tipoPara(tipos: CatalogosImport["tipos"], tam: "20" | "40"): string | n
   return (exacto ?? tipos.find((t) => t.code.startsWith(tam)))?.id ?? null;
 }
 
-const buscarPuerto = (c: CatalogosImport, v: string) =>
+const buscarPuerto = (c: Pick<CatalogosImport, "puertos">, v: string) =>
   c.puertos.find((p) => norm(p.code) === norm(v)) ?? c.puertos.find((p) => norm(p.name) === norm(v));
+const buscarNaviera = (c: Pick<CatalogosImport, "navieras">, v: string) =>
+  c.navieras.find((n) => norm(n.name) === norm(v) || (n.code && norm(n.code) === norm(v)));
 
 function normalizarFila(raw: Record<string, unknown>): Record<string, unknown> {
   const r: Record<string, unknown> = {};
@@ -78,12 +88,23 @@ interface ReferenciasFila {
   nav: CatalogosImport["navieras"][number] | undefined;
 }
 
-function validarReferencias(r: Record<string, unknown>, { o, d, ag, nav }: ReferenciasFila, fallas: string[]): void {
-  if (!o) fallas.push(`origen «${String(r.origen ?? "")}» no existe en puertos`);
-  if (!d) fallas.push(`destino «${String(r.destino ?? "")}» no existe en puertos`);
+function validarReferencias(
+  r: Record<string, unknown>, { o, d, ag, nav }: ReferenciasFila, fallas: string[],
+  existencia: Pick<CatalogosImport, "puertos" | "navieras">,
+): void {
+  for (const [campo, puerto] of [["origen", o], ["destino", d]] as const) {
+    if (puerto) continue;
+    const valor = String(r[campo] ?? "");
+    const motivo = buscarPuerto(existencia, valor) ? "está inactivo o no visible en esta organización" : "no existe en puertos";
+    fallas.push(`${campo} «${valor}» ${motivo}`);
+  }
   if (o && d && o.id === d.id) fallas.push("origen y destino son el mismo puerto");
   if (!ag) fallas.push(`agente «${String(r.agente ?? "")}» no existe`);
-  if (!nav) fallas.push(`naviera «${String(r.naviera ?? "")}» no existe`);
+  if (!nav) {
+    const valor = String(r.naviera ?? "");
+    const motivo = buscarNaviera(existencia, valor) ? "está inactiva o no visible en esta organización" : "no existe";
+    fallas.push(`naviera «${valor}» ${motivo}`);
+  }
 }
 
 function validarVigencia(desde: string | null, hasta: string | null, dias: number | null, fallas: string[]): void {
@@ -112,7 +133,10 @@ function agregarTarifas(
 }
 
 /** Convierte los renglones crudos del archivo en tarifas válidas + errores. */
-export function prepararImportacion(filas: ReadonlyArray<Record<string, unknown>>, c: CatalogosImport): ResultadoImport {
+export function prepararImportacion(
+  filas: ReadonlyArray<Record<string, unknown>>, c: CatalogosImport,
+  existencia: Pick<CatalogosImport, "puertos" | "navieras"> = c,
+): ResultadoImport {
   const tarifas: TarifaImport[] = [];
   const errores: string[] = [];
   const t20 = tipoPara(c.tipos, "20");
@@ -125,13 +149,13 @@ export function prepararImportacion(filas: ReadonlyArray<Record<string, unknown>
     const o = buscarPuerto(c, String(r.origen ?? ""));
     const d = buscarPuerto(c, String(r.destino ?? ""));
     const ag = c.agentes.find((a) => norm(a.nombre) === norm(r.agente));
-    const nav = c.navieras.find((n) => norm(n.name) === norm(r.naviera) || (n.code && norm(n.code) === norm(r.naviera)));
+    const nav = buscarNaviera(c, String(r.naviera ?? ""));
     const desde = fechaIso(r.desde);
     const hasta = fechaIso(r.hasta);
     const dias = numero(r.dias);
     const m20 = numero(r.t20);
     const m40 = numero(r.t40);
-    validarReferencias(r, { o, d, ag, nav }, fallas);
+    validarReferencias(r, { o, d, ag, nav }, fallas, existencia);
     validarVigencia(desde, hasta, dias, fallas);
     validarMontos(m20, m40, fallas);
     if (fallas.length || !o || !d || !ag || !nav || !desde || !hasta) {

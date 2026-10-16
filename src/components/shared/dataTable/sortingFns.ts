@@ -8,17 +8,18 @@
  *   - Números → resta directa.
  *   - Fechas (ISO o `Date`) → comparación numérica de timestamps;
  *     strings inválidos se tratan como null.
- *   - `null` / `undefined` van **siempre al final**, sin importar la
- *     dirección (asc o desc). Cualquier desviación rompe la UX del listado.
+ *   - Estos comparadores producen null-last ascendente. TanStack invierte
+ *     el signo en descendente: el comportamiento histórico no garantiza
+ *     null-last en ambas direcciones. Esta migración conserva esa política.
  *
  * Si alguna columna necesita un sort exótico, escribe un `SortingFn<T>`
- * ad-hoc pero **mantén el contrato null-last**.
+ * ad-hoc y documenta su política de valores ausentes.
  */
-import type { Row, SortingFn } from "@tanstack/react-table";
+import type { Row, SortingFn } from "@/components/shared/dataTable/tanstackTypes";
 
 export const esCollator = new Intl.Collator("es-MX", { sensitivity: "base" });
 
-function nullAwareNumber<T>(
+function nullAwareNumber<T extends object>(
   extract: (row: T) => number | null | undefined,
 ): SortingFn<T> {
   return (a: Row<T>, b: Row<T>) => {
@@ -31,7 +32,7 @@ function nullAwareNumber<T>(
   };
 }
 
-export function sortByString<T>(extract: (row: T) => string | null | undefined): SortingFn<T> {
+export function sortByString<T extends object>(extract: (row: T) => string | null | undefined): SortingFn<T> {
   return (a, b) => {
     const va = extract(a.original);
     const vb = extract(b.original);
@@ -42,11 +43,11 @@ export function sortByString<T>(extract: (row: T) => string | null | undefined):
   };
 }
 
-export function sortByNumber<T>(extract: (row: T) => number | null | undefined): SortingFn<T> {
+export function sortByNumber<T extends object>(extract: (row: T) => number | null | undefined): SortingFn<T> {
   return nullAwareNumber(extract);
 }
 
-export function sortByDate<T>(
+export function sortByDate<T extends object>(
   extract: (row: T) => string | Date | null | undefined,
 ): SortingFn<T> {
   return nullAwareNumber<T>((row) => {

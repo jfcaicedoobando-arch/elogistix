@@ -26,6 +26,44 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  cxp-filter-focus:
+    name: Isolated CxP filter focus (12 cases)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: ./.github/actions/setup-bun
+      - name: Install lockfile Chromium and system dependencies
+        run: node node_modules/@playwright/test/cli.js install --with-deps chromium
+      - name: Typecheck and lint isolated CxP fixture
+        run: |
+          node node_modules/typescript/bin/tsc -p e2e/visual/cxp-filters/tsconfig.json
+          node node_modules/eslint/bin/eslint.js --no-cache e2e/visual/cxp-filters
+      - name: Build fresh isolated fixture and run 12 focus and draft cases
+        run: node node_modules/@playwright/test/cli.js test --config e2e/visual/cxp-filters/playwright.config.ts
+      - name: Require all 12 cases without skips or retries
+        if: always()
+        run: |
+          node --input-type=module <<'JS'
+          import { readFileSync } from "node:fs";
+          const { stats } = JSON.parse(readFileSync("reports/cxp-filters/results.json", "utf8"));
+          if (stats.expected !== 12 || stats.unexpected !== 0 || stats.skipped !== 0 || stats.flaky !== 0) {
+            throw new Error(`Expected 12 passing CxP GUI cases with no skips/retries: ${JSON.stringify(stats)}`);
+          }
+          JS
+      - name: Upload synthetic CxP evidence
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: isolated-ui-cxp-filters
+          path: |
+            test-results/cxp-filters/
+            reports/cxp-filters/
+          retention-days: 3
+          if-no-files-found: warn
+
   dialog-card:
     name: Isolated dialog and payment cards (20 cases)
     runs-on: ubuntu-24.04

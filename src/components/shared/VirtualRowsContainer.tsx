@@ -12,11 +12,11 @@
  * scroll: sólo consume el snapshot inmutable de `rows`.
  */
 import { useMemo } from "react";
-import type { Row } from "@tanstack/react-table";
+import type { Row } from "@/components/shared/dataTable/tanstackTypes";
 import type { Virtualizer, VirtualItem } from "@tanstack/react-virtual";
 import { VirtualRow } from "@/components/shared/VirtualRow";
 
-interface VirtualRowsContainerProps<T> {
+interface VirtualRowsContainerProps<T extends object> {
   virtualizer: Virtualizer<HTMLDivElement, HTMLElement>;
   virtualItems: VirtualItem[];
   rows: Row<T>[];
@@ -28,7 +28,7 @@ interface VirtualRowsContainerProps<T> {
   rowClassName?: (item: T) => string;
 }
 
-export function VirtualRowsContainer<T>({
+export function VirtualRowsContainer<T extends object>({
   virtualizer,
   virtualItems,
   rows,

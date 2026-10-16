@@ -60,8 +60,8 @@ export default function OportunidadMontosFields({ form, set, esGanada }: Props) 
         )}
       </div>
       <div className="space-y-1">
-        <Label>Fecha estimada cierre</Label>
-        <DatePickerMx value={form.fecha_estimada_cierre} onChange={(v) => set("fecha_estimada_cierre", v)} className="w-full" />
+        <Label>Fecha estimada de cierre</Label>
+        <DatePickerMx title="Fecha estimada de cierre" value={form.fecha_estimada_cierre} onChange={(v) => set("fecha_estimada_cierre", v)} className="w-full" />
       </div>
       {/* B-034: al cerrar en etapa "ganada" exigimos fecha y valor reales;
           sin ellos el Resumen (monto_estimado) y el Leaderboard

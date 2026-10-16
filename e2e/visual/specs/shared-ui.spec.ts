@@ -34,3 +34,29 @@ test("empty, error and loading remain distinct", async ({ page }) => {
   await expect(page.getByRole("status")).toContainText("Cargando…");
   await expect(page.getByText("Sin cotizaciones", { exact: true })).toHaveCount(0);
 });
+
+test("height breakpoint and CSS variable sidebar widths retain their v3 behavior", async ({ page }) => {
+  await page.setViewportSize({ width: 2000, height: 900 });
+  const content = page.getByTestId("visual-page-container");
+  await expect(content).toHaveCSS("max-width", "1536px");
+  await page.setViewportSize({ width: 1280, height: 801 });
+  await expect(content).toHaveCSS("padding-top", "24px");
+  await page.setViewportSize({ width: 1280, height: 800 });
+  await expect(content).toHaveCSS("padding-top", "16px");
+  // The fixed frame owns the width variable and its 1px border.
+  const sidebar = page.locator('[data-sidebar="sidebar"]').locator("..");
+  await expect(sidebar).toHaveCSS("width", "256px");
+  await page.getByRole("button", { name: "Mostrar u ocultar la barra lateral", exact: true }).click();
+  await expect(sidebar).toHaveCSS("width", "48px");
+  const margins = await page.evaluate(() => {
+    const probe = document.createElement("div");
+    probe.className = "space-y-2";
+    probe.style.cssText = "position:absolute;visibility:hidden";
+    probe.innerHTML = '<div class="mb-2">First</div><div hidden>Hidden</div><div>Last</div>';
+    document.body.append(probe);
+    const result = [getComputedStyle(probe.children[0]).marginBottom, getComputedStyle(probe.children[2]).marginTop];
+    probe.remove();
+    return result;
+  });
+  expect(margins).toEqual(["8px", "8px"]);
+});

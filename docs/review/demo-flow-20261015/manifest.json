@@ -1,0 +1,176 @@
+{
+  "schema_version": 1,
+  "status": "REVIEW_ONLY_HOLD",
+  "repository_prefix": "docs/review/demo-flow-20261015",
+  "manifest_self_hash": "excluded",
+  "files": [
+    {
+      "local_path": "ADAPTATIONS.md",
+      "repository_path": "docs/review/demo-flow-20261015/ADAPTATIONS.md",
+      "SHA256": "f296ec5307b77f2203bc6f77241d8e51752be0f38b04808e427190c5b6f34094",
+      "gitblobhash": "1ad76c10ebb61b287f714acc875e9b636706ca05"
+    },
+    {
+      "local_path": "README.md",
+      "repository_path": "docs/review/demo-flow-20261015/README.md",
+      "SHA256": "139ef347b4bd17f3ed3ac02c893a9984f1e95b395ee05c6257ba28e21a592709",
+      "gitblobhash": "f6d6aac061344393113e12b2f8fcd8a0440abf41"
+    },
+    {
+      "local_path": "evidence/main-aprobar_factura_proveedor.sql",
+      "repository_path": "docs/review/demo-flow-20261015/evidence/main-aprobar_factura_proveedor.sql",
+      "SHA256": "8d01ef0010bbfb8e440a0bf1eb60f47e5737b960a12191164a48849df3758408",
+      "gitblobhash": "3d5d7f9f5ba81cb009ecdd8d8bbb2589fd1b480f"
+    },
+    {
+      "local_path": "fixtures/manifest.json",
+      "repository_path": "docs/review/demo-flow-20261015/fixtures/manifest.json",
+      "SHA256": "421e64c3edd7fe33307bb011581087677a7ae1f7dee31a34efd13335c962db4d",
+      "gitblobhash": "48b01d6628f73e419b383fc7232e3a7c8ebf6f58"
+    },
+    {
+      "local_path": "identity/proposals/demo-fixture-identity.sql.proposed",
+      "repository_path": "docs/review/demo-flow-20261015/identity/proposals/demo-fixture-identity.sql.proposed",
+      "SHA256": "666a466b0b8189ef3cec661f489495b7059cfd9bbcb2492d9d221b693ea3be7f",
+      "gitblobhash": "8d166a8ded732de4861bcad2f5ae7f713a3d5cf7"
+    },
+    {
+      "local_path": "identity/tests/bridge/fixture-contract.sql",
+      "repository_path": "docs/review/demo-flow-20261015/identity/tests/bridge/fixture-contract.sql",
+      "SHA256": "d1e4beaec6d8832fe444a9bd6b3e1ef7475b8f089b9cc061bb7ac42c13071de5",
+      "gitblobhash": "b25f363e6fdca81f75f1229d9a3bbc47353994d6"
+    },
+    {
+      "local_path": "identity/tests/bridge/prepare_identity_receipt.sql",
+      "repository_path": "docs/review/demo-flow-20261015/identity/tests/bridge/prepare_identity_receipt.sql",
+      "SHA256": "f0a14f683ee524527ed3b7f29305bc793f7f9e3d5581b4332da72f8fb8bb55a6",
+      "gitblobhash": "0eef8bcef4cf4eec32315bdd2e44b697f2d119be"
+    },
+    {
+      "local_path": "identity/tests/bridge/test_contract.py",
+      "repository_path": "docs/review/demo-flow-20261015/identity/tests/bridge/test_contract.py",
+      "SHA256": "0899e61e2f58fb04454c7daf74a511fcfc29f7d80e4ebcb832d8ce7db77edc0f",
+      "gitblobhash": "190e67690c83c128102c556ac18f43ef50adf766"
+    },
+    {
+      "local_path": "identity/tests/bridge/verify_identity_receipt.sql",
+      "repository_path": "docs/review/demo-flow-20261015/identity/tests/bridge/verify_identity_receipt.sql",
+      "SHA256": "69bbcd2ec825953ca4fda822ec5fde143f1f70a5120f372ee3c211e96523c5b2",
+      "gitblobhash": "9728b864af8a9cb7bc6eebaf61e750e068e3da75"
+    },
+    {
+      "local_path": "issuer/10-issuer.sql",
+      "repository_path": "docs/review/demo-flow-20261015/issuer/10-issuer.sql",
+      "SHA256": "8c739036ea948163d83617d6f59068f5b414a641c251c7ac4115be82b3d0a81e",
+      "gitblobhash": "44bbf7f72807efb9a33516ea522d8d0f037b6505"
+    },
+    {
+      "local_path": "issuer/11-atomic-entry.sql",
+      "repository_path": "docs/review/demo-flow-20261015/issuer/11-atomic-entry.sql",
+      "SHA256": "a2093b45e37c922f0505e496581381b4b5a3d105d3f0e583d694ef92e9c47cb3",
+      "gitblobhash": "42ac0a5a263a9b3414657c0146c7bf6d09202332"
+    },
+    {
+      "local_path": "issuer/12-approval-main.sql",
+      "repository_path": "docs/review/demo-flow-20261015/issuer/12-approval-main.sql",
+      "SHA256": "ee528767111b8352196f2d40629342b00bbcceedc4b5f2ecbdadc88c7477e583",
+      "gitblobhash": "da04314e839476197c05f7b9f958170c77655673"
+    },
+    {
+      "local_path": "issuer/13-readonly-verifiers.sql",
+      "repository_path": "docs/review/demo-flow-20261015/issuer/13-readonly-verifiers.sql",
+      "SHA256": "15ff74c47b4b33840fceb5ec918f25749f9c9c4ef761c61a976b438a60f81dcd",
+      "gitblobhash": "ebc1ca7ea87d6aa082b6619fccc4af7a1b794004"
+    },
+    {
+      "local_path": "issuer/14-reconcile.sql",
+      "repository_path": "docs/review/demo-flow-20261015/issuer/14-reconcile.sql",
+      "SHA256": "f2345eb19c532a0cce48042bc8afa6f27d58ff60796b7c6dc930be44f0aa50a1",
+      "gitblobhash": "213684eb0d1cc54c756c15700a6e6e83fffa5bf8"
+    },
+    {
+      "local_path": "issuer/15-rpc-boundary.sql",
+      "repository_path": "docs/review/demo-flow-20261015/issuer/15-rpc-boundary.sql",
+      "SHA256": "9656003b716ea2c60ec90b7a4de9dc1b21743c46a0ef1199f2522f9831979799",
+      "gitblobhash": "749fd6abf87b56530aedfc2ddde44d008bcb805c"
+    },
+    {
+      "local_path": "issuer/16-owner-registry.sql",
+      "repository_path": "docs/review/demo-flow-20261015/issuer/16-owner-registry.sql",
+      "SHA256": "a74d69ed6d19356ba36fe27d7070a496e99c3ef5cec7a030c3b96b609a64463b",
+      "gitblobhash": "7b8060d3669e7c71cf0cb8f828a4ad314c8f1254"
+    },
+    {
+      "local_path": "issuer/source-pins.json",
+      "repository_path": "docs/review/demo-flow-20261015/issuer/source-pins.json",
+      "SHA256": "476891cb97c11af6f0ee52b036945fc13da1b2a63260a201e65051eed099c3e8",
+      "gitblobhash": "5c906b18039b9448bffe72276ab14353f4dd72ab"
+    },
+    {
+      "local_path": "issuer/static_tests.py",
+      "repository_path": "docs/review/demo-flow-20261015/issuer/static_tests.py",
+      "SHA256": "a6886a60d2f4ea4b84ad5e8641b8a29f2c969c20ef50ba693f170c6b24496776",
+      "gitblobhash": "991084418fca1380b972488777e8d794bb5ca3c9"
+    },
+    {
+      "local_path": "public_contract_test.py",
+      "repository_path": "docs/review/demo-flow-20261015/public_contract_test.py",
+      "SHA256": "5d55dd3d56d5846ec59fa378fa4397af14aba46e0384599f6b7277e4a2439ace",
+      "gitblobhash": "615f04b2a46784a6feaf87c8ff4c02c0990861ff"
+    },
+    {
+      "local_path": "review-order.json",
+      "repository_path": "docs/review/demo-flow-20261015/review-order.json",
+      "SHA256": "52c11c4d717c6dd42adf30e68f520f0eaa9b51384aecc538aabfcb268257a904",
+      "gitblobhash": "1cfba2648a9bd398482b65283c686fbae1a4c0a5"
+    },
+    {
+      "local_path": "rpc/rpc-attempt.test.mjs",
+      "repository_path": "docs/review/demo-flow-20261015/rpc/rpc-attempt.test.mjs",
+      "SHA256": "181933655d043da7f29365c83f29b118ed8398ead9c09075c88724c5a5fb647f",
+      "gitblobhash": "61b45f8fd21f994ce3d96cb7dc2d113c5d1fe46d"
+    },
+    {
+      "local_path": "rpc/rpc-attempt.ts",
+      "repository_path": "docs/review/demo-flow-20261015/rpc/rpc-attempt.ts",
+      "SHA256": "04f24a62e2ecb2a96ab6df1e6984f9c41a8dc3afd8e251ea3350be8159ccb726",
+      "gitblobhash": "73df34e36c01e51bad6c89a0136cf28286fb5a01"
+    },
+    {
+      "local_path": "run_offline.py",
+      "repository_path": "docs/review/demo-flow-20261015/run_offline.py",
+      "SHA256": "4baeb243dd775d392c120b92c073b663925e2bbfcead7f8b8e7d67e39cf52fb6",
+      "gitblobhash": "83a677b26c8ab3225fc0415dc50be0e4828b5bec"
+    },
+    {
+      "local_path": "sql/01-private.sql",
+      "repository_path": "docs/review/demo-flow-20261015/sql/01-private.sql",
+      "SHA256": "e78412eb7e0efe59749c7f7077b8955df5752a4a8d911a02822ddf56c57dd9a2",
+      "gitblobhash": "23093a265a53287aa65a153922df3085c90220cb"
+    },
+    {
+      "local_path": "sql/02-manifest.sql",
+      "repository_path": "docs/review/demo-flow-20261015/sql/02-manifest.sql",
+      "SHA256": "5d49c6dabc0a39b2a1ba5d5e1c0f19a2112d100147d9f706ddd2d9e5093790d0",
+      "gitblobhash": "8bea4e402aafe8e506a731ed4c0cce713d298fb1"
+    },
+    {
+      "local_path": "sql/04-engine.sql",
+      "repository_path": "docs/review/demo-flow-20261015/sql/04-engine.sql",
+      "SHA256": "44460cb9e8e4028ad02e3eb2485ca451ab9489208f84b9c2a85917d45a642f1d",
+      "gitblobhash": "5b06190de1af981d07a28b047cd1bcaa645ca5cc"
+    },
+    {
+      "local_path": "sql/06-simulation-guards.sql",
+      "repository_path": "docs/review/demo-flow-20261015/sql/06-simulation-guards.sql",
+      "SHA256": "44f88ad264f1c2e0bd89577fe1dcdd24e3b11a017b78c4b26ad911147e7012a3",
+      "gitblobhash": "7aa37a61f25365bbc722c8bca06a79bc0d60c603"
+    },
+    {
+      "local_path": "verify_manifest.py",
+      "repository_path": "docs/review/demo-flow-20261015/verify_manifest.py",
+      "SHA256": "a918fa16d6655c2cb70ab75469547b66325fc3e5518fa11441feacdc5b6423cd",
+      "gitblobhash": "4ee0b75e8415c6e308be32c88690538c2b62e556"
+    }
+  ]
+}

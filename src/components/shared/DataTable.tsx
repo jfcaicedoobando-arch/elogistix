@@ -1,5 +1,5 @@
 import React from "react";
-import type { ColumnDef, OnChangeFn, RowSelectionState, VisibilityState, TableOptions } from "@tanstack/react-table";
+import type { ColumnDef, OnChangeFn, RowSelectionState, VisibilityState, TableOptions } from "@/components/shared/dataTable/tanstackTypes";
 import type { LucideIcon } from "lucide-react";
 import { ErrorStateInline } from "@/components/empty/ErrorStateInline";
 import PaginationControls from "@/components/shared/PaginationControls";
@@ -10,10 +10,10 @@ import type { DataTablePagination, TableDensity, SortDir } from "@/components/sh
 // API pública estable (componente + helpers) — allowlisted en eslint react-refresh override.
 export type {    SortDir } from "@/components/shared/dataTable/types";
 export { defineColumns } from "@/components/shared/dataTable/defineColumns";
-export type { ColumnDef, VisibilityState } from "@tanstack/react-table";
+export type { ColumnDef, VisibilityState } from "@/components/shared/dataTable/tanstackTypes";
 
 
-interface DataTableProps<T> {
+interface DataTableProps<T extends object> {
   /** API única: `ColumnDef<T, unknown>[]` de TanStack. Construir con
    *  `defineColumns<T>([...])` para autocompletado del `meta` extendido. */
   columns: ReadonlyArray<ColumnDef<T, unknown>>;
@@ -86,7 +86,7 @@ const DATA_TABLE_DEFAULTS = {
   stickyHeader: false,
 };
 
-function mergeDataTableProps<T>(raw: DataTableProps<T>) {
+function mergeDataTableProps<T extends object>(raw: DataTableProps<T>) {
   const merged: Record<string, unknown> = { ...DATA_TABLE_DEFAULTS };
   for (const [k, v] of Object.entries(raw)) {
     if (v !== undefined) merged[k] = v;
@@ -95,7 +95,7 @@ function mergeDataTableProps<T>(raw: DataTableProps<T>) {
   return merged as unknown as DataTableProps<T> & typeof DATA_TABLE_DEFAULTS;
 }
 
-function DataTableInner<T>(rawProps: DataTableProps<T>) {
+function DataTableInner<T extends object>(rawProps: DataTableProps<T>) {
   const {
     columns, data, onRetry, errorState, emptyHint, emptyIcon, emptyState,
     onRowClick, onRowMouseEnter, getRowHref, getRowAriaLabel,

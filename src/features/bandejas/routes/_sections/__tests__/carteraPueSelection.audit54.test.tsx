@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import { fireEvent, render, screen } from "@testing-library/react";
 import { MemoryRouter } from "react-router";
 import { DataTable } from "@/components/shared/DataTable";
+import type { RowSelectionState } from "@/components/shared/dataTable/tanstackTypes";
 import { buildCarteraSelectionColumns } from "../carteraColumns.selection";
 import { puedeSeleccionarCobro } from "../carteraLote";
 import type { CarteraRow } from "../carteraColumns.types";
@@ -12,7 +13,7 @@ const row = (id: string, metodo_pago: string, pagado: number): CarteraRow => ({
   total: 1.16, pagado, saldo: 1.16 - pagado, ultimo_contacto: null, estado: "Pagada", metodo_pago,
 });
 function Harness() {
-  const [selection, setSelection] = useState<Record<string, boolean>>({});
+  const [selection, setSelection] = useState<RowSelectionState>({});
   return <MemoryRouter>
     <DataTable columns={buildCarteraSelectionColumns()} data={[row("A8", "PUE", 1.15), row("PPD", "PPD", 0)]}
       rowKey={(r) => r.factura_id} rowSelection={selection} onRowSelectionChange={setSelection}

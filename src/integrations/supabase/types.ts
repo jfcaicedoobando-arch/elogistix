@@ -1895,6 +1895,7 @@ export type Database = {
       costeo_cargos_fob_agente: {
         Row: {
           agente_id: string
+          aplica_iva: boolean
           concepto: string
           created_at: string
           created_by: string | null
@@ -1908,6 +1909,7 @@ export type Database = {
         }
         Insert: {
           agente_id: string
+          aplica_iva?: boolean
           concepto?: string
           created_at?: string
           created_by?: string | null
@@ -1921,6 +1923,7 @@ export type Database = {
         }
         Update: {
           agente_id?: string
+          aplica_iva?: boolean
           concepto?: string
           created_at?: string
           created_by?: string | null
@@ -1951,6 +1954,7 @@ export type Database = {
       }
       costeo_cargos_locales_naviera: {
         Row: {
+          aplica_iva: boolean
           concepto: string
           created_at: string
           created_by: string | null
@@ -1964,6 +1968,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          aplica_iva?: boolean
           concepto?: string
           created_at?: string
           created_by?: string | null
@@ -1977,6 +1982,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          aplica_iva?: boolean
           concepto?: string
           created_at?: string
           created_by?: string | null
@@ -9962,6 +9968,10 @@ export type Database = {
           p_target_ids: string[]
         }
         Returns: undefined
+      }
+      _crm_empresa_para_conversion: {
+        Args: { p_lead: string; p_oportunidad: string; p_org: string }
+        Returns: string
       }
       _crm_es_pricing: { Args: { p_org: string }; Returns: boolean }
       _crm_folio_pricing_prefijo: { Args: { p_ts: string }; Returns: string }

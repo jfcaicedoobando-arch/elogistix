@@ -8,7 +8,7 @@ import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
 vi.mock("../cargosService", () => ({ listarCargos: vi.fn(), archivarCargo: vi.fn() }));
 vi.mock("../CargoFormDialog", () => ({ CargoFormDialog: () => <div>Formulario de cargo</div> }));
 vi.mock("@/lib/ui/appFeedback", () => ({ notifyError: vi.fn(), notifySuccess: vi.fn() }));
-const cargo = { id: "c1", entidad_id: "a1", entidad: { nombre: "Agente uno" }, concepto: "FOB origen", monto: 120, moneda: "USD", unidad: "Por BL" };
+const cargo = { id: "c1", entidad_id: "a1", entidad: { nombre: "Agente uno" }, concepto: "FOB origen", monto: 120, moneda: "USD", unidad: "Por BL", aplica_iva: false };
 function setup(puedeEditar = true) {
   vi.mocked(listarCargos).mockResolvedValue([cargo]);
   const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });

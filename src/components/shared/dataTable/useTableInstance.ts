@@ -1,29 +1,20 @@
 /**
- * useTableInstance — wrapper de `useReactTable` que centraliza:
+ * useTableInstance — wrapper de `useTable` que centraliza:
  *   - Sort controlado vs. interno, sin `useState` ni `useMemo` paralelos.
  *   - Modo server (`manualSorting: true`) cuando el caller pasa
  *     `controlledSort` + `onSortChange` (la fuente de verdad vive en
  *     `useEmbarquesPageState`, `useCotizacionesPageState`, etc., y a su vez
  *     en los RPC de Supabase). En modo client, TanStack ordena con
- *     `getSortedRowModel`.
+ *     `sortedRowModel`.
  *
  * Regla del proyecto: TanStack es la única fuente de verdad del orden.
  * No reintroducir `useMemo` que ordene `data` ni `useEffect` que rehidrate
  * el estado de sort desde fuera del page-state.
  */
 import { useMemo, useState } from "react";
-import {
-  getCoreRowModel,
-  getSortedRowModel,
-  useReactTable,
-  type ColumnDef,
-  type TableOptions,
-  type OnChangeFn,
-  type RowSelectionState,
-  type SortingState,
-  type Updater,
-  type VisibilityState,
-} from "@tanstack/react-table";
+import { useTable } from "@tanstack/react-table";
+import type { ColumnDef, TableOptions, OnChangeFn, RowSelectionState, SortingState, Updater, VisibilityState } from "@/components/shared/dataTable/tanstackTypes";
+import { dataTableFeatures } from "./tableFeatures";
 import type { SortDir } from "./types";
 
 export interface ControlledSort {
@@ -31,7 +22,7 @@ export interface ControlledSort {
   dir: SortDir;
 }
 
-interface Args<T> {
+interface Args<T extends object> {
   data: T[];
   columns: ReadonlyArray<ColumnDef<T, unknown>>;
   sortMode: "client" | "server";
@@ -39,7 +30,7 @@ interface Args<T> {
   onSortChange?: (key: string | null, dir: SortDir) => void;
   /** Identificador estable para que TanStack no recree filas en cada render. */
   getRowId?: (row: T, index: number) => string;
-  /** Si false, omite `getSortedRowModel` (útil para tablas virtualizadas que
+  /** Si false, omite el procesamiento de orden (útil para tablas virtualizadas que
    *  no necesitan sort interno). */
   enableSorting?: boolean;
   /** Orden inicial para modo client. Ignorado en server-sort (la fuente
@@ -64,7 +55,7 @@ function resolveUpdater(updater: Updater<SortingState>, prev: SortingState): Sor
   return typeof updater === "function" ? updater(prev) : updater;
 }
 
-export function useTableInstance<T>({
+export function useTableInstance<T extends object>({
   data,
   columns,
   sortMode,
@@ -100,11 +91,8 @@ export function useTableInstance<T>({
       }
     : undefined;
 
-  // Estado interno de sort para modo client. TanStack v8 requiere
-  // `state.sorting` + `onSortingChange` controlados para que `setSorting`
-  // (invocado por `getToggleSortingHandler`) tenga efecto. Pasar ambos como
-  // `undefined` deja el `setSorting` interno en no-op y los headers no
-  // ordenan al hacer click.
+  // Mantener el slice controlado conserva el orden inicial y el contrato
+  // existente de los headers sin duplicar el procesamiento de TanStack.
   const [internalSorting, setInternalSorting] = useState<SortingState>(
     () => (initialSort?.key ? [{ id: initialSort.key, desc: initialSort.dir === "desc" }] : []),
   );
@@ -116,13 +104,15 @@ export function useTableInstance<T>({
 
   const selectionEnabled = enableRowSelection ?? Boolean(onRowSelectionChange);
 
-  return useReactTable<T>({
+  return useTable({
+    features: dataTableFeatures,
     data,
     columns: columnDefs,
     getRowId,
     enableSorting,
-    manualSorting: isServer,
+    manualSorting: isServer || !enableSorting,
     enableRowSelection: selectionEnabled,
+    enableRowRangeSelection: false,
     state: {
       sorting,
       ...(columnVisibility ? { columnVisibility } : {}),
@@ -131,7 +121,5 @@ export function useTableInstance<T>({
     onSortingChange,
     onColumnVisibilityChange,
     onRowSelectionChange: selectionEnabled ? onRowSelectionChange : undefined,
-    getCoreRowModel: getCoreRowModel(),
-    getSortedRowModel: enableSorting && !isServer ? getSortedRowModel() : undefined,
   });
 }

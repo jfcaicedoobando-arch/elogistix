@@ -6,7 +6,7 @@ import { Clock } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { calcularReloj } from "@/features/crm/services/pricing/relojPricing";
 
-interface Props { enviadaAt: string | null; venceAt: string | null; respondidaAt: string | null }
+interface Props { enviadaAt: string | null; venceAt: string | null; respondidaAt: string | null; cancelada?: boolean }
 
 const VARIANTE = {
   ok: "success",
@@ -15,15 +15,16 @@ const VARIANTE = {
   detenida: "neutral",
 } as const;
 
-export function RelojPricing({ enviadaAt, venceAt, respondidaAt }: Props) {
+export function RelojPricing({ enviadaAt, venceAt, respondidaAt, cancelada = false }: Props) {
   const [ahora, setAhora] = useState(() => new Date());
   useEffect(() => {
-    if (respondidaAt) return undefined;
+    if (respondidaAt || cancelada) return undefined;
     const t = setInterval(() => setAhora(new Date()), 60_000);
     return () => clearInterval(t);
-  }, [respondidaAt]);
+  }, [respondidaAt, cancelada]);
 
-  const reloj = calcularReloj({ enviadaAt, venceAt, respondidaAt, ahora });
+  // Una solicitud cancelada ya no corre contra el plazo.
+  const reloj = cancelada ? null : calcularReloj({ enviadaAt, venceAt, respondidaAt, ahora });
   if (!reloj) return <span className="text-body-sm text-muted-foreground">—</span>;
   return (
     <Badge variant={VARIANTE[reloj.nivel]} className="gap-1">

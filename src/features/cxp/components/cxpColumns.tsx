@@ -24,7 +24,7 @@ export function buildCxPColumns(): ColumnDef<FacturaCxP, unknown>[] {
     {
       id: "folio_interno", header: () => <span className="whitespace-normal">Folio interno</span>,
       accessorFn: (f) => f.folio_interno, enableSorting: true,
-      sortingFn: sortByString<FacturaCxP>((f) => f.folio_interno),
+      sortFn: sortByString<FacturaCxP>((f) => f.folio_interno),
       meta: { width: COL_W.nombre, className: "font-mono text-body-sm font-semibold whitespace-nowrap", sticky: true },
       cell: ({ row }) => (
         <div>
@@ -40,7 +40,7 @@ export function buildCxPColumns(): ColumnDef<FacturaCxP, unknown>[] {
     {
       id: "folio", header: () => <span className="whitespace-normal">Folio proveedor</span>,
       accessorFn: (f) => f.folio_proveedor, enableSorting: true,
-      sortingFn: sortByString<FacturaCxP>((f) => f.folio_proveedor),
+      sortFn: sortByString<FacturaCxP>((f) => f.folio_proveedor),
       meta: { width: COL_W.folio, className: "whitespace-nowrap text-body-sm text-muted-foreground hidden xl:table-cell", headerClassName: "hidden xl:table-cell" },
       cell: ({ row }) => row.original.folio_proveedor,
     },
@@ -116,7 +116,7 @@ export function buildCxPColumns(): ColumnDef<FacturaCxP, unknown>[] {
     {
       id: "estado", header: "Estado",
       accessorFn: (f) => f.estatus, enableSorting: true,
-      sortingFn: sortByString<FacturaCxP>((f) => f.estatus),
+      sortFn: sortByString<FacturaCxP>((f) => f.estatus),
       meta: { width: COL_W.estado },
       cell: ({ row }) => <EstadoFacturaCxPCell factura={row.original} />,
     },

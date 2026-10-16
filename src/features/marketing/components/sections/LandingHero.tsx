@@ -57,7 +57,7 @@ export function LandingHero() {
 
         {/* Mockup: vista de Embarque real */}
         <div className="relative flex items-center justify-center">
-          <div className="w-full max-w-md rounded-2xl border border-primary-foreground/15 bg-primary-foreground/[0.06] p-5 shadow-2xl backdrop-blur-sm">
+          <div className="w-full max-w-md rounded-2xl border border-primary-foreground/15 bg-primary-foreground/[0.06] p-5 shadow-2xl backdrop-blur-xs">
             <div className="mb-4 flex items-center justify-between border-b border-primary-foreground/10 pb-3">
               <div>
                 <p className="text-2xs font-semibold uppercase tracking-wider text-primary-foreground/80">

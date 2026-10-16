@@ -1,5 +1,88 @@
 # Changelog
 
+## [13.824.85] - Unreleased
+
+### CRM: empresas propias del KAM a Prospecto
+
+- Permite pasar empresas propias de Lead a Prospecto al miembro vendedor de la organización activa y habilitada. Exige creador explícito de la empresa y propietarios, vigencia, organización y origen coherentes de todos sus vínculos comerciales, también al reintentar.
+- Conserva la ruta de administración, operación y contabilidad y el helper compartido de escritura. No reasigna registros existentes ni recupera borrados o empresas ya Cliente por la nueva ruta KAM.
+- Protege la atribución de empresas frente a altas con creador falso, cambios de creador/ID y borrado físico ajeno para reutilizar su identidad. Conserva los productores de servidor y las capacidades previas de los roles writer.
+- Alinea el botón y sus mensajes con esta capacidad específica. Agrega una migración forward con preimagen/postimagen y conservación de identidad, owner, ACL y atributos; requiere aplicación posterior revisada en Lovable.
+
+## [13.824.84] - Unreleased
+
+### Acceso demo deshabilitado temporalmente
+
+- Presenta «Demo no disponible» sin abrir ni enviar el formulario demo, registrar leads por ese flujo, iniciar sesión o navegar al ERP. Conserva la captación comercial restante.
+- El endpoint demo devuelve 503 saneado antes de Auth, membresía o SQL; conserva OPTIONS y el contrato CORS público. No conecta un proveedor de disponibilidad.
+- Agrega una migración forward atómica que bloquea las cuatro rutas de regeneración/limpieza antes de cualquier DML, con verificación exacta de cuerpos, owner, firma y ACL y preservación de metadata. Su presencia no acredita aplicación a una base.
+- Conserva datos y sesiones existentes: esta release no revoca sesiones, cambia cuentas, activa organizaciones ni habilita regeneración. No incluye escritor ni preparador de identidad pendientes.
+- Prepara comprobación Deno canónica aislada y adapta el smoke manual al contrato 503 sin credenciales; los smoke que necesitan login quedan explícitamente fuera de ese contrato. No se ejecuta el workflow mutante en esta entrega.
+
+## [13.824.83] - Unreleased
+
+### Análisis, navegación y lectura del crédito de proveedores
+
+- Presenta el estado de resultados en tarjetas móviles con importes por modo y totales, títulos que admiten varias líneas y estados explícitos de información parcial o no calculable, conservando los cálculos y la tabla de escritorio.
+- Conserva mes y filtros de la proyección de facturación en la URL al consultar un expediente y volver; evita que el segundo clic de un doble clic agregue otra navegación de fila y mantiene los controles internos y la apertura con modificadores.
+- Incluye `dias_credito` en la lectura del detalle del proveedor para recuperar el valor ya guardado, sin modificar registros ni reglas de crédito.
+- Reconoce los estados documentales de CxC, CxP y notas de crédito de proveedores en el diagnóstico de cobertura, con validación según su origen. Documenta los requisitos de las fuentes financieras sin activar DSO, DPO ni runway ni convertir estados observados en elegibilidad operativa o cifras disponibles.
+
+### Fechas y horas en español
+
+- Alinea los calendarios compartidos y selectores de fecha y hora con el locale español compatible de react-day-picker; permite que las ayudas largas se ajusten al ancho disponible y conserva asociaciones accesibles de fecha en los formularios de actividad de CRM.
+- Asocia la etiqueta «Hora» a un identificador estable y propio de cada control de hora, sin reutilizar el identificador del campo de fecha.
+
+### Cartera: vigencia de las descargas
+
+- Evita inicios repetidos de PDF y descarta descargas, avisos y finalizaciones obsoletas al cambiar la selección, la búsqueda, los datos o el contexto autorizado, o al salir de la pantalla. Revalida organización, usuario, permisos, sesión y día del reporte antes de descargar.
+- Conserva el formato CSV y sus controles de vigencia. La cancelación lógica del PDF suprime continuaciones obsoletas; no detiene físicamente la generación ya iniciada.
+
+### CI: cobertura del contenido final en merges
+
+- Complementa el escaneo histórico de secretos con un escaneo obligatorio de los blobs finales añadidos o modificados, verificado contra los SHA del evento. Cierra el caso de merges cuyo escaneo histórico informa cero commits y cero bytes, sin ampliar exclusiones ni sustituir el escaneo histórico.
+- Verifica la identidad y materialización del snapshot y rechaza resultados vacíos inconsistentes o errores del scanner; incluye contratos offline y casos con el binario real en CI. No declara cobertura de secretos introducidos y retirados en commits intermedios omitidos por el escaneo histórico.
+
+### CxP: autoaprobación del rol Contador
+
+- Permite que Contador apruebe facturas de proveedor que él mismo capturó dentro de las empresas a las que ya tiene acceso. Conserva los controles de organización, validación del gasto, bloqueo de fila y versión revisada, así como el actor, la fecha y el historial de aprobación.
+- Alinea la disponibilidad de aprobación individual y selección por lote con esa excepción. Conserva los roles autorizados, las reglas de rechazo y las reglas de pagos; no amplía el acceso a otras empresas.
+- Agrega la migración forward de esta excepción con verificación de la definición revisada y conservación de metadatos, propietario y permisos de la función. Incluye su espejo canónico y regresiones; la presencia del archivo no acredita su aplicación a una base de datos.
+
+### Corte y alcance de la propuesta
+
+- Conserva completas las 47 entradas históricas del manifest y agrega 13.824.83 con 1,528 migraciones: las 1,527 anteriores y `20261013195000_cxp_contador_autoaprobacion.sql`.
+- Parte del código revisado de PR337, head `64ed0e2e3df072846b6e34d49c31e91644dce205`, preservando las cinco rutas concurrentes de main `fe97a9933cdf363ba3295c26a162102966e7054e`, y añade los cambios de Contador descritos arriba. Esta entrada no acredita integración en main, publicación web, despliegue de backend/Edge ni aceptación de la interfaz publicada. La publicación de 13.824.82 conserva su proceso separado.
+
+## [13.824.82] - Unreleased
+
+### Padres activos, pagos idempotentes y contexto del tarifario
+
+- Incorpora los guards ya integrados que rechazan facturas dadas de baja como padres operativos de notas de crédito, REP y sustituciones, conservando consultas históricas, conceptos manuales de NC y controles existentes de organización y permisos. El código de REP rechaza un padre dado de baja antes de contactar al proveedor o adquirir el claim; su despliegue Edge no queda acreditado por este registro.
+- Exige padres activos antes de recalcular los totales de una factura o actualizar el tipo de cambio DOF de un embarque. Conserva las fórmulas, el redondeo, los comportamientos de ausencia existentes y las restricciones de embarques cerrados.
+- Limita la comprobación previa de REP a pagos vigentes y conserva el RPC autoritativo e idempotente ante pagos ausentes, dados de baja o errores de lectura, sin fabricar éxito local. El contexto de tarifas exige un embarque activo, pero conserva el snapshot histórico, los ceros y las listas vacías sin consultar el catálogo actual.
+
+### Dependencias y virtualización
+
+- Integra las actualizaciones menores de dependencias y jest-dom 7, con el arnés y catálogo de pruebas de virtualización. El alcance queda sujeto a las pruebas de compatibilidad y navegadores del SHA final; no incorpora Tailwind 4 ni Table 9.
+
+### Refacturación: continuaciones de interfaz vigentes
+
+- Invalida acciones asíncronas de refacturación al cambiar el caso, la organización o la elegibilidad de las referencias; consulta el estado vigente de QueryClient y evita continuaciones obsoletas y acciones repetidas. Conserva la lectura histórica de la factura original y no restaura ni recrea documentos automáticamente. Estas protecciones de frontend no acreditan integridad transaccional del backend.
+
+### Crédito del cliente después de reintentar el tipo de cambio
+
+- Distingue cliente ausente, error de lectura, crédito nulo y crédito cero; revalida las condiciones vigentes después de guardar el tipo de cambio y bloquea la creación mientras la consulta se actualiza o falla. Reintentar un PDF no vuelve a crear documentos.
+
+### Compatibilidad explícita de evidencias de workflows
+
+- Mantiene como predeterminado el formato 1 de las evidencias de NC y habilita el formato 2 sólo mediante un snapshot de archivo conocido y explícito. Conserva el contrato distinto de aceptación y no elimina ni desactiva workflows.
+
+### Alcance y estado de la entrega
+
+- Conserva las 46 entradas existentes completas del manifest y agrega 13.824.82 con las mismas 1,527 migraciones de 13.824.81 en este corte, incluidas 20261013141500 y 20261013151000 ya incorporadas al repositorio. El cambio de metadatos no agrega SQL ni vuelve a ejecutar migraciones.
+- El frente transaccional de backend de refacturación sigue fuera de este corte; no se declara resuelto. El estado de la base, el despliegue de Edge Functions, la publicación web y la validación de la interfaz publicada requieren evidencias separadas. La integración y las pruebas locales no equivalen a un despliegue.
+
 ## [13.824.81] - Unreleased
 
 ### Bajas lógicas: fuentes operativas activas y consultas históricas

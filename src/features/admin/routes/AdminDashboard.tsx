@@ -99,7 +99,7 @@ export default function AdminDashboard() {
             ) : (
               recentOrgs.map((o) => (
                 <button key={o.id} onClick={() => navigate(`/admin/organizaciones/${o.id}`)}
-                  className="w-full flex items-center justify-between p-2 rounded-md hover:bg-muted/50 transition-colors text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                  className="w-full flex items-center justify-between p-2 rounded-md hover:bg-muted/50 transition-colors text-left focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring"
                 >
                   <div className="min-w-0">
                     <div className="text-body font-medium truncate">{o.nombre}</div>

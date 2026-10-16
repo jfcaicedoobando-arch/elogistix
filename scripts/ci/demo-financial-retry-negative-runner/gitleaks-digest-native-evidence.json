@@ -1,0 +1,54 @@
+{
+  "scope": "NATIVE_WINDOWS_8_24_3_EXACT_HISTORICAL_FILE_ONLY",
+  "version": "8.24.3",
+  "release_checksum": "PASS",
+  "history_enabled": true,
+  "path_filter": "exact reviewer evidence only",
+  "results": [
+    {
+      "label": "old",
+      "exit": 2,
+      "expected_exit": 2,
+      "config_sha256": "275f505fe53c82d3fc731d3168f882c2db374ffb310d991f6fcc96734ee5ed62",
+      "findings": [
+        {
+          "RuleID": "generic-api-key",
+          "File": "scripts/ci/demo-financial-retry-negative-review/origin-v2-evidence.json",
+          "StartLine": 27,
+          "Commit": "63317ad7d92c3138c720ca43ceaea3b28f966b05",
+          "Fingerprint": "63317ad7d92c3138c720ca43ceaea3b28f966b05:scripts/ci/demo-financial-retry-negative-review/origin-v2-evidence.json:generic-api-key:27"
+        }
+      ]
+    },
+    {
+      "label": "candidate",
+      "exit": 0,
+      "expected_exit": 0,
+      "config_sha256": "16e8939d68d188a57355d5b1c605c575df3448563913d92f4f62547bffeb08db",
+      "findings": []
+    },
+    {
+      "label": "candidate_git_lf",
+      "exit": 0,
+      "expected_exit": 0,
+      "config_sha256": "316da7c08d4cfe7576a3fee2d34f515f24d58d7dd5bb8e6b39f6f58839df4718",
+      "findings": []
+    }
+  ],
+  "same_linux_binary": "NOT_RUN",
+  "sql_execution": "NOT_RUN",
+  "official_windows_archive_sha256": "3f1a35578631dbfe633cc5b49e6c906e55ff14a4bfd7336a10fb27fe33b6dcd2",
+  "root_cause": "v8.24.3 detect/location.go sets startLineIndex to preceding newline index; line target includes one leading newline",
+  "negative_controls": {
+    "scope": "NATIVE_WINDOWS_8_24_3_SYNTHETIC_SCANNER_CONTROLS_ONLY",
+    "status": "PASS",
+    "tests": 1,
+    "scanner_scenarios": 9,
+    "skipped": 0,
+    "sql": "NOT_RUN"
+  },
+  "source_references": [
+    "https://github.com/gitleaks/gitleaks/blob/v8.24.3/detect/location.go",
+    "https://github.com/gitleaks/gitleaks/blob/v8.24.3/detect/detect.go"
+  ]
+}

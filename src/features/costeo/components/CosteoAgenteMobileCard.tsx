@@ -30,7 +30,7 @@ export function CosteoAgenteMobileCard({ agente, onEditar, onInvitarPortal, onEl
             onEditar();
           }
         }}
-        className="min-w-0 flex-1 space-y-1 cursor-pointer rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+        className="min-w-0 flex-1 space-y-1 cursor-pointer rounded-sm focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring"
       >
         <div className="flex flex-wrap items-center gap-2">
           <p className="font-semibold text-body break-words">{toTitleCase(agente.nombre) || "—"}</p>
