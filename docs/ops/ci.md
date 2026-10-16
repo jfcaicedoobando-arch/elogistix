@@ -34,7 +34,41 @@ Ver [contrato de shards y paralelismo](../ci-shard-benchmark.md#contrato-de-conf
 Bun **1.4.0** vía `setup-bun`. Cada job tiene instalación/caché propia;
 `node_modules` no se comparte en memoria entre runners.
 Sin caché: lockfile congelado, `--ignore-scripts`.
-La acción compartida fija Node **22.22.0**, con caché por SO/arquitectura/runtime.
+La acción compartida fija Node **24.22.0 LTS**, con caché de `node_modules`
+por SO/arquitectura/versión real instalada de Node/Bun/lockfile. ESLint usa
+la misma versión real de Node en todas sus claves, incluidas las de restauración.
+No se reutiliza una caché de `node_modules` ni de ESLint de Node 22.
+El caché de tarballs de Bun y los binarios de Playwright no dependen del ABI de Node.
+
+Los carriles de revisión de protocolo conservan su pin **24.19.0** y sus
+fixtures históricas. `engines.node >=22.22.0` es el mínimo de compatibilidad del
+paquete, no la selección de CI; `@types/node` contiene declaraciones de TypeScript,
+no instala Node. Esta migración no cambia dependencias, Bun ni `bun.lock`.
+
+### Actions oficiales y compatibilidad del runner
+
+Verificado el **2026-10-16**: [checkout 7.0.1](https://github.com/actions/checkout/releases/tag/v7.0.1),
+[setup-node 7.1.0](https://github.com/actions/setup-node/releases/tag/v7.1.0) y
+[upload-artifact 7.0.2](https://github.com/actions/upload-artifact/releases/tag/v7.0.2)
+están fijados por SHA en todos los workflows activos. Sus metadatos `runs.using`
+usan Node 24; ese runtime interno es distinto del `node-version` instalado para
+los comandos del job. [Node 24.22.0](https://nodejs.org/en/blog/release/v24.22.0)
+es la release LTS elegida deliberadamente, no un alias móvil.
+
+Checkout/setup-node requieren Actions Runner **>=2.327.1** para Node 24.
+Checkout v6+ almacena credenciales persistidas en `$RUNNER_TEMP`; ejecutar Git
+con autenticación dentro de acciones Docker requiere **>=2.329.0**.
+Los workflows usan runners hospedados y conservan `persist-credentials: false`;
+no se añade acceso ni se habilita `allow-unsafe-pr-checkout`.
+Setup-node v7 migra sus internos a ESM y retira el token ficticio de fallback;
+aquí no se configura `registry-url` y el caché automático sigue deshabilitado
+en la acción compartida. Las condiciones de los laboratorios, hashes históricos
+y runtimes de sus fixtures permanecen separados de esta actualización.
+Tres workflows financieros tienen inventarios históricos que incluyen su YAML;
+sus bases/ramas exactas siguen cerradas. El nuevo contrato de migración verifica
+que sólo cambian las referencias oficiales, sin reescribir esos inventarios ni
+atribuir la actualización a ejecuciones anteriores. Reejecutar dichos laboratorios
+sobre otra base exige una integración revisada nueva.
 SQL-only conocido omite lint/typecheck/build/PDF, pero conserva todos los shards
 Vitest por sus contratos SQL y los guards DB. Los paths desconocidos conservan
 frontend activo. Actionlint vive en el detector (ya no tiene workflow separado)
