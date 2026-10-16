@@ -14,7 +14,6 @@ import {
 
 type Cuenta = Tables<"cuentas_bancarias">;
 
-export type { TraspasoFormState } from "@/features/tesoreria/domain/traspasoForm";
 export {
   sugerirTcQuote, traspasoSucio, conceptoTraspaso, partesTraspaso,
 } from "@/features/tesoreria/domain/traspasoForm";

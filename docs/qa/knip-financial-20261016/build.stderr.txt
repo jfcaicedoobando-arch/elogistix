@@ -1,0 +1,23 @@
+$ vite build
+(!) Your Vite config uses features that are unsupported by `configLoader: 'native'`, which is planned to become the default in a future major version of Vite:
+  - `__dirname` (vite.config.ts:84:54). Use `import.meta.dirname` instead
+  - import "./scripts/lib/readAppVersion" without a file extension (vite.config.ts:7:32). Add the file extension
+  - import "./scripts/lib/verifyHtmlBundle" without a file extension (vite.config.ts:8:56). Add the file extension
+Set `VITE_CONFIG_NATIVE_IGNORE_WARNING=true` to suppress this warning.
+[sentry] SENTRY_AUTH_TOKEN ausente: sourcemaps NO se subirán a Sentry. Los stack traces de producción quedarán minificados. Configura el token en Workspace Settings → Build Secrets.
+[plugin builtin:vite-reporter] 
+(!) Some chunks are larger than 350 kB after minification. Consider:
+- Using dynamic import() to code-split the application
+- Use build.rolldownOptions.output.codeSplitting to improve chunking: https://rolldown.rs/reference/OutputOptions.codeSplitting
+- Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.
+[33m[PLUGIN_TIMINGS] [0mJavaScript callbacks ran for 30.5s of this 38.3s build (80%).
+The slowest callbacks, timed inside each callback (the wait before a callback starts is excluded, the time it awaits is included):
+  - plugin vite:css transform (17%, 6.4s, 2 calls)
+  - plugin vite:asset-import-meta-url transform (14%, 5.2s, 2 calls)
+  - plugin vite:css-post augmentChunkHash (3%, 1.1s, 748 calls)
+  - plugin vite:build-import-analysis generateBundle (3%, 1.0s, 1 call)
+Additional callback time came from the callbacks below and from callbacks under 1s.
+1 callback is listed without a time. Its calls overlapped, so the time inside one call includes work from other calls. To find its cost, profile the build with `node --cpu-prof`:
+  - plugin vite:terser renderChunk (748 calls)
+See https://rolldown.rs/reference/InputOptions.checks#bundlertimings for more details.
+
