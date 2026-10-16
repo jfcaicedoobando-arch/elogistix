@@ -1,0 +1,45 @@
+name: Independent financial retry negative review
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+    branches: [main]
+    paths:
+      - 'scripts/ci/demo-financial-retry-negative-review/**'
+      - 'scripts/ci/demo-financial-retry-negative-runner/**'
+      - 'scripts/ci/demo-financial-integrated-base-review/**'
+      - '.github/workflows/demo-financial-retry-negative-review.yml'
+permissions:
+  contents: read
+concurrency:
+  group: independent-financial-retry-negative-${{ github.event.pull_request.number }}
+  cancel-in-progress: false
+jobs:
+  integrated-independent:
+    strategy:
+      fail-fast: false
+      matrix:
+        lane: [review-v2, supplement]
+    if: github.repository == 'jfcaicedoobando-arch/elogistix' && github.event.pull_request.draft == true && github.event.pull_request.head.repo.full_name == github.repository && github.event.pull_request.head.ref == 'codex/demo-financial-behavior-recovery-20261015' && github.event.pull_request.base.sha == '326d981b9d98cae405c42158b66a3960cfe75bd3'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          persist-credentials: false
+          fetch-depth: 0
+      - name: Offline immutable-provider and native-adapter checks
+        run: |
+          python3 -B -I -m unittest discover -s scripts/ci/demo-financial-retry-negative-review -p 'test_*.py' -v
+          python3 -B -I -m unittest discover -s scripts/ci/demo-financial-retry-negative-runner -p 'test_*.py' -v
+          python3 -B -I -m unittest discover -s scripts/ci/demo-financial-integrated-base-review -p 'test_*.py' -v
+      - name: Full independent integration lane with native assertions
+        run: python3 -B -I scripts/ci/demo-financial-integrated-base-review/run_ci.py --lane ${{ matrix.lane }} --output "$RUNNER_TEMP/independent-financial-retry-negative"
+      - name: Preserve bounded native and cleanup evidence
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: financial-integrated-${{ matrix.lane }}-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/independent-financial-retry-negative/public/**
+          if-no-files-found: warn
+          retention-days: 14
