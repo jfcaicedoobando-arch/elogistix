@@ -66,7 +66,9 @@ Los cuatro PRs están cerrados y fusionados. Sus runs aquí enlazados son
 
 El [snapshot nuevo](workflow-archive/closed-labs-20261016/manifest.json) contiene
 los cuatro YAML exactos de la base, como `.yml.txt`, con ruta original, bytes,
-SHA256, blob Git, rama, merge y SHA del run. Es un registro de auditoría fuera
+SHA256, blob Git, rama, merge y SHA del run. Una regla `-text` de `.gitattributes`
+limitada a estos cuatro archivos impide la conversión LF/CRLF en otros checkouts.
+Es un registro de auditoría fuera
 del directorio ejecutable de Actions; no es una ruta de ejecución ni modifica
 el API o los dos snapshots existentes de NC/Acceptance.
 
