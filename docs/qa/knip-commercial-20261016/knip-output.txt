@@ -1,0 +1,55 @@
+Node v24.22.0
+Command: node node_modules/knip/bin/knip.js --no-progress
+Started: 2026-10-16T23:05:33.099Z
+[sentry] SENTRY_AUTH_TOKEN ausente: sourcemaps NO se subirán a Sentry. Los stack traces de producción quedarán minificados. Configura el token en Workspace Settings → Build Secrets.
+[sentry] SENTRY_AUTH_TOKEN ausente: sourcemaps NO se subirán a Sentry. Los stack traces de producción quedarán minificados. Configura el token en Workspace Settings → Build Secrets.
+[sentry] SENTRY_AUTH_TOKEN ausente: sourcemaps NO se subirán a Sentry. Los stack traces de producción quedarán minificados. Configura el token en Workspace Settings → Build Secrets.
+[sentry] SENTRY_AUTH_TOKEN ausente: sourcemaps NO se subirán a Sentry. Los stack traces de producción quedarán minificados. Configura el token en Workspace Settings → Build Secrets.
+Unused exports (26)
+getSuperAdminOrg                                         src/features/admin/services/organization/index.ts:2:10
+setSuperAdminOrg                                         src/features/admin/services/organization/index.ts:2:53
+getAuthToken                                   function  src/features/admin/services/usuario/mutaciones.auth.ts:14:23
+fetchDesactivadosOrg         catalogosService            src/features/catalogos/services/index.ts:11:10
+setActivoOrg                 catalogosService            src/features/catalogos/services/index.ts:11:32
+subirFacturaEntrante                                     src/features/cxp/services/facturasEntrantes.ts:26:3
+cargoEnMxn                                               src/features/cxp/services/index.ts:27:10
+cargoEnMonedaCuenta                                      src/features/cxp/services/index.ts:27:22
+ERROR_TC_REQUERIDO                                       src/features/cxp/services/index.ts:27:43
+runwayIncompleto                               function  src/features/dashboardEjecutivo/components/kpiValuacion.ts:8:17
+eficienciaIncompleta                           function  …c/features/dashboardEjecutivo/components/kpiValuacion.ts:12:17
+ratiosDisponibles                              function  src/features/dashboardEjecutivo/services/completitud.ts:18:17
+STEP_LABELS                                              src/features/embarques/domain/embarqueWizardSchemas.ts:19:28
+esEstadoEmbarqueContable                       function  src/features/embarques/domain/estadosContables.ts:11:17
+ivaDeFila                                                …ques/hooks/useDialogGenerarProformaController.helpers.ts:22:10
+sincronizarContenedores      svc                         src/features/embarques/services/contenedores/index.ts:8:3
+FacturaConRepsVivosError                                 src/features/facturacion/services/facturapi.ts:55:10
+esRespuestaPendiente                                     src/features/facturacion/services/timbradoPendiente.ts:25:14
+getAttribution                                 function  src/features/marketing/lib/attribution.ts:43:17
+TIPO_PAGO_LABELS                                         src/features/tesoreria/domain/libroPagos.ts:18:34
+TOLERANCIA_MONTO_MXN                                     src/features/tesoreria/domain/tolerancia.ts:6:3
+TOLERANCIA_MONTO_POR_MONEDA                              src/features/tesoreria/domain/tolerancia.ts:7:3
+useTableFilters                                          src/hooks/shared/index.ts:25:10
+facturaEnPreparacion                           function  src/lib/domain/etiquetaCicloProforma.ts:44:17
+Leads                                                    src/routes/appRoutes.lazy.ts:87:14
+CrmProspectos                                            src/routes/appRoutes.lazy.ts:89:14
+Unused exported types (16)
+VisibilityState                                 type  src/components/shared/DataTable.tsx:13:26
+DocumentoKpi                                    type  src/components/shared/documento/DocumentoKpiStrip.tsx:8:15
+OrganizationRow                                 type  src/features/admin/services/organization/index.ts:3:15
+ResponsableOption                               type  src/features/auditoria/hooks/useOrgMembersAsignables.ts:13:15
+ConceptoLike                                    type  src/features/auditoria/utils/diffConceptos.ts:5:15
+ConceptosDiff                                   type  src/features/auditoria/utils/diffConceptos.ts:5:29
+ConceptosDiff                                   type  src/features/auditoria/utils/diffFields.ts:8:29
+CatalogoOrg                   catalogosService  type  src/features/catalogos/services/index.ts:10:15
+NuevaFacturaProveedorPayload                    type  src/features/cxp/services/proveedorFacturas.ts:153:8
+OrigenAceptacion                                type  src/features/proformas/components/ProformaEstadoBadges.tsx:18:15
+SortField                                       type  src/features/reportes/components/ReportesTablaClientes.tsx:13:15
+TraspasoFormState                               type  src/features/tesoreria/hooks/useTraspasoForm.ts:17:15
+TableFiltersState                               type  src/hooks/shared/index.ts:26:25
+PasoDocumento                                   type  src/lib/domain/documentoEstados.ts:10:39
+EstadoProformaInput                             type  src/lib/domain/documentoEstados.ts:108:15
+IssueUsoCfdi                                    type  src/lib/financial/usoCfdiFiscal.ts:3:32
+Configuration hints (1)
+.css    knip.json  Compiled extension excluded by project (imports not followed)
+
+Result: {"command":["node_modules/knip/bin/knip.js","--no-progress"],"exit":0,"durationSeconds":41.652}

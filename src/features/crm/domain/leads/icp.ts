@@ -27,8 +27,6 @@ export const ICP_ESTATUS_OPCIONES = [
   { value: "Descartado", label: "Descartado" },
 ] as const;
 
-export const ICP_ESTATUS = ICP_ESTATUS_OPCIONES.map((o) => o.value);
-
 /**
  * Normaliza un estatus histórico al valor canónico sin perder información:
  * compara sin acentos/mayúsculas contra valores y etiquetas conocidas y, si no

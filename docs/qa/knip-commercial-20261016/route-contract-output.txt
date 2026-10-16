@@ -1,0 +1,1 @@
+PASS: leads/prospectos redirect to the exact filtered Empresas URLs with replace; leads/:id retains LeadDetalle.

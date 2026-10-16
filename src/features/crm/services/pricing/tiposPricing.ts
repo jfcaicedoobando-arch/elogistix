@@ -21,7 +21,6 @@ export const UNIDADES_MEDIDA_PRICING = [
 ] as const;
 export type ComplejidadPricing = "baja" | "media" | "alta";
 
-export const HORAS_POR_COMPLEJIDAD: Record<ComplejidadPricing, number> = { baja: 8, media: 24, alta: 48 };
 export const ETIQUETA_COMPLEJIDAD: Record<ComplejidadPricing, string> = {
   baja: "Baja (8 h)", media: "Media (24 h)", alta: "Alta (48 h)",
 };
