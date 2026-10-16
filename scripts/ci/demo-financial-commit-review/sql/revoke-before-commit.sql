@@ -21,7 +21,12 @@ SELECT demo_flow_writer.prepare_execute_checkpoint(:'context_id'::uuid,0)::text 
 -- Restore the actual technical role before COMMIT. No deferred queue is drained.
 SET LOCAL ROLE postgres;
 UPDATE demo_flow_writer.runs SET revoked_at=clock_timestamp()
- WHERE id=(SELECT run_id FROM demo_flow_writer.server_admissions WHERE context_id=:'context_id'::uuid);
+ WHERE id=(SELECT run_id FROM demo_flow_writer.server_admissions WHERE context_id=:'context_id'::uuid)
+ RETURNING id AS revoked_run_id \gset
+SELECT 'FINANCIAL_COMMIT_REVOCATION_CONFIRMED='||jsonb_build_object(
+ 'revoked',r.revoked_at IS NOT NULL,'context_bound',a.context_id=:'context_id'::uuid)::text
+ FROM demo_flow_writer.runs r JOIN demo_flow_writer.server_admissions a ON a.run_id=r.id
+ WHERE r.id=:'revoked_run_id'::uuid;
 SET LOCAL ROLE service_role;
 \echo FINANCIAL_COMMIT_PHASE_business_commit
 COMMIT;

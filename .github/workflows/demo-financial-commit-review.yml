@@ -1,0 +1,35 @@
+name: Demo financial actual COMMIT review
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+    branches: ['codex/demo-financial-behavior-recovery-20261015']
+    paths:
+      - 'scripts/ci/demo-financial-commit-review/**'
+      - '.github/workflows/demo-financial-commit-review.yml'
+permissions:
+  contents: read
+concurrency:
+  group: financial-actual-commit-${{ github.event.pull_request.number }}
+  cancel-in-progress: false
+jobs:
+  synthetic-actual-commit:
+    if: github.repository == 'jfcaicedoobando-arch/elogistix' && github.event.pull_request.draft == true && github.event.pull_request.head.repo.full_name == github.repository && github.event.pull_request.head.ref == 'codex/demo-financial-commit-review-20261015' && github.event.pull_request.base.sha == '616bff8d454f9de35b6590913d08b7ad0d69b049'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          persist-credentials: false
+      - name: Offline source ordering and native evidence contracts
+        run: python3 -B -I -m unittest discover -s scripts/ci/demo-financial-commit-review -p 'test_*.py' -v
+      - name: Original guard and isolated proposed actual COMMIT probes
+        run: python3 -B -I scripts/ci/demo-financial-commit-review/run_ci.py --output "$RUNNER_TEMP/financial-actual-commit"
+      - name: Preserve bounded COMMIT and cleanup evidence
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: financial-actual-commit-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/financial-actual-commit/public/**
+          if-no-files-found: warn
+          retention-days: 14
