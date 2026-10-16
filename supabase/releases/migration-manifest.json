@@ -75725,7 +75725,8 @@
       "20261015050000_disable_demo_reseed.sql",
       "20261015170857_seed_r3_stopped_admission.sql",
       "20261016060000_crm_empresa_prospecto_kam_propio.sql",
-      "20261016070000_crm_cliente_identidad_atomica.sql"
+      "20261016070000_crm_cliente_identidad_atomica.sql",
+      "20261016080000_crm_oportunidad_origen_empresa.sql"
     ]
   }
 }

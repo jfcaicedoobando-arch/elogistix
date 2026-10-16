@@ -16432,6 +16432,7 @@ DECLARE
   v_org uuid := public.org_scope();
   v_datos public.crm_oportunidades%ROWTYPE;
   v_id uuid;
+  v_cliente_empresa uuid;
 BEGIN
   IF auth.uid() IS NULL OR v_org IS NULL THEN
     RAISE EXCEPTION 'Selecciona una organización e inicia sesión' USING ERRCODE = '42501';
@@ -16442,13 +16443,21 @@ BEGIN
   IF p_datos IS NULL OR jsonb_typeof(p_datos) IS DISTINCT FROM 'object' THEN
     RAISE EXCEPTION 'Los datos de la oportunidad no son válidos' USING ERRCODE = '22023';
   END IF;
-  PERFORM 1 FROM public.crm_empresas
+  SELECT cliente_id INTO v_cliente_empresa FROM public.crm_empresas
     WHERE id = p_empresa_id AND organization_id = v_org AND deleted_at IS NULL
     FOR SHARE;
   IF NOT FOUND THEN
     RAISE EXCEPTION 'La empresa no está disponible en esta organización' USING ERRCODE = '42501';
   END IF;
   SELECT * INTO v_datos FROM jsonb_populate_record(NULL::public.crm_oportunidades, p_datos);
+  -- La empresa puede haberse convertido mientras el formulario estaba abierto.
+  -- El lock conserva esa identidad hasta terminar ambos INSERTs.
+  IF v_cliente_empresa IS NOT NULL AND (
+    v_datos.cliente_id IS DISTINCT FROM v_cliente_empresa OR v_datos.lead_id IS NOT NULL
+  ) THEN
+    RAISE EXCEPTION 'El origen debe ser el cliente asociado a la empresa, sin prospecto'
+      USING ERRCODE = '22023';
+  END IF;
   IF nullif(btrim(v_datos.nombre), '') IS NULL THEN
     RAISE EXCEPTION 'Nombre es obligatorio' USING ERRCODE = '22023';
   END IF;
