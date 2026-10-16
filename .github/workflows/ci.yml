@@ -180,11 +180,31 @@ jobs:
           persist-credentials: false
 
       - name: Setup Bun + install
+        id: setup
         uses: ./.github/actions/setup-bun
 
-      - name: TypeScript typecheck
+      - name: Installed TypeScript version
+        id: typescript
         if: needs.detector.outputs.frontend == 'true'
-        run: bun run typecheck
+        run: node --input-type=commonjs -e 'require("node:fs").appendFileSync(process.env.GITHUB_OUTPUT, "version=" + require("typescript/package.json").version + "\n")'
+
+      # TypeScript owns this mutable state independently of node_modules.
+      # Only checks restores/saves it; compiler/config/lock changes cannot use a
+      # broader fallback. Source changes are checked by the incremental compiler.
+      - name: Restore TypeScript incremental cache
+        id: ts-cache
+        if: needs.detector.outputs.frontend == 'true'
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: .cache/tsc
+          key: ${{ runner.os }}-${{ runner.arch }}-tsc-v1-node${{ steps.setup.outputs.node-version }}-bun1.4.0-ts${{ steps.typescript.outputs.version }}-${{ hashFiles('tsconfig*.json', 'package.json', 'bun.lock', 'scripts/ci/typecheck-incremental.mjs') }}-${{ github.run_id }}-${{ github.run_attempt }}
+          restore-keys: |
+            ${{ runner.os }}-${{ runner.arch }}-tsc-v1-node${{ steps.setup.outputs.node-version }}-bun1.4.0-ts${{ steps.typescript.outputs.version }}-${{ hashFiles('tsconfig*.json', 'package.json', 'bun.lock', 'scripts/ci/typecheck-incremental.mjs') }}-
+
+      - name: TypeScript typecheck
+        id: typecheck
+        if: needs.detector.outputs.frontend == 'true'
+        run: bun run typecheck:ci
 
       # Guard estático de BD: sólo cuando el diff toca migraciones/schema/tests/
       # releases, los scripts de auditoría, appVersion, dependencias o este CI.
@@ -274,6 +294,15 @@ jobs:
             --allow-net \
             --allow-read \
             "${tests[@]}"
+
+      # Save only after every checks step succeeds. A fresh key avoids keeping
+      # the first source snapshot forever; restore and save use the same key.
+      - name: Save TypeScript incremental cache
+        if: success() && needs.detector.outputs.frontend == 'true' && steps.typecheck.outcome == 'success' && steps.ts-cache.outputs.cache-hit != 'true'
+        uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: .cache/tsc
+          key: ${{ steps.ts-cache.outputs.cache-primary-key }}
 
   tests:
     name: Vitest shard ${{ matrix.shard }}/${{ needs.detector.outputs.shard_count }}

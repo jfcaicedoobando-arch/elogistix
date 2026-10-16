@@ -1,0 +1,93 @@
+{
+  "schemaVersion": 1,
+  "scope": "Two executions of the checks job at the same commit; log-marker durations are observations on different hosted runners, not controlled benchmark samples or a CI-wide speedup.",
+  "runURL": "https://github.com/jfcaicedoobando-arch/elogistix/actions/runs/38955742577",
+  "sourceFilesSHA256": {
+    "actions-attempt1-sanitized.json": "ef73a32f9eedfd26a038cc46085c6883679636876c7303c57f7ec5767754cca3",
+    "actions-attempt2-sanitized.json": "218859d638d2ab3e9dff3f2d3afb88dce7f3b03cec21aff62933bae14ee8d429"
+  },
+  "attempts": [
+    {
+      "attempt": 1,
+      "evidence": {
+        "sha": "67ac599b3cb6477ee0372ef6b1b67671eaf6680b",
+        "runId": 38955742577,
+        "jobId": 117158312105,
+        "note": "Only TypeScript cache/check log markers; durations are bounds between log groups, not benchmark samples.",
+        "sections": [
+          {
+            "start": "2026-10-16T19:35:46.8254833Z ##[group]Run actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9",
+            "untilNextGroupSeconds": 0.283,
+            "lines": [
+              "2026-10-16T19:35:46.8256115Z   key: Linux-X64-tsc-v1-nodev24.22.0-bun1.4.0-ts6.0.3-74aa60362caeb5fb368245a398929ea96058f4b1af6c6fef421ab1f7678880bf-38955742577-1",
+              "2026-10-16T19:35:46.8257085Z   restore-keys: Linux-X64-tsc-v1-nodev24.22.0-bun1.4.0-ts6.0.3-74aa60362caeb5fb368245a398929ea96058f4b1af6c6fef421ab1f7678880bf-",
+              "2026-10-16T19:35:47.0997021Z Cache not found for input keys: Linux-X64-tsc-v1-nodev24.22.0-bun1.4.0-ts6.0.3-74aa60362caeb5fb368245a398929ea96058f4b1af6c6fef421ab1f7678880bf-38955742577-1, Linux-X64-tsc-v1-nodev24.22.0-bun1.4.0-ts6.0.3-74aa60362caeb5fb368245a398929ea96058f4b1af6c6fef421ab1f7678880bf-"
+            ]
+          },
+          {
+            "start": "2026-10-16T19:35:47.1089781Z ##[group]Run bun run typecheck:ci",
+            "untilNextGroupSeconds": 69.435,
+            "lines": [
+              "2026-10-16T19:35:47.1089781Z ##[group]Run bun run typecheck:ci",
+              "2026-10-16T19:35:47.1280616Z $ node scripts/ci/typecheck-incremental.mjs"
+            ]
+          },
+          {
+            "start": "2026-10-16T19:38:02.9860400Z ##[group]Run actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9",
+            "untilNextGroupSeconds": null,
+            "lines": [
+              "2026-10-16T19:38:02.9861615Z   key: Linux-X64-tsc-v1-nodev24.22.0-bun1.4.0-ts6.0.3-74aa60362caeb5fb368245a398929ea96058f4b1af6c6fef421ab1f7678880bf-38955742577-1",
+              "2026-10-16T19:38:03.5196613Z Sent 483775 of 483775 (100.0%), 1.9 MBs/sec",
+              "2026-10-16T19:38:03.7274705Z Cache saved with key: Linux-X64-tsc-v1-nodev24.22.0-bun1.4.0-ts6.0.3-74aa60362caeb5fb368245a398929ea96058f4b1af6c6fef421ab1f7678880bf-38955742577-1"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "attempt": 2,
+      "evidence": {
+        "sha": "67ac599b3cb6477ee0372ef6b1b67671eaf6680b",
+        "runId": 38955742577,
+        "jobId": 117160668463,
+        "note": "Only TypeScript cache/check log markers; durations from log markers, not controlled cross-runner benchmarks. Shard records reused original logs and only attempt-1 artifacts exist.",
+        "sections": [
+          {
+            "start": "2026-10-16T19:39:59.5944934Z ##[group]Run actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9",
+            "untilNextGroupSeconds": 1.12,
+            "throughConfirmationSeconds": 1.095,
+            "lines": [
+              "2026-10-16T19:39:59.5945606Z   key: Linux-X64-tsc-v1-nodev24.22.0-bun1.4.0-ts6.0.3-74aa60362caeb5fb368245a398929ea96058f4b1af6c6fef421ab1f7678880bf-38955742577-2",
+              "2026-10-16T19:39:59.5946123Z   restore-keys: Linux-X64-tsc-v1-nodev24.22.0-bun1.4.0-ts6.0.3-74aa60362caeb5fb368245a398929ea96058f4b1af6c6fef421ab1f7678880bf-",
+              "2026-10-16T19:39:59.9033956Z Cache hit for restore-key: Linux-X64-tsc-v1-nodev24.22.0-bun1.4.0-ts6.0.3-74aa60362caeb5fb368245a398929ea96058f4b1af6c6fef421ab1f7678880bf-38955742577-1",
+              "2026-10-16T19:40:00.6766948Z Received 483775 of 483775 (100.0%), 0.9 MBs/sec",
+              "2026-10-16T19:40:00.6767298Z Cache Size: ~0 MB (483775 B)",
+              "2026-10-16T19:40:00.6845280Z Cache restored successfully",
+              "2026-10-16T19:40:00.6898651Z Cache restored from key: Linux-X64-tsc-v1-nodev24.22.0-bun1.4.0-ts6.0.3-74aa60362caeb5fb368245a398929ea96058f4b1af6c6fef421ab1f7678880bf-38955742577-1"
+            ]
+          },
+          {
+            "start": "2026-10-16T19:40:00.7144774Z ##[group]Run bun run typecheck:ci",
+            "untilNextGroupSeconds": 5.908,
+            "throughConfirmationSeconds": null,
+            "lines": [
+              "2026-10-16T19:40:00.7144774Z ##[group]Run bun run typecheck:ci",
+              "2026-10-16T19:40:00.7452469Z $ node scripts/ci/typecheck-incremental.mjs"
+            ]
+          },
+          {
+            "start": "2026-10-16T19:40:56.8180772Z ##[group]Run actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9",
+            "untilNextGroupSeconds": null,
+            "throughConfirmationSeconds": 1.122,
+            "lines": [
+              "2026-10-16T19:40:56.8181423Z   key: Linux-X64-tsc-v1-nodev24.22.0-bun1.4.0-ts6.0.3-74aa60362caeb5fb368245a398929ea96058f4b1af6c6fef421ab1f7678880bf-38955742577-2",
+              "2026-10-16T19:40:57.6700813Z Sent 483814 of 483814 (100.0%), 0.9 MBs/sec",
+              "2026-10-16T19:40:57.9402153Z Cache saved with key: Linux-X64-tsc-v1-nodev24.22.0-bun1.4.0-ts6.0.3-74aa60362caeb5fb368245a398929ea96058f4b1af6c6fef421ab1f7678880bf-38955742577-2",
+              "2026-10-16T19:40:58.1600382Z Cache hit occurred on the primary key Linux-X64-nodev24.22.0-node-modules-bun1.4.0-32333dad20873f78405030c3246f09ee65e46b06b07e7bd728550b14728a2c36, not saving cache."
+            ]
+          }
+        ]
+      }
+    }
+  ]
+}

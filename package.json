@@ -22,6 +22,7 @@
     "lint:unused": "knip --no-progress",
     "lint:unused:strict": "knip --no-progress --include files,dependencies,unlisted,duplicates,exports,types",
     "typecheck": "tsc -b",
+    "typecheck:ci": "node scripts/ci/typecheck-incremental.mjs",
     "preview": "vite preview",
     "test": "NODE_OPTIONS=\"--max-old-space-size=8192\" vitest run",
     "ci:fast": "bash scripts/ci-fast.sh",

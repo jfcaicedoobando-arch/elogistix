@@ -64,6 +64,8 @@ Ver [alcance y discrepancia de Remotion](../ci/dependency-runtime-reproducibilit
 
 | Comando | Contrato |
 | --- | --- |
+| `bun run typecheck` | Comando local existente `tsc -b` |
+| `bun run typecheck:ci` | Checker de CI que valida el grafo de proyectos, comprueba app y Node por contenido y conserva fallback `tsc -b --force` |
 | `bun run test:ci` | Suite normal Vitest sin coverage, retry ni blobs; admite filtros y `--shard=i/N` |
 | `bun run ci:local` | Lint `--max-warnings=0` → typecheck → Knip → tests normales → build; se detiene al primer fallo |
 | `bun run test:coverage` | Medición optativa de la suite con coverage |
@@ -75,6 +77,53 @@ aunque el CI principal no lo exige. No ejecuta por sí solo guards DB, Deno,
 RLS, selección por áreas ni verificación de evidencia del agregador.
 Un merge de coverage tampoco sustituye la ejecución de tests. Ninguno de estos
 comandos activa coverage ni cambia los **14 shards** de PR/push del CI principal.
+
+### Estado incremental de TypeScript
+
+El job `checks` ejecuta `bun run typecheck:ci` cuando hay frontend, incluso
+con un hit de caché. El runner valida el grafo raíz de dos proyectos
+independientes con `incremental` y `noEmit`, comprueba `tsconfig.app.json` y
+`tsconfig.node.json`, y usa `tsc -b --force` si el grafo no está soportado o
+la configuración es inválida, o necesita reproducir un fallo con el contrato
+de build. Los cambios de configuración que el parser admite dentro del grafo
+compatible siguen comprobándose con `tsc -p`; un cambio de configuración no
+implica siempre fallback. Se mantienen `strict`, `skipLibCheck` y las opciones
+de comprobación existentes.
+
+Los dos archivos `tsconfig.app.tsbuildinfo` y `tsconfig.node.tsbuildinfo`
+viven en **`.cache/tsc`**, fuera de `node_modules`. Sólo `checks` restaura y
+guarda esa caché en Actions. Su clave combina SO, arquitectura, Node instalado,
+Bun, TypeScript instalado, hash de los `tsconfig*.json` raíz, `package.json`,
+`bun.lock` y el runner del checker, además de run/attempt. El único fallback
+conserva todos esos campos de compatibilidad y permite cambiar las fuentes.
+El guardado usa la clave devuelta por restore y exige éxito de typecheck y de
+los pasos anteriores de `checks`; un hit exacto evita un guardado redundante.
+
+La caché es estado del compilador: no habilita omitir el checker ni prueba que
+los tipos actuales sean correctos. Un checkout con mtimes distintos debe
+volver a comprobar el contenido. Las cachés de dependencias, ESLint, Bun y
+Playwright conservan sus políticas. Ver [medición y límites](../ci/typescript-cache-20261016.md)
+para distinguir frío de TypeScript, frío del SO y tiempos reales de Actions.
+En el combinado `caf5dcbc`, tres réplicas de `typecheck:ci` dieron medianas de
+59.4183 s sin estado TS, 6.6563 s sin cambios y 33.0189 s con un cambio de cuerpo
+equivalente. La base `86020fb` con `tsc -b` dio 59.7707 s, 0.2174 s y 31.8730 s;
+los rangos fríos e incrementales se solapan y el no-op local es más rápido.
+El run `38955742577` confirmó miss/save y luego hit por prefijo/check/save;
+su checker pasó de 69.435 s a 5.908 s entre marcadores de log de dos runners.
+Con las fuentes combinadas, el run `38957769417` restauró por prefijo y volvió
+a comprobarlas en 29.0148 s. Son observaciones de distintos ciclos de caché;
+no prometen ahorro global o sostenido de CI.
+El helper mantiene un mismo checkout aislado durante cada serie y no simula
+el antiguo `node_modules` restaurado en un checkout nuevo. El CI anterior
+podía tener estado TS útil: frío frente a caliente no equivale al ahorro total
+frente a ese CI. La caché propia acredita disponibilidad y actualización
+independientes del estado. `typecheck` conserva su `tsc -b` local; únicamente
+`typecheck:ci` aplica el runner que revalida contenido.
+El escenario adicional con estado útil restaurado, bytes preservados y mtimes
+nuevos dio medianas de **6.2158 s** para `tsc -b` en `86020fb` y **7.0565 s**
+para `typecheck:ci` en `caf5dcbc` (tres pares A/B, seis exit codes 0). El candidato
+tardó 0.8407 s más en esa mediana. No se midió la frecuencia de estado útil
+en el CI anterior; estos resultados no acreditan una mejora de rendimiento.
 
 ### Actions oficiales y compatibilidad del runner
 
@@ -158,7 +207,7 @@ Esto no cambia el CLI del workflow ni agrega otro pipeline. Ver
 | `codeql.yml` | Lunes 06:00 UTC y manual | JavaScript/TypeScript |
 | `e2e.yml` | Sólo manual | Playwright/provisioning/staging |
 | `post-deploy-smoke.yml` | Sólo manual | Smoke del destino seleccionado |
-| `isolated-ui-audit.yml` | PR por rutas de UI/configuración, manual | 32 casos sintéticos sin backend: 20 diálogos/tarjetas + 8 filtros + 4 virtualización (Chromium/Firefox) |
+| `isolated-ui-audit.yml` | PR por rutas de UI/configuración, manual | 52 casos sintéticos sin backend: 12 filtros CxP + 20 diálogos/tarjetas + 8 rentabilidad + 8 virtualización/teclado (Chromium/Firefox) + 4 dependencias |
 | `pricing-rpc-authenticated.yml` | PR por rutas del harness, manual | Baseline congelado y 53 assertions: 32 CRM + 21 de roles/compatibilidad |
 | `test-diagnostics.yml` | Sólo manual | Diagnósticos PDF/visuales |
 | `nc-publica-replay-review.yml` | PR a main por rutas; jobs restringidos a revisión histórica | Replay mínimo y completo de NC |
