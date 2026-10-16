@@ -44,7 +44,10 @@ export function useEstadoCuentaVista(clienteIds: string[], defaultSoloConSaldo: 
     [clienteIds, desde, hasta, moneda, soloConSaldo],
   );
 
-  const { rows, kpis, isLoading } = useEstadoCuenta(filters);
+  const {
+    rows, kpis, isLoading, isError, error, refetch, isFetching, hasData,
+    kpisIsLoading, kpisIsError, kpisError, kpisHasData, kpisIsFetching, kpisRefetch,
+  } = useEstadoCuenta(filters);
 
   const aging = useMemo(() => calcularAging(rows), [rows]);
 
@@ -79,7 +82,10 @@ export function useEstadoCuentaVista(clienteIds: string[], defaultSoloConSaldo: 
     bucket, toggleBucket,
     sort, onSort,
     rows, filtradas, grupos, aging, kpis, isLoading,
+    isError, error, refetch, isFetching, hasData,
+    kpisIsLoading, kpisIsError, kpisError, kpisHasData, kpisIsFetching, kpisRefetch,
     restantes: Math.max(0, filtradas.length - visibles),
     verMas: () => setVisibles((v) => v + PAGINA),
   };
 }
+

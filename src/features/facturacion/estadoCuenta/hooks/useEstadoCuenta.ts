@@ -53,5 +53,15 @@ export function useEstadoCuenta(filters: EstadoCuentaFilters) {
     };
   }, [remotoHabilitado, kpisQuery.data, kpisLocales]);
 
-  return { ...query, rows, kpis, kpisIsLoading: remotoHabilitado && kpisQuery.isLoading };
+  return {
+    ...query, rows, kpis,
+    hasData: query.data !== undefined,
+    kpisIsLoading: remotoHabilitado && kpisQuery.isLoading,
+    kpisIsError: remotoHabilitado && kpisQuery.isError,
+    kpisError: remotoHabilitado ? kpisQuery.error : null,
+    kpisHasData: !remotoHabilitado || kpisQuery.data !== undefined,
+    kpisIsFetching: remotoHabilitado && kpisQuery.isFetching,
+    kpisRefetch: () => void kpisQuery.refetch(),
+  };
 }
+
