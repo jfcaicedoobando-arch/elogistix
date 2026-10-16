@@ -5,7 +5,7 @@ import type { FilaCorreo } from "../comun";
 
 const mocks = vi.hoisted(() => ({ extraer: vi.fn(), agentes: vi.fn(), parser: vi.fn() }));
 vi.mock("@/features/costeo/services/extraerTarifasCorreo", () => ({ extraerTarifasCorreo: mocks.extraer }));
-vi.mock("@/features/costeo/services/agentes", () => ({ fetchCosteoAgentes: mocks.agentes }));
+vi.mock("@/features/costeo/services/importacionTarifasCorreo", () => ({ fetchAgentesImportacionCorreo: mocks.agentes }));
 vi.mock("../parsearCorreoTarifas", () => ({ parsearCorreoProveedor: mocks.parser }));
 vi.mock("@/lib/date/mx", () => ({ hoyMx: () => "2026-10-14" }));
 

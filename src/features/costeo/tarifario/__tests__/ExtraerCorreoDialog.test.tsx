@@ -8,7 +8,7 @@ const mocks = vi.hoisted(() => {
   const organization: { id: string | null } = { id: "org-a" };
   return {
     organization, invoke: vi.fn(), puertos: vi.fn(), agentes: vi.fn(), navieras: vi.fn(),
-    tipos: vi.fn(), rutas: vi.fn(), existentes: vi.fn(), insertarRuta: vi.fn(), insertarTarifa: vi.fn(), parser: vi.fn(),
+    tipos: vi.fn(), rutas: vi.fn(), catalogos: vi.fn(), existentes: vi.fn(), insertarRuta: vi.fn(), insertarTarifa: vi.fn(), parser: vi.fn(),
     insertarPuerto: vi.fn(), insertarNaviera: vi.fn(),
   };
 });
@@ -16,7 +16,11 @@ vi.mock("@/integrations/supabase/client", () => ({ supabase: { functions: { invo
 vi.mock("@/lib/contexts/OrganizationContext", () => ({ useOrganization: () => ({ organizationId: mocks.organization.id }) }));
 vi.mock("@/features/catalogos/services", () => ({ fetchPuertos: mocks.puertos, fetchNavieras: mocks.navieras, fetchTiposContenedor: mocks.tipos,
   insertPuerto: mocks.insertarPuerto, insertNaviera: mocks.insertarNaviera }));
-vi.mock("@/features/costeo/services/agentes", () => ({ fetchCosteoAgentes: mocks.agentes }));
+vi.mock("@/features/costeo/services/importacionTarifasCorreo", () => ({
+  fetchAgentesImportacionCorreo: mocks.agentes,
+  fetchCatalogosImportacionCorreo: mocks.catalogos,
+  fetchTarifasConflictosImportacion: mocks.existentes,
+}));
 vi.mock("@/features/costeo/services/rutas", () => ({ fetchCosteoRutas: mocks.rutas, insertCosteoRuta: mocks.insertarRuta }));
 vi.mock("@/features/costeo/services/tarifas", () => ({ fetchCosteoTarifas: mocks.existentes, insertTarifaConRecargos: mocks.insertarTarifa }));
 vi.mock("../correo/parsearCorreoTarifas", () => ({ parsearCorreoProveedor: mocks.parser }));
@@ -53,6 +57,12 @@ beforeEach(() => {
   mocks.navieras.mockResolvedValue([{ id: "nav-1", name: "Maersk", code: "MAEU" }]);
   mocks.tipos.mockResolvedValue([{ id: "t20", code: "20GP" }, { id: "t40", code: "40HC" }]);
   mocks.rutas.mockResolvedValue([{ id: "ruta-1", puerto_origen_id: "o", puerto_destino_id: "d" }]);
+  mocks.catalogos.mockImplementation(async (org: string) => {
+    const [puertos, agentes, navieras, tipos, rutas] = await Promise.all([
+      mocks.puertos(), mocks.agentes(org), mocks.navieras(), mocks.tipos(), mocks.rutas(org),
+    ]);
+    return { existencia: { puertos, navieras }, validacion: { puertos, agentes, navieras, tipos, rutas }, tiposComparacion: tipos };
+  });
   mocks.existentes.mockResolvedValue([]);
   mocks.insertarRuta.mockResolvedValue({ id: "nueva-ruta" });
   mocks.insertarTarifa.mockResolvedValue({ id: "nueva-tarifa" });
@@ -69,7 +79,7 @@ describe("ExtraerCorreoDialog", () => {
     expect(mocks.agentes).toHaveBeenNthCalledWith(1, "org-a");
     expect(mocks.agentes).toHaveBeenNthCalledWith(2, "org-a");
     expect(mocks.rutas).toHaveBeenCalledExactlyOnceWith("org-a");
-    expect(mocks.existentes).toHaveBeenCalledExactlyOnceWith("org-a", { estado: "todas" });
+    expect(mocks.existentes).toHaveBeenCalledExactlyOnceWith("org-a");
     expect(mocks.parser).toHaveBeenCalledExactlyOnceWith(correo, "2026-10-14");
     expect(mocks.insertarRuta).not.toHaveBeenCalled();
     expect(mocks.insertarTarifa).not.toHaveBeenCalled();
@@ -101,6 +111,65 @@ describe("ExtraerCorreoDialog", () => {
     buscar();
     expect(await screen.findByText(/No se pudieron leer los correos: tarifario no disponible/)).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: /Cargar/ })).not.toBeInTheDocument();
+  });
+
+  it.each(["catalogos", "existentes"] as const)("bloquea preparación y altas si falla una página posterior de %s", async (lector) => {
+    mocks.parser.mockResolvedValue({ filas: [{ ...fila(100), Origen: "Puerto Sintético" }], errores: [] });
+    mocks[lector].mockRejectedValue(new Error("falló página posterior"));
+    render(<ExtraerCorreoDialog {...props()} />);
+    buscar();
+    expect(await screen.findByText(/No se pudieron leer los correos: falló página posterior/)).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /Cargar|Dar de alta/ })).not.toBeInTheDocument();
+    expect(screen.queryByRole("checkbox", { name: /Dar de alta/ })).not.toBeInTheDocument();
+    expect(mocks.insertarTarifa).not.toHaveBeenCalled();
+    expect(mocks.insertarPuerto).not.toHaveBeenCalled();
+    expect(mocks.insertarNaviera).not.toHaveBeenCalled();
+  });
+
+  it("muestra inactivos existentes sin ofrecer su alta ni importación", async () => {
+    mocks.catalogos.mockResolvedValue({
+      existencia: { puertos: [{ id: "o", name: "Shanghai", code: "CNSHA" }, { id: "d", name: "Manzanillo", code: "MXZLO" }],
+        navieras: [{ id: "nav-1", name: "Maersk", code: "MAEU" }] },
+      validacion: { puertos: [{ id: "d", name: "Manzanillo", code: "MXZLO" }], navieras: [], tipos: [],
+        agentes: [{ id: "ag-1", nombre: "Agente Longsail México" }], rutas: [] },
+      tiposComparacion: [],
+    });
+    render(<ExtraerCorreoDialog {...props()} />);
+    buscar();
+    expect(await screen.findByText(/origen «Shanghai» está inactivo.*naviera «MAEU» está inactiva/)).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /Cargar|Dar de alta/ })).not.toBeInTheDocument();
+    expect(mocks.insertarTarifa).not.toHaveBeenCalled();
+    expect(mocks.insertarPuerto).not.toHaveBeenCalled();
+    expect(mocks.insertarNaviera).not.toHaveBeenCalled();
+  });
+
+  it("desmarca un conflicto por alias y guarda el UUID preparado sólo al elegir conservarlo", async () => {
+    mocks.tipos.mockResolvedValue([{ id: "t20", code: "20GP", idsEquivalentes: ["t20", "legacy"] }]);
+    mocks.existentes.mockResolvedValue([{ ...existente, tipo_contenedor_id: "legacy" }]);
+    render(<ExtraerCorreoDialog {...props()} />);
+    buscar();
+    await waitFor(() => expect(cargar(0)).toBeDisabled());
+    expect(screen.getByRole("checkbox", { name: /Fila 2:/ })).not.toBeChecked();
+    fireEvent.click(screen.getByRole("checkbox", { name: /Fila 2:/ }));
+    fireEvent.click(cargar(1));
+    await waitFor(() => expect(mocks.insertarTarifa).toHaveBeenCalledExactlyOnceWith("org-a", expect.objectContaining({ tipo_contenedor_id: "t20" })));
+  });
+
+  it("retira los pendientes anteriores y muestra el fallo al volver a prepararlos", async () => {
+    mocks.parser.mockResolvedValue({ filas: [{ ...fila(100), Origen: "Puerto Sintético" }], errores: [] });
+    render(<ExtraerCorreoDialog {...props()} />);
+    buscar();
+    fireEvent.click(await screen.findByRole("checkbox", { name: "Dar de alta Puerto Sintético" }));
+    fireEvent.change(screen.getByLabelText("Código de Puerto Sintético"), { target: { value: "CNZZZ" } });
+    fireEvent.click(screen.getByRole("button", { name: "Dar de alta 1 seleccionado(s)" }));
+    const preparar = await screen.findByRole("button", { name: "Dar de alta 1 tarifa(s) pendientes" });
+    mocks.existentes.mockRejectedValueOnce(new Error("falló página posterior"));
+    fireEvent.click(preparar);
+    expect(await screen.findByText(/No se pudieron preparar las tarifas: falló página posterior/)).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /Cargar|Dar de alta/ })).not.toBeInTheDocument();
+    expect(screen.queryByRole("checkbox", { name: /Dar de alta/ })).not.toBeInTheDocument();
+    expect(mocks.insertarPuerto).toHaveBeenCalledTimes(1);
+    expect(mocks.insertarTarifa).not.toHaveBeenCalled();
   });
 
   it("conserva la selección inicial de main e importa únicamente la fila sin conflicto", async () => {
@@ -194,7 +263,7 @@ describe("ExtraerCorreoDialog", () => {
     expect(screen.queryByRole("button", { name: /Cargar/ })).not.toBeInTheDocument();
     expect(mocks.insertarTarifa).not.toHaveBeenCalled();
     buscar();
-    await waitFor(() => expect(mocks.existentes).toHaveBeenLastCalledWith("org-b", { estado: "todas" }));
+    await waitFor(() => expect(mocks.existentes).toHaveBeenLastCalledWith("org-b"));
     await waitFor(() => expect(cargar(1)).toBeEnabled());
     fireEvent.click(cargar(1));
     await waitFor(() => expect(p.onDone).toHaveBeenCalledTimes(1));
@@ -214,7 +283,7 @@ describe("ExtraerCorreoDialog", () => {
     expect(mocks.agentes).toHaveBeenNthCalledWith(1, "org-a");
     expect(mocks.agentes).toHaveBeenNthCalledWith(2, "org-a");
     expect(mocks.rutas).toHaveBeenCalledExactlyOnceWith("org-a");
-    expect(mocks.existentes).toHaveBeenCalledExactlyOnceWith("org-a", { estado: "todas" });
+    expect(mocks.existentes).toHaveBeenCalledExactlyOnceWith("org-a");
     expect(screen.queryByRole("button", { name: /Cargar/ })).not.toBeInTheDocument();
     expect(mocks.insertarTarifa).not.toHaveBeenCalled();
   });
@@ -260,7 +329,7 @@ describe("ExtraerCorreoDialog", () => {
     await waitFor(() => expect(cargar(1)).toBeEnabled());
     expect(mocks.invoke).toHaveBeenCalledTimes(1);
     expect(mocks.puertos).toHaveBeenCalledTimes(2);
-    expect(mocks.existentes).toHaveBeenNthCalledWith(2, "org-a", { estado: "todas" });
+    expect(mocks.existentes).toHaveBeenNthCalledWith(2, "org-a");
     fireEvent.click(cargar(1));
     await waitFor(() => expect(p.onDone).toHaveBeenCalledTimes(1));
     expect(mocks.insertarTarifa).toHaveBeenCalledExactlyOnceWith("org-a", expect.objectContaining({ naviera_id: "naviera-sintetica", flete_base: 100 }));

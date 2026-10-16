@@ -4,6 +4,7 @@
  * en el mismo lote. Lógica pura: la pantalla decide cuáles conservar.
  */
 import type { TarifaImport } from "./importarTarifas";
+import { resolverIdCanonicoTipo, type TipoContenedorCanonico } from "@/features/catalogos/domain";
 
 export interface TarifaExistente {
   id: string; agente_id: string; naviera_id: string; ruta_id: string; tipo_contenedor_id: string;
@@ -38,18 +39,19 @@ function estaActiva(e: TarifaExistente, hoy: string): boolean {
 
 export function detectarConflictos(
   lote: readonly TarifaImport[], existentes: readonly TarifaExistente[], rutas: readonly Ruta[], hoy: string,
+  tipos: readonly TipoContenedorCanonico[] = [],
 ): Conflicto[] {
   const porClave = new Map<string, TarifaExistente[]>();
   for (const e of existentes) {
     if (!estaActiva(e, hoy)) continue;
-    const k = clave(e.agente_id, e.naviera_id, e.ruta_id, e.tipo_contenedor_id);
+    const k = clave(e.agente_id, e.naviera_id, e.ruta_id, resolverIdCanonicoTipo(tipos, e.tipo_contenedor_id));
     porClave.set(k, [...(porClave.get(k) ?? []), e]);
   }
   const vistos = new Map<string, TarifaImport[]>();
   const out: Conflicto[] = [];
   lote.forEach((t, indice) => {
     const i = t.input;
-    const k = clave(i.agente_id, i.naviera_id, rutaDe(t, rutas), i.tipo_contenedor_id);
+    const k = clave(i.agente_id, i.naviera_id, rutaDe(t, rutas), resolverIdCanonicoTipo(tipos, i.tipo_contenedor_id));
     const previa = (vistos.get(k) ?? []).find((p) => seCruzan(p.input.vigente_desde, p.input.vigente_hasta, i.vigente_desde, i.vigente_hasta));
     const existente = (porClave.get(k) ?? []).find((e) => seCruzan(e.vigente_desde, e.vigente_hasta, i.vigente_desde, i.vigente_hasta));
     if (existente) {
