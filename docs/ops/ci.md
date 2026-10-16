@@ -28,6 +28,8 @@ manual permite elegir **5/8/10/14** shards; PR/push usan **14**.
 Ver [contrato de shards y paralelismo](../ci-shard-benchmark.md#contrato-de-configuración).
 
 - Frontend: typecheck, build, límites de bundle y sourcemaps.
+  El wrapper de bundle conserva los checks JS y añade un
+  [presupuesto CSS raw/gzip/Brotli](../ci/css-size-budget-20261016.md).
 - DB: manifiesto, schema, schema-functions, migraciones, replay-mirror y rpc-sync.
 - Edge: Deno **2.9.7 estable fijado**, `*_test.ts` salvo smoke; typecheck habilitado.
 - Vitest: `bun run test -- --shard=i/N` (i de 1 a N; N = 14 por defecto),
