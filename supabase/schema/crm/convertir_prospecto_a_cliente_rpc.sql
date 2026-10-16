@@ -34,6 +34,7 @@ DECLARE
   v_regimen text; v_uso text; v_forma text; v_metodo text;
   v_coherente boolean;
   v_empresa uuid; v_org_inicial uuid; v_op_inicial uuid; v_lead_inicial uuid;
+  v_empresa_ids uuid[];
 BEGIN
   IF auth.uid() IS NULL THEN
     RAISE EXCEPTION 'LC_SESION_REQUERIDA' USING ERRCODE = '42501';
@@ -72,13 +73,15 @@ BEGIN
     OR v_oportunidad_id IS DISTINCT FROM v_op_inicial THEN
     RAISE EXCEPTION 'LC_CONVERSION_INCONSISTENTE';
   END IF;
-  -- Los vínculos pueden haber cambiado mientras esperábamos: no elegir otro destino.
-  PERFORM 1 FROM public.crm_oportunidad_empresa WHERE oportunidad_id = v_op_inicial FOR SHARE;
-  IF EXISTS (SELECT 1 FROM public.crm_oportunidad_empresa
-              WHERE oportunidad_id = v_op_inicial AND
-                (empresa_id IS DISTINCT FROM v_empresa OR organization_id IS DISTINCT FROM v_org))
-     OR EXISTS (SELECT 1 FROM public.crm_empresas WHERE lead_origen_id = v_lead_inicial
-                 AND id IS DISTINCT FROM v_empresa) THEN
+  -- Igualdad completa: un conjunto vacío también invalida un destino cacheado.
+  SELECT array_agg(DISTINCT id ORDER BY id) INTO v_empresa_ids FROM (
+    SELECT id FROM public.crm_empresas WHERE lead_origen_id = v_lead_inicial
+    UNION
+    SELECT empresa_id FROM public.crm_oportunidad_empresa WHERE oportunidad_id = v_op_inicial
+  ) targets;
+  IF v_empresa_ids IS DISTINCT FROM CASE WHEN v_empresa IS NULL THEN NULL::uuid[] ELSE ARRAY[v_empresa] END
+     OR EXISTS (SELECT 1 FROM public.crm_oportunidad_empresa
+                 WHERE oportunidad_id = v_op_inicial AND organization_id IS DISTINCT FROM v_org) THEN
     RAISE EXCEPTION 'LC_CONVERSION_INCONSISTENTE';
   END IF;
 
@@ -158,11 +161,14 @@ BEGIN
   IF v_lead_id IS DISTINCT FROM v_lead_inicial THEN
     RAISE EXCEPTION 'LC_CONVERSION_INCONSISTENTE';
   END IF;
-  IF EXISTS (SELECT 1 FROM public.crm_oportunidad_empresa
-              WHERE oportunidad_id = v_op_inicial AND
-                (empresa_id IS DISTINCT FROM v_empresa OR organization_id IS DISTINCT FROM v_org))
-     OR EXISTS (SELECT 1 FROM public.crm_empresas WHERE lead_origen_id = v_lead_inicial
-                 AND id IS DISTINCT FROM v_empresa) THEN
+  SELECT array_agg(DISTINCT id ORDER BY id) INTO v_empresa_ids FROM (
+    SELECT id FROM public.crm_empresas WHERE lead_origen_id = v_lead_inicial
+    UNION
+    SELECT empresa_id FROM public.crm_oportunidad_empresa WHERE oportunidad_id = v_op_inicial
+  ) targets;
+  IF v_empresa_ids IS DISTINCT FROM CASE WHEN v_empresa IS NULL THEN NULL::uuid[] ELSE ARRAY[v_empresa] END
+     OR EXISTS (SELECT 1 FROM public.crm_oportunidad_empresa
+                 WHERE oportunidad_id = v_op_inicial AND organization_id IS DISTINCT FROM v_org) THEN
     RAISE EXCEPTION 'LC_CONVERSION_INCONSISTENTE';
   END IF;
   IF v_op_org <> v_org THEN

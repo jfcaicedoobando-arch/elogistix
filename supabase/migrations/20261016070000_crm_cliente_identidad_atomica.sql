@@ -22,12 +22,21 @@ BEGIN
   IF NOT FOUND OR v_emp.deleted_at IS NOT NULL THEN
     RAISE EXCEPTION 'LC_CRM_EMPRESA_NO_ENCONTRADA' USING ERRCODE = 'P0002';
   END IF;
+  -- Una empresa ligada sólo por oportunidad puede no tener lead de origen.
+  -- Si sí lo tiene, debe ser exactamente el lead de esta conversión.
+  IF v_emp.lead_origen_id IS NOT NULL AND v_emp.lead_origen_id IS DISTINCT FROM p_lead THEN
+    RAISE EXCEPTION 'LC_CONVERSION_INCONSISTENTE' USING ERRCODE = '23514';
+  END IF;
   IF v_emp.organization_id IS DISTINCT FROM p_org OR EXISTS (
     SELECT 1 FROM public.crm_oportunidad_empresa oe
       WHERE oe.oportunidad_id = p_oportunidad AND oe.organization_id IS DISTINCT FROM p_org
   ) THEN
     RAISE EXCEPTION 'LC_ORG_AJENA' USING ERRCODE = '42501';
   END IF;
+  -- Retener los vínculos originales antes de esperar lead/cotización. Si un
+  -- DELETE ya ganó, la relectura de abajo debe detectar también su desaparición.
+  PERFORM 1 FROM public.crm_oportunidad_empresa
+    WHERE oportunidad_id = p_oportunidad ORDER BY empresa_id FOR SHARE;
   SELECT array_agg(DISTINCT id ORDER BY id) INTO v_actuales FROM (
     SELECT e.id FROM public.crm_empresas e WHERE e.lead_origen_id = p_lead
     UNION
@@ -41,6 +50,37 @@ BEGIN
 END $$;
 REVOKE ALL ON FUNCTION public._crm_empresa_para_conversion(uuid,uuid,uuid) FROM PUBLIC, anon, authenticated;
 GRANT EXECUTE ON FUNCTION public._crm_empresa_para_conversion(uuid,uuid,uuid) TO service_role;
+
+
+-- Serializa las nuevas reclamaciones de identidad con la conversión, que ya
+-- retiene el lead. No barre ni modifica relaciones históricas.
+CREATE OR REPLACE FUNCTION public._crm_empresa_validar_lead()
+RETURNS trigger LANGUAGE plpgsql SECURITY DEFINER SET search_path TO 'public' AS $$
+DECLARE v_lead public.crm_leads%ROWTYPE;
+BEGIN
+  IF NEW.lead_origen_id IS NULL THEN RETURN NEW; END IF;
+  IF TG_OP = 'UPDATE' AND NEW.lead_origen_id IS NOT DISTINCT FROM OLD.lead_origen_id
+    AND NEW.organization_id IS NOT DISTINCT FROM OLD.organization_id THEN RETURN NEW; END IF;
+  SELECT * INTO v_lead FROM public.crm_leads WHERE id = NEW.lead_origen_id FOR UPDATE;
+  -- Igual que el guard de atribución, conservar productores privilegiados que
+  -- reconstruyen espejos históricos; también retienen el lock si el lead existe.
+  IF auth.role() = 'service_role'
+    OR (auth.uid() IS NULL AND coalesce(auth.role(), '') <> 'authenticated') THEN RETURN NEW; END IF;
+  IF NOT FOUND OR v_lead.deleted_at IS NOT NULL
+    OR v_lead.organization_id IS DISTINCT FROM NEW.organization_id THEN
+    RAISE EXCEPTION 'LC_CRM_LEAD_AJENO' USING ERRCODE = '23514';
+  END IF;
+  -- Una reclamación interactiva no puede ganar tras una conversión.
+  IF v_lead.cliente_convertido_id IS NOT NULL OR v_lead.estado::text = 'Convertido' THEN
+    RAISE EXCEPTION 'LC_CONVERSION_INCONSISTENTE' USING ERRCODE = '23514';
+  END IF;
+  RETURN NEW;
+END $$;
+REVOKE ALL ON FUNCTION public._crm_empresa_validar_lead() FROM PUBLIC, anon, authenticated;
+GRANT EXECUTE ON FUNCTION public._crm_empresa_validar_lead() TO service_role;
+CREATE OR REPLACE TRIGGER trg_crm_empresa_validar_lead
+BEFORE INSERT OR UPDATE OF lead_origen_id, organization_id ON public.crm_empresas
+FOR EACH ROW EXECUTE FUNCTION public._crm_empresa_validar_lead();
 
 
 CREATE OR REPLACE FUNCTION public._crm_empresa_desde_cliente()
@@ -147,6 +187,7 @@ DECLARE
   v_regimen text; v_uso text; v_forma text; v_metodo text;
   v_coherente boolean;
   v_empresa uuid; v_org_inicial uuid; v_op_inicial uuid; v_lead_inicial uuid;
+  v_empresa_ids uuid[];
 BEGIN
   IF auth.uid() IS NULL THEN
     RAISE EXCEPTION 'LC_SESION_REQUERIDA' USING ERRCODE = '42501';
@@ -185,13 +226,15 @@ BEGIN
     OR v_oportunidad_id IS DISTINCT FROM v_op_inicial THEN
     RAISE EXCEPTION 'LC_CONVERSION_INCONSISTENTE';
   END IF;
-  -- Los vínculos pueden haber cambiado mientras esperábamos: no elegir otro destino.
-  PERFORM 1 FROM public.crm_oportunidad_empresa WHERE oportunidad_id = v_op_inicial FOR SHARE;
-  IF EXISTS (SELECT 1 FROM public.crm_oportunidad_empresa
-              WHERE oportunidad_id = v_op_inicial AND
-                (empresa_id IS DISTINCT FROM v_empresa OR organization_id IS DISTINCT FROM v_org))
-     OR EXISTS (SELECT 1 FROM public.crm_empresas WHERE lead_origen_id = v_lead_inicial
-                 AND id IS DISTINCT FROM v_empresa) THEN
+  -- Igualdad completa: un conjunto vacío también invalida un destino cacheado.
+  SELECT array_agg(DISTINCT id ORDER BY id) INTO v_empresa_ids FROM (
+    SELECT id FROM public.crm_empresas WHERE lead_origen_id = v_lead_inicial
+    UNION
+    SELECT empresa_id FROM public.crm_oportunidad_empresa WHERE oportunidad_id = v_op_inicial
+  ) targets;
+  IF v_empresa_ids IS DISTINCT FROM CASE WHEN v_empresa IS NULL THEN NULL::uuid[] ELSE ARRAY[v_empresa] END
+     OR EXISTS (SELECT 1 FROM public.crm_oportunidad_empresa
+                 WHERE oportunidad_id = v_op_inicial AND organization_id IS DISTINCT FROM v_org) THEN
     RAISE EXCEPTION 'LC_CONVERSION_INCONSISTENTE';
   END IF;
 
@@ -271,11 +314,14 @@ BEGIN
   IF v_lead_id IS DISTINCT FROM v_lead_inicial THEN
     RAISE EXCEPTION 'LC_CONVERSION_INCONSISTENTE';
   END IF;
-  IF EXISTS (SELECT 1 FROM public.crm_oportunidad_empresa
-              WHERE oportunidad_id = v_op_inicial AND
-                (empresa_id IS DISTINCT FROM v_empresa OR organization_id IS DISTINCT FROM v_org))
-     OR EXISTS (SELECT 1 FROM public.crm_empresas WHERE lead_origen_id = v_lead_inicial
-                 AND id IS DISTINCT FROM v_empresa) THEN
+  SELECT array_agg(DISTINCT id ORDER BY id) INTO v_empresa_ids FROM (
+    SELECT id FROM public.crm_empresas WHERE lead_origen_id = v_lead_inicial
+    UNION
+    SELECT empresa_id FROM public.crm_oportunidad_empresa WHERE oportunidad_id = v_op_inicial
+  ) targets;
+  IF v_empresa_ids IS DISTINCT FROM CASE WHEN v_empresa IS NULL THEN NULL::uuid[] ELSE ARRAY[v_empresa] END
+     OR EXISTS (SELECT 1 FROM public.crm_oportunidad_empresa
+                 WHERE oportunidad_id = v_op_inicial AND organization_id IS DISTINCT FROM v_org) THEN
     RAISE EXCEPTION 'LC_CONVERSION_INCONSISTENTE';
   END IF;
   IF v_op_org <> v_org THEN

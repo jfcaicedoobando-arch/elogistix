@@ -17,6 +17,7 @@ adapter=module('crm_cliente_owned_adapter',HERE.parent/'crm-prospecto-kam/run-ac
 cases=module('crm_cliente_cases',HERE/'cases.py')
 MIGRATION='supabase/migrations/20261016070000_crm_cliente_identidad_atomica.sql'
 MIRRORS=['_crm_empresa_para_conversion.sql','crm_empresa_desde_cliente.sql',
+         '_crm_empresa_validar_lead.sql',
          'crm_empresa_no_borrar_cliente.sql','_crm_lead_sync_estado_empresa.sql',
          'convertir_prospecto_a_cliente_rpc.sql']
 original_verify=adapter.verify_sources
