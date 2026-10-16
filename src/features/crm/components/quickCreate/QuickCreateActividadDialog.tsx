@@ -5,7 +5,7 @@
  * v13.746.0: migrado de Popover a modal estándar (ver nota en
  * `QuickCreateLeadDialog.tsx`).
  */
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useId, useMemo, useRef, useState } from "react";
 import { Activity } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -41,6 +41,7 @@ function defaultFecha(): string {
 }
 
 export default function QuickCreateActividadDialog({ open, onOpenChange, onCreated, onMore }: Props) {
+  const fechaId = `qc-actividad-fecha-${useId()}`;
   const crear = useCrearActividad();
   const enviandoRef = useRef(false);
   const { data: opsData } = useOportunidades({ pageSize: 100 });
@@ -171,8 +172,8 @@ export default function QuickCreateActividadDialog({ open, onOpenChange, onCreat
             </Select>
           </div>
           <div className="space-y-1">
-            <Label>Fecha</Label>
-            <DateTimePickerMx value={fecha} onChange={setFecha} />
+            <Label htmlFor={fechaId}>Fecha</Label>
+            <DateTimePickerMx id={fechaId} value={fecha} onChange={setFecha} />
           </div>
         </div>
       </FormDialogSection>

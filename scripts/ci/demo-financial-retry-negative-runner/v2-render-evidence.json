@@ -1,0 +1,55 @@
+{
+  "scope": "OFFLINE_RENDER_AND_SOURCE_ONLY",
+  "tests": 71,
+  "status": "PASS",
+  "unaffected_renders": [
+    {
+      "id": "foreign_bound_invoice_id",
+      "old_sha256": "7a86703ba90ea0c59862f6ce0c3c153fb8431495a3df96a73185a573cd6a2ce1",
+      "v2_sha256": "7a86703ba90ea0c59862f6ce0c3c153fb8431495a3df96a73185a573cd6a2ce1"
+    },
+    {
+      "id": "authority_scheduler_disabled",
+      "old_sha256": "bd7b7c245dacae4543479a2d6d383c414160c43062c1519596895f8bda62c5bb",
+      "v2_sha256": "bd7b7c245dacae4543479a2d6d383c414160c43062c1519596895f8bda62c5bb"
+    },
+    {
+      "id": "authority_transport_disabled",
+      "old_sha256": "8fe72562cacded6ecf723f88df0089c1af50e860fd8cce9def57a9cdbdeea808",
+      "v2_sha256": "8fe72562cacded6ecf723f88df0089c1af50e860fd8cce9def57a9cdbdeea808"
+    },
+    {
+      "id": "tenant_organization_inactive",
+      "old_sha256": "5d33f9f49a94a19842261a213a23ab754333e02c9f035ce616b44ec2e8876690",
+      "v2_sha256": "5d33f9f49a94a19842261a213a23ab754333e02c9f035ce616b44ec2e8876690"
+    },
+    {
+      "id": "manifest_scheduler_hash_drift",
+      "old_sha256": "6f9596bfe2c266e25f82052f27bccf06c2c4f432dd08615f1369dc1d93e8cfb2",
+      "v2_sha256": "6f9596bfe2c266e25f82052f27bccf06c2c4f432dd08615f1369dc1d93e8cfb2"
+    },
+    {
+      "id": "expiry_run_shortened",
+      "old_sha256": "048c2c92f388748ee9d7d255d00942c4e0b299ed8508d9fe87e89f036ba5caf6",
+      "v2_sha256": "048c2c92f388748ee9d7d255d00942c4e0b299ed8508d9fe87e89f036ba5caf6"
+    },
+    {
+      "id": "guarded_tenant_run_rebinding",
+      "old_sha256": "e9c68e7e1d80e439e4bb29673a90c33f009349eb65a26835e7acca7d8e690a05",
+      "v2_sha256": "e9c68e7e1d80e439e4bb29673a90c33f009349eb65a26835e7acca7d8e690a05"
+    }
+  ],
+  "corrected_renders": [
+    {
+      "id": "mutable_supplier_origin_drift",
+      "old_sha256": "4939968d64554d126ec6acda73ce8fd1522a8c8b0c0803ae451b21130103fc65",
+      "v2_sha256": "3059883e74ada2524fe5a492e1b941a73578e47cb7940b33d497d1db52815e8d"
+    },
+    {
+      "id": "materialized_invoice_folio_drift",
+      "old_sha256": "f713eac53f2cbdc83ce868f7cdbca33015ea3e057b4ec0de250691ef54a300b9",
+      "v2_sha256": "70da50eff0283ba61b448f5b8d87356702713b47458e902c327e68826e12c860"
+    }
+  ],
+  "native_corrected_denials": "NOT_RUN"
+}

@@ -3,11 +3,13 @@ const DOMAIN_NAMES = new Set([
   "AprobacionFacturaError", "CreditLimitError", "ValidationError", "ZodError",
   "ReglaNegocioError", "BuzonDuplicadoError",
 ]);
-const DOMAIN_CODES = /\bLC_(?:COT_TRANSICION_INVALIDA|TRANSICION_INVALIDA|CONFLICTO_CONCURRENCIA|(?:CRM_)?MONEDA_INCOMPATIBLE)\b/;
+const DOMAIN_CODES = /\bLC_(?:COT_TRANSICION_INVALIDA|TRANSICION_INVALIDA|CONFLICTO_CONCURRENCIA|(?:CRM_)?MONEDA_INCOMPATIBLE|CREDITO_TC_INVALIDO)\b/;
+// Guards de datos (Sentry 7Q/77): el usuario ve el mensaje; no es falla de código.
 const KNOWN_MESSAGES = [
   "ya está registrado en este embarque", "verifica el uuid en el sat",
   "factura duplicada", "no puedes aprobar o rechazar esta factura",
   "embarque cerrado: usa reabrir_embarque", "debe seleccionar al menos",
+  "no coinciden con el resumen del proveedor de timbrado",
 ];
 
 export function isExpectedTelemetryError(error: unknown): boolean {

@@ -4,6 +4,7 @@ export interface CatalogEntry {
   mode?: string;
   reason?: string;
   sha256?: string;
+  verificationEvidence?: string;
 }
 export interface TestCatalog {
   schemaVersion: number;
@@ -17,4 +18,7 @@ export function assertExactPaths(expected: string[], actual: string[], label: st
 export function classifyFiles(files: string[], guards: string[], sqlSupport: Record<string, string | undefined>): CatalogEntry[];
 export function buildCatalog(root?: string): TestCatalog;
 export function validateRlsEvidence(catalog: Pick<TestCatalog, 'sha' | 'entries'>, tsv: string): { sha: string; files: number; durationMs: number };
+export const DEMO_PREFREEZE_EVIDENCE: string;
+export const DEMO_PREFREEZE_SOURCES: Readonly<Record<string, string>>;
+export function validatePrefreezeEvidence(catalog: Pick<TestCatalog, 'sha' | 'entries'>, evidence: unknown, root?: string): { sha: string; files: number; executions: number; concurrencyExecutions: number; checkpoints: number; clones: number };
 export function writeJson(file: string, data: unknown): void;

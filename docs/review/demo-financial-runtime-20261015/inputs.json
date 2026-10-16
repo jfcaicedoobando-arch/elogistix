@@ -1,0 +1,92 @@
+[
+  {
+    "path": "README.md",
+    "bytes": 7086,
+    "sha256": "ef4ff0ed1cdd2cc2ffa0966a1811adeafe1ff16c049fe4dae907ecb4bfb33784"
+  },
+  {
+    "path": "evidence/engine-dependencies.json",
+    "bytes": 17585,
+    "sha256": "368838d1e83efa509ccd1a01f42f65788c7a76fb0cbc1b676f5fcbe311d68a48"
+  },
+  {
+    "path": "evidence/extraction-hashes.json",
+    "bytes": 391,
+    "sha256": "923bdbed9476f1b2cf365906a548da585745086bbf3fdcbe4acfcd69ec8ca24f"
+  },
+  {
+    "path": "evidence/offline-result.json",
+    "bytes": 150,
+    "sha256": "3a4229c5ef5a90c2918c0c51bcab2b428e4c62de43ba764c2c55d32907f37a60"
+  },
+  {
+    "path": "evidence/source-pins.json",
+    "bytes": 777,
+    "sha256": "bb5fb79c7b90c72317a290e2302aa0a46b7e1100b21e9837f41cb06639462c0d"
+  },
+  {
+    "path": "evidence/status.json",
+    "bytes": 311,
+    "sha256": "2e1dd839769f37592ee73eaff2d22213e2460226e6dc8d8d0816659c69e3e7be"
+  },
+  {
+    "path": "offline_checks.py",
+    "bytes": 6167,
+    "sha256": "d27cd33946d8785091d91dd9fbda8e4c6d35cd37f21c4d18892b57d05e5449d3"
+  },
+  {
+    "path": "prepared/checkpoint_rollback.sql",
+    "bytes": 3998,
+    "sha256": "3ec8a5f82173e0f596bf5174b6d8712b8d662fc1511e2dc751e7b0551887b616"
+  },
+  {
+    "path": "prepared/happy_path.sql",
+    "bytes": 3238,
+    "sha256": "5ce51125b057f002a3f1e9820ffc72934273cd3045521f222dee0922bed1dd88"
+  },
+  {
+    "path": "run_ci.py",
+    "bytes": 7670,
+    "sha256": "9049d94eca7d215a64d4d29f93c0903382daad29d8b416724a9654ae94b9a2f5"
+  },
+  {
+    "path": "sql/01-types.sql",
+    "bytes": 710,
+    "sha256": "41c20c52b22d295af74b5315ffb090865c1018d10269cff954128e36e75b8d6f"
+  },
+  {
+    "path": "sql/02-synthetic-schema.sql",
+    "bytes": 3701,
+    "sha256": "975f75d628508da6cad06d2f1ba7de358dae51aedd91d3d1af1daad262247ee1"
+  },
+  {
+    "path": "sql/03-canonical-dependencies.sql",
+    "bytes": 7927,
+    "sha256": "93061bb2e7970482052b4adca5acd2d4383b577554a3dfc34cc499fe42ab97f2"
+  },
+  {
+    "path": "sql/04-validator.sql",
+    "bytes": 11516,
+    "sha256": "c8863477dbfa9f04d9f609a24a62bb8c99ba391d09e7aea3798c01340387414c"
+  },
+  {
+    "path": "sql/05-human-helper.sql",
+    "bytes": 5328,
+    "sha256": "c49ff31389db1a38f83af2843d157db03ed6bc8845178f6cf2f96aba63a4da26"
+  },
+  {
+    "path": "sql/06-behavior.sql",
+    "bytes": 8453,
+    "sha256": "19c7cb3ec4ca663211b094dc6d8c8c88f3ecb572c9a506fad7e3da5ee87037d1"
+  },
+  {
+    "path": "sql/run.sql",
+    "bytes": 1092,
+    "sha256": "6ae5290c26d619d3d19d2ea923050ad55a5cdd8f812ca9a93a52b56faf8498e2"
+  },
+  {
+    "path": "workflow/demo-human-approval-review.yml",
+    "bytes": 1743,
+    "sha256": "639e5ef729dbc9e5898ff87300dafb7fad7a554b81cb45f5263cb40320591dfe"
+  }
+]

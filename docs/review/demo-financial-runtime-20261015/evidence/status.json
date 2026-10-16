@@ -1,0 +1,11 @@
+{
+  "sql_runtime": "NOT_RUN",
+  "financial_engine": "BLOCKED_NOT_RUN",
+  "human_helper_logic": "PREPARED_NOT_RUN",
+  "external_human_authentication": "NOT_RUN",
+  "application_acl_rls": "NOT_RUN",
+  "postgres_docker_local": "NOT_RUN",
+  "git_mutations": "NONE",
+  "deployment": "NONE",
+  "activation": "HOLD"
+}

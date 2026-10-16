@@ -21,11 +21,18 @@ export interface UnifiedFiltersBarProps {
   searchPlaceholder?: string;
   /** Filtros que se muestran siempre (ej. select de estado). */
   primary?: ReactNode;
+  /** Primarios temporales cuando se trasladan al panel móvil. */
+  sheetPrimary?: ReactNode;
   /** Filtros que se muestran dentro del Sheet lateral. */
   secondary?: ReactNode;
   chips: ChipItem[];
   activeCount: number;
   onClearAll: () => void;
+  /** Ciclo de vida y acciones de un borrador administrado por el consumidor. */
+  onSheetOpenChange?: (open: boolean) => void;
+  onApply?: () => void;
+  onSheetClearAll?: () => void;
+  sheetActiveCount?: number;
   /**
    * v13.823.341 — la selección dentro del panel es temporal: al abrirlo se
    * toma una foto y al cerrarlo sin "Aplicar" se restaura.
@@ -40,10 +47,15 @@ export function UnifiedFiltersBar({
   onSearchChange,
   searchPlaceholder = "Buscar…",
   primary,
+  sheetPrimary,
   secondary,
   chips,
   activeCount,
   onClearAll,
+  onSheetOpenChange,
+  onApply,
+  onSheetClearAll,
+  sheetActiveCount,
   snapshot,
   restore,
   className,
@@ -75,14 +87,19 @@ export function UnifiedFiltersBar({
         {secondary || (isMobile && primary) ? (
           <MobileFiltersSheet
             open={sheetOpen}
-            onOpenChange={setSheetOpen}
+            onOpenChange={(open) => {
+              onSheetOpenChange?.(open);
+              setSheetOpen(open);
+            }}
             activeCount={activeCount}
-            onClearAll={onClearAll}
+            selectionCount={sheetActiveCount}
+            onClearAll={onSheetClearAll ?? onClearAll}
+            onApply={onApply}
             snapshot={snapshot}
             restore={restore}
           >
             {isMobile && primary ? (
-              <div className="space-y-3">{primary}</div>
+              <div className="space-y-3">{sheetPrimary ?? primary}</div>
             ) : null}
             {secondary}
           </MobileFiltersSheet>

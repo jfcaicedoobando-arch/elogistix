@@ -14,6 +14,8 @@ import DoubleConfirmDeleteDialog from "@/components/shared/DoubleConfirmDeleteDi
 import type { Naviera } from "@/features/catalogos/services";
 import { TABLE_DENSITY } from "@/components/shared/dataTable/tableTokens";
 import { usePermissions } from "@/hooks/shared";
+import { useAuth } from "@/lib/contexts/AuthContext";
+import { puedeDarAltaCatalogo } from "../domain/permisosCatalogo";
 
 /** Lo que ve la empresa: global encendido y sin apagado propio. */
 const visibleOrg = (n: Naviera) => n.activoOrg ?? n.activo;
@@ -22,6 +24,7 @@ export default function TabNavieras() {
   const { data: navieras = [], isLoading, isError, error, refetch, isFetching } = useAllNavieras();
   const { agregarNaviera, toggleActivo, eliminarNaviera } = useAdminNavieras();
   const { isSuperAdmin } = usePermissions();
+  const puedeCrear = puedeDarAltaCatalogo(useAuth().effectiveRole);
   const [busqueda, setBusqueda] = useState("");
   const [nuevoCode, setNuevoCode] = useState("");
   const [nuevoName, setNuevoName] = useState("");
@@ -87,7 +90,7 @@ export default function TabNavieras() {
         <CardDescription>Catálogo compartido. Enciende o apaga las navieras que quieres ver en tu empresa; no afecta a otras empresas.</CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
-        {isSuperAdmin && (
+        {puedeCrear && (
         <div className="flex flex-wrap gap-2 items-end">
           <FormField label="Código" className="space-y-1">
             <Input className="w-28" placeholder="MAERSK" value={nuevoCode} onChange={(e) => setNuevoCode(e.target.value)} />

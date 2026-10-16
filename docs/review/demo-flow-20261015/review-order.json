@@ -1,0 +1,16 @@
+[
+  "sql/01-private.sql",
+  "sql/02-manifest.sql",
+  "sql/04-engine.sql",
+  "issuer/10-issuer.sql",
+  "issuer/11-atomic-entry.sql",
+  "issuer/12-approval-main.sql",
+  "issuer/13-readonly-verifiers.sql",
+  "issuer/14-reconcile.sql",
+  "issuer/15-rpc-boundary.sql",
+  "issuer/16-owner-registry.sql",
+  "identity/proposals/demo-fixture-identity.sql.proposed",
+  "identity/tests/bridge/verify_identity_receipt.sql",
+  "identity/tests/bridge/prepare_identity_receipt.sql",
+  "sql/06-simulation-guards.sql"
+]

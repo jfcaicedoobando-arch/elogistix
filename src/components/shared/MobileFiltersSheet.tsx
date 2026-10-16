@@ -22,6 +22,8 @@ export interface MobileFiltersSheetProps {
   onOpenChange: (v: boolean) => void;
   title?: string;
   activeCount: number;
+  /** Conteo del borrador abierto; el badge conserva el conteo aplicado. */
+  selectionCount?: number;
   onClearAll: () => void;
   /** Commits a caller-owned draft; dismissal never invokes this callback. */
   onApply?: () => void;
@@ -43,6 +45,7 @@ export function MobileFiltersSheet({
   onOpenChange,
   title = "Filtros",
   activeCount,
+  selectionCount = activeCount,
   onClearAll,
   onApply,
   triggerLabel = "Filtros",
@@ -101,16 +104,21 @@ export function MobileFiltersSheet({
         <div className="flex-1 overflow-y-auto p-4 space-y-4">
           {children}
         </div>
-        <SheetFooter className="p-4 border-t flex-row gap-2 sm:flex-row sm:justify-between pb-[max(env(safe-area-inset-bottom),1rem)]">
+        <SheetFooter className="p-4 border-t flex-row flex-wrap gap-2 sm:flex-row sm:justify-between pb-[max(env(safe-area-inset-bottom),1rem)]">
           <Button
             variant="ghost"
             onClick={limpiar}
-            disabled={activeCount === 0}
+            disabled={selectionCount === 0}
             className="gap-2"
           >
             <X className="h-4 w-4" /> Limpiar
           </Button>
-          <Button onClick={aplicar}>Aplicar</Button>
+          <div className="ml-auto flex gap-2">
+            {onApply && (
+              <Button variant="outline" onClick={() => handleOpenChange(false)}>Cancelar</Button>
+            )}
+            <Button onClick={aplicar}>Aplicar</Button>
+          </div>
         </SheetFooter>
       </SheetContent>
     </Sheet>

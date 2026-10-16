@@ -54,6 +54,8 @@ INSERT INTO _ci_service_role_only (fn) VALUES
   ('public._crm_criterio_etapa_misma_org()'),
   ('public._crm_cumplimiento_misma_org()'),
   ('public._crm_comentario_oportunidad_misma_org()'),
+  -- Drizzle 0016: helper de trigger cerrado por el replay literal.
+  ('public._crm_empresa_desde_cliente()'),
   -- v13.823.6x · candados CRM de conversión y sincronía con cotizaciones:
   -- son triggers/RPC internos DEFINER, nunca los llama el cliente.
   ('public._crm_actividad_toca_oportunidad()'),
@@ -176,4 +178,10 @@ INSERT INTO _ci_service_role_only (fn) VALUES
    ('public._costeo_tarifa_solicitud_guard()'),
    ('public._crm_sol_pricing_before_ins()'),
    ('public._crm_empresa_estado_por_cliente()'),
-   ('public._crm_lead_sync_estado_empresa()');
+  -- Attribution guard; invoked by the crm_empresas trigger, never a client RPC.
+  ('public._crm_empresa_proteger_creador()'),
+   ('public._crm_lead_sync_estado_empresa()'),
+   -- Private explicit identity resolver, called only by authorized conversion RPCs.
+   ('public._crm_empresa_para_conversion(uuid, uuid, uuid)'),
+   ('public._crm_empresa_validar_lead()');
+

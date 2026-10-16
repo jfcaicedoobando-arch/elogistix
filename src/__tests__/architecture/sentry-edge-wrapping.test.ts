@@ -66,6 +66,8 @@ const CRITICAL = [
   "supabase/functions/verificar-sat-semanal/index.ts",
   // 13.715.0 — Ola 5 · O5.8: verificación server-side del XML del buzón CxP
   "supabase/functions/adjuntar-xml-entrante/index.ts",
+  // Extracción de tarifas del correo: usa el wrapper compartido.
+  "supabase/functions/extraer-tarifas-correo/index.ts",
 ];
 
 describe("Edge functions críticas envueltas con wrapEdgeHandler", () => {

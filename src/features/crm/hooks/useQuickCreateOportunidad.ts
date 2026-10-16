@@ -4,15 +4,13 @@
  * el origen (cliente o prospecto calificado) se deduce de la empresa, así el
  * guard `_crm_oportunidad_requiere_origen` sigue intacto.
  */
-import { crm } from "../queryKeys";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useOrigenEmpresaConsulta } from "./useOrigenEmpresaConsulta";
 import { notifyError } from "@/lib/ui/appFeedback";
 import { useAuth } from "@/lib/contexts/AuthContext";
 import { useCrearOportunidad, useEtapasPipeline } from "@/features/crm/hooks";
 import { primeraEtapaAbierta, type OrigenInicial } from "@/features/crm/domain/oportunidadFormHelpers";
 import type { RefRow } from "@/features/crm/services/objetosCrm";
-import { fetchOrigenEmpresa } from "@/features/crm/services/origenEmpresaCrm";
 
 /** Lo capturado en el alta express que viaja a "Más campos →". */
 export interface OportunidadQuickDraft {
@@ -61,21 +59,19 @@ export function useQuickCreateOportunidad({ open, onOpenChange, onCreated }: Par
   const valor = Number(valorEstimado);
   const valorListo = valorEstimado.trim() !== "" && Number.isFinite(valor) && valor > 0;
 
-  const origenQ = useQuery({
-    queryKey: crm.origenEmpresa(empresa?.id ?? ""),
-    queryFn: () => fetchOrigenEmpresa(empresa!.id),
-    enabled: !!empresa,
-  });
-  const origen = origenQ.data?.ok ? origenQ.data.origen : null;
-  const motivoOrigen = origenQ.data && !origenQ.data.ok ? origenQ.data.motivo : null;
+  const consultaOrigen = useOrigenEmpresaConsulta(empresa?.id ?? null, open);
+  const { origen, motivo: motivoOrigen } = consultaOrigen;
 
   const faltantes = camposFaltantes(nombre, empresa, etapa, valorListo);
-  const listo = faltantes.length === 0 && !!origen;
+  const listo = consultaOrigen.listo && faltantes.length === 0 && !!origen;
 
-  const construirBorrador = (): OportunidadQuickDraft => ({
-    nombre: nombre.trim(), empresa, origen, etapaId: etapa?.id ?? null,
-    valorEstimado,
-  });
+  const construirBorrador = (): OportunidadQuickDraft => {
+    const datos = consultaOrigen.datosListos();
+    return {
+      nombre: nombre.trim(), empresa, origen: datos?.ok ? datos.origen : null,
+      etapaId: etapa?.id ?? null, valorEstimado,
+    };
+  };
 
   const resolverVendedor = (o: OrigenInicial) =>
     o.tipo === "prospecto" && o.vendedorId
@@ -84,9 +80,11 @@ export function useQuickCreateOportunidad({ open, onOpenChange, onCreated }: Par
 
   const submit = async () => {
     if (crear.isPending || enviandoRef.current) return;
+    const datosActuales = consultaOrigen.datosListos();
+    const origen = datosActuales?.ok ? datosActuales.origen : null;
     if (!listo || !empresa || !etapa || !origen) {
       notifyError(undefined, {
-        title: motivoOrigen ?? `Falta: ${faltantes.join(", ")}`,
+        title: consultaOrigen.mensaje ?? motivoOrigen ?? `Falta: ${faltantes.join(", ")}`,
         method: "FEATURES_CRM_COMPONENTS_QUICKCREATE_QUICKCREATEOPORTUNIDADDIALOG_1",
       });
       return;
@@ -118,7 +116,7 @@ export function useQuickCreateOportunidad({ open, onOpenChange, onCreated }: Par
     nombre, setNombre, empresa, setEmpresa,
     etapasAbiertas, etapa, setEtapaId,
     valorEstimado, setValorEstimado,
-    origenCargando: origenQ.isFetching, motivoOrigen, faltantes, listo,
+    consultaOrigen, origenCargando: consultaOrigen.cargando, motivoOrigen, faltantes, listo,
     crear, submit, construirBorrador,
   };
 }

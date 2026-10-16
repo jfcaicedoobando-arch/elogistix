@@ -1,0 +1,83 @@
+[
+  {
+    "path": "sql/identity.sql",
+    "source": "identity/proposals/demo-fixture-identity.sql.proposed",
+    "upstream_sha256": "288ec5282822ebd40bf39715000fdaf283b775e54af560cf9ec450abcb22bb74",
+    "adaptation": "Synthetic tenant and fixture literals only; validation code preserved",
+    "sha256": "666a466b0b8189ef3cec661f489495b7059cfd9bbcb2492d9d221b693ea3be7f"
+  },
+  {
+    "path": "sql/bridge.sql",
+    "source": "identity/tests/bridge/verify_identity_receipt.sql",
+    "upstream_sha256": "8689097cccd845d72a36c6fed50f0cd1673b5f4f171dd1324c1b4ecb17ec1c3a",
+    "adaptation": "Synthetic tenant and fixture literals only; validation code preserved",
+    "sha256": "69bbcd2ec825953ca4fda822ec5fde143f1f70a5120f372ee3c211e96523c5b2"
+  },
+  {
+    "path": "sql/producer.sql",
+    "source": "identity/tests/bridge/prepare_identity_receipt.sql",
+    "upstream_sha256": "3c5e2f88ef2c364b39e57c7bed4df0b17d1361927f88aa5754e2ebdb91a3a1a6",
+    "adaptation": "Synthetic tenant and fixture literals only; validation code preserved",
+    "sha256": "f0a14f683ee524527ed3b7f29305bc793f7f9e3d5581b4332da72f8fb8bb55a6"
+  },
+  {
+    "path": "sql/registry.sql",
+    "source": "issuer/16-owner-registry.sql",
+    "upstream_sha256": "0b29f9f21d28f0340b9c714727fb8d801216333a42f7e8f80091ea87bed826bb",
+    "adaptation": "Synthetic tenant and fixture literals only; validation code preserved",
+    "sha256": "a74d69ed6d19356ba36fe27d7070a496e99c3ef5cec7a030c3b96b609a64463b"
+  },
+  {
+    "path": "sql/manifest.sql",
+    "source": "sql/02-manifest.sql",
+    "upstream_sha256": "4ed0bba38874e82a6922302c8134ff905d02bd3d977d61e793f836794a338a32",
+    "adaptation": "Synthetic tenant and fixture literals only; validation code preserved",
+    "sha256": "5d49c6dabc0a39b2a1ba5d5e1c0f19a2112d100147d9f706ddd2d9e5093790d0"
+  },
+  {
+    "path": "sql/core-owner-fixture.sql",
+    "source": "SYNTHETIC_OWNER_METADATA_FIXTURE",
+    "adaptation": "Always raises; not core behavior or authority evidence",
+    "sha256": "a850f7d409b721c317001947daf6633fa3d3f0ca4680eac6670e193eed82a563"
+  },
+  {
+    "path": "sql/runtime-guards.sql",
+    "source": "identity/evidence/runtime-guards.source.sql",
+    "upstream_sha256": "eb656d1d02205b9115e9bdc4512a593d0d34cd05f73bca62855055ced75cbad5",
+    "adaptation": "Synthetic tenant and fixture literals only; validation code preserved",
+    "sha256": "eb656d1d02205b9115e9bdc4512a593d0d34cd05f73bca62855055ced75cbad5"
+  },
+  {
+    "path": "sql/crm-trigger.sql",
+    "source": "identity/tests/0016-trigger.behavior.sql",
+    "upstream_sha256": "116435b37cb0ba806438e69c050192411ea7b4fdaf275bbea4868ed355e6733b",
+    "adaptation": "Synthetic tenant and fixture literals only; validation code preserved",
+    "sha256": "116435b37cb0ba806438e69c050192411ea7b4fdaf275bbea4868ed355e6733b"
+  },
+  {
+    "path": "sql/producer-fixture-contract.sql",
+    "source": "identity/tests/bridge/fixture-contract.sql",
+    "upstream_sha256": "029b0fc0b5f3ab91579165bff86e486c4ba6463b6507db38463a8610522ef2ae",
+    "adaptation": "Synthetic tenant and fixture literals only; validation code preserved",
+    "sha256": "d1e4beaec6d8832fe444a9bd6b3e1ef7475b8f089b9cc061bb7ac42c13071de5"
+  },
+  {
+    "path": "sql/writer-dependencies.sql",
+    "extracted_function": "assert_active_organization",
+    "source": "sql/01-private.sql",
+    "definition_sha256": "1c9612087a8ced4dfa56d9a6fc3faac3d30b78d643917e7cca202195912d74ff",
+    "adaptation": "Synthetic tenant UUID literal only"
+  },
+  {
+    "path": "sql/writer-dependencies.sql",
+    "extracted_function": "immutable",
+    "source": "sql/01-private.sql",
+    "definition_sha256": "eeea48044b2769d7449f46942445f5e318bf6380c27c571bfb1421415e0883d3"
+  },
+  {
+    "path": "sql/writer-dependencies.sql",
+    "extracted_function": "sha256",
+    "source": "sql/04-engine.sql",
+    "definition_sha256": "8f27c03eb8bfb084b4f98de456e33ef5715d3e04910132b272fe79a52fc5ef53"
+  }
+]

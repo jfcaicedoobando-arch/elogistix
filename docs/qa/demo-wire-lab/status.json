@@ -1,0 +1,25 @@
+{
+  "scope": "SYNTHETIC_ACTIONS_LAB_ONLY",
+  "operational_wire": "UNBOUND",
+  "deployment_configuration": "EMPTY",
+  "endpoint": "CLOSED",
+  "physical_runtime": "PASS_SYNTHETIC_ONLY_AT_RECORDED_HEAD",
+  "last_audited_attempt": {
+    "head": "9084f0249900491b50d944f34caf075d7a6ad2d3",
+    "run": 38813587064,
+    "artifact": 12009084011,
+    "zip_sha256": "f1f230ca2c300e9e00c3bf4723dc1bf7c56f63fb5bed52f37e7ccb59fe2243dc",
+    "job": "PASS",
+    "physical_cases": "9_PASS",
+    "owned_cleanup": "PASS",
+    "independent_reviews": "PASS_SYNTHETIC_ONLY"
+  },
+  "offline_node_tests": "24_PASS",
+  "offline_python_tests": "20_PASS",
+  "driver": "pg@8.23.1",
+  "driver_source_commit": "0980cefebe0ae461da8883703be049fe13ca96cf",
+  "sql_store_sha256": "fb7fa69c17eca7230606ecb6217086c6eb5317d75551df9efc268959f69140a7",
+  "crash_recovery": "NOT_RUN",
+  "real_issuer_identity_engine_acl_pooler": "NOT_RUN",
+  "guarantee": "at-most-once with quarantine; no availability or exactly-once guarantee"
+}

@@ -2,8 +2,9 @@
  * Columnas de la bandeja /compras/por-aprobar, con la columna de selección en
  * lote cuando aplica. Extraído de `ComprasPorAprobar.tsx` (límite 200 líneas).
  *
- * SoD: las facturas capturadas por el propio usuario no son seleccionables,
- * porque la RPC `aprobar_factura_proveedor` las rechaza con `LC_SOD_VIOLATION`.
+ * SoD: administradores y contadores pueden seleccionar sus propias facturas
+ * de proveedor para aprobación, conforme a `aprobar_factura_proveedor`.
+ * La selección exige permiso de aprobación y no otorga permisos de pago.
  */
 import { useMemo } from "react";
 import { buildCxPColumns } from "@/features/cxp";

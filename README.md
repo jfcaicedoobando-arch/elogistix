@@ -38,7 +38,7 @@ instalada. No significa que sean las últimas versiones de cada proveedor.
 
 ## Desarrollo
 
-Node.js **≥22.22.0** según `engines` y el mínimo de Router 8. CI utiliza Bun **1.4.0**.
+Node.js **≥22.22.0** según `engines` y el mínimo de Router 8. CI utiliza Node **24.22.0 LTS** y Bun **1.4.0** en la acción compartida.
 
 ```bash
 bun install --frozen-lockfile

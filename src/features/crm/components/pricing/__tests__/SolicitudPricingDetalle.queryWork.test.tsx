@@ -18,6 +18,7 @@ vi.mock("../ResumenSolicitudPricing", () => ({ ResumenSolicitudPricing: () => nu
 vi.mock("../AdjuntosSolicitudPricing", () => ({ AdjuntosSolicitudPricing: () => null }));
 vi.mock("../OpcionesTarifario", () => ({ OpcionesTarifario: () => null }));
 vi.mock("../OpcionPricingEditor", () => ({ OpcionPricingEditor: () => null }));
+vi.mock("../EnviarSolicitudFinal", () => ({ EnviarSolicitudFinal: () => null }));
 vi.mock("@/features/costeo", () => ({
   TarifaForm: ({ onOpenChange, onSaved }: { onOpenChange: (value: boolean) => void; onSaved: () => void }) => (
     <div role="dialog">

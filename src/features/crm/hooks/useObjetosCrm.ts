@@ -10,9 +10,10 @@ import {
   type ContactoRow, type EmpresaRow, type NuevoContactoInput, type Pagina, type ValorInicial,
 } from "@/features/crm/services/objetosCrm";
 import { pasarAProspecto } from "@/features/crm/services/estadoEmpresaCrm";
+import { eliminarEmpresa } from "@/features/crm/services/eliminarEmpresaCrm";
 import {
   contactosDeEmpresa, contactosDeOportunidad, desligar, empresasDeContacto, empresasDeOportunidad,
-  ligar, oportunidadesDe, type TipoVinculo,
+  ligar, oportunidadesDe, type TipoVinculo, type VinculoCrmRow,
 } from "@/features/crm/services/vinculosCrm";
 
 const BASE = crm.objetos.all;
@@ -74,7 +75,7 @@ export type Relacion =
   | "oportunidades-de-empresa" | "oportunidades-de-contacto"
   | "empresas-de-oportunidad" | "contactos-de-oportunidad";
 
-const LECTORES: Record<Relacion, (id: string) => Promise<{ id: string; nombre: string }[]>> = {
+const LECTORES: Record<Relacion, (id: string) => Promise<VinculoCrmRow[]>> = {
   "contactos-de-empresa": contactosDeEmpresa,
   "empresas-de-contacto": empresasDeContacto,
   "oportunidades-de-empresa": (id) => oportunidadesDe("empresa", id),
@@ -120,5 +121,17 @@ export function useVinculoCrm() {
       quitar ? desligar(tipo, aId, bId) : ligar(tipo, aId, bId),
     onSuccess: (_d, v) => { notifySuccess(undefined, { title: v.quitar ? "Vínculo quitado" : "Registro ligado" }); void invalidar(); },
     onError: (error, context) => notifyError(undefined, { title: "No se pudo actualizar el vínculo", error, context: { ...context }, method: "CRM_ACTUALIZAR_VINCULO" }),
+  });
+}
+
+/** Elimina (baja lógica) una empresa que todavía no es cliente. */
+export function useEliminarEmpresaCrm() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (empresaId: string) => eliminarEmpresa(empresaId),
+    onSuccess: () => { void qc.invalidateQueries({ queryKey: crm.all }); notifySuccess(undefined, { title: "Empresa eliminada" }); },
+    onError: (error: Error) => notifyError(undefined, {
+      title: "No se pudo eliminar la empresa", description: error.message, error, method: "CRM_ELIMINAR_EMPRESA",
+    }),
   });
 }

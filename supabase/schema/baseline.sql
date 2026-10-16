@@ -2595,12 +2595,164 @@ BEGIN
   RETURN NEW;
 END;
 $$;
+CREATE FUNCTION public._crm_empresa_desde_cliente() RETURNS trigger
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 'public'
+    AS $$
+BEGIN
+  -- Un alta independiente no aporta identidad CRM: cada cliente obtiene la suya.
+  -- La conversión reserva su UUID en la empresa exacta antes de insertar el cliente.
+  IF EXISTS (SELECT 1 FROM public.crm_empresas
+              WHERE organization_id = NEW.organization_id
+                AND cliente_id = NEW.id AND deleted_at IS NULL) THEN
+    RETURN NEW;
+  END IF;
+  INSERT INTO public.crm_empresas (organization_id, nombre, cliente_id, created_by)
+  VALUES (NEW.organization_id, NEW.nombre, NEW.id, auth.uid());
+  RETURN NEW;
+END $$;
 CREATE FUNCTION public._crm_empresa_estado_por_cliente() RETURNS trigger
     LANGUAGE plpgsql
     SET search_path TO 'public'
     AS $$
 BEGIN
   IF NEW.cliente_id IS NOT NULL THEN NEW.estado_crm := 'Cliente'; END IF;
+  RETURN NEW;
+END $$;
+CREATE FUNCTION public._crm_empresa_no_borrar_cliente() RETURNS trigger
+    LANGUAGE plpgsql
+    SET search_path TO 'public'
+    AS $$
+BEGIN
+  IF (NEW.deleted_at IS NOT NULL AND
+        (NEW.cliente_id IS NOT NULL OR NEW.estado_crm = 'Cliente'))
+     OR (TG_OP = 'UPDATE' AND (
+        (OLD.cliente_id IS NOT NULL AND NEW.cliente_id IS DISTINCT FROM OLD.cliente_id)
+        OR (OLD.estado_crm = 'Cliente' AND NEW.estado_crm IS DISTINCT FROM 'Cliente')
+        OR (NEW.deleted_at IS NOT NULL AND
+            (OLD.cliente_id IS NOT NULL OR OLD.estado_crm = 'Cliente')))) THEN
+    RAISE EXCEPTION 'LC_CRM_EMPRESA_ES_CLIENTE: una empresa que ya es cliente no se puede eliminar'
+      USING ERRCODE = '23514';
+  END IF;
+  RETURN NEW;
+END $$;
+CREATE FUNCTION public._crm_empresa_no_delete_fisico() RETURNS trigger
+    LANGUAGE plpgsql
+    SET search_path TO 'public'
+    AS $$
+BEGIN
+  IF OLD.cliente_id IS NOT NULL OR OLD.estado_crm = 'Cliente' THEN
+    RAISE EXCEPTION 'LC_CRM_EMPRESA_ES_CLIENTE: una empresa que ya es cliente no se puede eliminar'
+      USING ERRCODE = '23514';
+  END IF;
+  RETURN OLD;
+END $$;
+CREATE FUNCTION public._crm_empresa_para_conversion(p_org uuid, p_lead uuid, p_oportunidad uuid) RETURNS uuid
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 'public'
+    AS $$
+DECLARE v_ids uuid[]; v_actuales uuid[]; v_emp public.crm_empresas%ROWTYPE;
+BEGIN
+  SELECT array_agg(DISTINCT id ORDER BY id) INTO v_ids FROM (
+    SELECT e.id FROM public.crm_empresas e WHERE e.lead_origen_id = p_lead
+    UNION
+    SELECT oe.empresa_id FROM public.crm_oportunidad_empresa oe
+      WHERE oe.oportunidad_id = p_oportunidad
+  ) targets;
+  IF coalesce(cardinality(v_ids), 0) = 0 THEN RETURN NULL; END IF;
+  IF cardinality(v_ids) <> 1 THEN
+    RAISE EXCEPTION 'LC_CONVERSION_INCONSISTENTE' USING ERRCODE = '23514';
+  END IF;
+  -- No filtrar deleted_at antes de esperar: se valida la fila vigente tras el lock.
+  SELECT * INTO v_emp FROM public.crm_empresas WHERE id = v_ids[1] FOR UPDATE;
+  IF NOT FOUND OR v_emp.deleted_at IS NOT NULL THEN
+    RAISE EXCEPTION 'LC_CRM_EMPRESA_NO_ENCONTRADA' USING ERRCODE = 'P0002';
+  END IF;
+  -- Una empresa ligada sólo por oportunidad puede no tener lead de origen.
+  -- Si sí lo tiene, debe ser exactamente el lead de esta conversión.
+  IF v_emp.lead_origen_id IS NOT NULL AND v_emp.lead_origen_id IS DISTINCT FROM p_lead THEN
+    RAISE EXCEPTION 'LC_CONVERSION_INCONSISTENTE' USING ERRCODE = '23514';
+  END IF;
+  IF v_emp.organization_id IS DISTINCT FROM p_org OR EXISTS (
+    SELECT 1 FROM public.crm_oportunidad_empresa oe
+      WHERE oe.oportunidad_id = p_oportunidad AND oe.organization_id IS DISTINCT FROM p_org
+  ) THEN
+    RAISE EXCEPTION 'LC_ORG_AJENA' USING ERRCODE = '42501';
+  END IF;
+  -- Retener los vínculos originales antes de esperar lead/cotización. Si un
+  -- DELETE ya ganó, la relectura de abajo debe detectar también su desaparición.
+  PERFORM 1 FROM public.crm_oportunidad_empresa
+    WHERE oportunidad_id = p_oportunidad ORDER BY empresa_id FOR SHARE;
+  SELECT array_agg(DISTINCT id ORDER BY id) INTO v_actuales FROM (
+    SELECT e.id FROM public.crm_empresas e WHERE e.lead_origen_id = p_lead
+    UNION
+    SELECT oe.empresa_id FROM public.crm_oportunidad_empresa oe
+      WHERE oe.oportunidad_id = p_oportunidad
+  ) targets;
+  IF v_actuales IS DISTINCT FROM v_ids THEN
+    RAISE EXCEPTION 'LC_CONVERSION_INCONSISTENTE' USING ERRCODE = '23514';
+  END IF;
+  RETURN v_emp.id;
+END $$;
+CREATE FUNCTION public._crm_empresa_proteger_creador() RETURNS trigger
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 'public'
+    AS $$
+DECLARE v_uid uuid := auth.uid();
+BEGIN
+  -- Historical migrations and trusted backend producers may attribute records
+  -- on behalf of another user. An end-user RPC keeps its authenticated JWT.
+  IF auth.role() = 'service_role'
+    OR (v_uid IS NULL AND coalesce(auth.role(), '') <> 'authenticated') THEN
+    IF TG_OP = 'DELETE' THEN RETURN OLD; END IF;
+    RETURN NEW;
+  END IF;
+  IF v_uid IS NULL THEN
+    RAISE EXCEPTION 'LC_CRM_EMPRESA_CREADOR_PROTEGIDO' USING ERRCODE = '42501';
+  END IF;
+  BEGIN
+    PERFORM public._assert_writer(CASE WHEN TG_OP = 'INSERT' THEN NEW.organization_id ELSE OLD.organization_id END);
+    IF TG_OP = 'DELETE' THEN RETURN OLD; END IF;
+    RETURN NEW;
+  EXCEPTION WHEN insufficient_privilege THEN
+    NULL;
+  END;
+  IF TG_OP = 'INSERT' THEN
+    IF NEW.created_by IS DISTINCT FROM v_uid THEN
+      RAISE EXCEPTION 'LC_CRM_EMPRESA_CREADOR_PROTEGIDO' USING ERRCODE = '42501';
+    END IF;
+  ELSIF TG_OP = 'DELETE' THEN
+    IF OLD.created_by IS DISTINCT FROM v_uid THEN
+      RAISE EXCEPTION 'LC_CRM_EMPRESA_CREADOR_PROTEGIDO' USING ERRCODE = '42501';
+    END IF;
+    RETURN OLD;
+  ELSIF NEW.created_by IS DISTINCT FROM OLD.created_by OR NEW.id IS DISTINCT FROM OLD.id THEN
+    RAISE EXCEPTION 'LC_CRM_EMPRESA_CREADOR_PROTEGIDO' USING ERRCODE = '42501';
+  END IF;
+  RETURN NEW;
+END $$;
+CREATE FUNCTION public._crm_empresa_validar_lead() RETURNS trigger
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 'public'
+    AS $$
+DECLARE v_lead public.crm_leads%ROWTYPE;
+BEGIN
+  IF NEW.lead_origen_id IS NULL THEN RETURN NEW; END IF;
+  IF TG_OP = 'UPDATE' AND NEW.lead_origen_id IS NOT DISTINCT FROM OLD.lead_origen_id
+    AND NEW.organization_id IS NOT DISTINCT FROM OLD.organization_id THEN RETURN NEW; END IF;
+  SELECT * INTO v_lead FROM public.crm_leads WHERE id = NEW.lead_origen_id FOR UPDATE;
+  -- Igual que el guard de atribución, conservar productores privilegiados que
+  -- reconstruyen espejos históricos; también retienen el lock si el lead existe.
+  IF auth.role() = 'service_role'
+    OR (auth.uid() IS NULL AND coalesce(auth.role(), '') <> 'authenticated') THEN RETURN NEW; END IF;
+  IF NOT FOUND OR v_lead.deleted_at IS NOT NULL
+    OR v_lead.organization_id IS DISTINCT FROM NEW.organization_id THEN
+    RAISE EXCEPTION 'LC_CRM_LEAD_AJENO' USING ERRCODE = '23514';
+  END IF;
+  -- Una reclamación interactiva no puede ganar tras una conversión.
+  IF v_lead.cliente_convertido_id IS NOT NULL OR v_lead.estado::text = 'Convertido' THEN
+    RAISE EXCEPTION 'LC_CONVERSION_INCONSISTENTE' USING ERRCODE = '23514';
+  END IF;
   RETURN NEW;
 END $$;
 CREATE FUNCTION public._crm_es_pricing(p_org uuid) RETURNS boolean
@@ -2666,6 +2818,7 @@ BEGIN
   UPDATE public.crm_empresas e
      SET estado_crm = CASE WHEN NEW.estado::text = 'Convertido' THEN 'Cliente' ELSE 'Prospecto' END
    WHERE e.lead_origen_id = NEW.id AND e.organization_id = NEW.organization_id
+     AND e.deleted_at IS NULL
      AND e.estado_crm <> 'Cliente'
      AND NEW.estado::text IN ('Prospecto','Calificado','Pendiente de alta','Convertido');
   RETURN NEW;
@@ -5293,6 +5446,10 @@ CREATE FUNCTION public._seed_demo_limpiar_financiero() RETURNS void
 DECLARE
   v_org uuid := 'de100000-0000-0000-0000-000000000001'::uuid;
 BEGIN
+  -- Provisional fail-closed stop: conservation/adoption is not verified.
+  -- No flag or skip window may enable destructive reseeding in this release.
+  RAISE EXCEPTION 'LC_SEED_DEMO_CONSERVACION_PENDIENTE: reseed bloqueado hasta verificar conservación y adopción'
+    USING ERRCODE = '55000';
   PERFORM set_config('app.seed_demo', '1', true);
   -- Los REPs vivos bloquean el borrado de pagos: en demo se limpian primero.
   UPDATE public.pagos_factura
@@ -8022,7 +8179,7 @@ DECLARE
   v_uid uuid := auth.uid();
   v_email text;
   v_autorizado boolean;
-  v_es_admin boolean;
+  v_puede_autoaprobar_cxp boolean;
   v_desvinculo jsonb := '{}'::jsonb;
   v_estado_actual text;
 BEGIN
@@ -8040,8 +8197,8 @@ BEGIN
   SELECT EXISTS (
     SELECT 1 FROM public.user_roles ur
     WHERE ur.user_id = v_uid
-      AND ur.role::text = ANY (ARRAY['admin','admin_org','super_admin'])
-  ) INTO v_es_admin;
+      AND ur.role::text = ANY (ARRAY['admin','admin_org','super_admin','contador'])
+  ) INTO v_puede_autoaprobar_cxp;
   -- A-3: FOR UPDATE serializa dos clics simultáneos sobre la misma factura.
   SELECT * INTO v_row FROM public.proveedor_facturas
    WHERE id = p_id AND deleted_at IS NULL
@@ -8065,11 +8222,11 @@ BEGIN
   IF v_row.estado_aprobacion <> 'pendiente' THEN
     RAISE EXCEPTION 'La factura ya fue %', v_row.estado_aprobacion;
   END IF;
-  -- SoD: quien capturó no aprueba su propia factura (salvo administradores)
+  -- SoD CxP: administradores y contador pueden aprobar su propia factura.
   IF p_aprobar
      AND v_row.created_by IS NOT NULL
      AND v_row.created_by = v_uid
-     AND NOT v_es_admin
+     AND NOT v_puede_autoaprobar_cxp
   THEN
     RAISE EXCEPTION 'LC_SOD_VIOLATION: No puedes aprobar una factura que tú mismo capturaste. Pide la aprobación a otra persona.';
   END IF;
@@ -13722,6 +13879,8 @@ DECLARE
   v_ciudad text; v_estado_dir text;
   v_regimen text; v_uso text; v_forma text; v_metodo text;
   v_coherente boolean;
+  v_empresa uuid; v_org_inicial uuid; v_op_inicial uuid; v_lead_inicial uuid;
+  v_empresa_ids uuid[]; v_empresa_esperada uuid[];
 BEGIN
   IF auth.uid() IS NULL THEN
     RAISE EXCEPTION 'LC_SESION_REQUERIDA' USING ERRCODE = '42501';
@@ -13729,8 +13888,7 @@ BEGIN
   SELECT organization_id, es_prospecto, cliente_id, estado::text, oportunidad_id
     INTO v_org, v_es_prospecto, v_cliente_id, v_estado, v_oportunidad_id
   FROM public.cotizaciones
-  WHERE id = p_cotizacion_id AND deleted_at IS NULL
-  FOR UPDATE;
+  WHERE id = p_cotizacion_id AND deleted_at IS NULL;
   IF v_org IS NULL THEN
     RAISE EXCEPTION 'LC_COTIZACION_NO_ENCONTRADA';
   END IF;
@@ -13743,6 +13901,31 @@ BEGIN
         ARRAY['admin','admin_org','operador','contador','super_admin']::app_role[],
         v_org) THEN
     RAISE EXCEPTION 'LC_CLIENTE_SIN_PERMISO' USING ERRCODE = '42501';
+  END IF;
+  -- Resolver y bloquear la empresa ANTES de lead/oportunidad (orden de PR366).
+  v_org_inicial := v_org; v_op_inicial := v_oportunidad_id;
+  SELECT lead_id INTO v_lead_inicial FROM public.crm_oportunidades
+    WHERE id = v_op_inicial AND organization_id = v_org AND deleted_at IS NULL;
+  v_empresa := public._crm_empresa_para_conversion(v_org, v_lead_inicial, v_op_inicial);
+  v_empresa_esperada := CASE WHEN v_empresa IS NULL THEN NULL ELSE ARRAY[v_empresa] END;
+  PERFORM 1 FROM public.crm_leads WHERE id = v_lead_inicial FOR UPDATE;
+  SELECT organization_id, es_prospecto, cliente_id, estado::text, oportunidad_id
+    INTO v_org, v_es_prospecto, v_cliente_id, v_estado, v_oportunidad_id
+    FROM public.cotizaciones WHERE id = p_cotizacion_id AND deleted_at IS NULL FOR UPDATE;
+  IF NOT FOUND OR v_org IS DISTINCT FROM v_org_inicial
+    OR v_oportunidad_id IS DISTINCT FROM v_op_inicial THEN
+    RAISE EXCEPTION 'LC_CONVERSION_INCONSISTENTE';
+  END IF;
+  -- Igualdad completa: un conjunto vacío también invalida un destino cacheado.
+  SELECT array_agg(DISTINCT id ORDER BY id) INTO v_empresa_ids FROM (
+    SELECT id FROM public.crm_empresas WHERE lead_origen_id = v_lead_inicial
+    UNION
+    SELECT empresa_id FROM public.crm_oportunidad_empresa WHERE oportunidad_id = v_op_inicial
+  ) targets;
+  IF v_empresa_ids IS DISTINCT FROM v_empresa_esperada
+     OR EXISTS (SELECT 1 FROM public.crm_oportunidad_empresa
+                 WHERE oportunidad_id = v_op_inicial AND organization_id IS DISTINCT FROM v_org) THEN
+    RAISE EXCEPTION 'LC_CONVERSION_INCONSISTENTE';
   END IF;
   ------------------------------------------------------------------
   -- Idempotencia segura: sólo si la conversión previa es coherente.
@@ -13772,7 +13955,9 @@ BEGIN
           WHERE c.id = v_cliente_id AND c.organization_id = v_org AND c.deleted_at IS NULL
         );
     END IF;
-    IF v_coherente THEN
+    IF v_coherente AND (v_empresa IS NULL OR EXISTS (
+      SELECT 1 FROM public.crm_empresas WHERE id = v_empresa AND deleted_at IS NULL
+        AND organization_id = v_org AND cliente_id = v_cliente_id)) THEN
       SELECT nombre INTO v_nombre FROM public.clientes WHERE id = v_cliente_id;
       RETURN jsonb_build_object(
         'cliente_id', v_cliente_id, 'nombre', v_nombre, 'creado', false,
@@ -13808,6 +13993,19 @@ BEGIN
   FOR UPDATE;
   IF v_op_org IS NULL THEN
     RAISE EXCEPTION 'LC_OPORTUNIDAD_NO_ENCONTRADA';
+  END IF;
+  IF v_lead_id IS DISTINCT FROM v_lead_inicial THEN
+    RAISE EXCEPTION 'LC_CONVERSION_INCONSISTENTE';
+  END IF;
+  SELECT array_agg(DISTINCT id ORDER BY id) INTO v_empresa_ids FROM (
+    SELECT id FROM public.crm_empresas WHERE lead_origen_id = v_lead_inicial
+    UNION
+    SELECT empresa_id FROM public.crm_oportunidad_empresa WHERE oportunidad_id = v_op_inicial
+  ) targets;
+  IF v_empresa_ids IS DISTINCT FROM v_empresa_esperada
+     OR EXISTS (SELECT 1 FROM public.crm_oportunidad_empresa
+                 WHERE oportunidad_id = v_op_inicial AND organization_id IS DISTINCT FROM v_org) THEN
+    RAISE EXCEPTION 'LC_CONVERSION_INCONSISTENTE';
   END IF;
   IF v_op_org <> v_org THEN
     RAISE EXCEPTION 'LC_ORG_AJENA' USING ERRCODE = '42501';
@@ -13885,16 +14083,25 @@ BEGIN
     SELECT id, nombre INTO v_cliente_id, v_nombre_canonico
     FROM public.clientes
     WHERE organization_id = v_org AND upper(btrim(rfc)) = v_rfc AND deleted_at IS NULL
-    LIMIT 1;
+    LIMIT 1 FOR SHARE;
   END IF;
   IF v_cliente_id IS NULL THEN
     BEGIN
+      v_cliente_id := gen_random_uuid();
+      IF v_empresa IS NOT NULL THEN
+        -- cliente_id no tiene FK en este esquema. La reserva y el INSERT son
+        -- atómicos; un conflicto RFC revierte ambos dentro de este subbloque.
+        UPDATE public.crm_empresas SET cliente_id = v_cliente_id
+          WHERE id = v_empresa AND organization_id = v_org AND deleted_at IS NULL
+            AND cliente_id IS NULL;
+        IF NOT FOUND THEN RAISE EXCEPTION 'LC_CONVERSION_INCONSISTENTE'; END IF;
+      END IF;
       INSERT INTO public.clientes (
-        organization_id, nombre, contacto, email, telefono, rfc,
+        id, organization_id, nombre, contacto, email, telefono, rfc,
         direccion, ciudad, estado, cp,
         regimen_fiscal, uso_cfdi_default, forma_pago_default, metodo_pago_default
       ) VALUES (
-        v_org, v_nombre, v_contacto, v_email, v_telefono, v_rfc,
+        v_cliente_id, v_org, v_nombre, v_contacto, v_email, v_telefono, v_rfc,
         COALESCE(v_direccion, ''), COALESCE(v_ciudad, ''), COALESCE(v_estado_dir, ''), v_cp,
         v_regimen, v_uso, v_forma, v_metodo
       )
@@ -13907,10 +14114,16 @@ BEGIN
       SELECT id, nombre INTO v_cliente_id, v_nombre_canonico
       FROM public.clientes
       WHERE organization_id = v_org AND upper(btrim(rfc)) = v_rfc AND deleted_at IS NULL
-      LIMIT 1;
+      LIMIT 1 FOR SHARE;
       IF v_cliente_id IS NULL THEN RAISE; END IF;
       v_creado := false;
     END;
+  END IF;
+  IF v_empresa IS NOT NULL AND NOT v_creado THEN
+    UPDATE public.crm_empresas SET cliente_id = v_cliente_id
+      WHERE id = v_empresa AND organization_id = v_org AND deleted_at IS NULL
+        AND (cliente_id IS NULL OR cliente_id = v_cliente_id);
+    IF NOT FOUND THEN RAISE EXCEPTION 'LC_CONVERSION_INCONSISTENTE'; END IF;
   END IF;
   v_nombre_canonico := COALESCE(NULLIF(btrim(COALESCE(v_nombre_canonico, '')), ''), v_nombre);
   ------------------------------------------------------------------
@@ -16219,6 +16432,7 @@ DECLARE
   v_org uuid := public.org_scope();
   v_datos public.crm_oportunidades%ROWTYPE;
   v_id uuid;
+  v_cliente_empresa uuid;
 BEGIN
   IF auth.uid() IS NULL OR v_org IS NULL THEN
     RAISE EXCEPTION 'Selecciona una organización e inicia sesión' USING ERRCODE = '42501';
@@ -16229,13 +16443,21 @@ BEGIN
   IF p_datos IS NULL OR jsonb_typeof(p_datos) IS DISTINCT FROM 'object' THEN
     RAISE EXCEPTION 'Los datos de la oportunidad no son válidos' USING ERRCODE = '22023';
   END IF;
-  PERFORM 1 FROM public.crm_empresas
+  SELECT cliente_id INTO v_cliente_empresa FROM public.crm_empresas
     WHERE id = p_empresa_id AND organization_id = v_org AND deleted_at IS NULL
     FOR SHARE;
   IF NOT FOUND THEN
     RAISE EXCEPTION 'La empresa no está disponible en esta organización' USING ERRCODE = '42501';
   END IF;
   SELECT * INTO v_datos FROM jsonb_populate_record(NULL::public.crm_oportunidades, p_datos);
+  -- La empresa puede haberse convertido mientras el formulario estaba abierto.
+  -- El lock conserva esa identidad hasta terminar ambos INSERTs.
+  IF v_cliente_empresa IS NOT NULL AND (
+    v_datos.cliente_id IS DISTINCT FROM v_cliente_empresa OR v_datos.lead_id IS NOT NULL
+  ) THEN
+    RAISE EXCEPTION 'El origen debe ser el cliente asociado a la empresa, sin prospecto'
+      USING ERRCODE = '22023';
+  END IF;
   IF nullif(btrim(v_datos.nombre), '') IS NULL THEN
     RAISE EXCEPTION 'Nombre es obligatorio' USING ERRCODE = '22023';
   END IF;
@@ -16329,14 +16551,63 @@ CREATE FUNCTION public.crm_empresa_pasar_a_prospecto(p_empresa_id uuid) RETURNS 
     AS $$
 DECLARE
   v_org uuid := public.org_scope();
+  v_uid uuid := auth.uid();
+  v_kam boolean := false;
   v_emp public.crm_empresas%ROWTYPE;
+  v_origen public.crm_leads%ROWTYPE;
+  v_existente public.crm_oportunidades%ROWTYPE;
+  v_vinculo record;
   v_lead uuid; v_etapa uuid; v_op uuid; v_email text;
 BEGIN
   IF v_org IS NULL THEN RAISE EXCEPTION 'LC_SIN_ORGANIZACION' USING ERRCODE = '42501'; END IF;
-  PERFORM public._assert_writer(v_org);
+  -- Preserve the existing writer contract; only this RPC adds an exact KAM
+  -- membership path. Never broaden the shared _assert_writer helper.
+  BEGIN
+    PERFORM public._assert_writer(v_org);
+  EXCEPTION WHEN insufficient_privilege THEN
+    PERFORM 1 FROM public.organization_members om
+      JOIN public.organizations org ON org.id = om.organization_id AND org.activo IS TRUE
+     WHERE om.organization_id = v_org AND om.user_id = v_uid AND om.role::text = 'vendedor'
+     FOR SHARE OF om, org;
+    IF NOT FOUND THEN RAISE; END IF;
+    v_kam := true;
+  END;
   SELECT * INTO v_emp FROM public.crm_empresas
    WHERE id = p_empresa_id AND organization_id = v_org AND deleted_at IS NULL FOR UPDATE;
   IF NOT FOUND THEN RAISE EXCEPTION 'LC_CRM_EMPRESA_NO_ENCONTRADA' USING ERRCODE = 'P0002'; END IF;
+  IF v_kam THEN
+    IF v_emp.created_by IS DISTINCT FROM v_uid THEN
+      RAISE EXCEPTION 'LC_CRM_PROSPECTO_NO_AUTORIZADO' USING ERRCODE = '42501';
+    END IF;
+    IF v_emp.estado_crm = 'Cliente' OR v_emp.cliente_id IS NOT NULL THEN
+      RAISE EXCEPTION 'LC_CRM_EMPRESA_YA_CLIENTE';
+    END IF;
+    IF v_emp.lead_origen_id IS NOT NULL THEN
+      SELECT * INTO v_origen FROM public.crm_leads
+       WHERE id = v_emp.lead_origen_id FOR UPDATE;
+      IF NOT FOUND OR v_origen.organization_id IS DISTINCT FROM v_org
+        OR v_origen.deleted_at IS NOT NULL OR v_origen.vendedor_id IS DISTINCT FROM v_uid
+        OR v_origen.estado::text = 'Convertido' OR v_origen.cliente_convertido_id IS NOT NULL THEN
+        RAISE EXCEPTION 'LC_CRM_PROSPECTO_VINCULO_INVALIDO' USING ERRCODE = '42501';
+      END IF;
+    END IF;
+    -- Validate and lock EVERY link, including deleted/foreign opportunities.
+    -- A favourable LIMIT 1 must never hide a different owner's relationship.
+    FOR v_vinculo IN SELECT oe.organization_id, oe.oportunidad_id
+      FROM public.crm_oportunidad_empresa oe WHERE oe.empresa_id = v_emp.id
+      ORDER BY oe.oportunidad_id FOR UPDATE
+    LOOP
+      SELECT * INTO v_existente FROM public.crm_oportunidades
+       WHERE id = v_vinculo.oportunidad_id FOR UPDATE;
+      IF NOT FOUND OR v_vinculo.organization_id IS DISTINCT FROM v_org
+        OR v_existente.organization_id IS DISTINCT FROM v_org
+        OR v_existente.deleted_at IS NOT NULL OR v_existente.vendedor_id IS DISTINCT FROM v_uid
+        OR v_emp.lead_origen_id IS NULL
+        OR v_existente.lead_id IS DISTINCT FROM v_emp.lead_origen_id THEN
+        RAISE EXCEPTION 'LC_CRM_PROSPECTO_VINCULO_INVALIDO' USING ERRCODE = '42501';
+      END IF;
+    END LOOP;
+  END IF;
   SELECT o.id INTO v_op FROM public.crm_oportunidad_empresa oe
     JOIN public.crm_oportunidades o ON o.id = oe.oportunidad_id AND o.deleted_at IS NULL
    WHERE oe.empresa_id = v_emp.id ORDER BY o.created_at LIMIT 1;
@@ -31884,6 +32155,10 @@ BEGIN
     RAISE EXCEPTION 'LC_SEED_DEMO_NO_AUTORIZADO: solo service_role o super_admin'
       USING ERRCODE = 'P0001';
   END IF;
+  -- Provisional fail-closed stop: conservation/adoption is not verified.
+  -- No flag or skip window may enable destructive reseeding in this release.
+  RAISE EXCEPTION 'LC_SEED_DEMO_CONSERVACION_PENDIENTE: reseed bloqueado hasta verificar conservación y adopción'
+    USING ERRCODE = '55000';
   -- Candado de transacción: un solo re-sembrado a la vez.
   PERFORM pg_advisory_xact_lock(hashtext('seed_demo_organization'));
   -- Ola 4 (H7): antes el reseed fallaba por FK si alguien había operado en la
@@ -31903,7 +32178,37 @@ DECLARE
   v_emb1 uuid; v_emb2 uuid; v_emb3 uuid; v_emb4 uuid;
   v_cat uuid;
   v_pf1 uuid; v_pf2 uuid; v_pf3 uuid;
+  v_seed record;
+  v_matches integer;
 BEGIN
+  -- El seed no crea un aprobador ni suplanta al usuario del llamador.
+  IF auth.uid() IS NULL THEN
+    RAISE EXCEPTION 'LC_SEED_DEMO_APROBADOR_REQUERIDO: el seed requiere la identidad de un aprobador existente; service_role sin usuario no basta'
+      USING ERRCODE = '42501';
+  END IF;
+  -- Provisional fail-closed stop: conservation/adoption is not verified.
+  -- No flag or skip window may enable destructive reseeding in this release.
+  RAISE EXCEPTION 'LC_SEED_DEMO_CONSERVACION_PENDIENTE: reseed bloqueado hasta verificar conservación y adopción'
+    USING ERRCODE = '55000';
+  PERFORM pg_advisory_xact_lock(hashtext('seed_demo_organization'));
+  LOCK TABLE ONLY public.clientes, public.crm_empresas IN SHARE ROW EXCLUSIVE MODE NOWAIT;
+  -- Claves exclusivas del seed, acotadas a demo. No matching general por nombre.
+  FOR v_seed IN SELECT rfc FROM (VALUES ('IPA950101AB1'), ('TMO880305C45'), ('APB050620XX9')) AS seed(rfc) LOOP
+    SELECT count(*) INTO v_matches FROM public.clientes
+     WHERE organization_id = v_org AND rfc = v_seed.rfc;
+    IF v_matches > 1 OR EXISTS (SELECT 1 FROM public.clientes
+        WHERE organization_id = v_org AND rfc = v_seed.rfc AND deleted_at IS NOT NULL) THEN
+      RAISE EXCEPTION 'LC_SEED_DEMO_IDENTIDAD_AMBIGUA: cliente demo duplicado o borrado para RFC %', v_seed.rfc
+        USING ERRCODE = '23514';
+    END IF;
+  END LOOP;
+  -- No reparar ni borrar empresas huérfanas existentes: se requiere revisión.
+  IF EXISTS (SELECT 1 FROM public.crm_empresas e LEFT JOIN public.clientes c ON c.id = e.cliente_id
+      WHERE e.organization_id = v_org AND e.cliente_id IS NOT NULL
+        AND (c.id IS NULL OR c.organization_id IS DISTINCT FROM v_org OR c.deleted_at IS NOT NULL)) THEN
+    RAISE EXCEPTION 'LC_SEED_DEMO_CRM_IDENTIDAD_INSEGURA: vínculo cliente huérfano, borrado o de otra organización'
+      USING ERRCODE = '23514';
+  END IF;
   -- Limpieza idempotente de la org demo (orden seguro de FKs).
   DELETE FROM public.anticipos_aplicaciones WHERE organization_id = v_org;
   DELETE FROM public.pagos_proveedor WHERE organization_id = v_org;
@@ -31914,18 +32219,28 @@ BEGIN
   DELETE FROM public.eventos_embarque WHERE organization_id = v_org;
   DELETE FROM public.embarques WHERE organization_id = v_org;
   DELETE FROM public.cotizaciones WHERE organization_id = v_org;
-  DELETE FROM public.contactos_cliente WHERE organization_id = v_org;
-  DELETE FROM public.clientes WHERE organization_id = v_org;
   DELETE FROM public.proveedores WHERE organization_id = v_org;
-  INSERT INTO public.clientes (id, organization_id, nombre, rfc, ciudad, estado, contacto, email, telefono, dias_credito)
-  VALUES (gen_random_uuid(), v_org, 'Importadora del Pacífico S.A. de C.V.', 'IPA950101AB1', 'Manzanillo', 'Colima', 'Ana Ramírez', 'ana@imppacifico.mx', '+52 314 333 1100', 30)
-  RETURNING id INTO v_cli1;
-  INSERT INTO public.clientes (id, organization_id, nombre, rfc, ciudad, estado, contacto, email, telefono, dias_credito)
-  VALUES (gen_random_uuid(), v_org, 'Textiles Monterrey S.A.', 'TMO880305C45', 'Monterrey', 'Nuevo León', 'Carlos Vega', 'cvega@textilesmty.mx', '+52 81 8000 5500', 15)
-  RETURNING id INTO v_cli2;
-  INSERT INTO public.clientes (id, organization_id, nombre, rfc, ciudad, estado, contacto, email, telefono, dias_credito)
-  VALUES (gen_random_uuid(), v_org, 'Auto Partes Bajío S. de R.L.', 'APB050620XX9', 'Silao', 'Guanajuato', 'María López', 'mlopez@apbajio.mx', '+52 472 555 0099', 45)
-  RETURNING id INTO v_cli3;
+  SELECT id INTO v_cli1 FROM public.clientes
+   WHERE organization_id = v_org AND rfc = 'IPA950101AB1' AND deleted_at IS NULL;
+  IF NOT FOUND THEN
+    INSERT INTO public.clientes (id, organization_id, nombre, rfc, ciudad, estado, contacto, email, telefono, dias_credito)
+    VALUES (gen_random_uuid(), v_org, 'Importadora del Pacífico S.A. de C.V.', 'IPA950101AB1', 'Manzanillo', 'Colima', 'Ana Ramírez', 'ana@imppacifico.mx', '+52 314 333 1100', 30)
+    RETURNING id INTO v_cli1;
+  END IF;
+  SELECT id INTO v_cli2 FROM public.clientes
+   WHERE organization_id = v_org AND rfc = 'TMO880305C45' AND deleted_at IS NULL;
+  IF NOT FOUND THEN
+    INSERT INTO public.clientes (id, organization_id, nombre, rfc, ciudad, estado, contacto, email, telefono, dias_credito)
+    VALUES (gen_random_uuid(), v_org, 'Textiles Monterrey S.A.', 'TMO880305C45', 'Monterrey', 'Nuevo León', 'Carlos Vega', 'cvega@textilesmty.mx', '+52 81 8000 5500', 15)
+    RETURNING id INTO v_cli2;
+  END IF;
+  SELECT id INTO v_cli3 FROM public.clientes
+   WHERE organization_id = v_org AND rfc = 'APB050620XX9' AND deleted_at IS NULL;
+  IF NOT FOUND THEN
+    INSERT INTO public.clientes (id, organization_id, nombre, rfc, ciudad, estado, contacto, email, telefono, dias_credito)
+    VALUES (gen_random_uuid(), v_org, 'Auto Partes Bajío S. de R.L.', 'APB050620XX9', 'Silao', 'Guanajuato', 'María López', 'mlopez@apbajio.mx', '+52 472 555 0099', 45)
+    RETURNING id INTO v_cli3;
+  END IF;
   INSERT INTO public.proveedores (organization_id, nombre, tipo, pais, rfc, contacto, email, telefono, moneda_preferida, categoria)
   VALUES (v_org, 'Agente Aduanal Pacífico', 'Agente Aduanal'::tipo_proveedor, 'México', 'AAP890101XX1', 'Lic. Pérez', 'gerencia@aapacifico.mx', '+52 314 222 1010', 'MXN'::moneda, 'Logistico'::categoria_proveedor)
   RETURNING id INTO v_prov1;
@@ -31935,10 +32250,26 @@ BEGIN
   INSERT INTO public.proveedores (organization_id, nombre, tipo, pais, rfc, contacto, email, telefono, moneda_preferida, categoria)
   VALUES (v_org, 'Ocean Forwarders China Ltd.', 'Agente de Carga'::tipo_proveedor, 'China', '', 'Lily Chen', 'lily@oceanfwd.cn', '+86 21 5500 9090', 'USD'::moneda, 'Logistico'::categoria_proveedor)
   RETURNING id INTO v_prov3;
-  INSERT INTO public.contactos_cliente (organization_id, cliente_id, nombre, email, telefono)
-  VALUES (v_org, v_cli1, 'Ana Ramírez', 'ana@imppacifico.mx', '+52 314 333 1100');
-  INSERT INTO public.contactos_cliente (organization_id, cliente_id, nombre, email, telefono)
-  VALUES (v_org, v_cli2, 'Carlos Vega', 'cvega@textilesmty.mx', '+52 81 8000 5500');
+  SELECT count(*) INTO v_matches FROM public.contactos_cliente
+   WHERE organization_id = v_org AND cliente_id = v_cli1 AND email = 'ana@imppacifico.mx';
+  IF v_matches > 1 THEN
+    RAISE EXCEPTION 'LC_SEED_DEMO_IDENTIDAD_AMBIGUA: contacto demo duplicado'
+      USING ERRCODE = '23514';
+  END IF;
+  IF v_matches = 0 THEN
+    INSERT INTO public.contactos_cliente (organization_id, cliente_id, nombre, email, telefono)
+    VALUES (v_org, v_cli1, 'Ana Ramírez', 'ana@imppacifico.mx', '+52 314 333 1100');
+  END IF;
+  SELECT count(*) INTO v_matches FROM public.contactos_cliente
+   WHERE organization_id = v_org AND cliente_id = v_cli2 AND email = 'cvega@textilesmty.mx';
+  IF v_matches > 1 THEN
+    RAISE EXCEPTION 'LC_SEED_DEMO_IDENTIDAD_AMBIGUA: contacto demo duplicado'
+      USING ERRCODE = '23514';
+  END IF;
+  IF v_matches = 0 THEN
+    INSERT INTO public.contactos_cliente (organization_id, cliente_id, nombre, email, telefono)
+    VALUES (v_org, v_cli2, 'Carlos Vega', 'cvega@textilesmty.mx', '+52 81 8000 5500');
+  END IF;
   INSERT INTO public.embarques (
     id, organization_id, expediente, cliente_id, cliente_nombre, modo, tipo, shipper, consignatario,
     descripcion_mercancia, peso_kg, volumen_m3, piezas, incoterm, estado, operador,
@@ -32032,7 +32363,7 @@ BEGIN
     v_org, v_prov1, 'Agente Aduanal Pacífico', v_emb2,
     'AAP-2026-0458', 'AAP890101XX1', CURRENT_DATE - 40, CURRENT_DATE - 10, 30,
     'MXN'::moneda, 30000, 4800, 34800, 'Vigente'::estado_proveedor_factura,
-    'aprobada'::estado_aprobacion_factura_proveedor, now(),
+    'pendiente'::estado_aprobacion_factura_proveedor, NULL,
     v_cat, 'manual', 'Honorarios y maniobras aduanales DEMO-2026-002'
   ) RETURNING id INTO v_pf1;
   INSERT INTO public.proveedor_facturas_conceptos
@@ -32040,6 +32371,9 @@ BEGIN
   VALUES
     (v_org, v_pf1, 'Honorarios agenciamiento aduanal', 1, 22000),
     (v_org, v_pf1, 'Maniobras en puerto', 1, 8000);
+  -- Aprobar sólo después de conceptos; el RPC valida actor, tenant y versión.
+  PERFORM public.aprobar_factura_proveedor(v_pf1, true, NULL,
+    (SELECT updated_at FROM public.proveedor_facturas WHERE id = v_pf1 AND organization_id = v_org));
   -- (2) VIGENTE
   INSERT INTO public.proveedor_facturas (
     organization_id, proveedor_id, proveedor_nombre, embarque_id,
@@ -32050,13 +32384,16 @@ BEGIN
     v_org, v_prov2, 'Transportes Terrestres del Norte', v_emb1,
     'TTN-88213', 'TTN010101AA2', CURRENT_DATE - 5, CURRENT_DATE + 25, 30,
     'MXN'::moneda, 12500, 2000, 14500, 'Vigente'::estado_proveedor_factura,
-    'aprobada'::estado_aprobacion_factura_proveedor, now(),
+    'pendiente'::estado_aprobacion_factura_proveedor, NULL,
     v_cat, 'manual', 'Flete Manzanillo-CDMX DEMO-2026-001'
   ) RETURNING id INTO v_pf2;
   INSERT INTO public.proveedor_facturas_conceptos
     (organization_id, proveedor_factura_id, descripcion, cantidad, monto)
   VALUES
     (v_org, v_pf2, 'Flete terrestre contenedor 40HC', 1, 12500);
+  -- Aprobar sólo después de conceptos; el RPC valida actor, tenant y versión.
+  PERFORM public.aprobar_factura_proveedor(v_pf2, true, NULL,
+    (SELECT updated_at FROM public.proveedor_facturas WHERE id = v_pf2 AND organization_id = v_org));
   -- (3) PARCIALMENTE PAGADA
   INSERT INTO public.proveedor_facturas (
     organization_id, proveedor_id, proveedor_nombre, embarque_id,
@@ -32067,7 +32404,7 @@ BEGIN
     v_org, v_prov3, 'Ocean Forwarders China Ltd.', v_emb4,
     'OFC-INV-7720', CURRENT_DATE - 20, CURRENT_DATE + 25, 45,
     'MXN'::moneda, 50000, 8000, 58000, 'Vigente'::estado_proveedor_factura,
-    'aprobada'::estado_aprobacion_factura_proveedor, now(),
+    'pendiente'::estado_aprobacion_factura_proveedor, NULL,
     v_cat, 'manual', 'Flete marítimo + THC DEMO-2026-004'
   ) RETURNING id INTO v_pf3;
   INSERT INTO public.proveedor_facturas_conceptos
@@ -32075,6 +32412,9 @@ BEGIN
   VALUES
     (v_org, v_pf3, 'Flete marítimo CNTAO-MXZLO', 1, 46000),
     (v_org, v_pf3, 'THC origen/destino', 1, 4000);
+  -- Aprobar sólo después de conceptos; el RPC valida actor, tenant y versión.
+  PERFORM public.aprobar_factura_proveedor(v_pf3, true, NULL,
+    (SELECT updated_at FROM public.proveedor_facturas WHERE id = v_pf3 AND organization_id = v_org));
   INSERT INTO public.pagos_proveedor (
     organization_id, proveedor_factura_id, fecha_pago, monto, moneda,
     metodo_pago, referencia, notas
@@ -32087,32 +32427,260 @@ $$;
 CREATE FUNCTION public.seed_demo_organization_guarded(p_skip_ms bigint DEFAULT 600000) RETURNS boolean
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
-    AS $$
+    SET row_security TO 'off'
+    AS $_$
 DECLARE
   v_ultimo timestamptz;
+  v_org constant uuid := 'de100000-0000-0000-0000-000000000001'::uuid;
+  v_roots oid[];
+  v_globals oid[];
+  v_graph oid[];
+  v_after oid[];
+  v_scoped oid[];
+  v_fingerprint jsonb;
+  v_after_fingerprint jsonb;
+  v_relation record;
+  v_fk record;
+  v_bad boolean;
+  v_join text;
+  v_graph_sql constant text := $graph$
+    WITH RECURSIVE tenant_graph(relid) AS (
+      SELECT unnest($1::oid[])
+      UNION
+      SELECT CASE WHEN fk.conrelid = g.relid THEN fk.confrelid ELSE fk.conrelid END
+      FROM tenant_graph g
+      JOIN pg_catalog.pg_constraint fk ON fk.contype = 'f'
+        AND (fk.conrelid = g.relid OR fk.confrelid = g.relid)
+      WHERE NOT (g.relid = ANY($2::oid[]))
+    )
+    SELECT array_agg(relid ORDER BY relid) FROM tenant_graph
+  $graph$;
 BEGIN
-  -- M8 (mismo guard que seed_demo_organization): sólo service_role
-  -- (edge demo-access) o super_admin explícito.
   IF coalesce(current_setting('request.jwt.claims', true)::jsonb ->> 'role', '') <> 'service_role'
      AND NOT public.has_role(auth.uid(), 'super_admin'::public.app_role) THEN
     RAISE EXCEPTION 'LC_SEED_DEMO_NO_AUTORIZADO: solo service_role o super_admin'
       USING ERRCODE = 'P0001';
   END IF;
-  -- REF-05: candado + chequeo de edad + seed + marcador en UNA transacción
-  -- (el chequeo previo en la edge era check-then-act).
+  -- Provisional fail-closed stop: conservation/adoption is not verified.
+  -- No flag or skip window may enable destructive reseeding in this release.
+  RAISE EXCEPTION 'LC_SEED_DEMO_CONSERVACION_PENDIENTE: reseed bloqueado hasta verificar conservación y adopción'
+    USING ERRCODE = '55000';
   PERFORM pg_advisory_xact_lock(hashtext('seed_demo_organization'));
   SELECT last_seeded_at INTO v_ultimo FROM public.demo_seed_state WHERE id = true;
   IF v_ultimo IS NOT NULL
      AND (extract(epoch FROM clock_timestamp()) - extract(epoch FROM v_ultimo)) * 1000 < p_skip_ms THEN
-    RETURN false; -- sembrado recientemente: omitir
+    RETURN false;
   END IF;
+  -- Forward safety gate. Fail before business DML; never trust RLS-filtered reads.
+  -- READ COMMITTED is needed for fresh snapshots after relation locks.
+  IF current_setting('transaction_isolation') <> 'read committed' THEN
+    RAISE EXCEPTION 'LC_SEED_DEMO_TENANT_UNSAFE: se requiere READ COMMITTED'
+      USING ERRCODE = 'P0001';
+  END IF;
+  -- All wrapper/core DELETE roots, plus the wrapper pricing UPDATE target.
+  -- CI asserts the reviewed core does not mutate an unrepresented tenant root.
+  v_roots := ARRAY[
+    'public.anticipos_aplicaciones'::regclass::oid,
+    'public.anticipos_proveedor'::regclass::oid,
+    'public.clientes'::regclass::oid,
+    'public.contactos_cliente'::regclass::oid,
+    'public.costeo_agentes'::regclass::oid,
+    'public.costeo_cargos_fob_agente'::regclass::oid,
+    'public.costeo_tarifas'::regclass::oid,
+    'public.cotizaciones'::regclass::oid,
+    'public.crm_solicitudes_pricing'::regclass::oid,
+    'public.embarques'::regclass::oid,
+    'public.eventos_embarque'::regclass::oid,
+    'public.pagos_proveedor'::regclass::oid,
+    'public.proveedor_facturas'::regclass::oid,
+    'public.proveedor_facturas_conceptos'::regclass::oid,
+    'public.proveedor_notas_credito'::regclass::oid,
+    'public.proveedores'::regclass::oid
+  ];
+  -- Explicitly reviewed shared endpoints; absence of organization_id alone
+  -- never qualifies an unknown table as global. Do not traverse through these.
+  v_globals := array_remove(ARRAY[
+    to_regclass('public.organizations')::oid,
+    to_regclass('public.navieras')::oid,
+    to_regclass('public.puertos')::oid,
+    to_regclass('public.tipos_contenedor')::oid,
+    to_regclass('auth.users')::oid
+  ], NULL::oid);
+  EXECUTE v_graph_sql INTO v_graph USING v_roots, v_globals;
+  SELECT array_agg(r ORDER BY r) INTO v_scoped
+    FROM unnest(v_graph) AS relations(r) WHERE NOT (r = ANY(v_globals));
+  SELECT coalesce(jsonb_agg(to_jsonb(fk) ORDER BY fk.oid), '[]'::jsonb)
+    INTO v_fingerprint
+    FROM pg_catalog.pg_constraint fk
+   WHERE fk.contype = 'f'
+     AND (fk.conrelid = ANY(v_scoped) OR fk.confrelid = ANY(v_scoped));
+  -- Broad, intentionally conservative maintenance locks. NOWAIT rejects busy
+  -- graphs rather than waiting while holding locks on unrelated tenant tables.
+  -- Locks last until caller transaction end, including all cleanup/core DML.
+  FOR v_relation IN
+    SELECT c.oid, n.nspname, c.relname, c.relkind
+      FROM pg_catalog.pg_class c
+      JOIN pg_catalog.pg_namespace n ON n.oid = c.relnamespace
+     WHERE c.oid = ANY(v_graph) ORDER BY c.oid
+  LOOP
+    IF v_relation.relkind <> 'r'
+       OR EXISTS (SELECT 1 FROM pg_catalog.pg_inherits i
+                   WHERE i.inhrelid = v_relation.oid OR i.inhparent = v_relation.oid)
+       OR (v_relation.nspname <> 'public' AND NOT (v_relation.oid = ANY(v_globals))) THEN
+      RAISE EXCEPTION 'LC_SEED_DEMO_TENANT_UNSAFE: relacion no soportada %.%',
+        v_relation.nspname, v_relation.relname USING ERRCODE = 'P0001';
+    END IF;
+    EXECUTE format('LOCK TABLE ONLY %I.%I IN SHARE ROW EXCLUSIVE MODE NOWAIT',
+      v_relation.nspname, v_relation.relname);
+    IF NOT EXISTS (SELECT 1 FROM pg_catalog.pg_locks l
+                    WHERE l.pid = pg_backend_pid() AND l.relation = v_relation.oid
+                      AND l.mode = 'ShareRowExclusiveLock' AND l.granted) THEN
+      RAISE EXCEPTION 'LC_SEED_DEMO_TENANT_UNSAFE: identidad de relacion cambio durante bloqueo'
+        USING ERRCODE = 'P0001';
+    END IF;
+  END LOOP;
+  -- Static DML/core uses these names. Locking an old renamed OID is not
+  -- enough: reject any rename/drop/recreate between discovery and locking.
+  IF v_roots IS DISTINCT FROM ARRAY[
+    to_regclass('public.anticipos_aplicaciones')::oid,
+    to_regclass('public.anticipos_proveedor')::oid,
+    to_regclass('public.clientes')::oid,
+    to_regclass('public.contactos_cliente')::oid,
+    to_regclass('public.costeo_agentes')::oid,
+    to_regclass('public.costeo_cargos_fob_agente')::oid,
+    to_regclass('public.costeo_tarifas')::oid,
+    to_regclass('public.cotizaciones')::oid,
+    to_regclass('public.crm_solicitudes_pricing')::oid,
+    to_regclass('public.embarques')::oid,
+    to_regclass('public.eventos_embarque')::oid,
+    to_regclass('public.pagos_proveedor')::oid,
+    to_regclass('public.proveedor_facturas')::oid,
+    to_regclass('public.proveedor_facturas_conceptos')::oid,
+    to_regclass('public.proveedor_notas_credito')::oid,
+    to_regclass('public.proveedores')::oid
+  ]
+     OR v_globals IS DISTINCT FROM array_remove(ARRAY[
+    to_regclass('public.organizations')::oid,
+    to_regclass('public.navieras')::oid,
+    to_regclass('public.puertos')::oid,
+    to_regclass('public.tipos_contenedor')::oid,
+    to_regclass('auth.users')::oid
+  ], NULL::oid) THEN
+    RAISE EXCEPTION 'LC_SEED_DEMO_TENANT_UNSAFE: identidad de raiz o tabla global cambio'
+      USING ERRCODE = 'P0001';
+  END IF;
+  -- Detect discovery/lock DDL races. Once locked, adding/dropping/changing an
+  -- FK on these tables needs a conflicting relation lock. Compare full catalog
+  -- records, not only endpoints, so changed actions/operators are not missed.
+  EXECUTE v_graph_sql INTO v_after USING v_roots, v_globals;
+  SELECT coalesce(jsonb_agg(to_jsonb(fk) ORDER BY fk.oid), '[]'::jsonb)
+    INTO v_after_fingerprint
+    FROM pg_catalog.pg_constraint fk
+   WHERE fk.contype = 'f'
+     AND (fk.conrelid = ANY(v_scoped) OR fk.confrelid = ANY(v_scoped));
+  IF cardinality(v_graph) <> (SELECT count(*) FROM pg_catalog.pg_class c WHERE c.oid = ANY(v_graph))
+     OR v_after IS DISTINCT FROM v_graph
+     OR v_after_fingerprint IS DISTINCT FROM v_fingerprint THEN
+    RAISE EXCEPTION 'LC_SEED_DEMO_TENANT_UNSAFE: cambio concurrente del grafo FK'
+      USING ERRCODE = 'P0001';
+  END IF;
+  FOR v_relation IN
+    SELECT c.oid, n.nspname, c.relname, c.relkind
+      FROM pg_catalog.pg_class c
+      JOIN pg_catalog.pg_namespace n ON n.oid = c.relnamespace
+     WHERE c.oid = ANY(v_graph) ORDER BY c.oid
+  LOOP
+    -- Repeat shape checks under locks (the initial discovery was not locked).
+    IF v_relation.relkind <> 'r'
+       OR EXISTS (SELECT 1 FROM pg_catalog.pg_inherits i
+                   WHERE i.inhrelid = v_relation.oid OR i.inhparent = v_relation.oid)
+       OR (v_relation.nspname <> 'public' AND NOT (v_relation.oid = ANY(v_globals)))
+       OR ((v_relation.oid = ANY(v_globals)) AND NOT EXISTS (
+         SELECT 1 FROM pg_catalog.pg_attribute a
+          WHERE a.attrelid = v_relation.oid AND a.attname = 'id'
+            AND a.atttypid = 'uuid'::regtype AND NOT a.attisdropped))
+       OR ((v_relation.oid = ANY(v_globals)) AND EXISTS (
+         SELECT 1 FROM pg_catalog.pg_attribute a
+          WHERE a.attrelid = v_relation.oid AND a.attname = 'organization_id'
+            AND NOT a.attisdropped))
+       OR ((v_relation.oid = ANY(v_scoped)) AND NOT EXISTS (
+         SELECT 1 FROM pg_catalog.pg_attribute a
+          WHERE a.attrelid = v_relation.oid AND a.attname = 'organization_id'
+            AND a.atttypid = 'uuid'::regtype AND NOT a.attisdropped)) THEN
+      RAISE EXCEPTION 'LC_SEED_DEMO_TENANT_UNSAFE: forma de tabla no soportada %.%',
+        v_relation.nspname, v_relation.relname USING ERRCODE = 'P0001';
+    END IF;
+  END LOOP;
+  -- A shared endpoint must never be a child of the tenant graph: deleting a
+  -- tenant parent could otherwise mutate shared rows without an ownership key.
+  IF EXISTS (SELECT 1 FROM pg_catalog.pg_constraint fk
+              WHERE fk.contype = 'f' AND fk.conrelid = ANY(v_globals)
+                AND fk.confrelid = ANY(v_scoped)) THEN
+    RAISE EXCEPTION 'LC_SEED_DEMO_TENANT_UNSAFE: tabla global dependiente de empresa'
+      USING ERRCODE = 'P0001';
+  END IF;
+  FOR v_fk IN
+    SELECT fk.*, cn.nspname AS child_schema, cc.relname AS child_table,
+           pn.nspname AS parent_schema, pc.relname AS parent_table
+      FROM pg_catalog.pg_constraint fk
+      JOIN pg_catalog.pg_class cc ON cc.oid = fk.conrelid
+      JOIN pg_catalog.pg_namespace cn ON cn.oid = cc.relnamespace
+      JOIN pg_catalog.pg_class pc ON pc.oid = fk.confrelid
+      JOIN pg_catalog.pg_namespace pn ON pn.oid = pc.relnamespace
+     WHERE fk.contype = 'f'
+       AND fk.conrelid = ANY(v_scoped) AND fk.confrelid = ANY(v_scoped)
+     ORDER BY fk.oid
+  LOOP
+    -- Include self/composite/cyclic and NOT VALID FKs, in either direction.
+    -- All reviewed tenant FK keys are UUID with the built-in UUID operator.
+    -- Fail closed if a future schema requires another comparison contract.
+    IF cardinality(v_fk.conkey) = 0
+       OR cardinality(v_fk.conkey) <> cardinality(v_fk.confkey)
+       OR cardinality(v_fk.conkey) <> cardinality(v_fk.conpfeqop)
+       OR EXISTS (
+         SELECT 1
+           FROM unnest(v_fk.conkey, v_fk.confkey, v_fk.conpfeqop) AS keys(child_att, parent_att, eqop)
+           LEFT JOIN pg_catalog.pg_attribute ca ON ca.attrelid = v_fk.conrelid AND ca.attnum = keys.child_att
+           LEFT JOIN pg_catalog.pg_attribute pa ON pa.attrelid = v_fk.confrelid AND pa.attnum = keys.parent_att
+          WHERE ca.atttypid IS DISTINCT FROM 'uuid'::regtype::oid
+             OR pa.atttypid IS DISTINCT FROM 'uuid'::regtype::oid
+             OR ca.attisdropped OR pa.attisdropped
+             OR keys.eqop IS DISTINCT FROM 'pg_catalog.=(uuid,uuid)'::regoperator::oid
+       ) THEN
+      RAISE EXCEPTION 'LC_SEED_DEMO_TENANT_UNSAFE: llave FK no soportada %', v_fk.conname
+        USING ERRCODE = 'P0001';
+    END IF;
+    SELECT string_agg(format('p.%I OPERATOR(pg_catalog.=) c.%I', pa.attname, ca.attname), ' AND ' ORDER BY keys.ord)
+      INTO v_join
+      FROM unnest(v_fk.conkey, v_fk.confkey) WITH ORDINALITY AS keys(child_att, parent_att, ord)
+      JOIN pg_catalog.pg_attribute ca ON ca.attrelid = v_fk.conrelid AND ca.attnum = keys.child_att
+      JOIN pg_catalog.pg_attribute pa ON pa.attrelid = v_fk.confrelid AND pa.attnum = keys.parent_att;
+    EXECUTE format(
+      'SELECT EXISTS (SELECT 1 FROM %I.%I c JOIN %I.%I p ON %s '
+      'WHERE (p.organization_id = $1 AND c.organization_id IS DISTINCT FROM $1) '
+      'OR (c.organization_id = $1 AND p.organization_id IS DISTINCT FROM $1))',
+      v_fk.child_schema, v_fk.child_table, v_fk.parent_schema, v_fk.parent_table, v_join)
+      INTO v_bad USING v_org;
+    IF v_bad THEN
+      RAISE EXCEPTION 'LC_SEED_DEMO_TENANT_UNSAFE: referencia entre empresas en %', v_fk.conname
+        USING ERRCODE = 'P0001';
+    END IF;
+  END LOOP;
+  -- Sentry JAVASCRIPT-REACT-80: agentes creados por visitantes de la demo
+  -- (alta provisional) quedaban ligados a proveedores que el reseed borra y
+  -- el SET NULL chocaba con proveedor_id NOT NULL. Sólo org demo.
+  UPDATE public.crm_solicitudes_pricing SET tarifa_tarifario_id = NULL
+   WHERE organization_id = v_org AND tarifa_tarifario_id IS NOT NULL;
+  DELETE FROM public.costeo_cargos_fob_agente WHERE organization_id = v_org;
+  DELETE FROM public.costeo_tarifas WHERE organization_id = v_org;
+  DELETE FROM public.costeo_agentes WHERE organization_id = v_org;
   PERFORM public.seed_demo_organization_core();
   INSERT INTO public.demo_seed_state (id, last_seeded_at)
   VALUES (true, clock_timestamp())
   ON CONFLICT (id) DO UPDATE SET last_seeded_at = excluded.last_seeded_at;
-  RETURN true; -- se re-sembró
+  RETURN true;
 END;
-$$;
+$_$;
 CREATE FUNCTION public.seed_presupuesto_categorias(p_organization_id uuid) RETURNS void
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
@@ -35733,6 +36301,7 @@ CREATE TABLE public.costeo_cargos_fob_agente (
     created_at timestamp with time zone DEFAULT now() NOT NULL,
     updated_at timestamp with time zone DEFAULT now() NOT NULL,
     deleted_at timestamp with time zone,
+    aplica_iva boolean DEFAULT false NOT NULL,
     CONSTRAINT costeo_cargos_fob_agente_moneda_check CHECK ((moneda = ANY (ARRAY['USD'::text, 'MXN'::text, 'EUR'::text]))),
     CONSTRAINT costeo_cargos_fob_agente_monto_check CHECK ((monto >= (0)::numeric))
 );
@@ -35748,6 +36317,7 @@ CREATE TABLE public.costeo_cargos_locales_naviera (
     created_at timestamp with time zone DEFAULT now() NOT NULL,
     updated_at timestamp with time zone DEFAULT now() NOT NULL,
     deleted_at timestamp with time zone,
+    aplica_iva boolean DEFAULT false NOT NULL,
     CONSTRAINT costeo_cargos_locales_naviera_moneda_check CHECK ((moneda = ANY (ARRAY['USD'::text, 'MXN'::text, 'EUR'::text]))),
     CONSTRAINT costeo_cargos_locales_naviera_monto_check CHECK ((monto >= (0)::numeric))
 );
@@ -38238,6 +38808,7 @@ CREATE TRIGGER trg_cierre_financiero BEFORE INSERT OR DELETE OR UPDATE ON public
 CREATE TRIGGER trg_cierre_financiero BEFORE INSERT OR DELETE OR UPDATE ON public.pagos_proveedor FOR EACH ROW EXECUTE FUNCTION public.tg_bloquear_financiero_embarque_cerrado();
 CREATE TRIGGER trg_cierre_financiero BEFORE INSERT OR DELETE OR UPDATE ON public.proveedor_facturas FOR EACH ROW EXECUTE FUNCTION public.tg_bloquear_financiero_embarque_cerrado();
 CREATE TRIGGER trg_cliente_documentos_updated_at BEFORE UPDATE ON public.cliente_documentos FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
+CREATE TRIGGER trg_clientes_crm_empresa AFTER INSERT ON public.clientes FOR EACH ROW WHEN ((new.deleted_at IS NULL)) EXECUTE FUNCTION public._crm_empresa_desde_cliente();
 CREATE TRIGGER trg_clientes_email_unico BEFORE INSERT OR UPDATE OF email ON public.clientes FOR EACH ROW EXECUTE FUNCTION public._assert_email_unico_org();
 CREATE TRIGGER trg_clientes_nombre_mayusculas BEFORE INSERT OR UPDATE OF nombre ON public.clientes FOR EACH ROW EXECUTE FUNCTION public._normalizar_razon_social();
 CREATE TRIGGER trg_clientes_normaliza_campos BEFORE INSERT OR UPDATE OF nombre, email, rfc ON public.clientes FOR EACH ROW EXECUTE FUNCTION public.trg_clientes_normaliza_campos();
@@ -38290,6 +38861,10 @@ CREATE TRIGGER trg_crm_criterio_etapa_misma_org BEFORE INSERT OR UPDATE OF etapa
 CREATE TRIGGER trg_crm_cumplimiento_misma_org BEFORE INSERT OR UPDATE OF oportunidad_id, criterio_id, organization_id ON public.crm_oportunidad_criterios FOR EACH ROW EXECUTE FUNCTION public._crm_cumplimiento_misma_org();
 CREATE TRIGGER trg_crm_cuotas_updated_at BEFORE UPDATE ON public.crm_cuotas_vendedor FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
 CREATE TRIGGER trg_crm_empresa_estado_por_cliente BEFORE INSERT OR UPDATE OF cliente_id ON public.crm_empresas FOR EACH ROW EXECUTE FUNCTION public._crm_empresa_estado_por_cliente();
+CREATE TRIGGER trg_crm_empresa_no_borrar_cliente BEFORE INSERT OR UPDATE OF deleted_at, cliente_id, estado_crm ON public.crm_empresas FOR EACH ROW EXECUTE FUNCTION public._crm_empresa_no_borrar_cliente();
+CREATE TRIGGER trg_crm_empresa_no_delete_fisico BEFORE DELETE ON public.crm_empresas FOR EACH ROW EXECUTE FUNCTION public._crm_empresa_no_delete_fisico();
+CREATE TRIGGER trg_crm_empresa_proteger_creador BEFORE INSERT OR DELETE OR UPDATE OF id, created_by ON public.crm_empresas FOR EACH ROW EXECUTE FUNCTION public._crm_empresa_proteger_creador();
+CREATE TRIGGER trg_crm_empresa_validar_lead BEFORE INSERT OR UPDATE OF lead_origen_id, organization_id ON public.crm_empresas FOR EACH ROW EXECUTE FUNCTION public._crm_empresa_validar_lead();
 CREATE TRIGGER trg_crm_etapa_criterios_updated_at BEFORE UPDATE ON public.crm_etapa_criterios FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
 CREATE TRIGGER trg_crm_etapa_motivo_misma_org BEFORE INSERT OR UPDATE OF etapa_id, motivo_perdida_id, organization_id ON public.crm_oportunidades FOR EACH ROW EXECUTE FUNCTION public._crm_oportunidad_etapa_motivo_misma_org();
 CREATE TRIGGER trg_crm_etapas_updated_at BEFORE UPDATE ON public.crm_etapas_pipeline FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
@@ -39166,6 +39741,9 @@ CREATE POLICY "Fiscal write refacturaciones" ON public.refacturaciones FOR INSER
   WHERE ((om.user_id = ( SELECT auth.uid() AS uid)) AND (om.organization_id = refacturaciones.organization_id) AND (om.role = ANY (ARRAY['admin_org'::public.app_role, 'admin'::public.app_role, 'contador'::public.app_role, 'auxiliar_contable'::public.app_role]))))))));
 CREATE POLICY "Gerencia administra metas" ON public.crm_metas_actividad TO authenticated USING ((((organization_id = ( SELECT public.current_user_org_id() AS current_user_org_id)) OR ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'super_admin'::public.app_role) AS has_role)) AND (( SELECT public.has_role(( SELECT auth.uid() AS uid), 'admin'::public.app_role) AS has_role) OR ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'admin_org'::public.app_role) AS has_role) OR ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'gerente_comercial'::public.app_role) AS has_role) OR ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'super_admin'::public.app_role) AS has_role)))) WITH CHECK ((((organization_id = ( SELECT public.current_user_org_id() AS current_user_org_id)) OR ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'super_admin'::public.app_role) AS has_role)) AND (( SELECT public.has_role(( SELECT auth.uid() AS uid), 'admin'::public.app_role) AS has_role) OR ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'admin_org'::public.app_role) AS has_role) OR ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'gerente_comercial'::public.app_role) AS has_role) OR ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'super_admin'::public.app_role) AS has_role))));
 CREATE POLICY "Gerencia administra presupuesto" ON public.crm_presupuesto_mensual TO authenticated USING ((((organization_id = ( SELECT public.current_user_org_id() AS current_user_org_id)) OR ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'super_admin'::public.app_role) AS has_role)) AND (( SELECT public.has_role(( SELECT auth.uid() AS uid), 'admin'::public.app_role) AS has_role) OR ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'admin_org'::public.app_role) AS has_role) OR ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'gerente_comercial'::public.app_role) AS has_role) OR ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'super_admin'::public.app_role) AS has_role)))) WITH CHECK ((((organization_id = ( SELECT public.current_user_org_id() AS current_user_org_id)) OR ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'super_admin'::public.app_role) AS has_role)) AND (( SELECT public.has_role(( SELECT auth.uid() AS uid), 'admin'::public.app_role) AS has_role) OR ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'admin_org'::public.app_role) AS has_role) OR ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'gerente_comercial'::public.app_role) AS has_role) OR ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'super_admin'::public.app_role) AS has_role))));
+CREATE POLICY "Gerente operaciones y admins dan de alta navieras" ON public.navieras FOR INSERT TO authenticated WITH CHECK ((( SELECT public.has_role(( SELECT auth.uid() AS uid), 'admin'::public.app_role) AS has_role) OR ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'gerente_operaciones'::public.app_role) AS has_role)));
+CREATE POLICY "Gerente operaciones y admins dan de alta puertos" ON public.puertos FOR INSERT TO authenticated WITH CHECK ((( SELECT public.has_role(( SELECT auth.uid() AS uid), 'admin'::public.app_role) AS has_role) OR ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'gerente_operaciones'::public.app_role) AS has_role)));
+CREATE POLICY "Gerente operaciones y admins dan de alta tipos_contenedor" ON public.tipos_contenedor FOR INSERT TO authenticated WITH CHECK ((( SELECT public.has_role(( SELECT auth.uid() AS uid), 'admin'::public.app_role) AS has_role) OR ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'gerente_operaciones'::public.app_role) AS has_role)));
 CREATE POLICY "Gestion leads in-org insert crm_leads" ON public.crm_leads FOR INSERT TO authenticated WITH CHECK ((public.is_org_member(organization_id) AND public.rls_tenant_scope_ok(organization_id) AND public.has_any_role_in_org(( SELECT auth.uid() AS uid), ARRAY['admin'::public.app_role, 'gerente_comercial'::public.app_role], organization_id)));
 CREATE POLICY "Gestion leads in-org select crm_leads" ON public.crm_leads FOR SELECT TO authenticated USING ((public.is_org_member(organization_id) AND public.rls_tenant_scope_ok(organization_id) AND public.has_any_role_in_org(( SELECT auth.uid() AS uid), ARRAY['admin'::public.app_role, 'gerente_comercial'::public.app_role], organization_id)));
 CREATE POLICY "Gestion leads in-org update crm_leads" ON public.crm_leads FOR UPDATE TO authenticated USING ((public.is_org_member(organization_id) AND public.rls_tenant_scope_ok(organization_id) AND public.has_any_role_in_org(( SELECT auth.uid() AS uid), ARRAY['admin'::public.app_role, 'gerente_comercial'::public.app_role], organization_id))) WITH CHECK ((public.is_org_member(organization_id) AND public.rls_tenant_scope_ok(organization_id) AND public.has_any_role_in_org(( SELECT auth.uid() AS uid), ARRAY['admin'::public.app_role, 'gerente_comercial'::public.app_role], organization_id)));
@@ -39934,8 +40512,18 @@ REVOKE ALL ON FUNCTION public._crm_criterio_etapa_misma_org() FROM PUBLIC;
 GRANT ALL ON FUNCTION public._crm_criterio_etapa_misma_org() TO service_role;
 REVOKE ALL ON FUNCTION public._crm_cumplimiento_misma_org() FROM PUBLIC;
 GRANT ALL ON FUNCTION public._crm_cumplimiento_misma_org() TO service_role;
+REVOKE ALL ON FUNCTION public._crm_empresa_desde_cliente() FROM PUBLIC;
+GRANT ALL ON FUNCTION public._crm_empresa_desde_cliente() TO service_role;
 REVOKE ALL ON FUNCTION public._crm_empresa_estado_por_cliente() FROM PUBLIC;
 GRANT ALL ON FUNCTION public._crm_empresa_estado_por_cliente() TO service_role;
+REVOKE ALL ON FUNCTION public._crm_empresa_no_borrar_cliente() FROM PUBLIC;
+REVOKE ALL ON FUNCTION public._crm_empresa_no_delete_fisico() FROM PUBLIC;
+REVOKE ALL ON FUNCTION public._crm_empresa_para_conversion(p_org uuid, p_lead uuid, p_oportunidad uuid) FROM PUBLIC;
+GRANT ALL ON FUNCTION public._crm_empresa_para_conversion(p_org uuid, p_lead uuid, p_oportunidad uuid) TO service_role;
+REVOKE ALL ON FUNCTION public._crm_empresa_proteger_creador() FROM PUBLIC;
+GRANT ALL ON FUNCTION public._crm_empresa_proteger_creador() TO service_role;
+REVOKE ALL ON FUNCTION public._crm_empresa_validar_lead() FROM PUBLIC;
+GRANT ALL ON FUNCTION public._crm_empresa_validar_lead() TO service_role;
 REVOKE ALL ON FUNCTION public._crm_es_pricing(p_org uuid) FROM PUBLIC;
 GRANT ALL ON FUNCTION public._crm_es_pricing(p_org uuid) TO authenticated;
 GRANT ALL ON FUNCTION public._crm_es_pricing(p_org uuid) TO service_role;

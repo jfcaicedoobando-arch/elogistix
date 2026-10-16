@@ -1,0 +1,148 @@
+{
+  "schema_version": 1,
+  "provider_version": 2,
+  "status": "PASS_OFFLINE_ONLY_NATIVE_V2_NOT_RUN",
+  "offline_tests": {
+    "passed": 71,
+    "failed": 0,
+    "previous": 53,
+    "v2": 18,
+    "command": "python -B -I -m unittest discover -s scripts/ci/demo-financial-retry-negative-review -p test_*.py -v"
+  },
+  "original_nine_files": "PASS_EXACT_BYTES",
+  "seven_original_renders": "PASS_BYTE_IDENTICAL",
+  "authentic_schema_source_hashes": "PASS",
+  "standalone_first_delivery_without_supplement": "PASS_IMPORT_AND_RENDER",
+  "historical_native_run": {
+    "run_id": 38826041062,
+    "head": "21b5fae8e9fb7e072f21ae9478e0f6df6d7e4f35",
+    "passed": 7,
+    "failed_before_mutation": 2,
+    "failure_sqlstate": "42703",
+    "failure_message": "column a.identity_receipt_id does not exist",
+    "expected_denials_for_affected_cases": "NOT_RUN"
+  },
+  "historical_artifact": {
+    "id": 12014284809,
+    "api_sha256": "8b45e68934272812c51c75579c3c6f0b2c9602e057d653254b4f9605e2182607",
+    "local_zip_verification": "NOT_VERIFIED_DNS_FAILURE",
+    "job_logs": "READ_AND_CONFIRMED_POSITIVE_CONTROLS_NO_MUTATION_OR_DENIAL_FOR_TWO_FAILS"
+  },
+  "rendered_suites": [
+    {
+      "case_id": "foreign_bound_invoice_id",
+      "bytes": 29505,
+      "sha256": "6e3a6678d93503ca4bde1338c08276fc5381a0637b4fcd1bfd556801468a545b",
+      "original_render_byte_identical": true,
+      "expected_sqlstate": "23514",
+      "expected_message": "DEMO_FINANCIAL_ADOPTION_DENIED",
+      "native_v2": "NOT_RUN"
+    },
+    {
+      "case_id": "authority_scheduler_disabled",
+      "bytes": 32492,
+      "sha256": "2e3a01f9f7aabdc9a371447b30cd4248dc191ed44769e750b8b0f9fef98933c5",
+      "original_render_byte_identical": true,
+      "expected_sqlstate": "42501",
+      "expected_message": "DEMO_SCHEDULER_APPROVAL_INVALID",
+      "native_v2": "NOT_RUN"
+    },
+    {
+      "case_id": "authority_transport_disabled",
+      "bytes": 34396,
+      "sha256": "fa62067861c5df6132c253a224b84eb4b06c8e22822820722c353ac852db4176",
+      "original_render_byte_identical": true,
+      "expected_sqlstate": "42501",
+      "expected_message": "DEMO_REGISTERED_RPC_TRANSPORT_REQUIRED",
+      "native_v2": "NOT_RUN"
+    },
+    {
+      "case_id": "tenant_organization_inactive",
+      "bytes": 32879,
+      "sha256": "e8804b79887a5dae4af50ecfc7d5271555d939f48a1a5e6e10d29b160e7608d7",
+      "original_render_byte_identical": true,
+      "expected_sqlstate": "42501",
+      "expected_message": "DEMO_ORGANIZATION_INACTIVE",
+      "native_v2": "NOT_RUN"
+    },
+    {
+      "case_id": "manifest_scheduler_hash_drift",
+      "bytes": 33503,
+      "sha256": "6b5180a986c4cd610d3d35145b7cf6551568cfe8e0af31481493c8e263b71b8d",
+      "original_render_byte_identical": true,
+      "expected_sqlstate": "42501",
+      "expected_message": "DEMO_SCHEDULER_APPROVAL_INVALID",
+      "native_v2": "NOT_RUN"
+    },
+    {
+      "case_id": "expiry_run_shortened",
+      "bytes": 33291,
+      "sha256": "3398a26b47a31baf33f70b99f03cc2c0038ac5da1fc4295eb2b8af9b77c0e7a4",
+      "original_render_byte_identical": true,
+      "expected_sqlstate": "42501",
+      "expected_message": "DEMO_RUN_UNAUTHORIZED",
+      "native_v2": "NOT_RUN"
+    },
+    {
+      "case_id": "guarded_tenant_run_rebinding",
+      "bytes": 30780,
+      "sha256": "244bbee5bd68cddd2d5f388b82d7ae03db80e65b19a63ff77827e5721230955a",
+      "original_render_byte_identical": true,
+      "expected_sqlstate": "42501",
+      "expected_message": "DEMO_IMMUTABLE_RUN",
+      "native_v2": "NOT_RUN"
+    },
+    {
+      "case_id": "mutable_supplier_origin_drift",
+      "bytes": 41747,
+      "sha256": "2d049dddfbcd919a05d3473a3835d26bf22c7bd053b2a2f405ea2433f63df2c9",
+      "original_render_byte_identical": false,
+      "expected_sqlstate": "23514",
+      "expected_message": "DEMO_ADMITTED_SUPPLIER_DRIFT",
+      "native_v2": "NOT_RUN"
+    },
+    {
+      "case_id": "materialized_invoice_folio_drift",
+      "bytes": 42028,
+      "sha256": "ed07cade3f5c92245b20219b7420db27a2b27225bc8206ab9bfedede64f96ef7",
+      "original_render_byte_identical": false,
+      "expected_sqlstate": "PT409",
+      "expected_message": "DEMO_DOCUMENT_DIVERGED",
+      "native_v2": "NOT_RUN"
+    }
+  ],
+  "source_probe": {
+    "sha256": "72a47d8cdcf98597549b3b53394942fb65db94b24aa8fa93a588feca876489ee",
+    "native_execution": "NOT_RUN",
+    "scope": "Read-only exact corrected expressions and authentic typed receipt chain before mutation"
+  },
+  "new_source_files": {
+    "CORRECTION_V2.md": {
+      "bytes": 4940,
+      "sha256": "e1d6bc81fdc0a309b75c873166d877136894c51d0846ba1d8692764dcd1b2b4a"
+    },
+    "origin-v2-contract.json": {
+      "bytes": 2688,
+      "sha256": "8472d9a158baf30d61d90e31cc803d0b595adf9f4e803fc096612d3b83ac054e"
+    },
+    "origin_materialization_cases_v2.py": {
+      "bytes": 10207,
+      "sha256": "5733519465a7bdf3a080a83b302730445ce071cefe499ccca99cf876d304394d"
+    },
+    "suite_v2.py": {
+      "bytes": 3829,
+      "sha256": "aaf1d803de0b912e58e7751e370b83cd122832a896a155661d922f1905dd0539"
+    },
+    "test_origin_materialization_v2.py": {
+      "bytes": 18240,
+      "sha256": "d6122d820375ce61ec5264a9652862e5a5d7f6114e1a57d2892544a3602b69d3"
+    },
+    "test_suite_v2.py": {
+      "bytes": 4885,
+      "sha256": "c64e3a7af8746a90695b39e1c176df2cdddf04f9f24d56f0e742c2e4503ae26a"
+    }
+  },
+  "native_v2": "NOT_RUN",
+  "business_commit": "NOT_RUN",
+  "operational_admission": "NOT_ADMITTED"
+}

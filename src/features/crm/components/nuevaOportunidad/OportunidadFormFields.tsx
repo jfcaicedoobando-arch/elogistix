@@ -14,6 +14,8 @@ import OportunidadMontosFields from "./OportunidadMontosFields";
 import OportunidadRutaFields from "./OportunidadRutaFields";
 import { OportunidadEmpresaField } from "./OportunidadEmpresaField";
 import { useNombreProspecto } from "@/features/crm/hooks/useNombreProspecto";
+import type { OrigenClienteForzado } from "@/features/crm/hooks/useOrigenClienteForzado";
+import { OrigenEmpresaEstado } from "./OrigenEmpresaEstado";
 import type { OportunidadFormState } from "@/features/crm/hooks";
 
 interface Etapa {
@@ -35,12 +37,17 @@ interface Props {
   etapas: Etapa[];
   clientes: ClienteOption[];
   isEdit: boolean;
+  origenEmpresa?: OrigenClienteForzado;
   autoActividad: boolean;
   setAutoActividad: (v: boolean) => void;
 }
 
+function origenBloqueado(isEdit: boolean, origenEmpresa?: OrigenClienteForzado) {
+  return isEdit || !origenEmpresa?.listo || origenEmpresa.clienteForzado;
+}
+
 export default function OportunidadFormFields({
-  form, setForm, set, etapas, clientes, isEdit, autoActividad, setAutoActividad,
+  form, setForm, set, etapas, clientes, isEdit, origenEmpresa, autoActividad, setAutoActividad,
 }: Props) {
   const etapaSel = etapas.find((e) => e.id === form.etapa_id);
   const esGanada = etapaSel?.tipo === "ganada";
@@ -89,7 +96,7 @@ export default function OportunidadFormFields({
           }))
         }
         clientes={clientes}
-        readOnly={isEdit}
+        readOnly={origenBloqueado(isEdit, origenEmpresa)}
       />
       <div className="sm:col-span-2 space-y-1">
         <Label htmlFor="op-nombre">Nombre *</Label>
@@ -98,9 +105,13 @@ export default function OportunidadFormFields({
       {!isEdit && <div className="sm:col-span-2">
         <OportunidadEmpresaField
           empresa={form.empresa_id ? { id: form.empresa_id, nombre: form.empresa_nombre } : null}
-          onChange={(e) => setForm((f) => ({ ...f, empresa_id: e.id, empresa_nombre: e.nombre }))}
+          onChange={(e) => setForm((f) => f.empresa_id === e.id ? f : ({
+            ...f, empresa_id: e.id, empresa_nombre: e.nombre, origen_tipo: "prospecto",
+            lead_id: null, lead_nombre: "", cliente_id: null, cliente_nombre: "",
+          }))}
         />
       </div>}
+      {!isEdit && origenEmpresa && <OrigenEmpresaEstado consulta={origenEmpresa} />}
       <div className="space-y-1">
         <Label htmlFor="op-etapa">Etapa *</Label>
         {/*

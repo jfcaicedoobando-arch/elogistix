@@ -14,6 +14,7 @@ import { FormDialogFooter } from "@/components/shared/FormDialogFooter";
 import { MSG_SIN_ETAPA_ABIERTA } from "@/features/crm/domain/oportunidadFormHelpers";
 import { useQuickCreateOportunidad, type OportunidadQuickDraft } from "@/features/crm/hooks/useQuickCreateOportunidad";
 import { OportunidadEmpresaField } from "../nuevaOportunidad/OportunidadEmpresaField";
+import { OrigenEmpresaEstado } from "../nuevaOportunidad/OrigenEmpresaEstado";
 
 export type { OportunidadQuickDraft };
 
@@ -29,7 +30,7 @@ export default function QuickCreateOportunidadDialog({ open, onOpenChange, onCre
     nombre, setNombre, empresa, setEmpresa,
     etapasAbiertas, etapa, setEtapaId,
     valorEstimado, setValorEstimado,
-    origenCargando, motivoOrigen, faltantes, listo,
+    consultaOrigen, origenCargando, motivoOrigen, faltantes, listo,
     crear, submit, construirBorrador,
   } = useQuickCreateOportunidad({ open, onOpenChange, onCreated });
 
@@ -69,6 +70,7 @@ export default function QuickCreateOportunidadDialog({ open, onOpenChange, onCre
               placeholder="Importación China Q1" />
           </div>
           <OportunidadEmpresaField empresa={empresa} onChange={setEmpresa} disabled={crear.isPending} />
+          <OrigenEmpresaEstado consulta={consultaOrigen} />
           {motivoOrigen && <p role="alert" className="text-body-sm text-destructive">{motivoOrigen}</p>}
           <div className="space-y-1">
             <Label htmlFor="qc-oportunidad-etapa">Etapa *</Label>

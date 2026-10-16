@@ -77,9 +77,9 @@ export async function validarLimiteCredito(
       message: "El cliente de la factura no existe o fue eliminado. Revisa la factura antes de timbrar.",
     }, 404);
   }
-  // 0/NULL = sin límite configurado (mismo criterio que la UI).
-  const limite = Number(cliente.limite_credito_mxn ?? 0);
-  if (!(limite > 0)) return null;
+  // NULL = sin límite; 0 = sin crédito (mismo criterio que la UI).
+  if (cliente.limite_credito_mxn == null) return null;
+  const limite = Number(cliente.limite_credito_mxn);
 
 
   // YG-01: un TC inválido para moneda != MXN subestimaba el límite de crédito

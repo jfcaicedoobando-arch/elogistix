@@ -1,0 +1,72 @@
+{
+  "base": "ecc53750c5d920d898ca2b00a2f717371dc19cf5",
+  "scope": "AUTHENTIC_DEPENDENCIES_UNCHANGED",
+  "sources": [
+    {
+      "path": "docs/review/demo-flow-20261015/issuer/16-owner-registry.sql",
+      "bytes": 11333,
+      "sha256": "a74d69ed6d19356ba36fe27d7070a496e99c3ef5cec7a030c3b96b609a64463b"
+    },
+    {
+      "path": "scripts/ci/demo-authentic-review/sql/bridge.sql",
+      "bytes": 8362,
+      "sha256": "69bbcd2ec825953ca4fda822ec5fde143f1f70a5120f372ee3c211e96523c5b2"
+    },
+    {
+      "path": "scripts/ci/demo-authentic-review/sql/core-owner-fixture.sql",
+      "bytes": 282,
+      "sha256": "a850f7d409b721c317001947daf6633fa3d3f0ca4680eac6670e193eed82a563"
+    },
+    {
+      "path": "scripts/ci/demo-authentic-review/sql/crm-trigger.sql",
+      "bytes": 1236,
+      "sha256": "116435b37cb0ba806438e69c050192411ea7b4fdaf275bbea4868ed355e6733b"
+    },
+    {
+      "path": "scripts/ci/demo-authentic-review/sql/identity.sql",
+      "bytes": 16101,
+      "sha256": "666a466b0b8189ef3cec661f489495b7059cfd9bbcb2492d9d221b693ea3be7f"
+    },
+    {
+      "path": "scripts/ci/demo-authentic-review/sql/manifest.sql",
+      "bytes": 2813,
+      "sha256": "5d49c6dabc0a39b2a1ba5d5e1c0f19a2112d100147d9f706ddd2d9e5093790d0"
+    },
+    {
+      "path": "scripts/ci/demo-authentic-review/sql/producer.sql",
+      "bytes": 19028,
+      "sha256": "f0a14f683ee524527ed3b7f29305bc793f7f9e3d5581b4332da72f8fb8bb55a6"
+    },
+    {
+      "path": "scripts/ci/demo-authentic-review/sql/registry.sql",
+      "bytes": 11333,
+      "sha256": "a74d69ed6d19356ba36fe27d7070a496e99c3ef5cec7a030c3b96b609a64463b"
+    },
+    {
+      "path": "scripts/ci/demo-authentic-review/sql/runtime-guards.sql",
+      "bytes": 2492,
+      "sha256": "eb656d1d02205b9115e9bdc4512a593d0d34cd05f73bca62855055ced75cbad5"
+    },
+    {
+      "path": "scripts/ci/demo-authentic-review/sql/setup.sql",
+      "bytes": 1101,
+      "sha256": "df99f777b74550176c61baa4b4f616421671642cc8fc122cc92724095eb21f2c"
+    },
+    {
+      "path": "scripts/ci/demo-authentic-review/sql/synthetic-schema.sql",
+      "bytes": 4598,
+      "sha256": "d1fd5123a9d688a02651534ab2829ca520891439125a256735f8071fe7ad3c1a"
+    },
+    {
+      "path": "scripts/ci/demo-authentic-review/sql/writer-dependencies.sql",
+      "bytes": 876,
+      "sha256": "aff280e2ac714525f8fc026416c8ad031c20c541d169dbcaff7bcd9bb2f4d1dd"
+    },
+    {
+      "path": "scripts/ci/demo-authority-bridge-review/contract.mjs",
+      "bytes": 13081,
+      "sha256": "8531d10fdb07692bbac2c40ae519ffd7b818cbf30ed22c39f4fca4aaf5e32aff"
+    }
+  ],
+  "integrationBase": "3a7c71fba35c9e7af509a8217a193929da21db9c"
+}

@@ -9,6 +9,11 @@ export const crm = {
     list: (tipo: string, busqueda: string, pagina: number, ...filtros: string[]) => ["crm", "objetos", tipo, busqueda, pagina, ...filtros] as const,
     detail: (tipo: string, id?: string) => ["crm", "objetos", tipo, id] as const,
     relacion: (relacion: string, id: string) => ["crm", "objetos", "rel", relacion, id] as const,
+    empresaEliminada: ["crm", "objetos", "empresa-eliminada"] as const,
+    permisoProspecto: (organizationId: string | null, userId: string | null, empresaId: string, leadId: string | null) =>
+      ["crm", "objetos", "permiso-prospecto", organizationId, userId, empresaId, leadId] as const,
+    membresiaProspecto: (organizationId: string | null, userId: string | null) =>
+      ["crm", "objetos", "membresia-prospecto", organizationId, userId] as const,
   },
   propiedades: {
     all: ["crm", "propiedades"] as const,

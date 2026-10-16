@@ -52,9 +52,16 @@ export function VinculosCard({ titulo, relacion, duenoId, rutaBase, edicion, can
         <ul className="divide-y">
           {data.map((r) => (
             <li key={r.id} className="flex items-center justify-between py-2">
-              <Link to={`${rutaBase}/${r.id}`} className="text-body-sm text-primary hover:underline">
-                {r.nombre}
-              </Link>
+              {r.empresaEliminada && (relacion === "empresas-de-contacto" || relacion === "empresas-de-oportunidad") ? (
+                <div className="text-body-sm">
+                  <span>{r.nombre}</span>
+                  <span className="ml-2 text-muted-foreground">Empresa eliminada</span>
+                </div>
+              ) : (
+                <Link to={`${rutaBase}/${r.id}`} className="text-body-sm text-primary hover:underline">
+                  {r.nombre}
+                </Link>
+              )}
               {editable && (
                 <Button
                   size="icon" variant="ghost" className="h-7 w-7"

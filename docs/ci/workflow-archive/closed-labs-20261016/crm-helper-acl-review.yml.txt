@@ -1,0 +1,35 @@
+name: CRM helper ACL isolated review
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+    branches: [main]
+    paths:
+      - 'scripts/ci/crm-acl-review/**'
+      - '.github/workflows/crm-helper-acl-review.yml'
+permissions:
+  contents: read
+concurrency:
+  group: crm-acl-review-${{ github.event.pull_request.number }}
+  cancel-in-progress: false
+jobs:
+  synthetic-review:
+    if: github.repository == 'jfcaicedoobando-arch/elogistix' && github.event.pull_request.draft == true && github.event.pull_request.head.repo.full_name == github.repository && github.event.pull_request.head.ref == 'fix/crm-helper-acl-review-20261015'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          persist-credentials: false
+      - name: Offline harness tests
+        run: python3 -m unittest discover -s scripts/ci/crm-acl-review -p 'test_*.py' -v
+      - name: Disposable PostgreSQL 17.6 review
+        run: python3 scripts/ci/crm-acl-review/run_ci.py --output "$RUNNER_TEMP/crm-acl-evidence"
+      - name: Preserve synthetic evidence
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: crm-acl-review-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/crm-acl-evidence
+          if-no-files-found: warn
+          retention-days: 14

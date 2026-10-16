@@ -11,7 +11,7 @@ const LEAD_NO_CALIFICADO = ["Nuevo", "Contactado", "Descalificado"];
 
 export type OrigenEmpresa =
   | { ok: true; origen: OrigenInicial }
-  | { ok: false; motivo: string };
+  | { ok: false; motivo: string; clienteId?: string };
 
 const SIN_ORIGEN =
   "Esta empresa aún no es prospecto ni cliente. Pásala a prospecto desde su ficha para crear la oportunidad.";
@@ -20,7 +20,7 @@ async function origenCliente(clienteId: string): Promise<OrigenEmpresa> {
   const { data, error } = await supabase.from("clientes")
     .select("id, nombre").eq("id", clienteId).is("deleted_at", null).maybeSingle();
   if (error) throw error;
-  if (!data) return { ok: false, motivo: SIN_ORIGEN };
+  if (!data) return { ok: false, motivo: "El cliente asociado a esta empresa no está disponible. Revisa su ficha antes de crear.", clienteId };
   return { ok: true, origen: { tipo: "cliente", id: data.id, nombre: data.nombre ?? "" } };
 }
 

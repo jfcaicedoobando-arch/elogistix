@@ -1,0 +1,135 @@
+{
+  "sourceSha256": "8531d10fdb07692bbac2c40ae519ffd7b818cbf30ed22c39f4fca4aaf5e32aff",
+  "scope": "LOCAL_SYNTHETIC_MUTATION_CONTROLS_ONLY",
+  "controls": [
+    {
+      "mutation": "accept-extra-fields",
+      "before": "keys.length === Object.keys(schema).length\n    && keys.every(key => typeof key === 'string' && Object.hasOwn(schema, key))",
+      "after": "true",
+      "rejected": true,
+      "exitCode": 1,
+      "failedTests": [
+        "every required input field is rejected when absent and every nested object rejects extras",
+        "every binding field and nesting is strict, with canonical JSON key order",
+        "plain JSON boundary rejects getters, symbols, hidden properties and custom prototypes without invoking them",
+        "missing occurrence or semantic identity cannot be recovered from UUID, hash, TTL or caller fields",
+        "ledger row is strict and cannot disagree with its full binding"
+      ],
+      "logSha256": "8d0d8b25dd085cd07a28faa4f0930234737dc9870d9d1af5711edcbe919933d1"
+    },
+    {
+      "mutation": "allow-unsafe-skip",
+      "before": "skipMs: integer",
+      "after": "skipMs: value => typeof value === 'number'",
+      "rejected": true,
+      "exitCode": 1,
+      "failedTests": [
+        "governed skip rejects -1 (number)",
+        "governed skip rejects 0 (number)",
+        "governed skip rejects 0.5 (number)",
+        "governed skip rejects 9007199254740992 (number)",
+        "governed skip rejects Infinity (number)",
+        "governed skip rejects NaN (number)"
+      ],
+      "logSha256": "75d1597359671f14089da38c0dcc1e4e31b2e5392a1436e8169d9503bd12a52c"
+    },
+    {
+      "mutation": "ignore-restore-fence",
+      "before": "e.restoreState.fence === u.restoreFence",
+      "after": "true",
+      "rejected": true,
+      "exitCode": 1,
+      "failedTests": [
+        "restore generation and fence are independently required and never establish restore durability"
+      ],
+      "logSha256": "6d4f9a316726365d4ed616de0265a5fa4a08e66aaa0dcbb69de0e14c38014b7f"
+    },
+    {
+      "mutation": "ignore-revocation",
+      "before": "&& u.revokedAt === null",
+      "after": "&& true",
+      "rejected": true,
+      "exitCode": 1,
+      "failedTests": [
+        "declared revocation is a model rejection only, including unchanged historical binding",
+        "historical binding validity is not live authorization after model revocation"
+      ],
+      "logSha256": "777acdfe63b7b6fced3fbb96d5608a3d786fd8e109a3842fcd6d529ff3cbb157"
+    },
+    {
+      "mutation": "miss-binding-conflict",
+      "before": "if (!same(r.binding, p.binding)) conflicts.add('NATURAL_KEY_BINDING_CONFLICT');",
+      "after": "",
+      "rejected": true,
+      "exitCode": 1,
+      "failedTests": [
+        "same obligation with changed skip policy is an exact binding conflict, never reissuance",
+        "same obligation with changed semantic-family artifact revision is an exact binding conflict, never reissuance",
+        "same obligation with changed context TTL is an exact binding conflict, never reissuance",
+        "same obligation with changed restore generation and fence is an exact binding conflict, never reissuance",
+        "same obligation with changed receipt and preparation is an exact binding conflict, never reissuance",
+        "same natural obligation with a renewed context reports both context and binding conflicts",
+        "simultaneous natural and context conflicts preserve every cause independent of history order"
+      ],
+      "logSha256": "d3eaee31ecc6e2ea43c2b6535b1d94a423d6ecd5791ee76958fb2d09f167eae0"
+    },
+    {
+      "mutation": "grant-on-existing",
+      "before": "executionPermission: false",
+      "after": "executionPermission: true",
+      "rejected": true,
+      "exitCode": 1,
+      "failedTests": [
+        "no observed conflict and an identical record are distinct, neither permits execution",
+        "same obligation with changed skip policy is an exact binding conflict, never reissuance",
+        "same obligation with changed semantic-family artifact revision is an exact binding conflict, never reissuance",
+        "same obligation with changed context TTL is an exact binding conflict, never reissuance",
+        "same obligation with changed restore generation and fence is an exact binding conflict, never reissuance",
+        "same obligation with changed receipt and preparation is an exact binding conflict, never reissuance",
+        "same natural obligation with a renewed context reports both context and binding conflicts",
+        "separately declared occurrence has a new real issuer key, but cannot reuse the old context",
+        "natural-key ID mismatch is not repaired by trusting the digest-shaped UUID",
+        "digest-shaped ID collision is classified separately from natural-key identity",
+        "simultaneous natural and context conflicts preserve every cause independent of history order",
+        "deployment is a partition, not a free caller override",
+        "historical binding validity is not live authorization after model revocation",
+        "observation time is not binding identity, TTL renewal still is"
+      ],
+      "logSha256": "545c0d814d326df670a10afef16a50904c5ad9756a935d1f942090523ee109f5"
+    },
+    {
+      "mutation": "promote-sponsor",
+      "before": "initiatorUserId: literal(null)",
+      "after": "initiatorUserId: value => value === null || uuid(value)",
+      "rejected": true,
+      "exitCode": 1,
+      "failedTests": [
+        "scheduler sponsor is never promoted to the authenticated human"
+      ],
+      "logSha256": "f8fc4db466d1540aed1f1300971cab27e7bb6eed47714e3cf69d54a5ecfe85f7"
+    },
+    {
+      "mutation": "require-timestamp-equality",
+      "before": "c.notBefore <= c.issuedAt",
+      "after": "c.notBefore === c.issuedAt",
+      "rejected": true,
+      "exitCode": 1,
+      "failedTests": [
+        "SQL16 timing: INSERT default issuedAt may follow the entry-time notBefore",
+        "SQL16 timing: insertion delay neither extends TTL nor permits observing an unissued context"
+      ],
+      "logSha256": "380a043a4bc8eab7c48a3427d78f43e3cd6f184a4a286f454c5d3b95b582b87a"
+    },
+    {
+      "mutation": "extend-ttl-from-insert",
+      "before": "Date.parse(c.expiresAt) - Date.parse(c.notBefore)",
+      "after": "Date.parse(c.expiresAt) - Date.parse(c.issuedAt)",
+      "rejected": true,
+      "exitCode": 1,
+      "failedTests": [
+        "SQL16 timing: insertion delay neither extends TTL nor permits observing an unissued context"
+      ],
+      "logSha256": "6653be7b635b45f8c5f8a78003e33b967165b07c374e9e8d7d377b6329a78d08"
+    }
+  ]
+}

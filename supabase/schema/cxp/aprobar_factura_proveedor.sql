@@ -7,7 +7,7 @@ DECLARE
   v_uid uuid := auth.uid();
   v_email text;
   v_autorizado boolean;
-  v_es_admin boolean;
+  v_puede_autoaprobar_cxp boolean;
   v_desvinculo jsonb := '{}'::jsonb;
   v_estado_actual text;
 BEGIN
@@ -25,8 +25,8 @@ BEGIN
   SELECT EXISTS (
     SELECT 1 FROM public.user_roles ur
     WHERE ur.user_id = v_uid
-      AND ur.role::text = ANY (ARRAY['admin','admin_org','super_admin'])
-  ) INTO v_es_admin;
+      AND ur.role::text = ANY (ARRAY['admin','admin_org','super_admin','contador'])
+  ) INTO v_puede_autoaprobar_cxp;
   -- A-3: FOR UPDATE serializa dos clics simultáneos sobre la misma factura.
   SELECT * INTO v_row FROM public.proveedor_facturas
    WHERE id = p_id AND deleted_at IS NULL
@@ -50,11 +50,11 @@ BEGIN
   IF v_row.estado_aprobacion <> 'pendiente' THEN
     RAISE EXCEPTION 'La factura ya fue %', v_row.estado_aprobacion;
   END IF;
-  -- SoD: quien capturó no aprueba su propia factura (salvo administradores)
+  -- SoD CxP: administradores y contador pueden aprobar su propia factura.
   IF p_aprobar
      AND v_row.created_by IS NOT NULL
      AND v_row.created_by = v_uid
-     AND NOT v_es_admin
+     AND NOT v_puede_autoaprobar_cxp
   THEN
     RAISE EXCEPTION 'LC_SOD_VIOLATION: No puedes aprobar una factura que tú mismo capturaste. Pide la aprobación a otra persona.';
   END IF;

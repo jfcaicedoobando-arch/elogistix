@@ -1,0 +1,41 @@
+name: demo-disabled-validation
+
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - "supabase/functions/demo-access/**"
+      - "supabase/functions/_shared/**"
+      - ".github/workflows/demo-disabled-validation.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  exact-adapter-types:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: denoland/setup-deno@22d081ff2d3a40755e97629de92e3bcbfa7cf2ed # v2.0.5
+        with:
+          deno-version: v2.9.7
+      - name: Resolve original dependency graph and check deployable demo adapter
+        env:
+          DENO_NO_PACKAGE_JSON: "1"
+          DENO_DIR: ${{ runner.temp }}/demo-disabled-deno
+        run: |
+          set -euo pipefail
+          mkdir -p reports/demo-disabled-types
+          deno --version | tee reports/demo-disabled-types/version.txt
+          deno cache --node-modules-dir=none supabase/functions/demo-access/index.ts 2>&1 | tee reports/demo-disabled-types/cache.log
+          deno info --node-modules-dir=none --json supabase/functions/demo-access/index.ts > reports/demo-disabled-types/graph.json
+          deno check --node-modules-dir=none supabase/functions/demo-access/index.ts 2>&1 | tee reports/demo-disabled-types/check.log
+          deno test --node-modules-dir=none --sanitize-ops --sanitize-resources --deny-env --deny-net --allow-read=supabase/functions/demo-access supabase/functions/demo-access/index_test.ts supabase/functions/demo-access/handler_test.ts
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        if: always()
+        with:
+          name: demo-disabled-types
+          path: reports/demo-disabled-types/

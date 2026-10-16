@@ -16,6 +16,7 @@ import { actividadDefaultFechaMx } from "@/features/crm/domain/actividadDefaultF
 import { mxLocalToUtcIso } from "@/lib/date/mx";
 import { ERROR_CODES } from "@/lib/domain/errorCatalog";
 import type { OportunidadFormState } from "@/features/crm/domain/oportunidadFormState";
+import type { OrigenClienteForzado } from "./useOrigenClienteForzado";
 import {
   buildOportunidadFormPayload,
   validarOportunidadForm,
@@ -23,6 +24,7 @@ import {
 
 interface Args {
   form: OportunidadFormState;
+  origenEmpresa: OrigenClienteForzado;
   esGanada: boolean;
   isEdit: boolean;
   oportunidad?: CrmOportunidadRow | null;
@@ -33,7 +35,7 @@ interface Args {
 }
 
 export function useNuevaOportunidadSubmit({
-  form, esGanada, isEdit, oportunidad, autoActividad, markClean, onOpenChange, onSaved,
+  form, origenEmpresa, esGanada, isEdit, oportunidad, autoActividad, markClean, onOpenChange, onSaved,
 }: Args) {
   const crear = useCrearOportunidad();
   const actualizar = useActualizarOportunidad();
@@ -76,6 +78,13 @@ export function useNuevaOportunidadSubmit({
 
   const handleSubmit = async () => {
     if (pendingTotal || enviandoRef.current) return;
+    if (!isEdit && !origenEmpresa.puedeEnviar()) {
+      return notifyError(undefined, {
+        title: origenEmpresa.mensaje ?? "Verifica el origen de la empresa antes de crear",
+        method: "HANDLE_SUBMIT",
+        errorCode: ERROR_CODES.VALIDATION_FAILED,
+      });
+    }
     const invalido = validarOportunidadForm(form, esGanada, isEdit);
     if (invalido) {
       return notifyError(undefined, {

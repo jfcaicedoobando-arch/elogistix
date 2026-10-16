@@ -1,11 +1,10 @@
 name: post-deploy-smoke
 
 # Smoke manual que verifica que los endpoints críticos del backend desplegado
-# respondan con el contrato esperado. Cubre lo mismo que antes:
-#   - user-management (smoke_test.ts con login real)
-#   - exchange-rates (HTTP smoke vía curl)
-#   - tracking-public (HTTP smoke vía curl)
-#   - RPC smoke de dinero como `authenticated`
+# respondan con el contrato esperado con el acceso demo deshabilitado:
+#   - demo-access: HTTP 503 y objeto exacto {"error":"demo_unavailable"}
+#   - exchange-rates y tracking-public (HTTP smoke vía curl)
+#   - user-management, RPC y soft delete autenticados: omitidos explícitamente
 #
 # CI simplificado (YAGNI): SÓLO workflow_dispatch, UN job y sin automatización
 # de issues. Todo en un job porque GitHub enmascara los secrets al pasarlos como
@@ -36,6 +35,17 @@ jobs:
           # CLI estable fijado; no selecciona el runtime remoto de Supabase.
           deno-version: v2.9.7
 
+      - name: Run demo-disabled smoke contract regressions (local only)
+        env:
+          DENO_NO_PACKAGE_JSON: "1"
+        run: |
+          deno test \
+            --sanitize-ops \
+            --sanitize-resources \
+            --node-modules-dir=none \
+            --allow-read \
+            scripts/ci/post-deploy-smoke.test.mjs
+
       # Los dos valores son PUBLICABLES (url + anon). Se resuelven DENTRO del
       # job (nunca se imprimen ni se transportan entre jobs) y si faltan se
       # falla con un mensaje claro en vez de un críptico exit 3 de curl.
@@ -62,43 +72,48 @@ jobs:
           echo "SUPABASE_URL=$URL" >> "$GITHUB_ENV"
           echo "ANON_KEY=$KEY" >> "$GITHUB_ENV"
 
-      - name: Fetch demo credentials
+      - name: Verify demo-access is disabled
         run: |
           set -euo pipefail
-          curl -sS -X POST \
+          RESPONSE_FILE=$(mktemp)
+          trap 'rm -f "$RESPONSE_FILE"' EXIT
+          STATUS=$(curl --connect-timeout 15 --max-time 45 -sS \
+            -o "$RESPONSE_FILE" -w "%{http_code}" -X POST \
             -H "apikey: ${ANON_KEY}" \
             -H "Authorization: Bearer ${ANON_KEY}" \
             -H "Content-Type: application/json" \
             -d '{}' \
-            "${SUPABASE_URL}/functions/v1/demo-access" > /tmp/demo.json
-          EMAIL=$(jq -r '.email' /tmp/demo.json)
-          PASSWORD=$(jq -r '.password' /tmp/demo.json)
-          if [ -z "$EMAIL" ] || [ "$EMAIL" = "null" ] || [ -z "$PASSWORD" ] || [ "$PASSWORD" = "null" ]; then
-            echo "::error::demo-access no devolvió credenciales válidas"
-            exit 1
-          fi
-          # Enmascarar también el email: evita que aparezca en logs de Actions.
-          echo "::add-mask::$EMAIL"
-          echo "DEMO_USER_EMAIL=$EMAIL" >> "$GITHUB_ENV"
-          echo "::add-mask::$PASSWORD"
-          echo "DEMO_USER_PASSWORD=$PASSWORD" >> "$GITHUB_ENV"
-
-      - name: Run user-management smoke
-        env:
-          VITE_SUPABASE_URL: ${{ env.SUPABASE_URL }}
-          VITE_SUPABASE_PUBLISHABLE_KEY: ${{ env.ANON_KEY }}
-          DENO_NO_PACKAGE_JSON: "1"
-        run: |
-          deno test \
-            --sanitize-ops \
-            --sanitize-resources \
-            --node-modules-dir=none \
-            --allow-net \
-            --allow-env \
-            --allow-read \
-            supabase/functions/user-management/smoke_test.ts
+            "${SUPABASE_URL}/functions/v1/demo-access")
+          # No usar curl --fail: 503 es el cierre esperado. No imprimir el body.
+          node --input-type=commonjs - "$STATUS" "$RESPONSE_FILE" <<'NODE'
+          const { readFileSync } = require("node:fs");
+          const [status, responseFile] = process.argv.slice(2);
+          const fail = () => {
+            console.error('::error::demo-access debe responder HTTP 503 con el objeto exacto {"error":"demo_unavailable"}');
+            process.exit(1);
+          };
+          let payload;
+          let responseText;
+          try {
+            responseText = readFileSync(responseFile, "utf8");
+            payload = JSON.parse(responseText);
+          } catch {
+            fail();
+          }
+          // Check the raw single-member contract too: JSON.parse alone discards
+          // duplicate keys and decodes escaped keys that can conceal extra values.
+          // Only JSON whitespace is allowed; no body content is logged.
+          const exactBody = /^[ \t\r\n]*\{[ \t\r\n]*"error"[ \t\r\n]*:[ \t\r\n]*"demo_unavailable"[ \t\r\n]*\}[ \t\r\n]*$/;
+          if (status !== "503" || !exactBody.test(responseText) || !payload || typeof payload !== "object" ||
+              Array.isArray(payload) || Object.keys(payload).length !== 1 ||
+              payload.error !== "demo_unavailable") {
+            fail();
+          }
+          console.log("demo-access cerrado: HTTP 503 demo_unavailable sin credenciales");
+          NODE
 
       - name: Ping exchange-rates
+        if: ${{ !cancelled() && env.SUPABASE_URL != '' && env.ANON_KEY != '' }}
         run: |
           set -euo pipefail
           STATUS=$(curl -sS -o /tmp/resp.json -w "%{http_code}" \
@@ -112,6 +127,7 @@ jobs:
           grep -E '"(usdMxn|eurMxn|rates|USD|MXN)"' /tmp/resp.json > /dev/null
 
       - name: Ping tracking-public (token inexistente debe responder 404/410)
+        if: ${{ !cancelled() && env.SUPABASE_URL != '' && env.ANON_KEY != '' }}
         run: |
           set -euo pipefail
           STATUS=$(curl -sS -o /tmp/resp.json -w "%{http_code}" \
@@ -126,68 +142,18 @@ jobs:
             exit 1
           fi
 
-      - name: Login demo (token para los RPC smoke)
+      - name: Report credential-dependent checks as omitted
+        if: ${{ !cancelled() }}
         run: |
-          set -euo pipefail
-          TOKEN=$(curl -sS -X POST \
-            -H "apikey: ${ANON_KEY}" \
-            -H "Content-Type: application/json" \
-            -d "{\"email\":\"$DEMO_USER_EMAIL\",\"password\":\"$DEMO_USER_PASSWORD\"}" \
-            "${SUPABASE_URL}/auth/v1/token?grant_type=password" | jq -r '.access_token')
-          if [ -z "$TOKEN" ] || [ "$TOKEN" = "null" ]; then
-            echo "::error::login demo fallo - no se obtuvo access_token"
-            exit 1
-          fi
-          echo "::add-mask::$TOKEN"
-          echo "DEMO_TOKEN=$TOKEN" >> "$GITHUB_ENV"
+          echo "::notice::OMITIDOS user-management, duplicar_cotizacion, cxc_aging_clientes y soft delete authenticated: acceso demo deshabilitado, sin credenciales."
+          cat >> "$GITHUB_STEP_SUMMARY" <<'SUMMARY'
+          ### Cobertura con acceso demo deshabilitado
 
-      - name: RPC duplicar_cotizacion - jamas 42703/42883 (B-016)
-        run: |
-          set -euo pipefail
-          BODY=$(curl --connect-timeout 15 --max-time 45 -sS -w '\n%{http_code}' -X POST \
-            -H "apikey: ${ANON_KEY}" -H "Authorization: Bearer ${DEMO_TOKEN}" \
-            -H "Content-Type: application/json" \
-            -d '{"p_id":"00000000-0000-0000-0000-000000000000"}' \
-            "${SUPABASE_URL}/rest/v1/rpc/duplicar_cotizacion")
-          STATUS=$(tail -n1 <<<"$BODY")
-          PAYLOAD=$(head -n-1 <<<"$BODY")
-          echo "HTTP $STATUS - $PAYLOAD"
-          node scripts/ci/validate-duplicate-smoke.mjs "$STATUS" <<<"$PAYLOAD"
+          Las siguientes comprobaciones se omiten porque requieren credenciales demo:
+          - user-management/smoke_test.ts (login real).
+          - RPC duplicar_cotizacion como authenticated (B-016).
+          - RPC cxc_aging_clientes como authenticated.
+          - Soft delete de cotizaciones como authenticated (B-001).
 
-      - name: RPC cxc_aging_clientes - jamas 42703/42883/500
-        run: |
-          set -euo pipefail
-          BODY=$(curl -sS -w '\n%{http_code}' -X POST \
-            -H "apikey: ${ANON_KEY}" -H "Authorization: Bearer ${DEMO_TOKEN}" \
-            -H "Content-Type: application/json" \
-            -d '{}' \
-            "${SUPABASE_URL}/rest/v1/rpc/cxc_aging_clientes")
-          STATUS=$(tail -n1 <<<"$BODY")
-          PAYLOAD=$(head -n-1 <<<"$BODY")
-          echo "HTTP $STATUS - $PAYLOAD"
-          if [ "$STATUS" = "500" ] || grep -qE '"code":"(42703|42883)"' <<<"$PAYLOAD"; then
-            echo "::error::cxc_aging_clientes ROTA en el entorno desplegado (42703/42883/500)"
-            exit 1
-          fi
-          if [ "$STATUS" != "200" ]; then
-            echo "::error::cxc_aging_clientes respondio HTTP $STATUS (esperado 200)"
-            exit 1
-          fi
-          jq -e 'type == "array"' <<<"$PAYLOAD" > /dev/null
-
-      - name: Soft delete como authenticated - jamas 401/403/500 (B-001)
-        run: |
-          set -euo pipefail
-          STATUS=$(curl -sS -o /tmp/patch.json -w "%{http_code}" -X PATCH \
-            -H "apikey: ${ANON_KEY}" -H "Authorization: Bearer ${DEMO_TOKEN}" \
-            -H "Content-Type: application/json" \
-            -H "Prefer: return=minimal" \
-            -d '{"deleted_at":"2026-01-01T00:00:00Z"}' \
-            "${SUPABASE_URL}/rest/v1/cotizaciones?id=eq.00000000-0000-0000-0000-000000000000")
-          echo "HTTP $STATUS"
-          cat /tmp/patch.json || true
-          if [ "$STATUS" = "401" ] || [ "$STATUS" = "403" ] || [ "$STATUS" = "500" ]; then
-            echo "::error::soft delete como authenticated bloqueado (HTTP $STATUS) - patron B-001"
-            exit 1
-          fi
-          test "$STATUS" = "204"
+          Esta ejecución no valida esas operaciones autenticadas.
+          SUMMARY

@@ -24,5 +24,6 @@ export {
   createUserViaEdgeFunction,
   quitarDeOrganizacion,
   enviarResetPassword,
+  cambiarAccesoUsuario,
   type CreateUserParams,
 } from "./mutaciones";
