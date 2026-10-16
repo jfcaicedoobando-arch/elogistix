@@ -250,7 +250,7 @@
     },
     {
       "path": "src/components/shared/dataTable/__tests__/DataTable.e2e.test.tsx",
-      "gitBlob": "608433039e33a4c027451a01fd01c9afc25c3fb0"
+      "gitBlob": "83969e41393327aa322117ed26b4aa1d9dc471f2"
     },
     {
       "path": "src/components/shared/dataTable/__tests__/DataTable.perf.test.tsx",
@@ -525,5 +525,24 @@
     "Full suite, unchanged Bash bundle/sourcemap gates and all44 UI cases must pass remotely on final SHA",
     "Pre-existing missing/nonfinite descending sort policy retained; Infinity-Infinity NaN is documented, not redesigned",
     "No RPC/SQL/business/runtime/style/snapshot or workflow changes relative to baseline main"
-  ]
+  ],
+  "hygieneFollowup": {
+    "initialImplementationSha": "0689669613d15de7b83ebba90f710fc3de527518",
+    "ciRun": 38943897339,
+    "failedJob": 117118276060,
+    "reason": "Global duplicate-title guard found the same new test title in e2e and regression files",
+    "correction": "Rename only the e2e test title; preserve assertions, production sources and guards",
+    "localValidation": {
+      "files": 3,
+      "cases": 24,
+      "passed": 24,
+      "includes": "audit-report hygiene/architecture/casts plus both server-order test files"
+    },
+    "allInitialUiCases": {
+      "run": 38943897360,
+      "passed": 44,
+      "includesChromiumAndFirefox": true
+    },
+    "logSha256": "03b5a6dbebe3437303b27edf8c1ddd9588e2e7f70daa7ff2f6c4802ff0647b08"
+  }
 }

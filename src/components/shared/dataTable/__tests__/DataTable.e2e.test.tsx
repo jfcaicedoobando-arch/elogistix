@@ -150,7 +150,7 @@ describe("DataTable E2E — filtro + orden + paginación", () => {
     expect(screen.getByTestId("sort-state").textContent).toBe("null|asc");
   });
 
-  it("preserves contradictory server order through clicks and controlled rerenders", () => {
+  it("external server page retains its exact DOM order through header clicks and replacement", () => {
     const serverPage: EmbarqueRow[] = [
       { id: "e1", numero: "EMB-001", cliente: "ACME", total: 1500 },
       { id: "e3", numero: "EMB-003", cliente: "Initech", total: 900 },
