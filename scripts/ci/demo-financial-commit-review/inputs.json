@@ -1,0 +1,72 @@
+[
+  {
+    "path": "docs/deferred-guard-analysis.md",
+    "bytes": 6921,
+    "sha256": "f030e976216df76ea190ba9280fe65e59163bfb9bd01bdd7e66c9c8c83d2c724"
+  },
+  {
+    "path": "README.md",
+    "bytes": 4940,
+    "sha256": "2175724ce4e53d306d6f63c26e1d6454954570e2158d9ce74844dc29c0ccaf3b"
+  },
+  {
+    "path": "run_ci.py",
+    "bytes": 22273,
+    "sha256": "4754ca90eed90d75661e835358ef151c008310760273f4f5c4b4ca4bbe631fd1"
+  },
+  {
+    "path": "source-pins.json",
+    "bytes": 6081,
+    "sha256": "bfd8432aeddb663311f14e925865124c82c89f6e85c010a431093172ab99fb09"
+  },
+  {
+    "path": "sql/business.sql",
+    "bytes": 2197,
+    "sha256": "7ef22fb38581c1a95c917f2bd6a72125abda50fd9c5c5c85066de6bd4aaa57bd"
+  },
+  {
+    "path": "sql/deferred-owner-context.sql",
+    "bytes": 671,
+    "sha256": "25cfdd5a936800bcff5aceb29e13468b69e4c43e794dbae46bef47c681963976"
+  },
+  {
+    "path": "sql/observe-failed.sql",
+    "bytes": 1158,
+    "sha256": "8ece57e91e56ca63da2611b86008f18c89afce3f8fc4c1931b016130fdff13f2"
+  },
+  {
+    "path": "sql/observe.sql",
+    "bytes": 1406,
+    "sha256": "d002ded439283b206b86e4c5ac3a6e02bf059e866ed3c7f406d1677641811bf7"
+  },
+  {
+    "path": "sql/retry.sql",
+    "bytes": 2160,
+    "sha256": "43fe5e16f0fd0ce8936a37b2142815fa3c22de9863ba1443647efcad31fe1e3c"
+  },
+  {
+    "path": "sql/revoke-before-commit.sql",
+    "bytes": 2904,
+    "sha256": "4e6d052062837431618e6a938098d955f3a7dc07009360b463966c7c97c5cf4b"
+  },
+  {
+    "path": "sql/setup-observation.sql",
+    "bytes": 15391,
+    "sha256": "1b4031f38a341f018ce5ac859e889082d185f432854f12b5717ec2568597a3c9"
+  },
+  {
+    "path": "test_guard_contract.py",
+    "bytes": 14193,
+    "sha256": "3b10473741bacdaeefe4ad36567842858afed9a026656901f421084afbe6dd00"
+  },
+  {
+    "path": "test_observation.py",
+    "bytes": 16947,
+    "sha256": "4c8090e1a7d72d131bd4863ffe41becfcdee4c78169291893dca95998989e57c"
+  },
+  {
+    "path": "test_runner.py",
+    "bytes": 17104,
+    "sha256": "73a532402e5703a133030cf5c23a94d4bb7f1ef54f390673e32e13359e911f05"
+  }
+]
