@@ -327,6 +327,7 @@ jobs:
           fi
           bash scripts/db/schema-snapshot.sh /tmp/schema.actual.sql "$container" || exit 1
           wc -l /tmp/schema.actual.sql
+          sha256sum /tmp/schema.actual.sql
           if [ ! -f "$BASELINE" ]; then
             echo "::error::Falta $BASELINE — genera y confirma la baseline (bun run db:baseline:update)."
             exit 1

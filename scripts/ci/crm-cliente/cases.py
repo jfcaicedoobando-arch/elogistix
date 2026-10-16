@@ -21,10 +21,13 @@ BEGIN
    WHEN 'create' THEN
      SELECT to_jsonb(c) INTO result FROM public.crear_clientes(jsonb_build_array(payload)) c;
    WHEN 'convert' THEN result := public.convertir_prospecto_a_cliente_rpc(target,payload);
+   WHEN 'kam' THEN result := pg_temp.invoke(target,auth.uid(),public.org_scope())->'value';
    WHEN 'delete' THEN UPDATE public.crm_empresas SET deleted_at=clock_timestamp() WHERE id=target;
    WHEN 'combined' THEN
      UPDATE public.crm_empresas SET cliente_id=gen_random_uuid(),deleted_at=clock_timestamp() WHERE id=target;
    WHEN 'clear' THEN UPDATE public.crm_empresas SET cliente_id=NULL WHERE id=target;
+   WHEN 'clear_delete' THEN
+     UPDATE public.crm_empresas SET cliente_id=NULL,estado_crm='Lead',deleted_at=clock_timestamp() WHERE id=target;
    WHEN 'demote' THEN UPDATE public.crm_empresas SET estado_crm='Lead' WHERE id=target;
    WHEN 'insert_deleted' THEN
      INSERT INTO public.crm_empresas(organization_id,nombre,estado_crm,deleted_at)
@@ -47,7 +50,7 @@ def run(context, m):
         s.execute(HELPER)
         actor = dict(f)
         if not kam:
-            actor['actor'] = f.get('operator',f['actor'])
+            actor['actor'] = f.get('writer',f['actor'])
         s.begin(actor)
         return s
     def call(s, kind, target=None, payload=None, wait=True):
@@ -65,15 +68,15 @@ def run(context, m):
         return r['value']
     def denied(r, code=None):
         m.require('error' in r and (code is None or code in r['error']), 'Expected controlled rejection: '+str(r))
-    def operator(f):
-        f['operator'] = str(uuid.uuid4())
+    def writer(f):
+        f['writer'] = str(uuid.uuid4())
         q=m.literal
-        roles=h.query("BEGIN; INSERT INTO auth.users(id,email) VALUES ("+q(f['operator'])+","+q(f['operator']+'@test.invalid')+"); "
-                "INSERT INTO public.organization_members(organization_id,user_id,role) VALUES ("+q(f['org'])+","+q(f['operator'])+",'customer_service'); "
-                "UPDATE public.organization_members SET role='operador' WHERE user_id="+q(f['operator'])+"; "
-                "INSERT INTO public.user_roles(user_id,role) VALUES ("+q(f['operator'])+",'operador') ON CONFLICT (user_id) DO UPDATE SET role=EXCLUDED.role; "
-                "SELECT jsonb_build_object('membership',(SELECT role FROM public.organization_members WHERE user_id="+q(f['operator'])+" AND organization_id="+q(f['org'])+"),'global',(SELECT role FROM public.user_roles WHERE user_id="+q(f['operator'])+")); COMMIT;",'operator')
-        m.require(roles=={'membership':'operador','global':'operador'},'Exact operator mirrors required')
+        roles=h.query("BEGIN; INSERT INTO auth.users(id,email) VALUES ("+q(f['writer'])+","+q(f['writer']+'@test.invalid')+"); "
+                "INSERT INTO public.organization_members(organization_id,user_id,role) VALUES ("+q(f['org'])+","+q(f['writer'])+",'customer_service'); "
+                "UPDATE public.organization_members SET role='contador' WHERE user_id="+q(f['writer'])+"; "
+                "INSERT INTO public.user_roles(user_id,role) VALUES ("+q(f['writer'])+",'contador') ON CONFLICT (user_id) DO UPDATE SET role=EXCLUDED.role; "
+                "SELECT jsonb_build_object('membership',(SELECT role FROM public.organization_members WHERE user_id="+q(f['writer'])+" AND organization_id="+q(f['org'])+"),'global',(SELECT role FROM public.user_roles WHERE user_id="+q(f['writer'])+")); COMMIT;",'writer')
+        m.require(roles=={'membership':'contador','global':'contador'},'Exact writer mirrors required')
     def seed(quote=False):
         f,_=h.seed()
         if quote:
@@ -88,7 +91,7 @@ def run(context, m):
                     ','.join((q(f['quote']),q(f['org']),q('CRM-QA-'+f['quote']),q('Marítimo'),q('Importación'),q(f['op']),"true",q('Prospecto identity'),q(f['actor'])))+"); "
                     "UPDATE public.cotizaciones SET estado='Aceptada' WHERE id="+q(f['quote'])+"; "
                     "SELECT jsonb_build_object('lead',lead_id) FROM public.crm_oportunidades WHERE id="+q(f['op'])+"; COMMIT;",'quote-fixture')
-        operator(f)
+        writer(f)
         return f
     def snap(f,label):
         value=h.snapshot(f,label)
@@ -138,7 +141,7 @@ def run(context, m):
         m.require(retry['cliente_id']==c['cliente_id'] and retry['sin_cambios'] is True,'Wrong retry')
         s.commit()
         m.require(snap(f,'explicit-retry-after')==after,'Retry physically rewrote rows')
-        for kind in ('clear','demote','delete'):
+        for kind in ('clear','clear_delete','demote','delete'):
             s=case_session(f,'guard-'+kind)
             denied(call(s,kind,f['company']),'LC_CRM_EMPRESA_ES_CLIENTE'); s.commit()
         done('explicit_new_identity_retry_and_clear_then_delete')
@@ -208,10 +211,13 @@ def run(context, m):
                 c=ok(result(conv)); conv.commit()
             else:
                 c=ok(call(conv,'convert',f['quote']))
-                kam.call(asynchronous=True)
+                call(kam,'kam',f['company'],wait=False)
                 h.wait_blocked(kam,conv); conv.commit()
-                r=kam.result(); kam.commit()
-            m.require(r['oportunidad_id']==f['op'] and r['sin_cambios'] is True,'KAM lineage changed')
+                committed=snap(f,'conversion-before-kam')
+                denied(result(kam),'LC_CRM_EMPRESA_YA_CLIENTE'); kam.commit()
+                m.require(snap(f,'kam-rejected-after')==committed,'Rejected KAM rewrote rows')
+            if kam_first:
+                m.require(r['oportunidad_id']==f['op'] and r['sin_cambios'] is True,'KAM lineage changed')
             client_company(snap(f,'kam-final-'+str(kam_first)),f,c['cliente_id'])
             done('kam_before_conversion' if kam_first else 'conversion_before_kam')
 
@@ -236,6 +242,10 @@ def run(context, m):
                    'cross_org':'LC_ORG_AJENA','ambiguous':'LC_CONVERSION_INCONSISTENTE',
                    'conflict':'LC_CONVERSION_INCONSISTENTE'}[mutation]);s.commit()
             m.require(snap(f,'invalid-after-'+mutation)==before,'Rejected conversion wrote rows')
+            if mutation=='deleted':
+                h.query("UPDATE public.crm_leads SET estado='Convertido' WHERE id=(SELECT lead_id FROM public.crm_oportunidades WHERE id="+q(f['op'])+"); SELECT jsonb_build_object('ok',true);",'deleted-lead-sync')
+                m.require(snap(f,'deleted-company-after-lead-sync')['companies']==before['companies'],
+                          'Lead propagation changed a deleted company')
             done('reject_'+mutation)
         f=seed()
         for kind in ('combined','insert_deleted'):
@@ -245,10 +255,20 @@ def run(context, m):
 
         # Replay and runtime must not change PR366 owner/security/body/ACL.
         record.update(status='pass',both_committed=True)
+    except BaseException as error:
+        record.update(status='fail',error_type=type(error).__name__,error=str(error))
+        raise
     finally:
+        cleanup_errors=[]
         for s in h.sessions:
-            s.close()
+            try:
+                s.close()
+            except BaseException as error:
+                cleanup_errors.append(str(error))
+        if cleanup_errors:
+            record.update(status='fail',cleanup_errors=cleanup_errors)
         record['events']=h.events
         (h.out/'result.json').write_text(json.dumps(record,indent=2)+'\n')
+        m.require(not cleanup_errors,'Session cleanup failed')
     return record
 
