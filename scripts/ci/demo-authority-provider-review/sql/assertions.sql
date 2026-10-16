@@ -64,4 +64,38 @@ SELECT pg_temp.expect_reject(format('SELECT demo_flow_writer.register_occurrence
 SELECT pg_temp.expect_reject(format('SELECT demo_flow_writer.register_occurrence(''SYNTHETIC_AUTHORITY_REVIEW'',''FAMILY'',''BAD_TIME'',''70000000-0000-4000-8000-000000000001'',%L,0,date_trunc(''milliseconds'',clock_timestamp())-interval ''1 second''+interval ''1 microsecond'',date_trunc(''milliseconds'',clock_timestamp())+interval ''1 minute'',''test'')',receipt_id),'DEMO_AUTHORITY_TIMESTAMP_PRECISION') FROM public.authority_test_receipt;
 SELECT pg_temp.expect_reject('SELECT demo_flow_writer.read_authority(''ffffffff-ffff-4fff-8fff-ffffffffffff'')','query returned no rows');
 DO $$ BEGIN IF (SELECT count(*) FROM demo_flow_writer.protected_occurrences)<>1 OR (SELECT count(*) FROM demo_flow_writer.occurrence_context_bindings)<>1 OR EXISTS(SELECT 1 FROM demo_flow_writer.occurrence_revocations) THEN RAISE EXCEPTION 'Failed statements leaked rows'; END IF; END $$;
+-- A new occurrence cannot reuse another occurrence's context.
+BEGIN;
+CREATE TEMP TABLE second_authority AS SELECT demo_flow_writer.register_occurrence(
+ 'SYNTHETIC_AUTHORITY_REVIEW','SYNTHETIC_SEMANTIC_FAMILY','SECOND_FIXTURE_OCCURRENCE',
+ '70000000-0000-4000-8000-000000000001',receipt_id,0,
+ date_trunc('milliseconds',clock_timestamp())-interval '1 minute',
+ date_trunc('milliseconds',clock_timestamp())+interval '10 minutes','FIXTURE ONLY') authority_id
+ FROM public.authority_test_receipt;
+SELECT pg_temp.expect_reject(format('INSERT INTO demo_flow_writer.occurrence_context_bindings VALUES(%L,%L,current_user::regrole::oid)',s.authority_id,t.context_id),'duplicate key')
+ FROM second_authority s CROSS JOIN public.authority_test_result t;
+-- A genuinely issued legacy SQL16 context is not silently normalized to ms.
+-- Repeated clock samples only find an inexact native timestamp; no stored row is altered.
+CREATE TEMP TABLE legacy_context AS SELECT demo_flow_writer.issue_scheduler_context(
+ '30000000-0000-4000-8000-000000000001',receipt_id,300) context_id FROM public.authority_test_receipt;
+DO $$ DECLARE c demo_flow_writer.server_admissions; BEGIN
+ SELECT a.* INTO STRICT c FROM demo_flow_writer.server_admissions a JOIN legacy_context t USING(context_id);
+ IF c.issued_at=date_trunc('milliseconds',c.issued_at) AND c.not_before=date_trunc('milliseconds',c.not_before) AND c.expires_at=date_trunc('milliseconds',c.expires_at) THEN
+  RAISE EXCEPTION 'Legacy sample unexpectedly exactly ms; no precision evidence'; END IF;
+END $$;
+INSERT INTO demo_flow_writer.occurrence_context_bindings SELECT s.authority_id,c.context_id,current_user::regrole::oid FROM second_authority s CROSS JOIN legacy_context c;
+SELECT pg_temp.expect_reject(format('SELECT demo_flow_writer.read_authority(%L)',context_id),'DEMO_AUTHORITY_TIMESTAMP_PRECISION') FROM legacy_context;
+ROLLBACK;
+-- Exact expiry is strict and an expired binding cannot mint another context.
+BEGIN;
+CREATE TEMP TABLE expiring_authority AS SELECT demo_flow_writer.register_occurrence(
+ 'SYNTHETIC_AUTHORITY_REVIEW','SYNTHETIC_SEMANTIC_FAMILY','EXPIRING_FIXTURE_OCCURRENCE',
+ '70000000-0000-4000-8000-000000000001',receipt_id,0,
+ date_trunc('milliseconds',clock_timestamp())-interval '1 minute',
+ date_trunc('milliseconds',clock_timestamp())+interval '2 seconds','FIXTURE ONLY') authority_id
+ FROM public.authority_test_receipt;
+SELECT demo_flow_writer.issue_bound_context(authority_id) FROM expiring_authority;
+SELECT pg_sleep(2.1);
+SELECT pg_temp.expect_reject(format('SELECT demo_flow_writer.issue_bound_context(%L)',authority_id),'DEMO_AUTHORITY_EXPIRED_OR_EARLY') FROM expiring_authority;
+ROLLBACK;
 SELECT 'AUTHORITY_NATIVE_ASSERTIONS_COMPLETE';
