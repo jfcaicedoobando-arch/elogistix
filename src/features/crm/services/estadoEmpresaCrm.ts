@@ -3,7 +3,7 @@
  * embudo en la etapa Prospecto) → Cliente (dada de alta en Clientes).
  */
 import { supabase } from "@/integrations/supabase/client";
-import { LC_CODE_MESSAGES_CRM } from "@/lib/errors/lcCodeMessages.crm";
+import { LC_CODE_MESSAGES_CRM_EMPRESAS } from "@/lib/errors/lcCodeMessages.crmEmpresas";
 
 export const ESTADOS_EMPRESA_CRM = ["Lead", "Sospechoso", "Prospecto", "Cliente"] as const;
 export type EstadoEmpresaCrm = (typeof ESTADOS_EMPRESA_CRM)[number];
@@ -25,7 +25,7 @@ export async function pasarAProspecto(empresaId: string): Promise<string> {
   const rpc = supabase.rpc.bind(supabase) as unknown as RpcSinTipos;
   const { data, error } = await rpc("crm_empresa_pasar_a_prospecto", { p_empresa_id: empresaId });
   if (error) {
-    const mensaje = LC_CODE_MESSAGES_CRM[error.message];
+    const mensaje = LC_CODE_MESSAGES_CRM_EMPRESAS[error.message];
     if (mensaje) throw new Error(mensaje, { cause: error });
     throw error;
   }

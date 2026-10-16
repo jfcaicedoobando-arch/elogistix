@@ -12,10 +12,6 @@
 const MSG_OPORTUNIDAD_INEXISTENTE =
   "La oportunidad ya no existe o pertenece a otra organización.";
 export const LC_CODE_MESSAGES_CRM: Record<string, string> = {
-  LC_CRM_PROSPECTO_NO_AUTORIZADO: "Sólo puedes pasar a prospecto las empresas creadas por ti en la organización activa.",
-  LC_CRM_PROSPECTO_VINCULO_INVALIDO: "El lead o las oportunidades vinculadas no están vigentes o no corresponden a tu usuario, empresa y organización. Revisa sus vínculos.",
-  LC_CRM_EMPRESA_YA_CLIENTE: "La empresa ya es cliente y no puede pasar a prospecto.",
-  LC_CRM_EMPRESA_CREADOR_PROTEGIDO: "No puedes cambiar el creador o la identidad de esta empresa ni atribuir registros a otro usuario. Conserva su atribución original.",
   LC_CRM_EMPRESA_ES_CLIENTE: "Esta empresa ya es cliente y no se puede eliminar. Conserva su registro y sus vínculos.",
   LC_TARIFA_NO_VIGENTE: "La tarifa seleccionada ya no está vigente. Actualiza las opciones del tarifario y elige otra tarifa.",
   LC_CRM_EMPRESA_NO_ENCONTRADA:
