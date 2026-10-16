@@ -1,0 +1,127 @@
+{
+  "schema_version": 1,
+  "status": "PASS_OFFLINE_ONLY",
+  "offline_unittests": {
+    "passed": 14,
+    "failed": 0,
+    "command": "python -B -I -m unittest discover -s scripts/ci/demo-financial-retry-negative-review -p test_*.py -v"
+  },
+  "author_fix_head": "a7aff9ff8f92852687c56d3bc05d41150b44b2ae",
+  "external_source_bytes": "PASS_EXACT_SHA256",
+  "rendered_suites": [
+    {
+      "case_id": "foreign_bound_invoice_id",
+      "phase": "fresh",
+      "rejection_stage": "rpc",
+      "expected_sqlstate": "23514",
+      "expected_message": "DEMO_FINANCIAL_ADOPTION_DENIED",
+      "rendered_bytes": 29505,
+      "rendered_sha256": "6e3a6678d93503ca4bde1338c08276fc5381a0637b4fcd1bfd556801468a545b",
+      "native_sql": "NOT_RUN"
+    },
+    {
+      "case_id": "authority_scheduler_disabled",
+      "phase": "materialized",
+      "rejection_stage": "rpc",
+      "expected_sqlstate": "42501",
+      "expected_message": "DEMO_SCHEDULER_APPROVAL_INVALID",
+      "rendered_bytes": 32492,
+      "rendered_sha256": "2e3a01f9f7aabdc9a371447b30cd4248dc191ed44769e750b8b0f9fef98933c5",
+      "native_sql": "NOT_RUN"
+    },
+    {
+      "case_id": "authority_transport_disabled",
+      "phase": "materialized",
+      "rejection_stage": "rpc",
+      "expected_sqlstate": "42501",
+      "expected_message": "DEMO_REGISTERED_RPC_TRANSPORT_REQUIRED",
+      "rendered_bytes": 34396,
+      "rendered_sha256": "fa62067861c5df6132c253a224b84eb4b06c8e22822820722c353ac852db4176",
+      "native_sql": "NOT_RUN"
+    },
+    {
+      "case_id": "tenant_organization_inactive",
+      "phase": "materialized",
+      "rejection_stage": "rpc",
+      "expected_sqlstate": "42501",
+      "expected_message": "DEMO_ORGANIZATION_INACTIVE",
+      "rendered_bytes": 32879,
+      "rendered_sha256": "e8804b79887a5dae4af50ecfc7d5271555d939f48a1a5e6e10d29b160e7608d7",
+      "native_sql": "NOT_RUN"
+    },
+    {
+      "case_id": "manifest_scheduler_hash_drift",
+      "phase": "materialized",
+      "rejection_stage": "rpc",
+      "expected_sqlstate": "42501",
+      "expected_message": "DEMO_SCHEDULER_APPROVAL_INVALID",
+      "rendered_bytes": 33503,
+      "rendered_sha256": "6b5180a986c4cd610d3d35145b7cf6551568cfe8e0af31481493c8e263b71b8d",
+      "native_sql": "NOT_RUN"
+    },
+    {
+      "case_id": "expiry_run_shortened",
+      "phase": "materialized",
+      "rejection_stage": "rpc",
+      "expected_sqlstate": "42501",
+      "expected_message": "DEMO_RUN_UNAUTHORIZED",
+      "rendered_bytes": 33291,
+      "rendered_sha256": "3398a26b47a31baf33f70b99f03cc2c0038ac5da1fc4295eb2b8af9b77c0e7a4",
+      "native_sql": "NOT_RUN"
+    },
+    {
+      "case_id": "guarded_tenant_run_rebinding",
+      "phase": "materialized",
+      "rejection_stage": "mutation",
+      "expected_sqlstate": "42501",
+      "expected_message": "DEMO_IMMUTABLE_RUN",
+      "rendered_bytes": 30780,
+      "rendered_sha256": "244bbee5bd68cddd2d5f388b82d7ae03db80e65b19a63ff77827e5721230955a",
+      "native_sql": "NOT_RUN"
+    },
+    {
+      "case_id": "mutable_supplier_origin_drift",
+      "phase": "materialized",
+      "rejection_stage": "rpc",
+      "expected_sqlstate": "23514",
+      "expected_message": "DEMO_ADMITTED_SUPPLIER_DRIFT",
+      "rendered_bytes": 32973,
+      "rendered_sha256": "1dea10594d1768fd7c69e9797d83c3f5be0e662c08209a0caba1d9b9c3b0d4fb",
+      "native_sql": "NOT_RUN"
+    },
+    {
+      "case_id": "materialized_invoice_folio_drift",
+      "phase": "materialized",
+      "rejection_stage": "rpc",
+      "expected_sqlstate": "PT409",
+      "expected_message": "DEMO_DOCUMENT_DIVERGED",
+      "rendered_bytes": 33251,
+      "rendered_sha256": "7834dd62607c3f88d7949cac1119b00d5e493d6174b3a66e7eeff95095e6e8e2",
+      "native_sql": "NOT_RUN"
+    }
+  ],
+  "blocked_cases": [
+    {
+      "id": "tenant_identity_drift",
+      "phase": "materialized",
+      "category": "tenant_identity",
+      "status": "BLOCKED",
+      "reason": "A changed tenant cannot safely reach the retry verifier in this source. Existing scheduler/transport/run/lineage organization_id CHECKs pin the tenant, and server admissions, authorizations, and lineages reject updates. Changing JWT claims does not change attested tenant identity. Tenant deactivation and the run-rebinding guard have separate, accurately scoped cases; neither is evidence of a cross-tenant retry rejection.",
+      "source_evidence": "flow/issuer/16-owner-registry.sql: tenant CHECKs and immutable_admissions; flow/issuer/10-issuer.sql: immutable_authorizations; flow/sql/01-private.sql: immutable_lineages and protect_run"
+    }
+  ],
+  "native_sql": "NOT_RUN",
+  "business_commit": "NOT_RUN",
+  "operational_admission": "NOT_ADMITTED",
+  "limits": [
+    "sequence rollback",
+    "catalog and ACL invariance",
+    "business COMMIT",
+    "crash durability",
+    "external authentication",
+    "real transport",
+    "real RLS",
+    "cross-tenant identity retry",
+    "independent foreign concept/payment collisions"
+  ]
+}
