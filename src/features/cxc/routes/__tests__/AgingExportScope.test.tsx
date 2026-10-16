@@ -21,13 +21,15 @@ vi.mock("@/components/shared/dataTable/ResponsiveDataTable", () => ({
 }));
 
 const base = { moneda: "MXN", saldo_total: 116.04, vigente: 0, d_1_30: 0, d_31_60: 116.04, d_61_90: 0, mas_90: 0, num_facturas: 3 };
+const sucursales = Array.from({ length: 9 }, (_, i) => ({ ...base, id: `s${i + 1}`, nombre: `Alfa Sucursal ${i + 1}` }));
 const rows = [
   { ...base, id: "a1", nombre: "Alfa Norte" },
+  ...sucursales,
   { ...base, id: "a2", nombre: "Alfa Sur" },
   { ...base, id: "a3", nombre: "Alfa Vigente", vigente: 116.04, d_31_60: 0 },
   { ...base, id: "b", nombre: "Beta" },
 ];
-const queryState = { isLoading: false, isError: false, error: null, refetch: vi.fn(), monedas: ["MXN", "USD"], monedaActiva: "MXN", setMoneda: vi.fn(), totales: { ...base, total: 464.16 } };
+const queryState = { isLoading: false, isError: false, error: null, refetch: vi.fn(), monedas: ["MXN", "USD"], monedaActiva: "MXN", setMoneda: vi.fn(), totales: { ...base, total: 1508.52 } };
 
 beforeEach(() => {
   vi.clearAllMocks();
@@ -42,13 +44,19 @@ function wrapper(query: string) {
 
 describe.each([["CxC", CxcAging], ["CxP", CxpAging]] as const)("CSV Aging %s respeta tabla", (_, Route) => {
   it("exporta todas las páginas que combinan búsqueda y cubeta e identifica su alcance", () => {
-    render(<Route />, { wrapper: wrapper("?q=Alfa&cubeta=31_60&ps=1&page=1") });
-    expect(screen.getByTestId("tabla").querySelectorAll("p")).toHaveLength(1);
+    render(<Route />, { wrapper: wrapper("?q=Alfa&cubeta=31_60&ps=10&page=1") });
+    const tabla = screen.getByTestId("tabla");
+    expect(tabla.querySelectorAll("p")).toHaveLength(1);
+    expect(tabla).toHaveTextContent("Alfa Norte");
+    expect(tabla).not.toHaveTextContent("Alfa Sur");
+    expect(tabla).not.toHaveTextContent("Alfa Sucursal");
     fireEvent.click(screen.getByRole("button", { name: "Exportar CSV" }));
-    expect(csv).toHaveBeenCalledWith(expect.objectContaining({ rowCount: 2 }));
+    expect(csv).toHaveBeenCalledWith(expect.objectContaining({ rowCount: 11 }));
     const content: string = csv.mock.lastCall?.[0].csv;
     expect(content).toContain("Alfa Norte");
     expect(content).toContain("Alfa Sur");
+    for (const sucursal of sucursales) expect(content).toContain(sucursal.nombre);
+    expect(content).toContain('"Alfa Norte",MXN,3,0,0,116.04,0,0,116.04,2026-11-04');
     expect(content).not.toContain("Alfa Vigente");
     expect(content).not.toContain("Beta");
     expect(content).toContain("Con saldo en 31-60 días; Búsqueda: Alfa");
@@ -81,5 +89,5 @@ it("CxP aclara que la fecha reclasifica saldos actuales tanto en pantalla como e
   expect(content).toContain("Alcance de saldos");
   expect(content).toContain(alcance.textContent);
   expect(content).toContain("116.04");
-  expect(csv).toHaveBeenCalledWith(expect.objectContaining({ rowCount: 4 }));
+  expect(csv).toHaveBeenCalledWith(expect.objectContaining({ rowCount: 13 }));
 });

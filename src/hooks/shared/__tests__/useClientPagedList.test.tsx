@@ -31,6 +31,7 @@ function setup(data: Row[] = DATA) {
         data,
         defaultFilters: DEFAULTS,
         defaultPageSize: 2,
+        pageSizeOptions: [1, 2, 5],
         filterLabels: { moneda: "Moneda" },
         searchAccessor: (r) => r.nombre,
         filterPredicate: (r, ff) => ff.moneda === "todas" || r.moneda === ff.moneda,
@@ -46,6 +47,46 @@ function setup(data: Row[] = DATA) {
 }
 
 describe("useClientPagedList", () => {
+  it.each([
+    { page: "1", ps: "0", expectedPage: 1, ids: ["3", "4"] },
+    { page: "1", ps: "-2", expectedPage: 1, ids: ["3", "4"] },
+    { page: "1", ps: "9007199254740991", expectedPage: 1, ids: ["3", "4"] },
+    { page: "1", ps: "3", expectedPage: 1, ids: ["3", "4"] },
+    { page: "-1", ps: "2", expectedPage: 0, ids: ["1", "2"] },
+    { page: "9007199254740991", ps: "2", expectedPage: 0, ids: ["1", "2"] },
+  ])("normaliza page=$page y ps=$ps antes del primer slice", ({ page, ps, expectedPage, ids }) => {
+    const { result } = renderHook(
+      () => useClientPagedList({
+        data: DATA,
+        defaultFilters: DEFAULTS,
+        defaultPageSize: 2,
+        pageSizeOptions: [1, 2, 5],
+      }),
+      { wrapper: withNuqsTestingAdapter({ hasMemory: true, searchParams: { page, ps } }) },
+    );
+
+    expect(result.current.rows.map(row => row.id)).toEqual(ids);
+    expect(result.current.page).toBe(expectedPage);
+    expect(result.current.pageSize).toBe(2);
+    expect(result.current.totalPages).toBe(3);
+    expect(result.current.pagination).toMatchObject({ page: expectedPage, pageSize: 2, totalPages: 3 });
+  });
+
+  it("respeta las opciones propias del listado también al leer la URL", () => {
+    const { result } = renderHook(
+      () => useClientPagedList({
+        data: DATA,
+        defaultFilters: DEFAULTS,
+        defaultPageSize: 2,
+        pageSizeOptions: [1, 2, 5],
+      }),
+      { wrapper: withNuqsTestingAdapter({ hasMemory: true, searchParams: { ps: "5" } }) },
+    );
+
+    expect(result.current.rows).toEqual(DATA);
+    expect(result.current.totalPages).toBe(1);
+    expect(result.current.pagination.pageSizeOptions).toEqual([1, 2, 5]);
+  });
 
   it("aplica default sort ascendente y pagina", () => {
     const { result } = setup();
@@ -133,7 +174,7 @@ describe("useClientPagedList", () => {
     expect(result.current.filteredRows).toEqual([]);
   });
   it("clamps a stale URL page and persists the correction when rows shrink", async () => {
-    const { result, rerender } = renderHook(({data}: {data: Row[]}) => useClientPagedList({data, defaultFilters: DEFAULTS}), {
+    const { result, rerender } = renderHook(({data}: {data: Row[]}) => useClientPagedList({data, defaultFilters: DEFAULTS, pageSizeOptions: [2, 10, 20, 50, 100]}), {
       initialProps: {data: DATA},
       wrapper: withNuqsTestingAdapter({hasMemory: true, searchParams: {page: "2", ps: "2"}}),
     });
@@ -149,7 +190,7 @@ describe("useClientPagedList", () => {
 
   it("does not discard a deep-linked page while the dataset is loading", async () => {
     const { result, rerender } = renderHook(({data, isLoading}: {data: Row[] | undefined; isLoading: boolean}) =>
-      useClientPagedList({data, isLoading, defaultFilters: DEFAULTS}), {
+      useClientPagedList({data, isLoading, defaultFilters: DEFAULTS, pageSizeOptions: [2, 10, 20, 50, 100]}), {
         initialProps: {data: undefined as Row[] | undefined, isLoading: true},
         wrapper: withNuqsTestingAdapter({hasMemory: true, searchParams: {page: "2", ps: "2"}}),
       });

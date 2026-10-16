@@ -54,16 +54,16 @@ export function DataTableHeaderRow<T extends object>({ table, striped, bordered,
                   borderCell,
                   "whitespace-nowrap",
                   meta.headerClassName,
-                  canSort && "cursor-pointer select-none hover:text-foreground transition-colors",
                   meta.sticky && "sticky left-0 z-20 bg-background shadow-[4px_0_4px_-2px_hsl(var(--border)/0.3)]",
                   meta.stickyRight && "sticky right-0 z-20 bg-background shadow-[-4px_0_4px_-2px_hsl(var(--border)/0.3)]",
                 )}
-                onClick={canSort ? toggle : undefined}
               >
                 {canSort ? (
-                  <span
+                  <button
+                    type="button"
+                    onClick={toggle}
                     className={cn(
-                      "inline-flex items-center gap-1",
+                      "inline-flex items-center gap-1 rounded-sm p-0 [text-transform:inherit] cursor-pointer select-none hover:text-foreground transition-colors focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
                       align === "right" && "flex-row-reverse",
                       align === "center" && "justify-center w-full",
                     )}
@@ -72,7 +72,7 @@ export function DataTableHeaderRow<T extends object>({ table, striped, bordered,
                     {sortDir === "asc" && <ArrowUp className="h-3 w-3 text-foreground" />}
                     {sortDir === "desc" && <ArrowDown className="h-3 w-3 text-foreground" />}
                     {!sortDir && <ArrowUpDown className="h-3 w-3 opacity-30" />}
-                  </span>
+                  </button>
                 ) : (
                   flexRender(header.column.columnDef.header, header.getContext())
                 )}

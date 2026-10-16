@@ -191,7 +191,7 @@ jobs:
           if-no-files-found: warn
 
   virtualization:
-    name: Isolated virtualization (4 cases, Chromium and Firefox)
+    name: Isolated virtualization and table keyboard (8 cases, Chromium and Firefox)
     runs-on: ubuntu-24.04
     timeout-minutes: 20
     steps:
@@ -255,12 +255,12 @@ jobs:
         run: |
           set -euo pipefail
           node node_modules/eslint/bin/eslint.js --no-cache e2e/visual/virtualization 2>&1 | tee reports/virtualization/lint.log
-      - name: Check all 4 browser cases with a fresh isolated build
+      - name: Check all 8 browser cases with a fresh isolated build
         shell: bash
         run: |
           set -euo pipefail
           node node_modules/@playwright/test/cli.js test --config e2e/visual/virtualization/playwright.config.ts 2>&1 | tee reports/virtualization/browser.log
-      - name: Require all 4 cases without skips or retries
+      - name: Require all 8 cases without skips or retries
         if: always()
         shell: bash
         run: |
@@ -268,8 +268,8 @@ jobs:
           node --input-type=module <<'JS'
           import { readFileSync } from "node:fs";
           const { stats } = JSON.parse(readFileSync("reports/virtualization/results.json", "utf8"));
-          if (stats.expected !== 4 || stats.unexpected !== 0 || stats.skipped !== 0 || stats.flaky !== 0) {
-            throw new Error(`Expected 4 passing GUI cases with no skips/retries: ${JSON.stringify(stats)}`);
+          if (stats.expected !== 8 || stats.unexpected !== 0 || stats.skipped !== 0 || stats.flaky !== 0) {
+            throw new Error(`Expected 8 passing GUI cases with no skips/retries: ${JSON.stringify(stats)}`);
           }
           JS
       - name: Upload only synthetic virtualization evidence

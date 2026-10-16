@@ -4,6 +4,7 @@ import { useVirtualTableState } from "@/components/shared/dataTable/useVirtualTa
 import { VirtualRow } from "@/components/shared/VirtualRow";
 import { VirtualTimeline } from "@/components/shared/bitacora/VirtualTimeline";
 import type { EntradaBitacora } from "@/types/bitacora";
+import { KeyboardSortingFixture } from "./KeyboardSortingFixture";
 
 type SyntheticRow = { id: string; height: number };
 const rows: SyntheticRow[] = Array.from({ length: 240 }, (_, index) => ({
@@ -51,7 +52,8 @@ function TableFixture({ data }: { data: SyntheticRow[] }) {
 }
 
 export function VirtualizationFixture() {
-  const timeline = new URLSearchParams(window.location.search).get("case") === "timeline";
+  const scenario = new URLSearchParams(window.location.search).get("case");
+  const timeline = scenario === "timeline";
   const [filtered, setFiltered] = useState(false);
   const [generation, setGeneration] = useState(0);
   // Simulate a server returning a smaller, differently ordered result set.
@@ -59,6 +61,9 @@ export function VirtualizationFixture() {
   const visibleRows = filtered ? rows.filter((_, index) => index % 2 === 0).reverse() : rows;
   const visibleActivities = filtered
     ? activities.filter((_, index) => index % 2 === 0).reverse() : activities;
+  if (scenario === "keyboard-client" || scenario === "keyboard-server") {
+    return <KeyboardSortingFixture mode={scenario === "keyboard-client" ? "client" : "server"} />;
+  }
   return (
     <main className="p-4 space-y-4" style={{ width: 560 }}>
       <h1>Virtualización sintética: {timeline ? "bitácora" : "tabla"}</h1>

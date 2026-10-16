@@ -15,6 +15,8 @@ import { useQueryState, parseAsString, parseAsStringLiteral } from "nuqs";
 import { useTableFilters, type UseTableFiltersOpts, type ChipItem } from "@/hooks/shared/useTableFilters";
 import type { SortDir, DataTablePagination } from "@/components/shared/dataTable/types";
 
+const PAGE_SIZE_OPTIONS = [10, 20, 50, 100];
+
 export interface ClientPagedOpts<TRow, TFilters extends Record<string, string>>
   extends UseTableFiltersOpts<TFilters> {
   data: TRow[] | undefined;
@@ -71,13 +73,14 @@ export function useClientPagedList<
   defaultFilters,
   filterLabels,
   defaultPageSize,
+  pageSizeOptions = PAGE_SIZE_OPTIONS,
   searchAccessor,
   filterPredicate,
   dateAccessor,
   sorters,
   defaultSort,
 }: ClientPagedOpts<TRow, TFilters>): ClientPagedResult<TRow, TFilters> {
-  const f = useTableFilters<TFilters>({ defaultFilters, filterLabels, defaultPageSize });
+  const f = useTableFilters<TFilters>({ defaultFilters, filterLabels, defaultPageSize, pageSizeOptions });
 
   const [sortKeyRaw, setSortKeyRaw] = useQueryState(
     "sort",
@@ -144,10 +147,10 @@ export function useClientPagedList<
       onPageChange: f.setPage,
       pageSize: f.pageSize,
       onPageSizeChange: f.setPageSize,
-      pageSizeOptions: [10, 20, 50, 100],
+      pageSizeOptions: [...pageSizeOptions],
       total: filteredCount,
     }),
-    [page, f.pageSize, f.setPage, f.setPageSize, totalPages, filteredCount],
+    [page, f.pageSize, f.setPage, f.setPageSize, totalPages, filteredCount, pageSizeOptions],
   );
 
   return {
