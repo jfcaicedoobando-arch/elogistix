@@ -98,6 +98,6 @@ describe("pagos a proveedor · frontera RPC vigente", () => {
 
   it("el barrel de CxP no reexporta comandos del módulo legado", () => {
     const exportLegado = indexSource.match(/export\s*([^;]+)\s*from\s*["']\.\/pagoProveedorMovimiento["']/g);
-    expect(exportLegado).toEqual(['export { cargoEnMxn, cargoEnMonedaCuenta, ERROR_TC_REQUERIDO } from "./pagoProveedorMovimiento"']);
+    expect(exportLegado).toBeNull();
   });
 });

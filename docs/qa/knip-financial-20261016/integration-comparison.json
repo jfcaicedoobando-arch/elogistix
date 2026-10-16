@@ -1,0 +1,29 @@
+{
+  "integratedMain": "c1d86c349b80faa7489d250440924ea77848c57d",
+  "mergeCommit": "f505e171c18e27fb3e127ad40a79faa989a7b121",
+  "initialFinancialCommit": "1bdd40842d1c06cb7b0f7c9bdeb516eeebe97000",
+  "financialSourceDiffIdentical": true,
+  "financialSourceDiffSha256": "4c2136447292871527efbff2c56a33586a91688ddeac690929893f093c0165c2",
+  "mainInventory": {
+    "files": 0,
+    "dependencies": 0,
+    "devDependencies": 0,
+    "unlisted": 0,
+    "duplicates": 0,
+    "exports": 26,
+    "types": 16
+  },
+  "integratedInventory": {
+    "files": 0,
+    "dependencies": 0,
+    "devDependencies": 0,
+    "unlisted": 0,
+    "duplicates": 0,
+    "exports": 13,
+    "types": 13
+  },
+  "financialFindingsRemoved": 16,
+  "remainingFinancialFindings": [],
+  "matchesExpectedInventory": true,
+  "unexpectedAdded": []
+}

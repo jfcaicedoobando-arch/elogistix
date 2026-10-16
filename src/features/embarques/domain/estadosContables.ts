@@ -7,7 +7,3 @@
  * `estado_embarque`, añadirlo aquí también.
  */
 export const ESTADOS_EMBARQUE_NO_CONTABLES = ["Cotización", "Borrador", "Cancelado"] as const;
-
-export function esEstadoEmbarqueContable(estado: string | null | undefined): boolean {
-  return !!estado && !ESTADOS_EMBARQUE_NO_CONTABLES.includes(estado as never);
-}

@@ -1,0 +1,4 @@
+[sentry] SENTRY_AUTH_TOKEN ausente: sourcemaps NO se subirán a Sentry. Los stack traces de producción quedarán minificados. Configura el token en Workspace Settings → Build Secrets.
+[sentry] SENTRY_AUTH_TOKEN ausente: sourcemaps NO se subirán a Sentry. Los stack traces de producción quedarán minificados. Configura el token en Workspace Settings → Build Secrets.
+[sentry] SENTRY_AUTH_TOKEN ausente: sourcemaps NO se subirán a Sentry. Los stack traces de producción quedarán minificados. Configura el token en Workspace Settings → Build Secrets.
+[sentry] SENTRY_AUTH_TOKEN ausente: sourcemaps NO se subirán a Sentry. Los stack traces de producción quedarán minificados. Configura el token en Workspace Settings → Build Secrets.

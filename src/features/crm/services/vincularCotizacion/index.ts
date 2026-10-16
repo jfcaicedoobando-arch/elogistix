@@ -10,4 +10,3 @@ export {
   
 } from "./vincularOCrear";
 export { sincronizarEtapaPorEstadoCotizacion } from "./sincronizarEtapa";
-export { propagarConversionProspectoCRM } from "./propagarConversion";

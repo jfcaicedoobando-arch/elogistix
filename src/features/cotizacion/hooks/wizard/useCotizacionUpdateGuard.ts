@@ -44,11 +44,6 @@ export interface GuardedUpdateMutation {
   selloActual: () => string | null;
 }
 
-export interface CotizacionUpdateGuard<TRow extends { id: string }> {
-  updateCotizacion: GuardedUpdateMutation;
-  crearCotizacion: CrearCotizacionMutation<TRow>;
-}
-
 export function useCotizacionUpdateGuard<TRow extends { id: string; updated_at?: string | null }>(
   updateCotizacion: UpdateCotizacionMutation,
   initialUpdatedAt: string | null | undefined,

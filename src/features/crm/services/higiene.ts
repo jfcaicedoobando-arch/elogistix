@@ -6,7 +6,7 @@
 import { supabase } from "@/integrations/supabase/client";
 
 import type { HigieneResumen, HigieneOportunidad } from "../types/higiene";
-export type { EstadoHigiene, HigieneResumen, HigieneOportunidad } from "../types/higiene";
+export type { HigieneResumen, HigieneOportunidad } from "../types/higiene";
 const RESUMEN_VACIO: HigieneResumen = {
   abiertas: 0,
   registros_completos: 0,

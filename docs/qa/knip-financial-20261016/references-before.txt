@@ -1,0 +1,133 @@
+CHANGELOG.md:752:- **fix(MNY-NEW-04 · movimiento bancario fail-closed)**: `cargoEnMonedaCuenta` devuelve `null` cuando pago y cuenta difieren de moneda sin T/C y `crearMovimientoBancarioPago` corta con mensaje que pide capturarlo; misma moneda sigue igual.
+CHANGELOG.md:757:- Cobertura focalizada: `cargoEnMonedaCuenta.test.ts`, `reconciliacionMoneda.test.ts`, `labelExpediente.test.ts`, `agregadosVigencia.test.ts`, `conceptosCostoCargando.test.tsx`, `flujoFacturacionDetalle.test.tsx`, `fechasAccesibles.test.tsx`, `datosGeneralesAccesible.test.tsx`, `estadoCuentaToolbarA11y.test.tsx`.
+CHANGELOG.md:2325:- Remates de CI: se movieron `buildPrimary` (barra de acciones de factura) y `derivarOrigenAceptacion` a módulos propios para que los archivos de UI sólo exporten componentes (react-refresh), se agregó el filtro `deleted_at` a la lectura de facturas Borrador en la corrección de fecha, y se regeneró `migration-manifest.json` para 13.823.171.
+CHANGELOG.md:2398:- Bundle inicial: `@/lib/ui/appFeedback` importaba `STEP_LABELS` desde `embarqueWizardSchemas`, arrastrando los esquemas zod del wizard de embarques al chunk de arranque. `STEP_LABELS` se movió a `embarqueWizardConstants.ts` (módulo sin zod) y se re-exporta desde los esquemas para no romper imports.
+CHANGELOG.md:4700:- **Power of 10 / ESLint**: `subirFacturaEntrante` baja de complejidad 19 a límite (helpers `subirArchivosDelBuzon` / `insertarFilaEntrante`) y los helpers del alta se mueven a `facturasEntrantesUploadAlta.ts` (archivos ≤200 líneas).
+src/components/shared/BulkImportDialog.tsx:47:const STEP_LABELS = ["Cargar archivo", "Revisar", "Confirmar"];
+src/components/shared/BulkImportDialog.tsx:89:      stepper={{ step: stepToIndex(step), totalSteps: 3, labels: STEP_LABELS }}
+src/features/cxp/hooks/__tests__/useSubirFacturaEntrante.contract.test.tsx:6:vi.mock("@/features/cxp/services/facturasEntrantes", () => ({ subirFacturaEntranteConResultado: mocks.subir }));
+src/features/cxp/hooks/useFacturasEntrantes.ts:14:  subirFacturaEntranteConResultado,
+src/features/cxp/hooks/useFacturasEntrantes.ts:59:    mutationFn: (input: SubirFacturaEntranteInput) => subirFacturaEntranteConResultado(input),
+src/features/cxp/services/__tests__/cargoEnMonedaCuenta.test.ts:5:import { cargoEnMonedaCuenta } from "../pagoProveedorMovimiento";
+src/features/cxp/services/__tests__/cargoEnMonedaCuenta.test.ts:7:describe("cargoEnMonedaCuenta", () => {
+src/features/cxp/services/__tests__/cargoEnMonedaCuenta.test.ts:9:    expect(cargoEnMonedaCuenta(23650, "USD", "USD", 17.2067)).toBe(23650);
+src/features/cxp/services/__tests__/cargoEnMonedaCuenta.test.ts:10:    expect(cargoEnMonedaCuenta(1000, "MXN", "MXN", 17.2067)).toBe(1000);
+src/features/cxp/services/__tests__/cargoEnMonedaCuenta.test.ts:14:    expect(cargoEnMonedaCuenta(100, "USD", "MXN", 17)).toBe(1700);
+src/features/cxp/services/__tests__/cargoEnMonedaCuenta.test.ts:18:    expect(cargoEnMonedaCuenta(1700, "MXN", "USD", 17)).toBe(100);
+src/features/cxp/services/__tests__/cargoEnMonedaCuenta.test.ts:22:    expect(cargoEnMonedaCuenta(500, "USD", "MXN", null)).toBeNull();
+src/features/cxp/services/__tests__/cargoEnMonedaCuenta.test.ts:23:    expect(cargoEnMonedaCuenta(500, "USD", "MXN", 0)).toBeNull();
+src/features/cxp/services/__tests__/cargoEnMonedaCuenta.test.ts:24:    expect(cargoEnMonedaCuenta(500, "EUR", "MXN", 17)).toBeNull();
+src/features/cxp/services/__tests__/cargoEnMonedaCuenta.test.ts:28:    expect(cargoEnMonedaCuenta(500, "USD", monedaCuenta, 17)).toBeNull();
+src/features/cxp/services/__tests__/cargoEnMonedaCuenta.test.ts:29:    expect(cargoEnMonedaCuenta(500, "MXN", monedaCuenta, null)).toBeNull();
+src/features/cxp/services/__tests__/cargoEnMonedaCuenta.test.ts:33:    expect(cargoEnMonedaCuenta(500, moneda, moneda, null)).toBe(500);
+src/features/cxp/services/__tests__/duplicadoFolioBuzon.test.ts:14:import { subirFacturaEntrante } from "../facturasEntrantesUpload";
+src/features/cxp/services/__tests__/duplicadoFolioBuzon.test.ts:48:describe("subirFacturaEntrante — dedupe del buzón", () => {
+src/features/cxp/services/__tests__/duplicadoFolioBuzon.test.ts:57:    await expect(subirFacturaEntrante({
+src/features/cxp/services/__tests__/duplicadoFolioBuzon.test.ts:66:    await expect(subirFacturaEntrante({
+src/features/cxp/services/__tests__/facturaEntrantePartialResult.test.ts:10:import { subirFacturaEntranteConResultado } from "../facturasEntrantesUpload";
+src/features/cxp/services/__tests__/facturaEntrantePartialResult.test.ts:19:    const result = await subirFacturaEntranteConResultado({ xml: {} } as SubirFacturaEntranteInput);
+src/features/cxp/services/__tests__/facturasEntrantesUpload.test.ts:49:const { subirFacturaEntrante, adjuntarXmlFacturaEntrante } = await import(
+src/features/cxp/services/__tests__/facturasEntrantesUpload.test.ts:67:describe("subirFacturaEntrante", () => {
+src/features/cxp/services/__tests__/facturasEntrantesUpload.test.ts:85:      subirFacturaEntrante({ ...INPUT_BASE, pdf: archivo(), xml: null }),
+src/features/cxp/services/__tests__/facturasEntrantesUpload.test.ts:97:      subirFacturaEntrante({ ...INPUT_BASE, pdf: archivo(), xml: null }),
+src/features/cxp/services/__tests__/facturasEntrantesUpload.test.ts:108:      subirFacturaEntrante({ ...INPUT_BASE, pdf: archivo("f.pdf"), xml: archivo("f.xml", "text/xml") }),
+src/features/cxp/services/__tests__/facturasEntrantesUpload.test.ts:121:      subirFacturaEntrante({ ...INPUT_BASE, pdf: archivo("f.pdf"), xml: archivo("f.xml", "text/xml") }),
+src/features/cxp/services/__tests__/facturasEntrantesUpload.test.ts:141:      subirFacturaEntrante({ ...INPUT_BASE, pdf: archivo("f.pdf"), xml: null }),
+src/features/cxp/services/__tests__/facturasEntrantesUpload.test.ts:153:      subirFacturaEntrante({ ...INPUT_BASE, pdf: archivo() }),
+src/features/cxp/services/__tests__/pagoProveedorMovimiento.cuentaDisponible.test.ts:16:  ERROR_TC_REQUERIDO,
+src/features/cxp/services/__tests__/pagoProveedorMovimiento.cuentaDisponible.test.ts:77:  expect(ERROR_CUENTA_NO_DISPONIBLE).not.toBe(ERROR_TC_REQUERIDO);
+src/features/cxp/services/__tests__/pagoProveedorMovimiento.cuentaDisponible.test.ts:167:    await expect(crearMovimientoBancarioPago({ ...INPUT, tipoCambioUsd })).resolves.toEqual({ ok: false, error: ERROR_TC_REQUERIDO });
+src/features/cxp/services/__tests__/pagosProveedor.rpcBoundary.test.ts:101:    expect(exportLegado).toEqual(['export { cargoEnMxn, cargoEnMonedaCuenta, ERROR_TC_REQUERIDO } from "./pagoProveedorMovimiento"']);
+src/features/cxp/services/conciliacionBancaria.ts:11:  TOLERANCIA_MONTO_MXN,
+src/features/cxp/services/conciliacionBancaria.ts:37:  const min = pago.monto - TOLERANCIA_MONTO_MXN;
+src/features/cxp/services/conciliacionBancaria.ts:38:  const max = pago.monto + TOLERANCIA_MONTO_MXN;
+src/features/cxp/services/facturasEntrantes.ts:26:  subirFacturaEntrante,
+src/features/cxp/services/facturasEntrantes.ts:27:  subirFacturaEntranteConResultado,
+src/features/cxp/services/facturasEntrantesUpload.ts:31:export async function subirFacturaEntrante(input: SubirFacturaEntranteInput): Promise<string> {
+src/features/cxp/services/facturasEntrantesUpload.ts:32:  return (await subirFacturaEntranteConResultado(input)).documentoId;
+src/features/cxp/services/facturasEntrantesUpload.ts:35:export async function subirFacturaEntranteConResultado(input: SubirFacturaEntranteInput): Promise<ResultadoSubidaEntrante> {
+src/features/cxp/services/facturasEntrantesUpload.ts:108:    // Ola 5 · RG4-7: mismo criterio que subirFacturaEntrante.
+src/features/cxp/services/facturasEntrantesUploadAlta.ts:111: * Extraído de `subirFacturaEntrante` para respetar el límite de complejidad.
+src/features/cxp/services/index.ts:27:export { cargoEnMxn, cargoEnMonedaCuenta, ERROR_TC_REQUERIDO } from "./pagoProveedorMovimiento";
+src/features/cxp/services/pagoProveedorBitacora.ts:6:import { cargoEnMxn } from "./pagoProveedorMovimiento";
+src/features/cxp/services/pagoProveedorBitacora.ts:36:    cargo_mxn: conCuenta ? cargoEnMxn(input.monto, input.moneda, input.tipoCambioUsd) : null,
+src/features/cxp/services/pagoProveedorMovimiento.ts:41: * NUNCA para el movimiento bancario: ver `cargoEnMonedaCuenta`.
+src/features/cxp/services/pagoProveedorMovimiento.ts:43:export function cargoEnMxn(
+src/features/cxp/services/pagoProveedorMovimiento.ts:63:export function cargoEnMonedaCuenta(
+src/features/cxp/services/pagoProveedorMovimiento.ts:79:export const ERROR_TC_REQUERIDO =
+src/features/cxp/services/pagoProveedorMovimiento.ts:143:  const cargo = cargoEnMonedaCuenta(input.monto, input.moneda, monedaCuenta, input.tipoCambioUsd);
+src/features/cxp/services/pagoProveedorMovimiento.ts:145:  if (cargo === null) return { ok: false, error: ERROR_TC_REQUERIDO };
+src/features/cxp/services/proveedorFacturas.crud.ts:15:export type NuevaFacturaProveedorPayload =
+src/features/cxp/services/proveedorFacturas.crud.ts:24:export type CrearFacturaProveedorInput = NuevaFacturaProveedorPayload & {
+src/features/cxp/services/proveedorFacturas.ts:153:  type NuevaFacturaProveedorPayload,
+src/features/embarques/components/conceptos/__tests__/ventaEmbarqueNoObjeto.test.tsx:9:import { ivaDeFila } from "@/features/embarques/domain/ivaConceptoVenta";
+src/features/embarques/components/conceptos/__tests__/ventaEmbarqueNoObjeto.test.tsx:81:    expect(ivaDeFila(filaDb)).toBe(false);
+src/features/embarques/components/proforma/PasoConfirmacionProforma.tsx:4:import { ivaDeFila, etiquetaIvaFilas } from "@/features/embarques/domain/ivaConceptoVenta";
+src/features/embarques/components/proforma/PasoConfirmacionProforma.tsx:58:                const aplica = ivaDeFila(c);
+src/features/embarques/components/proforma/PasoSeleccionConceptos.tsx:11:import { ivaDeFila, etiquetaIvaFilas } from "@/features/embarques/domain/ivaConceptoVenta";
+src/features/embarques/components/proforma/PasoSeleccionConceptos.tsx:99:            const ivaActivo = ivaDeFila(c);
+src/features/embarques/components/proforma/TratamientoIvaProforma.tsx:3:import { ivaDeFila } from "@/features/embarques/domain/ivaConceptoVenta";
+src/features/embarques/components/proforma/TratamientoIvaProforma.tsx:14:  const sinTraslado = concepto.moneda === "USD" && !ivaActivo && ivaDeFila(concepto) && !pendiente;
+src/features/embarques/domain/__tests__/proformaElegibilidadIva.test.ts:3:import { ivaDeFila, etiquetaIvaFilas } from "../ivaConceptoVenta";
+src/features/embarques/domain/__tests__/proformaElegibilidadIva.test.ts:30:    expect(ivaDeFila(c)).toBe(false);
+src/features/embarques/domain/embarqueWizardConstants.ts:19:export const STEP_LABELS: Record<number, string> = {
+src/features/embarques/domain/embarqueWizardSchemas.ts:19:export { MAX_FILE_SIZE_MB, STEP_LABELS } from "./embarqueWizardConstants";
+src/features/embarques/domain/embarqueWizardSchemas.ts:43:// `STEP_LABELS` vive en `embarqueWizardConstants.ts` (sin zod) y se re-exporta
+src/features/embarques/domain/estadosContables.ts:11:export function esEstadoEmbarqueContable(estado: string | null | undefined): boolean {
+src/features/embarques/domain/ivaConceptoVenta.ts:17:export function ivaDeFila(c: FilaIvaLike): boolean {
+src/features/embarques/domain/ivaConceptoVenta.ts:32:  const conIva = filas.filter(ivaDeFila);
+src/features/embarques/hooks/mutations/__tests__/useMutationsEmbarque.test.tsx:26:  sincronizarContenedores: vi.fn().mockResolvedValue([]),
+src/features/embarques/hooks/useDialogGenerarProformaController.helpers.ts:15:import { ivaDeFila } from "@/features/embarques/domain/ivaConceptoVenta";
+src/features/embarques/hooks/useDialogGenerarProformaController.helpers.ts:22:export { ivaDeFila };
+src/features/embarques/services/contenedores/__tests__/crud.test.ts:15:  sincronizarContenedores,
+src/features/embarques/services/contenedores/__tests__/crud.test.ts:64:describe("sincronizarContenedores", () => {
+src/features/embarques/services/contenedores/__tests__/crud.test.ts:70:    const result = await sincronizarContenedores(EMB, [
+src/features/embarques/services/contenedores/__tests__/crud.test.ts:82:    await expect(sincronizarContenedores(EMB, [])).rejects.toThrow("conflict");
+src/features/embarques/services/contenedores/__tests__/crudExtra.test.ts:13:  sincronizarContenedores,
+src/features/embarques/services/contenedores/__tests__/crudExtra.test.ts:85:    await sincronizarContenedores("e1", []);
+src/features/embarques/services/contenedores/__tests__/crudExtra.test.ts:93:    await expect(sincronizarContenedores("e1", [])).rejects.toThrow();
+src/features/embarques/services/contenedores/__tests__/crudExtra.test.ts:98:    await sincronizarContenedores("e1", [
+src/features/embarques/services/contenedores/crud.ts:90: * Para edición preservando IDs usar `sincronizarContenedores`.
+src/features/embarques/services/contenedores/crud.ts:116:export async function sincronizarContenedores(
+src/features/embarques/services/contenedores/index.ts:8:  sincronizarContenedores,
+src/features/embarques/services/submitProformaDialog.ts:12:import { ivaDeFila } from "@/features/embarques/domain/ivaConceptoVenta";
+src/features/embarques/services/submitProformaDialog.ts:126:  const ivaOverrides = Object.fromEntries(conceptosSeleccionados.map((c) => [c.id, ivaDeFila(c)]));
+src/features/facturacion/services/facturapi.ts:55:export { FacturaConRepsVivosError } from "./facturapiRepsVivos";
+src/features/facturacion/services/facturapiRepsVivos.ts:8:export class FacturaConRepsVivosError extends Error {
+src/features/facturacion/services/facturapiRepsVivos.ts:16:    this.name = "FacturaConRepsVivosError";
+src/features/facturacion/services/facturapiRepsVivos.ts:30:    if ((count ?? 0) > 0) throw new FacturaConRepsVivosError(count ?? 0);
+src/features/facturacion/services/facturapiRepsVivos.ts:32:    if (err instanceof FacturaConRepsVivosError) throw err;
+src/features/facturacion/services/timbradoPendiente.ts:25:export const esRespuestaPendiente = esPendienteWire;
+src/features/proformas/components/ProformaEstadoBadges.tsx:13:  derivarOrigenAceptacion,
+src/features/proformas/components/ProformaEstadoBadges.tsx:14:  type OrigenAceptacion,
+src/features/proformas/components/ProformaEstadoBadges.tsx:18:export type { OrigenAceptacion };
+src/features/proformas/components/ProformaEstadoBadges.tsx:20:function BadgeOrigenAceptacion({ origen }: { origen: OrigenAceptacion }) {
+src/features/proformas/components/ProformaEstadoBadges.tsx:102:  const origen = derivarOrigenAceptacion(aceptadaPor);
+src/features/proformas/components/ProformaEstadoBadges.tsx:111:      {mostrarOrigen && <BadgeOrigenAceptacion origen={origen} />}
+src/features/proformas/components/__tests__/ProformaEstadoBadges.test.ts:2:import { derivarOrigenAceptacion } from "@/features/proformas/domain/origenAceptacion";
+src/features/proformas/components/__tests__/ProformaEstadoBadges.test.ts:4:describe("derivarOrigenAceptacion", () => {
+src/features/proformas/components/__tests__/ProformaEstadoBadges.test.ts:6:    expect(derivarOrigenAceptacion("auto:sin_autorizacion_requerida")).toBe("interna");
+src/features/proformas/components/__tests__/ProformaEstadoBadges.test.ts:10:    expect(derivarOrigenAceptacion("cliente_portal_token")).toBe("portal");
+src/features/proformas/components/__tests__/ProformaEstadoBadges.test.ts:11:    expect(derivarOrigenAceptacion("manual:alguien@ejemplo.com")).toBe("manual");
+src/features/proformas/components/__tests__/ProformaEstadoBadges.test.ts:12:    expect(derivarOrigenAceptacion(null)).toBe("desconocido");
+src/features/proformas/domain/origenAceptacion.ts:6:export type OrigenAceptacion = "portal" | "manual" | "migracion" | "interna" | "desconocido";
+src/features/proformas/domain/origenAceptacion.ts:14:export function derivarOrigenAceptacion(aceptadaPor: string | null | undefined): OrigenAceptacion {
+src/features/tesoreria/domain/libroPagos.tipos.ts:71:export const TIPO_PAGO_LABELS: Record<TipoPago, string> = {
+src/features/tesoreria/domain/libroPagos.ts:10:import { TIPO_PAGO_LABELS } from "./libroPagos.tipos";
+src/features/tesoreria/domain/libroPagos.ts:18:  FILTROS_LIBRO_PAGOS_INICIALES, TIPO_PAGO_LABELS, VISTA_LABELS,
+src/features/tesoreria/domain/libroPagos.ts:26:  return pago.es_ajuste ? "Ajuste no monetario" : TIPO_PAGO_LABELS[pago.tipo];
+src/features/tesoreria/domain/tolerancia.ts:6:  TOLERANCIA_MONTO_MXN,
+src/features/tesoreria/domain/tolerancia.ts:7:  TOLERANCIA_MONTO_POR_MONEDA,
+src/features/tesoreria/domain/traspasoForm.ts:22:export interface TraspasoFormState {
+src/features/tesoreria/domain/traspasoForm.ts:37:export const ESTADO_INICIAL: TraspasoFormState = {
+src/features/tesoreria/domain/traspasoForm.ts:84:  state: TraspasoFormState,
+src/features/tesoreria/domain/traspasoForm.ts:131:export function traspasoSucio(state: TraspasoFormState, fechaInicial?: string): boolean {
+src/features/tesoreria/domain/traspasoForm.ts:146:export function conceptoTraspaso(state: TraspasoFormState): string {
+src/features/tesoreria/domain/traspasoForm.ts:151:  state: TraspasoFormState,
+src/features/tesoreria/hooks/useTraspasoForm.ts:17:export type { TraspasoFormState } from "@/features/tesoreria/domain/traspasoForm";
+src/lib/domain/tolerancia.ts:13:export const TOLERANCIA_MONTO_MXN = 1;
+src/lib/domain/tolerancia.ts:26:export const TOLERANCIA_MONTO_POR_MONEDA: Record<string, number> = {
+src/lib/domain/tolerancia.ts:38:  return TOLERANCIA_MONTO_POR_MONEDA[m] ?? 0;
+src/lib/domain/tolerancia.ts:44:export function dentroDeTolerancia(montoA: number, montoB: number, tolerancia = TOLERANCIA_MONTO_MXN): boolean {
+src/lib/ui/appFeedback.ts:24:import { STEP_LABELS } from "@/features/embarques/domain/embarqueWizardConstants";
+src/lib/ui/appFeedback.ts:48:    const label = STEP_LABELS[step] ?? `Paso ${step}`;
