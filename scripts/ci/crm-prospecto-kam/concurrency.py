@@ -260,6 +260,11 @@ class Harness:
             '(' + q[org] + ',' + q[actor] + ",'customer_service')"
             for org, actor in (('org', 'actor'), ('other_org', 'other_actor'))) + ';\n'
         sql += "UPDATE public.organization_members SET role='vendedor' WHERE user_id IN (" + q['actor'] + ',' + q['other_actor'] + ');\n'
+        # In an empty clone, auth bootstrap can give the first synthetic user
+        # super_admin; membership sync deliberately preserves platform roles.
+        # Set only these new fixture identities to exact KAM, with all real
+        # triggers active, so neither RPC can take the legacy writer bypass.
+        sql += "UPDATE public.user_roles SET role='vendedor' WHERE user_id IN (" + q['actor'] + ',' + q['other_actor'] + ');\n'
         sql += 'INSERT INTO public.crm_empresas(id,organization_id,nombre,created_by) VALUES ' + ','.join(
             '(' + q[company] + ',' + q[org] + ",'KAM concurrency company'," + q[actor] + ')'
             for company, org, actor in (('company', 'org', 'actor'), ('other_company', 'other_org', 'other_actor'))) + ';\n'
