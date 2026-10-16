@@ -43,8 +43,11 @@ BEGIN
     VALUES (p_org, v_uid, 'customer_service');
   UPDATE public.organization_members SET role = p_membresia
     WHERE organization_id = p_org AND user_id = v_uid;
-  -- BEFORE INSERT blocks legacy roles even on an ON CONFLICT path. The real
-  -- membership trigger already created this mirror; UPDATE models old history.
+  -- The real membership trigger omits deprecated admin/operador/viewer mirrors.
+  -- Seed a canonical role if absent; never INSERT a legacy role (even upsert).
+  INSERT INTO public.user_roles(user_id, role) VALUES (v_uid, 'customer_service')
+    ON CONFLICT (user_id) DO NOTHING;
+  -- UPDATE models persisted legacy history and deliberate global/member drift.
   UPDATE public.user_roles SET role = coalesce(p_global, p_membresia) WHERE user_id = v_uid;
   IF NOT FOUND THEN RAISE EXCEPTION 'PROSPECTO_FIXTURE: membership mirror missing'; END IF;
   IF NOT EXISTS (SELECT 1 FROM public.organization_members om JOIN public.user_roles ur ON ur.user_id = om.user_id
