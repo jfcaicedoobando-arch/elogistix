@@ -19,9 +19,10 @@ vi.mock("../ExportActions", () => ({ ExportActions: () => <div>
   {["PDF", "CSV", "Enviar"].map(label => <button key={label} onClick={h.export}>{label}</button>)}
 </div> }));
 
-const row = { id: "f1", numero: "F-1", moneda: "MXN", saldo: 100, total: 100,
+const row: FacturaEstadoCuenta = { id: "f1", numero: "F-1", moneda: "MXN", saldo: 100, total: 100,
   pagado: 0, notas_credito_aplicadas: 0, dias_vencido: 1, fecha_emision: "2026-10-01",
-  fecha_vencimiento: "2026-10-02" } as FacturaEstadoCuenta;
+  fecha_vencimiento: "2026-10-02", cliente_id: "c1", cliente_nombre: "Cliente", expediente: "EXP-1",
+  estatus_cobranza: "Vencida", estado_factura: "Emitida", pagos: [], notas_credito: [] };
 const props = { clienteIds: ["c1"], facturaHrefBase: "/facturacion" };
 function query(overrides = {}) {
   return { rows: [], kpis: {}, isLoading: false, isFetching: false, isError: false,

@@ -9,7 +9,12 @@ import { KPIS_ESTADO_CUENTA_VACIOS } from "../../services/estadoCuentaKpisTypes"
 const h = vi.hoisted(() => ({ rows: vi.fn(), kpis: vi.fn() }));
 vi.mock("../../services/estadoCuenta", () => ({ fetchEstadoCuenta: h.rows, fetchEstadoCuentaKpis: h.kpis }));
 const filters = { clienteIds: ["c1"], moneda: "todas" as const };
-const row = { id: "f1", moneda: "MXN", saldo: 100, dias_vencido: 1, pagos: [], notas_credito: [] } as FacturaEstadoCuenta;
+const row: FacturaEstadoCuenta = {
+  id: "f1", numero: "F-1", cliente_id: "c1", cliente_nombre: "Cliente", expediente: "EXP-1",
+  moneda: "MXN", total: 100, pagado: 0, notas_credito_aplicadas: 0, saldo: 100,
+  fecha_emision: "2026-10-01", fecha_vencimiento: "2026-10-02", dias_vencido: 1,
+  estatus_cobranza: "Vencida", estado_factura: "Emitida", pagos: [], notas_credito: [],
+};
 function wrapper({ children }: PropsWithChildren) {
   return <QueryClientProvider client={new QueryClient({ defaultOptions: { queries: { retry: false, gcTime: 0 } } })}>
     {children}
