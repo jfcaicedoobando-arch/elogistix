@@ -62,6 +62,8 @@ Ver [alcance y discrepancia de Remotion](../ci/dependency-runtime-reproducibilit
 
 | Comando | Contrato |
 | --- | --- |
+| `bun run typecheck` | Comando local existente `tsc -b` |
+| `bun run typecheck:ci` | Checker de CI que valida el grafo de proyectos, comprueba app y Node por contenido y conserva fallback `tsc -b --force` |
 | `bun run test:ci` | Suite normal Vitest sin coverage, retry ni blobs; admite filtros y `--shard=i/N` |
 | `bun run ci:local` | Lint `--max-warnings=0` → typecheck → Knip → tests normales → build; se detiene al primer fallo |
 | `bun run test:coverage` | Medición optativa de la suite con coverage |
@@ -73,6 +75,30 @@ aunque el CI principal no lo exige. No ejecuta por sí solo guards DB, Deno,
 RLS, selección por áreas ni verificación de evidencia del agregador.
 Un merge de coverage tampoco sustituye la ejecución de tests. Ninguno de estos
 comandos activa coverage ni cambia los **14 shards** de PR/push del CI principal.
+
+### Estado incremental de TypeScript
+
+El job `checks` ejecuta `bun run typecheck:ci` cuando hay frontend, incluso
+con un hit de caché. El runner valida el grafo raíz de dos proyectos
+independientes con `incremental` y `noEmit`, comprueba `tsconfig.app.json` y
+`tsconfig.node.json`, y usa `tsc -b --force` si el grafo no está soportado o
+necesita reproducir un fallo con el contrato de build. Se mantienen `strict`,
+`skipLibCheck` y las opciones de comprobación existentes.
+
+Los dos archivos `tsconfig.app.tsbuildinfo` y `tsconfig.node.tsbuildinfo`
+viven en **`.cache/tsc`**, fuera de `node_modules`. Sólo `checks` restaura y
+guarda esa caché en Actions. Su clave combina SO, arquitectura, Node instalado,
+Bun, TypeScript instalado, hash de los `tsconfig*.json` raíz, `package.json`,
+`bun.lock` y el runner del checker, además de run/attempt. El único fallback
+conserva todos esos campos de compatibilidad y permite cambiar las fuentes.
+El guardado usa la clave devuelta por restore y exige éxito de typecheck y de
+los pasos anteriores de `checks`; un hit exacto evita un guardado redundante.
+
+La caché es estado del compilador: no habilita omitir el checker ni prueba que
+los tipos actuales sean correctos. Un checkout con mtimes distintos debe
+volver a comprobar el contenido. Las cachés de dependencias, ESLint, Bun y
+Playwright conservan sus políticas. Ver [medición y límites](../ci/typescript-cache-20261016.md)
+para distinguir frío de TypeScript, frío del SO y tiempos reales de Actions.
 
 ### Actions oficiales y compatibilidad del runner
 
