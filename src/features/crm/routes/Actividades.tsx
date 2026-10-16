@@ -55,6 +55,7 @@ export default function Actividades() {
     defaultFilters: DEFAULTS,
     filterLabels: { tipo: "Tipo", estado: "Estado", responsable: "Responsable" },
     defaultPageSize: 100,
+    pageSizeOptions: [50, 100, 200, 500],
     defaultSort: { key: "fecha_programada", dir: "asc" },
     sortableKeys: ACTIVIDAD_SORTABLE_KEYS,
     fetcher: async ({ search, filters, sortKey, sortDir, page, pageSize }) => {

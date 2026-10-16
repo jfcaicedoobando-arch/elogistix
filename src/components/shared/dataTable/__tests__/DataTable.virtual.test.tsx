@@ -79,7 +79,7 @@ describe("DataTable — ColumnDef nativo (Fase 2)", () => {
       <DataTable columns={nativeColumns} data={embarques} rowKey={(r) => r.id}
         sortMode="server" controlledSort={{ key: null, dir: "asc" }} onSortChange={onSortChange} />,
     );
-    fireEvent.click(screen.getByRole("columnheader", { name: /Cliente/ }));
+    fireEvent.click(screen.getByRole("button", { name: /Cliente/ }));
     expect(onSortChange).toHaveBeenLastCalledWith("cliente", "asc");
   });
 });
@@ -140,13 +140,13 @@ describe("DataTable - orden cliente real con sortFn auto", () => {
     render(<DataTable columns={columns} data={autoSortRows} rowKey={(row) => row.id} />);
     const header = screen.getByRole("columnheader", { name: key });
     expect(renderedIds()).toEqual(["e2", "e3", "e1", "e4"]);
-    fireEvent.click(header);
+    fireEvent.click(within(header).getByRole("button"));
     expect(header).toHaveAttribute("aria-sort", firstDesc ? "descending" : "ascending");
     expect(renderedIds()).toEqual(firstDesc ? desc : asc);
-    fireEvent.click(header);
+    fireEvent.click(within(header).getByRole("button"));
     expect(header).toHaveAttribute("aria-sort", firstDesc ? "ascending" : "descending");
     expect(renderedIds()).toEqual(firstDesc ? asc : desc);
-    fireEvent.click(header);
+    fireEvent.click(within(header).getByRole("button"));
     expect(header).toHaveAttribute("aria-sort", "none");
     expect(renderedIds()).toEqual(["e2", "e3", "e1", "e4"]);
   });

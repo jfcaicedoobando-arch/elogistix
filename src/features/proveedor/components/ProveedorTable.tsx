@@ -24,7 +24,7 @@ interface Props {
 }
 
 export function ProveedorTable({ tipo, search, origen, onSelect, onTotalChange, canCreate, onCreateNew }: Props) {
-  const { page, setPage, pageSize, setPageSize, resetPage } = useListPageState({});
+  const { page, setPage, pageSize, setPageSize, resetPage } = useListPageState({}, 100, [50, 100, 200, 500]);
   const debouncedSearch = useDebounce(search, 300);
 
   useEffect(() => {

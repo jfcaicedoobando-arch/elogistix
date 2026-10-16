@@ -13,9 +13,9 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import type { PropsWithChildren } from "react";
 import { useServerPagedList } from "@/hooks/shared/useServerPagedList";
 
-function buildWrapper() {
+function buildWrapper(searchParams?: Record<string, string>) {
   const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } });
-  const NuqsWrap = withNuqsTestingAdapter({ hasMemory: true });
+  const NuqsWrap = withNuqsTestingAdapter({ hasMemory: true, searchParams });
   return ({ children }: PropsWithChildren) => (
     <QueryClientProvider client={qc}>
       <NuqsWrap>{children}</NuqsWrap>
@@ -27,6 +27,65 @@ interface Filters extends Record<string, string> { estado: string }
 const DEFAULTS: Filters = { estado: "todos" };
 
 describe("useServerPagedList", () => {
+  it.each([
+    { page: "2", ps: "0", expectedPage: 2 },
+    { page: "2", ps: "-20", expectedPage: 2 },
+    { page: "2", ps: "9007199254740991", expectedPage: 2 },
+    { page: "2", ps: "21", expectedPage: 2 },
+    { page: "-1", ps: "20", expectedPage: 0 },
+    { page: "9007199254740991", ps: "20", expectedPage: 0 },
+  ])("normaliza page=$page y ps=$ps antes de consultar", async ({ page, ps, expectedPage }) => {
+    const fetcher = vi.fn().mockResolvedValue({ rows: [], count: 101 });
+    const { result } = renderHook(
+      () => useServerPagedList({
+        queryKey: ["test-invalid-pagination"],
+        fetcher,
+        defaultFilters: DEFAULTS,
+        defaultPageSize: 20,
+      }),
+      { wrapper: buildWrapper({ page, ps }) },
+    );
+
+    await waitFor(() => expect(result.current.count).toBe(101));
+    // Todas las llamadas, incluida la primera, deben llegar con un rango seguro.
+    for (const [args] of fetcher.mock.calls) {
+      expect(args).toMatchObject({
+        page: expectedPage,
+        pageSize: 20,
+        range: { from: expectedPage * 20, to: (expectedPage + 1) * 20 - 1 },
+      });
+    }
+    expect(result.current.totalPages).toBe(6);
+    expect(result.current.pagination.page).toBe(expectedPage);
+    expect(result.current.pagination.pageSize).toBe(20);
+  });
+
+  it.each([
+    { pageSizeOptions: [50, 100, 200], size: 200 },
+    { pageSizeOptions: [50, 100, 200, 500], size: 500 },
+  ])("conserva ps=$size con las opciones propias del listado", async ({ pageSizeOptions, size }) => {
+    const fetcher = vi.fn().mockResolvedValue({ rows: [], count: 801 });
+    const { result } = renderHook(
+      () => useServerPagedList({
+        queryKey: ["test-custom-pagination"],
+        fetcher,
+        defaultFilters: DEFAULTS,
+        defaultPageSize: 100,
+        pageSizeOptions,
+      }),
+      { wrapper: buildWrapper({ page: "2", ps: String(size) }) },
+    );
+
+    await waitFor(() => expect(result.current.count).toBe(801));
+    expect(fetcher.mock.calls[0][0]).toMatchObject({
+      page: 2,
+      pageSize: size,
+      range: { from: 2 * size, to: 3 * size - 1 },
+    });
+    expect(result.current.totalPages).toBe(Math.ceil(801 / size));
+    expect(result.current.pagination.pageSizeOptions).toEqual(pageSizeOptions);
+  });
+
   it("llama al fetcher con el estado inicial y expone rows/count", async () => {
     const fetcher = vi.fn().mockResolvedValue({ rows: [{ id: "1" }, { id: "2" }], count: 42 });
     const { result } = renderHook(

@@ -23,6 +23,8 @@ import { useTableFilters, type UseTableFiltersOpts } from "@/hooks/shared/useTab
 import { useDebouncedValue } from "@/lib/hooks/useDebouncedValue";
 import type { SortDir, DataTablePagination } from "@/components/shared/dataTable/types";
 
+const PAGE_SIZE_OPTIONS = [10, 20, 50, 100];
+
 export interface ServerPagedFetcherArgs<TFilters extends Record<string, string>> {
   search: string;
   filters: TFilters;
@@ -85,6 +87,7 @@ export function useServerPagedList<
   defaultFilters,
   filterLabels,
   defaultPageSize,
+  pageSizeOptions = PAGE_SIZE_OPTIONS,
   defaultSort,
   sortableKeys,
   staleTime = 30_000,
@@ -94,6 +97,7 @@ export function useServerPagedList<
     defaultFilters,
     filterLabels,
     defaultPageSize,
+    pageSizeOptions,
   });
 
   const { sortKey, sortDir, setSort } = useUrlSort(sortableKeys, defaultSort);
@@ -153,10 +157,10 @@ export function useServerPagedList<
       onPageChange: filtersState.setPage,
       pageSize: filtersState.pageSize,
       onPageSizeChange: filtersState.setPageSize,
-      pageSizeOptions: [10, 20, 50, 100],
+      pageSizeOptions: [...pageSizeOptions],
       total: count,
     }),
-    [filtersState.page, filtersState.pageSize, filtersState.setPage, filtersState.setPageSize, totalPages, count],
+    [filtersState.page, filtersState.pageSize, filtersState.setPage, filtersState.setPageSize, totalPages, count, pageSizeOptions],
   );
 
   return {

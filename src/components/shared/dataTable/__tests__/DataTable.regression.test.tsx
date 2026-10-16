@@ -67,7 +67,7 @@ describe("DataTable — render", () => {
 describe("DataTable — server-side sort (patrón Embarques/Cotizaciones)", () => {
   it("Embarques: ciclo completo asc → desc → null vía onSortChange (columna string)", () => {
     const onSortChange = vi.fn();
-    const clienteHeader = () => screen.getByRole("columnheader", { name: /Cliente/ });
+    const clienteHeader = () => screen.getByRole("button", { name: /Cliente/ });
 
     const { rerender } = render(
       <DataTable columns={embarqueColumns} data={embarques} rowKey={(r) => r.id}
@@ -97,7 +97,7 @@ describe("DataTable — server-side sort (patrón Embarques/Cotizaciones)", () =
       <DataTable columns={embarqueColumns} data={embarques} rowKey={(r) => r.id}
         sortMode="server" controlledSort={{ key: null, dir: "asc" }} onSortChange={onSortChange} />,
     );
-    fireEvent.click(screen.getByRole("columnheader", { name: /Total/ }));
+    fireEvent.click(screen.getByRole("button", { name: /Total/ }));
     expect(onSortChange).toHaveBeenLastCalledWith("total", "desc");
   });
 
@@ -125,7 +125,7 @@ describe("DataTable — server-side sort (patrón Embarques/Cotizaciones)", () =
         sortMode="server" controlledSort={{ key: "total", dir: "desc" }} onSortChange={onSortChange} />,
     );
     expect(order()).toEqual(["EMB-001", "EMB-003", "EMB-002"]);
-    fireEvent.click(screen.getByRole("columnheader", { name: /Cliente/ }));
+    fireEvent.click(screen.getByRole("button", { name: /Cliente/ }));
     expect(onSortChange).toHaveBeenLastCalledWith("cliente", "asc");
     expect(order()).toEqual(["EMB-001", "EMB-003", "EMB-002"]);
     rerender(
@@ -133,7 +133,7 @@ describe("DataTable — server-side sort (patrón Embarques/Cotizaciones)", () =
         sortMode="server" controlledSort={{ key: "total", dir: "asc" }} onSortChange={onSortChange} />,
     );
     expect(order()).toEqual(["EMB-002", "EMB-001", "EMB-003"]);
-    fireEvent.click(screen.getByRole("columnheader", { name: /Total/ }));
+    fireEvent.click(screen.getByRole("button", { name: /Total/ }));
     expect(onSortChange).toHaveBeenLastCalledWith(null, "asc");
     expect(order()).toEqual(["EMB-002", "EMB-001", "EMB-003"]);
   });

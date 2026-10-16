@@ -55,8 +55,8 @@ describe("columnBuilders", () => {
       .map(row => within(row).getAllByRole("cell")[0].textContent);
     expect(order()).toEqual(["low", "high", "missing-null", "missing-undefined", "infinite"]);
     // Existing v8 contract: numeric desc-first cycles asc -> none -> desc.
-    fireEvent.click(screen.getByRole("columnheader", { name: /Monto/ }));
-    fireEvent.click(screen.getByRole("columnheader", { name: /Monto/ }));
+    fireEvent.click(screen.getByRole("button", { name: /Monto/ }));
+    fireEvent.click(screen.getByRole("button", { name: /Monto/ }));
     expect(order()).toEqual(["missing-null", "missing-undefined", "infinite", "high", "low"]);
   });
   it("statusColumn renderiza StatusBadge con el estado", () => {

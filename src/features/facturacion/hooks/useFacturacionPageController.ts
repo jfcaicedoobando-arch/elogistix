@@ -28,7 +28,7 @@ export function useFacturacionPageController(opts?: {
   const {
     search, filters, page, pageSize,
     setSearch, setFilter, setPage, setPageSize,
-  } = useListPageState({ estado: "todos", cliente: "todos" }, 100);
+  } = useListPageState({ estado: "todos", cliente: "todos" }, 100, [50, 100, 200, 500]);
   const filterEstado = filters.estado;
   const filterCliente = filters.cliente;
 
