@@ -18,6 +18,7 @@ PIN = 'postgres@sha256:66b6a97eac1771fc78bd201b918b4253859f436c6913aeede97bd5366
 MIGRATION = 'supabase/migrations/20261016060000_crm_empresa_prospecto_kam_propio.sql'
 MIRROR = 'supabase/schema/crm/crm_empresa_pasar_a_prospecto.sql'
 EXPECTED_BODY_MD5 = '3f909f4d6d3e426c1e962909b1e55bcf'
+EVIDENCE_SUBDIR = 'reports/crm-prospecto-kam-concurrency'
 spec = importlib.util.spec_from_file_location('crm_prospecto_kam_race', HERE / 'concurrency.py')
 m = importlib.util.module_from_spec(spec)
 sys.modules[spec.name] = m
@@ -63,7 +64,7 @@ def main():
     require(not any(os.environ.get(key) for key in ('DATABASE_URL', 'SUPABASE_DB_URL', 'PGSERVICE', 'PGSERVICEFILE', 'PGHOSTADDR')),
             'Ambient remote/database routing refused')
     migration = verify_sources()
-    out = ROOT / 'reports/crm-prospecto-kam-concurrency'
+    out = ROOT / EVIDENCE_SUBDIR
     require(not out.exists(), 'Fresh evidence directory required')
     out.mkdir(parents=True)
     record = {'status': 'running', 'container_id': container, 'service_image': PIN,
@@ -200,3 +201,4 @@ def main():
 
 if __name__ == '__main__':
     main()
+

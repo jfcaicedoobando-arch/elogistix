@@ -180,4 +180,7 @@ INSERT INTO _ci_service_role_only (fn) VALUES
    ('public._crm_empresa_estado_por_cliente()'),
   -- Attribution guard; invoked by the crm_empresas trigger, never a client RPC.
   ('public._crm_empresa_proteger_creador()'),
-   ('public._crm_lead_sync_estado_empresa()');
+   ('public._crm_lead_sync_estado_empresa()'),
+   -- Private explicit identity resolver, called only by authorized conversion RPCs.
+   ('public._crm_empresa_para_conversion(uuid, uuid, uuid)');
+
