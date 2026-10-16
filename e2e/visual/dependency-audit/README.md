@@ -8,8 +8,7 @@ imports de backend y la prueba bloquea tráfico externo y WebSockets.
 No agrega dependencias ni workflows.
 
 ```bash
-node node_modules/vite/bin/vite.js build --config e2e/visual/dependency-audit/vite.config.ts
-node node_modules/playwright/cli.js test --config e2e/visual/dependency-audit/playwright.config.ts
+node node_modules/@playwright/test/cli.js test --config e2e/visual/dependency-audit/playwright.config.ts
 # Para revisar la vista manualmente en localhost:8099:
 node node_modules/vite/bin/vite.js preview --config e2e/visual/dependency-audit/vite.config.ts
 ```
@@ -23,6 +22,13 @@ Los tests de Query usan TanStack real, reloj controlado y storage sintético.
 
 Resultados del navegador y screenshots: `reports/dependency-audit/browser.json`
 y `test-results/dependency-audit/` (salidas locales ignoradas por Git).
+
+El job `dependency-audit` del workflow existente `isolated-ui-audit.yml`
+ejecuta sólo `specs/demo.spec.ts` en cada PR afectado. Playwright exige un build
+fresco antes del preview y no reutiliza servidores. El guard exige exactamente
+cuatro casos aprobados, cero fallos, skips, flaky y errores globales; el reporte
+faltante o inválido también falla. Los logs, resultados y screenshots sintéticos
+se adjuntan como `isolated-ui-dependency-audit`, con retención de tres días.
 
 Pruebas focales sin cargar `.env` (el config reutiliza proyectos/setup/aliases
 del repositorio; en Windows, si Vite falla con ENOENT temporal, fijar TEMP/TMP
