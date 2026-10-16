@@ -13,7 +13,7 @@ import { pasarAProspecto } from "@/features/crm/services/estadoEmpresaCrm";
 import { eliminarEmpresa } from "@/features/crm/services/eliminarEmpresaCrm";
 import {
   contactosDeEmpresa, contactosDeOportunidad, desligar, empresasDeContacto, empresasDeOportunidad,
-  ligar, oportunidadesDe, type TipoVinculo,
+  ligar, oportunidadesDe, type TipoVinculo, type VinculoCrmRow,
 } from "@/features/crm/services/vinculosCrm";
 
 const BASE = crm.objetos.all;
@@ -75,7 +75,7 @@ export type Relacion =
   | "oportunidades-de-empresa" | "oportunidades-de-contacto"
   | "empresas-de-oportunidad" | "contactos-de-oportunidad";
 
-const LECTORES: Record<Relacion, (id: string) => Promise<{ id: string; nombre: string }[]>> = {
+const LECTORES: Record<Relacion, (id: string) => Promise<VinculoCrmRow[]>> = {
   "contactos-de-empresa": contactosDeEmpresa,
   "empresas-de-contacto": empresasDeContacto,
   "oportunidades-de-empresa": (id) => oportunidadesDe("empresa", id),

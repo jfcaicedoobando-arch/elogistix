@@ -40,6 +40,16 @@ function borrar(tipo: TipoVinculo, aId: string, bId: string) {
 
 type Embebido = { id: string; nombre: string } | null;
 
+export interface VinculoCrmRow extends RefRow { empresaEliminada?: boolean }
+type EmpresaEmbebida = RefRow & { deleted_at: string | null };
+
+function aplanarEmpresas(filas: { crm_empresas: EmpresaEmbebida | null }[] | null): VinculoCrmRow[] {
+  // Un embed nulo puede estar oculto por RLS: no inferir su nombre ni su estado.
+  return (filas ?? []).map((f) => f.crm_empresas).filter((e): e is EmpresaEmbebida => e != null)
+    .map((e) => ({ id: e.id, nombre: e.nombre, empresaEliminada: e.deleted_at !== null }))
+    .sort((x, y) => x.nombre.localeCompare(y.nombre, "es-MX"));
+}
+
 function aplanar(filas: Array<Record<string, Embebido>> | null, clave: string): RefRow[] {
   return (filas ?? []).map((f) => f[clave]).filter((x): x is RefRow => x != null)
     .sort((x, y) => x.nombre.localeCompare(y.nombre, "es-MX"));
@@ -52,11 +62,11 @@ export async function contactosDeEmpresa(empresaId: string): Promise<RefRow[]> {
   return aplanar(data as never, "crm_contactos");
 }
 
-export async function empresasDeContacto(contactoId: string): Promise<RefRow[]> {
+export async function empresasDeContacto(contactoId: string): Promise<VinculoCrmRow[]> {
   const { data, error } = await supabase.from("crm_empresa_contacto")
-    .select("crm_empresas(id, nombre)").eq("contacto_id", contactoId).limit(200);
+    .select("crm_empresas(id, nombre, deleted_at)").eq("contacto_id", contactoId).limit(200);
   if (error) throw error;
-  return aplanar(data as never, "crm_empresas");
+  return aplanarEmpresas(data);
 }
 
 export async function oportunidadesDe(tipo: "empresa" | "contacto", id: string): Promise<RefRow[]> {
@@ -67,11 +77,11 @@ export async function oportunidadesDe(tipo: "empresa" | "contacto", id: string):
   return aplanar(data as never, "crm_oportunidades");
 }
 
-export async function empresasDeOportunidad(oportunidadId: string): Promise<RefRow[]> {
+export async function empresasDeOportunidad(oportunidadId: string): Promise<VinculoCrmRow[]> {
   const { data, error } = await supabase.from("crm_oportunidad_empresa")
-    .select("crm_empresas(id, nombre)").eq("oportunidad_id", oportunidadId).limit(200);
+    .select("crm_empresas(id, nombre, deleted_at)").eq("oportunidad_id", oportunidadId).limit(200);
   if (error) throw error;
-  return aplanar(data as never, "crm_empresas");
+  return aplanarEmpresas(data);
 }
 
 export async function contactosDeOportunidad(oportunidadId: string): Promise<RefRow[]> {
