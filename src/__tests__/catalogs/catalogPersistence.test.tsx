@@ -5,12 +5,12 @@ vi.mock('@/lib/query/queryErrorReporting', () => ({
 import { queryClient, shouldDehydrateCatalogQuery } from '@/lib/query/queryClient';
 afterEach(() => queryClient.clear());
 describe('Local audit: production persistence allowlist', () => {
-  it.each(['planes','puertos','navieras','tipos_contenedor','tipos_cambio_dof'])(
+  it.each(['planes','puertos','navieras','tipos_contenedor','tipos_cambio_dof','tasa_iva'])(
     '%s is excluded from the persistent query cache', root => {
       expect(shouldDehydrateCatalogQuery([root],'success')).toBe(false);
     },
   );
-  it.each(['tasa_iva','exchange-rates'])(
+  it.each(['exchange-rates'])(
     '%s is only persisted after success', root => {
       expect(shouldDehydrateCatalogQuery([root],'success')).toBe(true);
       expect(shouldDehydrateCatalogQuery([root],'error')).toBe(false);
