@@ -10,7 +10,7 @@ import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
 import { ERROR_CODES } from "@/lib/domain/errorCatalog";
 import { isClienteStep1Valid, mergeClienteCsf } from "./nuevoClienteFormState";
 import { DOC_CSF, DOCS_OBLIGATORIOS, EMPTY_CLIENTE, type ClienteForm, type ModoAlta } from "./useNuevoClienteController.constants";
-export { DOC_CSF, DOCS_OBLIGATORIOS, EMPTY_CLIENTE } from "./useNuevoClienteController.constants";
+export { DOC_CSF } from "./useNuevoClienteController.constants";
 export type { ClienteForm, ModoAlta } from "./useNuevoClienteController.constants";
 
 /**

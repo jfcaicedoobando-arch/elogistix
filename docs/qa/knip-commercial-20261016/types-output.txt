@@ -1,0 +1,5 @@
+Node v24.22.0
+Command: node node_modules/typescript/bin/tsc -b
+Started: 2026-10-16T23:02:55.863Z
+
+Result: {"command":["node_modules/typescript/bin/tsc","-b"],"exit":0,"durationSeconds":90.684}

@@ -12,5 +12,3 @@ export const FRECUENCIAS_COTIZACION = [
   "Mensual",
   "Bajo demanda",
 ] as const;
-
-export type FrecuenciaCotizacion = (typeof FRECUENCIAS_COTIZACION)[number];

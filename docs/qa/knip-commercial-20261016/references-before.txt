@@ -1,0 +1,173 @@
+.lovable/drafts/drft_01m46fnapve9jszszzy1qvgwxf/plan-archive/fusionar-leads-y-prospectos-en-empresas-y-contactos-2026-10-05/01-overview.md:1:# Fusionar Leads y Prospectos en Empresas y Contactos
+.lovable/drafts/drft_01m46fnapve9jszszzy1qvgwxf/plan-archive/fusionar-leads-y-prospectos-en-empresas-y-contactos-2026-10-05/03-detalles.md:4:## 5. Qué pasa con las pantallas de Leads y Prospectos
+.lovable/drafts/drft_01m46fnapve9jszszzy1qvgwxf/plan-archive/fusionar-leads-y-prospectos-en-empresas-y-contactos-2026-10-05/03-detalles.md:5:- El menú deja de mostrar "Leads" y "Prospectos".
+CHANGELOG.md:1787:- **fix(crm)**: la ficha de un prospecto dice "Volver a Prospectos" (y regresa ahí desde un enlace directo) en lugar de nombrar Leads.
+CHANGELOG.md:2577:- CRM zona horaria (Mi día / dashboard): las lecturas y etiquetas de "hoy" ya no usan el reloj del navegador. `fetchCrmDashboard` (`src/features/crm/services/dashboard.ts`) acota "Mis actividades de hoy" y "Leads sin contactar" con `limitesDiaMx` y `mxAddDaysIso` en lugar de `setHours`/`setDate` locales; `esVencida`/`esHoy` (`proximasActividades.ts`) y `formatProx` (`proximaActividadLabel.ts`) comparan con `diffDiasMx` (calendario America/Mexico_City); `ActividadesHoyCard` formatea la hora con `timeZone: TZ_MX`. Nuevos helpers puros en `src/lib/date/mx.ts`: `diaMx`, `limitesDiaMx`, `diffDiasMx`. Sin cambios en reglas de negocio ni en nombres de tarjetas; el encabezado de `MiDia` ya usaba `formatFechaLarga` con TZ_MX. Regresiones cerca de medianoche con el navegador en UTC y en America/Mexico_City.
+CHANGELOG.md:2623:- CRM Leads: al crear un lead y fallar ya no aparecen dos avisos de error; se eliminó el `notifyError` duplicado en los `catch` de `QuickCreateLeadDialog` y `NuevoLeadDialog` porque `useCrearLead` ya notifica en `onError`. Se conservan el guard anti doble submit, el cierre/reset y el aviso específico cuando el lead sí se crea pero falla la tarea automática (mutación silenciosa). Regresiones: un solo feedback visible al fallar la creación en ambos diálogos, y aviso específico de actividad automática intacto.
+CHANGELOG.md:2908:### Leads CRM: exportación completa, selección segura e importación confiable
+CHANGELOG.md:3089:- **Accesibilidad y detalles**: el botón "+" de actividad se anuncia a lectores de pantalla, la tabla de Leads deja ver el Score en pantallas de 1280 px, el atajo de búsqueda muestra "Ctrl+K" en Windows y los contadores dicen "1 actividad" / "N actividades".
+CHANGELOG.md:3821:- PDF: los comentarios capturados en las filas de costos se propagan al concepto de venta (`buildConceptosFromCostos` y la sincronización manual), por lo que aparecen como subrenglón en el PDF de la cotización.
+CHANGELOG.md:4895:- **O7.6 · Exportar CSV**: botón de exportación en Leads y Oportunidades (respeta filtros y permisos).
+CHANGELOG.md:5575:- 15 `<button>` nativos en 12 archivos (Leads demo, anticipos de proveedor, conciliación de compras, buscador de prospectos, cargas de CFDI/XML/PDF en CxP, notas de crédito, contactos de cliente, tarjeta de operador) ahora usan el componente `Button`: foco por teclado, tap targets y estado deshabilitado consistentes.
+docs/changelog-archive-v13.md:5105:- **feat(cotización/paso 2 unificado con catálogo SAT)**: el paso 2 del wizard ya no usa listas hardcodeadas (`CONCEPTOS_COSTO_USD/MXN`) ni un select de unidades libre. Ahora reutiliza `ProductoServicioSelect` (mismo componente del paso 3, con búsqueda contra `catalogo_claves_sat`) y `UnidadMedidaSelect`. Al elegir un producto, la fila hereda `clave_sat`, `tipo_iva → aplica_iva`, `tasa_iva_aplicada` y `clave_unidad_sat` (si la fila aún no tenía unidad). El tipo `FilaCostoLocal` gana los campos opcionales `clave_sat` y `tasa_iva_aplicada`; `buildConceptosFromCostos` respeta la tasa del catálogo cuando existe (0.16 / 0 / exento) y cae al comportamiento legacy (`CONCEPTOS_CON_IVA_USD` + IVA general MXN) cuando la fila no trae metadata. Beneficio: al pasar a paso 3, los conceptos ya llegan con la clave SAT y el tipo de IVA correctos — se elimina la doble captura y la desincronización paso 2 ↔ paso 3.
+docs/changelog-archive-v13.md:6211:  - Cartera, CxP Por Pagar, CxP Por Capturar, CxP Aging, Embarques, Cotizaciones, Clientes, Facturas Emitidas, Proformas, Leads, Oportunidades, EmbarquesActivosTable, ProfitTable, HistorialProformas, HistorialFacturas, AdminOrganizaciones, EmbarquesRelacionadosCard, ClienteDetalle (embarques + cotizaciones del cliente).
+docs/changelog-archive-v13.md:6511:- **arquitectura(listados) — Ola 2 CRM (parcial): Leads** — `/crm/leads` migrado a `useServerPagedList` + `<UnifiedFiltersBar />`. Todo el estado (búsqueda, estado, fuente, orden y paginación) vive en la URL vía nuqs (`?q=&estado=&fuente=&sort=&dir=&page=&ps=`) y es shareable/persistente. El fetcher server-side (`listLeads`) ahora acepta `sortKey`/`sortDir` (whitelist: `created_at, empresa, estado, fuente, score`) y aplica orden en Postgres — nunca en cliente.
+docs/changelog-archive-v13.md:6514:  - `pagedListsAllowlist.test.ts` extendido — allowlist Ola 2 con Leads (10 casos totales pasando).
+docs/changelog-archive-v13.md:6597:  - **Fase 1 — homologación visual con `columnBuilders`:** CxP, Comisiones, CRM Oportunidades, CRM Leads, Admin Organizaciones y Cliente-detalle ahora usan `statusColumn`/`moneyColumn`/`dateColumn` y `StatusBadge` en lugar de badges/formatters ad-hoc. Se añade `sticky: true` a la primera columna de cada listado y responsive `hidden xl:table-cell` donde faltaba.
+docs/changelog-archive-v13.md:6947:  - CRM: CrmDashboard, Leads, Oportunidades, Actividades, Analitica, MiDia, Configuracion, LeadDetalle, OportunidadDetalle.
+docs/changelog-archive-v13.md:8078:- **feat(crm/ux)**: las pestañas *Resumen* y *Mi día* del CRM ahora tienen propósitos claros y dejan de duplicarse. **Mi día** (`/crm/mi-dia`) queda 100% accionable — sólo Next Best Actions, Actividades de hoy y la grilla de la semana (Cerrando semana, Cotizaciones sin respuesta, Leads sin contactar); se quitó la tira de KPIs que ya vive en Resumen. **Resumen ejecutivo** (`/crm`) se convierte en un mini-dashboard de lectura rápida: el `KpiStrip` original (Leads, Oportunidades abiertas, Actividades pendientes, Pipeline ponderado) + 3 tarjetas grandes de totales del forecast (Pipeline / Ponderado / Ganado en MXN compacto) + tarjeta de **Embudo** con barras horizontales por etapa (ancho proporcional al máximo, sin nueva dependencia, usando `bg-primary/70`) + tarjeta **Forecast por mes** (tabla compacta máx. 6 meses: mes / ponderado / ganado / #) + `LeaderboardVendedores`. Se quitaron de Resumen las 4 tarjetas de tareas individuales (NBA, Actividades hoy, Cerrando semana, Cot. sin respuesta, Leads sin contactar) — ahora viven sólo en Mi día. Sin cambios de rutas, sin hooks nuevos (reutiliza `useCrmInicioVM`, `useForecast`, `useReportesCRM`, `useLeaderboardVendedores`). Analogía: antes ambas pestañas eran el mismo plato servido dos veces; ahora Mi día es el GPS con la siguiente indicación ("llama a este cliente") y Resumen es el tablero del coche con velocímetro y combustible.
+docs/changelog-archive-v13.md:9252:- **feat(crm,costeo/page-header)**: Las 12 rutas que mostraban `<h1>` + `<p>` inline ahora usan el componente `PageHeader` estándar para coherencia visual con el resto de la app. CRM (6): `Leads`, `Actividades`, `Oportunidades`, `CrmDashboard`, `MiDia`, `Analitica`. Costeo (6): `CosteoTarifas`, `CosteoBuscar`, `CosteoRutas`, `CosteoAgentes`, `CosteoNavieras`, `CosteoDemorasVenta`. Acciones existentes se conservan vía la prop `actions`. Sin cambios de lógica.
+docs/changelog-archive-v13.md:9497:- **ux(mobile 20:9 — Fase 5: padding legacy)**: Normalizado padding de página `p-6` → `p-4 sm:p-6` y `space-y-6` → `space-y-4 sm:space-y-6` en 7 rutas CRM (Leads, Oportunidades, Configuración, MiDía, Actividades, Analítica, LeadDetalle). Gana ~16 px laterales en `<sm` sin afectar desktop. `PageHeader` ya apila título/acciones en mobile (verificado, sin cambios).
+docs/changelog-archive-v13.md:9501:- **ux(mobile 20:9 — Fase 4: filtros móviles)**: Nuevo wrapper `MobileFiltersSheet` (Sheet derecho con footer "Limpiar/Aplicar" y respeto a `safe-area-inset-bottom`). Aplicado a CRM Leads, CRM Oportunidades, Reportes y Auditoría Hallazgos: en `<md` aparece un botón "Filtros (N)" junto al search con badge de filtros activos; en `≥md` se mantiene la fila inline. Embarques, Cotizaciones y CxP ya usaban el mismo patrón. Elimina hasta 6 selects apilados verticalmente en pantallas 20:9.
+docs/changelog-archive-v13.md:9507:- **ux(mobile 20:9 — Fase 2: tablas responsive)**: Nuevo wrapper `ResponsiveDataTable` que renderiza `DataTable` en `≥sm` y una lista de tarjetas táctiles (≥56 px) en `<sm`. Migradas Embarques, Cotizaciones, Proveedores, CRM Leads y Reportes/Desglose por Cliente — desaparece el scroll horizontal en móvil sin tocar lógica. Cada card muestra título primario (folio/empresa/cliente), línea secundaria (cliente/ruta/contacto) y badge de estado. Padding inferior `pb-24 sm:pb-0` añadido en páginas con FAB para que la última fila no quede tapada por el botón flotante.
+docs/changelog-archive.md:1363:- **feat(tablas)**: el selector de filas por página simplificado a **100 / pág** (default) y **Todos** se aplica ahora a todas las tablas principales: Clientes, Proveedores, Cotizaciones, Leads, Actividades, Facturación (Facturas y Proformas). `useListPageState.DEFAULT_PAGE_SIZE` y `useTabProformasState` ajustados a 100. Se conservan sin cambios las tablas de Diagnóstico/Logs (opciones grandes intencionales), Oportunidades (kanban) y Bitácora/Auditoría.
+docs/changelog-archive.md:1584:- **CRM — menos bloatware, menos fricción**: (1) `CrmLayout` colapsado a una sola franja de 48px: se elimina el `<h1>CRM</h1>` y la descripción (la sidebar ya lo dice); tabs + QuickAddMenu + engranaje en la misma línea. (2) `PageHeader` removido de `Inicio`, `Leads`, `Oportunidades`, `Actividades` y `Analítica`; nuevo componente compacto `CrmSubheader` (h-10) sólo muestra contador/contexto a la derecha. (3) Un único punto de creación: se quitan los botones "Nuevo lead" / "Nueva oportunidad" y los `FloatingActionButton` del CRM — todo vive en `QuickAddMenu` (header), que ahora también incluye "Importar leads CSV". (4) Atajos de teclado nuevos vía `useCrmHotkeys`: `N` abre el menú, `L/O/A` crean lead/oportunidad/actividad directamente (ignora cuando el foco está en input/textarea). (5) `VencidasAlert` eliminado (archivo + import + hook `useActividadesVencidasList` en VM): la regla "Actividad vencida" sube a score 110+ en `nextBestActions.ts` y pasa a ser la prioridad #1 dentro de `NextBestActionsCard`, con subtítulo dinámico "Vencida hace N días". Test actualizado. (6) Dashboard de Inicio re-priorizado de ~11 bloques a 6: NBA arriba, 2×2 grid con `ActividadesHoy · CerrandoSemana · CotizacionesSinRespuesta · LeadsSinContactar`, KPIs comprimidos a un `stat strip` horizontal h-14 (antes 4 cards grandes). `TopDealsCard` removido del Inicio (vive ya en `/crm/oportunidades`). (7) Oportunidades: filtros avanzados ahora colapsables (`Collapsible` + chip "Filtros (N)" con badge del número de filtros activos); por defecto sólo se ve el `SearchInput`, ganando ~120px verticales. (8) Analítica: fusionada de 4 sub-tabs a vista única scrollable (`Forecast` arriba, `Embudo + Conversión + Pérdidas` en 3 columnas, `Vendedores` al final si `canEdit`); el query param `?tab=…` se ignora silenciosamente para no romper enlaces. (9) Configuración: 3 sub-tabs reemplazados por 3 `Accordion` items (Pipeline / Motivos / Plantillas), Pipeline abierto por default. (10) Leads: edición inline del estado en la tabla — nuevo `EstadoCell` con `Select` directo en la celda (usa `useActualizarLead` existente + `e.stopPropagation()` para no disparar el row click); estados "Convertido" siguen siendo badge inmutable.
+scripts/ci/rls-prepare-db.sh:171:  # Leads installer controls are opt-in only in the disposable Actions service.
+src/components/layout/Breadcrumbs.tsx:52:  leads: "Leads",
+src/features/admin/components/adminSidebarGroups.ts:34:      { title: "Leads demo", url: "/admin/demo-leads", icon: Users2 },
+src/features/admin/routes/AdminDemoLeads.tsx:56:  useDocumentTitle('Leads de la demo');
+src/features/admin/routes/AdminDemoLeads.tsx:83:        title="Leads de la demo"
+src/features/admin/routes/papelera/tablas.ts:37:  { value: "crm_leads", label: "Leads", grupo: "CRM" },
+src/features/cliente/hooks/__tests__/useNuevoClienteController.test.tsx:51:    expect(result.current.documentos).toHaveLength(11); // DOCS_OBLIGATORIOS length
+src/features/cliente/hooks/useNuevoClienteController.constants.ts:2:export const EMPTY_CLIENTE = {
+src/features/cliente/hooks/useNuevoClienteController.constants.ts:8:export const DOCS_OBLIGATORIOS = [
+src/features/cliente/hooks/useNuevoClienteController.constants.ts:15:export type ClienteForm = typeof EMPTY_CLIENTE;
+src/features/cliente/hooks/useNuevoClienteController.ts:12:import { DOC_CSF, DOCS_OBLIGATORIOS, EMPTY_CLIENTE, type ClienteForm, type ModoAlta } from "./useNuevoClienteController.constants";
+src/features/cliente/hooks/useNuevoClienteController.ts:13:export { DOC_CSF, DOCS_OBLIGATORIOS, EMPTY_CLIENTE } from "./useNuevoClienteController.constants";
+src/features/cliente/hooks/useNuevoClienteController.ts:24:  const [form, setForm] = useState<ClienteForm>(EMPTY_CLIENTE);
+src/features/cliente/hooks/useNuevoClienteController.ts:50:  const documentos: DocumentoChecklist[] = step === 2 ? DOCS_OBLIGATORIOS.map(nombre => ({
+src/features/cliente/hooks/useNuevoClienteController.ts:75:    setForm(EMPTY_CLIENTE);
+src/features/cliente/types/clienteForm.ts:25:/** Defaults fiscales del alta (idénticos a `EMPTY_CLIENTE` del módulo Clientes). */
+src/features/costeo/services/topTarifas.ts:87:export async function fetchTarifaVigentePorId(id: string): Promise<TopTarifaRow | null> {
+src/features/cotizacion/components/AvisoSincronizarConceptosVenta.tsx:12:import { buildConceptosFromCostos } from "@/features/cotizacion/domain/cotizacion";
+src/features/cotizacion/components/AvisoSincronizarConceptosVenta.tsx:72:    const { usd, mxn } = buildConceptosFromCostos(filas, tasaIva);
+src/features/cotizacion/components/wizard/RecuperarConceptosDesdeCostos.tsx:3:import { buildConceptosFromCostos } from "@/features/cotizacion/domain/cotizacion.conceptos";
+src/features/cotizacion/components/wizard/RecuperarConceptosDesdeCostos.tsx:26:    const { usd, mxn } = buildConceptosFromCostos(conConcepto, tasaIva);
+src/features/cotizacion/components/wizard/VincularVentasHeredadas.tsx:7:import { buildConceptosFromCostos } from "@/features/cotizacion/domain/cotizacion.conceptos";
+src/features/cotizacion/components/wizard/VincularVentasHeredadas.tsx:39:      const generada = buildConceptosFromCostos([costo], tasaIva);
+src/features/cotizacion/domain/__tests__/cotizacion.extra.test.ts:3:  buildConceptosFromCostos,
+src/features/cotizacion/domain/__tests__/cotizacion.extra.test.ts:24:describe("cotizacion.extra — buildConceptosFromCostos extra cases", () => {
+src/features/cotizacion/domain/__tests__/cotizacion.extra.test.ts:26:    const out = buildConceptosFromCostos([mkFila({ concepto: "Handling" })], TASA);
+src/features/cotizacion/domain/__tests__/cotizacion.extra.test.ts:31:    const out = buildConceptosFromCostos(
+src/features/cotizacion/domain/__tests__/cotizacion.extra.test.ts:39:    const out = buildConceptosFromCostos([mkFila({ concepto: "Flete", cantidad: 2, precio_venta: 150 })], TASA);
+src/features/cotizacion/domain/__tests__/cotizacion.extra.test.ts:45:    const out = buildConceptosFromCostos(
+src/features/cotizacion/domain/__tests__/cotizacion.extra.test.ts:53:    const out = buildConceptosFromCostos(
+src/features/cotizacion/domain/__tests__/cotizacion.extra.test.ts:61:    const out = buildConceptosFromCostos([mkFila({ precio_venta: 350 })], TASA);
+src/features/cotizacion/domain/__tests__/cotizacion.noObjeto.test.ts:2:import { buildConceptosFromCostos } from "@/features/cotizacion/domain/cotizacion.conceptos";
+src/features/cotizacion/domain/__tests__/cotizacion.noObjeto.test.ts:21:    const { mxn } = buildConceptosFromCostos(
+src/features/cotizacion/domain/__tests__/cotizacion.noObjeto.test.ts:32:    const { usd } = buildConceptosFromCostos(
+src/features/cotizacion/domain/__tests__/cotizacion.noObjeto.test.ts:42:    const { mxn } = buildConceptosFromCostos(
+src/features/cotizacion/domain/__tests__/cotizacion.test.ts:3:  buildConceptosFromCostos,
+src/features/cotizacion/domain/__tests__/cotizacion.test.ts:24:describe("buildConceptosFromCostos", () => {
+src/features/cotizacion/domain/__tests__/cotizacion.test.ts:26:    const out = buildConceptosFromCostos([fila({ concepto: "  " })], TASA);
+src/features/cotizacion/domain/__tests__/cotizacion.test.ts:32:    const out = buildConceptosFromCostos(
+src/features/cotizacion/domain/__tests__/cotizacion.test.ts:43:    const out = buildConceptosFromCostos(
+src/features/cotizacion/domain/__tests__/cotizacion.test.ts:52:    const out = buildConceptosFromCostos(
+src/features/cotizacion/domain/__tests__/cotizacion.test.ts:61:    const out = buildConceptosFromCostos(
+src/features/cotizacion/domain/__tests__/cotizacion.test.ts:70:    const out = buildConceptosFromCostos(
+src/features/cotizacion/domain/__tests__/cotizacionVentaSync.test.ts:9:import { buildConceptosFromCostos } from "../cotizacion.conceptos";
+src/features/cotizacion/domain/__tests__/cotizacionVentaSync.test.ts:61:    const { usd, mxn } = buildConceptosFromCostos(
+src/features/cotizacion/domain/__tests__/cotizacionVentaSync.test.ts:73:    const { mxn } = buildConceptosFromCostos([fila({ concepto: "" })], 0.16);
+src/features/cotizacion/domain/cotizacion.conceptos.ts:45:export function buildConceptosFromCostos(
+src/features/cotizacion/domain/cotizacion.ts:7:export { buildConceptosFromCostos } from "./cotizacion.conceptos";
+src/features/cotizacion/domain/cotizacionVentaSync.ts:7: * silencio en `buildConceptosFromCostos`, así que la cotización quedaba con
+src/features/cotizacion/domain/frecuencias.ts:16:export type FrecuenciaCotizacion = (typeof FRECUENCIAS_COTIZACION)[number];
+src/features/cotizacion/domain/sincronizarVentasConCostos.ts:2:import { buildConceptosFromCostos } from "./cotizacion.conceptos";
+src/features/cotizacion/domain/sincronizarVentasConCostos.ts:51:  const generated = buildConceptosFromCostos(nuevos, tasaIva);
+src/features/cotizacion/hooks/__tests__/useCotizacionDetalleHandlers.test.tsx:63:  propagarConversionProspectoCRM: (...a: unknown[]) => propagarConversionMock(...a),
+src/features/cotizacion/hooks/usePendientesReaprobacion.ts:16:export function useCotizacionesPendientesReaprobacion() {
+src/features/cotizacion/hooks/wizard/__tests__/paso2Helpers.limpieza.test.ts:8:import { buildConceptosFromCostos } from "@/features/cotizacion/domain/cotizacion.conceptos";
+src/features/cotizacion/hooks/wizard/__tests__/paso2Helpers.limpieza.test.ts:25:      conceptosUSD: buildConceptosFromCostos([fila("USD", 200)], 0.16).usd,
+src/features/cotizacion/hooks/wizard/__tests__/pricingAutosync.test.tsx:9:vi.mock('@/features/costeo/services/topTarifas',()=>({fetchRecargosDeTarifa:m.recargos,fetchTarifaVigentePorId:vi.fn()}));
+src/features/cotizacion/hooks/wizard/__tests__/useCotizacionWizardSteps.test.tsx:23:  buildConceptosFromCostos: (await import("@/features/cotizacion/domain/cotizacion.conceptos")).buildConceptosFromCostos,
+src/features/cotizacion/hooks/wizard/useCotizacionUpdateGuard.ts:47:export interface CotizacionUpdateGuard<TRow extends { id: string }> {
+src/features/cotizacion/hooks/wizard/wizardStepsTypes.ts:21: * output de `buildConceptosFromCostos`.
+src/features/cotizacion/services/__tests__/contextoPricingCotizacion.test.ts:29:vi.mock("@/features/costeo/services/topTarifas", () => ({ fetchTarifaVigentePorId: m.tarifa, fetchTarifasVigentesPorIds: m.tarifas }));
+src/features/cotizacion/services/costos.ts:36:export interface CotizacionCostosSnapshot {
+src/features/cotizacion/services/costos.ts:43:): Promise<CotizacionCostosSnapshot> {
+src/features/cotizacion/services/costos.ts:72:export interface UpsertCostosResult {
+src/features/cotizacion/services/costos.ts:74:  snapshot: CotizacionCostosSnapshot;
+src/features/cotizacion/services/costos.ts:87:): Promise<UpsertCostosResult> {
+src/features/cotizacion/services/index.ts:18:  fetchCotizacionSello,
+src/features/cotizacion/services/index.ts:37:export type { CotizacionCostosSnapshot, UpsertCostosResult } from "./costos";
+src/features/cotizacion/services/index.ts:57:export { buildConceptosFromCostos } from "@/features/cotizacion/domain/cotizacion";
+src/features/cotizacion/services/queries.ts:174:export async function fetchCotizacionSello(cotizacionId: string): Promise<string | null> {
+src/features/crm/AGENTS.md:8:- CRM estado de empresa: Lead/Prospecto/Cliente vive en `crm_empresas.estado_crm`; "Pasar a prospecto" sólo por el RPC `crm_empresa_pasar_a_prospecto` (crea/reutiliza la oportunidad en la etapa Prospecto con lead de origen) y los triggers sincronizan desde el lead y el alta a Clientes; las listas Leads/Prospectos redirigen a Empresas filtradas. Why: un solo objeto para la cuenta y el embudo sigue exigiendo origen calificado.
+src/features/crm/components/CrmCommandPalette.tsx:51:          <CommandGroup heading="Leads">
+src/features/crm/components/crmDashboard/DealsCards.tsx:91:          <AlertTriangle className="size-4 text-destructive" /> Leads sin contactar (&gt;{" "}
+src/features/crm/components/leadDetalle/LeadDetalleHeader.tsx:18:  /** VIS-20260908-06: letrero del regreso según el contexto real (Leads/Prospectos). */
+src/features/crm/domain/higieneMetas.ts:4:import type { HigieneOportunidad, EstadoHigiene } from "@/features/crm/types/higiene";
+src/features/crm/domain/higieneMetas.ts:8:export const ETIQUETA_HIGIENE: Record<EstadoHigiene, string> = {
+src/features/crm/domain/higieneMetas.ts:14:export const VARIANTE_HIGIENE: Record<EstadoHigiene, "default" | "secondary" | "destructive"> = {
+src/features/crm/domain/higieneMetas.ts:63:  const peso: Record<EstadoHigiene, number> = { vencida: 0, por_vencer: 1, en_tiempo: 2 };
+src/features/crm/domain/leads/icp.ts:30:export const ICP_ESTATUS = ICP_ESTATUS_OPCIONES.map((o) => o.value);
+src/features/crm/domain/umbralesContacto.ts:15:/** Tarjeta "Leads sin contactar" del resumen semanal: más de 7 días. */
+src/features/crm/hooks/useLeads.ts:2: * Hooks de Leads (CRM Fase 2).
+src/features/crm/routes/CrmDashboard.tsx:134:          <StatStripItem icon={Users} label="Leads en cartera" value={v(isLoading, vm.kpis.leads)} />
+src/features/crm/routes/LeadDetalle.tsx:33:/** VIS-20260908-06: contexto de listado (Leads vs Prospectos) de la ficha. */
+src/features/crm/routes/LeadDetalle.tsx:39:    plural: p ? "Prospectos" : "Leads",
+src/features/crm/routes/Leads.tsx:46:export default function Leads() {
+src/features/crm/routes/Leads.tsx:47:  useDocumentTitle('Leads');
+src/features/crm/routes/Leads.tsx:100:        title="Leads"
+src/features/crm/routes/LeadsFiltrosPrimarios.tsx:3: * Extraído de `Leads.tsx` (Power of 10 #1: archivos ≤200 líneas).
+src/features/crm/routes/Prospectos.tsx:70:        description="Leads calificados que cumplen el perfil comercial y pueden recibir cotizaciones"
+src/features/crm/routes/oportunidadesUrlState.ts:3: * Leads/Actividades): búsqueda, filtros (y por tanto la vista guardada activa)
+src/features/crm/routes/useLeadsExport.ts:3: * (no sólo la página visible). Extraído de `Leads.tsx`.
+src/features/crm/routes/useLeadsSelection.ts:4: * Extraído de `Leads.tsx` (Power of 10 — límite de líneas por archivo).
+src/features/crm/services/__tests__/bitacoraNoBloqueante.test.ts:30:import { propagarConversionProspectoCRM } from "../vincularCotizacion/propagarConversion";
+src/features/crm/services/__tests__/bitacoraNoBloqueante.test.ts:102:    const r = await propagarConversionProspectoCRM({
+src/features/crm/services/__tests__/dashboardLeadsCartera.test.ts:2: * Auditoría CRM v13.823.75 · hallazgo 5 — el KPI "Leads" del Resumen ejecutivo
+src/features/crm/services/__tests__/dashboardScopePersonal.test.ts:42:  it("filtra 'Cerrando esta semana' y 'Leads sin contactar' por vendedor", async () => {
+src/features/crm/services/dashboard.ts:151:    // Tanda 2 · hallazgo 1: "Leads sin contactar" es tarjeta personal.
+src/features/crm/services/higiene.ts:9:export type { EstadoHigiene, HigieneResumen, HigieneOportunidad } from "../types/higiene";
+src/features/crm/services/leads/bulk.ts:2: * Leads — operaciones en lote (bulk create/update/softDelete).
+src/features/crm/services/leads/convertir.ts:2: * Leads — conversión a cliente + oportunidad.
+src/features/crm/services/leads/index.ts:2: * Servicio CRM — Leads. Barrel: re-exporta queries, mutations, bulk y conversión.
+src/features/crm/services/leads/mutations.ts:2: * Leads — mutaciones individuales (create/update/softDelete/tomar de la bolsa).
+src/features/crm/services/leads/queries.ts:2: * Leads — lecturas (lista paginada, lectura completa para exportar y detalle).
+src/features/crm/services/pricing/tiposPricing.ts:24:export const HORAS_POR_COMPLEJIDAD: Record<ComplejidadPricing, number> = { baja: 8, media: 24, alta: 48 };
+src/features/crm/services/prospectoSearch.ts:10: * - Leads en estado `Calificado` o `Prospecto` (nunca Nuevo/Contactado/
+src/features/crm/services/vincularCotizacion/__tests__/propagarConversion.test.ts:9:import { propagarConversionProspectoCRM } from "../propagarConversion";
+src/features/crm/services/vincularCotizacion/__tests__/propagarConversion.test.ts:17:describe("propagarConversionProspectoCRM", () => {
+src/features/crm/services/vincularCotizacion/__tests__/propagarConversion.test.ts:20:      propagarConversionProspectoCRM({ oportunidadId: null, clienteId: "c-1", clienteNombre: "Acme" }),
+src/features/crm/services/vincularCotizacion/__tests__/propagarConversion.test.ts:28:    await propagarConversionProspectoCRM({
+src/features/crm/services/vincularCotizacion/__tests__/propagarConversion.test.ts:50:      propagarConversionProspectoCRM({ oportunidadId: "op-1", clienteId: "c-1", clienteNombre: "X" }),
+src/features/crm/services/vincularCotizacion/index.ts:13:export { propagarConversionProspectoCRM } from "./propagarConversion";
+src/features/crm/services/vincularCotizacion/propagarConversion.ts:17:export async function propagarConversionProspectoCRM(input: {
+src/features/crm/types/higiene.ts:2:export type EstadoHigiene = "en_tiempo" | "por_vencer" | "vencida";
+src/features/crm/types/higiene.ts:33:  estado_higiene: EstadoHigiene;
+src/features/dashboard/routes/ayudaGlosario.ts:27:  { termino: "Lead", definicion: "Contacto comercial inicial sin oportunidad asignada. Vive en CRM → Leads." },
+src/features/dashboard/routes/ayudaModulos.ts:31:    resumen: "Leads, oportunidades, actividades y proyección comercial.",
+src/features/dashboard/routes/ayudaModulos.ts:35:      { pregunta: "¿Cómo creo un lead rápido?", respuesta: "Botón '+' arriba a la derecha del CRM (Quick Add) o atajo de teclado en cualquier pantalla del CRM. También puedes importar masivamente desde CRM → Leads → Importar CSV." },
+src/features/dashboard/routes/ayudaModulos.ts:37:      { pregunta: "¿Qué son las Next Best Actions (NBA)?", respuesta: `Sugerencias automáticas del CRM que aparecen primero en Mi día: leads nuevos sin contactar hace más de ${NBA_LEAD_SIN_CONTACTAR_HORAS} horas, cotizaciones sin respuesta, oportunidades a punto de cerrarse. Ojo: la tarjeta 'Leads sin contactar' del resumen usa otro contexto y agrupa los que llevan más de ${SEMANA_LEAD_SIN_CONTACTAR_DIAS} días; son dos umbrales distintos a propósito (acción inmediata vs. seguimiento semanal).` },
+src/hooks/shared/__tests__/pagedListsAllowlist.test.ts:24:  "src/features/crm/routes/Leads.tsx",
+src/lib/access/permissionMatrix.crm.ts:16:export const CRM_CONFIG: readonly AppRole[] = [...TENANT_ADMINS, "gerente_comercial"];
+src/lib/access/permissionMatrix.crm.ts:24:export const CRM_TOMAR_LEAD: readonly AppRole[] = [
+src/lib/access/permissionMatrix.crm.ts:37:export const CRM_GESTION_TODOS_LEADS: readonly AppRole[] = [
+src/lib/access/permissionMatrix.crm.ts:47:export const CRM_CREAR_LEAD: readonly AppRole[] = [
+src/lib/access/permissionMatrix.crm.ts:48:  ...CRM_GESTION_TODOS_LEADS,
+src/lib/access/permissionMatrix.crm.ts:62:export const CRM_STAFF_REGISTROS: readonly AppRole[] = [
+src/lib/access/permissionMatrix.crm.ts:70:  ...CRM_STAFF_REGISTROS,
+src/lib/access/permissionMatrix.crm.ts:78:export const CRM_REASIGNAR_VENDEDOR: readonly AppRole[] = [...CRM_STAFF_REGISTROS];
+src/lib/access/permissionMatrix.crm.ts:81:export interface PermisosCrmResueltos {
+src/lib/access/permissionMatrix.crm.ts:109:): PermisosCrmResueltos {
+src/lib/access/permissionMatrix.crm.ts:114:  const canGestionarTodosLosLeads = enLista(CRM_GESTION_TODOS_LEADS, role);
+src/lib/access/permissionMatrix.crm.ts:115:  const canGestionarTodasLasOportunidades = enLista(CRM_STAFF_REGISTROS, role);
+src/lib/access/permissionMatrix.crm.ts:119:    canConfigurarCrm: enLista(CRM_CONFIG, role),
+src/lib/access/permissionMatrix.crm.ts:120:    canTomarLead: enLista(CRM_TOMAR_LEAD, role),
+src/lib/access/permissionMatrix.crm.ts:124:      (enLista(CRM_TOMAR_LEAD, role) && propio(vendedorId)),
+src/lib/access/permissionMatrix.crm.ts:125:    canCrearLead: enLista(CRM_CREAR_LEAD, role),
+src/lib/access/permissionMatrix.crm.ts:135:    canReasignarVendedorCrm: enLista(CRM_REASIGNAR_VENDEDOR, role),
+src/lib/access/permissionMatrix.ts:151:  CRM_CONFIG,
+src/lib/access/permissionMatrix.ts:152:  CRM_TOMAR_LEAD,
+src/lib/access/permissionMatrix.ts:153:  CRM_GESTION_TODOS_LEADS,
+src/lib/access/permissionMatrix.ts:154:  CRM_CREAR_LEAD,
+src/lib/access/permissionMatrix.ts:155:  CRM_STAFF_REGISTROS,
+src/lib/access/permissionMatrix.ts:157:  CRM_REASIGNAR_VENDEDOR,
+src/lib/access/permissionMatrix.ts:160:export type { PermisosCrmResueltos } from "./permissionMatrix.crm";
+src/lib/access/roleRouteSets.ts:66: * tenant + gerencia comercial (espejo de CRM_CONFIG en permissionMatrix.ts y
+src/lib/ui/filterWidths.ts:21:   * Variantes auto-ajustables (O3.7.8, patrón de Leads): crecen con la
+src/routes/appRoutes.lazy.ts:87:export const Leads = lazy(() => import("@/features/crm/routes/Leads"));
+src/routes/appRoutes.lazy.ts:89:export const CrmProspectos = lazy(() => import("@/features/crm/routes/Prospectos"));
+src/routes/crmRoutes.tsx:24:    {/* Leads y Prospectos ahora son estados de la Empresa: las listas viejas
+supabase/migrations/20260821145033_861e0d61-e211-45cf-9f14-c71957c74cad.sql:10:-- super_admin — mismo set que la UI (CRM_CONFIG en permissionMatrix.ts) y que
