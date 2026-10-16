@@ -5,6 +5,7 @@
  */
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import NuevaOportunidadDialog from "@/features/crm/components/NuevaOportunidadDialog";
 import { EMPTY_OPORTUNIDAD } from "@/features/crm/domain/oportunidadFormState";
 import { actividadDefaultFechaMx } from "@/features/crm/domain/actividadDefaultFecha";
@@ -43,9 +44,13 @@ vi.mock("@/lib/contexts/AuthContext", () => ({
 vi.mock("@/features/crm/components/nuevaOportunidad/OportunidadFormFields", () => ({
   default: () => <div />,
 }));
+vi.mock("@/features/crm/services/origenEmpresaCrm", () => ({
+  fetchOrigenEmpresa: async () => ({ ok: false, motivo: "Sin origen automático" }),
+}));
 
 async function crearYObtenerFecha(): Promise<string> {
-  render(<NuevaOportunidadDialog open onOpenChange={vi.fn()} />);
+  render(<QueryClientProvider client={new QueryClient()}><NuevaOportunidadDialog open onOpenChange={vi.fn()} /></QueryClientProvider>);
+  await waitFor(() => expect(screen.getByRole("button", { name: /Crear oportunidad/i })).toBeEnabled());
   fireEvent.click(screen.getByRole("button", { name: /Crear oportunidad/i }));
   await waitFor(() => expect(crearActividad).toHaveBeenCalled());
   return crearActividad.mock.calls[0]?.[0]?.fecha_programada ?? "";
