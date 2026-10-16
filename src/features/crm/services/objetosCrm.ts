@@ -5,10 +5,12 @@
 import { supabase } from "@/integrations/supabase/client";
 import type { TipoPropiedad } from "./propiedadesCrm";
 import { filaValor, type ValorEntrada } from "./valoresCrm";
+import type { EmpresaProspecto } from "../domain/pasarEmpresaAProspecto";
 
 export const OBJETOS_PAGE_SIZE = 25;
 
 export interface EmpresaRow { id: string; nombre: string; cliente_id: string | null; estado_crm?: string | null; created_at: string }
+export interface EmpresaDetalleRow extends EmpresaRow, EmpresaProspecto {}
 export interface ContactoRow { id: string; nombre: string; email: string | null; telefono: string | null; created_at: string }
 export interface Pagina<T> { filas: T[]; total: number }
 export interface RefRow { id: string; nombre: string }
@@ -57,12 +59,12 @@ export async function fetchContactos(busqueda: string, pagina: number): Promise<
   return { filas: data ?? [], total: count ?? 0 };
 }
 
-export async function fetchEmpresa(id: string): Promise<EmpresaRow | null> {
+export async function fetchEmpresa(id: string): Promise<EmpresaDetalleRow | null> {
   const { data, error } = await supabase.from("crm_empresas")
-    .select(EMPRESA_COLS).eq("id", id).is("deleted_at", null).maybeSingle();
+    .select("id, nombre, cliente_id, estado_crm, created_at, created_by, organization_id, lead_origen_id, deleted_at")
+    .eq("id", id).is("deleted_at", null).maybeSingle();
   if (error) throw error;
-  // SAFE-CAST: ver fetchEmpresas (`estado_crm` del borrador).
-  return data as unknown as EmpresaRow | null;
+  return data;
 }
 
 export async function fetchContacto(id: string): Promise<ContactoRow | null> {

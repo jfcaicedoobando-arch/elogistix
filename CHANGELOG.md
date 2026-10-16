@@ -1,5 +1,14 @@
 # Changelog
 
+## [13.824.85] - Unreleased
+
+### CRM: empresas propias del KAM a Prospecto
+
+- Permite pasar empresas propias de Lead a Prospecto al miembro vendedor de la organización activa y habilitada. Exige creador explícito de la empresa y propietarios, vigencia, organización y origen coherentes de todos sus vínculos comerciales, también al reintentar.
+- Conserva la ruta de administración, operación y contabilidad y el helper compartido de escritura. No reasigna registros existentes ni recupera borrados o empresas ya Cliente por la nueva ruta KAM.
+- Protege la atribución de empresas frente a altas con creador falso, cambios de creador/ID y borrado físico ajeno para reutilizar su identidad. Conserva los productores de servidor y las capacidades previas de los roles writer.
+- Alinea el botón y sus mensajes con esta capacidad específica. Agrega una migración forward con preimagen/postimagen y conservación de identidad, owner, ACL y atributos; requiere aplicación posterior revisada en Lovable.
+
 ## [13.824.84] - Unreleased
 
 ### Acceso demo deshabilitado temporalmente

@@ -178,4 +178,6 @@ INSERT INTO _ci_service_role_only (fn) VALUES
    ('public._costeo_tarifa_solicitud_guard()'),
    ('public._crm_sol_pricing_before_ins()'),
    ('public._crm_empresa_estado_por_cliente()'),
+  -- Attribution guard; invoked by the crm_empresas trigger, never a client RPC.
+  ('public._crm_empresa_proteger_creador()'),
    ('public._crm_lead_sync_estado_empresa()');

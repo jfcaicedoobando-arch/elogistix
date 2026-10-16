@@ -14,6 +14,7 @@ import { LC_CODE_MESSAGES_COBRANZA } from "./lcCodeMessages.cobranza";
 import { LC_CODE_MESSAGES_TRASPASOS } from "./lcCodeMessages.traspasos";
 import { LC_CODE_MESSAGES_REFACTURACION } from "./lcCodeMessages.refacturacion";
 import { LC_CODE_MESSAGES_CRM } from "./lcCodeMessages.crm";
+import { LC_CODE_MESSAGES_CRM_EMPRESAS } from "./lcCodeMessages.crmEmpresas";
 import { LC_CODE_MESSAGES_PORTAL } from "./lcCodeMessages.portal";
 import { LC_CODE_MESSAGES_CLIENTES } from "./lcCodeMessages.clientes";
 
@@ -26,6 +27,7 @@ export const LC_CODE_MESSAGES: Record<string, string> = {
   ...LC_CODE_MESSAGES_TRASPASOS,
   ...LC_CODE_MESSAGES_REFACTURACION,
   ...LC_CODE_MESSAGES_CRM,
+  ...LC_CODE_MESSAGES_CRM_EMPRESAS,
   ...LC_CODE_MESSAGES_CLIENTES,
   ...LC_CODE_MESSAGES_PORTAL,
   LC_SEED_DEMO_CONSERVACION_PENDIENTE:

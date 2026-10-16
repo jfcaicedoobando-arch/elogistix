@@ -2648,6 +2648,43 @@ BEGIN
   END IF;
   RETURN OLD;
 END $$;
+CREATE FUNCTION public._crm_empresa_proteger_creador() RETURNS trigger
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 'public'
+    AS $$
+DECLARE v_uid uuid := auth.uid();
+BEGIN
+  -- Historical migrations and trusted backend producers may attribute records
+  -- on behalf of another user. An end-user RPC keeps its authenticated JWT.
+  IF auth.role() = 'service_role'
+    OR (v_uid IS NULL AND coalesce(auth.role(), '') <> 'authenticated') THEN
+    IF TG_OP = 'DELETE' THEN RETURN OLD; END IF;
+    RETURN NEW;
+  END IF;
+  IF v_uid IS NULL THEN
+    RAISE EXCEPTION 'LC_CRM_EMPRESA_CREADOR_PROTEGIDO' USING ERRCODE = '42501';
+  END IF;
+  BEGIN
+    PERFORM public._assert_writer(CASE WHEN TG_OP = 'INSERT' THEN NEW.organization_id ELSE OLD.organization_id END);
+    IF TG_OP = 'DELETE' THEN RETURN OLD; END IF;
+    RETURN NEW;
+  EXCEPTION WHEN insufficient_privilege THEN
+    NULL;
+  END;
+  IF TG_OP = 'INSERT' THEN
+    IF NEW.created_by IS DISTINCT FROM v_uid THEN
+      RAISE EXCEPTION 'LC_CRM_EMPRESA_CREADOR_PROTEGIDO' USING ERRCODE = '42501';
+    END IF;
+  ELSIF TG_OP = 'DELETE' THEN
+    IF OLD.created_by IS DISTINCT FROM v_uid THEN
+      RAISE EXCEPTION 'LC_CRM_EMPRESA_CREADOR_PROTEGIDO' USING ERRCODE = '42501';
+    END IF;
+    RETURN OLD;
+  ELSIF NEW.created_by IS DISTINCT FROM OLD.created_by OR NEW.id IS DISTINCT FROM OLD.id THEN
+    RAISE EXCEPTION 'LC_CRM_EMPRESA_CREADOR_PROTEGIDO' USING ERRCODE = '42501';
+  END IF;
+  RETURN NEW;
+END $$;
 CREATE FUNCTION public._crm_es_pricing(p_org uuid) RETURNS boolean
     LANGUAGE sql STABLE SECURITY DEFINER
     SET search_path TO 'public'
@@ -16378,14 +16415,63 @@ CREATE FUNCTION public.crm_empresa_pasar_a_prospecto(p_empresa_id uuid) RETURNS 
     AS $$
 DECLARE
   v_org uuid := public.org_scope();
+  v_uid uuid := auth.uid();
+  v_kam boolean := false;
   v_emp public.crm_empresas%ROWTYPE;
+  v_origen public.crm_leads%ROWTYPE;
+  v_existente public.crm_oportunidades%ROWTYPE;
+  v_vinculo record;
   v_lead uuid; v_etapa uuid; v_op uuid; v_email text;
 BEGIN
   IF v_org IS NULL THEN RAISE EXCEPTION 'LC_SIN_ORGANIZACION' USING ERRCODE = '42501'; END IF;
-  PERFORM public._assert_writer(v_org);
+  -- Preserve the existing writer contract; only this RPC adds an exact KAM
+  -- membership path. Never broaden the shared _assert_writer helper.
+  BEGIN
+    PERFORM public._assert_writer(v_org);
+  EXCEPTION WHEN insufficient_privilege THEN
+    PERFORM 1 FROM public.organization_members om
+      JOIN public.organizations org ON org.id = om.organization_id AND org.activo IS TRUE
+     WHERE om.organization_id = v_org AND om.user_id = v_uid AND om.role::text = 'vendedor'
+     FOR SHARE OF om, org;
+    IF NOT FOUND THEN RAISE; END IF;
+    v_kam := true;
+  END;
   SELECT * INTO v_emp FROM public.crm_empresas
    WHERE id = p_empresa_id AND organization_id = v_org AND deleted_at IS NULL FOR UPDATE;
   IF NOT FOUND THEN RAISE EXCEPTION 'LC_CRM_EMPRESA_NO_ENCONTRADA' USING ERRCODE = 'P0002'; END IF;
+  IF v_kam THEN
+    IF v_emp.created_by IS DISTINCT FROM v_uid THEN
+      RAISE EXCEPTION 'LC_CRM_PROSPECTO_NO_AUTORIZADO' USING ERRCODE = '42501';
+    END IF;
+    IF v_emp.estado_crm = 'Cliente' OR v_emp.cliente_id IS NOT NULL THEN
+      RAISE EXCEPTION 'LC_CRM_EMPRESA_YA_CLIENTE';
+    END IF;
+    IF v_emp.lead_origen_id IS NOT NULL THEN
+      SELECT * INTO v_origen FROM public.crm_leads
+       WHERE id = v_emp.lead_origen_id FOR UPDATE;
+      IF NOT FOUND OR v_origen.organization_id IS DISTINCT FROM v_org
+        OR v_origen.deleted_at IS NOT NULL OR v_origen.vendedor_id IS DISTINCT FROM v_uid
+        OR v_origen.estado::text = 'Convertido' OR v_origen.cliente_convertido_id IS NOT NULL THEN
+        RAISE EXCEPTION 'LC_CRM_PROSPECTO_VINCULO_INVALIDO' USING ERRCODE = '42501';
+      END IF;
+    END IF;
+    -- Validate and lock EVERY link, including deleted/foreign opportunities.
+    -- A favourable LIMIT 1 must never hide a different owner's relationship.
+    FOR v_vinculo IN SELECT oe.organization_id, oe.oportunidad_id
+      FROM public.crm_oportunidad_empresa oe WHERE oe.empresa_id = v_emp.id
+      ORDER BY oe.oportunidad_id FOR UPDATE
+    LOOP
+      SELECT * INTO v_existente FROM public.crm_oportunidades
+       WHERE id = v_vinculo.oportunidad_id FOR UPDATE;
+      IF NOT FOUND OR v_vinculo.organization_id IS DISTINCT FROM v_org
+        OR v_existente.organization_id IS DISTINCT FROM v_org
+        OR v_existente.deleted_at IS NOT NULL OR v_existente.vendedor_id IS DISTINCT FROM v_uid
+        OR v_emp.lead_origen_id IS NULL
+        OR v_existente.lead_id IS DISTINCT FROM v_emp.lead_origen_id THEN
+        RAISE EXCEPTION 'LC_CRM_PROSPECTO_VINCULO_INVALIDO' USING ERRCODE = '42501';
+      END IF;
+    END LOOP;
+  END IF;
   SELECT o.id INTO v_op FROM public.crm_oportunidad_empresa oe
     JOIN public.crm_oportunidades o ON o.id = oe.oportunidad_id AND o.deleted_at IS NULL
    WHERE oe.empresa_id = v_emp.id ORDER BY o.created_at LIMIT 1;
@@ -38641,6 +38727,7 @@ CREATE TRIGGER trg_crm_cuotas_updated_at BEFORE UPDATE ON public.crm_cuotas_vend
 CREATE TRIGGER trg_crm_empresa_estado_por_cliente BEFORE INSERT OR UPDATE OF cliente_id ON public.crm_empresas FOR EACH ROW EXECUTE FUNCTION public._crm_empresa_estado_por_cliente();
 CREATE TRIGGER trg_crm_empresa_no_borrar_cliente BEFORE UPDATE OF deleted_at ON public.crm_empresas FOR EACH ROW EXECUTE FUNCTION public._crm_empresa_no_borrar_cliente();
 CREATE TRIGGER trg_crm_empresa_no_delete_fisico BEFORE DELETE ON public.crm_empresas FOR EACH ROW EXECUTE FUNCTION public._crm_empresa_no_delete_fisico();
+CREATE TRIGGER trg_crm_empresa_proteger_creador BEFORE INSERT OR DELETE OR UPDATE OF id, created_by ON public.crm_empresas FOR EACH ROW EXECUTE FUNCTION public._crm_empresa_proteger_creador();
 CREATE TRIGGER trg_crm_etapa_criterios_updated_at BEFORE UPDATE ON public.crm_etapa_criterios FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
 CREATE TRIGGER trg_crm_etapa_motivo_misma_org BEFORE INSERT OR UPDATE OF etapa_id, motivo_perdida_id, organization_id ON public.crm_oportunidades FOR EACH ROW EXECUTE FUNCTION public._crm_oportunidad_etapa_motivo_misma_org();
 CREATE TRIGGER trg_crm_etapas_updated_at BEFORE UPDATE ON public.crm_etapas_pipeline FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
@@ -40294,6 +40381,8 @@ REVOKE ALL ON FUNCTION public._crm_empresa_estado_por_cliente() FROM PUBLIC;
 GRANT ALL ON FUNCTION public._crm_empresa_estado_por_cliente() TO service_role;
 REVOKE ALL ON FUNCTION public._crm_empresa_no_borrar_cliente() FROM PUBLIC;
 REVOKE ALL ON FUNCTION public._crm_empresa_no_delete_fisico() FROM PUBLIC;
+REVOKE ALL ON FUNCTION public._crm_empresa_proteger_creador() FROM PUBLIC;
+GRANT ALL ON FUNCTION public._crm_empresa_proteger_creador() TO service_role;
 REVOKE ALL ON FUNCTION public._crm_es_pricing(p_org uuid) FROM PUBLIC;
 GRANT ALL ON FUNCTION public._crm_es_pricing(p_org uuid) TO authenticated;
 GRANT ALL ON FUNCTION public._crm_es_pricing(p_org uuid) TO service_role;
