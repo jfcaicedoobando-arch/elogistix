@@ -1,0 +1,39 @@
+name: Protected authority registry isolated review
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+    branches: [main]
+    paths:
+      - 'docs/review/demo-authority-provider-20261016/issuer/17-protected-occurrence.sql'
+      - 'docs/review/demo-authority-provider-20261016/issuer/18-authority-reader.sql'
+      - 'scripts/ci/demo-authority-provider-review/**'
+      - '.github/workflows/demo-authority-provider-review.yml'
+permissions:
+  contents: read
+concurrency:
+  group: protected-authority-review-${{ github.event.pull_request.number }}
+  cancel-in-progress: false
+jobs:
+  isolated-postgres:
+    if: github.repository == 'jfcaicedoobando-arch/elogistix' && github.event.pull_request.draft == true && github.event.pull_request.head.repo.full_name == github.repository && github.event.pull_request.head.ref == 'review/protected-authority-registry-20261016'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          persist-credentials: false
+      - name: Offline authority contracts and isolation gates
+        run: python3 -m unittest discover -s scripts/ci/demo-authority-provider-review -p 'test_*.py' -v
+      - name: PostgreSQL 17.6 authentic authority reader and locks
+        env:
+          DEMO_AUTHORITY_ISOLATED: '1'
+        run: python3 -I scripts/ci/demo-authority-provider-review/run_ci.py --execute-disposable --output "$RUNNER_TEMP/authority-evidence"
+      - name: Preserve owned synthetic evidence
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: protected-authority-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/authority-evidence
+          if-no-files-found: warn
+          retention-days: 14
