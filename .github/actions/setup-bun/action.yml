@@ -1,6 +1,9 @@
 name: "Setup Bun + Install"
 description: "Setup Bun, restore install cache, and run `bun install --frozen-lockfile`."
 outputs:
+  node-version:
+    description: "Exact installed Node.js version, including the v prefix."
+    value: ${{ steps.setup-node.outputs.node-version }}
   cache-hit:
     description: "Exact node_modules cache hit, false if repaired/reinstalled."
     value: ${{ steps.cache-node-modules.outputs.cache-hit == 'true' && steps.verify-cache.outputs.reinstalled != 'true' }}
@@ -8,9 +11,10 @@ runs:
   using: "composite"
   steps:
     - name: Setup Node
-      uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
+      id: setup-node
+      uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
       with:
-        node-version: "22.22.0"
+        node-version: "24.22.0"
         package-manager-cache: false
     - name: Show Node runtime
       shell: bash
@@ -32,7 +36,7 @@ runs:
       uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
       with:
         path: node_modules
-        key: ${{ runner.os }}-${{ runner.arch }}-node22.22.0-node-modules-bun1.4.0-${{ hashFiles('bun.lock', 'package.json') }}
+        key: ${{ runner.os }}-${{ runner.arch }}-node${{ steps.setup-node.outputs.node-version }}-node-modules-bun1.4.0-${{ hashFiles('bun.lock', 'package.json') }}
 
     - name: Cache Bun deps
       if: steps.cache-node-modules.outputs.cache-hit != 'true'

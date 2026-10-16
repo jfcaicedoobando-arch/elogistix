@@ -87,7 +87,7 @@ jobs:
         run: node scripts/ci/test-catalog.mjs --output reports/test-inventory.json
 
       - name: Node 24 for review-only protocol tests
-        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version: '24.19.0'
 
@@ -128,13 +128,14 @@ jobs:
           persist-credentials: false
 
       - name: Setup Bun + install
+        id: setup
         uses: ./.github/actions/setup-bun
 
       # Caché de ESLint AISLADA del cache de `node_modules` del composite action.
       # Antes vivía en `node_modules/.cache/eslint/`, cuya clave es compartida por
       # lint/checks/tests: el primer job que guardaba ese cache lo escribía sin
       # estado de ESLint y el de lint nunca persistía.
-      # Clave: runner + versión de Bun + configuración de lint y lockfile. NO
+      # Clave: SO/arquitectura + Node instalado + Bun + configuración y lockfile. NO
       # incluye el contenido de `src/`, para que la caché se reutilice de forma
       # incremental entre commits (`--cache-strategy content` decide por archivo).
       # `github.run_id` en la clave principal garantiza escritura propia por
@@ -144,10 +145,10 @@ jobs:
         uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: .cache/eslint
-          key: ${{ runner.os }}-eslint-bun1.4.0-${{ hashFiles('eslint.config.js', 'package.json', 'bun.lock') }}-${{ github.run_id }}
+          key: ${{ runner.os }}-${{ runner.arch }}-eslint-node${{ steps.setup.outputs.node-version }}-bun1.4.0-${{ hashFiles('eslint.config.js', 'package.json', 'bun.lock') }}-${{ github.run_id }}
           restore-keys: |
-            ${{ runner.os }}-eslint-bun1.4.0-${{ hashFiles('eslint.config.js', 'package.json', 'bun.lock') }}-
-            ${{ runner.os }}-eslint-bun1.4.0-
+            ${{ runner.os }}-${{ runner.arch }}-eslint-node${{ steps.setup.outputs.node-version }}-bun1.4.0-${{ hashFiles('eslint.config.js', 'package.json', 'bun.lock') }}-
+            ${{ runner.os }}-${{ runner.arch }}-eslint-node${{ steps.setup.outputs.node-version }}-bun1.4.0-
 
       # `react-compiler` cuenta warnings como errores: fail-fast real.
       - name: ESLint (max-warnings 0)
