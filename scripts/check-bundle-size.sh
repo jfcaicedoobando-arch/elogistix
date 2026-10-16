@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # scripts/check-bundle-size.sh — Bundle-size gate para CI.
-# Falla el job si el chunk inicial (entry) gzipped supera el budget.
+# Falla por presupuestos JS (entry/lazy/vendor) o CSS total (raw/gzip/Brotli).
 # Uso:  BUNDLE_BUDGET_KB=350 bash scripts/check-bundle-size.sh
 set -euo pipefail
 
@@ -100,5 +100,9 @@ if [ "$FAIL" -eq 1 ]; then
   exit 1
 fi
 
-echo "✓ Bundle size OK (entry + lazy + vendor)"
+# CSS: bytes exactos, todos los recursos y compresion reproducible por archivo.
+# Baseline y criterio: docs/ci/css-size-budget-20261016.md.
+node "$(dirname "${BASH_SOURCE[0]}")/check-css-size.mjs" "$DIST_DIR"
+
+echo "✓ Bundle size OK (entry + lazy + vendor + CSS)"
 

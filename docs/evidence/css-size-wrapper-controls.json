@@ -1,0 +1,72 @@
+{
+  "node": "v24.22.0",
+  "budgets": {
+    "raw": 200467,
+    "gzip": 28104,
+    "brotli": 21584
+  },
+  "results": [
+    {
+      "name": "control",
+      "status": 0,
+      "expectedMessages": [
+        "entry + lazy + vendor + CSS"
+      ],
+      "output": "→ Entry chunk: index-control.js\n→ Gzipped size: 0 KB (budget: 365 KB)\ncontrol.css: raw=12 gzip=32 brotli=16 bytes\nCSS total raw: 12 bytes (limit 200467 bytes)\nCSS total gzip: 32 bytes (limit 28104 bytes)\nCSS total brotli: 16 bytes (limit 21584 bytes)\n✓ Bundle size OK (entry + lazy + vendor + CSS)"
+    },
+    {
+      "name": "css-growth",
+      "status": 1,
+      "expectedMessages": [
+        "::error::CSS raw:",
+        "::error::CSS gzip:",
+        "::error::CSS brotli:"
+      ],
+      "output": "→ Entry chunk: index-control.js\n→ Gzipped size: 0 KB (budget: 365 KB)\ncontrol.css: raw=12 gzip=32 brotli=16 bytes\ngrown.css: raw=523210 gzip=145612 brotli=113129 bytes\nCSS total raw: 523222 bytes (limit 200467 bytes)\nCSS total gzip: 145644 bytes (limit 28104 bytes)\nCSS total brotli: 113145 bytes (limit 21584 bytes)\n\n::error::CSS raw: 523222 bytes exceeds limit 200467 bytes\n::error::CSS gzip: 145644 bytes exceeds limit 28104 bytes\n::error::CSS brotli: 113145 bytes exceeds limit 21584 bytes"
+    },
+    {
+      "name": "missing-css",
+      "status": 1,
+      "expectedMessages": [
+        "No CSS files"
+      ],
+      "output": "→ Entry chunk: index-control.js\n→ Gzipped size: 0 KB (budget: 365 KB)\n\n::error::No CSS files found in <temporary>\\missing-css"
+    },
+    {
+      "name": "entry",
+      "status": 1,
+      "expectedMessages": [
+        "Entry chunk",
+        "excede"
+      ],
+      "output": "→ Entry chunk: index-control.js\n→ Gzipped size: 9 KB (budget: 1 KB)\n::error::Entry chunk 9 KB excede el budget de 1 KB.\nCausas comunes: import estático de @react-pdf/renderer, xlsx, recharts en main.tsx o providers.\nSugerencia: ejecutar 'ANALYZE=true bun run build' y revisar dist/bundle-stats.html"
+    },
+    {
+      "name": "lazy",
+      "status": 1,
+      "expectedMessages": [
+        "Chunk lazy 'route.js'",
+        "excede"
+      ],
+      "output": "→ Entry chunk: index-control.js\n→ Gzipped size: 0 KB (budget: 365 KB)\n::error::Chunk lazy 'route.js' = 9 KB excede budget 1 KB.\n::error::Bundle size gate FALLÓ. Revisa imports estáticos pesados o falta de lazy()."
+    },
+    {
+      "name": "vendor",
+      "status": 1,
+      "expectedMessages": [
+        "Chunk vendor 'vendor-example.js'",
+        "excede"
+      ],
+      "output": "→ Entry chunk: index-control.js\n→ Gzipped size: 0 KB (budget: 365 KB)\n::error::Chunk vendor 'vendor-example.js' = 9 KB excede budget 1 KB.\n::error::Bundle size gate FALLÓ. Revisa imports estáticos pesados o falta de lazy()."
+    },
+    {
+      "name": "react-pdf",
+      "status": 1,
+      "expectedMessages": [
+        "Chunk lazy(react-pdf) 'react-pdf-example.js'",
+        "excede"
+      ],
+      "output": "→ Entry chunk: index-control.js\n→ Gzipped size: 0 KB (budget: 365 KB)\n::error::Chunk lazy(react-pdf) 'react-pdf-example.js' = 9 KB excede budget 1 KB.\n::error::Bundle size gate FALLÓ. Revisa imports estáticos pesados o falta de lazy()."
+    }
+  ]
+}

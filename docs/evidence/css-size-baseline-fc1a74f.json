@@ -1,0 +1,106 @@
+{
+  "sourceSha": "fc1a74fbefaa2864dc6d46f8b09ebfc7a7d93101",
+  "trackedWorktreeStatus": "",
+  "lockSha256": "0c7ad2aa4a05318d062a70aa5648c98147bac26c0a6a609c7cce777406daa8ea",
+  "toolSha256": {
+    "measure": "5525b89827632e233976b3b95635127c4dd353bba335d33526f095eaf5d14c98",
+    "compression": "d27dfc942e18f83249b7ce09590abef3e81ca22034a03169df032ab9de5faaee"
+  },
+  "runtime": {
+    "platform": "win32",
+    "arch": "x64",
+    "node": "v24.22.0",
+    "bun": "1.4.0",
+    "zlib": "1.3.2.1-motley-285e94b",
+    "brotli": "1.2.0"
+  },
+  "compression": {
+    "gzipLevel": 9,
+    "brotliQuality": 11,
+    "brotliMode": "text",
+    "brotliSizeHint": "input bytes"
+  },
+  "build": {
+    "command": "node node_modules/vite/bin/vite.js build --mode production",
+    "environment": {
+      "BUILD_SOURCEMAPS": "false",
+      "ANALYZE": "false",
+      "CI_REPORT_COMPRESSED_SIZE": "false",
+      "SENTRY_AUTH_TOKEN": "unset"
+    },
+    "cleanedBeforeEachRun": [
+      "dist",
+      "node_modules/.vite",
+      "node_modules/.vite-temp"
+    ],
+    "dependencyInstall": "bun install --frozen-lockfile --ignore-scripts (before this command)"
+  },
+  "runs": [
+    {
+      "run": 1,
+      "files": [
+        {
+          "file": "index-C9mpLDrh.css",
+          "sha256": "af1ddcfe6e9813c7969a671ac07837915452fe5834607e27a4d20fa88aa962de",
+          "raw": 196536,
+          "gzip": 27552,
+          "brotli": 21160
+        }
+      ],
+      "total": {
+        "raw": 196536,
+        "gzip": 27552,
+        "brotli": 21160
+      }
+    },
+    {
+      "run": 2,
+      "files": [
+        {
+          "file": "index-C9mpLDrh.css",
+          "sha256": "af1ddcfe6e9813c7969a671ac07837915452fe5834607e27a4d20fa88aa962de",
+          "raw": 196536,
+          "gzip": 27552,
+          "brotli": 21160
+        }
+      ],
+      "total": {
+        "raw": 196536,
+        "gzip": 27552,
+        "brotli": 21160
+      }
+    },
+    {
+      "run": 3,
+      "files": [
+        {
+          "file": "index-C9mpLDrh.css",
+          "sha256": "af1ddcfe6e9813c7969a671ac07837915452fe5834607e27a4d20fa88aa962de",
+          "raw": 196536,
+          "gzip": 27552,
+          "brotli": 21160
+        }
+      ],
+      "total": {
+        "raw": 196536,
+        "gzip": 27552,
+        "brotli": 21160
+      }
+    }
+  ],
+  "range": {
+    "raw": {
+      "min": 196536,
+      "max": 196536
+    },
+    "gzip": {
+      "min": 27552,
+      "max": 27552
+    },
+    "brotli": {
+      "min": 21160,
+      "max": 21160
+    }
+  },
+  "identicalCss": true
+}

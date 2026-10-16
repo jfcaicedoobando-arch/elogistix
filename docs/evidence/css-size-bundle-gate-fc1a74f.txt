@@ -1,0 +1,7 @@
+ΓåÆ Entry chunk: index-B6Uqs2eb.js
+ΓåÆ Gzipped size: 216 KB (budget: 365 KB)
+index-C9mpLDrh.css: raw=196536 gzip=27552 brotli=21160 bytes
+CSS total raw: 196536 bytes (limit 200467 bytes)
+CSS total gzip: 27552 bytes (limit 28104 bytes)
+CSS total brotli: 21160 bytes (limit 21584 bytes)
+Γ£ô Bundle size OK (entry + lazy + vendor + CSS)

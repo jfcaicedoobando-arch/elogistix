@@ -1,0 +1,7 @@
+ΓåÆ Entry chunk: index-C8US2jrS.js
+ΓåÆ Gzipped size: 216 KB (budget: 365 KB)
+index-CIDV54XG.css: raw=196588 gzip=27568 brotli=21163 bytes
+CSS total raw: 196588 bytes (limit 200467 bytes)
+CSS total gzip: 27568 bytes (limit 28104 bytes)
+CSS total brotli: 21163 bytes (limit 21584 bytes)
+Γ£ô Bundle size OK (entry + lazy + vendor + CSS)

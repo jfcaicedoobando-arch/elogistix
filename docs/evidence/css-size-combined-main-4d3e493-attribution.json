@@ -1,0 +1,64 @@
+{
+  "sourceSha": "fc964d1c35a0b7857c7941bae95db65e881b5ff6",
+  "integratedMainSha": "4d3e4935454458427df29223026fa6cd17c036d8",
+  "source": {
+    "file": "src/components/shared/dataTable/DataTableHeaderRow.tsx",
+    "line": 66,
+    "className": "[text-transform:inherit]"
+  },
+  "css": {
+    "file": "dist/assets/index-CIDV54XG.css",
+    "emittedCssFiles": 1,
+    "beforeSha256": "1a4adb8b8a74f032d85f6fed40998849f1daf79e191db0a5b1ebf0f893aeb7cf",
+    "afterSha256": "af1ddcfe6e9813c7969a671ac07837915452fe5834607e27a4d20fa88aa962de"
+  },
+  "rule": {
+    "text": ".\\[text-transform\\:inherit\\]{text-transform:inherit}",
+    "utf8Bytes": 52,
+    "occurrences": 1
+  },
+  "compression": {
+    "gzipLevel": 9,
+    "brotliQuality": 11,
+    "brotliMode": "text",
+    "brotliSizeHint": "input bytes for each before/after buffer"
+  },
+  "before": {
+    "raw": 196588,
+    "gzip": 27568,
+    "brotli": 21163
+  },
+  "after": {
+    "raw": 196536,
+    "gzip": 27552,
+    "brotli": 21160
+  },
+  "delta": {
+    "raw": 52,
+    "gzip": 16,
+    "brotli": 3
+  },
+  "baseline": {
+    "file": "docs/evidence/css-size-baseline-fc1a74f.json",
+    "sourceSha": "fc1a74fbefaa2864dc6d46f8b09ebfc7a7d93101",
+    "cssSha256": "af1ddcfe6e9813c7969a671ac07837915452fe5834607e27a4d20fa88aa962de",
+    "matchesAfterSha256": true
+  },
+  "runtime": {
+    "platform": "win32",
+    "arch": "x64",
+    "node": "v24.22.0",
+    "zlib": "1.3.2.1-motley-285e94b",
+    "brotli": "1.2.0"
+  },
+  "algorithm": [
+    "With Node 24.22.0, read the single dist/assets/*.css file as a Buffer; retain the original bytes without rewriting the file.",
+    "Decode that Buffer as UTF-8; require exactly one occurrence of rule.text, whose UTF-8 byte length must be 52.",
+    "Create an in-memory after Buffer using Buffer.from(text.replace(rule.text, \"\"), \"utf8\").",
+    "For each before/after Buffer, calculate raw=buffer.byteLength, SHA-256=createHash(\"sha256\").update(buffer).digest(\"hex\"), and gzip=gzipSync(buffer,{level:9}).byteLength.",
+    "Calculate brotli=brotliCompressSync(buffer,{params:{[constants.BROTLI_PARAM_QUALITY]:11,[constants.BROTLI_PARAM_MODE]:constants.BROTLI_MODE_TEXT,[constants.BROTLI_PARAM_SIZE_HINT]:buffer.byteLength}}).byteLength using node:zlib.",
+    "Calculate delta for each metric as before minus after; require the after SHA-256 to equal the baseline JSON runs[0].files[0].sha256.",
+    "Write only this attribution JSON. The emitted CSS and both baseline/candidate evidence files are read-only inputs."
+  ],
+  "cssFilesWritten": false
+}
