@@ -1,0 +1,447 @@
+{
+  "schemaVersion": 1,
+  "scope": "Three alternating A/B pairs with useful clean TS state restored and newer mtimes on unchanged included tracked inputs. Does not restore an old node_modules archive or measure cache transfer; no performance advantage for the candidate was observed.",
+  "sourceFilesSHA256": {
+    "metadata.json": "319b79970cbeaf843a0439d6ef37378aed4ea66593657f480601214bd63714b9",
+    "results.json": "dd972cf483332b34da3e10635118131e16b2f4641e8a8fdfed200a53a0c24f04",
+    "summary.json": "e1ff70af3ba1f9b53590717e0f0caa1e0a783133254960f3386b992420a097b1"
+  },
+  "metadata": {
+    "node": "v24.22.0",
+    "bun": "1.4.0",
+    "typescript": "6.0.3",
+    "replicas": 3,
+    "order": [
+      "baseline-86020",
+      "candidate-caf5dcbc",
+      "baseline-86020",
+      "candidate-caf5dcbc",
+      "baseline-86020",
+      "candidate-caf5dcbc"
+    ],
+    "platform": "Linux-6.18.44-x86_64-with-glibc2.41",
+    "helperSHA256": "78c71cd27e1d861d65a2666196b566ccb336414418905ff4115d048af26b022b",
+    "scenario": "Same included tracked bytes, clean TS state restored before every check, all included tracked mtimes newer than both cache files",
+    "environmentExclusion": "Exclude .env and .env.* path components except names ending .example; inspect names/headers only, never excluded file content; retain only excluded path names in evidence",
+    "limits": [
+      "Fresh frozen dependency installs; not a restored node_modules archive",
+      "No cache network transfer timing or OS cache flush",
+      "Tracked files are hashed before timing, warming OS page cache",
+      "Three alternating A/B pairs, no randomization, no peak RSS measurement"
+    ],
+    "variants": [
+      {
+        "name": "baseline-86020",
+        "sourceSHA": "86020fb322bb56c44e4a644c14e0798d480b62ce",
+        "command": [
+          "bun",
+          "run",
+          "typecheck"
+        ],
+        "cacheDir": "node_modules/.cache/tsc",
+        "sourceSeries": "/tmp/elogistix-tscache-baseline-86020",
+        "cacheArchiveSHA256": "ae79c25eae9469f8ab7de99fd2c7c73fcf03712d50d85324de8eaec099098a37",
+        "install": {
+          "seconds": 0.1643,
+          "exitCode": 0,
+          "timedOut": false,
+          "log": "baseline-86020-install.log",
+          "logSHA256": "7c15918df6a8ee3da58510a276073ffecb7ec9eeb381df2c4414d9b4f5702036"
+        },
+        "excludedTrackedPaths": [
+          ".env"
+        ],
+        "excludedArchivePaths": [
+          ".env"
+        ],
+        "trackedInputCount": 9866,
+        "trackedInputSHA256": "cee7c35ddb6435e09128ef5be9218d247c81c4742a940ecbb0fb9194d0d214d8",
+        "sourceInputSHA256": {
+          "package.json": "d928034e57c0f81c7d3e8f133af40c16351f5fc67f15c686f1ac98d2f6c2af48",
+          "bun.lock": "f8d0d12c8f45051b1d7045a164bf3a3c1240c9b0d0005ae750461758f96fbc9e",
+          "tsconfig.app.json": "642c7c5d7e41dd5facebad4f4ff2f8f37e3edbc666afbeb12ae589a98c0cded6",
+          "tsconfig.json": "a39d840b86afc9bbb13eab2cb0e8bbff5701c87191aa9e0b14d1c403036d58fb",
+          "tsconfig.node.json": "67effa9a961034dab96e47095a281cf151d0e0969b956288eda63a960538913d",
+          "tsconfig.test-tooling.json": "63c02cb1f4d55e3220ead8746236255f6df97be633887ba04cce703c077a0413"
+        }
+      },
+      {
+        "name": "candidate-caf5dcbc",
+        "sourceSHA": "caf5dcbc493915e421d6d2b6792e6a92f5384834",
+        "command": [
+          "bun",
+          "run",
+          "typecheck:ci"
+        ],
+        "cacheDir": ".cache/tsc",
+        "sourceSeries": "/tmp/elogistix-tscache-combined-caf5dcbc",
+        "cacheArchiveSHA256": "b57927fda3d1d165d7987e0ec7d1f1af4056541fad23cdfc9a2bdbbf05d6cd1e",
+        "install": {
+          "seconds": 0.1645,
+          "exitCode": 0,
+          "timedOut": false,
+          "log": "candidate-caf5dcbc-install.log",
+          "logSHA256": "6306295c487c3d3826b49ad69216e65046bebe4f19bca6d0ce386d075bafc5a3"
+        },
+        "excludedTrackedPaths": [
+          ".env"
+        ],
+        "excludedArchivePaths": [
+          ".env"
+        ],
+        "trackedInputCount": 9873,
+        "trackedInputSHA256": "15e579a0eefe043b473022eded86d77eb03e70a2c796df5508c47f941e1dc953",
+        "sourceInputSHA256": {
+          "package.json": "8ab230ab3c1136faadac913f0c01cfc41d7e9d9515489182f6cb7188bc823566",
+          "bun.lock": "f8d0d12c8f45051b1d7045a164bf3a3c1240c9b0d0005ae750461758f96fbc9e",
+          "tsconfig.app.json": "4b53128f7447cebc2c9b438cb4e256a8ce8a89a0b2ba221058d9b95da88cb522",
+          "tsconfig.json": "a39d840b86afc9bbb13eab2cb0e8bbff5701c87191aa9e0b14d1c403036d58fb",
+          "tsconfig.node.json": "3a09f649b13d5859682cd7fe7b702560eef3372adaaf9a5a60198e30ff7698e9",
+          "tsconfig.test-tooling.json": "63c02cb1f4d55e3220ead8746236255f6df97be633887ba04cce703c077a0413",
+          "scripts/ci/typecheck-incremental.mjs": "92ab87851ec0ef8babe268495cbf388ae86c2c79d48c34740dc47ad5857910bb"
+        }
+      }
+    ],
+    "completed": true
+  },
+  "results": [
+    {
+      "seconds": 6.4015,
+      "exitCode": 0,
+      "timedOut": false,
+      "log": "1-baseline-86020.log",
+      "logSHA256": "faeaa94bcf7012d86f91ca647580449f56a263fb7eaf572c54789764f60a9b8f",
+      "replica": 1,
+      "variant": "baseline-86020",
+      "sourceSHA": "86020fb322bb56c44e4a644c14e0798d480b62ce",
+      "command": [
+        "bun",
+        "run",
+        "typecheck"
+      ],
+      "cacheBefore": {
+        "node_modules/.cache/tsc/tsconfig.app.tsbuildinfo": {
+          "bytes": 1586566,
+          "sha256": "424aea596cbb13e59f057ad1475393d8787f87b4dad971a67ac587dd6d95d7df",
+          "mtimeNs": 1792180207483151276
+        },
+        "node_modules/.cache/tsc/tsconfig.node.tsbuildinfo": {
+          "bytes": 84757,
+          "sha256": "6cefcd3b06e545e02b656580a032d5f3fdde900420fb090fcf790c4b29ca7608",
+          "mtimeNs": 1792180207659155499
+        }
+      },
+      "cacheAfter": {
+        "node_modules/.cache/tsc/tsconfig.app.tsbuildinfo": {
+          "bytes": 1586566,
+          "sha256": "424aea596cbb13e59f057ad1475393d8787f87b4dad971a67ac587dd6d95d7df",
+          "mtimeNs": 1792180207483151276
+        },
+        "node_modules/.cache/tsc/tsconfig.node.tsbuildinfo": {
+          "bytes": 84757,
+          "sha256": "6cefcd3b06e545e02b656580a032d5f3fdde900420fb090fcf790c4b29ca7608",
+          "mtimeNs": 1792180207659155499
+        }
+      },
+      "trackedInputSHA256": "cee7c35ddb6435e09128ef5be9218d247c81c4742a940ecbb0fb9194d0d214d8",
+      "trackedMtimeMinNs": 1792180808406347650,
+      "trackedMtimeMaxNs": 1792180808406347650,
+      "cacheContentChanged": {
+        "node_modules/.cache/tsc/tsconfig.app.tsbuildinfo": false,
+        "node_modules/.cache/tsc/tsconfig.node.tsbuildinfo": false
+      },
+      "cacheMtimeChanged": {
+        "node_modules/.cache/tsc/tsconfig.app.tsbuildinfo": false,
+        "node_modules/.cache/tsc/tsconfig.node.tsbuildinfo": false
+      },
+      "cacheValidationError": null,
+      "trackedBytesPreserved": true
+    },
+    {
+      "seconds": 7.2703,
+      "exitCode": 0,
+      "timedOut": false,
+      "log": "1-candidate-caf5dcbc.log",
+      "logSHA256": "1e3e7a094fa20952244aebd91f5a1ea16c144390bf3a304688ddf634a53900c9",
+      "replica": 1,
+      "variant": "candidate-caf5dcbc",
+      "sourceSHA": "caf5dcbc493915e421d6d2b6792e6a92f5384834",
+      "command": [
+        "bun",
+        "run",
+        "typecheck:ci"
+      ],
+      "cacheBefore": {
+        ".cache/tsc/tsconfig.app.tsbuildinfo": {
+          "bytes": 1593450,
+          "sha256": "a8382b104929d9833396eac0eb2c90708ef7f4103cc3b1f3ef688583e5cf1fbb",
+          "mtimeNs": 1792180493286023106
+        },
+        ".cache/tsc/tsconfig.node.tsbuildinfo": {
+          "bytes": 90858,
+          "sha256": "b219079b379d7a93347fe0e5720976a5642fab3531edc7d6b341738886e641e8",
+          "mtimeNs": 1792180494130043405
+        }
+      },
+      "cacheAfter": {
+        ".cache/tsc/tsconfig.app.tsbuildinfo": {
+          "bytes": 1593450,
+          "sha256": "a8382b104929d9833396eac0eb2c90708ef7f4103cc3b1f3ef688583e5cf1fbb",
+          "mtimeNs": 1792180493286023106
+        },
+        ".cache/tsc/tsconfig.node.tsbuildinfo": {
+          "bytes": 90858,
+          "sha256": "b219079b379d7a93347fe0e5720976a5642fab3531edc7d6b341738886e641e8",
+          "mtimeNs": 1792180494130043405
+        }
+      },
+      "trackedInputSHA256": "15e579a0eefe043b473022eded86d77eb03e70a2c796df5508c47f941e1dc953",
+      "trackedMtimeMinNs": 1792180815505181786,
+      "trackedMtimeMaxNs": 1792180815505181786,
+      "cacheContentChanged": {
+        ".cache/tsc/tsconfig.app.tsbuildinfo": false,
+        ".cache/tsc/tsconfig.node.tsbuildinfo": false
+      },
+      "cacheMtimeChanged": {
+        ".cache/tsc/tsconfig.app.tsbuildinfo": false,
+        ".cache/tsc/tsconfig.node.tsbuildinfo": false
+      },
+      "cacheValidationError": null,
+      "trackedBytesPreserved": true
+    },
+    {
+      "seconds": 6.1171,
+      "exitCode": 0,
+      "timedOut": false,
+      "log": "2-baseline-86020.log",
+      "logSHA256": "faeaa94bcf7012d86f91ca647580449f56a263fb7eaf572c54789764f60a9b8f",
+      "replica": 2,
+      "variant": "baseline-86020",
+      "sourceSHA": "86020fb322bb56c44e4a644c14e0798d480b62ce",
+      "command": [
+        "bun",
+        "run",
+        "typecheck"
+      ],
+      "cacheBefore": {
+        "node_modules/.cache/tsc/tsconfig.app.tsbuildinfo": {
+          "bytes": 1586566,
+          "sha256": "424aea596cbb13e59f057ad1475393d8787f87b4dad971a67ac587dd6d95d7df",
+          "mtimeNs": 1792180207483151276
+        },
+        "node_modules/.cache/tsc/tsconfig.node.tsbuildinfo": {
+          "bytes": 84757,
+          "sha256": "6cefcd3b06e545e02b656580a032d5f3fdde900420fb090fcf790c4b29ca7608",
+          "mtimeNs": 1792180207659155499
+        }
+      },
+      "cacheAfter": {
+        "node_modules/.cache/tsc/tsconfig.app.tsbuildinfo": {
+          "bytes": 1586566,
+          "sha256": "424aea596cbb13e59f057ad1475393d8787f87b4dad971a67ac587dd6d95d7df",
+          "mtimeNs": 1792180207483151276
+        },
+        "node_modules/.cache/tsc/tsconfig.node.tsbuildinfo": {
+          "bytes": 84757,
+          "sha256": "6cefcd3b06e545e02b656580a032d5f3fdde900420fb090fcf790c4b29ca7608",
+          "mtimeNs": 1792180207659155499
+        }
+      },
+      "trackedInputSHA256": "cee7c35ddb6435e09128ef5be9218d247c81c4742a940ecbb0fb9194d0d214d8",
+      "trackedMtimeMinNs": 1792180823466122647,
+      "trackedMtimeMaxNs": 1792180823466122647,
+      "cacheContentChanged": {
+        "node_modules/.cache/tsc/tsconfig.app.tsbuildinfo": false,
+        "node_modules/.cache/tsc/tsconfig.node.tsbuildinfo": false
+      },
+      "cacheMtimeChanged": {
+        "node_modules/.cache/tsc/tsconfig.app.tsbuildinfo": false,
+        "node_modules/.cache/tsc/tsconfig.node.tsbuildinfo": false
+      },
+      "cacheValidationError": null,
+      "trackedBytesPreserved": true
+    },
+    {
+      "seconds": 7.0565,
+      "exitCode": 0,
+      "timedOut": false,
+      "log": "2-candidate-caf5dcbc.log",
+      "logSHA256": "1e3e7a094fa20952244aebd91f5a1ea16c144390bf3a304688ddf634a53900c9",
+      "replica": 2,
+      "variant": "candidate-caf5dcbc",
+      "sourceSHA": "caf5dcbc493915e421d6d2b6792e6a92f5384834",
+      "command": [
+        "bun",
+        "run",
+        "typecheck:ci"
+      ],
+      "cacheBefore": {
+        ".cache/tsc/tsconfig.app.tsbuildinfo": {
+          "bytes": 1593450,
+          "sha256": "a8382b104929d9833396eac0eb2c90708ef7f4103cc3b1f3ef688583e5cf1fbb",
+          "mtimeNs": 1792180493286023106
+        },
+        ".cache/tsc/tsconfig.node.tsbuildinfo": {
+          "bytes": 90858,
+          "sha256": "b219079b379d7a93347fe0e5720976a5642fab3531edc7d6b341738886e641e8",
+          "mtimeNs": 1792180494130043405
+        }
+      },
+      "cacheAfter": {
+        ".cache/tsc/tsconfig.app.tsbuildinfo": {
+          "bytes": 1593450,
+          "sha256": "a8382b104929d9833396eac0eb2c90708ef7f4103cc3b1f3ef688583e5cf1fbb",
+          "mtimeNs": 1792180493286023106
+        },
+        ".cache/tsc/tsconfig.node.tsbuildinfo": {
+          "bytes": 90858,
+          "sha256": "b219079b379d7a93347fe0e5720976a5642fab3531edc7d6b341738886e641e8",
+          "mtimeNs": 1792180494130043405
+        }
+      },
+      "trackedInputSHA256": "15e579a0eefe043b473022eded86d77eb03e70a2c796df5508c47f941e1dc953",
+      "trackedMtimeMinNs": 1792180830318454329,
+      "trackedMtimeMaxNs": 1792180830318454329,
+      "cacheContentChanged": {
+        ".cache/tsc/tsconfig.app.tsbuildinfo": false,
+        ".cache/tsc/tsconfig.node.tsbuildinfo": false
+      },
+      "cacheMtimeChanged": {
+        ".cache/tsc/tsconfig.app.tsbuildinfo": false,
+        ".cache/tsc/tsconfig.node.tsbuildinfo": false
+      },
+      "cacheValidationError": null,
+      "trackedBytesPreserved": true
+    },
+    {
+      "seconds": 6.2158,
+      "exitCode": 0,
+      "timedOut": false,
+      "log": "3-baseline-86020.log",
+      "logSHA256": "faeaa94bcf7012d86f91ca647580449f56a263fb7eaf572c54789764f60a9b8f",
+      "replica": 3,
+      "variant": "baseline-86020",
+      "sourceSHA": "86020fb322bb56c44e4a644c14e0798d480b62ce",
+      "command": [
+        "bun",
+        "run",
+        "typecheck"
+      ],
+      "cacheBefore": {
+        "node_modules/.cache/tsc/tsconfig.app.tsbuildinfo": {
+          "bytes": 1586566,
+          "sha256": "424aea596cbb13e59f057ad1475393d8787f87b4dad971a67ac587dd6d95d7df",
+          "mtimeNs": 1792180207483151276
+        },
+        "node_modules/.cache/tsc/tsconfig.node.tsbuildinfo": {
+          "bytes": 84757,
+          "sha256": "6cefcd3b06e545e02b656580a032d5f3fdde900420fb090fcf790c4b29ca7608",
+          "mtimeNs": 1792180207659155499
+        }
+      },
+      "cacheAfter": {
+        "node_modules/.cache/tsc/tsconfig.app.tsbuildinfo": {
+          "bytes": 1586566,
+          "sha256": "424aea596cbb13e59f057ad1475393d8787f87b4dad971a67ac587dd6d95d7df",
+          "mtimeNs": 1792180207483151276
+        },
+        "node_modules/.cache/tsc/tsconfig.node.tsbuildinfo": {
+          "bytes": 84757,
+          "sha256": "6cefcd3b06e545e02b656580a032d5f3fdde900420fb090fcf790c4b29ca7608",
+          "mtimeNs": 1792180207659155499
+        }
+      },
+      "trackedInputSHA256": "cee7c35ddb6435e09128ef5be9218d247c81c4742a940ecbb0fb9194d0d214d8",
+      "trackedMtimeMinNs": 1792180838044863751,
+      "trackedMtimeMaxNs": 1792180838044863751,
+      "cacheContentChanged": {
+        "node_modules/.cache/tsc/tsconfig.app.tsbuildinfo": false,
+        "node_modules/.cache/tsc/tsconfig.node.tsbuildinfo": false
+      },
+      "cacheMtimeChanged": {
+        "node_modules/.cache/tsc/tsconfig.app.tsbuildinfo": false,
+        "node_modules/.cache/tsc/tsconfig.node.tsbuildinfo": false
+      },
+      "cacheValidationError": null,
+      "trackedBytesPreserved": true
+    },
+    {
+      "seconds": 6.6571,
+      "exitCode": 0,
+      "timedOut": false,
+      "log": "3-candidate-caf5dcbc.log",
+      "logSHA256": "1e3e7a094fa20952244aebd91f5a1ea16c144390bf3a304688ddf634a53900c9",
+      "replica": 3,
+      "variant": "candidate-caf5dcbc",
+      "sourceSHA": "caf5dcbc493915e421d6d2b6792e6a92f5384834",
+      "command": [
+        "bun",
+        "run",
+        "typecheck:ci"
+      ],
+      "cacheBefore": {
+        ".cache/tsc/tsconfig.app.tsbuildinfo": {
+          "bytes": 1593450,
+          "sha256": "a8382b104929d9833396eac0eb2c90708ef7f4103cc3b1f3ef688583e5cf1fbb",
+          "mtimeNs": 1792180493286023106
+        },
+        ".cache/tsc/tsconfig.node.tsbuildinfo": {
+          "bytes": 90858,
+          "sha256": "b219079b379d7a93347fe0e5720976a5642fab3531edc7d6b341738886e641e8",
+          "mtimeNs": 1792180494130043405
+        }
+      },
+      "cacheAfter": {
+        ".cache/tsc/tsconfig.app.tsbuildinfo": {
+          "bytes": 1593450,
+          "sha256": "a8382b104929d9833396eac0eb2c90708ef7f4103cc3b1f3ef688583e5cf1fbb",
+          "mtimeNs": 1792180493286023106
+        },
+        ".cache/tsc/tsconfig.node.tsbuildinfo": {
+          "bytes": 90858,
+          "sha256": "b219079b379d7a93347fe0e5720976a5642fab3531edc7d6b341738886e641e8",
+          "mtimeNs": 1792180494130043405
+        }
+      },
+      "trackedInputSHA256": "15e579a0eefe043b473022eded86d77eb03e70a2c796df5508c47f941e1dc953",
+      "trackedMtimeMinNs": 1792180844939538189,
+      "trackedMtimeMaxNs": 1792180844939538189,
+      "cacheContentChanged": {
+        ".cache/tsc/tsconfig.app.tsbuildinfo": false,
+        ".cache/tsc/tsconfig.node.tsbuildinfo": false
+      },
+      "cacheMtimeChanged": {
+        ".cache/tsc/tsconfig.app.tsbuildinfo": false,
+        ".cache/tsc/tsconfig.node.tsbuildinfo": false
+      },
+      "cacheValidationError": null,
+      "trackedBytesPreserved": true
+    }
+  ],
+  "summary": {
+    "baseline-86020": {
+      "seconds": [
+        6.4015,
+        6.1171,
+        6.2158
+      ],
+      "median": 6.2158,
+      "range": [
+        6.1171,
+        6.4015
+      ]
+    },
+    "candidate-caf5dcbc": {
+      "seconds": [
+        7.2703,
+        7.0565,
+        6.6571
+      ],
+      "median": 7.0565,
+      "range": [
+        6.6571,
+        7.2703
+      ]
+    }
+  }
+}

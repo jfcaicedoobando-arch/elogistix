@@ -1,0 +1,437 @@
+{
+  "schemaVersion": 1,
+  "scope": "Local baseline benchmark of main 86020fb using the existing typecheck=tsc -b command; does not measure the combined commit caf5dcbc.",
+  "sourceFilesSHA256": {
+    "metadata.json": "02145f720eab6a7489f9e0d883a2adbcceedaa06d8f0ca1d8583a78329c8c53d",
+    "results.json": "1422a38660d35a2ebf7f8ea3754556e66025b32ee7245ad9a6c0d48396834c39",
+    "summary.json": "fce7a130e1cbe575d32444db80353854e7a7c8f87abc024e5c3efb1dbdb11bfb"
+  },
+  "metadata": {
+    "ref": "86020fb322bb56c44e4a644c14e0798d480b62ce",
+    "sourceSHA": "86020fb322bb56c44e4a644c14e0798d480b62ce",
+    "node": "v24.22.0",
+    "bun": "1.4.0",
+    "command": [
+      "bun",
+      "run",
+      "typecheck"
+    ],
+    "cacheDir": "node_modules/.cache/tsc",
+    "replicas": 3,
+    "platform": "Linux-6.18.44-x86_64-with-glibc2.41",
+    "cpuQuota": "400000 100000",
+    "memoryLimit": "17179869184",
+    "coldDefinition": "Delete both project .tsbuildinfo files; OS page cache is not flushed",
+    "helperSHA256": "0318cfbb02672b17861d664d263e82e8661535a3f7d4377c37331b2468016c78",
+    "install": {
+      "command": [
+        "bun",
+        "install",
+        "--frozen-lockfile",
+        "--ignore-scripts"
+      ],
+      "exitCode": 0,
+      "logSHA256": "b3bf0b319611340bf3471e58a3300d35665c521f2056bd4ad0cb9e7bb45ee8b7"
+    },
+    "typescript": "6.0.3",
+    "inputSHA256": {
+      "package.json": "d928034e57c0f81c7d3e8f133af40c16351f5fc67f15c686f1ac98d2f6c2af48",
+      "bun.lock": "f8d0d12c8f45051b1d7045a164bf3a3c1240c9b0d0005ae750461758f96fbc9e",
+      "tsconfig.app.json": "642c7c5d7e41dd5facebad4f4ff2f8f37e3edbc666afbeb12ae589a98c0cded6",
+      "tsconfig.json": "a39d840b86afc9bbb13eab2cb0e8bbff5701c87191aa9e0b14d1c403036d58fb",
+      "tsconfig.node.json": "67effa9a961034dab96e47095a281cf151d0e0969b956288eda63a960538913d",
+      "tsconfig.test-tooling.json": "63c02cb1f4d55e3220ead8746236255f6df97be633887ba04cce703c077a0413"
+    },
+    "incrementalChange": {
+      "path": "src/lib/financial/tcValido.ts",
+      "before": "return Number.isFinite(n) && n > 0 ? n : null;",
+      "after": "return !Number.isFinite(n) || n <= 0 ? null : n;",
+      "originalSHA256": "8c47d20161b845c745e6c0decdf96ead8efb398611043e7bf62b8b8ebb383b2f",
+      "changedSHA256": "73bcbfe791fe760fbc2d0fa3d3abd5b09b59ba8ca04fb016c9da06667622e1ef",
+      "publicSignatureChanged": false
+    },
+    "completed": true
+  },
+  "results": [
+    {
+      "replica": 1,
+      "phase": "cold",
+      "seconds": 59.7707,
+      "exitCode": 0,
+      "cacheBefore": {
+        "node_modules/.cache/tsc/tsconfig.app.tsbuildinfo": {
+          "exists": false,
+          "bytes": null,
+          "mtimeNs": null,
+          "sha256": null
+        },
+        "node_modules/.cache/tsc/tsconfig.node.tsbuildinfo": {
+          "exists": false,
+          "bytes": null,
+          "mtimeNs": null,
+          "sha256": null
+        }
+      },
+      "cacheAfter": {
+        "node_modules/.cache/tsc/tsconfig.app.tsbuildinfo": {
+          "exists": true,
+          "bytes": 1586566,
+          "mtimeNs": 1792180207483151276,
+          "sha256": "424aea596cbb13e59f057ad1475393d8787f87b4dad971a67ac587dd6d95d7df"
+        },
+        "node_modules/.cache/tsc/tsconfig.node.tsbuildinfo": {
+          "exists": true,
+          "bytes": 84757,
+          "mtimeNs": 1792180207659155499,
+          "sha256": "6cefcd3b06e545e02b656580a032d5f3fdde900420fb090fcf790c4b29ca7608"
+        }
+      },
+      "sourceSHA256": "8c47d20161b845c745e6c0decdf96ead8efb398611043e7bf62b8b8ebb383b2f",
+      "sourceMtimeNs": 1792180148049643895,
+      "log": "1-cold.log",
+      "logSHA256": "faeaa94bcf7012d86f91ca647580449f56a263fb7eaf572c54789764f60a9b8f"
+    },
+    {
+      "replica": 1,
+      "phase": "warm",
+      "seconds": 0.2174,
+      "exitCode": 0,
+      "cacheBefore": {
+        "node_modules/.cache/tsc/tsconfig.app.tsbuildinfo": {
+          "exists": true,
+          "bytes": 1586566,
+          "mtimeNs": 1792180207483151276,
+          "sha256": "424aea596cbb13e59f057ad1475393d8787f87b4dad971a67ac587dd6d95d7df"
+        },
+        "node_modules/.cache/tsc/tsconfig.node.tsbuildinfo": {
+          "exists": true,
+          "bytes": 84757,
+          "mtimeNs": 1792180207659155499,
+          "sha256": "6cefcd3b06e545e02b656580a032d5f3fdde900420fb090fcf790c4b29ca7608"
+        }
+      },
+      "cacheAfter": {
+        "node_modules/.cache/tsc/tsconfig.app.tsbuildinfo": {
+          "exists": true,
+          "bytes": 1586566,
+          "mtimeNs": 1792180207483151276,
+          "sha256": "424aea596cbb13e59f057ad1475393d8787f87b4dad971a67ac587dd6d95d7df"
+        },
+        "node_modules/.cache/tsc/tsconfig.node.tsbuildinfo": {
+          "exists": true,
+          "bytes": 84757,
+          "mtimeNs": 1792180207659155499,
+          "sha256": "6cefcd3b06e545e02b656580a032d5f3fdde900420fb090fcf790c4b29ca7608"
+        }
+      },
+      "sourceSHA256": "8c47d20161b845c745e6c0decdf96ead8efb398611043e7bf62b8b8ebb383b2f",
+      "sourceMtimeNs": 1792180148049643895,
+      "log": "1-warm.log",
+      "logSHA256": "faeaa94bcf7012d86f91ca647580449f56a263fb7eaf572c54789764f60a9b8f"
+    },
+    {
+      "replica": 1,
+      "phase": "incremental",
+      "seconds": 33.3632,
+      "exitCode": 0,
+      "cacheBefore": {
+        "node_modules/.cache/tsc/tsconfig.app.tsbuildinfo": {
+          "exists": true,
+          "bytes": 1586566,
+          "mtimeNs": 1792180207483151276,
+          "sha256": "424aea596cbb13e59f057ad1475393d8787f87b4dad971a67ac587dd6d95d7df"
+        },
+        "node_modules/.cache/tsc/tsconfig.node.tsbuildinfo": {
+          "exists": true,
+          "bytes": 84757,
+          "mtimeNs": 1792180207659155499,
+          "sha256": "6cefcd3b06e545e02b656580a032d5f3fdde900420fb090fcf790c4b29ca7608"
+        }
+      },
+      "cacheAfter": {
+        "node_modules/.cache/tsc/tsconfig.app.tsbuildinfo": {
+          "exists": true,
+          "bytes": 1586657,
+          "mtimeNs": 1792180241307963657,
+          "sha256": "597a013bf514b76da9abffa26948902777215e808bbc061de101e52928a9cff4"
+        },
+        "node_modules/.cache/tsc/tsconfig.node.tsbuildinfo": {
+          "exists": true,
+          "bytes": 84757,
+          "mtimeNs": 1792180207659155499,
+          "sha256": "6cefcd3b06e545e02b656580a032d5f3fdde900420fb090fcf790c4b29ca7608"
+        }
+      },
+      "sourceSHA256": "73bcbfe791fe760fbc2d0fa3d3abd5b09b59ba8ca04fb016c9da06667622e1ef",
+      "sourceMtimeNs": 1792180208045126704,
+      "log": "1-incremental.log",
+      "logSHA256": "faeaa94bcf7012d86f91ca647580449f56a263fb7eaf572c54789764f60a9b8f"
+    },
+    {
+      "replica": 2,
+      "phase": "cold",
+      "seconds": 61.0631,
+      "exitCode": 0,
+      "cacheBefore": {
+        "node_modules/.cache/tsc/tsconfig.app.tsbuildinfo": {
+          "exists": false,
+          "bytes": null,
+          "mtimeNs": null,
+          "sha256": null
+        },
+        "node_modules/.cache/tsc/tsconfig.node.tsbuildinfo": {
+          "exists": false,
+          "bytes": null,
+          "mtimeNs": null,
+          "sha256": null
+        }
+      },
+      "cacheAfter": {
+        "node_modules/.cache/tsc/tsconfig.app.tsbuildinfo": {
+          "exists": true,
+          "bytes": 1586566,
+          "mtimeNs": 1792180302033423073,
+          "sha256": "424aea596cbb13e59f057ad1475393d8787f87b4dad971a67ac587dd6d95d7df"
+        },
+        "node_modules/.cache/tsc/tsconfig.node.tsbuildinfo": {
+          "exists": true,
+          "bytes": 84757,
+          "mtimeNs": 1792180302273428846,
+          "sha256": "6cefcd3b06e545e02b656580a032d5f3fdde900420fb090fcf790c4b29ca7608"
+        }
+      },
+      "sourceSHA256": "8c47d20161b845c745e6c0decdf96ead8efb398611043e7bf62b8b8ebb383b2f",
+      "sourceMtimeNs": 1792180241411514801,
+      "log": "2-cold.log",
+      "logSHA256": "faeaa94bcf7012d86f91ca647580449f56a263fb7eaf572c54789764f60a9b8f"
+    },
+    {
+      "replica": 2,
+      "phase": "warm",
+      "seconds": 0.2145,
+      "exitCode": 0,
+      "cacheBefore": {
+        "node_modules/.cache/tsc/tsconfig.app.tsbuildinfo": {
+          "exists": true,
+          "bytes": 1586566,
+          "mtimeNs": 1792180302033423073,
+          "sha256": "424aea596cbb13e59f057ad1475393d8787f87b4dad971a67ac587dd6d95d7df"
+        },
+        "node_modules/.cache/tsc/tsconfig.node.tsbuildinfo": {
+          "exists": true,
+          "bytes": 84757,
+          "mtimeNs": 1792180302273428846,
+          "sha256": "6cefcd3b06e545e02b656580a032d5f3fdde900420fb090fcf790c4b29ca7608"
+        }
+      },
+      "cacheAfter": {
+        "node_modules/.cache/tsc/tsconfig.app.tsbuildinfo": {
+          "exists": true,
+          "bytes": 1586566,
+          "mtimeNs": 1792180302033423073,
+          "sha256": "424aea596cbb13e59f057ad1475393d8787f87b4dad971a67ac587dd6d95d7df"
+        },
+        "node_modules/.cache/tsc/tsconfig.node.tsbuildinfo": {
+          "exists": true,
+          "bytes": 84757,
+          "mtimeNs": 1792180302273428846,
+          "sha256": "6cefcd3b06e545e02b656580a032d5f3fdde900420fb090fcf790c4b29ca7608"
+        }
+      },
+      "sourceSHA256": "8c47d20161b845c745e6c0decdf96ead8efb398611043e7bf62b8b8ebb383b2f",
+      "sourceMtimeNs": 1792180241411514801,
+      "log": "2-warm.log",
+      "logSHA256": "faeaa94bcf7012d86f91ca647580449f56a263fb7eaf572c54789764f60a9b8f"
+    },
+    {
+      "replica": 2,
+      "phase": "incremental",
+      "seconds": 31.873,
+      "exitCode": 0,
+      "cacheBefore": {
+        "node_modules/.cache/tsc/tsconfig.app.tsbuildinfo": {
+          "exists": true,
+          "bytes": 1586566,
+          "mtimeNs": 1792180302033423073,
+          "sha256": "424aea596cbb13e59f057ad1475393d8787f87b4dad971a67ac587dd6d95d7df"
+        },
+        "node_modules/.cache/tsc/tsconfig.node.tsbuildinfo": {
+          "exists": true,
+          "bytes": 84757,
+          "mtimeNs": 1792180302273428846,
+          "sha256": "6cefcd3b06e545e02b656580a032d5f3fdde900420fb090fcf790c4b29ca7608"
+        }
+      },
+      "cacheAfter": {
+        "node_modules/.cache/tsc/tsconfig.app.tsbuildinfo": {
+          "exists": true,
+          "bytes": 1586657,
+          "mtimeNs": 1792180334438202099,
+          "sha256": "597a013bf514b76da9abffa26948902777215e808bbc061de101e52928a9cff4"
+        },
+        "node_modules/.cache/tsc/tsconfig.node.tsbuildinfo": {
+          "exists": true,
+          "bytes": 84757,
+          "mtimeNs": 1792180302273428846,
+          "sha256": "6cefcd3b06e545e02b656580a032d5f3fdde900420fb090fcf790c4b29ca7608"
+        }
+      },
+      "sourceSHA256": "73bcbfe791fe760fbc2d0fa3d3abd5b09b59ba8ca04fb016c9da06667622e1ef",
+      "sourceMtimeNs": 1792180302695197240,
+      "log": "2-incremental.log",
+      "logSHA256": "faeaa94bcf7012d86f91ca647580449f56a263fb7eaf572c54789764f60a9b8f"
+    },
+    {
+      "replica": 3,
+      "phase": "cold",
+      "seconds": 58.6337,
+      "exitCode": 0,
+      "cacheBefore": {
+        "node_modules/.cache/tsc/tsconfig.app.tsbuildinfo": {
+          "exists": false,
+          "bytes": null,
+          "mtimeNs": null,
+          "sha256": null
+        },
+        "node_modules/.cache/tsc/tsconfig.node.tsbuildinfo": {
+          "exists": false,
+          "bytes": null,
+          "mtimeNs": null,
+          "sha256": null
+        }
+      },
+      "cacheAfter": {
+        "node_modules/.cache/tsc/tsconfig.app.tsbuildinfo": {
+          "exists": true,
+          "bytes": 1586566,
+          "mtimeNs": 1792180392871607605,
+          "sha256": "424aea596cbb13e59f057ad1475393d8787f87b4dad971a67ac587dd6d95d7df"
+        },
+        "node_modules/.cache/tsc/tsconfig.node.tsbuildinfo": {
+          "exists": true,
+          "bytes": 84757,
+          "mtimeNs": 1792180393055612032,
+          "sha256": "6cefcd3b06e545e02b656580a032d5f3fdde900420fb090fcf790c4b29ca7608"
+        }
+      },
+      "sourceSHA256": "8c47d20161b845c745e6c0decdf96ead8efb398611043e7bf62b8b8ebb383b2f",
+      "sourceMtimeNs": 1792180334571620225,
+      "log": "3-cold.log",
+      "logSHA256": "faeaa94bcf7012d86f91ca647580449f56a263fb7eaf572c54789764f60a9b8f"
+    },
+    {
+      "replica": 3,
+      "phase": "warm",
+      "seconds": 0.2204,
+      "exitCode": 0,
+      "cacheBefore": {
+        "node_modules/.cache/tsc/tsconfig.app.tsbuildinfo": {
+          "exists": true,
+          "bytes": 1586566,
+          "mtimeNs": 1792180392871607605,
+          "sha256": "424aea596cbb13e59f057ad1475393d8787f87b4dad971a67ac587dd6d95d7df"
+        },
+        "node_modules/.cache/tsc/tsconfig.node.tsbuildinfo": {
+          "exists": true,
+          "bytes": 84757,
+          "mtimeNs": 1792180393055612032,
+          "sha256": "6cefcd3b06e545e02b656580a032d5f3fdde900420fb090fcf790c4b29ca7608"
+        }
+      },
+      "cacheAfter": {
+        "node_modules/.cache/tsc/tsconfig.app.tsbuildinfo": {
+          "exists": true,
+          "bytes": 1586566,
+          "mtimeNs": 1792180392871607605,
+          "sha256": "424aea596cbb13e59f057ad1475393d8787f87b4dad971a67ac587dd6d95d7df"
+        },
+        "node_modules/.cache/tsc/tsconfig.node.tsbuildinfo": {
+          "exists": true,
+          "bytes": 84757,
+          "mtimeNs": 1792180393055612032,
+          "sha256": "6cefcd3b06e545e02b656580a032d5f3fdde900420fb090fcf790c4b29ca7608"
+        }
+      },
+      "sourceSHA256": "8c47d20161b845c745e6c0decdf96ead8efb398611043e7bf62b8b8ebb383b2f",
+      "sourceMtimeNs": 1792180334571620225,
+      "log": "3-warm.log",
+      "logSHA256": "faeaa94bcf7012d86f91ca647580449f56a263fb7eaf572c54789764f60a9b8f"
+    },
+    {
+      "replica": 3,
+      "phase": "incremental",
+      "seconds": 30.7013,
+      "exitCode": 0,
+      "cacheBefore": {
+        "node_modules/.cache/tsc/tsconfig.app.tsbuildinfo": {
+          "exists": true,
+          "bytes": 1586566,
+          "mtimeNs": 1792180392871607605,
+          "sha256": "424aea596cbb13e59f057ad1475393d8787f87b4dad971a67ac587dd6d95d7df"
+        },
+        "node_modules/.cache/tsc/tsconfig.node.tsbuildinfo": {
+          "exists": true,
+          "bytes": 84757,
+          "mtimeNs": 1792180393055612032,
+          "sha256": "6cefcd3b06e545e02b656580a032d5f3fdde900420fb090fcf790c4b29ca7608"
+        }
+      },
+      "cacheAfter": {
+        "node_modules/.cache/tsc/tsconfig.app.tsbuildinfo": {
+          "exists": true,
+          "bytes": 1586657,
+          "mtimeNs": 1792180424028357191,
+          "sha256": "597a013bf514b76da9abffa26948902777215e808bbc061de101e52928a9cff4"
+        },
+        "node_modules/.cache/tsc/tsconfig.node.tsbuildinfo": {
+          "exists": true,
+          "bytes": 84757,
+          "mtimeNs": 1792180393055612032,
+          "sha256": "6cefcd3b06e545e02b656580a032d5f3fdde900420fb090fcf790c4b29ca7608"
+        }
+      },
+      "sourceSHA256": "73bcbfe791fe760fbc2d0fa3d3abd5b09b59ba8ca04fb016c9da06667622e1ef",
+      "sourceMtimeNs": 1792180393431846070,
+      "log": "3-incremental.log",
+      "logSHA256": "faeaa94bcf7012d86f91ca647580449f56a263fb7eaf572c54789764f60a9b8f"
+    }
+  ],
+  "summary": {
+    "cold": {
+      "seconds": [
+        59.7707,
+        61.0631,
+        58.6337
+      ],
+      "median": 59.7707,
+      "range": [
+        58.6337,
+        61.0631
+      ]
+    },
+    "warm": {
+      "seconds": [
+        0.2174,
+        0.2145,
+        0.2204
+      ],
+      "median": 0.2174,
+      "range": [
+        0.2145,
+        0.2204
+      ]
+    },
+    "incremental": {
+      "seconds": [
+        33.3632,
+        31.873,
+        30.7013
+      ],
+      "median": 31.873,
+      "range": [
+        30.7013,
+        33.3632
+      ]
+    }
+  }
+}

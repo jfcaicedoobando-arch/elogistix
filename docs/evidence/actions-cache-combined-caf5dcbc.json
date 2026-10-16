@@ -1,0 +1,574 @@
+{
+  "schemaVersion": 1,
+  "repository": "jfcaicedoobando-arch/elogistix",
+  "requestedHeadSha": "caf5dcbc493915e421d6d2b6792e6a92f5384834",
+  "collectedAt": "2026-10-16T19:54:45.971Z",
+  "collectionMethod": "Read-only GitHub connector workflow metadata and selected job-log fields; no reruns, artifact downloads, repository edits or full environment persisted.",
+  "ci": {
+    "run": {
+      "id": 38957769417,
+      "url": "https://github.com/jfcaicedoobando-arch/elogistix/actions/runs/38957769417",
+      "headSha": "caf5dcbc493915e421d6d2b6792e6a92f5384834",
+      "event": "pull_request",
+      "attempt": 1,
+      "status": "completed",
+      "conclusion": "success"
+    },
+    "jobsReturned": 18,
+    "totalJobsReported": 18,
+    "successfulJobs": 18,
+    "shards": {
+      "expected": 14,
+      "returned": 14,
+      "successful": 14
+    },
+    "aggregator": {
+      "id": 117166302294,
+      "name": "CI Success (aggregator)",
+      "url": "https://github.com/jfcaicedoobando-arch/elogistix/actions/runs/38957769417/job/117166302294",
+      "status": "completed",
+      "conclusion": "success",
+      "headSha": "caf5dcbc493915e421d6d2b6792e6a92f5384834",
+      "startedAt": "2026-10-16T19:53:18Z",
+      "completedAt": "2026-10-16T19:53:35Z",
+      "durationSecondsApi": 17
+    },
+    "checks": {
+      "id": 117165106144,
+      "name": "Typecheck · guards DB · build · Deno",
+      "url": "https://github.com/jfcaicedoobando-arch/elogistix/actions/runs/38957769417/job/117165106144",
+      "status": "completed",
+      "conclusion": "success",
+      "headSha": "caf5dcbc493915e421d6d2b6792e6a92f5384834",
+      "startedAt": "2026-10-16T19:50:21Z",
+      "completedAt": "2026-10-16T19:52:23Z",
+      "durationSecondsApi": 122,
+      "checkedOutCommit": "31e603ae692683a90578cfbd8899793abff638a6",
+      "checkoutScope": "PR merge ref; distinct from workflow head SHA.",
+      "relevantSteps": [
+        {
+          "name": "Installed TypeScript version",
+          "number": 4,
+          "status": "completed",
+          "conclusion": "success",
+          "startedAt": "2026-10-16T19:50:40Z",
+          "completedAt": "2026-10-16T19:50:40Z",
+          "durationSecondsApi": 0
+        },
+        {
+          "name": "Restore TypeScript incremental cache",
+          "number": 5,
+          "status": "completed",
+          "conclusion": "success",
+          "startedAt": "2026-10-16T19:50:40Z",
+          "completedAt": "2026-10-16T19:50:41Z",
+          "durationSecondsApi": 1
+        },
+        {
+          "name": "TypeScript typecheck",
+          "number": 6,
+          "status": "completed",
+          "conclusion": "success",
+          "startedAt": "2026-10-16T19:50:41Z",
+          "completedAt": "2026-10-16T19:51:10Z",
+          "durationSecondsApi": 29
+        },
+        {
+          "name": "Bundle size gate",
+          "number": 10,
+          "status": "completed",
+          "conclusion": "success",
+          "startedAt": "2026-10-16T19:51:51Z",
+          "completedAt": "2026-10-16T19:51:56Z",
+          "durationSecondsApi": 5
+        },
+        {
+          "name": "Save TypeScript incremental cache",
+          "number": 15,
+          "status": "completed",
+          "conclusion": "success",
+          "startedAt": "2026-10-16T19:52:19Z",
+          "completedAt": "2026-10-16T19:52:20Z",
+          "durationSecondsApi": 1
+        }
+      ],
+      "typescriptCache": {
+        "path": ".cache/tsc",
+        "primaryKey": "Linux-X64-tsc-v1-nodev24.22.0-bun1.4.0-ts6.0.3-74aa60362caeb5fb368245a398929ea96058f4b1af6c6fef421ab1f7678880bf-38957769417-1",
+        "compatibilityPrefix": "Linux-X64-tsc-v1-nodev24.22.0-bun1.4.0-ts6.0.3-74aa60362caeb5fb368245a398929ea96058f4b1af6c6fef421ab1f7678880bf-",
+        "restoredKey": "Linux-X64-tsc-v1-nodev24.22.0-bun1.4.0-ts6.0.3-74aa60362caeb5fb368245a398929ea96058f4b1af6c6fef421ab1f7678880bf-38955742577-2",
+        "restoreKind": "prefix",
+        "restorePayloadBytes": 483814,
+        "savedKey": "Linux-X64-tsc-v1-nodev24.22.0-bun1.4.0-ts6.0.3-74aa60362caeb5fb368245a398929ea96058f4b1af6c6fef421ab1f7678880bf-38957769417-1",
+        "restoreDurationSecondsLogToRestoredMessage": 1.0662024,
+        "checkerDurationSecondsBetweenLogMarkers": 29.0148104,
+        "checkerStart": "2026-10-16T19:50:41.7009915Z",
+        "checkerNextStep": "2026-10-16T19:51:10.7158019Z",
+        "saveDurationSecondsLogToSavedMessage": 1.0564241
+      },
+      "cssBudget": {
+        "raw": {
+          "bytes": 196588,
+          "limitBytes": 200467,
+          "passed": true,
+          "timestamp": "2026-10-16T19:51:56.0465199Z"
+        },
+        "gzip": {
+          "bytes": 27568,
+          "limitBytes": 28104,
+          "passed": true,
+          "timestamp": "2026-10-16T19:51:56.0465916Z"
+        },
+        "brotli": {
+          "bytes": 21163,
+          "limitBytes": 21584,
+          "passed": true,
+          "timestamp": "2026-10-16T19:51:56.0466478Z"
+        }
+      },
+      "sanitizedLogExcerpt": [
+        {
+          "timestamp": "2026-10-16T19:50:26.1664640Z",
+          "text": "31e603ae692683a90578cfbd8899793abff638a6"
+        },
+        {
+          "timestamp": "2026-10-16T19:50:40.6260188Z",
+          "text": "  path: .cache/tsc"
+        },
+        {
+          "timestamp": "2026-10-16T19:50:40.6261377Z",
+          "text": "  key: Linux-X64-tsc-v1-nodev24.22.0-bun1.4.0-ts6.0.3-74aa60362caeb5fb368245a398929ea96058f4b1af6c6fef421ab1f7678880bf-38957769417-1"
+        },
+        {
+          "timestamp": "2026-10-16T19:50:40.6262438Z",
+          "text": "  restore-keys: Linux-X64-tsc-v1-nodev24.22.0-bun1.4.0-ts6.0.3-74aa60362caeb5fb368245a398929ea96058f4b1af6c6fef421ab1f7678880bf-"
+        },
+        {
+          "timestamp": "2026-10-16T19:50:40.9466151Z",
+          "text": "Cache hit for restore-key: Linux-X64-tsc-v1-nodev24.22.0-bun1.4.0-ts6.0.3-74aa60362caeb5fb368245a398929ea96058f4b1af6c6fef421ab1f7678880bf-38955742577-2"
+        },
+        {
+          "timestamp": "2026-10-16T19:50:41.6718271Z",
+          "text": "Cache Size: ~0 MB (483814 B)"
+        },
+        {
+          "timestamp": "2026-10-16T19:50:41.6844423Z",
+          "text": "Cache restored successfully"
+        },
+        {
+          "timestamp": "2026-10-16T19:50:41.6921548Z",
+          "text": "Cache restored from key: Linux-X64-tsc-v1-nodev24.22.0-bun1.4.0-ts6.0.3-74aa60362caeb5fb368245a398929ea96058f4b1af6c6fef421ab1f7678880bf-38955742577-2"
+        },
+        {
+          "timestamp": "2026-10-16T19:50:41.7009915Z",
+          "text": "##[group]Run bun run typecheck:ci"
+        },
+        {
+          "timestamp": "2026-10-16T19:51:10.7158019Z",
+          "text": "##[group]Run bun run audit:manifest"
+        },
+        {
+          "timestamp": "2026-10-16T19:51:56.0465199Z",
+          "text": "CSS total raw: 196588 bytes (limit 200467 bytes)"
+        },
+        {
+          "timestamp": "2026-10-16T19:51:56.0465916Z",
+          "text": "CSS total gzip: 27568 bytes (limit 28104 bytes)"
+        },
+        {
+          "timestamp": "2026-10-16T19:51:56.0466478Z",
+          "text": "CSS total brotli: 21163 bytes (limit 21584 bytes)"
+        },
+        {
+          "timestamp": "2026-10-16T19:51:56.0498304Z",
+          "text": "✓ Bundle size OK (entry + lazy + vendor + CSS)"
+        },
+        {
+          "timestamp": "2026-10-16T19:52:19.2774958Z",
+          "text": "  path: .cache/tsc"
+        },
+        {
+          "timestamp": "2026-10-16T19:52:19.2776069Z",
+          "text": "  key: Linux-X64-tsc-v1-nodev24.22.0-bun1.4.0-ts6.0.3-74aa60362caeb5fb368245a398929ea96058f4b1af6c6fef421ab1f7678880bf-38957769417-1"
+        },
+        {
+          "timestamp": "2026-10-16T19:52:20.3338070Z",
+          "text": "Cache saved with key: Linux-X64-tsc-v1-nodev24.22.0-bun1.4.0-ts6.0.3-74aa60362caeb5fb368245a398929ea96058f4b1af6c6fef421ab1f7678880bf-38957769417-1"
+        }
+      ],
+      "logCapture": {
+        "returnedCharacters": 346350,
+        "returnedLines": 3099,
+        "firstTimestamp": "2026-10-16T19:50:22.5023483Z",
+        "lastTimestamp": "2026-10-16T19:52:21.1999103Z",
+        "jobCleanupMarkerSeen": true,
+        "truncationMarkerSeen": false
+      }
+    }
+  },
+  "isolatedUi": {
+    "run": {
+      "id": 38957769246,
+      "url": "https://github.com/jfcaicedoobando-arch/elogistix/actions/runs/38957769246",
+      "headSha": "caf5dcbc493915e421d6d2b6792e6a92f5384834",
+      "event": "pull_request",
+      "attempt": 1,
+      "status": "completed",
+      "conclusion": "success"
+    },
+    "totalJobsReported": 5,
+    "jobsReturned": 5,
+    "successfulJobs": 5,
+    "totalCases": {
+      "expected": 52,
+      "passed": 52,
+      "unexpected": 0,
+      "skipped": 0,
+      "flaky": 0
+    },
+    "jobs": [
+      {
+        "id": 117164855276,
+        "name": "Isolated profitability filters (8 cases)",
+        "url": "https://github.com/jfcaicedoobando-arch/elogistix/actions/runs/38957769246/job/117164855276",
+        "status": "completed",
+        "conclusion": "success",
+        "headSha": "caf5dcbc493915e421d6d2b6792e6a92f5384834",
+        "startedAt": "2026-10-16T19:49:45Z",
+        "completedAt": "2026-10-16T19:51:15Z",
+        "durationSecondsApi": 90,
+        "checkedOutCommit": "31e603ae692683a90578cfbd8899793abff638a6",
+        "checkoutEvidence": {
+          "timestamp": "2026-10-16T19:49:51.8756540Z",
+          "text": "31e603ae692683a90578cfbd8899793abff638a6"
+        },
+        "provenanceTestedCommit": null,
+        "stats": {
+          "expected": 8,
+          "passed": 8,
+          "unexpected": 0,
+          "skipped": 0,
+          "flaky": 0,
+          "topLevelErrorsVerifiedEmpty": false
+        },
+        "statsEvidence": "Expected/unexpected/skipped/flaky values are entailed by the successful report guard; passed count is independently printed by Playwright. Report JSON was not downloaded.",
+        "guard": {
+          "name": "Require all 8 cases without skips",
+          "number": 8,
+          "status": "completed",
+          "conclusion": "success",
+          "startedAt": "2026-10-16T19:51:09Z",
+          "completedAt": "2026-10-16T19:51:09Z",
+          "durationSecondsApi": 0
+        },
+        "browserStep": {
+          "name": "Check 8 browser cases",
+          "number": 7,
+          "status": "completed",
+          "conclusion": "success",
+          "startedAt": "2026-10-16T19:50:48Z",
+          "completedAt": "2026-10-16T19:51:09Z",
+          "durationSecondsApi": 21
+        },
+        "sanitizedLogExcerpt": [
+          {
+            "timestamp": "2026-10-16T19:49:51.8756540Z",
+            "text": "31e603ae692683a90578cfbd8899793abff638a6"
+          },
+          {
+            "timestamp": "2026-10-16T19:51:09.1593608Z",
+            "text": "  8 passed (20.2s)"
+          },
+          {
+            "timestamp": "2026-10-16T19:51:09.1784536Z",
+            "text": "if (stats.expected !== 8 || stats.unexpected !== 0 || stats.skipped !== 0 || stats.flaky !== 0) {"
+          }
+        ],
+        "logCapture": {
+          "returnedCharacters": 53224,
+          "returnedLines": 598,
+          "firstTimestamp": "2026-10-16T19:49:46.8265242Z",
+          "lastTimestamp": "2026-10-16T19:51:12.6454811Z",
+          "jobCleanupMarkerSeen": true,
+          "truncationMarkerSeen": false
+        }
+      },
+      {
+        "id": 117164855417,
+        "name": "Isolated dialog and payment cards (20 cases)",
+        "url": "https://github.com/jfcaicedoobando-arch/elogistix/actions/runs/38957769246/job/117164855417",
+        "status": "completed",
+        "conclusion": "success",
+        "headSha": "caf5dcbc493915e421d6d2b6792e6a92f5384834",
+        "startedAt": "2026-10-16T19:49:45Z",
+        "completedAt": "2026-10-16T19:52:47Z",
+        "durationSecondsApi": 182,
+        "checkedOutCommit": "31e603ae692683a90578cfbd8899793abff638a6",
+        "checkoutEvidence": {
+          "timestamp": "2026-10-16T19:49:50.0418845Z",
+          "text": "31e603ae692683a90578cfbd8899793abff638a6"
+        },
+        "provenanceTestedCommit": null,
+        "stats": {
+          "expected": 20,
+          "passed": 20,
+          "unexpected": 0,
+          "skipped": 0,
+          "flaky": 0,
+          "topLevelErrorsVerifiedEmpty": false
+        },
+        "statsEvidence": "Expected/unexpected/skipped/flaky values are entailed by the successful report guard; passed count is independently printed by Playwright. Report JSON was not downloaded.",
+        "guard": {
+          "name": "Require all 20 cases without skips",
+          "number": 8,
+          "status": "completed",
+          "conclusion": "success",
+          "startedAt": "2026-10-16T19:52:41Z",
+          "completedAt": "2026-10-16T19:52:41Z",
+          "durationSecondsApi": 0
+        },
+        "browserStep": {
+          "name": "Check 20 browser cases",
+          "number": 7,
+          "status": "completed",
+          "conclusion": "success",
+          "startedAt": "2026-10-16T19:50:46Z",
+          "completedAt": "2026-10-16T19:52:41Z",
+          "durationSecondsApi": 115
+        },
+        "sanitizedLogExcerpt": [
+          {
+            "timestamp": "2026-10-16T19:49:50.0418845Z",
+            "text": "31e603ae692683a90578cfbd8899793abff638a6"
+          },
+          {
+            "timestamp": "2026-10-16T19:52:41.4528040Z",
+            "text": "  20 passed (1.9m)"
+          },
+          {
+            "timestamp": "2026-10-16T19:52:41.6252061Z",
+            "text": "if (stats.expected !== 20 || stats.unexpected !== 0 || stats.skipped !== 0 || stats.flaky !== 0) {"
+          }
+        ],
+        "logCapture": {
+          "returnedCharacters": 55764,
+          "returnedLines": 605,
+          "firstTimestamp": "2026-10-16T19:49:46.2237978Z",
+          "lastTimestamp": "2026-10-16T19:52:45.3617333Z",
+          "jobCleanupMarkerSeen": true,
+          "truncationMarkerSeen": false
+        }
+      },
+      {
+        "id": 117164855524,
+        "name": "Isolated virtualization and table keyboard (8 cases, Chromium and Firefox)",
+        "url": "https://github.com/jfcaicedoobando-arch/elogistix/actions/runs/38957769246/job/117164855524",
+        "status": "completed",
+        "conclusion": "success",
+        "headSha": "caf5dcbc493915e421d6d2b6792e6a92f5384834",
+        "startedAt": "2026-10-16T19:49:45Z",
+        "completedAt": "2026-10-16T19:50:59Z",
+        "durationSecondsApi": 74,
+        "checkedOutCommit": "caf5dcbc493915e421d6d2b6792e6a92f5384834",
+        "checkoutEvidence": {
+          "timestamp": "2026-10-16T19:49:50.5504644Z",
+          "text": "caf5dcbc493915e421d6d2b6792e6a92f5384834"
+        },
+        "provenanceTestedCommit": "caf5dcbc493915e421d6d2b6792e6a92f5384834",
+        "stats": {
+          "expected": 8,
+          "passed": 8,
+          "unexpected": 0,
+          "skipped": 0,
+          "flaky": 0,
+          "topLevelErrorsVerifiedEmpty": false
+        },
+        "statsEvidence": "Expected/unexpected/skipped/flaky values are entailed by the successful report guard; passed count is independently printed by Playwright. Report JSON was not downloaded.",
+        "guard": {
+          "name": "Require all 8 cases without skips or retries",
+          "number": 9,
+          "status": "completed",
+          "conclusion": "success",
+          "startedAt": "2026-10-16T19:50:55Z",
+          "completedAt": "2026-10-16T19:50:55Z",
+          "durationSecondsApi": 0
+        },
+        "browserStep": {
+          "name": "Check all 8 browser cases with a fresh isolated build",
+          "number": 8,
+          "status": "completed",
+          "conclusion": "success",
+          "startedAt": "2026-10-16T19:50:35Z",
+          "completedAt": "2026-10-16T19:50:55Z",
+          "durationSecondsApi": 20
+        },
+        "sanitizedLogExcerpt": [
+          {
+            "timestamp": "2026-10-16T19:49:50.5504644Z",
+            "text": "caf5dcbc493915e421d6d2b6792e6a92f5384834"
+          },
+          {
+            "timestamp": "2026-10-16T19:50:55.5909297Z",
+            "text": "  8 passed (19.9s)"
+          },
+          {
+            "timestamp": "2026-10-16T19:50:55.6208973Z",
+            "text": "if (stats.expected !== 8 || stats.unexpected !== 0 || stats.skipped !== 0 || stats.flaky !== 0) {"
+          },
+          {
+            "timestamp": "2026-10-16T19:50:02.2414595Z",
+            "text": "  \"testedCommit\": \"caf5dcbc493915e421d6d2b6792e6a92f5384834\","
+          }
+        ],
+        "logCapture": {
+          "returnedCharacters": 77062,
+          "returnedLines": 848,
+          "firstTimestamp": "2026-10-16T19:49:46.5302286Z",
+          "lastTimestamp": "2026-10-16T19:50:57.4845263Z",
+          "jobCleanupMarkerSeen": true,
+          "truncationMarkerSeen": false
+        }
+      },
+      {
+        "id": 117164855554,
+        "name": "Isolated dependency lifecycle and persistence (4 cases)",
+        "url": "https://github.com/jfcaicedoobando-arch/elogistix/actions/runs/38957769246/job/117164855554",
+        "status": "completed",
+        "conclusion": "success",
+        "headSha": "caf5dcbc493915e421d6d2b6792e6a92f5384834",
+        "startedAt": "2026-10-16T19:49:46Z",
+        "completedAt": "2026-10-16T19:51:13Z",
+        "durationSecondsApi": 87,
+        "checkedOutCommit": "caf5dcbc493915e421d6d2b6792e6a92f5384834",
+        "checkoutEvidence": {
+          "timestamp": "2026-10-16T19:49:51.6593084Z",
+          "text": "caf5dcbc493915e421d6d2b6792e6a92f5384834"
+        },
+        "provenanceTestedCommit": null,
+        "stats": {
+          "expected": 4,
+          "passed": 4,
+          "unexpected": 0,
+          "skipped": 0,
+          "flaky": 0,
+          "topLevelErrorsVerifiedEmpty": true
+        },
+        "statsEvidence": "Expected/unexpected/skipped/flaky values are entailed by the successful report guard; passed count is independently printed by Playwright. Report JSON was not downloaded.",
+        "guard": {
+          "name": "Require all 4 dependency cases without skips or retries",
+          "number": 8,
+          "status": "completed",
+          "conclusion": "success",
+          "startedAt": "2026-10-16T19:51:08Z",
+          "completedAt": "2026-10-16T19:51:08Z",
+          "durationSecondsApi": 0
+        },
+        "browserStep": {
+          "name": "Check all 4 dependency browser cases with a fresh isolated build",
+          "number": 7,
+          "status": "completed",
+          "conclusion": "success",
+          "startedAt": "2026-10-16T19:50:40Z",
+          "completedAt": "2026-10-16T19:51:08Z",
+          "durationSecondsApi": 28
+        },
+        "sanitizedLogExcerpt": [
+          {
+            "timestamp": "2026-10-16T19:49:51.6593084Z",
+            "text": "caf5dcbc493915e421d6d2b6792e6a92f5384834"
+          },
+          {
+            "timestamp": "2026-10-16T19:51:08.8087453Z",
+            "text": "  4 passed (28.0s)"
+          },
+          {
+            "timestamp": "2026-10-16T19:51:08.8319967Z",
+            "text": "if (stats.expected !== 4 || stats.unexpected !== 0 || stats.skipped !== 0 || stats.flaky !== 0 || !Array.isArray(errors) || errors.length !== 0) {"
+          }
+        ],
+        "logCapture": {
+          "returnedCharacters": 51136,
+          "returnedLines": 573,
+          "firstTimestamp": "2026-10-16T19:49:47.0875705Z",
+          "lastTimestamp": "2026-10-16T19:51:11.3632725Z",
+          "jobCleanupMarkerSeen": true,
+          "truncationMarkerSeen": false
+        }
+      },
+      {
+        "id": 117164855619,
+        "name": "Isolated CxP filter focus (12 cases)",
+        "url": "https://github.com/jfcaicedoobando-arch/elogistix/actions/runs/38957769246/job/117164855619",
+        "status": "completed",
+        "conclusion": "success",
+        "headSha": "caf5dcbc493915e421d6d2b6792e6a92f5384834",
+        "startedAt": "2026-10-16T19:49:45Z",
+        "completedAt": "2026-10-16T19:51:54Z",
+        "durationSecondsApi": 129,
+        "checkedOutCommit": "31e603ae692683a90578cfbd8899793abff638a6",
+        "checkoutEvidence": {
+          "timestamp": "2026-10-16T19:49:50.9738016Z",
+          "text": "31e603ae692683a90578cfbd8899793abff638a6"
+        },
+        "provenanceTestedCommit": null,
+        "stats": {
+          "expected": 12,
+          "passed": 12,
+          "unexpected": 0,
+          "skipped": 0,
+          "flaky": 0,
+          "topLevelErrorsVerifiedEmpty": false
+        },
+        "statsEvidence": "Expected/unexpected/skipped/flaky values are entailed by the successful report guard; passed count is independently printed by Playwright. Report JSON was not downloaded.",
+        "guard": {
+          "name": "Require all 12 cases without skips or retries",
+          "number": 7,
+          "status": "completed",
+          "conclusion": "success",
+          "startedAt": "2026-10-16T19:51:50Z",
+          "completedAt": "2026-10-16T19:51:50Z",
+          "durationSecondsApi": 0
+        },
+        "browserStep": {
+          "name": "Build fresh isolated fixture and run 12 focus and draft cases",
+          "number": 6,
+          "status": "completed",
+          "conclusion": "success",
+          "startedAt": "2026-10-16T19:50:54Z",
+          "completedAt": "2026-10-16T19:51:50Z",
+          "durationSecondsApi": 56
+        },
+        "sanitizedLogExcerpt": [
+          {
+            "timestamp": "2026-10-16T19:49:50.9738016Z",
+            "text": "31e603ae692683a90578cfbd8899793abff638a6"
+          },
+          {
+            "timestamp": "2026-10-16T19:51:50.1150265Z",
+            "text": "  12 passed (55.3s)"
+          },
+          {
+            "timestamp": "2026-10-16T19:51:50.1398476Z",
+            "text": "if (stats.expected !== 12 || stats.unexpected !== 0 || stats.skipped !== 0 || stats.flaky !== 0) {"
+          }
+        ],
+        "logCapture": {
+          "returnedCharacters": 51204,
+          "returnedLines": 564,
+          "firstTimestamp": "2026-10-16T19:49:46.7354214Z",
+          "lastTimestamp": "2026-10-16T19:51:52.0957494Z",
+          "jobCleanupMarkerSeen": true,
+          "truncationMarkerSeen": false
+        }
+      }
+    ]
+  },
+  "limitations": [
+    "Step durations from GitHub API have whole-second timestamps; log-marker intervals include runner/step overhead and are not isolated compiler CPU time.",
+    "Playwright display durations are rounded; full report JSON files were not downloaded. Successful report guards plus CLI passed counts establish the case totals and absence of skipped/unexpected/flaky cases.",
+    "Workflow head SHA is caf5dcbc; checks, CxP, dialog and profitability jobs checked the PR merge ref 31e603ae, while virtualization and dependency jobs explicitly checked caf5dcbc.",
+    "All requested job-log strings include first/last timestamps and cleanup markers with no observed truncation marker; connector responses did not provide a separate completeness guarantee or byte-limit field.",
+    "Job lists were fetched with per_page=100; reported and returned counts agree (18 CI, 5 isolated UI).",
+    "This single combined-source run does not establish sustained or overall CI speed improvement."
+  ]
+}

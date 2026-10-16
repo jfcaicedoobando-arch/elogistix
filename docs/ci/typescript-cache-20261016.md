@@ -5,9 +5,12 @@ Base de la iniciativa: `main` en
 Se distinguen el baseline, un **prototipo** aislado y el runner entregado en
 `67ac599b3cb6477ee0372ef6b1b67671eaf6680b`, medido con `bun run typecheck:ci`.
 Ese commit también tiene evidencia de miss, guardado y restauración real en
-Actions. La integración posterior de `main`
-`86020fb322bb56c44e4a644c14e0798d480b62ce` necesita su propia medición;
-los resultados de `67ac599` no se atribuyen a esa combinación.
+Actions. También se midió la nueva base `main`
+`86020fb322bb56c44e4a644c14e0798d480b62ce` con `bun run typecheck`.
+Su integración está comprometida en `caf5dcbc493915e421d6d2b6792e6a92f5384834`;
+esa combinación tiene su propia serie de tres réplicas, separada de los tiempos
+de `67ac599`. Un escenario adicional con estado útil restaurado y mtimes nuevos
+también completó tres pares A/B: no mostró ventaja de rendimiento del candidato.
 No se declara un porcentaje de ahorro, una mejora sostenida ni un SLA de CI.
 
 ## Cambio y contrato
@@ -94,6 +97,15 @@ No hubo flush del SO entre réplicas, aleatorización de variantes ni ejecución
 simultánea de checks. Son tres muestras por fase en un mismo entorno cloud,
 sin incluir instalación, transferencia de caché de Actions ni su cola.
 
+El helper de las fases conserva el mismo checkout aislado dentro de cada serie.
+No simula restaurar el antiguo `node_modules` sobre un checkout nuevo con otros
+mtimes; el CI anterior podía disponer ya de estado TypeScript útil. Por ello, comparar
+frío y caliente dentro de la serie no mide por sí solo una ganancia total frente
+al CI anterior. Lo acreditado por el cambio es poder disponer del estado TS y
+actualizarlo con una clave independiente de las dependencias, comprobando el
+contenido en cada ejecución de `typecheck:ci`. El comando local `typecheck`
+conserva `tsc -b` y su no-op rápido.
+
 ## Resultados del baseline y del prototipo
 
 Todos los 18 comandos medidos terminaron con exit code **0**. Tiempos en segundos:
@@ -163,13 +175,61 @@ esas fases. El no-op local de `tsc -b` sigue siendo más rápido que los
 impiden tratar ambas comprobaciones como equivalentes para restaurar estado
 entre checkouts.
 
-El beneficio pertinente para CI es reutilizar estado de TypeScript que antes
-podía estar ausente o permanecer en una instantánea inmutable de la caché
-compartida de `node_modules`. La caché propia se actualiza después de una
-comprobación aprobada; al restaurarla, el checker vuelve a validar contenido.
+La caché propia permite disponer de estado TypeScript y actualizarlo después
+de una comprobación aprobada, con independencia de la instantánea inmutable
+de dependencias. El CI anterior también podía tener estado útil; esta serie
+no mide ese caso restaurado en un checkout nuevo. Al restaurar la caché propia,
+`typecheck:ci` vuelve a validar contenido.
 En esta serie, ese camino sin cambios tardó 6.6529–7.0711 s frente a
 60.3504–62.1308 s sin estado TS. La serie local no incluye transferencia de
-caché ni permite deducir una reducción de la duración total del pipeline.
+caché ni permite deducir una reducción de la duración total frente al CI anterior.
+
+## Nueva base `86020fb`: tres réplicas
+
+La base `86020fb322bb56c44e4a644c14e0798d480b62ce` se archivó e instaló por
+separado con el mismo helper, Node `v24.22.0`, Bun `1.4.0`, TypeScript `6.0.3`,
+cuotas y fases. Ejecutó `["bun", "run", "typecheck"]`, es decir, `tsc -b`, con
+los dos estados bajo `node_modules/.cache/tsc`. Sus nueve comandos terminaron
+con exit code **0**.
+
+| Fase, segundos | Réplica 1 | Réplica 2 | Réplica 3 | Rango | Mediana |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| Frío TS | 59.7707 | 61.0631 | 58.6337 | 58.6337–61.0631 | 59.7707 |
+| Caliente sin cambios | 0.2174 | 0.2145 | 0.2204 | 0.2145–0.2204 | 0.2174 |
+| Cambio incremental | 33.3632 | 31.8730 | 30.7013 | 30.7013–33.3632 | 31.8730 |
+
+La [evidencia de la base `86020fb`](../evidence/typecheck-cache-baseline-86020fb.json)
+conserva metadatos, hashes, resultados y resumen. Sus originales están en
+`/tmp/elogistix-tscache-baseline-86020/`. Esta base incorpora cambios de producto
+posteriores a `fc1a74f`; la comparación del cambio de caché tras integrarlos
+debe usar la medición de `caf5dcbc`, sin sustituirla por la de `67ac599`.
+
+## Combinado `caf5dcbc`: tres réplicas
+
+El commit `caf5dcbc493915e421d6d2b6792e6a92f5384834` se archivó e instaló
+fuera del checkout de trabajo y ejecutó `["bun", "run", "typecheck:ci"]`.
+Node `v24.22.0`, Bun `1.4.0`, TypeScript `6.0.3`, el helper y las cuotas
+coinciden con la serie de la base `86020fb`. Los dos estados están en
+`.cache/tsc`; el runner conserva el SHA-256 publicado en `67ac599`.
+Los nueve comandos terminaron con exit code **0**.
+
+| Fase, segundos | Réplica 1 | Réplica 2 | Réplica 3 | Rango | Mediana |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| Frío TS | 63.7815 | 59.4183 | 59.1324 | 59.1324–63.7815 | 59.4183 |
+| Caliente sin cambios | 6.6563 | 6.7687 | 6.6081 | 6.6081–6.7687 | 6.6563 |
+| Cambio incremental | 33.2909 | 31.0441 | 33.0189 | 31.0441–33.2909 | 33.0189 |
+
+La [evidencia del combinado](../evidence/typecheck-cache-combined-caf5dcbc.json)
+conserva metadatos, hashes, resultados y resumen. Sus originales están en
+`/tmp/elogistix-tscache-combined-caf5dcbc/`.
+
+Comparada con la base `86020fb`, la mediana fría pasa de 59.7707 a 59.4183 s
+y la incremental de 31.8730 a 33.0189 s, con rangos solapados en ambas fases.
+La mediana sin cambios pasa de 0.2174 s con `tsc -b` a 6.6563 s con el runner
+que revalida contenido. La caché no acelera ese no-op local; el contrato de
+comprobación de CI y la gestión independiente del estado son el cambio que
+se valida. Esta comparación dentro de los checkouts no simula restaurar
+una caché antigua de dependencias ni mide una mejora total del pipeline.
 
 ## Restauración y guardado reales en Actions
 
@@ -196,6 +256,31 @@ de restore/check/save, sin acreditar ahorro global o sostenido del pipeline.
 Los logs de shards reutilizados del reintento y sus artefactos de intento 1
 no se presentan como una nueva ejecución de esos tests.
 
+### Fuentes combinadas: run `38957769417`
+
+El run de integración con head
+`caf5dcbc493915e421d6d2b6792e6a92f5384834` restauró por el mismo prefijo la
+clave terminada en `38955742577-2`, con **483814 B**. Su job `checks` comprobó
+el merge ref de PR `31e603ae692683a90578cfbd8899793abff638a6`, distinto del
+head del workflow; ejecutó `bun run typecheck:ci` y guardó la clave nueva
+terminada en `38957769417-1`.
+
+| Operación | Duración observada por marcadores de log |
+| --- | ---: |
+| Restore hasta confirmación | 1.0662 s |
+| Checker hasta el siguiente step | 29.0148 s |
+| Save hasta confirmación | 1.0564 s |
+
+Es un ciclo con **fuentes cambiadas** tras integrar `main`: sus 29.0148 s
+no equivalen a la observación sin cambios de 5.908 s ni al miss de 69.435 s
+del run anterior. No se utiliza la diferencia entre esos tiempos como
+estimación de ahorro. La [evidencia combinada de Actions](../evidence/actions-cache-combined-caf5dcbc.json)
+registra la procedencia, las claves y los marcadores completos seleccionados.
+
+El mismo job aprobó los budgets CSS sin elevarlos: raw **196588/200467 B**,
+gzip **27568/28104 B** y Brotli **21163/21584 B** (observado/límite).
+Esto comprueba los budgets de ese build, separado de la medición de tipos.
+
 ## Reproducir sobre refs comprometidas
 
 [scripts/bench-typecheck-cache.py](../../scripts/bench-typecheck-cache.py) permite
@@ -206,24 +291,24 @@ lockfile congelado sin scripts, aplica el cambio equivalente sólo en esa
 copia y guarda los logs/JSON/hashes fuera del repo. No reutiliza instalaciones
 ni cachés de TypeScript del checkout de trabajo.
 
-Baseline:
+Base actual `86020fb`:
 
 ```bash
 python3 scripts/bench-typecheck-cache.py \
-  --ref fc1a74fbefaa2864dc6d46f8b09ebfc7a7d93101 \
+  --ref 86020fb322bb56c44e4a644c14e0798d480b62ce \
   --command '["bun", "run", "typecheck"]' \
   --cache-dir node_modules/.cache/tsc \
-  --output /tmp/elogistix-typecheck-baseline-reproduction
+  --output /tmp/elogistix-typecheck-baseline-86020-reproduction
 ```
 
-Para repetir la medición del runner entregado:
+Combinado `caf5dcbc`:
 
 ```bash
 python3 scripts/bench-typecheck-cache.py \
-  --ref 67ac599b3cb6477ee0372ef6b1b67671eaf6680b \
+  --ref caf5dcbc493915e421d6d2b6792e6a92f5384834 \
   --command '["bun", "run", "typecheck:ci"]' \
   --cache-dir .cache/tsc \
-  --output /tmp/elogistix-typecheck-candidate-reproduction
+  --output /tmp/elogistix-typecheck-combined-caf5dcbc-reproduction
 ```
 
 Cada `--output` debe ser nuevo y estar fuera del repositorio. El helper registra
@@ -234,17 +319,91 @@ de estado esperados. Para otra revisión, sustituir `--ref` por su commit
 completo y usar un directorio de salida nuevo; los resultados de una ref
 no validan otra.
 
-## Resultado documentado y combinación con `main` pendiente
+### Estado útil restaurado y mtimes nuevos: método y resultados
+
+Se conserva una [copia del método de medición](../evidence/typecheck-restored-checkout-method.py)
+usado para comparar `86020fb` y `caf5dcbc` después de completar ambas
+series. Es un helper de evidencia para esas dos refs; no es el runner de
+producción ni un nuevo entrypoint de CI. Requiere sus archivos temporales de
+metadatos, resultados y tar de las dos cachés limpias de la primera réplica,
+en las rutas declaradas en el método.
+El método registrado tiene SHA-256
+`78c71cd27e1d861d65a2666196b566ccb336414418905ff4115d048af26b022b`.
+Excluye por nombre los componentes `.env` y `.env.*`, salvo ejemplos terminados
+en `.example`, tanto del archivo antes de extraerlo como del manifiesto de
+inputs. Sólo registra sus nombres, sin leer ni publicar sus valores; los
+guardas de nombres en la raíz evitan también la carga automática de Bun.
+
+El escenario restauró ese mismo estado limpio antes de cada comando,
+conservó los bytes de las fuentes y asignó a los inputs versionados incluidos
+mtimes posteriores a ambos `.tsbuildinfo`. Alternó tres pares baseline/candidato
+con sus comandos publicados, instalaciones congeladas nuevas y comprobaciones
+de hashes de entradas. No restaura un archivo antiguo de `node_modules`,
+no incluye transferencias de red ni vacía la caché del SO; leer los inputs
+para verificar sus hashes también calienta la caché de páginas. Node, Bun y
+TypeScript conservaron las versiones indicadas. No hubo aleatorización ni
+medición de RSS máxima.
+
+Los seis comandos terminaron con exit code **0**, sin timeout y con los bytes
+de los inputs incluidos preservados según sus hashes antes y después:
+
+| Variante con estado útil y mtimes nuevos, segundos | Par 1 | Par 2 | Par 3 | Rango | Mediana |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| Base `86020fb`, `bun run typecheck` (`tsc -b`) | 6.4015 | 6.1171 | 6.2158 | 6.1171–6.4015 | 6.2158 |
+| Combinado `caf5dcbc`, `bun run typecheck:ci` | 7.2703 | 7.0565 | 6.6571 | 6.6571–7.2703 | 7.0565 |
+
+En este escenario el candidato **no mejora el rendimiento** frente al comando
+anterior cuando éste dispone de estado útil: su mediana es **0.8407 s mayor**.
+El resultado acredita que `tsc -b` también puede aprovechar ese estado tras
+cambiar los mtimes. La frecuencia con que el CI anterior recibía estado útil,
+estado ausente o una instantánea antigua **no se midió**; tampoco se deduce de
+los 69.435 s frente a 5.908 s de dos ejecuciones distintas de Actions.
+
+La [evidencia compacta del escenario restaurado](../evidence/typecheck-restored-checkout-86020fb-caf5dcbc.json)
+conserva metadatos, resultados, resumen, hashes de logs y un hash agregado de
+los inputs por variante. Los manifiestos de miles de archivos no se duplican
+en el repo. Los originales están en `/tmp/elogistix-tscache-restored-checkout/`.
+
+El resultado del cambio es disponer de estado independiente y actualizarlo
+después del checker, manteniendo la comprobación de contenido y los guards.
+Estas mediciones documentan el coste de esa decisión; no acreditan una mejora
+de rendimiento frente al CI anterior ni proporcionan un coeficiente de ahorro.
+
+## Integración con `main`: resultado documentado
 
 `67ac599` tiene tres réplicas del runner publicado y un ciclo real de
 miss/save seguido de hit/check/save en Actions. Esa evidencia respalda la
 reutilización de estado con comprobación de contenido y sus límites descritos;
 no demuestra una mejora frente a todos los caminos de `tsc -b`.
 
-La integración de `main` `86020fb322bb56c44e4a644c14e0798d480b62ce` sobre ese
-commit cambia el árbol que se comprueba. Quedan pendientes la medición de
-esa base y de la combinación, con sus SHA, tres réplicas y validaciones
-correspondientes. Este documento no asigna todavía tiempos a la combinación.
+La integración de `main` `86020fb322bb56c44e4a644c14e0798d480b62ce` está
+comprometida en `caf5dcbc493915e421d6d2b6792e6a92f5384834`. Su
+[CI `38957769417`](https://github.com/jfcaicedoobando-arch/elogistix/actions/runs/38957769417)
+aprobó los 18 jobs, incluidos 14 shards y el agregador; la
+[auditoría aislada `38957769246`](https://github.com/jfcaicedoobando-arch/elogistix/actions/runs/38957769246)
+aprobó **52 casos**: 12 CxP, 20 diálogos/tarjetas, 8 rentabilidad,
+8 virtualización/teclado y 4 dependencias, sin skipped, unexpected ni flaky
+según sus guards y conteos de Playwright. Gitleaks y Dependency Review también
+aprobaron esa revisión. Estas comprobaciones no sustituyen un benchmark.
+
+La [evidencia de procedencia](../evidence/actions-cache-combined-caf5dcbc.json)
+distingue el head del workflow del checkout efectivo: `checks`, CxP,
+diálogos y rentabilidad usaron el merge ref
+`31e603ae692683a90578cfbd8899793abff638a6`; virtualización y dependencias
+usaron el head `caf5dcbc493915e421d6d2b6792e6a92f5384834`. El JSON conserva
+los límites de captura y de inferencia de los report guards, sin atribuir
+todo el run a un único checkout.
+
+La base `86020fb` y la combinación `caf5dcbc` tienen tres réplicas propias, y
+el escenario adicional de estado útil restaurado tiene tres pares A/B. En
+éste, el candidato tarda más. El beneficio acreditado es la gestión independiente
+del estado y la comprobación de contenido, con ese coste medido; una reducción
+global o sostenida del tiempo de CI sigue sin demostrarse.
 Un job omitido por áreas o un cache hit sin ejecución del checker tampoco
 aporta evidencia de comprobación. El efecto sobre la duración total de CI
 depende de restore/save y de los demás jobs.
+
+La revisión que publica este informe sólo modifica documentación y evidencia
+bajo `docs/`. Las fuentes, la configuración y el runner/checker de producción
+se conservan como en `caf5dcbc493915e421d6d2b6792e6a92f5384834`, que sigue
+siendo el commit de origen de las mediciones del combinado.
