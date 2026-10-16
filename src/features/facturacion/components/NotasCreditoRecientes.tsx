@@ -143,7 +143,7 @@ export function NotasCreditoRecientes() {
                             navigate(`/facturacion/${n.factura_id}`);
                           }
                         }}
-                        className="border-b last:border-0 hover:bg-muted/30 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/60"
+                        className="border-b last:border-0 hover:bg-muted/30 cursor-pointer focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring/60"
                       >
                         <TableCell onClick={(e) => e.stopPropagation()} onKeyDown={(e) => e.stopPropagation()}>
                           {ESTADOS_NC_CON_CFDI.has(n.estado) && (

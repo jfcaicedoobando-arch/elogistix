@@ -81,7 +81,7 @@ function rowClasses({ clickable, navigable, seleccionable, striped, hoverable }:
   return cn(
     clickable && "cursor-pointer",
     (navigable || seleccionable)
-      && "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset",
+      && "focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset",
     !striped && "even:bg-transparent",
     !hoverable && "hover:bg-transparent",
   );

@@ -39,17 +39,17 @@ const tabsListVariants = cva("", {
 });
 
 const tabsTriggerVariants = cva(
-  "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50",
+  "focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50",
   {
     variants: {
       variant: {
         default:
-          "inline-flex items-center justify-center whitespace-nowrap rounded-sm px-3 py-1.5 text-body font-medium text-muted-foreground ring-offset-background transition-all hover:text-foreground data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm data-[state=active]:border data-[state=active]:border-border",
+          "inline-flex items-center justify-center whitespace-nowrap rounded-sm px-3 py-1.5 text-body font-medium text-muted-foreground ring-offset-background transition-all hover:text-foreground data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-xs data-[state=active]:border data-[state=active]:border-border",
         underline: tabsUnderlineTriggerClass,
         seccion:
-          "inline-flex items-center justify-center gap-1.5 whitespace-nowrap rounded-sm px-3 py-1.5 text-body font-medium text-muted-foreground ring-offset-background transition-all hover:text-foreground data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm data-[state=active]:border data-[state=active]:border-border",
+          "inline-flex items-center justify-center gap-1.5 whitespace-nowrap rounded-sm px-3 py-1.5 text-body font-medium text-muted-foreground ring-offset-background transition-all hover:text-foreground data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-xs data-[state=active]:border data-[state=active]:border-border",
         vista:
-          "inline-flex items-center justify-center whitespace-nowrap rounded-sm px-3 py-1 text-label font-medium text-muted-foreground ring-offset-background transition-all hover:text-foreground data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm",
+          "inline-flex items-center justify-center whitespace-nowrap rounded-sm px-3 py-1 text-label font-medium text-muted-foreground ring-offset-background transition-all hover:text-foreground data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-xs",
       } satisfies Record<TabsVariant, string>,
     },
     defaultVariants: { variant: "default" },
@@ -94,7 +94,7 @@ const TabsContent = ({ ref, className, ...props }: React.ComponentPropsWithoutRe
   <TabsPrimitive.Content
     ref={ref}
     className={cn(
-      "mt-2 ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
+      "mt-2 ring-offset-background focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
       className,
     )}
     {...props}

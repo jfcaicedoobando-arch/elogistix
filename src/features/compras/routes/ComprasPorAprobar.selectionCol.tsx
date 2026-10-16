@@ -75,7 +75,7 @@ export function buildSelectionColumn({
                   <button
                     type="button"
                     aria-label={`Por qué no se puede aprobar: ${motivo}`}
-                    className="text-muted-foreground hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none rounded-sm"
+                    className="text-muted-foreground hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-hidden rounded-sm"
                   >
                     <Info className="h-3.5 w-3.5" />
                   </button>

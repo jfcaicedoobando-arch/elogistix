@@ -40,7 +40,7 @@ export function ComprasPorAprobarMobileCard({
                 <button
                   type="button"
                   aria-label={`Por qué no se puede aprobar: ${motivoBloqueo}`}
-                  className="rounded-sm text-muted-foreground hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                  className="rounded-sm text-muted-foreground hover:text-foreground focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring"
                 >
                   <Info className="size-3.5" />
                 </button>

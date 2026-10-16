@@ -23,7 +23,7 @@ interface Props {
 function Relacionados({ items }: { items: Item[] }) {
   return (
     <details className="mt-1 text-body-sm text-muted-foreground">
-      <summary className="cursor-pointer underline decoration-dotted rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+      <summary className="cursor-pointer underline decoration-dotted rounded-sm focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring">
         {items.length === 1
           ? "Ver 1 registro relacionado"
           : `Ver ${items.length} registros relacionados`}

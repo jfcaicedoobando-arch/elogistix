@@ -75,7 +75,7 @@ function Lockup({
   return (
     <div className={`inline-flex items-center gap-2.5 transition-transform ${sub.scale}`}>
       <span
-        className={`flex ${boxSize} shrink-0 items-center justify-center overflow-hidden rounded-xl bg-card p-1 shadow-sm ring-1 ${sub.ring}`}
+        className={`flex ${boxSize} shrink-0 items-center justify-center overflow-hidden rounded-xl bg-card p-1 shadow-xs ring-1 ${sub.ring}`}
       >
         <img src="/librecarga-logo.webp" alt="" className="h-full w-full object-contain" />
       </span>

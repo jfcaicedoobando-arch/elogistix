@@ -95,7 +95,7 @@ export function KpiCard({
     return (
       <Link
         to={to}
-        className="group block rounded-lg focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+        className="group block rounded-lg focus:outline-hidden focus-visible:ring-2 focus-visible:ring-ring"
       >
         {card}
       </Link>

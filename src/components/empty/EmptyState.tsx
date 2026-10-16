@@ -35,7 +35,7 @@ export default function EmptyState({
           type="button"
           onClick={primaryAction!.onClick}
           aria-label={primaryAction!.label}
-          className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-primary/10 text-primary mb-5 transition hover:bg-primary/20 hover:scale-105 focus:outline-none focus:ring-2 focus:ring-primary/40 cursor-pointer"
+          className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-primary/10 text-primary mb-5 transition hover:bg-primary/20 hover:scale-105 focus:outline-hidden focus:ring-2 focus:ring-primary/40 cursor-pointer"
         >
           <Icon className="h-8 w-8" />
         </button>

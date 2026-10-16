@@ -51,7 +51,7 @@ export function EstadoCuentaAgingBar({ buckets, activo, onToggle }: Props) {
               onClick={() => onToggle(b.id)}
               aria-pressed={seleccionado}
               className={cn(
-                "px-4 py-3 text-left transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset",
+                "px-4 py-3 text-left transition-colors focus:outline-hidden focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset",
                 seleccionado ? "bg-accent/10" : "hover:bg-muted/50",
               )}
             >

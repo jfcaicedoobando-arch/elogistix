@@ -25,8 +25,8 @@ const ToggleGroupItem = ({ ref, className, ...props }: React.ComponentPropsWitho
     className={cn(
       "inline-flex items-center justify-center whitespace-nowrap rounded-sm px-3 py-1.5 text-body font-medium text-muted-foreground transition-colors",
       "hover:bg-muted hover:text-foreground",
-      "data-[state=on]:bg-accent data-[state=on]:text-accent-foreground data-[state=on]:shadow-sm",
-      "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+      "data-[state=on]:bg-accent data-[state=on]:text-accent-foreground data-[state=on]:shadow-xs",
+      "focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring",
       "disabled:pointer-events-none disabled:opacity-50",
       className,
     )}

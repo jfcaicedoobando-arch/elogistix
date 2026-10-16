@@ -49,7 +49,7 @@ function tituloNodo(fase: FaseEmbarque): string {
 function claseConector(siguiente: FaseEmbarque["estado"]): string {
   if (siguiente === "completada") return "bg-accent";
   // Tramo hacia la fase actual: relleno a la mitad para señalar avance parcial.
-  if (siguiente === "actual") return "bg-gradient-to-r from-accent to-border";
+  if (siguiente === "actual") return "bg-linear-to-r/srgb from-accent to-border";
   return "bg-border";
 }
 

@@ -132,7 +132,7 @@ export default function PortalEmbarques() {
                         </div>
                         <p className="text-body-sm text-muted-foreground ml-10">{ruta}</p>
                       </div>
-                      <div className="flex items-center gap-1.5 flex-shrink-0">
+                      <div className="flex items-center gap-1.5 shrink-0">
                         {Object.entries(statusCounts).map(([estado, count]) => (
                           <StatusBadge
                             key={estado}

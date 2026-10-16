@@ -92,7 +92,7 @@ export function MonedaDetectadaIaCard({
       </div>
 
       <p className="flex items-start gap-2 text-body-sm text-muted-foreground">
-        <AlertTriangle className="size-4 flex-shrink-0 mt-0.5 text-warning" />
+        <AlertTriangle className="size-4 shrink-0 mt-0.5 text-warning" />
         <span>
           Revisa la moneda: en documentos que muestran el cargo en dólares y el equivalente
           en pesos la IA puede equivocarse. Al cambiarla,{" "}

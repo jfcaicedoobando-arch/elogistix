@@ -27,7 +27,7 @@ class AnalysisFocusBoundary extends Component<FocusBoundaryProps, unknown, Eleme
 
   render() {
     return <section ref={this.region} aria-label="Eficiencia financiera por moneda" tabIndex={-1}
-      className="space-y-3 rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+      className="space-y-3 rounded-lg focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring">
       <div ref={this.content} key={this.props.contentKey} className="space-y-3">{this.props.children}</div>
     </section>;
   }

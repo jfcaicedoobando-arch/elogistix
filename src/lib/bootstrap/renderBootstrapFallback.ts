@@ -13,7 +13,7 @@
 const CONTENEDOR_CLASSES =
   "min-h-dvh flex items-center justify-center bg-background text-foreground p-6";
 const TARJETA_CLASSES =
-  "max-w-md w-full rounded-lg border border-border bg-card p-6 text-center shadow-sm";
+  "max-w-md w-full rounded-lg border border-border bg-card p-6 text-center shadow-xs";
 const BOTON_CLASSES =
   "mt-4 inline-flex h-10 items-center justify-center rounded-md bg-primary px-4 text-sm " +
   "font-medium text-primary-foreground hover:opacity-90";

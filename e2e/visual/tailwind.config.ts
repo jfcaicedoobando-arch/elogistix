@@ -1,3 +1,7 @@
 import config from "../../tailwind.config.ts";
 
-export default { ...config, content: [...config.content, "./e2e/visual/**/*.tsx"] };
+// v4 resolves content paths relative to this config rather than process.cwd().
+export default { ...config, content: [
+  ...config.content.map(path => `../../${path.replace(/^\.\//, "")}`),
+  "./**/*.tsx",
+] };

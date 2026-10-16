@@ -35,7 +35,7 @@ export function DestinatariosRecientesChips({
               key={e}
               className="group inline-flex items-center gap-0.5 rounded border pl-1.5 pr-0.5 py-0.5 hover:bg-accent hover:text-accent-foreground"
             >
-              <button type="button" onClick={() => onAgregar(e)} className="outline-none">
+              <button type="button" onClick={() => onAgregar(e)} className="outline-hidden">
                 {e}
               </button>
               <button

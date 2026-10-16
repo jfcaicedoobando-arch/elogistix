@@ -117,14 +117,14 @@ const AppSidebarBase = forwardRef<HTMLDivElement>(function AppSidebarBase(_props
           <div
             data-testid="rail-scroll-arriba"
             aria-hidden="true"
-            className="pointer-events-none sticky top-0 -mt-2 h-4 shrink-0 bg-gradient-to-b from-sidebar to-transparent"
+            className="pointer-events-none sticky top-0 -mt-2 h-4 shrink-0 bg-linear-to-b/srgb from-sidebar to-transparent"
           />
         )}
         {estadoRail.hayAbajo && (
           <div
             data-testid="rail-scroll-abajo"
             aria-hidden="true"
-            className="pointer-events-none sticky bottom-0 -mb-2 h-4 shrink-0 bg-gradient-to-t from-sidebar to-transparent"
+            className="pointer-events-none sticky bottom-0 -mb-2 h-4 shrink-0 bg-linear-to-t/srgb from-sidebar to-transparent"
           />
         )}
       </SidebarContent>

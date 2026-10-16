@@ -41,7 +41,7 @@ export function VisualFixture() {
     </Sidebar>
     <SidebarInset className="min-w-0">
       <header className="flex h-14 items-center gap-3 border-b px-4"><SidebarTrigger /><span>Empresa de prueba · Monterrey</span></header>
-      <PageContainer>
+      <PageContainer data-testid="visual-page-container">
         <PageHeader title="Cotizaciones" description="Control comercial de servicios logísticos internacionales."
           actions={<Button onClick={() => setOpen(true)}>Nueva cotización</Button>} subHeader={<Badge variant="outline">6 cotizaciones · datos QA</Badge>} />
         <Input aria-label="Buscar cotizaciones" placeholder="Buscar por folio, cliente o ruta…" />

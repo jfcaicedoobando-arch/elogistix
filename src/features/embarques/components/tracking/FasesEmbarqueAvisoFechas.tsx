@@ -13,7 +13,7 @@ export function AvisoFechasFueraDeOrden() {
         Fechas de etapas fuera de orden —{" "}
         <Link
           to={{ search: "?tab=notas" }}
-          className="underline underline-offset-2 font-medium hover:no-underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded"
+          className="underline underline-offset-2 font-medium hover:no-underline focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring rounded"
         >
           revisar bitácora
         </Link>

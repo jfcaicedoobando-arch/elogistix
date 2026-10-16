@@ -45,7 +45,7 @@ export function TotalesChipDesglose({
         <button
           type="button"
           aria-label={`Subtotal ${formatCurrency(subtotal, moneda)}. Total del documento ${formatCurrency(total, moneda)}`}
-          className="rounded-lg border bg-card px-3 py-1.5 text-right transition-colors hover:bg-muted/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          className="rounded-lg border bg-card px-3 py-1.5 text-right transition-colors hover:bg-muted/50 focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring"
         >
           <span className="flex items-center gap-1 text-label font-bold uppercase tracking-tight text-muted-foreground">
             Subtotal

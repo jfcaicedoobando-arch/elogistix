@@ -59,7 +59,7 @@ export function CotizacionDetalleEmbarques({
                   key={emb.id}
                   to={`/embarques/${emb.id}`}
                   aria-label={`Abrir embarque ${folio} (${emb.estado})`}
-                  className="flex items-center justify-between p-3 border rounded-md hover:bg-muted/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                  className="flex items-center justify-between p-3 border rounded-md hover:bg-muted/50 focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
                 >
                   <span className="font-medium text-primary">{folio}</span>
                   <div className="flex items-center gap-3">

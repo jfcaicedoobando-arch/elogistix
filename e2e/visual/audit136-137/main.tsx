@@ -1,7 +1,7 @@
 import { createRoot } from "react-dom/client";
 import { BrowserRouter, Route, Routes } from "react-router";
 import { ReportFixture } from "./ReportFixture";
-import "@/index.css";
+import "../index.css";
 
 const root = document.getElementById("root");
 if (!root) throw new Error("Missing fixture root");

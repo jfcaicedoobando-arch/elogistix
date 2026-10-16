@@ -141,7 +141,7 @@ export function ResponsiveDataTable<T>(props: Props<T>) {
                         window.open(href, "_blank", "noopener,noreferrer");
                       }
                     }}
-                    className="min-h-14 px-3 py-2.5 cursor-pointer active:bg-muted/60 hover:bg-muted/40 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset"
+                    className="min-h-14 px-3 py-2.5 cursor-pointer active:bg-muted/60 hover:bg-muted/40 transition-colors focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset"
                   >
                     {mobileCard(row)}
                   </li>
@@ -155,7 +155,7 @@ export function ResponsiveDataTable<T>(props: Props<T>) {
                       type="button"
                       aria-label={ariaLabel}
                       onClick={() => onRowClick?.(row)}
-                      className="w-full text-left min-h-14 px-3 py-2.5 active:bg-muted/60 transition-colors focus-visible:outline-none focus-visible:bg-muted/60"
+                      className="w-full text-left min-h-14 px-3 py-2.5 active:bg-muted/60 transition-colors focus-visible:outline-hidden focus-visible:bg-muted/60"
                     >
                       {mobileCard(row)}
                     </button>

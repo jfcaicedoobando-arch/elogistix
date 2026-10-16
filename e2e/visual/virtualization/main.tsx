@@ -1,7 +1,7 @@
 import { createRoot } from "react-dom/client";
 import { MemoryRouter } from "react-router";
 import { VirtualizationFixture } from "./VirtualizationFixture";
-import "@/index.css";
+import "../index.css";
 
 const root = document.getElementById("root");
 if (!root) throw new Error("Missing synthetic fixture root");

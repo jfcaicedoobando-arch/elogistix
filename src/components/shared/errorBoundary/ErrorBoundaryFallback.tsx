@@ -46,7 +46,7 @@ export function ErrorBoundaryFallback({
               Detalles técnicos
             </summary>
             <div className="px-3 pb-3 space-y-2 font-mono">
-              <div className="grid grid-cols-[110px,1fr] gap-x-2 gap-y-1">
+              <div className="grid grid-cols-[110px_1fr] gap-x-2 gap-y-1">
                 <span className="text-muted-foreground">Versión</span>
                 <span>{APP_VERSION}</span>
                 <span className="text-muted-foreground">Timestamp</span>

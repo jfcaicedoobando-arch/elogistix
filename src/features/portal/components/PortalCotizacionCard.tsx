@@ -100,7 +100,7 @@ export function PortalCotizacionCard({ cotizacion: c, tasaIva }: Props) {
       <Link
         to={`/portal/cotizaciones/${c.id}`}
         aria-label={`Ver cotización ${c.folio}`}
-        className="block focus:outline-none"
+        className="block focus:outline-hidden"
       >
         <CardContent className="flex items-center justify-between gap-3 px-4 py-3">
           <div className="flex items-center gap-3 min-w-0 flex-1">

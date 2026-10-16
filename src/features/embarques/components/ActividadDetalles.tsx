@@ -16,7 +16,7 @@ interface Props {
 function DetalleTecnico({ detalles }: Props) {
   return (
     <details className="mt-1 text-body-sm text-muted-foreground">
-      <summary className="cursor-pointer underline decoration-dotted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-sm">
+      <summary className="cursor-pointer underline decoration-dotted focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring rounded-sm">
         Ver detalle técnico
       </summary>
       <pre className="mt-1 max-h-48 overflow-auto rounded-md bg-muted p-2 text-2xs whitespace-pre-wrap break-words">
