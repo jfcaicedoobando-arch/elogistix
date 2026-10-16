@@ -1,0 +1,38 @@
+name: Demo authority entry isolated review
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+    branches: [main]
+    paths:
+      - 'docs/review/demo-durable-owner-adapter-20261015/**'
+      - 'scripts/ci/demo-authority-bridge-review/**'
+      - 'scripts/ci/demo-authority-entry-review/**'
+      - '.github/workflows/demo-authority-entry-review.yml'
+permissions:
+  contents: read
+concurrency:
+  group: demo-authority-entry-review-${{ github.event.pull_request.number }}
+  cancel-in-progress: false
+jobs:
+  offline-protocol-review:
+    if: github.repository == 'jfcaicedoobando-arch/elogistix' && github.event.pull_request.draft == true && github.event.pull_request.head.repo.full_name == github.repository && github.event.pull_request.head.ref == 'review/demo-authority-provider-entry-20261016'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: '24.19.0'
+      - name: Offline protocol doubles and immutable source pins
+        run: node scripts/ci/demo-authority-entry-review/run_review.mjs --output "$RUNNER_TEMP/demo-authority-entry-evidence"
+      - name: Preserve offline evidence only
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: demo-authority-entry-review-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/demo-authority-entry-evidence
+          if-no-files-found: error
+          retention-days: 14
