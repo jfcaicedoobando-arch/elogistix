@@ -7,7 +7,8 @@ REPO = HERE.parents[2]
 BRANCH = 'review/protected-authority-registry-20261016'
 REPOSITORY = 'jfcaicedoobando-arch/elogistix'
 IMAGE = 'postgres@sha256:f3bd19c606e442c3d7bdfa8002e03fe260a1023351e0ea4598032022b68dd6e3'
-SQL = REPO / 'docs/review/demo-flow-20261015/issuer'
+SQL = REPO / 'docs/review/demo-authority-provider-20261016/issuer'
+HISTORICAL_SQL = REPO / 'docs/review/demo-flow-20261015/issuer'
 ENV = {'PATH': os.environ.get('PATH', '/usr/bin:/bin'), 'LANG': 'C.UTF-8', 'HOME': '/tmp'}
 
 def verify_inputs():
@@ -17,7 +18,7 @@ def verify_inputs():
         if p.is_symlink() or REPO not in p.resolve().parents: raise ValueError('Input escapes checkout')
         b = p.read_bytes()
         if len(b) != row['bytes'] or hashlib.sha256(b).hexdigest() != row['sha256']: raise ValueError('Authentic source drift: ' + row['path'])
-    if (REPO / 'scripts/ci/demo-authentic-review/sql/registry.sql').read_bytes() != (SQL / '16-owner-registry.sql').read_bytes():
+    if (REPO / 'scripts/ci/demo-authentic-review/sql/registry.sql').read_bytes() != (HISTORICAL_SQL / '16-owner-registry.sql').read_bytes():
         raise ValueError('SQL16 fixture is not original SQL16')
     return pins
 

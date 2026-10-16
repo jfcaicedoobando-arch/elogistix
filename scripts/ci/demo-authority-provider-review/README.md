@@ -4,6 +4,8 @@ Status: NOT_ADMITTED. Proposed SQL only, outside migrations. No application DB, 
 
 ## Contract and scope
 
+The proposed SQL17/18 payload is in `docs/review/demo-authority-provider-20261016/issuer/`. It is a separate review package. The historical `demo-flow-20261015` payload, SQL16, manifest and verification policy remain unchanged; adding proposed files never changes that frozen evidence.
+
 SQL17 adds an empty protected occurrence registry, append-only revocations, immutable 1:1 occurrence/context bindings and a deployment fence whose default is stopped. Missing fence configuration also denies. Its natural key is deployment / tenant / semantic manifest family / scheduler job / explicitly approved occurrence. Context IDs, source receipt, artifact version/hash, generation, fence and TTL never regenerate this key. Registration is an explicit existing-owner-only act; this package registers no real authority.
 
 SQL18 provides `SELECT demo_flow_writer.read_authority($1::uuid) AS authority`. The sole input is a bound context ID. Caller JSON, tenant, actor, occurrence, skip and success flags are not accepted. The SQL authenticates both current and session user through the unchanged SQL16 catalog-owner check, resolves protected references, executes the unchanged scheduler, authentic origin and identity receipt validators, and emits the exact camelCase PR358 shape. The mapper is unchanged and remains a format/correspondence validator, not authentication.

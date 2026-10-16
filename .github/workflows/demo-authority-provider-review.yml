@@ -4,8 +4,8 @@ on:
     types: [opened, synchronize, reopened]
     branches: [main]
     paths:
-      - 'docs/review/demo-flow-20261015/issuer/17-protected-occurrence.sql'
-      - 'docs/review/demo-flow-20261015/issuer/18-authority-reader.sql'
+      - 'docs/review/demo-authority-provider-20261016/issuer/17-protected-occurrence.sql'
+      - 'docs/review/demo-authority-provider-20261016/issuer/18-authority-reader.sql'
       - 'scripts/ci/demo-authority-provider-review/**'
       - '.github/workflows/demo-authority-provider-review.yml'
 permissions:
