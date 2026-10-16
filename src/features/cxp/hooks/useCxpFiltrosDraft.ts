@@ -1,5 +1,5 @@
 import { useState } from "react";
-import type { CxpFiltrosProps } from "./CxpFiltros";
+import type { CxpFiltrosProps } from "../components/CxpFiltros";
 
 /** Estado del panel: ningún setter aplicado participa en la edición. */
 export function useCxpFiltrosDraft(props: CxpFiltrosProps) {

@@ -16,7 +16,7 @@ import { CxpFiltrosChips } from "./CxpFiltrosChips";
 import { CxpFiltrosSheetFields } from "./CxpFiltrosSheetFields";
 import { mobileFilterSheet } from "@/components/shared/utils/dialogTokens";
 import type { Moneda } from "@/types/db";
-import { useCxpFiltrosDraft } from "./useCxpFiltrosDraft";
+import { useCxpFiltrosDraft } from "../hooks/useCxpFiltrosDraft";
 
 export interface CxpFiltrosProps {
   search: string;
