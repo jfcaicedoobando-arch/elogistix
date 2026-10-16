@@ -5,6 +5,7 @@ from pathlib import Path
 import sys
 import unittest
 from unittest.mock import patch
+from types import SimpleNamespace
 HERE=Path(__file__).resolve().parent
 spec=importlib.util.spec_from_file_location("independent_runner_test",HERE/"run_ci.py")
 r=importlib.util.module_from_spec(spec);sys.modules[spec.name]=r;spec.loader.exec_module(r)
@@ -16,7 +17,7 @@ class AdapterTests(unittest.TestCase):
    cmd.assert_not_called()
  def test_exact_source_inventory_and_provider_contract(self):
   frozen,pins=r.verify_inputs()
-  self.assertEqual(len(pins["files"]),50)
+  self.assertEqual(len(pins["files"]),57)
   review=r.module("independent_provider_test",r.REVIEW/"suite.py")
   self.assertEqual(tuple(c["id"] for c in review.CASES),r.CASE_IDS)
   bm=r.module("independent_author_test",r.BEHAVIOR/"run_ci.py")
@@ -53,6 +54,15 @@ class AdapterTests(unittest.TestCase):
   self.assertFalse(set(r.SUPPLEMENT_CASE_IDS)&set(r.CASE_IDS))
   self.assertNotIn(r.SEQUENCE_CONTROL_ID,r.CASE_IDS+r.SUPPLEMENT_CASE_IDS)
   self.assertIn('inspect_sequence_control', (HERE/"run_ci.py").read_text())
+ def test_v2_selects_only_corrected_pair_from_unchanged_nine_ids(self):
+  review=SimpleNamespace(CASES=tuple({"id":i} for i in r.CASE_IDS),PROVIDER_VERSION=2,VERSION_CONTRACT={"affected_cases":list(r.CORRECTED_CASE_IDS)})
+  self.assertEqual(tuple(c['id'] for c in r.selected_cases(review,'corrected')),r.CORRECTED_CASE_IDS)
+  self.assertEqual(tuple(c['id'] for c in r.selected_cases(review,'original')),r.CASE_IDS)
+  for key,value in [('PROVIDER_VERSION',1),('VERSION_CONTRACT',{'affected_cases':list(reversed(r.CORRECTED_CASE_IDS))}),('CASES',review.CASES[:-1])]:
+   bad=copy.deepcopy(review);setattr(bad,key,value)
+   with self.subTest(key=key),self.assertRaises(RuntimeError):r.selected_cases(bad,'corrected')
+ def test_unknown_group_cannot_choose_an_unreviewed_provider(self):
+  with self.assertRaises(RuntimeError):r.selected_cases(SimpleNamespace(),'all-new')
  def test_imported_author_and_review_sources_remain_separate_from_adapter(self):
   frozen,pins=r.verify_inputs()
   self.assertTrue(all(not row["path"].startswith("scripts/ci/demo-financial-commit-review/") for row in pins["files"]))

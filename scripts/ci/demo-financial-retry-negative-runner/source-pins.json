@@ -154,6 +154,11 @@
       "sha256": "909f84cca6b8291df56a7a8c6813cab06c891c833d5738f4fc77c95c8c4f6ed6"
     },
     {
+      "path": "scripts/ci/demo-financial-retry-negative-review/CORRECTION_V2.md",
+      "bytes": 4940,
+      "sha256": "e1d6bc81fdc0a309b75c873166d877136894c51d0846ba1d8692764dcd1b2b4a"
+    },
+    {
       "path": "scripts/ci/demo-financial-retry-negative-review/README.md",
       "bytes": 6318,
       "sha256": "056ffe77a98712fc618b73a7d583699264cb619ec2877166d2aaa3078efdbc11"
@@ -189,9 +194,24 @@
       "sha256": "340addb17d5a74a5cc11541532824bcba9401b861acedb3419bd7fd314931a9d"
     },
     {
+      "path": "scripts/ci/demo-financial-retry-negative-review/origin-v2-contract.json",
+      "bytes": 2688,
+      "sha256": "8472d9a158baf30d61d90e31cc803d0b595adf9f4e803fc096612d3b83ac054e"
+    },
+    {
+      "path": "scripts/ci/demo-financial-retry-negative-review/origin-v2-evidence.json",
+      "bytes": 5428,
+      "sha256": "1429008397dcd135441f29692e75d34493721b176813a8b6d10b5af144ffc5db"
+    },
+    {
       "path": "scripts/ci/demo-financial-retry-negative-review/origin_materialization_cases.py",
       "bytes": 9919,
       "sha256": "6212828414faa1ea6a105881a7e314d3f51a8169b3c271f78763b51429535022"
+    },
+    {
+      "path": "scripts/ci/demo-financial-retry-negative-review/origin_materialization_cases_v2.py",
+      "bytes": 10207,
+      "sha256": "5733519465a7bdf3a080a83b302730445ce071cefe499ccca99cf876d304394d"
     },
     {
       "path": "scripts/ci/demo-financial-retry-negative-review/sequence_observation.py",
@@ -202,6 +222,11 @@
       "path": "scripts/ci/demo-financial-retry-negative-review/suite.py",
       "bytes": 10697,
       "sha256": "9fc663562820b6ccc640ca868a886dfcc4a610545e9e4ed7abce8a48493b9ccf"
+    },
+    {
+      "path": "scripts/ci/demo-financial-retry-negative-review/suite_v2.py",
+      "bytes": 3829,
+      "sha256": "aaf1d803de0b912e58e7751e370b83cd122832a896a155661d922f1905dd0539"
     },
     {
       "path": "scripts/ci/demo-financial-retry-negative-review/supplemental-evidence.json",
@@ -229,6 +254,11 @@
       "sha256": "18e68955089bdb2b008621b673b8d9b4d02898df5ff65fdbe7b1672cbd588c05"
     },
     {
+      "path": "scripts/ci/demo-financial-retry-negative-review/test_origin_materialization_v2.py",
+      "bytes": 18240,
+      "sha256": "d6122d820375ce61ec5264a9652862e5a5d7f6114e1a57d2892544a3602b69d3"
+    },
+    {
       "path": "scripts/ci/demo-financial-retry-negative-review/test_sequence_observation.py",
       "bytes": 12913,
       "sha256": "4f148ec1f71112bcf8fdb7938503534d905e57bb68209bea7966452bbce97a38"
@@ -237,6 +267,11 @@
       "path": "scripts/ci/demo-financial-retry-negative-review/test_suite.py",
       "bytes": 5813,
       "sha256": "3be33c3eef21bbf4ac55f646bac9e59d05aaefc6e96db580b17864baa10cae1f"
+    },
+    {
+      "path": "scripts/ci/demo-financial-retry-negative-review/test_suite_v2.py",
+      "bytes": 4885,
+      "sha256": "c64e3a7af8746a90695b39e1c176df2cdddf04f9f24d56f0e742c2e4503ae26a"
     },
     {
       "path": "scripts/ci/demo-financial-retry-negative-review/test_supplemental_adoption_cases.py",
@@ -255,5 +290,7 @@
     }
   ],
   "supplement_commit": "7d38dc8ad3959b853d7fe60a556f671c60a5b244",
-  "supplement_integration_commit": "02a4ed7846b82738b1f23840567f4193860ad9ed"
+  "supplement_integration_commit": "02a4ed7846b82738b1f23840567f4193860ad9ed",
+  "correction_commit": "a3a6de1e31d239b6a563261c7b6cd695d5e158cf",
+  "correction_integration_commit": "63317ad7d92c3138c720ca43ceaea3b28f966b05"
 }

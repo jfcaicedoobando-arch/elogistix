@@ -1,22 +1,27 @@
 [
   {
     "path": "README.md",
-    "bytes": 4347,
-    "sha256": "c8912e2fbc52fb866fa899b3860608bbcda7c88eac7ce96f95dfc38570c3af09"
+    "bytes": 5308,
+    "sha256": "8117d034b9dd76c80ec9bbf7e23c8742ff700d27152947f5a1fd433cf28fd1d6"
   },
   {
     "path": "run_ci.py",
-    "bytes": 16157,
-    "sha256": "02be789b85f83adf4134a99577531e898035d3b2e9a39a6c382208f49371856c"
+    "bytes": 17474,
+    "sha256": "4f0981b4b63eac5d04c84764cac9b204faa7f6b5ed69478ba4902f4203ff8b83"
   },
   {
     "path": "source-pins.json",
-    "bytes": 10396,
-    "sha256": "bc0f4cb82fce222923e9bf29cad51946549d5cc286a51467aa094baef4b70c8b"
+    "bytes": 11981,
+    "sha256": "0dadc30d17b0ef9abf95f07f74cd03daa6f0fe96d1a6aae116b63348a8814bbc"
   },
   {
     "path": "test_runner.py",
-    "bytes": 3678,
-    "sha256": "eaa52129fc0457072144b75a263fbd7d73240ba38ab496767f5cbcebe85671f9"
+    "bytes": 4578,
+    "sha256": "484a9f8d666e4b7effb6d5f1eab04e3ba1584b320c383f2eb134ad18547fa468"
+  },
+  {
+    "path": "v2-render-evidence.json",
+    "bytes": 2256,
+    "sha256": "0d0c44059a8744d1632ce2b7e93824d4c407ab67bd78760d3f530b712665de1e"
   }
 ]

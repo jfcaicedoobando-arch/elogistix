@@ -19,6 +19,8 @@ REVIEW = ROOT / "scripts/ci/demo-financial-retry-negative-review"
 AUTHOR = "a7aff9ff8f92852687c56d3bc05d41150b44b2ae"
 REVIEW_COMMIT = "fd3a2fcb940dc122fda7be242afda05a053dd61d"
 SUPPLEMENT_COMMIT = "7d38dc8ad3959b853d7fe60a556f671c60a5b244"
+CORRECTION_COMMIT = "a3a6de1e31d239b6a563261c7b6cd695d5e158cf"
+CORRECTED_CASE_IDS = ("mutable_supplier_origin_drift", "materialized_invoice_folio_drift")
 SUPPLEMENT_CASE_IDS = ("foreign_bound_concept_id", "foreign_bound_payment_id", "tenant_authority_reassignment")
 SEQUENCE_CONTROL_ID = "sequence_nontransactional_control"
 DATABASE = "demo_financial_compile_recovery_lab"
@@ -64,8 +66,9 @@ def verify_inputs():
     require(pins["author_fix_head"] == AUTHOR and pins["review_commit"] == REVIEW_COMMIT
             and pins["integration_commit"] == "bd07f5488babb770d226f91f05abfcb1a2cb68d8", "Provenance differs")
     require(pins["supplement_commit"] == SUPPLEMENT_COMMIT and pins["supplement_integration_commit"] == "02a4ed7846b82738b1f23840567f4193860ad9ed", "Supplement provenance differs")
+    require(pins["correction_commit"] == CORRECTION_COMMIT and pins["correction_integration_commit"] == "63317ad7d92c3138c720ca43ceaea3b28f966b05", "Correction provenance differs")
     external = inventory(ROOT, pins["files"])
-    require(len(external) == 50, "Exact50 independent/fix sources required")
+    require(len(external) == 57, "Exact57 independent/fix sources required")
     for directory in (BEHAVIOR, REVIEW):
         actual = {p.relative_to(ROOT).as_posix() for p in directory.rglob("*") if p.is_file()}
         expected = {p for p in external if p.startswith(directory.relative_to(ROOT).as_posix() + "/")}
@@ -80,6 +83,17 @@ def accept_case(result, native, expected_stages):
     return (native.get("status") == "ASSERTIONS_OBSERVED_PENDING_OWNED_CLEANUP" and cleanup_ok(result)
             and [r.get("stage") for r in stages] == expected_stages and all(r.get("status") == "PASS" for r in stages)
             and result.get("install_verified") is True)
+
+def selected_cases(review, group):
+    require(group in ("original","supplement","corrected"),"Unknown independent group")
+    require(tuple(c["id"] for c in review.CASES)==(SUPPLEMENT_CASE_IDS if group=="supplement" else CASE_IDS),"Exact independent cases required")
+    cases=list(review.CASES)
+    if group=="corrected":
+        require(review.PROVIDER_VERSION==2 and tuple(review.VERSION_CONTRACT["affected_cases"])==CORRECTED_CASE_IDS,"Exact version2 affected cases required")
+        cases=[c for c in cases if c["id"] in CORRECTED_CASE_IDS]
+        require(tuple(c["id"] for c in cases)==CORRECTED_CASE_IDS,"Exact corrected pair required")
+    if group=="supplement":cases.append({"id":SEQUENCE_CONTROL_ID,"phase":"materialized","rejection_stage":"calibration"})
+    return cases
 
 def run_case(output, case, review, bm, cm, infrastructure, bundle, compile_frozen, behavior_frozen, variant, correction):
     case_id = case["id"]
@@ -106,7 +120,7 @@ def run_case(output, case, review, bm, cm, infrastructure, bundle, compile_froze
             self.result["stages"].append({"stage": label, "status": "PASS" if response.returncode == 0 else "FAIL", "stdin_sha256": sha(body)})
             if response.returncode:
                 self.result["diagnostic"] = bm.diagnose(response.stdout, response.stderr, label, response.returncode)
-                markers = re.findall(r"^RETRY_(?:NEGATIVE|SUPPLEMENT)_[A-Z_]+_" + re.escape(case_id) + r"$", response.stdout.decode(errors="replace"), re.M)
+                markers = re.findall(r"^RETRY_(?:NEGATIVE|SUPPLEMENT|ORIGIN_V2)_[A-Z_]+_" + re.escape(case_id) + r"$", response.stdout.decode(errors="replace"), re.M)
                 self.result["diagnostic"]["last_review_marker"] = markers[-1] if markers else None
             self.save()
             if required: require(response.returncode == 0, "Owned SQL failed at " + label)
@@ -170,12 +184,9 @@ def run(output, group="original"):
     compile_frozen = cm.verify_inputs()
     require(sha(file_bytes(bm.INFRA))==bm.INFRA_SHA,"Golden infrastructure changed")
     infrastructure = module("review_negative_golden", bm.INFRA)
-    require(group in ("original","supplement"),"Unknown independent group")
-    review = module("review_negative_provider", REVIEW / ("suite.py" if group == "original" else "supplemental_suite.py"))
-    require(tuple(c["id"] for c in review.CASES)==(CASE_IDS if group == "original" else SUPPLEMENT_CASE_IDS),"Exact independent cases required")
-    cases = list(review.CASES)
-    if group == "supplement":
-        cases.append({"id":SEQUENCE_CONTROL_ID,"phase":"materialized","rejection_stage":"calibration"})
+    require(group in ("original","supplement","corrected"),"Unknown independent group")
+    review = module("review_negative_provider", REVIEW / {"original":"suite.py","supplement":"supplemental_suite.py","corrected":"suite_v2.py"}[group])
+    cases = selected_cases(review,group)
     catalog = module("review_negative_catalog",bm.COMPILE / "catalog.py")
     baseline = subprocess.check_output(["git","show",head+":supabase/schema/baseline.sql"],cwd=ROOT)
     bundle = catalog.build_catalog(baseline)
@@ -186,7 +197,8 @@ def run(output, group="original"):
     public = output / "public";public.mkdir()
     for name,data in (("catalog-manifest",bundle.manifest),("dependency-report",bundle.report),("laboratory-manifest-variant",variant_evidence),("proposed-retry-correction",correction_evidence)):
         (public/(name+".json")).write_text(json.dumps(data,indent=2)+"\n")
-    summary = {"scope":"INDEPENDENT_RETRY_NEGATIVES_SYNTHETIC_ROW_ROLLBACK_ONLY" if group=="original" else "INDEPENDENT_SUPPLEMENT_ROWS_AND_SEQUENCE_OBSERVATIONS_ONLY","status":"FAIL","workflow_commit":head,"author_fix_head":AUTHOR,
+    summary = {"scope":{"original":"INDEPENDENT_RETRY_NEGATIVES_SYNTHETIC_ROW_ROLLBACK_ONLY","supplement":"INDEPENDENT_SUPPLEMENT_ROWS_AND_SEQUENCE_OBSERVATIONS_ONLY","corrected":"INDEPENDENT_CORRECTED_ORIGIN_NEGATIVES_SYNTHETIC_ROW_ROLLBACK_ONLY"}[group],"status":"FAIL","workflow_commit":head,"author_fix_head":AUTHOR,
+               "review_provider_version":2 if group=="corrected" else 1,"correction_commit":CORRECTION_COMMIT,"correction_integration_commit":pins["correction_integration_commit"],
                "group":group,"review_commit":REVIEW_COMMIT,"supplement_commit":SUPPLEMENT_COMMIT,"supplement_integration_commit":pins["supplement_integration_commit"],"integration_commit":pins["integration_commit"],"event_base":bm.EVENT_BASE,
                "catalog_sha256":sha(bundle.catalog_sql),"validation_sha256":sha(bundle.validation_sql),"cases":[],"blocked_cases":review.BLOCKED_CASES,
                "complete":False,"canonical_closure_complete":False,"fixtures_complete":False,"business_commit":"NOT_RUN","sequence_rollback":"NOT_ESTABLISHED",
@@ -196,13 +208,13 @@ def run(output, group="original"):
     save()
     for case in cases:
         summary["cases"].append(run_case(output/case["id"],case,review,bm,cm,infrastructure,bundle,compile_frozen,behavior_frozen,variant,correction));save()
-    summary["status"]=("PASS_SYNTHETIC_REVIEW_NEGATIVES_ROLLBACK_ONLY" if group == "original" else "PASS_SYNTHETIC_REVIEW_SUPPLEMENT_ONLY") if all(c["status"]=="PASS" for c in summary["cases"]) else "FAIL"
+    summary["status"]={"original":"PASS_SYNTHETIC_REVIEW_NEGATIVES_ROLLBACK_ONLY","supplement":"PASS_SYNTHETIC_REVIEW_SUPPLEMENT_ONLY","corrected":"PASS_SYNTHETIC_CORRECTED_ORIGIN_NEGATIVES_ROLLBACK_ONLY"}[group] if all(c["status"]=="PASS" for c in summary["cases"]) else "FAIL"
     save();print(json.dumps(summary))
-    require(summary["status"] in ("PASS_SYNTHETIC_REVIEW_NEGATIVES_ROLLBACK_ONLY","PASS_SYNTHETIC_REVIEW_SUPPLEMENT_ONLY"),"Independent native assertions or cleanup incomplete")
+    require(summary["status"] in ("PASS_SYNTHETIC_REVIEW_NEGATIVES_ROLLBACK_ONLY","PASS_SYNTHETIC_REVIEW_SUPPLEMENT_ONLY","PASS_SYNTHETIC_CORRECTED_ORIGIN_NEGATIVES_ROLLBACK_ONLY"),"Independent native assertions or cleanup incomplete")
     return summary
 
 def main():
-    parser=argparse.ArgumentParser(description=__doc__);parser.add_argument("--output",type=Path,required=True);parser.add_argument("--group",choices=("original","supplement"),default="original");args=parser.parse_args()
+    parser=argparse.ArgumentParser(description=__doc__);parser.add_argument("--output",type=Path,required=True);parser.add_argument("--group",choices=("original","supplement","corrected"),default="original");args=parser.parse_args()
     def interrupted(number,frame): raise RuntimeError("Interrupted by signal "+str(number))
     for sig in (signal.SIGINT,signal.SIGTERM): signal.signal(sig,interrupted)
     run(args.output,args.group)
