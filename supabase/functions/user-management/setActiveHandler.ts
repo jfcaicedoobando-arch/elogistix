@@ -6,6 +6,7 @@
  */
 import { jsonResponse, errorResponse } from "../_shared/response.ts";
 import type { HandlerCtx, AdminAccess } from "./types.ts";
+import { mensajeSeguro } from "./errores.ts";
 
 /** ~100 años: equivalente a "sin fecha de fin". */
 const BAN_INDEFINIDO = "876000h";
@@ -27,10 +28,19 @@ async function comprobarDestinoOrganizacion(
     log.finish(403, "multi_org_blocked", { user_id: callerId, payload: { target_user_id: user_id } });
     return errorResponse("El usuario también pertenece a otra organización; usa «Quitar de la organización»", 403, cors);
   }
-  const { data: roles } = await adminClient.from("user_roles").select("role").eq("user_id", user_id);
-  if ((roles ?? []).some((r: { role: string }) => r.role === "super_admin")) {
-    log.finish(403, "privesc_blocked_super_admin", { user_id: callerId, payload: { target_user_id: user_id } });
-    return errorResponse("No tienes permiso para desactivar a un super administrador", 403, cors);
+  try {
+    const { data: roles, error: rolesError } = await adminClient.from("user_roles").select("role").eq("user_id", user_id);
+    if (rolesError) throw rolesError;
+    if ((roles ?? []).some((r: { role: string }) => r.role === "super_admin")) {
+      log.finish(403, "privesc_blocked_super_admin", { user_id: callerId, payload: { target_user_id: user_id } });
+      return errorResponse("No tienes permiso para desactivar a un super administrador", 403, cors);
+    }
+  } catch (error) {
+    log.finish(500, "target_roles_lookup_failed", {
+      user_id: callerId, organization_id: orgId,
+      payload: { target_user_id: user_id, error: error instanceof Error ? error.message : error },
+    });
+    return errorResponse(mensajeSeguro(null), 500, cors);
   }
   return null;
 }
