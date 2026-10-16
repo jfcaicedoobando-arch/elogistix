@@ -57,14 +57,6 @@ export function sufijoFechaArchivo(hoy: Date = new Date()): string {
   return todayLocalISO(hoy);
 }
 
-export function exportarLeadsCsv(rows: CrmLeadRow[]): void {
-  downloadCsvWithFeedback({
-    filename: `leads_${sufijoFechaArchivo()}.csv`,
-    csv: buildLeadsCsv(rows),
-    rowCount: rows.length,
-  });
-}
-
 export function exportarOportunidadesCsv(rows: CrmOportunidadRow[]): void {
   downloadCsvWithFeedback({
     filename: `oportunidades_${sufijoFechaArchivo()}.csv`,

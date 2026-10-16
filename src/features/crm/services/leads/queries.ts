@@ -1,9 +1,8 @@
 /**
- * Leads — lecturas (lista paginada, lectura completa para exportar y detalle).
+ * Leads — lecturas (lista paginada y detalle).
  */
 import { supabase } from "@/integrations/supabase/client";
 import { orIlike } from "@/lib/search/ilike";
-import { leerTodasLasPaginas } from "@/lib/supabase/paginado";
 import {
   LEAD_COLUMNS,
   type CrmLeadRow,
@@ -21,8 +20,7 @@ interface FiltrableBuilder<T> {
 /**
  * Aplica búsqueda, etapa (`estadoIn`), estado, fuente y orden.
  *
- * Origen único para el listado paginado y la exportación completa: si la
- * exportación repitiera los filtros a mano acabaría divergiendo del listado.
+ * Filtros del listado paginado, con desempate estable por ID.
  */
 function aplicarFiltrosLeads<T extends FiltrableBuilder<T>>(builder: T, filtros: LeadFiltros): T {
   const { search = "", estado = "todos", fuente = "todos" } = filtros;
@@ -56,25 +54,6 @@ export async function listLeads(filtros: LeadFiltros): Promise<LeadsResultado> {
   const { data, count, error } = await q;
   if (error) throw error;
   return { data: (data ?? []) as CrmLeadRow[], count: count ?? 0 };
-}
-
-/**
- * Lee TODAS las coincidencias de los filtros actuales (exportación CSV).
- * RLS sigue limitando lo visible; sólo se quita el corte de página.
- */
-export async function listLeadsTodos(
-  filtros: Omit<LeadFiltros, "page" | "pageSize">,
-): Promise<CrmLeadRow[]> {
-  return leerTodasLasPaginas<CrmLeadRow>("crm.leads.export", (desde, hasta) =>
-    aplicarFiltrosLeads(
-      supabase.from("crm_leads").select(LEAD_COLUMNS).is("deleted_at", null),
-      filtros,
-    // SAFE-CAST: el builder de Supabase es thenable con la forma { data, error }; el tipo generado no lo expresa.
-    ).range(desde, hasta) as unknown as PromiseLike<{
-      data: CrmLeadRow[] | null;
-      error: { message: string } | null;
-    }>,
-  );
 }
 
 export async function getLead(id: string): Promise<CrmLeadRow | null> {

@@ -1,0 +1,39 @@
+Node v24.22.0
+Command: node node_modules/vitest/vitest.mjs run --maxWorkers=2 src/features/crm/services/__tests__/crmCsvExport.test.ts src/features/crm/services/leads/__tests__/listLeads.test.ts src/features/crm/services/leads/__tests__/queries.test.ts src/features/crm/hooks/__tests__/leadsBulk.test.tsx src/features/crm/components/__tests__/leadsPermisosConsumo.test.tsx src/features/crm/routes/__tests__/LeadDetalle.render.test.tsx src/features/crm/hooks/__tests__/useImportarLeadsCsv src/features/crm/components/__tests__/ImportarLeadsCsv src/features/crm/components/__tests__/QuickAddMenu src/features/crm/services/leads/__tests__/bulk.test.ts src/lib/csv/__tests__/leadsCsv src/routes/__tests__/appRoutes.smoke.test.tsx src/routes/__tests__/appRoutesGuards.test.ts
+Started: 2026-10-16T23:18:59.688Z
+(!) Your Vite config uses features that are unsupported by `configLoader: 'native'`, which is planned to become the default in a future major version of Vite:
+  - `__dirname` (vitest.config.ts:15:14). Use `import.meta.dirname` instead
+  - import "./scripts/lib/testEnvSplit" without a file extension (vitest.config.ts:3:41). Add the file extension
+  - import "./vitest.shared" without a file extension (vitest.config.ts:9:8). Add the file extension
+Set `VITE_CONFIG_NATIVE_IGNORE_WARNING=true` to suppress this warning.
+[vite:react-swc] We recommend switching to `@vitejs/plugin-react` for improved performance as no swc plugins are used. More information at https://vite.dev/rolldown
+[vite:react-swc] We recommend switching to `@vitejs/plugin-react` for improved performance as no swc plugins are used. More information at https://vite.dev/rolldown
+[vite:react-swc] We recommend switching to `@vitejs/plugin-react` for improved performance as no swc plugins are used. More information at https://vite.dev/rolldown
+
+ RUN  v5.0.3 C:/Users/torta/Documents/Codex/2026-10-16/task-12/commercial
+
+ ✓ |jsdom| src/features/crm/components/__tests__/QuickAddMenu.oportunidadDraft.test.tsx (11 tests) 1111ms
+ ✓ |jsdom| src/features/crm/hooks/__tests__/useImportarLeadsCsv.duplicados.test.tsx (4 tests) 412ms
+ ✓ |jsdom| src/features/crm/routes/__tests__/LeadDetalle.render.test.tsx (4 tests) 54ms
+ ✓ |jsdom| src/features/crm/components/__tests__/leadsPermisosConsumo.test.tsx (4 tests) 339ms
+ ✓ |jsdom| src/features/crm/hooks/__tests__/useImportarLeadsCsv.test.tsx (2 tests) 39ms
+ ✓ |jsdom| src/routes/__tests__/appRoutes.smoke.test.tsx (96 tests) 78ms
+ ✓ |jsdom| src/features/crm/components/__tests__/ImportarLeadsCsvDialog.cancelReset.test.tsx (1 test) 238ms
+ ✓ |jsdom| src/features/crm/hooks/__tests__/leadsBulk.test.tsx (3 tests) 256ms
+ ✓ |jsdom| src/features/crm/components/__tests__/QuickAddMenu.agenda.test.tsx (2 tests) 265ms
+ ✓ |node| src/features/crm/services/leads/__tests__/queries.test.ts (11 tests) 10ms
+ ✓ |node| src/features/crm/services/leads/__tests__/bulk.test.ts (10 tests) 13ms
+ ✓ |node| src/routes/__tests__/appRoutesGuards.test.ts (6 tests) 8ms
+ ✓ |node| src/features/crm/services/leads/__tests__/listLeads.test.ts (6 tests) 8ms
+ ✓ |node| src/lib/csv/__tests__/leadsCsv.test.ts (10 tests) 8ms
+ ✓ |jsdom| src/features/crm/components/__tests__/ImportarLeadsCsvPreview.revision.test.tsx (4 tests) 71ms
+ ✓ |node| src/lib/csv/__tests__/leadsCsv.origen.test.ts (3 tests) 15ms
+ ✓ |node| src/features/crm/services/__tests__/crmCsvExport.test.ts (4 tests) 18ms
+
+ Test Files  17 passed (17)
+      Tests  181 passed (181)
+   Start at  17:19:02
+   Duration  17.07s (import 41%, environment 24%, transform 19%, tests 9%, setup 7%)
+
+
+Result: {"command":["node_modules/vitest/vitest.mjs","run","--maxWorkers=2","src/features/crm/services/__tests__/crmCsvExport.test.ts","src/features/crm/services/leads/__tests__/listLeads.test.ts","src/features/crm/services/leads/__tests__/queries.test.ts","src/features/crm/hooks/__tests__/leadsBulk.test.tsx","src/features/crm/components/__tests__/leadsPermisosConsumo.test.tsx","src/features/crm/routes/__tests__/LeadDetalle.render.test.tsx","src/features/crm/hooks/__tests__/useImportarLeadsCsv","src/features/crm/components/__tests__/ImportarLeadsCsv","src/features/crm/components/__tests__/QuickAddMenu","src/features/crm/services/leads/__tests__/bulk.test.ts","src/lib/csv/__tests__/leadsCsv","src/routes/__tests__/appRoutes.smoke.test.tsx","src/routes/__tests__/appRoutesGuards.test.ts"],"exit":0,"durationSeconds":20.512}

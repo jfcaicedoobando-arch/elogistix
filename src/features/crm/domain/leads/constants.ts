@@ -53,7 +53,6 @@ export const LEAD_FUENTES: CrmLeadFuente[] = [
 ];
 
 export type LeadSortKey = "created_at" | "empresa" | "estado" | "fuente" | "score";
-export const LEAD_SORTABLE_KEYS = ["created_at", "empresa", "estado", "fuente", "score"] as const;
 
 export interface LeadFiltros {
   search?: string;

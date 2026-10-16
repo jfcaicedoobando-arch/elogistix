@@ -1,0 +1,40 @@
+{
+  "base": "c1d86c349b80faa7489d250440924ea77848c57d",
+  "runtime": {
+    "bun": "1.4.0",
+    "node": "24.22.0",
+    "knip": "6.41.0"
+  },
+  "exactPriorBaselineIncludingLocations": true,
+  "before": {
+    "files": 0,
+    "dependencies": 0,
+    "devDependencies": 0,
+    "unlisted": 0,
+    "duplicates": 0,
+    "exports": 26,
+    "types": 16
+  },
+  "after": {
+    "files": 0,
+    "dependencies": 0,
+    "devDependencies": 0,
+    "unlisted": 0,
+    "duplicates": 0,
+    "exports": 24,
+    "types": 16
+  },
+  "removed": [
+    {
+      "file": "src/routes/appRoutes.lazy.ts",
+      "kind": "exports",
+      "name": "CrmProspectos"
+    },
+    {
+      "file": "src/routes/appRoutes.lazy.ts",
+      "kind": "exports",
+      "name": "Leads"
+    }
+  ],
+  "added": []
+}

@@ -1,0 +1,1 @@
+PASS: 15 protected declarations/files identical to base; redirects/LeadDetalle and QuickAdd/import dialog unchanged.

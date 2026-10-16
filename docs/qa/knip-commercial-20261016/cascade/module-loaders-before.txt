@@ -1,0 +1,5 @@
+src/hooks/shared/__tests__/pagedListsAllowlist.test.ts:24:  "src/features/crm/routes/Leads.tsx",
+src/routes/appRoutes.lazy.ts:87:export const Leads = lazy(() => import("@/features/crm/routes/Leads"));
+src/routes/appRoutes.lazy.ts:89:export const CrmProspectos = lazy(() => import("@/features/crm/routes/Prospectos"));
+src/routes/appRoutes.tsx:33:} from "./appRoutes.lazy";
+src/routes/crmRoutes.tsx:18:} from "./appRoutes.lazy";
