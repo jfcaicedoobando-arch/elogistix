@@ -1,0 +1,28 @@
+Unused exports (13)
+getSuperAdminOrg                                  src/features/admin/services/organization/index.ts:2:10          
+setSuperAdminOrg                                  src/features/admin/services/organization/index.ts:2:53          
+getAuthToken                            function  src/features/admin/services/usuario/mutaciones.auth.ts:14:23    
+fetchDesactivadosOrg  catalogosService            src/features/catalogos/services/index.ts:11:10                  
+setActivoOrg          catalogosService            src/features/catalogos/services/index.ts:11:32                  
+runwayIncompleto                        function  src/features/dashboardEjecutivo/components/kpiValuacion.ts:8:17 
+eficienciaIncompleta                    function  src/features/dashboardEjecutivo/components/kpiValuacion.ts:12:17
+ratiosDisponibles                       function  src/features/dashboardEjecutivo/services/completitud.ts:18:17   
+getAttribution                          function  src/features/marketing/lib/attribution.ts:43:17                 
+useTableFilters                                   src/hooks/shared/index.ts:25:10                                 
+facturaEnPreparacion                    function  src/lib/domain/etiquetaCicloProforma.ts:44:17                   
+Leads                                             src/routes/appRoutes.lazy.ts:87:14                              
+CrmProspectos                                     src/routes/appRoutes.lazy.ts:89:14                              
+Unused exported types (13)
+VisibilityState                        type  src/components/shared/DataTable.tsx:13:26                       
+DocumentoKpi                           type  src/components/shared/documento/DocumentoKpiStrip.tsx:8:15      
+OrganizationRow                        type  src/features/admin/services/organization/index.ts:3:15          
+ResponsableOption                      type  src/features/auditoria/hooks/useOrgMembersAsignables.ts:13:15   
+ConceptoLike                           type  src/features/auditoria/utils/diffConceptos.ts:5:15              
+ConceptosDiff                          type  src/features/auditoria/utils/diffConceptos.ts:5:29              
+ConceptosDiff                          type  src/features/auditoria/utils/diffFields.ts:8:29                 
+CatalogoOrg          catalogosService  type  src/features/catalogos/services/index.ts:10:15                  
+SortField                              type  src/features/reportes/components/ReportesTablaClientes.tsx:13:15
+TableFiltersState                      type  src/hooks/shared/index.ts:26:25                                 
+PasoDocumento                          type  src/lib/domain/documentoEstados.ts:10:39                        
+EstadoProformaInput                    type  src/lib/domain/documentoEstados.ts:108:15                       
+IssueUsoCfdi                           type  src/lib/financial/usoCfdiFiscal.ts:3:32                         

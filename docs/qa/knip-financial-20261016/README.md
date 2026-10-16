@@ -63,6 +63,8 @@ acciones fiscales; las pruebas de servicios usan mocks.
 
 ## Validación y límites
 
+Medición original sobre `b5005653`, antes de integrar el grupo comercial:
+
 | Inventario | Antes | Después |
 | --- | ---: | ---: |
 | Exports | 42 | 29 |
@@ -93,3 +95,34 @@ limpieza sólo retira el reexport; la clase, consulta, cantidad, code y llamada
 `assertSinRepsVivos` no se modifican. No se atribuye esa cobertura al test.
 
 El PR se mantiene draft; no se fusiona ni despliega desde este hilo.
+
+## Integración del main comercial
+
+Por instrucción posterior se integró `main` en
+`c1d86c349b80faa7489d250440924ea77848c57d` (PR comercial #383), mediante merge
+`f505e171c18e27fb3e127ad40a79faa989a7b121`. No hubo conflictos ni ediciones
+manuales de archivos comerciales. Se leyó también `src/features/crm/AGENTS.md`.
+
+`integration-comparison.json` confirma que el diff binario de `src/` entre
+`c1d86c3` y la rama integrada es idéntico al diff financiero original entre
+`b5005653` y `1bdd40842`. SHA-256 de ese diff:
+`4c2136447292871527efbff2c56a33586a91688ddeac690929893f093c0165c2`.
+El único cambio propio adicional es esta documentación y su evidencia de
+integración.
+
+| Inventario sobre main comercial | Main comercial | Combinación financiera |
+| --- | ---: | ---: |
+| Exports | 26 | 13 |
+| Tipos | 16 | 13 |
+| Total | 42 | 26 |
+| Grupo financiero | 16 | 0 |
+
+La combinación coincide exactamente por archivo/tipo/símbolo con el inventario
+comercial menos los 16 avisos financieros documentados; no hay avisos nuevos.
+Los archivos `integrated-*.result.json`, `integrated-*.stdout.txt` y
+`integrated-*.stderr.txt` registran las validaciones repetidas con las mismas
+versiones fijadas. El estado final de CI se informa en la descripción del PR
+sobre el SHA final, sin confundirlo con la CI del commit previo a la integración.
+
+Resultado local integrado: Knip JSON, gate normal, tipos, lint con cero warnings,
+build y las mismas **34 suites / 273 tests** aprobados; todos salen con código 0.

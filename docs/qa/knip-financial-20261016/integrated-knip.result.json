@@ -1,0 +1,13 @@
+{
+  "command": [
+    "node",
+    "node_modules/knip/bin/knip.js",
+    "--no-progress",
+    "--reporter",
+    "json"
+  ],
+  "startedAt": "2026-10-16T23:17:27.537Z",
+  "finishedAt": "2026-10-16T23:18:02.532Z",
+  "code": 0,
+  "signal": null
+}
