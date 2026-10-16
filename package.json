@@ -142,7 +142,6 @@
     "@playwright/test": "^1.64.0",
     "@react-pdf/types": "^2.14.0",
     "@sentry/bundler-plugins": "11.6.0",
-    "@sentry/deno": "11.6.0",
     "@tanstack/react-query-devtools": "^5.104.1",
     "@tailwindcss/postcss": "4.3.3",
     "@testing-library/jest-dom": "^7.0.1",
