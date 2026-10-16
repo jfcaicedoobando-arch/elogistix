@@ -17,6 +17,7 @@ import { CxpFiltrosSheetFields } from "./CxpFiltrosSheetFields";
 import { mobileFilterSheet } from "@/components/shared/utils/dialogTokens";
 import type { Moneda } from "@/types/db";
 import { useCxpFiltrosDraft } from "../hooks/useCxpFiltrosDraft";
+import { useIsMobile } from "@/hooks/shared/useIsMobile";
 
 export interface CxpFiltrosProps {
   search: string;
@@ -39,7 +40,22 @@ export interface CxpFiltrosProps {
   onFechaHastaChange: (v: string) => void;
 }
 
+function FilterButton({ count }: { count: number }) {
+  return (
+    <SheetTrigger asChild>
+      <Button variant="outline" size="default" className="shrink-0 gap-2">
+        <Filter className="h-4 w-4" />
+        <span>Filtros</span>
+        {count > 0 && (
+          <Badge variant="secondary" className="h-5 min-w-5 px-1.5 text-label">{count}</Badge>
+        )}
+      </Button>
+    </SheetTrigger>
+  );
+}
+
 export function CxpFiltros(props: CxpFiltrosProps) {
+  const isMobile = useIsMobile();
   const draft = useCxpFiltrosDraft(props);
   const { data: proveedores = [] } = useProveedoresLite();
   const { data: categorias = [] } = usePresupuestoCategorias();
@@ -76,31 +92,13 @@ export function CxpFiltros(props: CxpFiltrosProps) {
     props.onFechaHastaChange("");
   };
 
-  const FilterButton = ({ count }: { count: number }) => (
-    <SheetTrigger asChild>
-      <Button variant="outline" size="default" className="shrink-0 gap-2">
-        <Filter className="h-4 w-4" />
-        <span>Filtros</span>
-        {count > 0 && (
-          <Badge variant="secondary" className="h-5 min-w-5 px-1.5 text-label">{count}</Badge>
-        )}
-      </Button>
-    </SheetTrigger>
-  );
-
   return (
     <div className="space-y-0">
       <Sheet open={draft.open} onOpenChange={draft.onOpenChange}>
-        <div className="flex gap-2 md:hidden">
+        <div className="flex gap-2 md:items-center md:flex-wrap">
           <SearchInput value={props.search} onChange={props.onSearchChange}
-            placeholder="Buscar folio o proveedor…" className="flex-1 min-w-0" />
-          <FilterButton count={totalActive} />
-        </div>
-
-        <div className="hidden md:flex md:items-center md:gap-2 md:flex-wrap">
-          <SearchInput value={props.search} onChange={props.onSearchChange}
-            placeholder="Buscar folio o proveedor…" className="flex-1 min-w-[220px]" />
-          <div className="flex flex-col gap-0.5 shrink-0">
+            placeholder="Buscar folio o proveedor…" className="flex-1 min-w-0 md:min-w-[220px]" />
+          <div className="hidden md:flex flex-col gap-0.5 shrink-0">
             <span className="px-1 text-overline text-muted-foreground short:sr-only">Origen</span>
             <div className="flex gap-1 rounded-md border bg-background p-0.5">
               {(['todos', 'Nacional', 'Extranjero'] as const).map((opt) => (
@@ -113,7 +111,7 @@ export function CxpFiltros(props: CxpFiltrosProps) {
               ))}
             </div>
           </div>
-          <FilterButton count={totalActive - (props.origen !== "todos" ? 1 : 0)} />
+          <FilterButton count={totalActive - (!isMobile && props.origen !== "todos" ? 1 : 0)} />
         </div>
 
         <SheetContent side="right" className={mobileFilterSheet}>
