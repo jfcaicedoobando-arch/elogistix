@@ -1,7 +1,7 @@
 /**
  * Filtros de CxP — barra compacta + chips de filtros activos.
  */
-import { useMemo, useState } from "react";
+import { useMemo } from "react";
 import { Filter, X } from "lucide-react";
 import {
   Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger, SheetFooter,
@@ -16,8 +16,9 @@ import { CxpFiltrosChips } from "./CxpFiltrosChips";
 import { CxpFiltrosSheetFields } from "./CxpFiltrosSheetFields";
 import { mobileFilterSheet } from "@/components/shared/utils/dialogTokens";
 import type { Moneda } from "@/types/db";
+import { useCxpFiltrosDraft } from "./useCxpFiltrosDraft";
 
-interface Props {
+export interface CxpFiltrosProps {
   search: string;
   onSearchChange: (v: string) => void;
   estatus: EstatusCxP | "todos";
@@ -38,8 +39,8 @@ interface Props {
   onFechaHastaChange: (v: string) => void;
 }
 
-export function CxpFiltros(props: Props) {
-  const [sheetOpen, setSheetOpen] = useState(false);
+export function CxpFiltros(props: CxpFiltrosProps) {
+  const draft = useCxpFiltrosDraft(props);
   const { data: proveedores = [] } = useProveedoresLite();
   const { data: categorias = [] } = usePresupuestoCategorias();
 
@@ -89,7 +90,7 @@ export function CxpFiltros(props: Props) {
 
   return (
     <div className="space-y-0">
-      <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
+      <Sheet open={draft.open} onOpenChange={draft.onOpenChange}>
         <div className="flex gap-2 md:hidden">
           <SearchInput value={props.search} onChange={props.onSearchChange}
             placeholder="Buscar folio o proveedor…" className="flex-1 min-w-0" />
@@ -122,16 +123,26 @@ export function CxpFiltros(props: Props) {
           <div className="flex-1 overflow-y-auto p-4">
             <CxpFiltrosSheetFields
               includePrimary
-              {...props}
+              {...draft.values}
+              onEstatusChange={(v) => draft.update("estatus", v)}
+              onMonedaChange={(v) => draft.update("moneda", v)}
+              onAprobacionChange={(v) => draft.update("aprobacion", v)}
+              onProveedorChange={(v) => draft.update("proveedorId", v)}
+              onCategoriaPresupuestoChange={(v) => draft.update("categoriaPresupuestoId", v)}
+              onFechaDesdeChange={(v) => draft.update("fechaDesde", v)}
+              onFechaHastaChange={(v) => draft.update("fechaHasta", v)}
               proveedoresOpts={proveedoresOpts}
               categoriasOpts={categoriasOpts}
             />
           </div>
-          <SheetFooter className="p-4 border-t flex-row gap-2 sm:flex-row sm:justify-between">
-            <Button variant="ghost" onClick={clearAll} disabled={totalActive === 0} className="gap-2">
+          <SheetFooter className="p-4 border-t flex-row flex-wrap gap-2 sm:flex-row sm:justify-between">
+            <Button variant="ghost" onClick={draft.clear} disabled={!draft.active} className="gap-2">
               <X className="h-4 w-4" /> Limpiar
             </Button>
-            <Button onClick={() => setSheetOpen(false)}>Aplicar</Button>
+            <div className="ml-auto flex gap-2">
+              <Button variant="outline" onClick={() => draft.onOpenChange(false)}>Cancelar</Button>
+              <Button onClick={draft.apply}>Aplicar</Button>
+            </div>
           </SheetFooter>
         </SheetContent>
       </Sheet>
