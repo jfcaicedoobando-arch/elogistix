@@ -28,6 +28,7 @@ on:
       - "scripts/ci/audit54-cxc-runtime-fixtures.py"
       - "scripts/ci/selector148/**"
       - "scripts/ci/cxp-approval/**"
+      - "scripts/ci/crm-prospecto-kam/**"
       - "scripts/ci/demo-guard/**"
       - "scripts/ci/financial49/**"
       - "scripts/ci/receivable155/**"
@@ -57,6 +58,7 @@ on:
       - "scripts/ci/audit54-cxc-runtime-fixtures.py"
       - "scripts/ci/selector148/**"
       - "scripts/ci/cxp-approval/**"
+      - "scripts/ci/crm-prospecto-kam/**"
       - "scripts/ci/demo-guard/**"
       - "scripts/ci/financial49/**"
       - "scripts/ci/receivable155/**"
@@ -199,6 +201,10 @@ jobs:
 
       - name: Pricing RPC exact ACL before harness grants
         run: $PSQL -f supabase/tests/rls/_ci_check_pricing_container_acl.sql
+
+      - name: KAM own company to Prospecto - strict roles, ownership and retries
+        # Before broad CI grants/FK relaxation; fixtures roll back with all triggers active.
+        run: $PSQL -f supabase/tests/rls/test_rls_crm_empresa_prospecto_kam.sql
 
       - name: Contador CxP — two-session races in fresh strict clones
         timeout-minutes: 8

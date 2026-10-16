@@ -16378,14 +16378,63 @@ CREATE FUNCTION public.crm_empresa_pasar_a_prospecto(p_empresa_id uuid) RETURNS 
     AS $$
 DECLARE
   v_org uuid := public.org_scope();
+  v_uid uuid := auth.uid();
+  v_kam boolean := false;
   v_emp public.crm_empresas%ROWTYPE;
+  v_origen public.crm_leads%ROWTYPE;
+  v_existente public.crm_oportunidades%ROWTYPE;
+  v_vinculo record;
   v_lead uuid; v_etapa uuid; v_op uuid; v_email text;
 BEGIN
   IF v_org IS NULL THEN RAISE EXCEPTION 'LC_SIN_ORGANIZACION' USING ERRCODE = '42501'; END IF;
-  PERFORM public._assert_writer(v_org);
+  -- Preserve the existing writer contract; only this RPC adds an exact KAM
+  -- membership path. Never broaden the shared _assert_writer helper.
+  BEGIN
+    PERFORM public._assert_writer(v_org);
+  EXCEPTION WHEN insufficient_privilege THEN
+    PERFORM 1 FROM public.organization_members om
+      JOIN public.organizations org ON org.id = om.organization_id AND org.activo IS TRUE
+     WHERE om.organization_id = v_org AND om.user_id = v_uid AND om.role::text = 'vendedor'
+     FOR SHARE OF om, org;
+    IF NOT FOUND THEN RAISE; END IF;
+    v_kam := true;
+  END;
   SELECT * INTO v_emp FROM public.crm_empresas
    WHERE id = p_empresa_id AND organization_id = v_org AND deleted_at IS NULL FOR UPDATE;
   IF NOT FOUND THEN RAISE EXCEPTION 'LC_CRM_EMPRESA_NO_ENCONTRADA' USING ERRCODE = 'P0002'; END IF;
+  IF v_kam THEN
+    IF v_emp.created_by IS DISTINCT FROM v_uid THEN
+      RAISE EXCEPTION 'LC_CRM_PROSPECTO_NO_AUTORIZADO' USING ERRCODE = '42501';
+    END IF;
+    IF v_emp.estado_crm = 'Cliente' OR v_emp.cliente_id IS NOT NULL THEN
+      RAISE EXCEPTION 'LC_CRM_EMPRESA_YA_CLIENTE';
+    END IF;
+    IF v_emp.lead_origen_id IS NOT NULL THEN
+      SELECT * INTO v_origen FROM public.crm_leads
+       WHERE id = v_emp.lead_origen_id FOR UPDATE;
+      IF NOT FOUND OR v_origen.organization_id IS DISTINCT FROM v_org
+        OR v_origen.deleted_at IS NOT NULL OR v_origen.vendedor_id IS DISTINCT FROM v_uid
+        OR v_origen.estado::text = 'Convertido' OR v_origen.cliente_convertido_id IS NOT NULL THEN
+        RAISE EXCEPTION 'LC_CRM_PROSPECTO_VINCULO_INVALIDO' USING ERRCODE = '42501';
+      END IF;
+    END IF;
+    -- Validate and lock EVERY link, including deleted/foreign opportunities.
+    -- A favourable LIMIT 1 must never hide a different owner's relationship.
+    FOR v_vinculo IN SELECT oe.organization_id, oe.oportunidad_id
+      FROM public.crm_oportunidad_empresa oe WHERE oe.empresa_id = v_emp.id
+      ORDER BY oe.oportunidad_id FOR UPDATE
+    LOOP
+      SELECT * INTO v_existente FROM public.crm_oportunidades
+       WHERE id = v_vinculo.oportunidad_id FOR UPDATE;
+      IF NOT FOUND OR v_vinculo.organization_id IS DISTINCT FROM v_org
+        OR v_existente.organization_id IS DISTINCT FROM v_org
+        OR v_existente.deleted_at IS NOT NULL OR v_existente.vendedor_id IS DISTINCT FROM v_uid
+        OR v_emp.lead_origen_id IS NULL
+        OR v_existente.lead_id IS DISTINCT FROM v_emp.lead_origen_id THEN
+        RAISE EXCEPTION 'LC_CRM_PROSPECTO_VINCULO_INVALIDO' USING ERRCODE = '42501';
+      END IF;
+    END LOOP;
+  END IF;
   SELECT o.id INTO v_op FROM public.crm_oportunidad_empresa oe
     JOIN public.crm_oportunidades o ON o.id = oe.oportunidad_id AND o.deleted_at IS NULL
    WHERE oe.empresa_id = v_emp.id ORDER BY o.created_at LIMIT 1;
