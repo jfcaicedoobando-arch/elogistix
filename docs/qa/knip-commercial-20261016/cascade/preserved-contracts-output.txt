@@ -1,1 +1,1 @@
-PASS: 15 protected declarations/files identical to base; redirects/LeadDetalle and QuickAdd/import dialog unchanged.
+PASS: 15 protected declarations/files identical to base; guard changes only by removing the retired Leads entry, preserving both assertions and every live entry.

@@ -1,0 +1,65 @@
+Node v24.22.0
+Command: node node_modules/vitest/vitest.mjs run --maxWorkers=2 src/hooks/shared/__tests__/pagedListsAllowlist.test.ts
+Started: 2026-10-16T23:20:45.841Z
+(!) Your Vite config uses features that are unsupported by `configLoader: 'native'`, which is planned to become the default in a future major version of Vite:
+  - `__dirname` (vitest.config.ts:15:14). Use `import.meta.dirname` instead
+  - import "./scripts/lib/testEnvSplit" without a file extension (vitest.config.ts:3:41). Add the file extension
+  - import "./vitest.shared" without a file extension (vitest.config.ts:9:8). Add the file extension
+Set `VITE_CONFIG_NATIVE_IGNORE_WARNING=true` to suppress this warning.
+[vite:react-swc] We recommend switching to `@vitejs/plugin-react` for improved performance as no swc plugins are used. More information at https://vite.dev/rolldown
+[vite:react-swc] We recommend switching to `@vitejs/plugin-react` for improved performance as no swc plugins are used. More information at https://vite.dev/rolldown
+[vite:react-swc] We recommend switching to `@vitejs/plugin-react` for improved performance as no swc plugins are used. More information at https://vite.dev/rolldown
+
+ RUN  v5.0.3 C:/Users/torta/Documents/Codex/2026-10-16/task-12/commercial
+
+ ❯ |node| src/hooks/shared/__tests__/pagedListsAllowlist.test.ts (14 tests | 2 failed) 15ms
+   ❯ Filtros globales — allowlist de rutas migradas (14)
+     ✓ src/features/bandejas/routes/Cartera.tsx usa el primitivo paginado unificado 2ms
+     ✓ src/features/bandejas/routes/CxpPorPagar.tsx usa el primitivo paginado unificado 0ms
+     ✓ src/features/cxp/routes/CxpAging.tsx usa el primitivo paginado unificado 0ms
+     ✓ src/features/comisiones/routes/Comisiones.tsx usa el primitivo paginado unificado 0ms
+     × src/features/crm/routes/Leads.tsx usa el primitivo paginado unificado 6ms
+     ✓ src/features/crm/routes/Actividades.tsx usa el primitivo paginado unificado 0ms
+     ✓ src/features/cotizacion/routes/Cotizaciones.tsx usa el primitivo paginado unificado 0ms
+     ✓ src/features/bandejas/routes/Cartera.tsx pasa la prop `pagination` al DataTable 0ms
+     ✓ src/features/bandejas/routes/CxpPorPagar.tsx pasa la prop `pagination` al DataTable 0ms
+     ✓ src/features/cxp/routes/CxpAging.tsx pasa la prop `pagination` al DataTable 0ms
+     ✓ src/features/comisiones/routes/Comisiones.tsx pasa la prop `pagination` al DataTable 0ms
+     × src/features/crm/routes/Leads.tsx pasa la prop `pagination` al DataTable 0ms
+     ✓ src/features/crm/routes/Actividades.tsx pasa la prop `pagination` al DataTable 0ms
+     ✓ src/features/cotizacion/routes/Cotizaciones.tsx pasa la prop `pagination` al DataTable 0ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  |node| src/hooks/shared/__tests__/pagedListsAllowlist.test.ts > Filtros globales — allowlist de rutas migradas > src/features/crm/routes/Leads.tsx usa el primitivo paginado unificado
+Error: ENOENT: no such file or directory, open 'C:\Users\torta\Documents\Codex\2026-10-16\task-12\commercial\src\features\crm\routes\Leads.tsx'
+ ❯ src/hooks/shared/__tests__/pagedListsAllowlist.test.ts:34:19
+     32|     "%s usa el primitivo paginado unificado",
+     33|     (relPath) => {
+     34|       const src = readFileSync(resolve(process.cwd(), relPath), "utf8"…
+       |                   ^
+     35|       const usesPrimitive = /useServerPagedList|useClientPagedList/.te…
+     36|       expect(usesPrimitive, `${relPath} debe importar useServerPagedLi…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+ FAIL  |node| src/hooks/shared/__tests__/pagedListsAllowlist.test.ts > Filtros globales — allowlist de rutas migradas > src/features/crm/routes/Leads.tsx pasa la prop `pagination` al DataTable
+Error: ENOENT: no such file or directory, open 'C:\Users\torta\Documents\Codex\2026-10-16\task-12\commercial\src\features\crm\routes\Leads.tsx'
+ ❯ src/hooks/shared/__tests__/pagedListsAllowlist.test.ts:43:19
+     41|     "%s pasa la prop `pagination` al DataTable",
+     42|     (relPath) => {
+     43|       const src = readFileSync(resolve(process.cwd(), relPath), "utf8"…
+       |                   ^
+     44|       // Aceptamos `pagination={...}` o `pagination={pagination}` para…
+     45|       // ambas formas idiomáticas.
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  2 failed | 12 passed (14)
+   Start at  17:20:48
+   Duration  190ms (transform 43%, tests 26%, setup 14%, worker 10%, import 6%)
+
+
+Result: {"command":["node_modules/vitest/vitest.mjs","run","--maxWorkers=2","src/hooks/shared/__tests__/pagedListsAllowlist.test.ts"],"exit":1,"durationSeconds":2.861}

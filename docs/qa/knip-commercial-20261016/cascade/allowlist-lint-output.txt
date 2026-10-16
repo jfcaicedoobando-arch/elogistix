@@ -1,0 +1,2 @@
+Command: node node_modules/eslint/bin/eslint.js src/hooks/shared/__tests__/pagedListsAllowlist.test.ts docs/qa/knip-commercial-20261016/cascade/check-preserved-contracts.mjs --max-warnings=0
+Exit: 0; no warnings or errors.

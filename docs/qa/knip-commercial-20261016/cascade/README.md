@@ -76,29 +76,48 @@ QuickAdd menu/full dialogs and the CSV import dialog. The parent directory's
 `/crm/empresas?estado=Lead` and `/crm/empresas?estado=Prospecto`, `replace`, and
 the `leads/:id` route with `LeadDetalle`. No legacy UI is reinstated or redesigned.
 
-## Shared-test coordination
+## Coordinated shared-test adjustment
 
 Reference review found one additional file outside this cascade:
 `src/hooks/shared/__tests__/pagedListsAllowlist.test.ts:24` reads `Leads.tsx`
 literally in two parameterized assertions. Its existing entry becomes stale
 when the page is removed. The proposed adjustment is to remove only that
 obsolete entry while preserving both assertion bodies and every live route.
-This was reported for coordination before editing; the shared test is currently
-unchanged pending assignment/approval. `allowlist-output.txt` records its
-focused result separately from the commercial contract tests.
+This was reported before editing. The user then assigned this one test
+exclusively to the commercial continuation and confirmed that the shared author
+would not edit it. The final test diff removes exactly the one `Leads.tsx`
+entry; both assertion bodies and all six live entries remain byte-identical.
+`check-preserved-contracts.mjs` verifies that the complete final file equals
+the base file with only that exact line removed, recording the proof in
+`preserved-contracts.json`. No exception, skipped test or weaker assertion was
+introduced.
 
-That focused run confirms **12 passed / 2 failed**: both failures are `ENOENT`
-for the removed `Leads.tsx`, one in each existing assertion body. This is a
-coordination blocker, not a runtime regression or a new Knip finding.
+The initial focused run is preserved in `allowlist-before-output.txt`: 12 passed
+and two `ENOENT` failures for the removed page. The corrected run in
+`allowlist-output.txt` passes all **12 cases** for the six live routes: Cartera,
+CxP Por pagar, CxP Aging, Comisiones, Actividades and Cotizaciones.
+
+**Empresas was not covered by `MIGRATED_ROUTES` before this change.** Its page
+delegates to `ListaObjetosCrm → useListaObjetosCrm`, not to
+`useServerPagedList`/`useClientPagedList`. Inserting Empresas into this specific
+guard would assert a migration that has not happened. No entry or exception is
+added for it, and no active page's existing checks are removed. The existing
+`ListaObjetosCrm.test.tsx` suite is retained and run separately: **five tests
+pass**, covering pagination/search/navigation and the Empresas URL state filter
+(including `?estado=Prospecto`). Empresas, its list component and hooks remain
+unchanged.
 
 ## Validation
 
 - TypeScript build check: **pass** (`types-output.txt`).
 - Frontend production build: **pass** (`build-output.txt`).
-- Focused tests: **17 files / 181 tests passed**, including all six requested
+- Commercial focused tests: **17 files / 181 tests passed**, including all six requested
   suites (`crmCsvExport`, `listLeads`, `queries`, `leadsBulk`,
   `leadsPermisosConsumo`, `LeadDetalle.render`) plus CSV round-trip/import,
   QuickAdd, bulk service and route smoke/guard contracts (`tests-output.txt`).
+- Coordinated allowlist and existing Empresas list tests: **two files / 17
+  tests passed** (`allowlist-output.txt`, `empresas-output.txt`), for **19 files
+  / 198 passing tests** across the focused runs.
 - Exact preserved declarations/files and route structure: **pass**.
 - Full ESLint with `--max-warnings=0`: **pass**, zero warnings (`lint-output.txt`).
 - Normal Knip gate, without severity flags: **pass** (`knip-output.txt`).

@@ -42,5 +42,12 @@ for (const file of [
   assert.ok(before.equals(after), `${file}: protected file changed`);
   result.push({file, sha256:hash(after)});
 }
-writeFileSync(new URL("preserved-contracts.json", import.meta.url), JSON.stringify({base, result}, null, 2) + "\n");
-console.log(`PASS: ${result.length} protected declarations/files identical to base; redirects/LeadDetalle and QuickAdd/import dialog unchanged.`);
+const guardPath = "src/hooks/shared/__tests__/pagedListsAllowlist.test.ts";
+const guardBefore = execFileSync("git", ["show", `${base}:${guardPath}`], {encoding:"utf8"});
+const guardAfter = readFileSync(guardPath, "utf8");
+const retiredEntry = '  "src/features/crm/routes/Leads.tsx",\n';
+assert.equal(guardBefore.split(retiredEntry).length, 2);
+assert.equal(guardAfter, guardBefore.replace(retiredEntry, ""), "Guard must change only by removing the retired entry");
+const allowlistMutation = {file:guardPath, retiredEntry:retiredEntry.trim(), onlyRetiredEntryRemoved:true, remainingAssertionsAndEntriesIdentical:true};
+writeFileSync(new URL("preserved-contracts.json", import.meta.url), JSON.stringify({base, result, allowlistMutation}, null, 2) + "\n");
+console.log(`PASS: ${result.length} protected declarations/files identical to base; guard changes only by removing the retired Leads entry, preserving both assertions and every live entry.`);

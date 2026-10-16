@@ -21,7 +21,6 @@ const MIGRATED_ROUTES = [
   "src/features/cxp/routes/CxpAging.tsx",
   "src/features/comisiones/routes/Comisiones.tsx",
   // Ola 2 — CRM
-  "src/features/crm/routes/Leads.tsx",
   "src/features/crm/routes/Actividades.tsx",
   // YG-03 — Cotizaciones (el primitivo vive en useCotizacionesPageController)
   "src/features/cotizacion/routes/Cotizaciones.tsx",

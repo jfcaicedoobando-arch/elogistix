@@ -72,5 +72,11 @@
       "file": "src/features/crm/components/ImportarLeadsCsvDialog.tsx",
       "sha256": "d4431de877d5acd594dc814b8423387bb838e7d8a66651209dae9697572fd8e3"
     }
-  ]
+  ],
+  "allowlistMutation": {
+    "file": "src/hooks/shared/__tests__/pagedListsAllowlist.test.ts",
+    "retiredEntry": "\"src/features/crm/routes/Leads.tsx\",",
+    "onlyRetiredEntryRemoved": true,
+    "remainingAssertionsAndEntriesIdentical": true
+  }
 }
