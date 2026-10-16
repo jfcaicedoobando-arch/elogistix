@@ -1,0 +1,23 @@
+Node v24.22.0
+Command: node node_modules/vitest/vitest.mjs run --maxWorkers=2 src/features/crm/components/objetos/__tests__/ListaObjetosCrm.test.tsx
+Started: 2026-10-16T23:24:20.269Z
+(!) Your Vite config uses features that are unsupported by `configLoader: 'native'`, which is planned to become the default in a future major version of Vite:
+  - `__dirname` (vitest.config.ts:15:14). Use `import.meta.dirname` instead
+  - import "./scripts/lib/testEnvSplit" without a file extension (vitest.config.ts:3:41). Add the file extension
+  - import "./vitest.shared" without a file extension (vitest.config.ts:9:8). Add the file extension
+Set `VITE_CONFIG_NATIVE_IGNORE_WARNING=true` to suppress this warning.
+[vite:react-swc] We recommend switching to `@vitejs/plugin-react` for improved performance as no swc plugins are used. More information at https://vite.dev/rolldown
+[vite:react-swc] We recommend switching to `@vitejs/plugin-react` for improved performance as no swc plugins are used. More information at https://vite.dev/rolldown
+[vite:react-swc] We recommend switching to `@vitejs/plugin-react` for improved performance as no swc plugins are used. More information at https://vite.dev/rolldown
+
+ RUN  v5.0.3 C:/Users/torta/Documents/Codex/2026-10-16/task-12/commercial
+
+ ✓ |jsdom| src/features/crm/components/objetos/__tests__/ListaObjetosCrm.test.tsx (5 tests) 241ms
+
+ Test Files  1 passed (1)
+      Tests  5 passed (5)
+   Start at  17:24:22
+   Duration  1.72s (environment 36%, transform 21%, import 18%, tests 15%, setup 10%)
+
+
+Result: {"command":["node_modules/vitest/vitest.mjs","run","--maxWorkers=2","src/features/crm/components/objetos/__tests__/ListaObjetosCrm.test.tsx"],"exit":0,"durationSeconds":4.208}

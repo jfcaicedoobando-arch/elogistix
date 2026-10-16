@@ -1,0 +1,26 @@
+docs/changelog-archive-v13.md:5594:  7. **Barra sticky de acciones (`LeadsBulkBar`)**: `rounded-md shadow-lg` → `rounded-lg shadow-raised`.
+docs/changelog-archive.md:1577:- **CRM — cierre de pendientes anti-fricción**: (1) Conversión Lead→Oportunidad sin perder contexto: nuevo `ConvertirLeadSheet` (Sheet lateral) con sólo 3 campos (nombre prefilled, monto, moneda) + checkbox crear cliente. Al confirmar se queda en `/crm/leads/:id` y muestra toast sonner "Lead convertido" con acción **"Abrir oportunidad →"** (5s). El `ConvertirLeadDialog` clásico sigue disponible vía botón "Más campos →" dentro del Sheet. `LeadDetalle` orquesta ambos modales. (2) Notas inline de actividad: tercer botón (icono `FileText`) en `ActividadRowActions` abre `ActividadNotasSheet` (Sheet derecho con `Textarea` único de "Resultado / notas") — disponible tanto en pendientes como en completadas. Nuevo hook `useActualizarActividadNotas` (update mínimo de `crm_actividades.resultado`). (3) Toasts CRM silenciados: nuevo wrapper `src/lib/crm/crmToast.ts` (`success` 2s, `error` 4s, `info`, `undo` 5s) usando sonner directo. Migrados a `crmToast.success`: `LeadDetalle`, `ConvertirLeadDialog`, `ConvertirLeadSheet`, `ActividadRowActions`, `ActividadNotasSheet`, `NuevoLeadDialog`, `NuevaOportunidadDialog`, `NuevaActividadDialog`, `ComentariosOportunidad`, `ActividadTimeline`, `LeadsBulkBar`, `useOportunidadDetalleActions`. `notifyError` se conserva donde aporta panel de debug copiable.
+src/features/crm/components/LeadsBulkBar.tsx:30:export default function LeadsBulkBar({ ids, onClear, onDone, bloqueado = false }: Props) {
+src/features/crm/domain/leads/constants.ts:56:export const LEAD_SORTABLE_KEYS = ["created_at", "empresa", "estado", "fuente", "score"] as const;
+src/features/crm/routes/Leads.tsx:19:import LeadsBulkBar from "@/features/crm/components/LeadsBulkBar";
+src/features/crm/routes/Leads.tsx:24:  LEAD_SORTABLE_KEYS,
+src/features/crm/routes/Leads.tsx:30:import { useLeadsSelection } from "./useLeadsSelection";
+src/features/crm/routes/Leads.tsx:31:import { useLeadsExport } from "./useLeadsExport";
+src/features/crm/routes/Leads.tsx:32:import LeadsFiltrosPrimarios from "./LeadsFiltrosPrimarios";
+src/features/crm/routes/Leads.tsx:57:    sortableKeys: LEAD_SORTABLE_KEYS,
+src/features/crm/routes/Leads.tsx:77:  const { selected, toggle, toggleAll, clearSel } = useLeadsSelection(leads, {
+src/features/crm/routes/Leads.tsx:82:  const { exportando, exportarTodo } = useLeadsExport({
+src/features/crm/routes/Leads.tsx:119:        <LeadsBulkBar
+src/features/crm/routes/Leads.tsx:136:            <LeadsFiltrosPrimarios
+src/features/crm/routes/LeadsFiltrosPrimarios.tsx:17:export default function LeadsFiltrosPrimarios({ estado, fuente, onChange }: Props) {
+src/features/crm/routes/Prospectos.tsx:21:  LEAD_SORTABLE_KEYS,
+src/features/crm/routes/Prospectos.tsx:51:    sortableKeys: LEAD_SORTABLE_KEYS,
+src/features/crm/routes/useLeadsExport.ts:6:import { listLeadsTodos } from "@/features/crm/services/leads";
+src/features/crm/routes/useLeadsExport.ts:7:import { exportarLeadsCsv } from "@/features/crm/services/crmCsvExport";
+src/features/crm/routes/useLeadsExport.ts:21:export function useLeadsExport(params: LeadsExportParams) {
+src/features/crm/routes/useLeadsExport.ts:37:      const todos = await listLeadsTodos(filtrosExport);
+src/features/crm/routes/useLeadsExport.ts:38:      exportarLeadsCsv(todos);
+src/features/crm/routes/useLeadsSelection.ts:19:export function useLeadsSelection(leads: CrmLeadRow[], selKeyParts: SelKeyParts) {
+src/features/crm/services/crmCsvExport.ts:60:export function exportarLeadsCsv(rows: CrmLeadRow[]): void {
+src/features/crm/services/leads/queries.ts:65:export async function listLeadsTodos(
+src/routes/appRoutes.lazy.ts:89:export const CrmProspectos = lazy(() => import("@/features/crm/routes/Prospectos"));

@@ -1,0 +1,82 @@
+{
+  "base": "c1d86c349b80faa7489d250440924ea77848c57d",
+  "result": [
+    {
+      "file": "src/features/crm/services/crmCsvExport.ts",
+      "name": "buildLeadsCsv",
+      "sha256": "203b09a1387e5ff75ca0a8e012a6e800f90f999a29d58bfb7f3bf66491720adc"
+    },
+    {
+      "file": "src/features/crm/services/crmCsvExport.ts",
+      "name": "buildOportunidadesCsv",
+      "sha256": "234188be70d87f3fda512f05c9a5b6ee43148d7c6698a5e39a55583aa9ec685a"
+    },
+    {
+      "file": "src/features/crm/services/crmCsvExport.ts",
+      "name": "sufijoFechaArchivo",
+      "sha256": "0ea18fc4267a2b53e19bc1ffd97a43ef20cfaf7d25f193b4135a08107150c0d7"
+    },
+    {
+      "file": "src/features/crm/services/crmCsvExport.ts",
+      "name": "exportarOportunidadesCsv",
+      "sha256": "4cbb7c433e0a93c3aa5c64b3218c5b84da55e56f7a98ba3a0a750c3e2ad7bee7"
+    },
+    {
+      "file": "src/features/crm/domain/leads/constants.ts",
+      "name": "LeadSortKey",
+      "sha256": "cdb34f7b89c5b601335cb28c5f73cdb544da8f9c218ab3c7842f7bddb262736b"
+    },
+    {
+      "file": "src/features/crm/domain/leads/constants.ts",
+      "name": "LeadFiltros",
+      "sha256": "361f847294995f4885b3b4e448d94f53137e292b89482d0b957298e64aec87d6"
+    },
+    {
+      "file": "src/features/crm/domain/leads/constants.ts",
+      "name": "LEAD_COLUMNS",
+      "sha256": "7130436adb2140184a8f34cea89884369ef75b93c0166bdf70507b61ffca8342"
+    },
+    {
+      "file": "src/features/crm/services/leads/queries.ts",
+      "name": "aplicarFiltrosLeads",
+      "sha256": "19201ac81eaf8413169ce445a853d6d0923530c3043977dfa311718ec1d8ae42"
+    },
+    {
+      "file": "src/features/crm/services/leads/queries.ts",
+      "name": "listLeads",
+      "sha256": "463c67c40d0fcfe2d7865ea6a1174e299cb745eede187d3c87a69cb24d10e366"
+    },
+    {
+      "file": "src/features/crm/services/leads/queries.ts",
+      "name": "getLead",
+      "sha256": "f19bebb9dcdc052f3ebed460b3c18e383b13e30e60a015a6ce042f060608470f"
+    },
+    {
+      "file": "src/features/crm/services/leads/queries.ts",
+      "name": "getNombreLead",
+      "sha256": "56d4b0f51408f884e0facd489d1b8f5deab60aae9b252539ab3f2ae32c07bb3e"
+    },
+    {
+      "file": "src/routes/crmRoutes.tsx",
+      "sha256": "4f6e804fbae188876d8772fc58bb5a5d1e71c3597607653f8618cd1b4e6a4f34"
+    },
+    {
+      "file": "src/features/crm/components/QuickAddMenu.tsx",
+      "sha256": "540b018cad54103833623244e5490137df98368ed74da25bd5cbd3d4b6e80570"
+    },
+    {
+      "file": "src/features/crm/components/quickCreate/QuickAddFullDialogs.tsx",
+      "sha256": "8d2725d0231a88b0ace0c7cf27e91c877d620aec6b45a4aaba2205146fe87fc7"
+    },
+    {
+      "file": "src/features/crm/components/ImportarLeadsCsvDialog.tsx",
+      "sha256": "d4431de877d5acd594dc814b8423387bb838e7d8a66651209dae9697572fd8e3"
+    }
+  ],
+  "allowlistMutation": {
+    "file": "src/hooks/shared/__tests__/pagedListsAllowlist.test.ts",
+    "retiredEntry": "\"src/features/crm/routes/Leads.tsx\",",
+    "onlyRetiredEntryRemoved": true,
+    "remainingAssertionsAndEntriesIdentical": true
+  }
+}

@@ -140,6 +140,9 @@ jobs:
         id: setup
         uses: ./.github/actions/setup-bun
 
+      - name: Knip (unused code inventory)
+        run: bun run lint:unused
+
       # Caché de ESLint AISLADA del cache de `node_modules` del composite action.
       # Antes vivía en `node_modules/.cache/eslint/`, cuya clave es compartida por
       # lint/checks/tests: el primer job que guardaba ese cache lo escribía sin
