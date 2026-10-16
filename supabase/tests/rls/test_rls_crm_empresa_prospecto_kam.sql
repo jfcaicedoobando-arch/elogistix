@@ -43,8 +43,15 @@ BEGIN
     VALUES (p_org, v_uid, 'customer_service');
   UPDATE public.organization_members SET role = p_membresia
     WHERE organization_id = p_org AND user_id = v_uid;
-  INSERT INTO public.user_roles(user_id, role) VALUES (v_uid, coalesce(p_global, p_membresia))
-    ON CONFLICT (user_id) DO UPDATE SET role = EXCLUDED.role;
+  -- BEFORE INSERT blocks legacy roles even on an ON CONFLICT path. The real
+  -- membership trigger already created this mirror; UPDATE models old history.
+  UPDATE public.user_roles SET role = coalesce(p_global, p_membresia) WHERE user_id = v_uid;
+  IF NOT FOUND THEN RAISE EXCEPTION 'PROSPECTO_FIXTURE: membership mirror missing'; END IF;
+  IF NOT EXISTS (SELECT 1 FROM public.organization_members om JOIN public.user_roles ur ON ur.user_id = om.user_id
+    WHERE om.organization_id = p_org AND om.user_id = v_uid AND om.role = p_membresia
+      AND ur.role = coalesce(p_global, p_membresia)) THEN
+    RAISE EXCEPTION 'PROSPECTO_FIXTURE: effective membership/global role mismatch';
+  END IF;
   RETURN v_uid;
 END;
 $$;
@@ -93,13 +100,19 @@ END;
 $$;
 
 CREATE OR REPLACE FUNCTION pg_temp.prospecto_denegado(
-  p_actor uuid, p_empresa uuid, p_state text, p_error text, p_caso text
+  p_actor uuid, p_empresa uuid, p_state text, p_error text, p_caso text,
+  p_backend boolean DEFAULT false
 ) RETURNS void LANGUAGE plpgsql AS $$
 DECLARE v_antes jsonb; v_state text; v_error text;
 BEGIN
   PERFORM pg_temp.as_postgres();
   v_antes := pg_temp.prospecto_snapshot();
-  PERFORM pg_temp.as_user(p_actor);
+  IF p_backend THEN
+    PERFORM set_config('request.jwt.claims', json_build_object('sub', p_actor, 'role', 'service_role')::text, true);
+    PERFORM set_config('role', 'service_role', true);
+  ELSE
+    PERFORM pg_temp.as_user(p_actor);
+  END IF;
   BEGIN
     PERFORM public.crm_empresa_pasar_a_prospecto(p_empresa);
   EXCEPTION WHEN OTHERS THEN
@@ -110,6 +123,30 @@ BEGIN
     format('%s: esperado %s/%s; recibido %s/%s', p_caso, p_state, p_error, v_state, v_error));
   PERFORM pg_temp.assert(pg_temp.prospecto_snapshot() IS NOT DISTINCT FROM v_antes,
     p_caso || ': rechazo debe conservar filas, conteos, propietarios e historial en ambos tenants');
+END;
+$$;
+
+-- DML real de authenticated, no fixture owner. Una operacion que RLS reduzca
+-- silenciosamente a cero filas tampoco satisface este rechazo del trigger.
+CREATE OR REPLACE FUNCTION pg_temp.prospecto_atribucion_denegada(
+  p_actor uuid, p_sql text, p_caso text
+) RETURNS void LANGUAGE plpgsql AS $$
+DECLARE v_antes jsonb; v_state text; v_error text;
+BEGIN
+  PERFORM pg_temp.as_postgres();
+  v_antes := pg_temp.prospecto_snapshot();
+  PERFORM pg_temp.as_user(p_actor);
+  BEGIN
+    EXECUTE p_sql;
+  EXCEPTION WHEN OTHERS THEN
+    GET STACKED DIAGNOSTICS v_state = RETURNED_SQLSTATE, v_error = MESSAGE_TEXT;
+  END;
+  PERFORM pg_temp.as_postgres();
+  PERFORM pg_temp.assert(v_state IS NOT DISTINCT FROM '42501'
+      AND v_error IS NOT DISTINCT FROM 'LC_CRM_EMPRESA_CREADOR_PROTEGIDO',
+    format('%s: esperado 42501/LC_CRM_EMPRESA_CREADOR_PROTEGIDO; recibido %s/%s', p_caso, v_state, v_error));
+  PERFORM pg_temp.assert(pg_temp.prospecto_snapshot() IS NOT DISTINCT FROM v_antes,
+    p_caso || ': intento de falsear atribucion no cambia filas, conteos ni linaje');
 END;
 $$;
 
@@ -188,6 +225,7 @@ DECLARE
   v_kam uuid; v_otro uuid; v_usuario uuid; v_sin_org uuid := gen_random_uuid();
   v_sa uuid := gen_random_uuid(); v_etapa_a uuid := gen_random_uuid(); v_etapa_b uuid := gen_random_uuid();
   v_cliente uuid := gen_random_uuid(); v_empresa uuid; v_lead uuid; v_op uuid;
+  v_empresa_null uuid; v_empresa_movida uuid; v_backend_actor uuid; v_afectadas integer;
   v_otro_lead uuid; v_otra_op uuid; v_role public.app_role; v_caso text;
   v_state text; v_error text;
   v_matriz integer := 0;
@@ -218,6 +256,152 @@ BEGIN
   PERFORM pg_temp.as_postgres();
   PERFORM pg_temp.assert(v_state IS NOT DISTINCT FROM '42501' AND v_error IS NOT DISTINCT FROM 'Permisos insuficientes',
     '_assert_writer conserva su rechazo previo de vendedor');
+
+  -- P1: el creador que usa la capacidad no se puede fabricar por la Data API.
+  -- Primero se ataca una empresa AJENA SIN LEAD: si el UPDATE prosperase,
+  -- el siguiente RPC la aceptaria sin una segunda fuente de atribucion.
+  v_empresa := pg_temp.prospecto_empresa(fx.org_a, v_otro);
+  PERFORM pg_temp.prospecto_atribucion_denegada(v_kam,
+    format('UPDATE public.crm_empresas SET created_by = %L::uuid WHERE id = %L::uuid', v_kam, v_empresa),
+    'KAM intenta autoadjudicarse empresa ajena sin lead');
+  PERFORM pg_temp.prospecto_atribucion_denegada(v_kam,
+    format('DELETE FROM public.crm_empresas WHERE id = %L::uuid', v_empresa),
+    'KAM no elimina empresa ajena para reinsertarla como propia');
+  PERFORM pg_temp.prospecto_atribucion_denegada(v_kam,
+    format('WITH borrada AS (DELETE FROM public.crm_empresas WHERE id = %L::uuid RETURNING id,organization_id,nombre) '
+      || 'INSERT INTO public.crm_empresas(id,organization_id,nombre,created_by) SELECT id,organization_id,nombre,%L::uuid FROM borrada',
+      v_empresa, v_kam), 'KAM no elude atribucion con DELETE y reinsert de empresa ajena');
+  PERFORM pg_temp.prospecto_atribucion_denegada(v_kam,
+    format('UPDATE public.crm_empresas SET id = %L::uuid WHERE id = %L::uuid', gen_random_uuid(), v_empresa),
+    'KAM no cambia identidad de empresa ajena');
+  PERFORM pg_temp.prospecto_atribucion_denegada(v_kam,
+    format('WITH movida AS (UPDATE public.crm_empresas SET id = %L::uuid WHERE id = %L::uuid RETURNING organization_id,nombre) '
+      || 'INSERT INTO public.crm_empresas(id,organization_id,nombre,created_by) SELECT %L::uuid,organization_id,nombre,%L::uuid FROM movida',
+      gen_random_uuid(), v_empresa, v_empresa, v_kam), 'KAM no elude atribucion moviendo id y reinsertando empresa ajena');
+  PERFORM pg_temp.prospecto_atribucion_denegada(v_kam,
+    format('INSERT INTO public.crm_empresas(id,organization_id,nombre,created_by) VALUES (%L::uuid,%L::uuid,%L,%L::uuid) '
+      || 'ON CONFLICT (id) DO UPDATE SET created_by = EXCLUDED.created_by,nombre = EXCLUDED.nombre',
+      v_empresa, fx.org_a, 'KAM UPSERT creador falso', v_kam), 'KAM no autoadjudica empresa ajena con UPSERT');
+  PERFORM pg_temp.prospecto_denegado(v_kam, v_empresa, '42501', 'LC_CRM_PROSPECTO_NO_AUTORIZADO',
+    'RPC sigue negando empresa ajena despues de ataques de atribucion, identidad y borrado');
+  v_empresa := pg_temp.prospecto_empresa(fx.org_a, NULL);
+  PERFORM pg_temp.prospecto_atribucion_denegada(v_kam,
+    format('UPDATE public.crm_empresas SET created_by = %L::uuid WHERE id = %L::uuid', v_kam, v_empresa),
+    'KAM intenta atribuirse empresa heredada sin creador');
+  PERFORM pg_temp.prospecto_atribucion_denegada(v_kam,
+    format('DELETE FROM public.crm_empresas WHERE id = %L::uuid', v_empresa),
+    'KAM no elimina empresa heredada sin creador');
+  PERFORM pg_temp.prospecto_atribucion_denegada(v_kam,
+    format('WITH borrada AS (DELETE FROM public.crm_empresas WHERE id = %L::uuid RETURNING id,organization_id,nombre) '
+      || 'INSERT INTO public.crm_empresas(id,organization_id,nombre,created_by) SELECT id,organization_id,nombre,%L::uuid FROM borrada',
+      v_empresa, v_kam), 'KAM no elude atribucion con DELETE y reinsert de creador NULL');
+  PERFORM pg_temp.prospecto_denegado(v_kam, v_empresa, '42501', 'LC_CRM_PROSPECTO_NO_AUTORIZADO',
+    'RPC sigue negando empresa con creador NULL despues del ataque');
+
+  v_empresa := pg_temp.prospecto_empresa(fx.org_a, v_kam);
+  PERFORM pg_temp.prospecto_atribucion_denegada(v_kam,
+    format('UPDATE public.crm_empresas SET created_by = %L::uuid WHERE id = %L::uuid', v_otro, v_empresa),
+    'KAM no transfiere atribucion de empresa propia');
+  PERFORM pg_temp.prospecto_atribucion_denegada(v_kam,
+    format('UPDATE public.crm_empresas SET created_by = NULL WHERE id = %L::uuid', v_empresa),
+    'KAM no borra atribucion de empresa propia');
+  PERFORM pg_temp.prospecto_atribucion_denegada(v_kam,
+    format('UPDATE public.crm_empresas SET id = %L::uuid WHERE id = %L::uuid', gen_random_uuid(), v_empresa),
+    'KAM no cambia identidad de empresa propia');
+  PERFORM pg_temp.prospecto_atribucion_denegada(v_kam,
+    format('INSERT INTO public.crm_empresas(organization_id,nombre,created_by) VALUES (%L::uuid,%L,%L::uuid)',
+      fx.org_a, 'KAM creador falso', v_otro), 'KAM no inserta creador ajeno');
+  PERFORM pg_temp.prospecto_atribucion_denegada(v_kam,
+    format('INSERT INTO public.crm_empresas(organization_id,nombre,created_by) VALUES (%L::uuid,%L,NULL)',
+      fx.org_a, 'KAM creador NULL'), 'KAM no inserta creador NULL');
+  PERFORM pg_temp.prospecto_atribucion_denegada(NULL,
+    format('INSERT INTO public.crm_empresas(organization_id,nombre,created_by) VALUES (%L::uuid,%L,NULL)',
+      fx.org_a, 'Authenticated sin UID'), 'JWT authenticated sin UID no usa bypass backend');
+
+  PERFORM pg_temp.as_user(v_kam);
+  INSERT INTO public.crm_empresas(organization_id, nombre)
+    VALUES (fx.org_a, 'KAM alta Data API con creador default') RETURNING id INTO v_empresa;
+  UPDATE public.crm_empresas SET id = id, created_by = created_by, nombre = nombre || ' editada'
+    WHERE id = v_empresa;
+  GET DIAGNOSTICS v_afectadas = ROW_COUNT;
+  PERFORM pg_temp.as_postgres();
+  PERFORM pg_temp.assert(v_afectadas = 1 AND (SELECT created_by = v_kam FROM public.crm_empresas WHERE id = v_empresa) IS TRUE,
+    'KAM inserta con creador default y edita sin alterar su atribucion');
+  PERFORM pg_temp.prospecto_exito(v_kam, v_empresa, fx.org_a, NULL, NULL,
+    'empresa creada por Data API mantiene capacidad KAM');
+
+  -- El guard conserva la ruta writer previa completa, incluida atribucion
+  -- explicita a otro usuario o NULL para cargas legitimas de administracion.
+  FOREACH v_role IN ARRAY ARRAY['admin', 'admin_org', 'operador', 'gerente_operaciones',
+    'coordinador_logistico', 'contador', 'auxiliar_contable']::public.app_role[] LOOP
+    v_usuario := pg_temp.prospecto_actor(fx.org_a, v_role);
+    PERFORM pg_temp.as_user(v_usuario);
+    INSERT INTO public.crm_empresas(organization_id, nombre, created_by)
+      VALUES (fx.org_a, 'Writer alta por cuenta ajena ' || v_role::text, v_otro) RETURNING id INTO v_empresa;
+    INSERT INTO public.crm_empresas(organization_id, nombre, created_by)
+      VALUES (fx.org_a, 'Writer alta sin creador ' || v_role::text, NULL) RETURNING id INTO v_empresa_null;
+    UPDATE public.crm_empresas SET created_by = NULL WHERE id = v_empresa;
+    GET DIAGNOSTICS v_afectadas = ROW_COUNT;
+    PERFORM pg_temp.assert(v_afectadas = 1, 'writer previo cambia atribucion a NULL ' || v_role::text);
+    UPDATE public.crm_empresas SET created_by = v_kam WHERE id = v_empresa;
+    GET DIAGNOSTICS v_afectadas = ROW_COUNT;
+    PERFORM pg_temp.as_postgres();
+    PERFORM pg_temp.assert(v_afectadas = 1
+      AND (SELECT created_by = v_kam FROM public.crm_empresas WHERE id = v_empresa) IS TRUE
+      AND (SELECT created_by IS NULL FROM public.crm_empresas WHERE id = v_empresa_null) IS TRUE,
+      'writer previo conserva INSERT on behalf/NULL y UPDATE de atribucion ' || v_role::text);
+    v_empresa_movida := gen_random_uuid();
+    PERFORM pg_temp.as_user(v_usuario);
+    UPDATE public.crm_empresas SET id = v_empresa_movida WHERE id = v_empresa;
+    GET DIAGNOSTICS v_afectadas = ROW_COUNT;
+    PERFORM pg_temp.assert(v_afectadas = 1, 'writer previo conserva UPDATE de identidad ' || v_role::text);
+    DELETE FROM public.crm_empresas WHERE id = v_empresa_null;
+    GET DIAGNOSTICS v_afectadas = ROW_COUNT;
+    PERFORM pg_temp.as_postgres();
+    PERFORM pg_temp.assert(v_afectadas = 1
+      AND EXISTS (SELECT 1 FROM public.crm_empresas WHERE id = v_empresa_movida AND created_by = v_kam)
+      AND NOT EXISTS (SELECT 1 FROM public.crm_empresas WHERE id IN (v_empresa, v_empresa_null)),
+      'writer previo conserva identidad y borrado de empresa no Cliente ' || v_role::text);
+  END LOOP;
+
+  -- Transporte backend real, con y sin sub. Su permiso de carga de datos no
+  -- concede al RPC un bypass de propiedad KAM ni una organizacion sin sesion.
+  FOREACH v_caso IN ARRAY ARRAY['con actor', 'sin actor'] LOOP
+    v_backend_actor := CASE WHEN v_caso = 'con actor' THEN v_kam ELSE NULL END;
+    PERFORM set_config('request.jwt.claims', json_build_object('sub', v_backend_actor, 'role', 'service_role')::text, true);
+    PERFORM set_config('role', 'service_role', true);
+    INSERT INTO public.crm_empresas(organization_id, nombre, created_by)
+      VALUES (fx.org_a, 'Backend alta por cuenta ajena ' || v_caso, v_otro) RETURNING id INTO v_empresa;
+    INSERT INTO public.crm_empresas(organization_id, nombre, created_by)
+      VALUES (fx.org_a, 'Backend alta sin creador ' || v_caso, NULL) RETURNING id INTO v_empresa_null;
+    UPDATE public.crm_empresas SET created_by = NULL WHERE id = v_empresa;
+    GET DIAGNOSTICS v_afectadas = ROW_COUNT;
+    PERFORM pg_temp.assert(v_afectadas = 1, 'backend puede borrar atribucion ' || v_caso);
+    UPDATE public.crm_empresas SET created_by = v_otro WHERE id = v_empresa;
+    GET DIAGNOSTICS v_afectadas = ROW_COUNT;
+    PERFORM pg_temp.as_postgres();
+    PERFORM pg_temp.assert(v_afectadas = 1
+      AND (SELECT created_by = v_otro FROM public.crm_empresas WHERE id = v_empresa) IS TRUE
+      AND (SELECT created_by IS NULL FROM public.crm_empresas WHERE id = v_empresa_null) IS TRUE,
+      'backend conserva INSERT on behalf/NULL y UPDATE de atribucion ' || v_caso);
+    v_empresa_movida := gen_random_uuid();
+    PERFORM set_config('request.jwt.claims', json_build_object('sub', v_backend_actor, 'role', 'service_role')::text, true);
+    PERFORM set_config('role', 'service_role', true);
+    UPDATE public.crm_empresas SET id = v_empresa_movida WHERE id = v_empresa;
+    GET DIAGNOSTICS v_afectadas = ROW_COUNT;
+    PERFORM pg_temp.assert(v_afectadas = 1, 'backend conserva UPDATE de identidad ' || v_caso);
+    DELETE FROM public.crm_empresas WHERE id = v_empresa_null;
+    GET DIAGNOSTICS v_afectadas = ROW_COUNT;
+    PERFORM pg_temp.as_postgres();
+    PERFORM pg_temp.assert(v_afectadas = 1
+      AND EXISTS (SELECT 1 FROM public.crm_empresas WHERE id = v_empresa_movida AND created_by = v_otro)
+      AND NOT EXISTS (SELECT 1 FROM public.crm_empresas WHERE id IN (v_empresa, v_empresa_null)),
+      'backend conserva identidad y borrado de empresa no Cliente ' || v_caso);
+    v_empresa := v_empresa_movida;
+    PERFORM pg_temp.prospecto_denegado(v_backend_actor, v_empresa, '42501',
+      CASE WHEN v_backend_actor IS NULL THEN 'LC_SIN_ORGANIZACION' ELSE 'LC_CRM_PROSPECTO_NO_AUTORIZADO' END,
+      'backend no cambia autorizacion del RPC ' || v_caso, true);
+  END LOOP;
 
   -- Propio sin lead y propio con lead manual: se atribuyen exactamente las
   -- entidades nuevas al KAM; se conserva el vinculo y no se duplica al repetir.
@@ -376,7 +560,7 @@ BEGIN
   END LOOP;
 
   PERFORM pg_temp.assert_max_skips(0);
-  RAISE NOTICE 'OK - prospecto KAM: propiedad, membresia efectiva, 17 roles, plataforma, tenants, links, soft delete e idempotencia sin escrituras';
+  RAISE NOTICE 'OK - prospecto KAM: atribucion protegida, writers/backend preservados, propiedad, membresia efectiva, 17 roles, tenants, links e idempotencia sin escrituras';
 END;
 $$;
 

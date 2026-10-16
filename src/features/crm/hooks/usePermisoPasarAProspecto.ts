@@ -1,16 +1,27 @@
 import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/lib/contexts/AuthContext";
 import { useOrganization } from "@/lib/contexts/OrganizationContext";
-import { permisoPasarEmpresaAProspecto, type EmpresaProspecto } from "../domain/pasarEmpresaAProspecto";
+import { permisoPasarEmpresaAProspecto, type EmpresaProspecto, type PermisoProspecto } from "../domain/pasarEmpresaAProspecto";
 import { fetchMembresiaProspecto, fetchVinculosProspecto } from "../services/vinculosProspectoCrm";
 import { crm } from "../queryKeys";
 
-export function usePermisoPasarAProspecto(empresa: EmpresaProspecto) {
+type PermisoProspectoUi = PermisoProspecto & { reintentar?: () => void };
+
+function estadoConsulta(
+  query: { isError: boolean; isPending: boolean; isFetching: boolean; refetch: () => unknown },
+  mensaje: string, ocultarDuranteCarga = false,
+): PermisoProspectoUi | null {
+  if (query.isError) return { estado: "denegado", motivo: mensaje, reintentar: () => void query.refetch() };
+  if (query.isPending || query.isFetching) return { estado: ocultarDuranteCarga ? "oculto" : "comprobar" };
+  return null;
+}
+
+export function usePermisoPasarAProspecto(empresa: EmpresaProspecto): PermisoProspectoUi {
   const auth = useAuth();
   const organization = useOrganization();
   const loading = auth.loading || organization.loading;
   const actorWriter = {
-    userId: auth.user?.id ?? null, role: auth.role, orgRole: null,
+    userId: auth.user ? auth.user.id : null, role: auth.role, orgRole: null,
     organizationId: organization.organizationId, membershipOrganizationId: auth.organizationId,
     organizationActive: false,
   };
@@ -33,16 +44,10 @@ export function usePermisoPasarAProspecto(empresa: EmpresaProspecto) {
     enabled: comprobar,
   });
   if (loading) return { estado: "oculto" as const };
-  if (resolverMembresia && membresia.isError) return {
-    estado: "denegado" as const, motivo: "No se pudo verificar la membresía de la organización activa.",
-    reintentar: () => void membresia.refetch(),
-  };
-  if (resolverMembresia && (membresia.isPending || membresia.isFetching)) return { estado: "oculto" as const };
+  const estadoMembresia = resolverMembresia
+    ? estadoConsulta(membresia, "No se pudo verificar la membresía de la organización activa.", true) : null;
+  if (estadoMembresia) return estadoMembresia;
   if (!comprobar) return base;
-  if (query.isError) return {
-    estado: "denegado" as const, motivo: "No se pudo verificar el permiso para pasar a prospecto.",
-    reintentar: () => void query.refetch(),
-  };
-  if (query.isPending || query.isFetching) return { estado: "comprobar" as const };
-  return permisoPasarEmpresaAProspecto(actor, empresa, query.data);
+  return estadoConsulta(query, "No se pudo verificar el permiso para pasar a prospecto.")
+    ?? permisoPasarEmpresaAProspecto(actor, empresa, query.data);
 }

@@ -29,6 +29,28 @@ BEGIN
 END;
 $preflight$;
 
+DO $attribution_preflight$
+DECLARE v_guard oid := to_regprocedure('public._crm_empresa_proteger_creador()');
+BEGIN
+  IF v_guard IS NOT NULL AND NOT EXISTS (
+    SELECT 1 FROM pg_proc p WHERE p.oid = v_guard
+      AND md5(p.prosrc) = '99382bc36dc09e275e1950eabc65e554' AND p.proowner = 'postgres'::regrole
+      AND p.prosecdef AND p.prorettype = 'trigger'::regtype
+      AND p.proconfig = ARRAY['search_path=public']::text[]
+      AND (SELECT array_agg(a::text ORDER BY a::text) FROM unnest(p.proacl) a)
+        = ARRAY['postgres=X/postgres','service_role=X/postgres']::text[]
+  ) THEN
+    RAISE EXCEPTION 'CRM_PROSPECTO_KAM_PREFLIGHT: unexpected attribution guard';
+  END IF;
+  IF EXISTS (SELECT 1 FROM pg_trigger t WHERE t.tgrelid = 'public.crm_empresas'::regclass
+    AND t.tgname = 'trg_crm_empresa_proteger_creador'
+    AND (v_guard IS NULL OR t.tgfoid <> v_guard OR t.tgenabled <> 'O'
+      OR pg_get_triggerdef(t.oid) <> 'CREATE TRIGGER trg_crm_empresa_proteger_creador BEFORE INSERT OR DELETE OR UPDATE OF id, created_by ON public.crm_empresas FOR EACH ROW EXECUTE FUNCTION public._crm_empresa_proteger_creador()')) THEN
+    RAISE EXCEPTION 'CRM_PROSPECTO_KAM_PREFLIGHT: unexpected attribution trigger';
+  END IF;
+END;
+$attribution_preflight$;
+
 CREATE OR REPLACE FUNCTION public.crm_empresa_pasar_a_prospecto(p_empresa_id uuid)
 RETURNS jsonb LANGUAGE plpgsql SECURITY DEFINER SET search_path TO 'public' AS $$
 DECLARE
@@ -130,6 +152,54 @@ BEGIN
 END $$;
 REVOKE ALL ON FUNCTION public.crm_empresa_pasar_a_prospecto(uuid) FROM PUBLIC, anon;
 GRANT EXECUTE ON FUNCTION public.crm_empresa_pasar_a_prospecto(uuid) TO authenticated, service_role;
+CREATE OR REPLACE FUNCTION public._crm_empresa_proteger_creador()
+RETURNS trigger LANGUAGE plpgsql SECURITY DEFINER SET search_path TO 'public' AS $$
+DECLARE v_uid uuid := auth.uid();
+BEGIN
+  -- Historical migrations and trusted backend producers may attribute records
+  -- on behalf of another user. An end-user RPC keeps its authenticated JWT.
+  IF auth.role() = 'service_role'
+    OR (v_uid IS NULL AND coalesce(auth.role(), '') <> 'authenticated') THEN
+    IF TG_OP = 'DELETE' THEN RETURN OLD; END IF;
+    RETURN NEW;
+  END IF;
+  IF v_uid IS NULL THEN
+    RAISE EXCEPTION 'LC_CRM_EMPRESA_CREADOR_PROTEGIDO' USING ERRCODE = '42501';
+  END IF;
+  BEGIN
+    PERFORM public._assert_writer(CASE WHEN TG_OP = 'INSERT' THEN NEW.organization_id ELSE OLD.organization_id END);
+    IF TG_OP = 'DELETE' THEN RETURN OLD; END IF;
+    RETURN NEW;
+  EXCEPTION WHEN insufficient_privilege THEN
+    NULL;
+  END;
+  IF TG_OP = 'INSERT' THEN
+    IF NEW.created_by IS DISTINCT FROM v_uid THEN
+      RAISE EXCEPTION 'LC_CRM_EMPRESA_CREADOR_PROTEGIDO' USING ERRCODE = '42501';
+    END IF;
+  ELSIF TG_OP = 'DELETE' THEN
+    IF OLD.created_by IS DISTINCT FROM v_uid THEN
+      RAISE EXCEPTION 'LC_CRM_EMPRESA_CREADOR_PROTEGIDO' USING ERRCODE = '42501';
+    END IF;
+    RETURN OLD;
+  ELSIF NEW.created_by IS DISTINCT FROM OLD.created_by OR NEW.id IS DISTINCT FROM OLD.id THEN
+    RAISE EXCEPTION 'LC_CRM_EMPRESA_CREADOR_PROTEGIDO' USING ERRCODE = '42501';
+  END IF;
+  RETURN NEW;
+END $$;
+REVOKE ALL ON FUNCTION public._crm_empresa_proteger_creador() FROM PUBLIC, anon, authenticated;
+GRANT EXECUTE ON FUNCTION public._crm_empresa_proteger_creador() TO service_role;
+
+DO $attribution_install$
+BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_trigger WHERE tgrelid = 'public.crm_empresas'::regclass
+    AND tgname = 'trg_crm_empresa_proteger_creador') THEN
+    CREATE TRIGGER trg_crm_empresa_proteger_creador
+      BEFORE INSERT OR DELETE OR UPDATE OF id, created_by ON public.crm_empresas
+      FOR EACH ROW EXECUTE FUNCTION public._crm_empresa_proteger_creador();
+  END IF;
+END;
+$attribution_install$;
 
 DO $postcheck$
 DECLARE v_before record; v_after jsonb;
@@ -139,6 +209,15 @@ BEGIN
   IF v_after IS NULL OR (v_after - 'prosrc') IS DISTINCT FROM (v_before.metadata - 'prosrc')
     OR md5(v_after->>'prosrc') IS DISTINCT FROM '3f909f4d6d3e426c1e962909b1e55bcf' THEN
     RAISE EXCEPTION 'CRM_PROSPECTO_KAM_POSTCHECK: identity, ACL, owner, attributes or source changed';
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM pg_trigger t JOIN pg_proc p ON p.oid = t.tgfoid
+    WHERE t.tgrelid = 'public.crm_empresas'::regclass AND t.tgname = 'trg_crm_empresa_proteger_creador'
+      AND t.tgenabled = 'O' AND pg_get_triggerdef(t.oid) = 'CREATE TRIGGER trg_crm_empresa_proteger_creador BEFORE INSERT OR DELETE OR UPDATE OF id, created_by ON public.crm_empresas FOR EACH ROW EXECUTE FUNCTION public._crm_empresa_proteger_creador()'
+      AND md5(p.prosrc) = '99382bc36dc09e275e1950eabc65e554' AND p.proowner = 'postgres'::regrole
+      AND p.prosecdef AND p.proconfig = ARRAY['search_path=public']::text[]
+      AND (SELECT array_agg(a::text ORDER BY a::text) FROM unnest(p.proacl) a)
+        = ARRAY['postgres=X/postgres','service_role=X/postgres']::text[]) THEN
+    RAISE EXCEPTION 'CRM_PROSPECTO_KAM_POSTCHECK: invalid attribution guard or trigger';
   END IF;
 END;
 $postcheck$;

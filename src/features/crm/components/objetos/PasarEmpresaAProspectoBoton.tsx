@@ -19,7 +19,7 @@ export function PasarEmpresaAProspectoBoton({ empresa }: { empresa: EmpresaProsp
         <ArrowRight className="size-4" /> Pasar a prospecto
       </Button>
       {motivo && <p id={descripcionId} className="text-caption text-muted-foreground" role="status">{motivo}</p>}
-      {"reintentar" in permiso && <Button variant="link" size="sm" onClick={permiso.reintentar}>Reintentar verificación</Button>}
+      {permiso.reintentar && <Button variant="link" size="sm" onClick={permiso.reintentar}>Reintentar verificación</Button>}
     </div>
   );
 }

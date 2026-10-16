@@ -13,7 +13,8 @@ export async function fetchMembresiaProspecto(userId: string, organizationId: st
 /** No filtrar borrados ni usar !inner: una referencia invisible o borrada debe impedir el permiso. */
 export async function fetchVinculosProspecto(empresaId: string, leadId: string | null): Promise<VinculosProspecto> {
   const [lead, oportunidades] = await Promise.all([
-    leadId ? supabase.from("crm_leads").select("id, organization_id, vendedor_id, deleted_at, estado, cliente_convertido_id")
+    leadId ? supabase.from("crm_leads") // SOFT-DELETE-OK: el permiso debe detectar y rechazar el lead borrado.
+      .select("id, organization_id, vendedor_id, deleted_at, estado, cliente_convertido_id")
       .eq("id", leadId).maybeSingle() : Promise.resolve({ data: null, error: null }),
     supabase.from("crm_oportunidad_empresa")
       .select("organization_id, crm_oportunidades(id, organization_id, vendedor_id, deleted_at, lead_id)", { count: "exact" })

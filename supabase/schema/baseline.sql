@@ -2648,6 +2648,43 @@ BEGIN
   END IF;
   RETURN OLD;
 END $$;
+CREATE FUNCTION public._crm_empresa_proteger_creador() RETURNS trigger
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 'public'
+    AS $
+DECLARE v_uid uuid := auth.uid();
+BEGIN
+  -- Historical migrations and trusted backend producers may attribute records
+  -- on behalf of another user. An end-user RPC keeps its authenticated JWT.
+  IF auth.role() = 'service_role'
+    OR (v_uid IS NULL AND coalesce(auth.role(), '') <> 'authenticated') THEN
+    IF TG_OP = 'DELETE' THEN RETURN OLD; END IF;
+    RETURN NEW;
+  END IF;
+  IF v_uid IS NULL THEN
+    RAISE EXCEPTION 'LC_CRM_EMPRESA_CREADOR_PROTEGIDO' USING ERRCODE = '42501';
+  END IF;
+  BEGIN
+    PERFORM public._assert_writer(CASE WHEN TG_OP = 'INSERT' THEN NEW.organization_id ELSE OLD.organization_id END);
+    IF TG_OP = 'DELETE' THEN RETURN OLD; END IF;
+    RETURN NEW;
+  EXCEPTION WHEN insufficient_privilege THEN
+    NULL;
+  END;
+  IF TG_OP = 'INSERT' THEN
+    IF NEW.created_by IS DISTINCT FROM v_uid THEN
+      RAISE EXCEPTION 'LC_CRM_EMPRESA_CREADOR_PROTEGIDO' USING ERRCODE = '42501';
+    END IF;
+  ELSIF TG_OP = 'DELETE' THEN
+    IF OLD.created_by IS DISTINCT FROM v_uid THEN
+      RAISE EXCEPTION 'LC_CRM_EMPRESA_CREADOR_PROTEGIDO' USING ERRCODE = '42501';
+    END IF;
+    RETURN OLD;
+  ELSIF NEW.created_by IS DISTINCT FROM OLD.created_by OR NEW.id IS DISTINCT FROM OLD.id THEN
+    RAISE EXCEPTION 'LC_CRM_EMPRESA_CREADOR_PROTEGIDO' USING ERRCODE = '42501';
+  END IF;
+  RETURN NEW;
+END $;
 CREATE FUNCTION public._crm_es_pricing(p_org uuid) RETURNS boolean
     LANGUAGE sql STABLE SECURITY DEFINER
     SET search_path TO 'public'
@@ -38694,6 +38731,7 @@ CREATE TRIGGER trg_crm_etapa_criterios_updated_at BEFORE UPDATE ON public.crm_et
 CREATE TRIGGER trg_crm_etapa_motivo_misma_org BEFORE INSERT OR UPDATE OF etapa_id, motivo_perdida_id, organization_id ON public.crm_oportunidades FOR EACH ROW EXECUTE FUNCTION public._crm_oportunidad_etapa_motivo_misma_org();
 CREATE TRIGGER trg_crm_etapas_updated_at BEFORE UPDATE ON public.crm_etapas_pipeline FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
 CREATE TRIGGER trg_crm_lead_avanzar_por_cotizacion AFTER UPDATE OF estado ON public.cotizaciones FOR EACH ROW WHEN ((old.estado IS DISTINCT FROM new.estado)) EXECUTE FUNCTION public._crm_lead_avanzar_por_cotizacion();
+CREATE TRIGGER trg_crm_empresa_proteger_creador BEFORE INSERT OR DELETE OR UPDATE OF id, created_by ON public.crm_empresas FOR EACH ROW EXECUTE FUNCTION public._crm_empresa_proteger_creador();
 CREATE TRIGGER trg_crm_lead_sync_estado_empresa AFTER UPDATE OF estado ON public.crm_leads FOR EACH ROW WHEN ((new.estado IS DISTINCT FROM old.estado)) EXECUTE FUNCTION public._crm_lead_sync_estado_empresa();
 CREATE TRIGGER trg_crm_leads_updated_at BEFORE UPDATE ON public.crm_leads FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
 CREATE TRIGGER trg_crm_notify_comentario_oportunidad AFTER INSERT ON public.crm_comentarios_oportunidad FOR EACH ROW EXECUTE FUNCTION public.crm_notify_comentario_oportunidad();
@@ -40343,6 +40381,8 @@ REVOKE ALL ON FUNCTION public._crm_empresa_estado_por_cliente() FROM PUBLIC;
 GRANT ALL ON FUNCTION public._crm_empresa_estado_por_cliente() TO service_role;
 REVOKE ALL ON FUNCTION public._crm_empresa_no_borrar_cliente() FROM PUBLIC;
 REVOKE ALL ON FUNCTION public._crm_empresa_no_delete_fisico() FROM PUBLIC;
+REVOKE ALL ON FUNCTION public._crm_empresa_proteger_creador() FROM PUBLIC;
+GRANT ALL ON FUNCTION public._crm_empresa_proteger_creador() TO service_role;
 REVOKE ALL ON FUNCTION public._crm_es_pricing(p_org uuid) FROM PUBLIC;
 GRANT ALL ON FUNCTION public._crm_es_pricing(p_org uuid) TO authenticated;
 GRANT ALL ON FUNCTION public._crm_es_pricing(p_org uuid) TO service_role;
