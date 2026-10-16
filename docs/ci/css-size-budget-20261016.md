@@ -119,3 +119,39 @@ CSS. En este PR no cambia ninguna fuente de producto y el CSS emitido permanece
 idéntico. No se ejecutan navegador compartido, DB, upgrades ni despliegues. CI de
 Linux y la suite completa deben consultarse sobre el SHA remoto del PR; las
 pruebas locales focales no las sustituyen.
+
+## Integración con main `4d3e49354`
+
+El merge `fc964d1c35a0b7857c7941bae95db65e881b5ff6` incorpora
+`4d3e4935454458427df29223026fa6cd17c036d8` (accesibilidad de tablas y estado
+de listas) en la rama del guard. Los scripts del guard, límites y JSON del baseline y
+candidato original permanecen intactos respecto de `d6d180a48`. Los workflows
+coinciden exactamente con el main incorporado; sus cambios son heredados.
+
+Tres builds limpios del combinado, con el mismo runtime, lock y parámetros,
+emitieron CSS idéntico entre sí. [Mediciones y provenance](../evidence/css-size-combined-main-4d3e493.json):
+
+| Métrica, bytes | Combinado, 3/3 | Delta frente al baseline | Límite original | Margen restante |
+| --- | ---: | ---: | ---: | ---: |
+| Raw | 196588 | +52 | 200467 | 3879 |
+| gzip nivel 9 | 27568 | +16 | 28104 | 536 |
+| Brotli calidad 11, texto | 21163 | +3 | 21584 | 421 |
+
+CSS combinado: `index-CIDV54XG.css`, SHA-256
+`1a4adb8b8a74f032d85f6fed40998849f1daf79e191db0a5b1ebf0f893aeb7cf`.
+La nueva clase `[text-transform:inherit]` del botón de ordenación en
+[`DataTableHeaderRow.tsx`](../../src/components/shared/dataTable/DataTableHeaderRow.tsx)
+emite exactamente 52 bytes. Retirar esa regla sólo en memoria recupera el hash
+y las tres métricas originales del baseline; el resto del CSS es idéntico.
+[Atribución reproducible](../evidence/css-size-combined-main-4d3e493-attribution.json).
+No se elimina la clase ni se modifica el CSS de producto para pasar el guard.
+
+Las 19 pruebas del guard y typecheck pasan de nuevo sobre el combinado. El
+[gate completo JS+CSS](../evidence/css-size-bundle-gate-main-4d3e493.txt) también
+aprueba sobre este build (entry 216 KiB, límites originales). El PR requiere CI
+nuevo sobre el SHA que incorpora la combinación: un run verde del SHA anterior
+`d6d180a48` no sustituye esa comprobación.
+
+El margen del 2% sigue siendo la política documentada sobre el baseline
+`fc1a74fbe`. El crecimiento descrito procede de una nueva regla legítima; no
+se clasifica como variación de builds ni se recentra el presupuesto.
