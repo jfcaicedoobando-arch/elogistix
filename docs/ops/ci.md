@@ -1,6 +1,9 @@
 # CI de Libre Carga
 
 Fuente de verdad: `.github/workflows/` y `.github/actions/`.
+Inventario completo y retiro de cuatro laboratorios cerrados el **2026-10-16**:
+[revisión de Actions](../ci/actions-cleanup-20261016.md). Se conservan 21 workflows
+y las dos acciones locales; los YAML retirados tienen snapshot exacto de auditoría.
 Workflows revisados el **2026-10-13**. Esta guía no configura protección de rama.
 
 ## CI principal
