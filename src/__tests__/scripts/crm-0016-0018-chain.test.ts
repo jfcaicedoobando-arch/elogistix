@@ -42,15 +42,20 @@ describe("immutable CRM 0016 -> 0017 -> cargo 0018 replay chain", () => {
     }
   });
 
-  it("keeps ordinary mappings and literal historical CRM replays and mirrors", () => {
+  it("keeps historical CRM replays literal and current mirrors in the explicit forward", () => {
     const mapping = JSON.parse(read("drizzle/replay.json")) as DrizzleReplayEntry[];
+    const forwardName = "20261016070000_crm_cliente_identidad_atomica.sql";
+    const forward = read(`supabase/migrations/${forwardName}`);
+    expect(scanFile(forwardName, forward)).toEqual([]);
     for (const item of historical) {
       expect(mapping.filter(({ file }) => file === item.file)).toEqual([{ file: item.file, sha256: item.sha256, replays: [item.replay] }]);
       expect(scanFile(item.replay, read(`supabase/migrations/${item.replay}`))).toEqual([]);
       if ("mirror" in item) {
         const source = readFileSync(`drizzle/migrations/${item.file}`);
         expect(readFileSync(`supabase/migrations/${item.replay}`)).toEqual(source);
-        expect(readFileSync(`supabase/schema/crm/${item.mirror}`)).toEqual(source);
+        // Historical replay bytes stay pinned above; canonical mirrors evolve
+        // only through a complete, separately reviewed forward definition.
+        expect(forward).toContain(read(`supabase/schema/crm/${item.mirror}`));
       }
     }
     expect(read("supabase/tests/rls/_ci_service_role_only.sql")).toContain("('public._crm_empresa_desde_cliente()')");
@@ -74,3 +79,4 @@ describe("immutable CRM 0016 -> 0017 -> cargo 0018 replay chain", () => {
     expect(() => assertChain(journal.entries, broken)).toThrow();
   });
 });
+

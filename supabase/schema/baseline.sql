@@ -2599,22 +2599,16 @@ CREATE FUNCTION public._crm_empresa_desde_cliente() RETURNS trigger
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
     AS $$
-DECLARE v_emp uuid;
 BEGIN
+  -- Un alta independiente no aporta identidad CRM: cada cliente obtiene la suya.
+  -- La conversión reserva su UUID en la empresa exacta antes de insertar el cliente.
   IF EXISTS (SELECT 1 FROM public.crm_empresas
-              WHERE cliente_id = NEW.id AND deleted_at IS NULL) THEN
+              WHERE organization_id = NEW.organization_id
+                AND cliente_id = NEW.id AND deleted_at IS NULL) THEN
     RETURN NEW;
   END IF;
-  SELECT id INTO v_emp FROM public.crm_empresas
-   WHERE organization_id = NEW.organization_id AND deleted_at IS NULL
-     AND cliente_id IS NULL AND upper(btrim(nombre)) = upper(btrim(NEW.nombre))
-   ORDER BY created_at LIMIT 1;
-  IF v_emp IS NOT NULL THEN
-    UPDATE public.crm_empresas SET cliente_id = NEW.id WHERE id = v_emp;
-  ELSE
-    INSERT INTO public.crm_empresas (organization_id, nombre, cliente_id, created_by)
-    VALUES (NEW.organization_id, NEW.nombre, NEW.id, auth.uid());
-  END IF;
+  INSERT INTO public.crm_empresas (organization_id, nombre, cliente_id, created_by)
+  VALUES (NEW.organization_id, NEW.nombre, NEW.id, auth.uid());
   RETURN NEW;
 END $$;
 CREATE FUNCTION public._crm_empresa_estado_por_cliente() RETURNS trigger
@@ -2630,8 +2624,13 @@ CREATE FUNCTION public._crm_empresa_no_borrar_cliente() RETURNS trigger
     SET search_path TO 'public'
     AS $$
 BEGIN
-  IF NEW.deleted_at IS NOT NULL AND OLD.deleted_at IS NULL
-     AND (OLD.cliente_id IS NOT NULL OR OLD.estado_crm = 'Cliente') THEN
+  IF (NEW.deleted_at IS NOT NULL AND
+        (NEW.cliente_id IS NOT NULL OR NEW.estado_crm = 'Cliente'))
+     OR (TG_OP = 'UPDATE' AND (
+        (OLD.cliente_id IS NOT NULL AND NEW.cliente_id IS DISTINCT FROM OLD.cliente_id)
+        OR (OLD.estado_crm = 'Cliente' AND NEW.estado_crm IS DISTINCT FROM 'Cliente')
+        OR (NEW.deleted_at IS NOT NULL AND
+            (OLD.cliente_id IS NOT NULL OR OLD.estado_crm = 'Cliente')))) THEN
     RAISE EXCEPTION 'LC_CRM_EMPRESA_ES_CLIENTE: una empresa que ya es cliente no se puede eliminar'
       USING ERRCODE = '23514';
   END IF;
@@ -2647,6 +2646,53 @@ BEGIN
       USING ERRCODE = '23514';
   END IF;
   RETURN OLD;
+END $$;
+CREATE FUNCTION public._crm_empresa_para_conversion(p_org uuid, p_lead uuid, p_oportunidad uuid) RETURNS uuid
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 'public'
+    AS $$
+DECLARE v_ids uuid[]; v_actuales uuid[]; v_emp public.crm_empresas%ROWTYPE;
+BEGIN
+  SELECT array_agg(DISTINCT id ORDER BY id) INTO v_ids FROM (
+    SELECT e.id FROM public.crm_empresas e WHERE e.lead_origen_id = p_lead
+    UNION
+    SELECT oe.empresa_id FROM public.crm_oportunidad_empresa oe
+      WHERE oe.oportunidad_id = p_oportunidad
+  ) targets;
+  IF coalesce(cardinality(v_ids), 0) = 0 THEN RETURN NULL; END IF;
+  IF cardinality(v_ids) <> 1 THEN
+    RAISE EXCEPTION 'LC_CONVERSION_INCONSISTENTE' USING ERRCODE = '23514';
+  END IF;
+  -- No filtrar deleted_at antes de esperar: se valida la fila vigente tras el lock.
+  SELECT * INTO v_emp FROM public.crm_empresas WHERE id = v_ids[1] FOR UPDATE;
+  IF NOT FOUND OR v_emp.deleted_at IS NOT NULL THEN
+    RAISE EXCEPTION 'LC_CRM_EMPRESA_NO_ENCONTRADA' USING ERRCODE = 'P0002';
+  END IF;
+  -- Una empresa ligada sólo por oportunidad puede no tener lead de origen.
+  -- Si sí lo tiene, debe ser exactamente el lead de esta conversión.
+  IF v_emp.lead_origen_id IS NOT NULL AND v_emp.lead_origen_id IS DISTINCT FROM p_lead THEN
+    RAISE EXCEPTION 'LC_CONVERSION_INCONSISTENTE' USING ERRCODE = '23514';
+  END IF;
+  IF v_emp.organization_id IS DISTINCT FROM p_org OR EXISTS (
+    SELECT 1 FROM public.crm_oportunidad_empresa oe
+      WHERE oe.oportunidad_id = p_oportunidad AND oe.organization_id IS DISTINCT FROM p_org
+  ) THEN
+    RAISE EXCEPTION 'LC_ORG_AJENA' USING ERRCODE = '42501';
+  END IF;
+  -- Retener los vínculos originales antes de esperar lead/cotización. Si un
+  -- DELETE ya ganó, la relectura de abajo debe detectar también su desaparición.
+  PERFORM 1 FROM public.crm_oportunidad_empresa
+    WHERE oportunidad_id = p_oportunidad ORDER BY empresa_id FOR SHARE;
+  SELECT array_agg(DISTINCT id ORDER BY id) INTO v_actuales FROM (
+    SELECT e.id FROM public.crm_empresas e WHERE e.lead_origen_id = p_lead
+    UNION
+    SELECT oe.empresa_id FROM public.crm_oportunidad_empresa oe
+      WHERE oe.oportunidad_id = p_oportunidad
+  ) targets;
+  IF v_actuales IS DISTINCT FROM v_ids THEN
+    RAISE EXCEPTION 'LC_CONVERSION_INCONSISTENTE' USING ERRCODE = '23514';
+  END IF;
+  RETURN v_emp.id;
 END $$;
 CREATE FUNCTION public._crm_empresa_proteger_creador() RETURNS trigger
     LANGUAGE plpgsql SECURITY DEFINER
@@ -2682,6 +2728,30 @@ BEGIN
     RETURN OLD;
   ELSIF NEW.created_by IS DISTINCT FROM OLD.created_by OR NEW.id IS DISTINCT FROM OLD.id THEN
     RAISE EXCEPTION 'LC_CRM_EMPRESA_CREADOR_PROTEGIDO' USING ERRCODE = '42501';
+  END IF;
+  RETURN NEW;
+END $$;
+CREATE FUNCTION public._crm_empresa_validar_lead() RETURNS trigger
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 'public'
+    AS $$
+DECLARE v_lead public.crm_leads%ROWTYPE;
+BEGIN
+  IF NEW.lead_origen_id IS NULL THEN RETURN NEW; END IF;
+  IF TG_OP = 'UPDATE' AND NEW.lead_origen_id IS NOT DISTINCT FROM OLD.lead_origen_id
+    AND NEW.organization_id IS NOT DISTINCT FROM OLD.organization_id THEN RETURN NEW; END IF;
+  SELECT * INTO v_lead FROM public.crm_leads WHERE id = NEW.lead_origen_id FOR UPDATE;
+  -- Igual que el guard de atribución, conservar productores privilegiados que
+  -- reconstruyen espejos históricos; también retienen el lock si el lead existe.
+  IF auth.role() = 'service_role'
+    OR (auth.uid() IS NULL AND coalesce(auth.role(), '') <> 'authenticated') THEN RETURN NEW; END IF;
+  IF NOT FOUND OR v_lead.deleted_at IS NOT NULL
+    OR v_lead.organization_id IS DISTINCT FROM NEW.organization_id THEN
+    RAISE EXCEPTION 'LC_CRM_LEAD_AJENO' USING ERRCODE = '23514';
+  END IF;
+  -- Una reclamación interactiva no puede ganar tras una conversión.
+  IF v_lead.cliente_convertido_id IS NOT NULL OR v_lead.estado::text = 'Convertido' THEN
+    RAISE EXCEPTION 'LC_CONVERSION_INCONSISTENTE' USING ERRCODE = '23514';
   END IF;
   RETURN NEW;
 END $$;
@@ -2748,6 +2818,7 @@ BEGIN
   UPDATE public.crm_empresas e
      SET estado_crm = CASE WHEN NEW.estado::text = 'Convertido' THEN 'Cliente' ELSE 'Prospecto' END
    WHERE e.lead_origen_id = NEW.id AND e.organization_id = NEW.organization_id
+     AND e.deleted_at IS NULL
      AND e.estado_crm <> 'Cliente'
      AND NEW.estado::text IN ('Prospecto','Calificado','Pendiente de alta','Convertido');
   RETURN NEW;
@@ -13808,6 +13879,8 @@ DECLARE
   v_ciudad text; v_estado_dir text;
   v_regimen text; v_uso text; v_forma text; v_metodo text;
   v_coherente boolean;
+  v_empresa uuid; v_org_inicial uuid; v_op_inicial uuid; v_lead_inicial uuid;
+  v_empresa_ids uuid[]; v_empresa_esperada uuid[];
 BEGIN
   IF auth.uid() IS NULL THEN
     RAISE EXCEPTION 'LC_SESION_REQUERIDA' USING ERRCODE = '42501';
@@ -13815,8 +13888,7 @@ BEGIN
   SELECT organization_id, es_prospecto, cliente_id, estado::text, oportunidad_id
     INTO v_org, v_es_prospecto, v_cliente_id, v_estado, v_oportunidad_id
   FROM public.cotizaciones
-  WHERE id = p_cotizacion_id AND deleted_at IS NULL
-  FOR UPDATE;
+  WHERE id = p_cotizacion_id AND deleted_at IS NULL;
   IF v_org IS NULL THEN
     RAISE EXCEPTION 'LC_COTIZACION_NO_ENCONTRADA';
   END IF;
@@ -13829,6 +13901,31 @@ BEGIN
         ARRAY['admin','admin_org','operador','contador','super_admin']::app_role[],
         v_org) THEN
     RAISE EXCEPTION 'LC_CLIENTE_SIN_PERMISO' USING ERRCODE = '42501';
+  END IF;
+  -- Resolver y bloquear la empresa ANTES de lead/oportunidad (orden de PR366).
+  v_org_inicial := v_org; v_op_inicial := v_oportunidad_id;
+  SELECT lead_id INTO v_lead_inicial FROM public.crm_oportunidades
+    WHERE id = v_op_inicial AND organization_id = v_org AND deleted_at IS NULL;
+  v_empresa := public._crm_empresa_para_conversion(v_org, v_lead_inicial, v_op_inicial);
+  v_empresa_esperada := CASE WHEN v_empresa IS NULL THEN NULL ELSE ARRAY[v_empresa] END;
+  PERFORM 1 FROM public.crm_leads WHERE id = v_lead_inicial FOR UPDATE;
+  SELECT organization_id, es_prospecto, cliente_id, estado::text, oportunidad_id
+    INTO v_org, v_es_prospecto, v_cliente_id, v_estado, v_oportunidad_id
+    FROM public.cotizaciones WHERE id = p_cotizacion_id AND deleted_at IS NULL FOR UPDATE;
+  IF NOT FOUND OR v_org IS DISTINCT FROM v_org_inicial
+    OR v_oportunidad_id IS DISTINCT FROM v_op_inicial THEN
+    RAISE EXCEPTION 'LC_CONVERSION_INCONSISTENTE';
+  END IF;
+  -- Igualdad completa: un conjunto vacío también invalida un destino cacheado.
+  SELECT array_agg(DISTINCT id ORDER BY id) INTO v_empresa_ids FROM (
+    SELECT id FROM public.crm_empresas WHERE lead_origen_id = v_lead_inicial
+    UNION
+    SELECT empresa_id FROM public.crm_oportunidad_empresa WHERE oportunidad_id = v_op_inicial
+  ) targets;
+  IF v_empresa_ids IS DISTINCT FROM v_empresa_esperada
+     OR EXISTS (SELECT 1 FROM public.crm_oportunidad_empresa
+                 WHERE oportunidad_id = v_op_inicial AND organization_id IS DISTINCT FROM v_org) THEN
+    RAISE EXCEPTION 'LC_CONVERSION_INCONSISTENTE';
   END IF;
   ------------------------------------------------------------------
   -- Idempotencia segura: sólo si la conversión previa es coherente.
@@ -13858,7 +13955,9 @@ BEGIN
           WHERE c.id = v_cliente_id AND c.organization_id = v_org AND c.deleted_at IS NULL
         );
     END IF;
-    IF v_coherente THEN
+    IF v_coherente AND (v_empresa IS NULL OR EXISTS (
+      SELECT 1 FROM public.crm_empresas WHERE id = v_empresa AND deleted_at IS NULL
+        AND organization_id = v_org AND cliente_id = v_cliente_id)) THEN
       SELECT nombre INTO v_nombre FROM public.clientes WHERE id = v_cliente_id;
       RETURN jsonb_build_object(
         'cliente_id', v_cliente_id, 'nombre', v_nombre, 'creado', false,
@@ -13894,6 +13993,19 @@ BEGIN
   FOR UPDATE;
   IF v_op_org IS NULL THEN
     RAISE EXCEPTION 'LC_OPORTUNIDAD_NO_ENCONTRADA';
+  END IF;
+  IF v_lead_id IS DISTINCT FROM v_lead_inicial THEN
+    RAISE EXCEPTION 'LC_CONVERSION_INCONSISTENTE';
+  END IF;
+  SELECT array_agg(DISTINCT id ORDER BY id) INTO v_empresa_ids FROM (
+    SELECT id FROM public.crm_empresas WHERE lead_origen_id = v_lead_inicial
+    UNION
+    SELECT empresa_id FROM public.crm_oportunidad_empresa WHERE oportunidad_id = v_op_inicial
+  ) targets;
+  IF v_empresa_ids IS DISTINCT FROM v_empresa_esperada
+     OR EXISTS (SELECT 1 FROM public.crm_oportunidad_empresa
+                 WHERE oportunidad_id = v_op_inicial AND organization_id IS DISTINCT FROM v_org) THEN
+    RAISE EXCEPTION 'LC_CONVERSION_INCONSISTENTE';
   END IF;
   IF v_op_org <> v_org THEN
     RAISE EXCEPTION 'LC_ORG_AJENA' USING ERRCODE = '42501';
@@ -13971,16 +14083,25 @@ BEGIN
     SELECT id, nombre INTO v_cliente_id, v_nombre_canonico
     FROM public.clientes
     WHERE organization_id = v_org AND upper(btrim(rfc)) = v_rfc AND deleted_at IS NULL
-    LIMIT 1;
+    LIMIT 1 FOR SHARE;
   END IF;
   IF v_cliente_id IS NULL THEN
     BEGIN
+      v_cliente_id := gen_random_uuid();
+      IF v_empresa IS NOT NULL THEN
+        -- cliente_id no tiene FK en este esquema. La reserva y el INSERT son
+        -- atómicos; un conflicto RFC revierte ambos dentro de este subbloque.
+        UPDATE public.crm_empresas SET cliente_id = v_cliente_id
+          WHERE id = v_empresa AND organization_id = v_org AND deleted_at IS NULL
+            AND cliente_id IS NULL;
+        IF NOT FOUND THEN RAISE EXCEPTION 'LC_CONVERSION_INCONSISTENTE'; END IF;
+      END IF;
       INSERT INTO public.clientes (
-        organization_id, nombre, contacto, email, telefono, rfc,
+        id, organization_id, nombre, contacto, email, telefono, rfc,
         direccion, ciudad, estado, cp,
         regimen_fiscal, uso_cfdi_default, forma_pago_default, metodo_pago_default
       ) VALUES (
-        v_org, v_nombre, v_contacto, v_email, v_telefono, v_rfc,
+        v_cliente_id, v_org, v_nombre, v_contacto, v_email, v_telefono, v_rfc,
         COALESCE(v_direccion, ''), COALESCE(v_ciudad, ''), COALESCE(v_estado_dir, ''), v_cp,
         v_regimen, v_uso, v_forma, v_metodo
       )
@@ -13993,10 +14114,16 @@ BEGIN
       SELECT id, nombre INTO v_cliente_id, v_nombre_canonico
       FROM public.clientes
       WHERE organization_id = v_org AND upper(btrim(rfc)) = v_rfc AND deleted_at IS NULL
-      LIMIT 1;
+      LIMIT 1 FOR SHARE;
       IF v_cliente_id IS NULL THEN RAISE; END IF;
       v_creado := false;
     END;
+  END IF;
+  IF v_empresa IS NOT NULL AND NOT v_creado THEN
+    UPDATE public.crm_empresas SET cliente_id = v_cliente_id
+      WHERE id = v_empresa AND organization_id = v_org AND deleted_at IS NULL
+        AND (cliente_id IS NULL OR cliente_id = v_cliente_id);
+    IF NOT FOUND THEN RAISE EXCEPTION 'LC_CONVERSION_INCONSISTENTE'; END IF;
   END IF;
   v_nombre_canonico := COALESCE(NULLIF(btrim(COALESCE(v_nombre_canonico, '')), ''), v_nombre);
   ------------------------------------------------------------------
@@ -38725,9 +38852,10 @@ CREATE TRIGGER trg_crm_criterio_etapa_misma_org BEFORE INSERT OR UPDATE OF etapa
 CREATE TRIGGER trg_crm_cumplimiento_misma_org BEFORE INSERT OR UPDATE OF oportunidad_id, criterio_id, organization_id ON public.crm_oportunidad_criterios FOR EACH ROW EXECUTE FUNCTION public._crm_cumplimiento_misma_org();
 CREATE TRIGGER trg_crm_cuotas_updated_at BEFORE UPDATE ON public.crm_cuotas_vendedor FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
 CREATE TRIGGER trg_crm_empresa_estado_por_cliente BEFORE INSERT OR UPDATE OF cliente_id ON public.crm_empresas FOR EACH ROW EXECUTE FUNCTION public._crm_empresa_estado_por_cliente();
-CREATE TRIGGER trg_crm_empresa_no_borrar_cliente BEFORE UPDATE OF deleted_at ON public.crm_empresas FOR EACH ROW EXECUTE FUNCTION public._crm_empresa_no_borrar_cliente();
+CREATE TRIGGER trg_crm_empresa_no_borrar_cliente BEFORE INSERT OR UPDATE OF deleted_at, cliente_id, estado_crm ON public.crm_empresas FOR EACH ROW EXECUTE FUNCTION public._crm_empresa_no_borrar_cliente();
 CREATE TRIGGER trg_crm_empresa_no_delete_fisico BEFORE DELETE ON public.crm_empresas FOR EACH ROW EXECUTE FUNCTION public._crm_empresa_no_delete_fisico();
 CREATE TRIGGER trg_crm_empresa_proteger_creador BEFORE INSERT OR DELETE OR UPDATE OF id, created_by ON public.crm_empresas FOR EACH ROW EXECUTE FUNCTION public._crm_empresa_proteger_creador();
+CREATE TRIGGER trg_crm_empresa_validar_lead BEFORE INSERT OR UPDATE OF lead_origen_id, organization_id ON public.crm_empresas FOR EACH ROW EXECUTE FUNCTION public._crm_empresa_validar_lead();
 CREATE TRIGGER trg_crm_etapa_criterios_updated_at BEFORE UPDATE ON public.crm_etapa_criterios FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
 CREATE TRIGGER trg_crm_etapa_motivo_misma_org BEFORE INSERT OR UPDATE OF etapa_id, motivo_perdida_id, organization_id ON public.crm_oportunidades FOR EACH ROW EXECUTE FUNCTION public._crm_oportunidad_etapa_motivo_misma_org();
 CREATE TRIGGER trg_crm_etapas_updated_at BEFORE UPDATE ON public.crm_etapas_pipeline FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
@@ -40381,8 +40509,12 @@ REVOKE ALL ON FUNCTION public._crm_empresa_estado_por_cliente() FROM PUBLIC;
 GRANT ALL ON FUNCTION public._crm_empresa_estado_por_cliente() TO service_role;
 REVOKE ALL ON FUNCTION public._crm_empresa_no_borrar_cliente() FROM PUBLIC;
 REVOKE ALL ON FUNCTION public._crm_empresa_no_delete_fisico() FROM PUBLIC;
+REVOKE ALL ON FUNCTION public._crm_empresa_para_conversion(p_org uuid, p_lead uuid, p_oportunidad uuid) FROM PUBLIC;
+GRANT ALL ON FUNCTION public._crm_empresa_para_conversion(p_org uuid, p_lead uuid, p_oportunidad uuid) TO service_role;
 REVOKE ALL ON FUNCTION public._crm_empresa_proteger_creador() FROM PUBLIC;
 GRANT ALL ON FUNCTION public._crm_empresa_proteger_creador() TO service_role;
+REVOKE ALL ON FUNCTION public._crm_empresa_validar_lead() FROM PUBLIC;
+GRANT ALL ON FUNCTION public._crm_empresa_validar_lead() TO service_role;
 REVOKE ALL ON FUNCTION public._crm_es_pricing(p_org uuid) FROM PUBLIC;
 GRANT ALL ON FUNCTION public._crm_es_pricing(p_org uuid) TO authenticated;
 GRANT ALL ON FUNCTION public._crm_es_pricing(p_org uuid) TO service_role;
