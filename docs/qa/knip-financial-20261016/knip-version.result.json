@@ -1,0 +1,11 @@
+{
+  "command": [
+    "node",
+    "node_modules/knip/bin/knip.js",
+    "--version"
+  ],
+  "startedAt": "2026-10-16T23:08:10.399Z",
+  "finishedAt": "2026-10-16T23:08:12.336Z",
+  "code": 0,
+  "signal": null
+}

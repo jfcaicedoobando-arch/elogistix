@@ -15,7 +15,6 @@ import {
 } from "@/features/proformas/domain/origenAceptacion";
 
 export type EstadoCliente = "pendiente" | "aceptada" | "rechazada";
-export type { OrigenAceptacion };
 
 function BadgeOrigenAceptacion({ origen }: { origen: OrigenAceptacion }) {
   const config = {

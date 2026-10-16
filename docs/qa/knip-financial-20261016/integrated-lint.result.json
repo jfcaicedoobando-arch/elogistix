@@ -1,0 +1,13 @@
+{
+  "command": [
+    "bun",
+    "run",
+    "lint",
+    "--",
+    "--max-warnings=0"
+  ],
+  "startedAt": "2026-10-16T23:17:27.537Z",
+  "finishedAt": "2026-10-16T23:17:55.360Z",
+  "code": 0,
+  "signal": null
+}

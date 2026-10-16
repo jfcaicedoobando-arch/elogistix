@@ -12,14 +12,11 @@ import {
   filtrarPorContenedor,
   type FiltroContenedor,
 } from "@/features/embarques/domain/conceptosPorContenedor";
-import { ivaDeFila } from "@/features/embarques/domain/ivaConceptoVenta";
 import type { Tables } from "@/integrations/supabase/types";
 
 type ConceptoVenta = Tables<"conceptos_venta">;
 
 export type { TotalesProforma };
-
-export { ivaDeFila };
 
 /**
  * Calcula subtotales/IVA/totales por moneda para una proforma.

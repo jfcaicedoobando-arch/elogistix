@@ -1,0 +1,11 @@
+{
+  "command": [
+    "bun",
+    "run",
+    "lint:unused"
+  ],
+  "startedAt": "2026-10-16T23:07:23.282Z",
+  "finishedAt": "2026-10-16T23:08:03.335Z",
+  "code": 0,
+  "signal": null
+}
