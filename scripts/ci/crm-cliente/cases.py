@@ -68,11 +68,12 @@ def run(context, m):
     def operator(f):
         f['operator'] = str(uuid.uuid4())
         q=m.literal
-        h.query("BEGIN; INSERT INTO auth.users(id,email) VALUES ("+q(f['operator'])+","+q(f['operator']+'@test.invalid')+"); "
+        roles=h.query("BEGIN; INSERT INTO auth.users(id,email) VALUES ("+q(f['operator'])+","+q(f['operator']+'@test.invalid')+"); "
                 "INSERT INTO public.organization_members(organization_id,user_id,role) VALUES ("+q(f['org'])+","+q(f['operator'])+",'customer_service'); "
                 "UPDATE public.organization_members SET role='operador' WHERE user_id="+q(f['operator'])+"; "
-                "UPDATE public.user_roles SET role='operador' WHERE user_id="+q(f['operator'])+"; "
-                "SELECT jsonb_build_object('ok',true); COMMIT;",'operator')
+                "INSERT INTO public.user_roles(user_id,role) VALUES ("+q(f['operator'])+",'operador') ON CONFLICT (user_id) DO UPDATE SET role=EXCLUDED.role; "
+                "SELECT jsonb_build_object('membership',(SELECT role FROM public.organization_members WHERE user_id="+q(f['operator'])+" AND organization_id="+q(f['org'])+"),'global',(SELECT role FROM public.user_roles WHERE user_id="+q(f['operator'])+")); COMMIT;",'operator')
+        m.require(roles=={'membership':'operador','global':'operador'},'Exact operator mirrors required')
     def seed(quote=False):
         f,_=h.seed()
         if quote:
