@@ -48,6 +48,7 @@ export function useCxpPageState() {
   const tf = useTableFilters<CxpFiltrosUrl>({
     defaultFilters: DEFAULTS,
     defaultPageSize: 100,
+    pageSizeOptions: [50, 100, 200],
     filterLabels: {
       estatus: "Estatus",
       moneda: "Moneda",

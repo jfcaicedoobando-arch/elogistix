@@ -52,6 +52,7 @@ export default function Leads() {
     defaultFilters: DEFAULTS,
     filterLabels: { estado: "Estado", fuente: "Origen" },
     defaultPageSize: 50,
+    pageSizeOptions: [50, 100, 200, 500],
     defaultSort: { key: "created_at", dir: "desc" },
     sortableKeys: LEAD_SORTABLE_KEYS,
     fetcher: async ({ search, filters, sortKey, sortDir, page, pageSize }) => {
