@@ -55,3 +55,11 @@ class TimeoutGateTests(unittest.TestCase):
         for value in ('workflow_dispatch:', 'pull_request_target:', 'secrets.', 'environment:', 'DATABASE_URL', 'SUPABASE_URL'):
             self.assertNotIn(value, source)
         self.assertIn('persist-credentials: false', source)
+
+    def test_actions_reuse_exact_inherited_reviewed_pins(self):
+        import re
+        root=gate.REPOSITORY_ROOT/'.github/workflows'
+        old=(root/'crm-committed-state-review.yml').read_text()
+        new=(root/'crm-timeout-profile-review.yml').read_text()
+        pins=lambda text: re.findall(r'uses: (actions/(?:checkout|upload-artifact)@[0-9a-f]{40})',text)
+        self.assertEqual(pins(old),pins(new))

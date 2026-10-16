@@ -298,10 +298,10 @@ def render_TEST_ONLY_timeout(candidate, bundle, *, scope, validate_projection, s
             'TIMEOUT_SYNTHETIC_DATABASE')
     fence = """IF pg_catalog.current_database() !~ '^crm_acl_fixture_timeout_[a-z0-9_]+$'
      OR CURRENT_USER <> 'postgres' OR SESSION_USER <> 'postgres'
-     OR pg_catalog.current_setting('server_version_num') <> '170006'
-     OR (SELECT rolsuper FROM pg_catalog.pg_roles WHERE rolname=CURRENT_USER) THEN
+     OR pg_catalog.current_setting('server_version_num') <> '170006' THEN
     RAISE EXCEPTION 'CRM_TIMEOUT_SYNTHETIC_CONTEXT';
   END IF;"""
+    # The non-superuser catalog check is in the core AFTER local lock setup.
     # Two completed top-level SETs precede DO. No arbitrary timeout or DSN.
     return ("SET statement_timeout='120s'; SET lock_timeout='0';\n"
             + _wrap(_core(candidate, prepared, window, fault), fence))

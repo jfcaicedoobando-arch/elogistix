@@ -281,6 +281,9 @@ def run_timeout_cases(r,validator):
                     'Independent reader saw pending insert')
             record(r,CASES[16],independent_reader_sees_no_new_row=True,retry_permission='NOT_GRANTED')
             own=capture(SessionCapture(writer),validator,db,'outer-own')
+            own_context=own[0]['discovery']['result']['context']
+            require(own_context['statement_timeout']=='20s' and own_context['lock_timeout']=='3s',
+                    'Open writer context was normalized or restored before COMMIT')
             require('ASSIGNED_XID' in rejected(before,own,validator),'Own row called committed')
             writer.execute('COMMIT;','commit')
             writer.keep_outer_open=False

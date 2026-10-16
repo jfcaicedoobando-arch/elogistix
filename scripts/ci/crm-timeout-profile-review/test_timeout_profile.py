@@ -34,6 +34,13 @@ class TimeoutProfileTests(unittest.TestCase):
         self.assertLess(sql.index('CRM_TIMEOUT_NOT_ADMITTED'),sql.index('v_contract :='))
         self.assertNotIn(':=',sql.split('BEGIN',1)[0])
         self.assertNotIn('SET statement_timeout',sql)
+    def test_synthetic_guard_has_no_unbounded_catalog_query(self):
+        fence=self.synthetic().split('-- CRM_TIMEOUT_CORE_BEGIN',1)[0]
+        self.assertNotIn('SELECT',fence)
+        self.assertNotIn('pg_roles',fence)
+        core=self.core(self.synthetic())
+        self.assertLess(core.index("set_config('lock_timeout','3s',true)"),core.index('SELECT rolsuper'))
+
     def test_exact_shared_core_and_marker(self):
         for sql in (self.render(),self.synthetic()):
             self.assertEqual(hashlib.sha256(self.core(sql).encode()).hexdigest(),re.findall(r'CORE_SHA256:([a-f0-9]{64})',sql)[0])

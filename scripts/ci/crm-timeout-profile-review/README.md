@@ -106,7 +106,7 @@ python3 -B -m unittest discover -s scripts/ci/crm-timeout-profile-review -p 'tes
 ```
 
 Local results: 139 inherited tests (138 pass, one PowerShell availability skip)
-and 16 new offline tests pass. This worker's socket restriction prevents local
+and 18 new offline tests pass. This worker's socket restriction prevents local
 PostgreSQL execution; the runtime evidence is the separately recorded Actions
 run, not a claim of local execution.
 
