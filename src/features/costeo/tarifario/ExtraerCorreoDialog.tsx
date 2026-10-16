@@ -10,10 +10,7 @@ import { Button } from "@/components/ui/button";
 import { FormDialogShell } from "@/components/shared/FormDialogShell";
 import { getErrorMessage } from "@/lib/errors";
 import { useOrganization } from "@/lib/contexts/OrganizationContext";
-import { fetchPuertos, fetchNavieras, fetchTiposContenedor } from "@/features/catalogos/services";
-import { fetchCosteoAgentes } from "@/features/costeo/services/agentes";
-import { fetchCosteoRutas } from "@/features/costeo/services/rutas";
-import { fetchCosteoTarifas } from "@/features/costeo/services/tarifas";
+import { fetchCatalogosImportacionCorreo, fetchTarifasConflictosImportacion } from "@/features/costeo/services/importacionTarifasCorreo";
 import { detectarConflictos, seleccionInicial, type Conflicto } from "./duplicadosTarifas";
 import { ConflictosTarifasLista } from "./ConflictosTarifasLista";
 import { TarifasPorProveedor } from "./TarifasPorProveedor";
@@ -59,13 +56,13 @@ export function ExtraerCorreoDialog({ open, onOpenChange, onDone }: Props) {
   /** Valida filas contra catálogos frescos y detecta duplicados y faltantes. */
   const preparar = async (filas: FilaCorreo[], erroresBase: string[], resumen: Estado["resumen"]) => {
     if (!organizationId) return;
-    const [puertos, agentes, navieras, tipos, rutas] = await Promise.all([
-      fetchPuertos(), fetchCosteoAgentes(organizationId), fetchNavieras(), fetchTiposContenedor(), fetchCosteoRutas(organizationId),
+    const [catalogos, existentes] = await Promise.all([
+      fetchCatalogosImportacionCorreo(organizationId), fetchTarifasConflictosImportacion(organizationId),
     ]);
-    const existentes = await fetchCosteoTarifas(organizationId, { estado: "todas" });
-    const prep = prepararImportacion(filas.map((f) => ({ ...f })), { puertos, agentes, navieras, tipos, rutas });
-    const conflictos = detectarConflictos(prep.tarifas, existentes, rutas, hoyMx());
-    const f = faltantesDeCatalogo(filas, { puertos, navieras });
+    const { puertos, agentes, navieras, tipos, rutas } = catalogos.validacion;
+    const prep = prepararImportacion(filas.map((f) => ({ ...f })), { puertos, agentes, navieras, tipos, rutas }, catalogos.existencia);
+    const conflictos = detectarConflictos(prep.tarifas, existentes, rutas, hoyMx(), catalogos.tiposComparacion);
+    const f = faltantesDeCatalogo(filas, catalogos.existencia);
     setFaltantes(f.pendientes.length ? { ...f, organizationId } : null); setAltasHechas(0);
     setSeleccion(seleccionInicial(prep.tarifas.length, conflictos));
     const { proveedorDe, nombreAgenteDe } = mapearAgentes(agentes);
@@ -80,14 +77,21 @@ export function ExtraerCorreoDialog({ open, onOpenChange, onDone }: Props) {
 
   const prepararPendientes = async () => {
     if (!faltantes) return;
-    setCargando(true); setResultado(null);
+    setCargando(true); setResultado(null); setEstado(null); setFaltantes(null);
     try { await preparar(faltantes.pendientes, [], [{ proveedor: "Tarifas pendientes de alta", filas: faltantes.pendientes.length }]); }
+    catch (e) { mostrarError(e); }
     finally { setCargando(false); }
+  };
+
+  const mostrarError = (e: unknown) => {
+    if (!organizationId) return;
+    setFaltantes(null); setSeleccion(new Set());
+    setEstado({ organizationId, prep: { tarifas: [], errores: [`No se pudieron preparar las tarifas: ${getErrorMessage(e)}`] }, resumen: [], conflictos: [], proveedorDe: new Map(), nombreAgenteDe: new Map(), puertos: new Map(), navieras: new Map() });
   };
 
   const extraer = async () => {
     if (!organizationId) return;
-    setCargando(true); setResultado(null); setEstado(null);
+    setCargando(true); setResultado(null); setEstado(null); setFaltantes(null);
     try {
       const lectura = await leerCorreos(organizationId);
       await preparar(lectura.filas, lectura.errores, lectura.resumen);

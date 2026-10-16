@@ -3,7 +3,7 @@
  * convierte el correo más reciente de cada agente en filas y resumen.
  */
 import { extraerTarifasCorreo } from "@/features/costeo/services/extraerTarifasCorreo";
-import { fetchCosteoAgentes } from "@/features/costeo/services/agentes";
+import { fetchAgentesImportacionCorreo } from "@/features/costeo/services/importacionTarifasCorreo";
 import { parsearCorreoProveedor } from "./parsearCorreoTarifas";
 import { AGENTE_CLAVE, NOMBRE_PROVEEDOR } from "./proveedoresCorreo";
 import type { FilaCorreo } from "./comun";
@@ -19,7 +19,7 @@ export interface LecturaCorreos {
 
 export async function leerCorreos(organizationId: string): Promise<LecturaCorreos> {
   const correos = await extraerTarifasCorreo(organizationId);
-  const agentes = await fetchCosteoAgentes(organizationId);
+  const agentes = await fetchAgentesImportacionCorreo(organizationId);
   const out: LecturaCorreos = { filas: [], errores: [], resumen: [] };
   for (const c of correos) {
     const r = await parsearCorreoProveedor(c, hoyMx());
