@@ -137,8 +137,14 @@ test('exact test census rejects missing, duplicate, extra, manual, drift and unr
     'src/synthetic.test.ts', 'src/synthetic.perf.tsx', 'supabase/functions/synthetic/unit_test.ts',
     'supabase/functions/synthetic/smoke_test.ts', 'tests/pdf/synthetic.test.tsx',
     'e2e/specs/synthetic.spec.ts', 'e2e/visual/specs/shared-ui.spec.ts', 'e2e/visual/specs-unused.txt',
-    'e2e/visual/virtualization/specs/virtualization.spec.ts'];
-  const classified = classifyFiles(paths, guards, support).filter(entry => entry.lane === 'node-demo-authority-bridge');
+    'e2e/visual/virtualization/specs/virtualization.spec.ts',
+    'e2e/visual/virtualization/specs/keyboard-sorting.spec.ts'];
+  const entries = classifyFiles(paths, guards, support);
+  assert.deepEqual(entries.find(entry => entry.path === 'e2e/visual/virtualization/specs/keyboard-sorting.spec.ts'), {
+    path: 'e2e/visual/virtualization/specs/keyboard-sorting.spec.ts', lane: 'playwright-isolated', mode: 'automatic',
+  });
+  assert.throws(() => classifyFiles([...paths, 'e2e/visual/virtualization/specs/unregistered.spec.ts'], guards, support), /no execution lane/);
+  const classified = entries.filter(entry => entry.lane === 'node-demo-authority-bridge');
   const catalog = {schemaVersion: 1, entries: classified.map(entry => ({...entry, sha256: hash(fs.readFileSync(root + entry.path))}))};
   assert.deepEqual(validateAuthorityBridgeLane(catalog, root).map(entry => entry.path).sort(), actual);
   for (const mutate of [
@@ -158,7 +164,8 @@ test('CI runs the exact bridge lane automatically after inventory with pinned No
   const start = ci.indexOf('      - name: Demo authority bridge offline');
   const end = ci.indexOf('      - name: Post-deploy smoke contract', start);
   assert.ok(start > ci.indexOf('test-catalog.mjs --output reports/test-inventory.json'));
-  assert.ok(start > ci.indexOf("node-version: '24.19.0'"));
+  const nodeSetup = ci.indexOf("node-version: '24.22.0'");
+  assert.ok(nodeSetup >= 0 && nodeSetup < start);
   assert.ok(end > start);
   const step = ci.slice(start, end);
   assert.match(step, /--run node-demo-authority-bridge reports\/test-inventory.json/);

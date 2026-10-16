@@ -38,7 +38,9 @@ instalada. No significa que sean las últimas versiones de cada proveedor.
 
 ## Desarrollo
 
-Node.js **≥22.22.0** según `engines` y el mínimo de Router 8. CI utiliza Node **24.22.0 LTS** y Bun **1.4.0** en la acción compartida.
+Node.js **≥22.22.0** es el mínimo deliberado de `engines` por Router 8.
+Para reproducir CI, usar Node **24.22.0 LTS** y Bun **1.4.0**; el paquete
+declara `packageManager: bun@1.4.0`. Los tipos de Node corresponden al major 24.
 
 ```bash
 bun install --frozen-lockfile
@@ -55,7 +57,10 @@ sin subir secretos. Localhost puede apuntar a datos remotos: no equivale a stagi
 | `bun run lint:unused` | Diagnóstico Knip, no gate automático actual |
 | `bun run test -- <archivo>` | Regresión Vitest focal |
 | `bun run test:watch` | Desarrollo de pruebas |
+| `bun run test:ci` | Suite normal sin coverage; admite filtros y `--shard=i/N` |
 | `bun run test:perf` | Benchmarks separados |
+| `bun run ci:local` | Lint sin warnings, typecheck, Knip, tests y build |
+| `bun run test:coverage:merge` | Une blobs ya generados en `.vitest-reports`; no ejecuta la suite desde cero |
 | `bun run build` | Producción |
 | `bun run build:low-mem` | Build sin sourcemaps |
 | `bun run audit:report` | Informe generado en `reports/` |
@@ -86,7 +91,7 @@ e2e/                 Playwright, incluidos escenarios mutadores
 
 ## CI y publicación
 
-CI principal: detector, ESLint, comprobaciones, **cinco shards Vitest** y
+CI principal: detector, ESLint, comprobaciones, **14 shards Vitest** y
 agregador. No ejecuta coverage en cada PR. RLS se activa por rutas DB;
 E2E y smoke post-deploy son manuales. Detalles en [CI](docs/ops/ci.md).
 

@@ -47,5 +47,6 @@ test('CI runs the review lane automatically after catalog generation', () => {
   assert.match(section,/node scripts\/ci\/demo-review-offline\.mjs reports\/test-inventory\.json/);
   assert.doesNotMatch(section,/\bif:|continue-on-error/);
   assert.ok(ci.indexOf('test-catalog.mjs --output')<ci.indexOf('Demo review offline lane'));
-  assert.match(ci,/node-version: '24\.19\.0'/);
+  const nodeSetup=ci.indexOf("node-version: '24.22.0'");
+  assert.ok(nodeSetup>=0 && nodeSetup<ci.indexOf('Demo review offline lane'));
 });

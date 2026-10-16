@@ -4,7 +4,7 @@ Fuente de verdad: `.github/workflows/` y `.github/actions/`.
 Inventario completo y retiro de cuatro laboratorios cerrados el **2026-10-16**:
 [revisión de Actions](../ci/actions-cleanup-20261016.md). Se conservan 21 workflows
 y las dos acciones locales; los YAML retirados tienen snapshot exacto de auditoría.
-Workflows revisados el **2026-10-13**. Esta guía no configura protección de rama.
+Runtimes y comandos revisados el **2026-10-16**. Esta guía no configura protección de rama.
 
 ## CI principal
 
@@ -43,10 +43,36 @@ la misma versión real de Node en todas sus claves, incluidas las de restauraci�
 No se reutiliza una caché de `node_modules` ni de ESLint de Node 22.
 El caché de tarballs de Bun y los binarios de Playwright no dependen del ABI de Node.
 
-Los carriles de revisión de protocolo conservan su pin **24.19.0** y sus
-fixtures históricas. `engines.node >=22.22.0` es el mínimo de compatibilidad del
-paquete, no la selección de CI; `@types/node` contiene declaraciones de TypeScript,
-no instala Node. Esta migración no cambia dependencias, Bun ni `bun.lock`.
+Detector y agregador de CI principal, RLS, smoke y replay NC instalan Node
+**24.22.0 antes de su primer comando Node**. La acción compartida usa ese mismo
+pin para los jobs que instalan las dependencias del frontend.
+`engines.node >=22.22.0` conserva el mínimo deliberado por Router 8;
+`@types/node` major **24** alinea las declaraciones de TypeScript con CI,
+sin instalar Node ni afirmar compatibilidad con todas las versiones admitidas
+por `engines`. `packageManager: bun@1.4.0` declara el gestor para reproducir
+el lockfile; comprobar también la versión instalada con `bun --version`.
+
+Excepción deliberada: `demo-wire-lab.yml`, `demo-authority-entry-review.yml`
+y `demo-persistence-prerequisites.yml` conservan Node **24.19.0** y sus contratos
+históricos de ramas, bases y fuentes congeladas. Sus jobs tienen condiciones
+de revisión específicas; este cambio no habilita su ejecución para otros PRs.
+Ver [alcance y discrepancia de Remotion](../ci/dependency-runtime-reproducibility-20261016.md).
+
+### Comandos locales y coverage
+
+| Comando | Contrato |
+| --- | --- |
+| `bun run test:ci` | Suite normal Vitest sin coverage, retry ni blobs; admite filtros y `--shard=i/N` |
+| `bun run ci:local` | Lint `--max-warnings=0` → typecheck → Knip → tests normales → build; se detiene al primer fallo |
+| `bun run test:coverage` | Medición optativa de la suite con coverage |
+| `bun run test:coverage:shard -- --shard=i/N` | Genera blobs de coverage; usar el mismo N en todas las partes |
+| `bun run test:coverage:merge` | Consume blobs existentes en `.vitest-reports` y calcula coverage total; requiere generar o descargar todos los reports antes |
+
+`ci:local` incluye el diagnóstico Knip como comprobación local bloqueante,
+aunque el CI principal no lo exige. No ejecuta por sí solo guards DB, Deno,
+RLS, selección por áreas ni verificación de evidencia del agregador.
+Un merge de coverage tampoco sustituye la ejecución de tests. Ninguno de estos
+comandos activa coverage ni cambia los **14 shards** de PR/push del CI principal.
 
 ### Actions oficiales y compatibilidad del runner
 

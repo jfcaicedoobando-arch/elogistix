@@ -44,13 +44,13 @@ describe("Listado de proformas con contexto financiero", () => {
   it("ordena numéricamente cada moneda sin convertir ni sumar MXN y USD", () => {
     render(<MemoryRouter><DataTable columns={buildProformasColumns({})} data={listedRows()} rowKey={(p) => p.id} /></MemoryRouter>);
     const order = () => screen.getAllByRole("row").slice(1).map((row) => within(row).getAllByRole("cell")[0].textContent);
-    fireEvent.click(screen.getByRole("columnheader", { name: "Total MXN" }));
+    fireEvent.click(screen.getByRole("button", { name: "Total MXN" }));
     expect(order()).toEqual(["PRO-AUDIT38", "PRO-ALTO", "PRO-USD"]);
-    fireEvent.click(screen.getByRole("columnheader", { name: "Total MXN" }));
+    fireEvent.click(screen.getByRole("button", { name: "Total MXN" }));
     expect(order()).toEqual(["PRO-USD", "PRO-ALTO", "PRO-AUDIT38"]);
-    fireEvent.click(screen.getByRole("columnheader", { name: "Total USD" }));
+    fireEvent.click(screen.getByRole("button", { name: "Total USD" }));
     expect(order()).toEqual(["PRO-USD", "PRO-ALTO", "PRO-AUDIT38"]);
-    fireEvent.click(screen.getByRole("columnheader", { name: "Total USD" }));
+    fireEvent.click(screen.getByRole("button", { name: "Total USD" }));
     expect(order()).toEqual(["PRO-ALTO", "PRO-AUDIT38", "PRO-USD"]);
   });
 

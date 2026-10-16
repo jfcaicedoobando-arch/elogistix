@@ -85,15 +85,19 @@ El tamaño/RAM de un build deben medirse en su entorno real.
 
 ## Coverage
 
-CI principal usa **cinco shards sin coverage**.
+CI principal usa **14 shards sin coverage**.
 No hay workflow nightly de coverage vigente. Medición optativa:
 
 - `bun run test:coverage`.
 - `test:coverage:shard -- --shard=N/TOTAL` con el mismo TOTAL en todas las partes.
-- `test:coverage:merge` une blobs y aplica thresholds del total.
+- `test:coverage:merge` requiere blobs previos en `.vitest-reports`, los une y aplica thresholds del total.
 - `coverage:report` genera resumen.
 
-No confundir `test:ci` (alias de merge de coverage) con el comando real de CI.
+`bun run test:ci` ejecuta la suite normal sin coverage y admite filtros/shards.
+`bun run ci:local` ejecuta lint sin warnings, typecheck, Knip, tests normales
+y build. Ver [contratos vigentes](ops/ci.md#comandos-locales-y-coverage),
+revisados el **2026-10-16**; las validaciones fechadas de otras migraciones
+en esta guía conservan su alcance histórico.
 
 ## Vitest/Router
 

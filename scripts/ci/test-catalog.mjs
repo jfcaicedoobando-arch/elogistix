@@ -77,6 +77,7 @@ export function classifyFiles(files, guards, sqlSupport) {
       // Exact npm-test target; unrelated/new CJS tests must still fail closed.
       if (file === 'scripts/ci/selector148/tests/profile.test.cjs') lane = 'node-selector148';
       else if (file === 'scripts/ci/post-deploy-smoke.test.mjs') lane = 'node-post-deploy-smoke';
+      else if (file === 'scripts/ci/package-scripts.test.mjs') lane = 'node-package-scripts';
       // Review-only protocol/source tests have an automatic offline CI runner.
       else if (file === 'docs/review/demo-flow-20261015/rpc/rpc-attempt.test.mjs'
         || file === 'scripts/ci/demo-review-offline.test.mjs') lane = 'node-demo-review';
@@ -94,6 +95,7 @@ export function classifyFiles(files, guards, sqlSupport) {
       } else if (/^e2e\/specs\/.+\.spec\.ts$/.test(file)) { lane = 'playwright-staging'; mode = 'manual'; }
       else if (/^e2e\/visual\/audit(?:119-126|136-137)\/specs\/[^/]+\.spec\.ts$/.test(file)) lane = 'playwright-isolated';
       else if (file === 'e2e/visual/virtualization/specs/virtualization.spec.ts') lane = 'playwright-isolated';
+      else if (file === 'e2e/visual/virtualization/specs/keyboard-sorting.spec.ts') lane = 'playwright-isolated';
       else if (file === 'e2e/visual/cxp-filters/specs/focus.spec.ts') lane = 'playwright-isolated';
       else if (file === 'e2e/visual/dependency-audit/specs/demo.spec.ts') lane = 'playwright-isolated';
       else if (file === 'e2e/visual/specs/shared-ui.spec.ts') { lane = 'playwright-visual'; mode = 'manual'; }
