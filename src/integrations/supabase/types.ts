@@ -9969,6 +9969,10 @@ export type Database = {
         }
         Returns: undefined
       }
+      _crm_empresa_para_conversion: {
+        Args: { p_lead: string; p_oportunidad: string; p_org: string }
+        Returns: string
+      }
       _crm_es_pricing: { Args: { p_org: string }; Returns: boolean }
       _crm_folio_pricing_prefijo: { Args: { p_ts: string }; Returns: string }
       _crm_opcion_vigente: { Args: { p_id: string }; Returns: string }
