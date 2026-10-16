@@ -79,7 +79,7 @@ jobs:
             Tee-Object -FilePath "$env:RUNNER_TEMP/crm-timeout-preflight/projection-schema.log"
       - name: Preserve synthetic evidence and cleanup status
         if: always()
-        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d26962f4752f3646cd9
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
         with:
           name: crm-timeout-profile-${{ github.run_id }}-${{ github.run_attempt }}
           path: |
