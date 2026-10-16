@@ -13,7 +13,7 @@ concurrency:
   group: independent-financial-retry-negative-${{ github.event.pull_request.number }}
   cancel-in-progress: false
 jobs:
-  nine-independent-negatives:
+  independent-supplement:
     if: github.repository == 'jfcaicedoobando-arch/elogistix' && github.event.pull_request.draft == true && github.event.pull_request.head.repo.full_name == github.repository && github.event.pull_request.head.ref == 'codex/demo-financial-behavior-recovery-20261015' && github.event.pull_request.base.sha == 'b66d2c2caa00d7a8d522ed7140b6a15877a0b2aa'
     runs-on: ubuntu-24.04
     timeout-minutes: 35
@@ -26,8 +26,8 @@ jobs:
         run: |
           python3 -B -I -m unittest discover -s scripts/ci/demo-financial-retry-negative-review -p 'test_*.py' -v
           python3 -B -I -m unittest discover -s scripts/ci/demo-financial-retry-negative-runner -p 'test_*.py' -v
-      - name: Nine fresh owned PostgreSQL17.6 negative cases
-        run: python3 -B -I scripts/ci/demo-financial-retry-negative-runner/run_ci.py --output "$RUNNER_TEMP/independent-financial-retry-negative"
+      - name: Three independent denials and separate sequence calibration
+        run: python3 -B -I scripts/ci/demo-financial-retry-negative-runner/run_ci.py --group supplement --output "$RUNNER_TEMP/independent-financial-retry-negative"
       - name: Preserve bounded native and cleanup evidence
         if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02

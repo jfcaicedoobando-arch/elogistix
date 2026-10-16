@@ -13,3 +13,9 @@ The nine cases are: foreign invoice UUID collision; disabled scheduler; disabled
 Scope is table-row rollback only. Sequences, full catalogs/ACLs, real authentication/RLS, business COMMIT, crash durability and deployed transport remain NOT_ESTABLISHED or NOT_RUN. Independent concept/payment collisions and cross-tenant identity retry are explicitly pending complementary inputs. Configuration EMPTY, wire UNBOUND, external demo DISABLED. The separate `demo-financial-commit-review` work is not part of this adapter or its acceptance.
 
 Preparation status: offline checks only until the native Actions artifact confirms per-case results. No local SQL/Docker mode exists.
+
+## Exact supplemental source and separate execution group
+
+Source `7d38dc8ad3959b853d7fe60a556f671c60a5b244` adds eleven files and preserves the original nine. It is integrated unchanged as `02a4ed7846b82738b1f23840567f4193860ad9ed`; the complete external inventory is now50 (30 author +20 reviewer), all pinned. `--group original` keeps the nine historical cases; `--group supplement` executes only three new denial cases plus a separate TEMP-sequence calibration in four fresh clusters. It does not repeat the prior nine processes. Native sequence captures are reported as observations; TEMP17→24→24 calibration is not fixture sequence rollback or causality proof.
+
+Original runtime38826041062 at21b5fae8 yielded7PASS/2FAIL42703 before mutation, nine cleanups verified; its artifact12014284809 SHA2568b45e68934272812c51c75579c3c6f0b2c9602e057d653254b4f9605e2182607 is independently verified. Both drift cases require a corrected reviewer version because `_origin_snapshot` shadows outer server-admission alias `a` with inner preparation-admission alias `a`. Their intended denials remain NOT_RUN; no source or guard is rewritten to hide that result.

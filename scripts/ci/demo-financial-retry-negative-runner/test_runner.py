@@ -16,7 +16,7 @@ class AdapterTests(unittest.TestCase):
    cmd.assert_not_called()
  def test_exact_source_inventory_and_provider_contract(self):
   frozen,pins=r.verify_inputs()
-  self.assertEqual(len(pins["files"]),39)
+  self.assertEqual(len(pins["files"]),50)
   review=r.module("independent_provider_test",r.REVIEW/"suite.py")
   self.assertEqual(tuple(c["id"] for c in review.CASES),r.CASE_IDS)
   bm=r.module("independent_author_test",r.BEHAVIOR/"run_ci.py")
@@ -35,7 +35,7 @@ class AdapterTests(unittest.TestCase):
  def test_every_native_case_is_its_own_owned_cluster(self):
   code=(HERE/"run_ci.py").read_text()
   self.assertIn('r = ReviewRunner(output, uuid.uuid4().hex)',code)
-  self.assertIn('for case in review.CASES:',code)
+  self.assertIn('for case in cases:',code)
   self.assertIn('r.start()',code)
   self.assertIn('finally: r.save()',code)
  def test_native_parser_has_no_cleanup_authority(self):
@@ -48,6 +48,11 @@ class AdapterTests(unittest.TestCase):
   self.assertNotIn("offline-evidence.json",code)
   self.assertIn('"business_commit":"NOT_RUN"',code)
   self.assertIn('"sequence_rollback":"NOT_ESTABLISHED"',code)
+ def test_supplement_is_three_new_denials_and_a_distinct_calibration(self):
+  self.assertEqual(len(r.SUPPLEMENT_CASE_IDS),3)
+  self.assertFalse(set(r.SUPPLEMENT_CASE_IDS)&set(r.CASE_IDS))
+  self.assertNotIn(r.SEQUENCE_CONTROL_ID,r.CASE_IDS+r.SUPPLEMENT_CASE_IDS)
+  self.assertIn('inspect_sequence_control', (HERE/"run_ci.py").read_text())
  def test_imported_author_and_review_sources_remain_separate_from_adapter(self):
   frozen,pins=r.verify_inputs()
   self.assertTrue(all(not row["path"].startswith("scripts/ci/demo-financial-commit-review/") for row in pins["files"]))
