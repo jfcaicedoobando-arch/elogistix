@@ -1,16 +1,33 @@
 {
   "$schema": "https://unpkg.com/knip@6/schema.json",
-  "entry": [
-    "index.html",
-    "scripts/**/*.ts",
-    "src/**/*.test.{ts,tsx}",
-    "src/**/__tests__/**/*.{ts,tsx}",
-    "src/features/*/index.ts"
-  ],
-  "project": [
-    "src/**/*.{ts,tsx}",
-    "scripts/**/*.ts"
-  ],
+  "workspaces": {
+    ".": {
+      "entry": [
+        "index.html",
+        "scripts/**/*.ts",
+        "scripts/db/test-proforma-fixture-lock-order.mjs",
+        "src/**/*.test.{ts,tsx}",
+        "src/**/__tests__/**/*.{ts,tsx}",
+        "src/features/*/index.ts"
+      ],
+      "project": [
+        "src/**/*.{ts,tsx}",
+        "scripts/**/*.ts"
+      ],
+      "ignoreDependencies": [
+        "drizzle-orm"
+      ]
+    },
+    "scripts/ci/selector148": {
+      "entry": [
+        "concurrency.cjs",
+        "tests/**/*.test.cjs"
+      ],
+      "project": [
+        "**/*.cjs"
+      ]
+    }
+  },
   "ignore": [
     "src/integrations/supabase/types.ts",
     "src/components/ui/**",
