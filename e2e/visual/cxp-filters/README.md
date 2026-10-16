@@ -17,6 +17,8 @@ node node_modules/@playwright/test/cli.js test --config e2e/visual/cxp-filters/p
 
 The Playwright command builds a fresh fixture before serving localhost:8103.
 The isolated UI workflow runs all 12 tests and requires zero skips/retries.
+The exact spec path is registered as automatic `playwright-isolated` in
+`scripts/ci/test-catalog.mjs`; unmatched new tests still fail the catalog gate.
 Results are written to `reports/cxp-filters/results.json`; failures retain traces
 and screenshots in `test-results/cxp-filters/`. No screenshot baseline is updated.
 
@@ -54,3 +56,11 @@ synthetic closed-panel capture is byte-identical at 390×844. At 1280×900 the t
 rectangle is identical; 31 RGBA pixels differ by at most 1/255 in rounded corners.
 These observations cover the isolated fixture, not authenticated application data
 or other browsers. Baseline/result hashes and local checks are in `evidence.json`.
+
+The first remote CI detector correctly rejected the unregistered new spec. The
+follow-up registers its exact path in the existing automatic isolated lane. The
+catalog command and script lint pass locally. Of 35 additional catalog checks,
+32 pass on Windows; three existing RLS shell-harness checks cannot spawn `bash`
+in this MinGit runtime and require Linux CI. No database is used by those checks.
+The initial Linux CxP job passed its build and all-12-case guard on the identical
+product/component test sources; the final commit's CI result is reported separately.

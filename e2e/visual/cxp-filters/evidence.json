@@ -223,6 +223,42 @@
     "Isolated synthetic component data; no authenticated ERP/database access",
     "Local GUI coverage is Chromium on Windows only; CI Linux results are separate",
     "No full local unit rerun; 30 targeted cases and full CI configured",
-    "No shared browser, deployment, migration or snapshot changes"
-  ]
+    "No shared browser, deployment, migration or snapshot changes",
+    "32/35 additional catalog checks passed locally; 3 existing Unix shell harness cases cannot spawn bash on this Windows runtime; Linux CI validates them separately"
+  ],
+  "catalogFollowup": {
+    "initialCi": {
+      "commit": "a11f1aca9413c0b0551e6325b1bf3fa45e593d60",
+      "run": 38939368142,
+      "job": 117102824587,
+      "failure": "Test has no execution lane: e2e/visual/cxp-filters/specs/focus.spec.ts"
+    },
+    "fix": "Register only the exact focus.spec.ts path as automatic playwright-isolated",
+    "catalogCommandExit": 0,
+    "catalogNormalFiles": 2436,
+    "catalogIsolatedSpecFiles": 4,
+    "scriptLintExit": 0,
+    "localCatalogTests": {
+      "files": 2,
+      "passed": 32,
+      "failed": 3,
+      "reason": "Existing RLS shell harness tests spawn bash; this Windows MinGit runtime has no bash executable. GUI/CxP tests are unaffected."
+    },
+    "initialLinuxGui": {
+      "commit": "a11f1aca9413c0b0551e6325b1bf3fa45e593d60",
+      "run": 38939368627,
+      "job": 117102827631,
+      "buildAnd12CaseGuard": "success"
+    },
+    "artifacts": [
+      {
+        "localRelativePath": "focus-main-7feb/reports/cxp-filters/catalog.json",
+        "sha256": "4bc92cf4edd818b476b717d1190698d7d47d4d63c045bc13d8a9aae727439de8"
+      },
+      {
+        "localRelativePath": "focus-main-7feb/reports/cxp-filters/catalog-tests.log",
+        "sha256": "e4c0803f56f3eb202e068f03357ecdf3558fb205874d236c4f67f31204392217"
+      }
+    ]
+  }
 }
