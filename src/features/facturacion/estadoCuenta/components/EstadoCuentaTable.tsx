@@ -15,6 +15,7 @@ import { EstadoCuentaTableHead } from "./EstadoCuentaTableHead";
 import { EmptyStateInline } from "@/components/empty/EmptyStateInline";
 import { EstadoCuentaGrupoMoneda } from "./EstadoCuentaGrupoMoneda";
 import { Skeleton } from "@/components/ui/skeleton";
+import { FinancialQueryError } from "@/components/shared/FinancialQueryError";
 import type {
   GrupoMoneda,
   OrdenEstadoCuenta,
@@ -24,6 +25,10 @@ import type {
 interface Props {
   grupos: GrupoMoneda[];
   isLoading?: boolean;
+  isError?: boolean;
+  error?: unknown;
+  onRetry?: () => void;
+  isFetching?: boolean;
   facturaHref: (facturaId: string) => string;
   sort: SortEstadoCuenta;
   onSort: (key: OrdenEstadoCuenta) => void;
@@ -46,6 +51,10 @@ function Vacio() {
 export function EstadoCuentaTable({
   grupos,
   isLoading,
+  isError,
+  error,
+  onRetry,
+  isFetching,
   facturaHref,
   sort,
   onSort,
@@ -69,7 +78,17 @@ export function EstadoCuentaTable({
     <div className="overflow-hidden rounded-lg border bg-card">
       {toolbar && <div className="border-b px-3 py-2">{toolbar}</div>}
 
-      {vacio ? (
+      {isError && (
+        <FinancialQueryError
+          title="No se pudo cargar el estado de cuenta"
+          error={error}
+          onRetry={() => onRetry?.()}
+          retrying={isFetching}
+          hasPreviousData={grupos.length > 0}
+        />
+      )}
+
+      {isError && grupos.length === 0 ? null : vacio ? (
         <Vacio />
       ) : (
         <div className="overflow-x-auto">
@@ -112,3 +131,4 @@ export function EstadoCuentaTable({
     </div>
   );
 }
+

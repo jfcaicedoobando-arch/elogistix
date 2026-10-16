@@ -10,6 +10,7 @@ import { EstadoCuentaAgingBar } from "./EstadoCuentaAgingBar";
 import { EstadoCuentaFilters } from "./EstadoCuentaFilters";
 import { EstadoCuentaTable } from "./EstadoCuentaTable";
 import { ExportActions } from "./ExportActions";
+import { FinancialQueryError } from "@/components/shared/FinancialQueryError";
 
 interface Props {
   clienteIds: string[];
@@ -22,6 +23,10 @@ interface Props {
   identidad?: React.ReactNode;
   /** Si es `false`, las acciones de exportación se renderizan fuera (encabezado). */
   mostrarExportaciones?: boolean;
+}
+
+function puedeMostrarDatos(isError: boolean, hasData: boolean): boolean {
+  return !isError || hasData;
 }
 
 export function EstadoCuentaModule({
@@ -40,7 +45,7 @@ export function EstadoCuentaModule({
       {(headerRight || mostrarExportaciones) && (
         <div className="flex flex-wrap items-center justify-end gap-2">
           {headerRight}
-          {mostrarExportaciones && (
+          {mostrarExportaciones && !v.isError && !v.isLoading && !v.isFetching && (
             <ExportActions
               clienteIds={clienteIds}
               rows={v.filtradas}
@@ -57,13 +62,31 @@ export function EstadoCuentaModule({
 
       {identidad}
 
-      <EstadoCuentaKpiCards kpis={v.kpis} loading={v.isLoading} />
+      {v.kpisIsError && (
+        <FinancialQueryError
+          title="No se pudieron cargar los totales del estado de cuenta"
+          error={v.kpisError}
+          onRetry={v.kpisRefetch}
+          retrying={v.kpisIsFetching}
+          hasPreviousData={v.kpisHasData}
+        />
+      )}
 
-      <EstadoCuentaAgingBar buckets={v.aging} activo={v.bucket} onToggle={v.toggleBucket} />
+      {puedeMostrarDatos(v.isError, v.hasData) && puedeMostrarDatos(v.kpisIsError, v.kpisHasData) && (
+        <EstadoCuentaKpiCards kpis={v.kpis} loading={v.isLoading || v.kpisIsLoading} />
+      )}
+
+      {!v.isLoading && puedeMostrarDatos(v.isError, v.hasData) && (
+        <EstadoCuentaAgingBar buckets={v.aging} activo={v.bucket} onToggle={v.toggleBucket} />
+      )}
 
       <EstadoCuentaTable
         grupos={v.grupos}
         isLoading={v.isLoading}
+        isError={v.isError}
+        error={v.error}
+        onRetry={() => void v.refetch()}
+        isFetching={v.isFetching}
         facturaHref={facturaHref}
         sort={v.sort}
         onSort={v.onSort}
@@ -85,3 +108,4 @@ export function EstadoCuentaModule({
     </div>
   );
 }
+
