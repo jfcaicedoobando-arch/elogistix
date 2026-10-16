@@ -1,0 +1,68 @@
+{
+  "schemaVersion": 1,
+  "purpose": "Closed review workflow audit snapshot; not an execution route",
+  "observedAtCommit": "8d418febeb3b145a06a6a73688e4923f83e206d0",
+  "repository": "jfcaicedoobando-arch/elogistix",
+  "workflows": [
+    {
+      "originalPath": ".github/workflows/crm-helper-acl-review.yml",
+      "archivePath": "docs/ci/workflow-archive/closed-labs-20261016/crm-helper-acl-review.yml.txt",
+      "gitBlobSha1": "7df4d744702d8950f410fe6bc7f54081b8b1fde8",
+      "sha256": "51b2e581ced9c2df103375ab023c1d8c14cc7d2592083101240a74498b0cac2a",
+      "bytes": 1518,
+      "reviewPullRequest": 343,
+      "mergeCommit": "8887cb5c11307b420719ec4430bb8eed2d44b121",
+      "reviewBranch": "fix/crm-helper-acl-review-20261015",
+      "historicalRun": {
+        "id": 38795415956,
+        "headSha": "30be81b8dce06997005e7505b2119f23a69a9263",
+        "conclusion": "success"
+      }
+    },
+    {
+      "originalPath": ".github/workflows/demo-authentic-producer-review.yml",
+      "archivePath": "docs/ci/workflow-archive/closed-labs-20261016/demo-authentic-producer-review.yml.txt",
+      "gitBlobSha1": "2e5eadf5ac811da71dbffbe4832ce9fbfebbc73a",
+      "sha256": "256cce319b038634e2ed0c0a33445dd1b93b17f3b4e97eae1c1d93f16c295d4f",
+      "bytes": 1698,
+      "reviewPullRequest": 344,
+      "mergeCommit": "1e904a54ccd37993bb5eb90ac068dd90fe3d1c3b",
+      "reviewBranch": "fix/demo-authentic-producer-review-20261015",
+      "historicalRun": {
+        "id": 38797446037,
+        "headSha": "348c974605fbd2516c0f80cdb3e472a21242a635",
+        "conclusion": "success"
+      }
+    },
+    {
+      "originalPath": ".github/workflows/demo-human-approval-review.yml",
+      "archivePath": "docs/ci/workflow-archive/closed-labs-20261016/demo-human-approval-review.yml.txt",
+      "gitBlobSha1": "f1cc264ef5eaa2c47942fecd459d7c0d171206e3",
+      "sha256": "822acfead13de120b801f60b882daa447e0fe428edc552a00ba04216e511be6e",
+      "bytes": 1761,
+      "reviewPullRequest": 345,
+      "mergeCommit": "5d1f00d27628100a58ab166367a067ea90068b84",
+      "reviewBranch": "fix/demo-human-approval-review-20261015",
+      "historicalRun": {
+        "id": 38797160274,
+        "headSha": "898729a2a83d29c47847cfb6d2f6187a3829a4ad",
+        "conclusion": "success"
+      }
+    },
+    {
+      "originalPath": ".github/workflows/demo-authority-provider-review.yml",
+      "archivePath": "docs/ci/workflow-archive/closed-labs-20261016/demo-authority-provider-review.yml.txt",
+      "gitBlobSha1": "d3e70390d37577017d07f916618dd4171779626c",
+      "sha256": "9c47c523a5c5b4b74cd481b893c25f662ae9c916d9e4f1905beef8d87735eece",
+      "bytes": 1924,
+      "reviewPullRequest": 362,
+      "mergeCommit": "2820b90ecdbf62528a54e30e8543cc6243c80d57",
+      "reviewBranch": "review/protected-authority-registry-20261016",
+      "historicalRun": {
+        "id": 38835524317,
+        "headSha": "4d7eaecf2bde5872d2e069697f34babee02b0fc0",
+        "conclusion": "success"
+      }
+    }
+  ]
+}
