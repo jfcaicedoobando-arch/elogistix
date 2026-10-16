@@ -1,0 +1,210 @@
+{
+  "base": "b500565363af0fc566decb7327c717da61cfabd7",
+  "runtime": {
+    "bun": "1.4.0",
+    "node": "24.22.0",
+    "knip": "6.41.0"
+  },
+  "exactPinnedBaselineIncludingLocations": true,
+  "before": {
+    "files": 0,
+    "dependencies": 0,
+    "devDependencies": 0,
+    "unlisted": 0,
+    "duplicates": 0,
+    "exports": 42,
+    "types": 22
+  },
+  "after": {
+    "files": 0,
+    "dependencies": 0,
+    "devDependencies": 0,
+    "unlisted": 0,
+    "duplicates": 0,
+    "exports": 26,
+    "types": 16
+  },
+  "removed": [
+    {
+      "file": "src/features/cliente/hooks/useNuevoClienteController.ts",
+      "kind": "exports",
+      "name": "DOCS_OBLIGATORIOS"
+    },
+    {
+      "file": "src/features/cliente/hooks/useNuevoClienteController.ts",
+      "kind": "exports",
+      "name": "EMPTY_CLIENTE"
+    },
+    {
+      "file": "src/features/costeo/services/topTarifas.ts",
+      "kind": "exports",
+      "name": "fetchTarifaVigentePorId"
+    },
+    {
+      "file": "src/features/cotizacion/domain/frecuencias.ts",
+      "kind": "types",
+      "name": "FrecuenciaCotizacion"
+    },
+    {
+      "file": "src/features/cotizacion/hooks/usePendientesReaprobacion.ts",
+      "kind": "exports",
+      "name": "useCotizacionesPendientesReaprobacion"
+    },
+    {
+      "file": "src/features/cotizacion/hooks/wizard/useCotizacionUpdateGuard.ts",
+      "kind": "types",
+      "name": "CotizacionUpdateGuard"
+    },
+    {
+      "file": "src/features/cotizacion/services/index.ts",
+      "kind": "exports",
+      "name": "buildConceptosFromCostos"
+    },
+    {
+      "file": "src/features/cotizacion/services/index.ts",
+      "kind": "exports",
+      "name": "fetchCotizacionSello"
+    },
+    {
+      "file": "src/features/cotizacion/services/index.ts",
+      "kind": "types",
+      "name": "CotizacionCostosSnapshot"
+    },
+    {
+      "file": "src/features/cotizacion/services/index.ts",
+      "kind": "types",
+      "name": "UpsertCostosResult"
+    },
+    {
+      "file": "src/features/cotizacion/services/queries.ts",
+      "kind": "exports",
+      "name": "fetchCotizacionSello"
+    },
+    {
+      "file": "src/features/crm/domain/leads/icp.ts",
+      "kind": "exports",
+      "name": "ICP_ESTATUS"
+    },
+    {
+      "file": "src/features/crm/services/higiene.ts",
+      "kind": "types",
+      "name": "EstadoHigiene"
+    },
+    {
+      "file": "src/features/crm/services/pricing/tiposPricing.ts",
+      "kind": "exports",
+      "name": "HORAS_POR_COMPLEJIDAD"
+    },
+    {
+      "file": "src/features/crm/services/vincularCotizacion/index.ts",
+      "kind": "exports",
+      "name": "propagarConversionProspectoCRM"
+    },
+    {
+      "file": "src/lib/access/permissionMatrix.ts",
+      "kind": "exports",
+      "name": "CRM_CONFIG"
+    },
+    {
+      "file": "src/lib/access/permissionMatrix.ts",
+      "kind": "exports",
+      "name": "CRM_CREAR_LEAD"
+    },
+    {
+      "file": "src/lib/access/permissionMatrix.ts",
+      "kind": "exports",
+      "name": "CRM_GESTION_TODOS_LEADS"
+    },
+    {
+      "file": "src/lib/access/permissionMatrix.ts",
+      "kind": "exports",
+      "name": "CRM_REASIGNAR_VENDEDOR"
+    },
+    {
+      "file": "src/lib/access/permissionMatrix.ts",
+      "kind": "exports",
+      "name": "CRM_STAFF_REGISTROS"
+    },
+    {
+      "file": "src/lib/access/permissionMatrix.ts",
+      "kind": "exports",
+      "name": "CRM_TOMAR_LEAD"
+    },
+    {
+      "file": "src/lib/access/permissionMatrix.ts",
+      "kind": "types",
+      "name": "PermisosCrmResueltos"
+    }
+  ],
+  "added": [],
+  "deferredRoutes": [
+    {
+      "file": "src/routes/appRoutes.lazy.ts",
+      "kind": "exports",
+      "name": "CrmProspectos"
+    },
+    {
+      "file": "src/routes/appRoutes.lazy.ts",
+      "kind": "exports",
+      "name": "Leads"
+    }
+  ],
+  "routeRemovalProbe": {
+    "counts": {
+      "files": 6,
+      "dependencies": 0,
+      "devDependencies": 0,
+      "unlisted": 0,
+      "duplicates": 0,
+      "exports": 27,
+      "types": 16
+    },
+    "added": [
+      {
+        "file": "src/features/crm/components/LeadsBulkBar.tsx",
+        "kind": "files",
+        "name": "src/features/crm/components/LeadsBulkBar.tsx"
+      },
+      {
+        "file": "src/features/crm/domain/leads/constants.ts",
+        "kind": "exports",
+        "name": "LEAD_SORTABLE_KEYS"
+      },
+      {
+        "file": "src/features/crm/routes/Leads.tsx",
+        "kind": "files",
+        "name": "src/features/crm/routes/Leads.tsx"
+      },
+      {
+        "file": "src/features/crm/routes/LeadsFiltrosPrimarios.tsx",
+        "kind": "files",
+        "name": "src/features/crm/routes/LeadsFiltrosPrimarios.tsx"
+      },
+      {
+        "file": "src/features/crm/routes/Prospectos.tsx",
+        "kind": "files",
+        "name": "src/features/crm/routes/Prospectos.tsx"
+      },
+      {
+        "file": "src/features/crm/routes/useLeadsExport.ts",
+        "kind": "files",
+        "name": "src/features/crm/routes/useLeadsExport.ts"
+      },
+      {
+        "file": "src/features/crm/routes/useLeadsSelection.ts",
+        "kind": "files",
+        "name": "src/features/crm/routes/useLeadsSelection.ts"
+      },
+      {
+        "file": "src/features/crm/services/crmCsvExport.ts",
+        "kind": "exports",
+        "name": "exportarLeadsCsv"
+      },
+      {
+        "file": "src/features/crm/services/leads/queries.ts",
+        "kind": "exports",
+        "name": "listLeadsTodos"
+      }
+    ]
+  }
+}

@@ -148,16 +148,9 @@ export {
 } from "./permissionMatrix.cotizaciones";
 
 export {
-  CRM_CONFIG,
-  CRM_TOMAR_LEAD,
-  CRM_GESTION_TODOS_LEADS,
-  CRM_CREAR_LEAD,
-  CRM_STAFF_REGISTROS,
   CRM_ESCRITURA_REGISTROS,
-  CRM_REASIGNAR_VENDEDOR,
   resolverPermisosCrm,
 } from "./permissionMatrix.crm";
-export type { PermisosCrmResueltos } from "./permissionMatrix.crm";
 
 export {
   ADMIN_CUENTAS_BANCARIAS,
