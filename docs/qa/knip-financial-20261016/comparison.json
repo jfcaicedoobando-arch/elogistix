@@ -1,0 +1,110 @@
+{
+  "base": "b500565363af0fc566decb7327c717da61cfabd7",
+  "versions": {
+    "bun": "1.4.0",
+    "node": "24.22.0",
+    "knip": "6.41.0"
+  },
+  "baselineMatchesVersionedIncludingLocations": true,
+  "before": {
+    "files": 0,
+    "dependencies": 0,
+    "devDependencies": 0,
+    "unlisted": 0,
+    "duplicates": 0,
+    "exports": 42,
+    "types": 22
+  },
+  "after": {
+    "files": 0,
+    "dependencies": 0,
+    "devDependencies": 0,
+    "unlisted": 0,
+    "duplicates": 0,
+    "exports": 29,
+    "types": 19
+  },
+  "removed": [
+    {
+      "file": "src/features/cxp/services/facturasEntrantes.ts",
+      "kind": "exports",
+      "name": "subirFacturaEntrante"
+    },
+    {
+      "file": "src/features/cxp/services/index.ts",
+      "kind": "exports",
+      "name": "cargoEnMonedaCuenta"
+    },
+    {
+      "file": "src/features/cxp/services/index.ts",
+      "kind": "exports",
+      "name": "cargoEnMxn"
+    },
+    {
+      "file": "src/features/cxp/services/index.ts",
+      "kind": "exports",
+      "name": "ERROR_TC_REQUERIDO"
+    },
+    {
+      "file": "src/features/cxp/services/proveedorFacturas.ts",
+      "kind": "types",
+      "name": "NuevaFacturaProveedorPayload"
+    },
+    {
+      "file": "src/features/embarques/domain/embarqueWizardSchemas.ts",
+      "kind": "exports",
+      "name": "STEP_LABELS"
+    },
+    {
+      "file": "src/features/embarques/domain/estadosContables.ts",
+      "kind": "exports",
+      "name": "esEstadoEmbarqueContable"
+    },
+    {
+      "file": "src/features/embarques/hooks/useDialogGenerarProformaController.helpers.ts",
+      "kind": "exports",
+      "name": "ivaDeFila"
+    },
+    {
+      "file": "src/features/embarques/services/contenedores/index.ts",
+      "kind": "exports",
+      "name": "sincronizarContenedores"
+    },
+    {
+      "file": "src/features/facturacion/services/facturapi.ts",
+      "kind": "exports",
+      "name": "FacturaConRepsVivosError"
+    },
+    {
+      "file": "src/features/facturacion/services/timbradoPendiente.ts",
+      "kind": "exports",
+      "name": "esRespuestaPendiente"
+    },
+    {
+      "file": "src/features/proformas/components/ProformaEstadoBadges.tsx",
+      "kind": "types",
+      "name": "OrigenAceptacion"
+    },
+    {
+      "file": "src/features/tesoreria/domain/libroPagos.ts",
+      "kind": "exports",
+      "name": "TIPO_PAGO_LABELS"
+    },
+    {
+      "file": "src/features/tesoreria/domain/tolerancia.ts",
+      "kind": "exports",
+      "name": "TOLERANCIA_MONTO_MXN"
+    },
+    {
+      "file": "src/features/tesoreria/domain/tolerancia.ts",
+      "kind": "exports",
+      "name": "TOLERANCIA_MONTO_POR_MONEDA"
+    },
+    {
+      "file": "src/features/tesoreria/hooks/useTraspasoForm.ts",
+      "kind": "types",
+      "name": "TraspasoFormState"
+    }
+  ],
+  "added": []
+}

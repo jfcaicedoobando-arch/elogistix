@@ -23,7 +23,6 @@ export type {
   SubirFacturaEntranteInput,
 } from "@/features/cxp/services/facturasEntrantes.types";
 export {
-  subirFacturaEntrante,
   subirFacturaEntranteConResultado,
   adjuntarXmlFacturaEntrante,
 } from "@/features/cxp/services/facturasEntrantesUpload";

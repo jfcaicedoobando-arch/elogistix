@@ -52,7 +52,6 @@ export interface CancelarFacturapiResult {
 }
 
 // Pre-check de REPs vivos vive en ./facturapiRepsVivos.ts (split Power-of-10).
-export { FacturaConRepsVivosError } from "./facturapiRepsVivos";
 
 
 export async function cancelarFacturapi(

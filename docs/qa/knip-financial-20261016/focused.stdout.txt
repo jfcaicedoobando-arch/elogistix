@@ -1,0 +1,43 @@
+
+ RUN  v5.0.3 C:/Users/torta/Documents/Codex/2026-10-16/task-13/financial
+
+ ✓ |jsdom| src/features/embarques/hooks/__tests__/useDialogGenerarProformaController.creditValidity.test.tsx (8 tests) 815ms
+ ✓ |jsdom| src/features/embarques/hooks/__tests__/useDialogGenerarProformaController.tcRace.test.tsx (14 tests) 1340ms
+ ✓ |jsdom| src/features/embarques/hooks/mutations/__tests__/useMutationsEmbarque.test.tsx (6 tests) 81ms
+ ✓ |jsdom| src/features/embarques/hooks/__tests__/useDialogGenerarProformaController.test.tsx (6 tests) 117ms
+ ✓ |jsdom| src/features/embarques/hooks/__tests__/useDialogGenerarProformaController.credit.test.tsx (5 tests) 521ms
+ ✓ |jsdom| src/features/proformas/components/__tests__/ProformaEstadoBadges.test.tsx (7 tests) 82ms
+ ✓ |jsdom| src/features/tesoreria/hooks/__tests__/useTraspasoForm.parMoneda.test.tsx (3 tests) 104ms
+ ✓ |jsdom| src/features/tesoreria/hooks/__tests__/useTraspasoForm.destinoRedondeado.test.tsx (4 tests) 76ms
+ ✓ |jsdom| src/features/tesoreria/hooks/__tests__/useTraspasoForm.tcFecha.test.tsx (2 tests) 125ms
+ ✓ |jsdom| src/features/cxp/hooks/__tests__/useSubirFacturaEntrante.contract.test.tsx (2 tests) 58ms
+ ✓ |node| src/features/cxp/services/__tests__/facturasEntrantesUpload.test.ts (11 tests) 30ms
+ ✓ |node| src/features/cxp/services/__tests__/pagoProveedorMovimiento.cuentaDisponible.test.ts (24 tests) 19ms
+ ✓ |node| src/features/cxp/services/__tests__/proveedorFacturas.test.ts (19 tests) 31ms
+ ✓ |node| src/features/tesoreria/domain/__tests__/auditoria103_104_105_108_114_120.test.ts (28 tests) 52ms
+ ✓ |node| src/features/tesoreria/domain/__tests__/auditoria98_99_100.test.ts (8 tests) 34ms
+ ✓ |node| src/features/facturacion/services/__tests__/timbradoWire.test.ts (14 tests) 21ms
+ ✓ |node| src/features/facturacion/services/__tests__/facturapi.test.ts (11 tests) 70ms
+ ✓ |node| src/features/embarques/services/contenedores/__tests__/crudExtra.test.ts (11 tests) 12ms
+ ✓ |node| src/features/cxp/services/__tests__/pagosProveedor.rpcBoundary.test.ts (7 tests) 11ms
+ ✓ |node| src/features/embarques/services/contenedores/__tests__/crud.test.ts (6 tests) 13ms
+ ✓ |node| src/features/embarques/domain/__tests__/embarqueWizardSchemas.test.ts (9 tests) 19ms
+ ✓ |node| src/features/cxp/services/__tests__/duplicadoFolioBuzon.test.ts (5 tests) 32ms
+ ✓ |node| src/features/tesoreria/domain/__tests__/ajustesLibroPagos.test.ts (4 tests) 36ms
+ ✓ |node| src/features/tesoreria/domain/__tests__/tolerancia.test.ts (14 tests) 14ms
+ ✓ |node| src/features/facturacion/services/proyeccion/__tests__/fetchSources.test.ts (3 tests) 33ms
+ ✓ |node| src/features/tesoreria/domain/__tests__/toleranciaMoneda.test.ts (8 tests) 14ms
+ ✓ |node| src/features/embarques/domain/__tests__/proformaElegibilidadIva.test.ts (6 tests) 26ms
+ ✓ |node| src/features/facturacion/services/__tests__/timbradoPendiente.test.ts (4 tests) 17ms
+ ✓ |node| src/features/tesoreria/domain/__tests__/libroPagosRepCancelado.test.ts (2 tests) 16ms
+ ✓ |node| src/features/cxp/services/__tests__/facturaEntrantePartialResult.test.ts (1 test) 10ms
+ ✓ |node| src/features/cxp/services/__tests__/cargoEnMonedaCuenta.test.ts (9 tests) 9ms
+ ✓ |node| src/features/tesoreria/domain/__tests__/libroPagosSinTc.test.ts (2 tests) 9ms
+ ✓ |node| src/features/proformas/components/__tests__/ProformaEstadoBadges.test.ts (2 tests) 8ms
+ ✓ |node| src/features/tesoreria/domain/__tests__/tcPar.test.ts (8 tests) 17ms
+
+ Test Files  34 passed (34)
+      Tests  273 passed (273)
+   Start at  17:06:27
+   Duration  64.74s (import 63%, environment 21%, transform 6%, setup 6%, tests 3%, worker 1%)
+

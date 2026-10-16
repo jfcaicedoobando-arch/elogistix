@@ -10,7 +10,6 @@ import { Hint } from "@/components/shared/Hint";
 import { MoneyCell } from "@/components/shared/MoneyCell";
 
 import type { SortField } from "../domain/reportesFilters";
-export type { SortField } from "../domain/reportesFilters";
 
 interface ClienteRow {
   cliente_id: string;

@@ -1,0 +1,10 @@
+{
+  "command": [
+    "bun",
+    "--version"
+  ],
+  "startedAt": "2026-10-16T23:08:10.399Z",
+  "finishedAt": "2026-10-16T23:08:10.459Z",
+  "code": 0,
+  "signal": null
+}

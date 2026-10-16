@@ -14,13 +14,6 @@ export interface FacturaCicloLite {
 }
 
 /**
- * Estados previos a la emisión (preparación interna del documento).
- * Coinciden con los pasos "Borrador" y "Por timbrar" del ciclo documental
- * (`documentoEstados.ts`) y con el enum `estado_factura`.
- */
-const ESTADOS_PREPARACION = new Set(["borrador", "por timbrar"]);
-
-/**
  * Estados que sólo existen una vez emitida la factura. Se enumeran de forma
  * explícita: un estado desconocido NO se asume emitido.
  */
@@ -38,11 +31,6 @@ const normalizar = (f: FacturaCicloLite): string => (f.estado ?? "").trim().toLo
 /** Una factura cuenta como emitida sólo en estados posteriores a la preparación. */
 export function facturaEmitida(f: FacturaCicloLite): boolean {
   return ESTADOS_EMITIDOS.has(normalizar(f));
-}
-
-/** true cuando la factura existe pero aún no se emite (Borrador / Por timbrar). */
-export function facturaEnPreparacion(f: FacturaCicloLite): boolean {
-  return ESTADOS_PREPARACION.has(normalizar(f));
 }
 
 export function contarFacturasEmitidas(facturas: FacturaCicloLite[]): number {

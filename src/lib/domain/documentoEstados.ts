@@ -7,7 +7,7 @@
 import { resumenDocumentoBase as resumen } from "@/lib/documentoResumen";
 import type { EstadoDocumentoResumen, PasoDocumento } from "@/lib/documentoResumen";
 
-export type { EstadoDocumentoResumen, PasoDocumento } from "@/lib/documentoResumen";
+export type { EstadoDocumentoResumen } from "@/lib/documentoResumen";
 
 export type DocumentoDominio = "factura_emitida" | "factura_recibida";
 
@@ -105,4 +105,3 @@ export function resumenDocumento(
 
 
 export { resumenProforma } from "@/lib/proformaEstados";
-export type { EstadoProformaInput } from "@/lib/proformaEstados";

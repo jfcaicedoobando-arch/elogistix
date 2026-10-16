@@ -8,7 +8,7 @@
  * proceso en curso y NO como éxito ni invitar a reintentar (reintentar duplica
  * el CFDI).
  */
-import { esPendienteWire, type TimbradoPendienteWire } from "./timbradoWire";
+import type { TimbradoPendienteWire } from "./timbradoWire";
 
 export const MSG_TIMBRADO_PENDIENTE_CLIENTE =
   "El proveedor recibió el documento y está recuperando el timbre del SAT. No vuelvas a timbrar: el sistema lo marcará como emitido en cuanto el SAT responda.";
@@ -17,12 +17,6 @@ export interface TimbradoPendiente {
   pendiente: true;
   message: string;
 }
-
-/**
- * Type guard real sobre el contrato wire: estrecha a `TimbradoPendienteWire`
- * en vez de devolver un `boolean` suelto.
- */
-export const esRespuestaPendiente = esPendienteWire;
 
 /** Normaliza el 202 validado (ya no recibe `unknown`). */
 export function respuestaPendiente(data: TimbradoPendienteWire): TimbradoPendiente {

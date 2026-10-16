@@ -3,8 +3,6 @@
  * dentro del feature `tesoreria` sin bloquear imports cross-feature.
  */
 export {
-  TOLERANCIA_MONTO_MXN,
-  TOLERANCIA_MONTO_POR_MONEDA,
   toleranciaMonto,
   TOLERANCIA_DIAS,
   dentroDeTolerancia,

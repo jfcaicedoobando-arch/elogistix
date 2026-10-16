@@ -1,0 +1,41 @@
+scripts/audit-schema-columns.ts:13:import fg from "fast-glob";
+src/__tests__/architecture/bandejas-domain-pure.test.ts:8:import { sync as glob } from "fast-glob";
+src/__tests__/architecture/barril-sin-logica.test.ts:15:import fg from "fast-glob";
+src/__tests__/architecture/carga-guard-sin-early-return.test.ts:17:import { sync as globSync } from "fast-glob";
+src/__tests__/architecture/carga-guard-sin-early-return.test.ts:46:    const archivos = globSync("src/**/routes/*.tsx", {
+src/__tests__/architecture/carga-guard-sin-early-return.test.ts:66:    const faltantes = [...ALLOWLIST].filter((ruta) => globSync(ruta).length === 0);
+src/__tests__/architecture/console-spy-restore.test.ts:12:import fg from "fast-glob";
+src/__tests__/architecture/date-fns-format-en-features.test.ts:17:import { sync as globSync } from "fast-glob";
+src/__tests__/architecture/date-fns-format-en-features.test.ts:24:  return globSync("src/features/**/*.{ts,tsx}", {
+src/__tests__/architecture/dias-calendario-central.test.ts:14:import fg from "fast-glob";
+src/__tests__/architecture/elipsis-y-uppercase-ratchet.test.ts:13:import { sync as globSync } from "fast-glob";
+src/__tests__/architecture/elipsis-y-uppercase-ratchet.test.ts:16:  globSync("src/**/*.tsx", {
+src/__tests__/architecture/error-toasts-preserve-exceptions.test.ts:4:import fg from "fast-glob";
+src/__tests__/architecture/error-toasts-use-notifyError.test.ts:13:import fg from "fast-glob";
+src/__tests__/architecture/estructura-legacy-ratchet.test.ts:12:import { sync as glob } from "fast-glob";
+src/__tests__/architecture/fase2-pages-and-formatters.test.ts:8:import { sync as glob } from "fast-glob";
+src/__tests__/architecture/formatfechaes-deprecado.test.ts:11:import { sync as globSync } from "fast-glob";
+src/__tests__/architecture/formatfechaes-deprecado.test.ts:18:  const archivos = globSync("src/**/*.{ts,tsx}", {
+src/__tests__/architecture/icon-size-ratchet.test.ts:12:import { sync as globSync } from "fast-glob";
+src/__tests__/architecture/icon-size-ratchet.test.ts:28:  const archivos = globSync("src/**/*.tsx", {
+src/__tests__/architecture/moneda-alias-central.test.ts:11:import fg from "fast-glob";
+src/__tests__/architecture/mutations-have-onerror.test.ts:13:import fg from "fast-glob";
+src/__tests__/architecture/no-double-toast-on-mutate.test.ts:21:import fg from "fast-glob";
+src/__tests__/architecture/no-hardcoded-tcs.test.ts:3:import fg from "fast-glob";
+src/__tests__/architecture/no-kpi-size-literal.test.ts:13:import { sync as globSync } from "fast-glob";
+src/__tests__/architecture/no-kpi-size-literal.test.ts:20:  const archivos = globSync("src/**/*.tsx", {
+src/__tests__/architecture/no-loader2-en-button.test.ts:17:import { sync as globSync } from "fast-glob";
+src/__tests__/architecture/no-loader2-en-button.test.ts:35:  const archivos = globSync("src/**/*.tsx", {
+src/__tests__/architecture/no-orphan-console-error.test.ts:11:import fg from "fast-glob";
+src/__tests__/architecture/no-raw-callout.test.ts:16:import { sync as globSync } from "fast-glob";
+src/__tests__/architecture/no-raw-callout.test.ts:30:  const archivos = globSync("src/**/*.tsx", {
+src/__tests__/architecture/no-title-nativo.test.ts:16:import { sync as globSync } from "fast-glob";
+src/__tests__/architecture/no-title-nativo.test.ts:33:  const archivos = globSync("src/**/*.tsx", {
+src/__tests__/architecture/no-tofixed-jsx-ratchet.test.ts:14:import { sync as globSync } from "fast-glob";
+src/__tests__/architecture/no-tofixed-jsx-ratchet.test.ts:32:  const archivos = globSync("src/**/*.tsx", {
+src/__tests__/architecture/props-drilling-cap.test.ts:13:import { sync as globSync } from "fast-glob";
+src/__tests__/architecture/props-drilling-cap.test.ts:23:    const archivos = globSync("src/**/*.tsx", { ignore: ["**/*.test.tsx"] });
+src/__tests__/architecture/select-star-ratchet.test.ts:12:import { sync as globSync } from "fast-glob";
+src/__tests__/architecture/select-star-ratchet.test.ts:24:  const archivos = globSync("src/**/*.{ts,tsx}", {
+src/constants/__tests__/queryCaps.test.ts:9:import fg from "fast-glob";
+src/lib/aging/__tests__/bucketsProveedor.test.ts:9:import fg from "fast-glob";

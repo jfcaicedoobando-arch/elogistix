@@ -1,0 +1,69 @@
+{
+  "base": "b500565363af0fc566decb7327c717da61cfabd7",
+  "versions": {
+    "node": "v24.22.0",
+    "bun": "1.4.0",
+    "knip": "6.41.0"
+  },
+  "commands": [
+    {
+      "command": "bun install --frozen-lockfile --ignore-scripts",
+      "exit": 0
+    },
+    {
+      "command": "node node_modules/knip/bin/knip.js --no-progress --reporter json",
+      "phase": "before",
+      "exit": 0,
+      "exports": 42,
+      "types": 22
+    },
+    {
+      "command": "node node_modules/knip/bin/knip.js --no-progress --reporter json",
+      "phase": "after",
+      "exit": 0,
+      "exports": 31,
+      "types": 9
+    },
+    {
+      "command": "node docs/qa/knip-shared-20261016/compare-inventory.mjs",
+      "exit": 0
+    },
+    {
+      "command": "bun run lint:unused",
+      "exit": 0
+    },
+    {
+      "command": "bun run typecheck",
+      "exit": 0
+    },
+    {
+      "command": "bun run lint -- --max-warnings=0",
+      "exit": 0
+    },
+    {
+      "command": "bun run build",
+      "exit": 0
+    },
+    {
+      "command": "node node_modules/vitest/vitest.mjs run <focused paths listed in logs>",
+      "exit": 0,
+      "files": 53,
+      "tests": 359
+    },
+    {
+      "command": "git diff --check",
+      "exit": 0
+    }
+  ],
+  "scope": {
+    "sourceFiles": 16,
+    "assignedWarningsBefore": 24,
+    "assignedWarningsAfter": 0,
+    "otherGroupsUnchanged": true,
+    "testsModified": false
+  },
+  "limits": [
+    "Full test suite delegated to Linux CI; known Windows Bash/symlink failures were not replayed.",
+    "Historical comment mentioning getAttribution in useUtmParams.ts remains outside assigned scope."
+  ]
+}

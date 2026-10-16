@@ -15,7 +15,7 @@ export type {
   PagoLibro, LibroPagos, FiltrosLibroPagos, TotalesLibroPagos,
 } from "./libroPagos.tipos";
 export {
-  FILTROS_LIBRO_PAGOS_INICIALES, TIPO_PAGO_LABELS, VISTA_LABELS,
+  FILTROS_LIBRO_PAGOS_INICIALES, VISTA_LABELS,
 } from "./libroPagos.tipos";
 export {
   normalizarTextoPago, esEntrada, filtrarPagos, metodosDisponibles, monedasDisponibles,
