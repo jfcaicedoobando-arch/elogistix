@@ -166,7 +166,7 @@ describe("ci.yml · caché de ESLint aislada", () => {
 
   it("el job lint tiene su propia actions/cache para .cache/eslint", () => {
     expect(ci).toContain("path: .cache/eslint");
-    expect(ci).toMatch(/\$\{\{ runner\.os \}\}-eslint-/);
+    expect(ci).toContain("${{ runner.os }}-${{ runner.arch }}-eslint-node${{ steps.setup.outputs.node-version }}-bun1.4.0-");
     // El comentario histórico del workflow sí menciona la ruta antigua; el
     // guard contra la regresión real vive en la aserción de package.json.
 
