@@ -15,7 +15,7 @@ const Table = ({ ref, className, wrapperClassName, ...props }: TableProps) => (
 Table.displayName = "Table";
 
 const TableHeader = ({ ref, className, ...props }: React.HTMLAttributes<HTMLTableSectionElement> & { ref?: React.Ref<HTMLTableSectionElement> }) => (
-    <thead ref={ref} className={cn("sticky top-0 z-10 bg-muted/40 backdrop-blur-sm [&_tr]:border-b", className)} {...props} />
+    <thead ref={ref} className={cn("sticky top-0 z-10 bg-muted/40 backdrop-blur-xs [&_tr]:border-b", className)} {...props} />
   );
 TableHeader.displayName = "TableHeader";
 

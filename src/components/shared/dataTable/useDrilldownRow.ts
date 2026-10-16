@@ -56,6 +56,6 @@ export function useDrilldownRow({ href, ariaLabel }: Params) {
     onClick,
     onKeyDown,
     onAuxClick,
-    className: "cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/60",
+    className: "cursor-pointer focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring/60",
   };
 }

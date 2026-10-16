@@ -64,7 +64,7 @@ export default function PortalCotizacionHeader({
 
 
       {showActions && (
-        <div className="md:hidden fixed bottom-16 inset-x-0 z-40 border-t bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/85 px-4 py-3">
+        <div className="md:hidden fixed bottom-16 inset-x-0 z-40 border-t bg-card/95 backdrop-blur-sm supports-[backdrop-filter]:bg-card/85 px-4 py-3">
           <div className="flex gap-2 max-w-3xl mx-auto">
             <Button
               variant="outline"

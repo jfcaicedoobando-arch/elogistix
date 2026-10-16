@@ -33,7 +33,7 @@ interface Props {
 export function FacturacionBandejasTabs(p: Props) {
   return (
     <Tabs value={p.activeBandeja} onValueChange={p.setActiveBandeja}>
-      <div className="sticky top-0 z-20 -mx-4 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/70">
+      <div className="sticky top-0 z-20 -mx-4 border-b bg-background/95 backdrop-blur-sm supports-[backdrop-filter]:bg-background/70">
         <div className="px-4">
           <BandejaTabs activeBandeja={p.activeBandeja} onSelect={p.setActiveBandeja} />
         </div>

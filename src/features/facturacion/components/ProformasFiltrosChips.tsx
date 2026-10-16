@@ -94,7 +94,7 @@ export function ProformasFiltrosChips(props: ProformasFiltrosChipsProps) {
             type="button"
             onClick={chip.onRemove}
             aria-label={`Quitar filtro ${chip.label}`}
-            className="ml-0.5 inline-flex h-4 w-4 items-center justify-center rounded-sm hover:bg-background/60 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+            className="ml-0.5 inline-flex h-4 w-4 items-center justify-center rounded-sm hover:bg-background/60 focus-visible:outline-hidden focus-visible:ring-1 focus-visible:ring-ring"
           >
             <X className="h-3 w-3" />
           </button>

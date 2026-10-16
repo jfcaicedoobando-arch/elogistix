@@ -63,7 +63,7 @@ export function EmbarquesAlertasPanel({ resumen, activeAlerta, onSelect }: Props
               type="button"
               onClick={() => onSelect(active ? "todos" : key)}
               aria-pressed={active}
-              className={`flex items-start gap-3 rounded-lg border p-3 text-left transition-colors hover:bg-background/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
+              className={`flex items-start gap-3 rounded-lg border p-3 text-left transition-colors hover:bg-background/80 focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring ${
                 active ? "border-primary ring-2 ring-primary/20 bg-background" : "border-border bg-background/50"
               }`}
             >

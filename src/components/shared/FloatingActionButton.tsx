@@ -54,7 +54,7 @@ export function FloatingActionButton({
           "rounded-full bg-primary text-primary-foreground",
           "shadow-overlay ring-1 ring-primary/30",
           "transition-transform active:scale-95 hover:bg-primary/90",
-          "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
+          "focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
           className,
         )}
       >

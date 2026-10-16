@@ -162,7 +162,7 @@ export default function OportunidadKanban({ etapas, oportunidades, onMover, onCl
         </DndContext>
         <div
           aria-hidden
-          className="pointer-events-none absolute right-0 top-0 bottom-3 w-8 bg-gradient-to-l from-background to-transparent"
+          className="pointer-events-none absolute right-0 top-0 bottom-3 w-8 bg-linear-to-l/srgb from-background to-transparent"
         />
       </div>
     </div>

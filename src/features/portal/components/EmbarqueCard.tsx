@@ -71,7 +71,7 @@ function EmbarqueCardInner({ e }: { e: EmbarqueCardData }) {
         <CardContent className="p-3 space-y-2">
           <div className="flex items-center justify-between gap-2">
             <div className="flex items-center gap-3 min-w-0">
-              <div className={`rounded-full p-2 flex-shrink-0 ${getModoCircleStyle(e.modo)}`}>
+              <div className={`rounded-full p-2 shrink-0 ${getModoCircleStyle(e.modo)}`}>
                 {(() => { const Icon = getModoLucideIcon(e.modo); return <Icon className="h-5 w-5" />; })()}
               </div>
               <p className="font-semibold text-body truncate font-mono tabular-nums">
@@ -81,17 +81,17 @@ function EmbarqueCardInner({ e }: { e: EmbarqueCardData }) {
             <StatusBadge
               domain="embarque"
               status={estadoVisual}
-              className="flex-shrink-0 px-2.5 py-0.5"
+              className="shrink-0 px-2.5 py-0.5"
             />
           </div>
 
           <div className="flex items-center justify-between gap-2 sm:pl-12">
             <span className="text-body-sm text-muted-foreground flex items-center gap-1 truncate min-w-0">
-              <MapPin className="h-3 w-3 flex-shrink-0" />
+              <MapPin className="h-3 w-3 shrink-0" />
               <span className="truncate">{origen} → {destino}</span>
             </span>
             {tipoLabel && (
-              <Badge variant="outline" className="hidden sm:flex text-label px-1.5 py-0 flex-shrink-0 font-normal">
+              <Badge variant="outline" className="hidden sm:flex text-label px-1.5 py-0 shrink-0 font-normal">
                 {tipoLabel}
               </Badge>
             )}
@@ -102,7 +102,7 @@ function EmbarqueCardInner({ e }: { e: EmbarqueCardData }) {
               const CarrierIcon = getModoLucideIcon(e.modo);
               return (
                 <span className="text-body-sm text-muted-foreground flex items-center gap-1 truncate min-w-0">
-                  <CarrierIcon className="h-3 w-3 flex-shrink-0" />
+                  <CarrierIcon className="h-3 w-3 shrink-0" />
                   <span className="truncate">{carrier}</span>
                 </span>
               );
@@ -110,13 +110,13 @@ function EmbarqueCardInner({ e }: { e: EmbarqueCardData }) {
             <div className="flex items-center gap-3 ml-auto">
               <Hint label="Fecha estimada de salida">
                 <span className="text-body-sm text-muted-foreground flex items-center gap-1 tabular-nums">
-                  <CalendarClock className="h-3 w-3 flex-shrink-0" />
+                  <CalendarClock className="h-3 w-3 shrink-0" />
                   ETD: {formatDate(e.etd || "", "dd/MM/yy")}
                 </span>
               </Hint>
               <Hint label="Fecha estimada de arribo">
                 <span className={cn("text-body-sm flex items-center gap-1 tabular-nums", etaCls)}>
-                  <CalendarClock className="h-3 w-3 flex-shrink-0" />
+                  <CalendarClock className="h-3 w-3 shrink-0" />
                   ETA: {formatDate(e.eta || "", "dd/MM/yy")}
                 </span>
               </Hint>

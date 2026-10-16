@@ -71,7 +71,7 @@ export function StepIndicator({ steps, currentStep, onStepClick }: Props) {
               <button
                 type="button"
                 onClick={() => onStepClick?.(step.num)}
-                className="flex items-center gap-2 rounded-md p-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring hover:opacity-80"
+                className="flex items-center gap-2 rounded-md p-0.5 focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring hover:opacity-80"
                 aria-label={`Ir al paso ${step.num}: ${step.title}`}
               >
                 {content}

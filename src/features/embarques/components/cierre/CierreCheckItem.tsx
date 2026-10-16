@@ -121,7 +121,7 @@ export function CierreCheckItem({
           target="_blank"
           rel="noopener noreferrer"
           title={`${meta.ctaLabel} (nueva pestaña)`}
-          className={`${baseCls} cursor-pointer transition-colors hover:border-primary/40 hover:bg-accent/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring`}
+          className={`${baseCls} cursor-pointer transition-colors hover:border-primary/40 hover:bg-accent/40 focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring`}
         >
           {inner}
         </Link>

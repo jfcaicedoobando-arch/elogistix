@@ -62,7 +62,7 @@ export function DocumentoTabs({ tabs, param = "tab", className }: Props) {
         </TabsList>
         <div
           aria-hidden
-          className="pointer-events-none absolute inset-y-0 right-0 w-8 rounded-r-md bg-gradient-to-l from-background to-transparent"
+          className="pointer-events-none absolute inset-y-0 right-0 w-8 rounded-r-md bg-linear-to-l/srgb from-background to-transparent"
         />
       </div>
 

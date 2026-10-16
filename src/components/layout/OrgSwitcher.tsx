@@ -74,7 +74,7 @@ function OrgSwitcherBase({ collapsed }: { collapsed?: boolean }) {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger
-        className="w-full text-left px-1 py-0.5 rounded-sm hover:bg-sidebar-accent/40 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sidebar-ring"
+        className="w-full text-left px-1 py-0.5 rounded-sm hover:bg-sidebar-accent/40 transition-colors focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-sidebar-ring"
         aria-label="Cambiar de organización"
       >
         <div className="text-2xs font-medium uppercase tracking-wider text-sidebar-foreground/50">

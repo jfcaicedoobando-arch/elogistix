@@ -45,7 +45,7 @@ export function CuentaBancariaCard({
       role="button"
       tabIndex={0}
       aria-label={`Ver movimientos de la cuenta ${c.alias}, ${c.banco}`}
-      className={`transition-shadow hover:shadow-raised focus:outline-none focus:ring-2 focus:ring-ring cursor-pointer ${!c.activa ? "opacity-60" : ""}`}
+      className={`transition-shadow hover:shadow-raised focus:outline-hidden focus:ring-2 focus:ring-ring cursor-pointer ${!c.activa ? "opacity-60" : ""}`}
       onClick={irAConciliacion}
       onKeyDown={(e) => {
         if (e.key === "Enter" || e.key === " ") {

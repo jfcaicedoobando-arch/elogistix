@@ -10,7 +10,7 @@ export function PortalBottomNav() {
 
   return (
     <nav
-      className="md:hidden fixed bottom-0 inset-x-0 z-50 border-t bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/80 pb-[env(safe-area-inset-bottom)]"
+      className="md:hidden fixed bottom-0 inset-x-0 z-50 border-t bg-card/95 backdrop-blur-sm supports-[backdrop-filter]:bg-card/80 pb-[env(safe-area-inset-bottom)]"
       aria-label="Navegación principal"
     >
       <ul className="grid grid-cols-5">

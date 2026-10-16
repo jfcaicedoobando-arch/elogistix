@@ -168,7 +168,7 @@ export function EmailChipsField({
         onFocus={() => setFocused(true)}
         onBlur={handleBlur}
         placeholder={chips.length === 0 && lockedChips.length === 0 ? placeholder : ""}
-        className="flex-1 min-w-[160px] bg-transparent outline-none placeholder:text-muted-foreground"
+        className="flex-1 min-w-[160px] bg-transparent outline-hidden placeholder:text-muted-foreground"
       />
     </div>
   );

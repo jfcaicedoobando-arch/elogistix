@@ -93,7 +93,7 @@ export function AdminSidebar() {
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <button
-              className="w-full flex items-center gap-2 rounded-md px-2 py-2 hover:bg-sidebar-accent/50 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              className="w-full flex items-center gap-2 rounded-md px-2 py-2 hover:bg-sidebar-accent/50 transition-colors focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring"
               aria-label="Menú de usuario"
             >
               <div className="h-7 w-7 rounded-full bg-primary/15 text-primary flex items-center justify-center text-body-sm font-semibold shrink-0">

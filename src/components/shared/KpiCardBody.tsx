@@ -49,7 +49,7 @@ function KpiLabel({ label, hint }: { label: string; hint?: string }) {
               role="button"
               tabIndex={0}
               aria-label={`Información: ${label}`}
-              className="inline-flex shrink-0 rounded-sm text-muted-foreground/70 hover:text-foreground focus:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+              className="inline-flex shrink-0 rounded-sm text-muted-foreground/70 hover:text-foreground focus:outline-hidden focus-visible:ring-1 focus-visible:ring-ring"
             >
               <Info className="h-3 w-3" />
             </span>

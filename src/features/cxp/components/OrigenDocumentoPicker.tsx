@@ -74,7 +74,7 @@ export function OrigenDocumentoPicker({ mode, onModeChange }: Props) {
                 onClick={() => onModeChange(o.value)}
                 className={cn(
                   "group relative rounded-lg border p-3 text-left transition-colors",
-                  "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+                  "focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring",
                   activo
                     ? "border-primary bg-primary/5 ring-1 ring-primary/30"
                     : "bg-card hover:border-muted-foreground/40 hover:bg-muted/40",

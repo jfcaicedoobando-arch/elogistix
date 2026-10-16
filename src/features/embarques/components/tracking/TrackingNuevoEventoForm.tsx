@@ -66,7 +66,7 @@ export function TrackingNuevoEventoForm({
           <button
             type="button"
             onClick={() => setModo("eta")}
-            className="flex w-full items-start gap-3 rounded-lg border p-4 text-left transition-colors hover:bg-muted/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+            className="flex w-full items-start gap-3 rounded-lg border p-4 text-left transition-colors hover:bg-muted/50 focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
           >
             <CalendarClock className="h-5 w-5 text-primary shrink-0 mt-0.5" />
             <div>
@@ -79,7 +79,7 @@ export function TrackingNuevoEventoForm({
           <button
             type="button"
             onClick={() => setModo("llegada")}
-            className="flex w-full items-start gap-3 rounded-lg border p-4 text-left transition-colors hover:bg-muted/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+            className="flex w-full items-start gap-3 rounded-lg border p-4 text-left transition-colors hover:bg-muted/50 focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
           >
             <MapPin className="h-5 w-5 text-primary shrink-0 mt-0.5" />
             <div>

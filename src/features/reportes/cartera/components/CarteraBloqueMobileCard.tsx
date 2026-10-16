@@ -52,7 +52,7 @@ export function CarteraBloqueMobileCard({ row: f }: Props) {
         <span className="font-medium tabular-nums">{formatCurrency(f.mxnCorte, "MXN")}</span>
       </div>
       <details>
-        <summary className="min-h-11 cursor-pointer rounded-sm py-2 text-body-sm font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+        <summary className="min-h-11 cursor-pointer rounded-sm py-2 text-body-sm font-medium focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring">
           Ver detalle de valuación
         </summary>
         <dl className="mt-1 space-y-2 text-body-sm">

@@ -80,7 +80,7 @@ export default function ReportesTopChart({ data, isLoading }: Props) {
       {isMobile && !isLoading && data.length > 1 && data.some((row) => row.profit !== 0) && (
         <CardContent className="pt-0">
           <details>
-            <summary className="min-h-11 cursor-pointer rounded-sm py-2 text-body-sm font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+            <summary className="min-h-11 cursor-pointer rounded-sm py-2 text-body-sm font-medium focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring">
               Ver nombres e importes
             </summary>
             <ul className="space-y-2 text-body-sm">

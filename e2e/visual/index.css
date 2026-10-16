@@ -1,0 +1,4 @@
+@import "tailwindcss" source(none);
+@import "../../src/styles.css";
+@import "../../src/tailwind-compat.css";
+@config "./tailwind.config.ts";
