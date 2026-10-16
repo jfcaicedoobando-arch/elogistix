@@ -86,6 +86,13 @@ error. Firefox is therefore unverified locally; the existing Linux CI job still
 requires all eight cases with no skips or retries. JSON facts and focus-ring
 screenshots are attached to the Playwright results under `reports/virtualization`.
 
+The subsequent [Linux CI job](https://github.com/jfcaicedoobando-arch/elogistix/actions/runs/38953429217/job/117150244096)
+on head `d4ac95df9ce81f95251b77a7c6afd4bd08229a79` passed all eight cases
+in 18.0 seconds, including native keyboard sorting in both Chromium and Firefox.
+Its exact-count gate passed with zero unexpected, skipped or flaky cases.
+The separate main CI run on that head stopped at test-catalog registration;
+that result does not certify the unit/build lanes, which require the next run.
+
 ## Isolation
 
 The standalone build never loads the app's Vite configuration, `.env` files,
