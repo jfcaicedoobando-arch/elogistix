@@ -103,6 +103,9 @@ jobs:
       - name: Demo authority composition contracts offline (no database or external authentication)
         run: node scripts/ci/test-catalog.mjs --run node-demo-authority-contract reports/test-inventory.json
 
+      - name: Demo authority bridge offline (declared snapshots only, no authorization)
+        run: node scripts/ci/test-catalog.mjs --run node-demo-authority-bridge reports/test-inventory.json
+
       - name: Post-deploy smoke contract (offline, no credentials)
         run: node --test scripts/ci/post-deploy-smoke.test.mjs
 
@@ -390,3 +393,4 @@ jobs:
       - name: Verificar unión exacta de archivos y casos
         if: needs.tests.result == 'success'
         run: node scripts/ci/verify-test-evidence.mjs reports/ci-evidence ${{ needs.detector.outputs.shard_count }}
+

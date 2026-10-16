@@ -1,0 +1,98 @@
+{
+  "schemaVersion": 1,
+  "baseCommit": "b66d2c2caa00d7a8d522ed7140b6a15877a0b2aa",
+  "scope": "OFFLINE_DECLARED_SNAPSHOTS_ONLY",
+  "evidenceProvider": "UNBOUND",
+  "authentication": "UNBOUND",
+  "businessGuard": "UNBOUND",
+  "businessSQL": "UNBOUND",
+  "runtimeACL": "NOT_RUN",
+  "restoreDurability": "NOT_RUN",
+  "endpoint": "CLOSED",
+  "sources": [
+    {
+      "path": "docs/review/demo-durable-owner-adapter-20261015/issuer.mjs",
+      "bytes": 1833,
+      "sha256": "5d78d058a336f4eb21fa715d45844d86aa41c046f462c1670610084229e172d1",
+      "git_blob_sha1": "21aabf95836cd3385e0410b1c4d0afc136af45ed",
+      "checkout_eol": "CRLF_TO_LF_ALLOWED"
+    },
+    {
+      "path": "docs/review/demo-durable-owner-adapter-20261015/owner.mjs",
+      "bytes": 2641,
+      "sha256": "e16d06f030bf53aea860325448041e2b3e9cd84ff152ea4bb281709a6d786504",
+      "git_blob_sha1": "a8485df9c881604766d2976910b4366375f23b75",
+      "checkout_eol": "CRLF_TO_LF_ALLOWED"
+    },
+    {
+      "path": "docs/review/demo-durable-owner-adapter-20261015/driver.mjs",
+      "bytes": 2202,
+      "sha256": "82305d90a131339c3170dd2fdc48f46410b6a58a268bb72b798ffedcc5bcac6b",
+      "git_blob_sha1": "b166630236fcc2d3baa61b68fa155a8aa290dc91",
+      "checkout_eol": "CRLF_TO_LF_ALLOWED"
+    },
+    {
+      "path": "docs/review/demo-durable-owner-adapter-20261015/store.mjs",
+      "bytes": 1684,
+      "sha256": "a0aac72315944475b014019e312253619b42ee30dc0ba1040ec6d86f53432b45",
+      "git_blob_sha1": "03019204a5df6678260f9b05d1bb9f3afe09e842",
+      "checkout_eol": "CRLF_TO_LF_ALLOWED"
+    },
+    {
+      "path": "docs/review/demo-durable-owner-adapter-20261015/store.sql",
+      "bytes": 2599,
+      "sha256": "fb7fa69c17eca7230606ecb6217086c6eb5317d75551df9efc268959f69140a7",
+      "git_blob_sha1": "55d8709e29ae5b0b14f3aa82dc86cec4b93b9bd0",
+      "checkout_eol": "CRLF_TO_LF_ALLOWED"
+    },
+    {
+      "path": "docs/review/demo-durable-owner-adapter-20261015/config.example.json",
+      "bytes": 93,
+      "sha256": "d9d756fa4d8792eb70442659cb106244f8d89b2e839fcab511a9740675a21565",
+      "git_blob_sha1": "1d2b34e595f200faa452acb5fa5bc3c52228d041",
+      "checkout_eol": "CRLF_TO_LF_ALLOWED"
+    },
+    {
+      "path": "docs/review/demo-flow-20261015/issuer/15-rpc-boundary.sql",
+      "bytes": 4236,
+      "sha256": "9656003b716ea2c60ec90b7a4de9dc1b21743c46a0ef1199f2522f9831979799",
+      "git_blob_sha1": "749fd6abf87b56530aedfc2ddde44d008bcb805c",
+      "checkout_eol": "CRLF_TO_LF_ALLOWED"
+    },
+    {
+      "path": "docs/review/demo-flow-20261015/issuer/16-owner-registry.sql",
+      "bytes": 11333,
+      "sha256": "a74d69ed6d19356ba36fe27d7070a496e99c3ef5cec7a030c3b96b609a64463b",
+      "git_blob_sha1": "7b8060d3669e7c71cf0cb8f828a4ad314c8f1254",
+      "checkout_eol": "CRLF_TO_LF_ALLOWED"
+    },
+    {
+      "path": "scripts/ci/demo-authentic-review/sql/producer.sql",
+      "bytes": 19028,
+      "sha256": "f0a14f683ee524527ed3b7f29305bc793f7f9e3d5581b4332da72f8fb8bb55a6",
+      "git_blob_sha1": "0eef8bcef4cf4eec32315bdd2e44b697f2d119be",
+      "checkout_eol": "CRLF_TO_LF_ALLOWED"
+    },
+    {
+      "path": "supabase/functions/demo-access/index.ts",
+      "bytes": 1113,
+      "sha256": "777cc81270d75c4a460d7c7d18de254895f6c079a93eb0a986852caaeb8c144e",
+      "git_blob_sha1": "35dd3d55f11e4042b4f03d59506f68ec500eddb2",
+      "checkout_eol": "CRLF_TO_LF_ALLOWED"
+    },
+    {
+      "path": "supabase/functions/demo-access/handler.ts",
+      "bytes": 10091,
+      "sha256": "6775289b7c35b7dd97ae88b9c1bc16c6acfd8389504a49db75357daf2bf2e21b",
+      "git_blob_sha1": "bc0c86f70f399af77dc8beaf9999739efe1518bc",
+      "checkout_eol": "CRLF_TO_LF_ALLOWED"
+    },
+    {
+      "path": "src/features/marketing/lib/demoAccessAvailability.ts",
+      "bytes": 326,
+      "sha256": "38ca78ba9e730b656afd426b6847f585c8010862670283fb58897e4d2900c047",
+      "git_blob_sha1": "374446d4bb963544292d5202497fcbbe8e21e373",
+      "checkout_eol": "CRLF_TO_LF_ALLOWED"
+    }
+  ]
+}
