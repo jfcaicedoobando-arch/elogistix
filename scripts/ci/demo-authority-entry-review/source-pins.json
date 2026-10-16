@@ -1,0 +1,50 @@
+{
+  "schemaVersion": 1,
+  "baseCommit": "ecc53750c5d920d898ca2b00a2f717371dc19cf5",
+  "scope": "OFFLINE_PROTOCOL_DOUBLES_ONLY",
+  "admission": "NOT_ADMITTED",
+  "sources": [
+    {
+      "path": "docs/review/demo-durable-owner-adapter-20261015/driver.mjs",
+      "bytes": 2202,
+      "gitBlobSha1": "b166630236fcc2d3baa61b68fa155a8aa290dc91",
+      "sha256": "82305d90a131339c3170dd2fdc48f46410b6a58a268bb72b798ffedcc5bcac6b"
+    },
+    {
+      "path": "docs/review/demo-durable-owner-adapter-20261015/issuer.mjs",
+      "bytes": 1833,
+      "gitBlobSha1": "21aabf95836cd3385e0410b1c4d0afc136af45ed",
+      "sha256": "5d78d058a336f4eb21fa715d45844d86aa41c046f462c1670610084229e172d1"
+    },
+    {
+      "path": "docs/review/demo-durable-owner-adapter-20261015/owner.mjs",
+      "bytes": 2641,
+      "gitBlobSha1": "a8485df9c881604766d2976910b4366375f23b75",
+      "sha256": "e16d06f030bf53aea860325448041e2b3e9cd84ff152ea4bb281709a6d786504"
+    },
+    {
+      "path": "docs/review/demo-durable-owner-adapter-20261015/store.mjs",
+      "bytes": 1684,
+      "gitBlobSha1": "03019204a5df6678260f9b05d1bb9f3afe09e842",
+      "sha256": "a0aac72315944475b014019e312253619b42ee30dc0ba1040ec6d86f53432b45"
+    },
+    {
+      "path": "docs/review/demo-durable-owner-adapter-20261015/store.sql",
+      "bytes": 2599,
+      "gitBlobSha1": "55d8709e29ae5b0b14f3aa82dc86cec4b93b9bd0",
+      "sha256": "fb7fa69c17eca7230606ecb6217086c6eb5317d75551df9efc268959f69140a7"
+    },
+    {
+      "path": "scripts/ci/demo-authority-bridge-review/contract.mjs",
+      "bytes": 13081,
+      "gitBlobSha1": "cedc3c74e47f8ed8fd5f5d80e8b8fe94172813cb",
+      "sha256": "8531d10fdb07692bbac2c40ae519ffd7b818cbf30ed22c39f4fca4aaf5e32aff"
+    },
+    {
+      "path": "scripts/ci/demo-authority-bridge-review/synthetic-fixtures.mjs",
+      "bytes": 5356,
+      "gitBlobSha1": "8017640242e34c4c20b8218ab42a9151de8c6480",
+      "sha256": "c435b05994680ff72cfba3cd3e0b12839f7e9ed387854f1adde3c94e13ff4137"
+    }
+  ]
+}
