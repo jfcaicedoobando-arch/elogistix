@@ -1,0 +1,43 @@
+import { spawnSync } from 'node:child_process';
+import { mkdirSync, writeFileSync } from 'node:fs';
+import { fileURLToPath } from 'node:url';
+import { createHash } from 'node:crypto';
+
+const root = fileURLToPath(new URL('../', import.meta.url));
+const evidence = fileURLToPath(new URL('./', import.meta.url));
+const runtime = fileURLToPath(new URL('../cors-runtime/deno.exe', import.meta.url));
+const cache = fileURLToPath(new URL('../cors-deno-cache/', import.meta.url));
+const repo = fileURLToPath(new URL('../elogistix/', import.meta.url));
+const config = fileURLToPath(new URL('../elogistix/supabase/functions/preview-transactional-email/deno.json', import.meta.url));
+const entry = fileURLToPath(new URL('../elogistix/supabase/functions/preview-transactional-email/index.ts', import.meta.url));
+const env = { DENO_DIR: cache, DENO_NO_PACKAGE_JSON: '1', DENO_NO_UPDATE_CHECK: '1', NO_COLOR: '1' };
+for (const key of ['SYSTEMROOT', 'SystemRoot', 'WINDIR', 'TEMP', 'TMP']) {
+  if (process.env[key]) env[key] = process.env[key];
+}
+mkdirSync(cache, { recursive: true });
+const [name, ...args] = process.argv.slice(2);
+if (!name || !/^[a-z][a-z0-9-]+$/.test(name) || args.length === 0) throw new Error('Supply a log name and exact Deno args');
+const startedAt = new Date().toISOString();
+const result = spawnSync(runtime, args, {
+  cwd: repo, env, encoding: 'utf8', shell: false, timeout: 240_000, maxBuffer: 32 * 1024 * 1024,
+});
+const stdout = result.stdout ?? '';
+const stderr = result.stderr ?? '';
+writeFileSync(new URL(`${name}.stdout.txt`, import.meta.url), stdout);
+writeFileSync(new URL(`${name}.stderr.txt`, import.meta.url), stderr);
+const hash = (value) => createHash('sha256').update(value).digest('hex');
+const record = {
+  name, executable: runtime, args, cwd: repo, cache, config, entry,
+  inheritedEnvironmentKeys: Object.keys(env).filter((key) => !key.startsWith('DENO_') && key !== 'NO_COLOR'),
+  DENO_NO_PACKAGE_JSON: '1', startedAt, completedAt: new Date().toISOString(),
+  exitCode: result.status, signal: result.signal, error: result.error?.message ?? null,
+  stdout: { path: `${name}.stdout.txt`, sha256: hash(stdout) },
+  stderr: { path: `${name}.stderr.txt`, sha256: hash(stderr) },
+};
+writeFileSync(new URL(`${name}.execution.json`, import.meta.url), JSON.stringify(record, null, 2) + '\n');
+console.log(JSON.stringify({ name, exitCode: record.exitCode, signal: record.signal, error: record.error, stdoutBytes: Buffer.byteLength(stdout), stderrBytes: Buffer.byteLength(stderr) }));
+if (record.exitCode !== 0 || record.signal !== null || record.error !== null) {
+  console.log(stderr.slice(-10000));
+  console.log(stdout.slice(-10000));
+  process.exitCode = 1;
+}

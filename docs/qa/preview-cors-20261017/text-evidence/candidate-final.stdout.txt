@@ -1,0 +1,8 @@
+running 1 test from ../cors-evidence/handler_contract_test.ts
+actual preview index.ts: offline auth, OPTIONS, exact CORS, eight real renders ...
+------- output -------
+{"label":"candidate","corsImport":"npm:@supabase/supabase-js@2.118.0/cors","sourceUtf8Sha256":"0bc2d8df39dd1575f16563917195775358db2d6fad8d42234dc85fe29ecb5a28","cases":["optionsWithoutKey","missingKey","emptyKey","optionsWithWrongToken","missingToken","wrongToken","validPost","lowercaseBearer","validGET","validPUT","validPATCH","validDELETE"],"templates":["cotizacion-respuesta","cotizacion-enviada","proforma-enviada","factura-enviada","nota-credito-enviada","rep-enviado","recordatorio-cobranza","estado-cuenta-cliente"],"comparedAgainst":"file:///C:/Users/torta/Documents/Codex/2026-10-17/task-5/cors-evidence/reference-handler.json","networkAttempts":0}
+----- output end -----
+actual preview index.ts: offline auth, OPTIONS, exact CORS, eight real renders ... ok (1s)
+
+ok | 1 passed | 0 failed (1s)

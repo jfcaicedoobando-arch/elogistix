@@ -1,0 +1,67 @@
+{
+  "version": "2.118.0",
+  "exports": {
+    "react-native": {
+      "types": "./dist/cors.d.cts",
+      "default": "./dist/cors.cjs"
+    },
+    "import": {
+      "types": "./dist/cors.d.mts",
+      "default": "./dist/cors.mjs"
+    },
+    "require": {
+      "types": "./dist/cors.d.cts",
+      "default": "./dist/cors.cjs"
+    }
+  },
+  "publishedFiles": {
+    "package/dist/cors.cjs": {
+      "bytes": 2580,
+      "sha256": "b71a0dffc3b35739a15ff74b20ceeb3e57b7fd8fefec57a90573a639b46819b6"
+    },
+    "package/dist/cors.d.cts": {
+      "bytes": 1713,
+      "sha256": "d7c51bcdf83ae7726e8d7b2ba82886f35e537bf6738139bf5f4d9f526d6839b9"
+    },
+    "package/package.json": {
+      "bytes": 6437,
+      "sha256": "16ce1954171a17e803be9aa55f19a63d017517aa50d01d9ab44d72b3853d0e85"
+    },
+    "package/dist/cors.cjs.map": {
+      "bytes": 3195,
+      "sha256": "383fefd7718924a7710a95d2e9714d1d6296a0323c10822269c3bac461af26f6"
+    },
+    "package/dist/cors.d.cts.map": {
+      "bytes": 197,
+      "sha256": "154774df4a2e8a39e7267abbd3f8e544508ee44cf7db8f10c5c88e99d42da94c"
+    },
+    "package/dist/cors.d.mts.map": {
+      "bytes": 197,
+      "sha256": "9b20e72faf4da99657cb9ee503834efa36c1938737454fa1dec0f81cb9ff0b75"
+    },
+    "package/dist/cors.mjs.map": {
+      "bytes": 3194,
+      "sha256": "b361c43f8d2f384f4daf93ace8a2bce15b9684ea1f5e294cd0515b5cc48edf8c"
+    },
+    "package/dist/cors.mjs": {
+      "bytes": 2568,
+      "sha256": "f49d75dea0d7447055b5be6a8b427bb81103f0e5ce9bc9c5c30b9d7d3ed869ec"
+    },
+    "package/dist/cors.d.mts": {
+      "bytes": 1713,
+      "sha256": "5998d1de6719c10ecfe62769bfef3201a9e11a7b95bd194042bf4b6166417592"
+    },
+    "package/src/cors.ts": {
+      "bytes": 2693,
+      "sha256": "365d7aee74f77e74d517033741a6ffc5bef20e92646ca7a7f627ee1c117796f9"
+    }
+  },
+  "corsHeaders": {
+    "Access-Control-Allow-Origin": "*",
+    "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-retry-count, traceparent, tracestate, baggage",
+    "Access-Control-Allow-Methods": "GET, POST, PUT, PATCH, DELETE, OPTIONS"
+  },
+  "nodeExportVerified": true,
+  "denoResolutionVerified": false,
+  "handlerExecuted": false
+}

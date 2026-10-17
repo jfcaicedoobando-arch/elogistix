@@ -1,0 +1,51 @@
+{
+  "name": "candidate-final",
+  "executable": "C:\\Users\\torta\\Documents\\Codex\\2026-10-17\\task-5\\cors-runtime\\deno.exe",
+  "args": [
+    "test",
+    "--cached-only",
+    "--no-lock",
+    "--node-modules-dir=none",
+    "--config=C:/Users/torta/Documents/Codex/2026-10-17/task-5/elogistix/supabase/functions/preview-transactional-email/deno.json",
+    "--sanitize-ops",
+    "--sanitize-resources",
+    "--deny-net",
+    "--deny-env",
+    "--deny-run",
+    "--deny-ffi",
+    "--deny-sys",
+    "--allow-read=C:/Users/torta/Documents/Codex/2026-10-17/task-5/elogistix/supabase/functions/preview-transactional-email/index.ts,C:/Users/torta/Documents/Codex/2026-10-17/task-5/elogistix/supabase/functions/_shared/transactional-email-templates,C:/Users/torta/Documents/Codex/2026-10-17/task-5/cors-evidence/reference-handler.json",
+    "--allow-write=C:/Users/torta/Documents/Codex/2026-10-17/task-5/cors-evidence/candidate-handler.json",
+    "C:/Users/torta/Documents/Codex/2026-10-17/task-5/cors-evidence/handler_contract_test.ts",
+    "--",
+    "--entry=file:///C:/Users/torta/Documents/Codex/2026-10-17/task-5/elogistix/supabase/functions/preview-transactional-email/index.ts",
+    "--label=candidate",
+    "--compare=file:///C:/Users/torta/Documents/Codex/2026-10-17/task-5/cors-evidence/reference-handler.json",
+    "--output=file:///C:/Users/torta/Documents/Codex/2026-10-17/task-5/cors-evidence/candidate-handler.json"
+  ],
+  "cwd": "C:\\Users\\torta\\Documents\\Codex\\2026-10-17\\task-5\\elogistix\\",
+  "cache": "C:\\Users\\torta\\Documents\\Codex\\2026-10-17\\task-5\\cors-deno-cache\\",
+  "config": "C:\\Users\\torta\\Documents\\Codex\\2026-10-17\\task-5\\elogistix\\supabase\\functions\\preview-transactional-email\\deno.json",
+  "entry": "C:\\Users\\torta\\Documents\\Codex\\2026-10-17\\task-5\\elogistix\\supabase\\functions\\preview-transactional-email\\index.ts",
+  "inheritedEnvironmentKeys": [
+    "SYSTEMROOT",
+    "SystemRoot",
+    "WINDIR",
+    "TEMP",
+    "TMP"
+  ],
+  "DENO_NO_PACKAGE_JSON": "1",
+  "startedAt": "2026-10-17T22:36:20.074Z",
+  "completedAt": "2026-10-17T22:36:21.268Z",
+  "exitCode": 0,
+  "signal": null,
+  "error": null,
+  "stdout": {
+    "path": "candidate-final.stdout.txt",
+    "sha256": "331f6311c2bfe4c02631ab8919033d26063a38830075ff3d1296052c1b31ce91"
+  },
+  "stderr": {
+    "path": "candidate-final.stderr.txt",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  }
+}

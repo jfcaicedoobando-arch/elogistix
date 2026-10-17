@@ -1,0 +1,18 @@
+running 1 test from ../cors-evidence/handler_contract_test.ts
+actual preview index.ts: offline auth, OPTIONS, exact CORS, eight real renders ... FAILED (9ms)
+
+ ERRORS
+
+actual preview index.ts: offline auth, OPTIONS, exact CORS, eight real renders => ../cors-evidence/handler_contract_test.ts:76:6
+error: Error: serve: expected an own data property
+  if (!condition) throw new Error(message);
+                        ^
+    at assert (file:///C:/Users/torta/Documents/Codex/2026-10-17/task-5/cors-evidence/assertions.ts:2:25)
+    at replaceProperty (file:///C:/Users/torta/Documents/Codex/2026-10-17/task-5/cors-evidence/handler_contract_test.ts:14:3)
+    at fn (file:///C:/Users/torta/Documents/Codex/2026-10-17/task-5/cors-evidence/handler_contract_test.ts:104:26)
+
+ FAILURES
+
+actual preview index.ts: offline auth, OPTIONS, exact CORS, eight real renders => ../cors-evidence/handler_contract_test.ts:76:6
+
+FAILED | 0 passed | 1 failed (16ms)

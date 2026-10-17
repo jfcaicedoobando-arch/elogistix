@@ -1,0 +1,47 @@
+import { readFileSync, writeFileSync } from 'node:fs';
+import { gunzipSync } from 'node:zlib';
+import { createHash } from 'node:crypto';
+
+const root = new URL('./', import.meta.url);
+const archive = gunzipSync(readFileSync(new URL('supabase-js-reference-candidate.tgz', root)));
+const entries = new Map();
+for (let offset = 0; offset + 512 <= archive.length;) {
+  const header = archive.subarray(offset, offset + 512);
+  const name = header.subarray(0, 100).toString().replace(/\0.*$/, '');
+  if (!name) break;
+  const size = Number.parseInt(header.subarray(124, 136).toString().replace(/\0.*$/, '').trim(), 8);
+  if (!Number.isSafeInteger(size) || size < 0) throw new Error('Invalid tar entry');
+  const content = archive.subarray(offset + 512, offset + 512 + size);
+  if (name === 'package/package.json' || /^package\/(dist\/cors\.|src\/cors\.ts)/.test(name)) {
+    entries.set(name, content);
+  }
+  offset += 512 + Math.ceil(size / 512) * 512;
+}
+const manifest = JSON.parse(entries.get('package/package.json').toString());
+const exported = manifest.exports['./cors'];
+if (exported.import.default !== './dist/cors.mjs') throw new Error('Unexpected CORS ESM export');
+const esm = entries.get('package/dist/cors.mjs');
+if (!esm) throw new Error('Published CORS ESM module missing');
+// This isolated, dependency-free module is evaluated under Node only to inspect
+// the published export. It does not establish Deno resolution or handler tests.
+const module = await import(`data:text/javascript;base64,${esm.toString('base64')}`);
+const expected = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-retry-count, traceparent, tracestate, baggage',
+  'Access-Control-Allow-Methods': 'GET, POST, PUT, PATCH, DELETE, OPTIONS',
+};
+if (JSON.stringify(module.corsHeaders) !== JSON.stringify(expected)) throw new Error('Unexpected CORS headers');
+const evidence = {
+  version: manifest.version,
+  exports: exported,
+  publishedFiles: Object.fromEntries([...entries].map(([name, content]) => [name, {
+    bytes: content.length, sha256: createHash('sha256').update(content).digest('hex'),
+  }])),
+  corsHeaders: module.corsHeaders,
+  nodeExportVerified: true,
+  denoResolutionVerified: false,
+  handlerExecuted: false,
+};
+writeFileSync(new URL('published-export.json', root), JSON.stringify(evidence, null, 2) + '\n');
+writeFileSync(new URL('cors-published.mjs', root), esm);
+console.log(JSON.stringify(evidence, null, 2));

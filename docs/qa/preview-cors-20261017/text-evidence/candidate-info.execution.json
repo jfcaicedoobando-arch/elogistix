@@ -1,0 +1,37 @@
+{
+  "name": "candidate-info",
+  "executable": "C:\\Users\\torta\\Documents\\Codex\\2026-10-17\\task-5\\cors-runtime\\deno.exe",
+  "args": [
+    "info",
+    "--json",
+    "--no-config",
+    "--no-lock",
+    "--node-modules-dir=none",
+    "npm:@supabase/supabase-js@2.118.0/cors"
+  ],
+  "cwd": "C:\\Users\\torta\\Documents\\Codex\\2026-10-17\\task-5\\elogistix\\",
+  "cache": "C:\\Users\\torta\\Documents\\Codex\\2026-10-17\\task-5\\cors-deno-cache\\",
+  "config": "C:\\Users\\torta\\Documents\\Codex\\2026-10-17\\task-5\\elogistix\\supabase\\functions\\preview-transactional-email\\deno.json",
+  "entry": "C:\\Users\\torta\\Documents\\Codex\\2026-10-17\\task-5\\elogistix\\supabase\\functions\\preview-transactional-email\\index.ts",
+  "inheritedEnvironmentKeys": [
+    "SYSTEMROOT",
+    "SystemRoot",
+    "WINDIR",
+    "TEMP",
+    "TMP"
+  ],
+  "DENO_NO_PACKAGE_JSON": "1",
+  "startedAt": "2026-10-17T22:33:05.433Z",
+  "completedAt": "2026-10-17T22:33:05.493Z",
+  "exitCode": 0,
+  "signal": null,
+  "error": null,
+  "stdout": {
+    "path": "candidate-info.stdout.txt",
+    "sha256": "b808700037d8094cb8f0e435e943839d91f4a1d9759de874193ffaf14b52dac3"
+  },
+  "stderr": {
+    "path": "candidate-info.stderr.txt",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  }
+}

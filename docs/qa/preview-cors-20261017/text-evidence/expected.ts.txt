@@ -1,0 +1,58 @@
+// Independent contract captured from the official SDK source and the repository's
+// eight committed preview fixtures; do not compute expectations from the handler.
+export const EXPECTED_CORS = {
+  "access-control-allow-origin": "*",
+  "access-control-allow-headers": "authorization, x-client-info, apikey, content-type, x-retry-count, traceparent, tracestate, baggage",
+  "access-control-allow-methods": "GET, POST, PUT, PATCH, DELETE, OPTIONS",
+};
+
+export const EXPECTED_TEMPLATES = [
+  {
+    templateName: "cotizacion-respuesta",
+    displayName: "Respuesta de cotización (portal cliente)",
+    subject: "Cotización COT-2026-0042 aceptada",
+    htmlMarkers: ["COT-2026-0042", "Aceptada", "Procedan con el embarque cuanto antes."],
+  },
+  {
+    templateName: "cotizacion-enviada",
+    displayName: "Envío de cotización al cliente",
+    subject: "Cotización COT-2026-0042 — CNSHA → MXVER",
+    htmlMarkers: ["COT-2026-0042", "CNSHA", "MXVER", "$ 145,320.00 MXN"],
+  },
+  {
+    templateName: "proforma-enviada",
+    displayName: "Envío de proforma al cliente",
+    subject: "Proforma PRO-2026-0949 — Requiere tu aprobación",
+    htmlMarkers: ["PRO-2026-0949", "ELIMP00285", "$ 12,540.00"],
+  },
+  {
+    templateName: "factura-enviada",
+    displayName: "Envío de factura al cliente",
+    subject: "Factura A-1024",
+    htmlMarkers: ["A-1024", "PPD", "12345678-90AB-CDEF-1234-567890ABCDEF"],
+  },
+  {
+    templateName: "nota-credito-enviada",
+    displayName: "Envío de nota de crédito al cliente",
+    subject: "Nota de crédito A-25",
+    htmlMarkers: ["A-25", "A-1024", "Ajuste por diferencia en flete", "$ 1,540.00"],
+  },
+  {
+    templateName: "rep-enviado",
+    displayName: "Envío de complemento de pago (REP) al cliente",
+    subject: "Complemento de pago P-42",
+    htmlMarkers: ["P-42", "A-1024", "18/10/2026", "$ 12,540.00"],
+  },
+  {
+    templateName: "recordatorio-cobranza",
+    displayName: "Recordatorio de cobranza",
+    subject: "Factura vencida — A-1024",
+    htmlMarkers: ["A-1024", "15/10/2026", "$ 12,540.00"],
+  },
+  {
+    templateName: "estado-cuenta-cliente",
+    displayName: "Envío de estado de cuenta al cliente",
+    subject: "Estado de cuenta — ACME, S.A. de C.V.",
+    htmlMarkers: ["01/07/2026 – 25/07/2026", "$ 45,120.00", "$ 3,200.00"],
+  },
+];

@@ -1,0 +1,1 @@
+Check supabase/functions/preview-transactional-email/index.ts

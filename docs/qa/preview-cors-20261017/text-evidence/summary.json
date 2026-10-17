@@ -1,0 +1,255 @@
+{
+  "schemaVersion": 1,
+  "generatedAt": "2026-10-17T22:39:05.779Z",
+  "base": "366e896df775490c29f87475db32ac7a9c126c30",
+  "productionChange": {
+    "path": "supabase/functions/preview-transactional-email/index.ts",
+    "before": "npm:@supabase/supabase-js@2/cors",
+    "after": "npm:@supabase/supabase-js@2.118.0/cors",
+    "onlyExactImportPin": true,
+    "windowsLineEndingsNormalizedForGitComparison": true
+  },
+  "runtime": {
+    "deno": "2.9.7",
+    "v8": "15.0.245.2-rusty",
+    "typescript": "6.0.3"
+  },
+  "runtimeProvenance": "runtime-provenance.json",
+  "resolution": {
+    "reference": "npm:@supabase/supabase-js@2/cors",
+    "candidate": "npm:@supabase/supabase-js@2.118.0/cors",
+    "referenceVersion": "2.118.0",
+    "candidateVersion": "2.118.0",
+    "moduleGraphsIdentical": true,
+    "npmPackageGraphsIdentical": true,
+    "corsHeaders": {
+      "Access-Control-Allow-Origin": "*",
+      "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-retry-count, traceparent, tracestate, baggage",
+      "Access-Control-Allow-Methods": "GET, POST, PUT, PATCH, DELETE, OPTIONS"
+    }
+  },
+  "validation": {
+    "typecheck": true,
+    "sanitizers": {
+      "ops": true,
+      "resources": true,
+      "exit": true
+    },
+    "referenceContractPassed": true,
+    "candidateContractPassed": true,
+    "responseCases": 12,
+    "responsesExactlyEqual": true,
+    "realTemplateNames": [
+      "cotizacion-respuesta",
+      "cotizacion-enviada",
+      "proforma-enviada",
+      "factura-enviada",
+      "nota-credito-enviada",
+      "rep-enviado",
+      "recordatorio-cobranza",
+      "estado-cuenta-cliente"
+    ],
+    "renderingStack": "React 18.3.1 + @react-email/components 0.0.22, unchanged",
+    "snapshotsIncludeRawHtml": true,
+    "sourceUtf8Sha256": {
+      "reference": "d195f253cf05aa23f6bcbdb40af7429f409c3dc599b3937bfd23650dad61b878",
+      "candidate": "0bc2d8df39dd1575f16563917195775358db2d6fad8d42234dc85fe29ecb5a28"
+    },
+    "responses": {
+      "optionsWithoutKey": {
+        "status": 200,
+        "headers": {
+          "access-control-allow-headers": "authorization, x-client-info, apikey, content-type, x-retry-count, traceparent, tracestate, baggage",
+          "access-control-allow-methods": "GET, POST, PUT, PATCH, DELETE, OPTIONS",
+          "access-control-allow-origin": "*"
+        },
+        "bodyBytes": 0,
+        "bodySha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "missingKey": {
+        "status": 500,
+        "headers": {
+          "access-control-allow-headers": "authorization, x-client-info, apikey, content-type, x-retry-count, traceparent, tracestate, baggage",
+          "access-control-allow-methods": "GET, POST, PUT, PATCH, DELETE, OPTIONS",
+          "access-control-allow-origin": "*",
+          "content-type": "application/json"
+        },
+        "bodyBytes": 38,
+        "bodySha256": "d07179506213892159cf6191152595e21a8f4621fefd12063b2f6262ceb420f4"
+      },
+      "emptyKey": {
+        "status": 500,
+        "headers": {
+          "access-control-allow-headers": "authorization, x-client-info, apikey, content-type, x-retry-count, traceparent, tracestate, baggage",
+          "access-control-allow-methods": "GET, POST, PUT, PATCH, DELETE, OPTIONS",
+          "access-control-allow-origin": "*",
+          "content-type": "application/json"
+        },
+        "bodyBytes": 38,
+        "bodySha256": "d07179506213892159cf6191152595e21a8f4621fefd12063b2f6262ceb420f4"
+      },
+      "optionsWithWrongToken": {
+        "status": 200,
+        "headers": {
+          "access-control-allow-headers": "authorization, x-client-info, apikey, content-type, x-retry-count, traceparent, tracestate, baggage",
+          "access-control-allow-methods": "GET, POST, PUT, PATCH, DELETE, OPTIONS",
+          "access-control-allow-origin": "*"
+        },
+        "bodyBytes": 0,
+        "bodySha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "missingToken": {
+        "status": 401,
+        "headers": {
+          "access-control-allow-headers": "authorization, x-client-info, apikey, content-type, x-retry-count, traceparent, tracestate, baggage",
+          "access-control-allow-methods": "GET, POST, PUT, PATCH, DELETE, OPTIONS",
+          "access-control-allow-origin": "*",
+          "content-type": "application/json"
+        },
+        "bodyBytes": 24,
+        "bodySha256": "3be5b8e53fdc8b0a2996590589456db33504977f3d1ce9bb75016c8a707e1a71"
+      },
+      "wrongToken": {
+        "status": 401,
+        "headers": {
+          "access-control-allow-headers": "authorization, x-client-info, apikey, content-type, x-retry-count, traceparent, tracestate, baggage",
+          "access-control-allow-methods": "GET, POST, PUT, PATCH, DELETE, OPTIONS",
+          "access-control-allow-origin": "*",
+          "content-type": "application/json"
+        },
+        "bodyBytes": 24,
+        "bodySha256": "3be5b8e53fdc8b0a2996590589456db33504977f3d1ce9bb75016c8a707e1a71"
+      },
+      "validPost": {
+        "status": 200,
+        "headers": {
+          "access-control-allow-headers": "authorization, x-client-info, apikey, content-type, x-retry-count, traceparent, tracestate, baggage",
+          "access-control-allow-methods": "GET, POST, PUT, PATCH, DELETE, OPTIONS",
+          "access-control-allow-origin": "*",
+          "content-type": "application/json"
+        },
+        "bodyBytes": 68399,
+        "bodySha256": "d43f47e9cc20a61b9d2bee069f50f8ee189d3f8fdfa44377ed04f5b73119dfe7"
+      },
+      "lowercaseBearer": {
+        "status": 200,
+        "headers": {
+          "access-control-allow-headers": "authorization, x-client-info, apikey, content-type, x-retry-count, traceparent, tracestate, baggage",
+          "access-control-allow-methods": "GET, POST, PUT, PATCH, DELETE, OPTIONS",
+          "access-control-allow-origin": "*",
+          "content-type": "application/json"
+        },
+        "bodyBytes": 68399,
+        "bodySha256": "d43f47e9cc20a61b9d2bee069f50f8ee189d3f8fdfa44377ed04f5b73119dfe7"
+      },
+      "validGET": {
+        "status": 200,
+        "headers": {
+          "access-control-allow-headers": "authorization, x-client-info, apikey, content-type, x-retry-count, traceparent, tracestate, baggage",
+          "access-control-allow-methods": "GET, POST, PUT, PATCH, DELETE, OPTIONS",
+          "access-control-allow-origin": "*",
+          "content-type": "application/json"
+        },
+        "bodyBytes": 68399,
+        "bodySha256": "d43f47e9cc20a61b9d2bee069f50f8ee189d3f8fdfa44377ed04f5b73119dfe7"
+      },
+      "validPUT": {
+        "status": 200,
+        "headers": {
+          "access-control-allow-headers": "authorization, x-client-info, apikey, content-type, x-retry-count, traceparent, tracestate, baggage",
+          "access-control-allow-methods": "GET, POST, PUT, PATCH, DELETE, OPTIONS",
+          "access-control-allow-origin": "*",
+          "content-type": "application/json"
+        },
+        "bodyBytes": 68399,
+        "bodySha256": "d43f47e9cc20a61b9d2bee069f50f8ee189d3f8fdfa44377ed04f5b73119dfe7"
+      },
+      "validPATCH": {
+        "status": 200,
+        "headers": {
+          "access-control-allow-headers": "authorization, x-client-info, apikey, content-type, x-retry-count, traceparent, tracestate, baggage",
+          "access-control-allow-methods": "GET, POST, PUT, PATCH, DELETE, OPTIONS",
+          "access-control-allow-origin": "*",
+          "content-type": "application/json"
+        },
+        "bodyBytes": 68399,
+        "bodySha256": "d43f47e9cc20a61b9d2bee069f50f8ee189d3f8fdfa44377ed04f5b73119dfe7"
+      },
+      "validDELETE": {
+        "status": 200,
+        "headers": {
+          "access-control-allow-headers": "authorization, x-client-info, apikey, content-type, x-retry-count, traceparent, tracestate, baggage",
+          "access-control-allow-methods": "GET, POST, PUT, PATCH, DELETE, OPTIONS",
+          "access-control-allow-origin": "*",
+          "content-type": "application/json"
+        },
+        "bodyBytes": 68399,
+        "bodySha256": "d43f47e9cc20a61b9d2bee069f50f8ee189d3f8fdfa44377ed04f5b73119dfe7"
+      }
+    },
+    "stages": [
+      "reference-info",
+      "candidate-info",
+      "reference-cache",
+      "reference-check-fixed",
+      "reference-final",
+      "resolution-final",
+      "candidate-check",
+      "candidate-final",
+      "candidate-ci-check",
+      "candidate-lint"
+    ]
+  },
+  "isolation": {
+    "cache": "task-local cors-deno-cache; npm public dependency acquisition separate from test execution",
+    "DENO_NO_PACKAGE_JSON": "1",
+    "nodeModulesDir": "none",
+    "cachedOnlyDuringTests": true,
+    "permissions": {
+      "net": "denied",
+      "env": "denied",
+      "run": "denied",
+      "ffi": "denied",
+      "sys": "denied"
+    },
+    "fileReadScope": "index.ts, committed template directory, reference snapshot",
+    "fileWriteScope": "one JSON report per test invocation",
+    "realEnvironmentRead": false,
+    "fixtureApiKeyOnly": true,
+    "dependencyEnvValues": {
+      "NODE_ENV": "undefined",
+      "NODE_OPTIONS": "undefined"
+    },
+    "networkAttempts": 0,
+    "socketCreated": false,
+    "mailSent": false,
+    "productionCalled": false
+  },
+  "independentReview": {
+    "moduleAndPackageEquivalence": "passed, no findings",
+    "handlerAndResponseSnapshots": "passed, no findings"
+  },
+  "historicalHarnessFailures": [
+    {
+      "stage": "reference-check",
+      "reason": "HeadersInit union type corrected to new Headers; product unchanged"
+    },
+    {
+      "stage": "reference-handler-first",
+      "reason": "Deno.serve accessor supported with descriptor-preserving replacement; product unchanged"
+    },
+    {
+      "stage": "reference-handler-serve-fixed",
+      "reason": "Dynamic import needed read permission for the committed template directory only"
+    },
+    {
+      "stage": "reference-handler-source-read",
+      "reason": "Node dependency env access replaced by empty fictional values while real env remained denied"
+    }
+  ],
+  "limits": [
+    "Manual local evidence; archived harness is not registered as an automatic CI suite",
+    "No claim of deployed runtime, historical remote resolution, deployment, or production behavior",
+    "No full ERP, DB/RLS, PR388 suite, migration, email, merge or deployment executed"
+  ]
+}

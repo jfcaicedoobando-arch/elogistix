@@ -1,0 +1,3 @@
+Check ../cors-evidence/handler_contract_test.ts
+Check ../cors-evidence/cors_resolution_test.ts
+Check supabase/functions/preview-transactional-email/index.ts

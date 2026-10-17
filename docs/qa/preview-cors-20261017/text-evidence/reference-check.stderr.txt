@@ -1,0 +1,13 @@
+Check ../cors-evidence/handler_contract_test.ts
+Check ../cors-evidence/cors_resolution_test.ts
+Check supabase/functions/preview-transactional-email/index.ts
+TS2322 [ERROR]: Type '{ Authorization?: undefined; } | { Authorization: string; }' is not assignable to type 'HeadersInit | undefined'.
+  Type '{ Authorization?: undefined; }' is not assignable to type 'HeadersInit | undefined'.
+    Type '{ Authorization?: undefined; }' is not assignable to type 'Record<string, string>'.
+      Property 'Authorization' is incompatible with index signature.
+        Type 'undefined' is not assignable to type 'string'.
+  const response = await handler(new Request("https://preview-handler.invalid/", { method, headers }), FIXTURE_INFO);
+                                                                                           ~~~~~~~
+    at file:///C:/Users/torta/Documents/Codex/2026-10-17/task-5/cors-evidence/handler_contract_test.ts:32:92
+
+error: Type checking failed.

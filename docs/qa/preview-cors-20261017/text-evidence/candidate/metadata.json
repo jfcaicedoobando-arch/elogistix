@@ -1,0 +1,47 @@
+{
+  "label": "candidate",
+  "entry": "file:///C:/Users/torta/Documents/Codex/2026-10-17/task-5/elogistix/supabase/functions/preview-transactional-email/index.ts",
+  "sourceUtf8Sha256": "0bc2d8df39dd1575f16563917195775358db2d6fad8d42234dc85fe29ecb5a28",
+  "corsImport": "npm:@supabase/supabase-js@2.118.0/cors",
+  "runtime": {
+    "deno": "2.9.7",
+    "v8": "15.0.245.2-rusty",
+    "typescript": "6.0.3"
+  },
+  "comparedAgainst": "file:///C:/Users/torta/Documents/Codex/2026-10-17/task-5/cors-evidence/reference-handler.json",
+  "permissions": {
+    "net": "denied",
+    "env": "denied",
+    "run": "denied",
+    "ffi": "denied",
+    "sys": "denied"
+  },
+  "serveRegistrations": 1,
+  "networkAttempts": 0,
+  "envReads": [
+    "LOVABLE_API_KEY",
+    "LOVABLE_API_KEY",
+    "LOVABLE_API_KEY",
+    "LOVABLE_API_KEY",
+    "LOVABLE_API_KEY",
+    "LOVABLE_API_KEY",
+    "LOVABLE_API_KEY",
+    "LOVABLE_API_KEY",
+    "LOVABLE_API_KEY",
+    "LOVABLE_API_KEY"
+  ],
+  "dependencyEnvReads": [
+    "NODE_ENV",
+    "NODE_OPTIONS"
+  ],
+  "realTemplateNames": [
+    "cotizacion-respuesta",
+    "cotizacion-enviada",
+    "proforma-enviada",
+    "factura-enviada",
+    "nota-credito-enviada",
+    "rep-enviado",
+    "recordatorio-cobranza",
+    "estado-cuenta-cliente"
+  ]
+}

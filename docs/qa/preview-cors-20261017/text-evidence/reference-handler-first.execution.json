@@ -1,0 +1,50 @@
+{
+  "name": "reference-handler-first",
+  "executable": "C:\\Users\\torta\\Documents\\Codex\\2026-10-17\\task-5\\cors-runtime\\deno.exe",
+  "args": [
+    "test",
+    "--cached-only",
+    "--no-lock",
+    "--node-modules-dir=none",
+    "--config=C:/Users/torta/Documents/Codex/2026-10-17/task-5/elogistix/supabase/functions/preview-transactional-email/deno.json",
+    "--sanitize-ops",
+    "--sanitize-resources",
+    "--deny-net",
+    "--deny-env",
+    "--deny-run",
+    "--deny-ffi",
+    "--deny-sys",
+    "--allow-read=C:/Users/torta/Documents/Codex/2026-10-17/task-5/elogistix/supabase/functions/preview-transactional-email/index.ts",
+    "--allow-write=C:/Users/torta/Documents/Codex/2026-10-17/task-5/cors-evidence/reference-handler.json",
+    "C:/Users/torta/Documents/Codex/2026-10-17/task-5/cors-evidence/handler_contract_test.ts",
+    "--",
+    "--entry=file:///C:/Users/torta/Documents/Codex/2026-10-17/task-5/elogistix/supabase/functions/preview-transactional-email/index.ts",
+    "--label=reference",
+    "--output=file:///C:/Users/torta/Documents/Codex/2026-10-17/task-5/cors-evidence/reference-handler.json"
+  ],
+  "cwd": "C:\\Users\\torta\\Documents\\Codex\\2026-10-17\\task-5\\elogistix\\",
+  "cache": "C:\\Users\\torta\\Documents\\Codex\\2026-10-17\\task-5\\cors-deno-cache\\",
+  "config": "C:\\Users\\torta\\Documents\\Codex\\2026-10-17\\task-5\\elogistix\\supabase\\functions\\preview-transactional-email\\deno.json",
+  "entry": "C:\\Users\\torta\\Documents\\Codex\\2026-10-17\\task-5\\elogistix\\supabase\\functions\\preview-transactional-email\\index.ts",
+  "inheritedEnvironmentKeys": [
+    "SYSTEMROOT",
+    "SystemRoot",
+    "WINDIR",
+    "TEMP",
+    "TMP"
+  ],
+  "DENO_NO_PACKAGE_JSON": "1",
+  "startedAt": "2026-10-17T22:34:01.744Z",
+  "completedAt": "2026-10-17T22:34:03.367Z",
+  "exitCode": 1,
+  "signal": null,
+  "error": null,
+  "stdout": {
+    "path": "reference-handler-first.stdout.txt",
+    "sha256": "1f38779a7777c92da765bf1757ece976083326ce8fa0133c8ee1702004875c3a"
+  },
+  "stderr": {
+    "path": "reference-handler-first.stderr.txt",
+    "sha256": "e6419cca1a171188256140475110a64de6a7532db1bb17b684f2e2c738cdb037"
+  }
+}

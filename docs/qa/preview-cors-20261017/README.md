@@ -59,6 +59,13 @@ de reproducción. No contiene ejecutable, caché ni dependencias instaladas.
 SHA256 del ZIP:
 `55d27ad4da2bfe8c83b11ec846c5d1affe0f3a497e1b1f21b7fdcb93a8eddbac`.
 
+La [presentación textual completa](text-evidence/README.md) permite revisar
+sin abrir el ZIP: fuentes del harness, expectativas, runner, logs, códigos y
+las 12 respuestas de cada ejecución con HTML sin truncar. Sus manifiestos
+relacionan los hashes originales con cada copia textual; ambos JSON de
+respuestas se reconstruyen byte a byte. No se volvió a ejecutar ni modificar
+el código probado para esta presentación.
+
 El ZIP es un snapshot de auditoría manual; no añade una suite automática ni
 modifica el catálogo o los workflows. CI ordinario se reporta en el PR por
 separado. Se conservan cuatro fallos iniciales del harness con su corrección:

@@ -1,0 +1,39 @@
+{
+  "name": "reference-check",
+  "executable": "C:\\Users\\torta\\Documents\\Codex\\2026-10-17\\task-5\\cors-runtime\\deno.exe",
+  "args": [
+    "check",
+    "--cached-only",
+    "--no-lock",
+    "--node-modules-dir=none",
+    "--config=C:/Users/torta/Documents/Codex/2026-10-17/task-5/elogistix/supabase/functions/preview-transactional-email/deno.json",
+    "C:/Users/torta/Documents/Codex/2026-10-17/task-5/cors-evidence/handler_contract_test.ts",
+    "C:/Users/torta/Documents/Codex/2026-10-17/task-5/cors-evidence/cors_resolution_test.ts",
+    "C:/Users/torta/Documents/Codex/2026-10-17/task-5/elogistix/supabase/functions/preview-transactional-email/index.ts"
+  ],
+  "cwd": "C:\\Users\\torta\\Documents\\Codex\\2026-10-17\\task-5\\elogistix\\",
+  "cache": "C:\\Users\\torta\\Documents\\Codex\\2026-10-17\\task-5\\cors-deno-cache\\",
+  "config": "C:\\Users\\torta\\Documents\\Codex\\2026-10-17\\task-5\\elogistix\\supabase\\functions\\preview-transactional-email\\deno.json",
+  "entry": "C:\\Users\\torta\\Documents\\Codex\\2026-10-17\\task-5\\elogistix\\supabase\\functions\\preview-transactional-email\\index.ts",
+  "inheritedEnvironmentKeys": [
+    "SYSTEMROOT",
+    "SystemRoot",
+    "WINDIR",
+    "TEMP",
+    "TMP"
+  ],
+  "DENO_NO_PACKAGE_JSON": "1",
+  "startedAt": "2026-10-17T22:33:39.319Z",
+  "completedAt": "2026-10-17T22:33:41.607Z",
+  "exitCode": 1,
+  "signal": null,
+  "error": null,
+  "stdout": {
+    "path": "reference-check.stdout.txt",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "stderr": {
+    "path": "reference-check.stderr.txt",
+    "sha256": "aa8f6b5a45abf0cfaf82bc16139aa6f1d9939cf33a2123a164f25475f0cb3a77"
+  }
+}

@@ -1,0 +1,22 @@
+{
+  "runtime": {
+    "deno": "2.9.7",
+    "v8": "15.0.245.2-rusty",
+    "typescript": "6.0.3"
+  },
+  "referenceSpecifier": "npm:@supabase/supabase-js@2/cors",
+  "candidateSpecifier": "npm:@supabase/supabase-js@2.118.0/cors",
+  "referenceVersion": "2.118.0",
+  "candidateVersion": "2.118.0",
+  "referenceExports": [
+    "corsHeaders"
+  ],
+  "candidateExports": [
+    "corsHeaders"
+  ],
+  "corsHeaders": {
+    "Access-Control-Allow-Origin": "*",
+    "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-retry-count, traceparent, tracestate, baggage",
+    "Access-Control-Allow-Methods": "GET, POST, PUT, PATCH, DELETE, OPTIONS"
+  }
+}

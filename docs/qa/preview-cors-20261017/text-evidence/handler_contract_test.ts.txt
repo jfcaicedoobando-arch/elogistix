@@ -1,0 +1,179 @@
+import { assert, assertEquals, assertIncludes, assertRecord, fileUrl, options, sha256 } from "./assertions.ts";
+import { EXPECTED_CORS, EXPECTED_TEMPLATES } from "./expected.ts";
+
+type Handler = Deno.ServeHandler<Deno.NetAddr>;
+type Snapshot = { status: number; headers: Record<string, string>; body: string };
+const FIXTURE_KEY = "offline-preview-contract-fixture-key";
+const FIXTURE_INFO = {
+  remoteAddr: { transport: "tcp" as const, hostname: "127.0.0.1", port: 1 },
+  completed: Promise.resolve(),
+};
+
+function replaceProperty(target: object, key: string, value: unknown): () => void {
+  const original = Object.getOwnPropertyDescriptor(target, key);
+  assert(original?.configurable, `${key}: expected a configurable own property`);
+  Object.defineProperty(target, key, { configurable: true, enumerable: original.enumerable, writable: true, value });
+  return () => { Object.defineProperty(target, key, original); };
+}
+
+function assertHandler(value: unknown): asserts value is Handler {
+  assert(typeof value === "function", "Deno.serve must receive the actual handler callback");
+}
+
+async function assertOfflinePermissions(): Promise<void> {
+  for (const name of ["net", "env", "run", "ffi", "sys"] as const) {
+    const permission = await Deno.permissions.query({ name });
+    assertEquals(permission.state, "denied", `${name}: run with explicit --deny-${name}`);
+  }
+}
+
+async function invoke(handler: Handler, method: string, authorization?: string): Promise<Snapshot> {
+  const headers = new Headers();
+  if (authorization !== undefined) headers.set("Authorization", authorization);
+  const response = await handler(new Request("https://preview-handler.invalid/", { method, headers }), FIXTURE_INFO);
+  assert(response instanceof Response, `${method}: handler must return a real Response`);
+  return {
+    status: response.status,
+    headers: Object.fromEntries(response.headers.entries()),
+    body: await response.text(),
+  };
+}
+
+function assertError(snapshot: Snapshot, status: number, error: string, label: string): void {
+  assertEquals(snapshot, {
+    status,
+    headers: { ...EXPECTED_CORS, "content-type": "application/json" },
+    body: JSON.stringify({ error }),
+  }, label);
+}
+
+function assertTemplates(snapshot: Snapshot): void {
+  assertEquals(snapshot.status, 200, "authorized status");
+  assertEquals(snapshot.headers, { ...EXPECTED_CORS, "content-type": "application/json" }, "authorized exact headers");
+  const payload: unknown = JSON.parse(snapshot.body);
+  assertRecord(payload, "authorized JSON");
+  assertEquals(Object.keys(payload), ["templates"], "authorized JSON keys");
+  assert(Array.isArray(payload.templates), "templates must be an array");
+  assertEquals(payload.templates.length, EXPECTED_TEMPLATES.length, "exactly eight real templates");
+  for (const [index, expected] of EXPECTED_TEMPLATES.entries()) {
+    const actual: unknown = payload.templates[index];
+    assertRecord(actual, expected.templateName);
+    assertEquals(Object.keys(actual).sort(), ["displayName", "html", "status", "subject", "templateName"], `${expected.templateName}: exact fields`);
+    assertEquals(actual.templateName, expected.templateName, "template order/name");
+    assertEquals(actual.displayName, expected.displayName, `${expected.templateName}: display name`);
+    assertEquals(actual.subject, expected.subject, `${expected.templateName}: real subject`);
+    assertEquals(actual.status, "ready", `${expected.templateName}: actual render succeeded`);
+    assert(typeof actual.html === "string", `${expected.templateName}: HTML must be a string`);
+    assert(/^<!DOCTYPE html/i.test(actual.html), `${expected.templateName}: rendered HTML doctype`);
+    assertIncludes(actual.html, '<html', `${expected.templateName}: HTML element`);
+    assertIncludes(actual.html, 'lang="es"', `${expected.templateName}: Spanish HTML`);
+    assertIncludes(actual.html, "Libre Carga", `${expected.templateName}: real brand layout`);
+    assertIncludes(actual.html, "ACME, S.A. de C.V.", `${expected.templateName}: real preview client`);
+    for (const marker of expected.htmlMarkers) assertIncludes(actual.html, marker, expected.templateName);
+  }
+}
+
+Deno.test({
+  name: "actual preview index.ts: offline auth, OPTIONS, exact CORS, eight real renders",
+  sanitizeOps: true,
+  sanitizeResources: true,
+  sanitizeExit: true,
+  async fn() {
+    const opts = options(Deno.args, ["entry", "label", "output", "compare"]);
+    const entry = fileUrl(opts.get("entry") ?? new URL("../elogistix/supabase/functions/preview-transactional-email/index.ts", import.meta.url).href, "entry");
+    assert(entry.pathname.endsWith("/supabase/functions/preview-transactional-email/index.ts"), "Only the real preview handler index.ts is in scope");
+    const output = opts.has("output") ? fileUrl(opts.get("output")!, "output") : undefined;
+    const comparison = opts.has("compare") ? fileUrl(opts.get("compare")!, "compare") : undefined;
+    await assertOfflinePermissions();
+    const source = await Deno.readTextFile(entry);
+    const corsImport = source.match(/from ['"](npm:@supabase\/supabase-js@(?:2|\d+\.\d+\.\d+)\/cors)['"]/);
+    assert(corsImport, "Expected the unchanged npm /cors channel and subpath in the real source");
+    const captured: Handler[] = [];
+    const envReads: string[] = [];
+    const dependencyEnvReads: string[] = [];
+    let apiKey: string | undefined;
+    let networkAttempts = 0;
+    const restoreFetch = replaceProperty(globalThis, "fetch", () => {
+      networkAttempts += 1;
+      throw new Error("Network fetch is prohibited in this offline handler contract");
+    });
+    const restoreEnv = replaceProperty(Deno.env, "get", (name: string) => {
+      // Dependencies see an entirely empty environment; the real getter is
+      // never called. The handler receives only the in-memory fixture key.
+      if (name !== "LOVABLE_API_KEY") {
+        dependencyEnvReads.push(name);
+        return undefined;
+      }
+      envReads.push(name);
+      return apiKey;
+    });
+    const restoreServe = replaceProperty(Deno, "serve", (...args: unknown[]) => {
+      assertEquals(args.length, 1, "Deno.serve call shape");
+      assertHandler(args[0]);
+      captured.push(args[0]);
+      // index.ts does not use the returned server. No socket is created.
+    });
+    const snapshots: Record<string, Snapshot> = {};
+    try {
+      // Import the actual file with actual React 18, renderAsync, registry and TSX.
+      // No source rewriting, helper substitute, renderer stub or fake template.
+      await import(entry.href);
+      assertEquals(captured.length, 1, "one Deno.serve registration");
+      restoreServe();
+      const handler = captured[0];
+      const preflight = { status: 200, headers: EXPECTED_CORS, body: "" };
+      snapshots.optionsWithoutKey = await invoke(handler, "OPTIONS");
+      assertEquals(snapshots.optionsWithoutKey, preflight, "OPTIONS before configuration/auth");
+      snapshots.missingKey = await invoke(handler, "POST", `Bearer ${FIXTURE_KEY}`);
+      assertError(snapshots.missingKey, 500, "Server configuration error", "missing key");
+      apiKey = "";
+      snapshots.emptyKey = await invoke(handler, "POST", "Bearer ");
+      assertError(snapshots.emptyKey, 500, "Server configuration error", "empty key");
+      apiKey = FIXTURE_KEY;
+      snapshots.optionsWithWrongToken = await invoke(handler, "OPTIONS", "Bearer wrong");
+      assertEquals(snapshots.optionsWithWrongToken, preflight, "OPTIONS precedes token validation");
+      snapshots.missingToken = await invoke(handler, "POST");
+      assertError(snapshots.missingToken, 401, "Unauthorized", "missing token");
+      snapshots.wrongToken = await invoke(handler, "POST", "Bearer wrong");
+      assertError(snapshots.wrongToken, 401, "Unauthorized", "wrong token");
+      snapshots.validPost = await invoke(handler, "POST", `Bearer ${FIXTURE_KEY}`);
+      assertTemplates(snapshots.validPost);
+      snapshots.lowercaseBearer = await invoke(handler, "POST", `bearer ${FIXTURE_KEY}`);
+      assertEquals(snapshots.lowercaseBearer, snapshots.validPost, "case-insensitive Bearer keeps exact response");
+      for (const method of ["GET", "PUT", "PATCH", "DELETE"]) {
+        const response = await invoke(handler, method, `Bearer ${FIXTURE_KEY}`);
+        assertEquals(response, snapshots.validPost, `${method}: preserve existing method behavior`);
+        snapshots[`valid${method}`] = response;
+      }
+      assertEquals(networkAttempts, 0, "no fetch, production, or email I/O");
+      assertEquals([...new Set(envReads)], ["LOVABLE_API_KEY"], "only fictional key reads");
+      assertEquals([...new Set(dependencyEnvReads)].sort(), ["NODE_ENV", "NODE_OPTIONS"], "only observed dependency environment queries; all return undefined");
+      if (comparison) {
+        const baseline: unknown = JSON.parse(await Deno.readTextFile(comparison));
+        assertRecord(baseline, "baseline evidence");
+        assertEquals(snapshots, baseline.snapshots, "reference/candidate exact status, headers, body and HTML equivalence");
+      }
+    } finally {
+      restoreServe();
+      restoreEnv();
+      restoreFetch();
+    }
+    const evidence = {
+      label: opts.get("label") ?? "unspecified",
+      entry: entry.href,
+      sourceUtf8Sha256: await sha256(source),
+      corsImport: corsImport[1],
+      runtime: Deno.version,
+      comparedAgainst: comparison?.href ?? null,
+      permissions: { net: "denied", env: "denied", run: "denied", ffi: "denied", sys: "denied" },
+      serveRegistrations: captured.length,
+      networkAttempts,
+      envReads,
+      dependencyEnvReads: [...new Set(dependencyEnvReads)].sort(),
+      realTemplateNames: EXPECTED_TEMPLATES.map((template) => template.templateName),
+      snapshots,
+    };
+    if (output) await Deno.writeTextFile(output, JSON.stringify(evidence, null, 2) + "\n");
+    console.log(JSON.stringify({ label: evidence.label, corsImport: evidence.corsImport, sourceUtf8Sha256: evidence.sourceUtf8Sha256, cases: Object.keys(snapshots), templates: evidence.realTemplateNames, comparedAgainst: evidence.comparedAgainst, networkAttempts }));
+  },
+});

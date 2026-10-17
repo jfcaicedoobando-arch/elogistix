@@ -1,0 +1,29 @@
+running 1 test from ../cors-evidence/handler_contract_test.ts
+actual preview index.ts: offline auth, OPTIONS, exact CORS, eight real renders ...
+Uncaught error from ../cors-evidence/handler_contract_test.ts FAILED
+actual preview index.ts: offline auth, OPTIONS, exact CORS, eight real renders ... cancelled (0ms)
+
+ ERRORS
+
+../cors-evidence/handler_contract_test.ts (uncaught error)
+error: (in promise) Error: Only the fictional handler key may be requested: expected "LOVABLE_API_KEY", received "NODE_OPTIONS"
+  if (!condition) throw new Error(message);
+                        ^
+    at assert (file:///C:/Users/torta/Documents/Codex/2026-10-17/task-5/cors-evidence/assertions.ts:2:25)
+    at assertEquals (file:///C:/Users/torta/Documents/Codex/2026-10-17/task-5/cors-evidence/assertions.ts:27:3)
+    at Object.<anonymous> (file:///C:/Users/torta/Documents/Codex/2026-10-17/task-5/cors-evidence/handler_contract_test.ts:101:7)
+    at getOptions (ext:deno_node/internal_binding/node_options.ts:2:1951)
+    at getOptionsFromBinding (ext:deno_node/internal/options.ts:1:396)
+    at getOptionValue (ext:deno_node/internal/options.ts:1:464)
+    at addReadOnlyProcessAlias (node:process:1:4434)
+    at node:process:1:17117
+    at lazyLoad (ext:core/01_core.js:963:17)
+    at node:module:1:12265
+This error was not caught from a test and caused the test runner to fail on the referenced module.
+It most likely originated from a dangling promise, event/timeout handler or top-level code.
+
+ FAILURES
+
+../cors-evidence/handler_contract_test.ts (uncaught error)
+
+FAILED | 0 passed | 2 failed (359ms)

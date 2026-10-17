@@ -1,0 +1,65 @@
+import { readFileSync, writeFileSync, mkdirSync } from 'node:fs';
+import { execFileSync } from 'node:child_process';
+import { createHash } from 'node:crypto';
+import { fileURLToPath } from 'node:url';
+import { isDeepStrictEqual } from 'node:util';
+
+const repo = fileURLToPath(new URL('../elogistix/', import.meta.url));
+const base = '366e896df775490c29f87475db32ac7a9c126c30';
+const entry = 'supabase/functions/preview-transactional-email/index.ts';
+const hash = (bytes) => createHash('sha256').update(bytes).digest('hex');
+const read = (name) => readFileSync(new URL(name, import.meta.url));
+const json = (name) => JSON.parse(read(name).toString().replace(/^\uFEFF/, ''));
+const requireThat = (condition, label) => { if (!condition) throw new Error(label); };
+const stages = ['reference-info', 'candidate-info', 'reference-cache', 'reference-check-fixed',
+  'reference-final', 'resolution-final', 'candidate-check', 'candidate-final', 'candidate-ci-check', 'candidate-lint'];
+for (const name of stages) {
+  const result = json(`${name}.execution.json`);
+  requireThat(result.exitCode === 0 && result.signal === null && result.error === null, `${name}: failed execution`);
+  for (const stream of ['stdout', 'stderr']) requireThat(hash(read(result[stream].path)) === result[stream].sha256, `${name}: ${stream} hash mismatch`);
+}
+const reference = json('reference-handler.json');
+const candidate = json('candidate-handler.json');
+requireThat(isDeepStrictEqual(reference.snapshots, candidate.snapshots), 'Response snapshots differ');
+requireThat(reference.networkAttempts === 0 && candidate.networkAttempts === 0, 'Network attempt');
+requireThat(reference.runtime.deno === '2.9.7' && candidate.runtime.deno === '2.9.7', 'Wrong Deno');
+const resolution = json('resolution.json');
+requireThat(resolution.referenceVersion === '2.118.0' && resolution.candidateVersion === '2.118.0', 'Wrong resolution');
+const graphReference = json('reference-info.stdout.txt');
+const graphCandidate = json('candidate-info.stdout.txt');
+requireThat(isDeepStrictEqual(graphReference.modules, graphCandidate.modules), 'Module graphs differ');
+requireThat(isDeepStrictEqual(graphReference.npmPackages, graphCandidate.npmPackages), 'npm package graphs differ');
+const gitSource = execFileSync('git', ['show', `${base}:${entry}`], { cwd: repo }).toString();
+const referenceSource = gitSource.replace(/\n/g, '\r\n');
+const candidateSource = readFileSync(new URL(`../elogistix/${entry}`, import.meta.url)).toString();
+requireThat(hash(referenceSource) === reference.sourceUtf8Sha256, 'Reference source provenance mismatch');
+requireThat(hash(candidateSource) === candidate.sourceUtf8Sha256, 'Candidate source provenance mismatch');
+requireThat(candidateSource.replace(/\r\n/g, '\n') === gitSource.replace('npm:@supabase/supabase-js@2/cors', 'npm:@supabase/supabase-js@2.118.0/cors'), 'Source delta exceeds exact import pin');
+mkdirSync(new URL('source/', import.meta.url), { recursive: true });
+writeFileSync(new URL('source/reference-index.ts', import.meta.url), referenceSource);
+writeFileSync(new URL('source/candidate-index.ts', import.meta.url), candidateSource);
+const templateNames = reference.realTemplateNames;
+requireThat(templateNames.length === 8, 'Template count mismatch');
+const responses = Object.fromEntries(Object.entries(reference.snapshots).map(([name, snapshot]) => [name, {
+  status: snapshot.status, headers: snapshot.headers, bodyBytes: Buffer.byteLength(snapshot.body), bodySha256: hash(snapshot.body),
+}]));
+const protectedDiff = execFileSync('git', ['diff', '--name-only', base, '--', 'src', 'scripts', '.github', 'package.json', 'bun.lock', 'supabase'], { cwd: repo }).toString().trim().split(/\r?\n/).filter(Boolean);
+requireThat(isDeepStrictEqual(protectedDiff, [entry]), 'Protected source/config paths changed');
+const summary = {
+  schemaVersion: 1, generatedAt: new Date().toISOString(), base,
+  productionChange: { path: entry, before: reference.corsImport, after: candidate.corsImport, onlyExactImportPin: true, windowsLineEndingsNormalizedForGitComparison: true },
+  runtime: reference.runtime, runtimeProvenance: 'runtime-provenance.json',
+  resolution: { reference: resolution.referenceSpecifier, candidate: resolution.candidateSpecifier, referenceVersion: resolution.referenceVersion, candidateVersion: resolution.candidateVersion, moduleGraphsIdentical: true, npmPackageGraphsIdentical: true, corsHeaders: resolution.corsHeaders },
+  validation: { typecheck: true, sanitizers: { ops: true, resources: true, exit: true }, referenceContractPassed: true, candidateContractPassed: true, responseCases: Object.keys(responses).length, responsesExactlyEqual: true, realTemplateNames: templateNames, renderingStack: 'React 18.3.1 + @react-email/components 0.0.22, unchanged', snapshotsIncludeRawHtml: true, sourceUtf8Sha256: { reference: reference.sourceUtf8Sha256, candidate: candidate.sourceUtf8Sha256 }, responses, stages },
+  isolation: { cache: 'task-local cors-deno-cache; npm public dependency acquisition separate from test execution', DENO_NO_PACKAGE_JSON: '1', nodeModulesDir: 'none', cachedOnlyDuringTests: true, permissions: candidate.permissions, fileReadScope: 'index.ts, committed template directory, reference snapshot', fileWriteScope: 'one JSON report per test invocation', realEnvironmentRead: false, fixtureApiKeyOnly: true, dependencyEnvValues: { NODE_ENV: 'undefined', NODE_OPTIONS: 'undefined' }, networkAttempts: 0, socketCreated: false, mailSent: false, productionCalled: false },
+  independentReview: { moduleAndPackageEquivalence: 'passed, no findings', handlerAndResponseSnapshots: 'passed, no findings' },
+  historicalHarnessFailures: [
+    { stage: 'reference-check', reason: 'HeadersInit union type corrected to new Headers; product unchanged' },
+    { stage: 'reference-handler-first', reason: 'Deno.serve accessor supported with descriptor-preserving replacement; product unchanged' },
+    { stage: 'reference-handler-serve-fixed', reason: 'Dynamic import needed read permission for the committed template directory only' },
+    { stage: 'reference-handler-source-read', reason: 'Node dependency env access replaced by empty fictional values while real env remained denied' },
+  ],
+  limits: ['Manual local evidence; archived harness is not registered as an automatic CI suite', 'No claim of deployed runtime, historical remote resolution, deployment, or production behavior', 'No full ERP, DB/RLS, PR388 suite, migration, email, merge or deployment executed'],
+};
+writeFileSync(new URL('summary.json', import.meta.url), JSON.stringify(summary, null, 2) + '\n');
+console.log(JSON.stringify({ sourceDelta: 'one import pin', deno: reference.runtime.deno, cases: Object.keys(responses).length, templateCount: templateNames.length, exactResponsesEqual: true, networkAttempts: 0, stagesVerified: stages.length }));
