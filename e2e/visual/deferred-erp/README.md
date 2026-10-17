@@ -145,3 +145,9 @@ Los controles de ruta, contexto, digest y credencial sintética adicional
 quedan en `scripts/ci/test_gitleaks_snapshot.py`; CI exige el CLI real 8.24.3.
 El diagnóstico original se conserva en
 `evidence/validation/gitleaks-history-before.txt`.
+
+La excepción sólo admite el formato LF publicado. Los probes CRLF y sin salto
+final permanecen detectados: el campo `Line` del CLI 8.24.3 puede retener CR o
+truncarse al final del match, por lo que no se amplía el patrón a contexto
+incompleto. Se conservan los 28 escenarios: dos permitidos y 26 detecciones.
+Referencia: [delimitación de líneas en el detector fijado](https://github.com/gitleaks/gitleaks/blob/v8.24.3/detect/detect.go#L377-L393).

@@ -1,17 +1,17 @@
 {
   "schemaVersion": 1,
-  "runId": "0f740211-a6dc-460e-aedd-e93636166959",
+  "runId": "13684419-7698-421d-8557-4e3348b6b508",
   "status": "passed",
-  "startedAt": "2026-10-17T22:37:25.463Z",
-  "completedAt": "2026-10-17T22:38:22.821Z",
+  "startedAt": "2026-10-17T22:47:24.690Z",
+  "completedAt": "2026-10-17T22:48:14.893Z",
   "sourceBefore": {
     "algorithm": "sha256",
-    "digest": "42ee6d57e55c43fbedc3b8be9d5674833a60167e6f0593c19e687d5a9bb75f74",
+    "digest": "18057c2e338ebffd89ddc095e8b06de28f7677f3ec80d46b2499028d88117179",
     "fileCount": 6885
   },
   "sourceAfter": {
     "algorithm": "sha256",
-    "digest": "42ee6d57e55c43fbedc3b8be9d5674833a60167e6f0593c19e687d5a9bb75f74",
+    "digest": "18057c2e338ebffd89ddc095e8b06de28f7677f3ec80d46b2499028d88117179",
     "fileCount": 6885
   },
   "commands": [
@@ -27,8 +27,8 @@
       "shell": false,
       "timeoutMs": 120000,
       "maxBufferBytes": 16777216,
-      "startedAt": "2026-10-17T22:37:30.264Z",
-      "completedAt": "2026-10-17T22:38:08.252Z",
+      "startedAt": "2026-10-17T22:47:29.139Z",
+      "completedAt": "2026-10-17T22:48:01.571Z",
       "exitCode": 0,
       "signal": null,
       "spawnError": null,
@@ -51,8 +51,8 @@
       "shell": false,
       "timeoutMs": 120000,
       "maxBufferBytes": 16777216,
-      "startedAt": "2026-10-17T22:38:08.254Z",
-      "completedAt": "2026-10-17T22:38:14.046Z",
+      "startedAt": "2026-10-17T22:48:01.572Z",
+      "completedAt": "2026-10-17T22:48:06.329Z",
       "exitCode": 0,
       "signal": null,
       "spawnError": null,
@@ -76,14 +76,14 @@
       "shell": false,
       "timeoutMs": 120000,
       "maxBufferBytes": 16777216,
-      "startedAt": "2026-10-17T22:38:14.047Z",
-      "completedAt": "2026-10-17T22:38:19.269Z",
+      "startedAt": "2026-10-17T22:48:06.330Z",
+      "completedAt": "2026-10-17T22:48:11.171Z",
       "exitCode": 0,
       "signal": null,
       "spawnError": null,
       "log": {
         "path": "reports/deferred-erp/build.log",
-        "sha256": "fa422d9492d78bfb5099ef06ec9e96d29f15b778e8cdd6aea9cdd19b1965cde8",
+        "sha256": "bf74e1408f859372b0340908674b266150527c0ccc328536bc464a0a556eeedc",
         "bytes": 900,
         "evidencePath": "validation/build.txt"
       }

@@ -79,7 +79,7 @@ export async function runValidation({ root, runId = randomUUID(), execute = spaw
       } catch (error) {
         result = { status: null, signal: null, error };
       }
-      const log = `${result?.stdout ?? ""}\n[stderr]\n${result?.stderr ?? ""}`.replaceAll("\r\n", "\n").replace(/[ \t]+$/gm, "");
+      const log = `${result?.stdout ?? ""}\n[stderr]\n${result?.stderr ?? ""}`.replaceAll("\r\n", "\n").replace(/[ \t]+$/gm, "").trimEnd() + "\n";
       const logPath = `${reportPath}/${command.name}.log`;
       await writeFile(join(root, logPath), log);
       const record = {

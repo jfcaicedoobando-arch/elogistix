@@ -50,4 +50,5 @@ regexTarget = "line"
 # Public release integrity digest, verified against the official asset metadata.
 # HEAD configuration covers this exact historical block without rewriting commits.
 # The character class preserves the literal context without flagging this regex.
-regexes = ['''^(?:\r?\n)?su SHA256 coincide con el digest publicado por la AP[I] oficial de GitHub:\r?\n`a0c3101b4158d1dfb7d6a78a7bf0f3de80c96bb423c152beec8beb22786f2238`\.[ \t]*(?:\r?\n)?$''']
+# Keep unsupported CRLF/EOF projections detectable; only the published LF block.
+regexes = ['''^(?:\n)?su SHA256 coincide con el digest publicado por la AP[I] oficial de GitHub:\n`a0c3101b4158d1dfb7d6a78a7bf0f3de80c96bb423c152beec8beb22786f2238`\.[ \t]*(?:\n)?$''']

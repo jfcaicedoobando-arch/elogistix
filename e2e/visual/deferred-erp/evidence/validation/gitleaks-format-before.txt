@@ -1,0 +1,13 @@
+2026-10-17T22:39:18.8537279Z 10:39PM INF 6 commits scanned.
+2026-10-17T22:39:18.8538480Z 10:39PM INF scanned ~420619 bytes (420.62 KB) in 152ms
+2026-10-17T22:39:18.8538854Z 10:39PM INF no leaks found
+2026-10-17T22:39:27.7790500Z test_real_credential_in_same_block_remains_detectable (test_gitleaks_snapshot.RealDenoDigestAllowlistTests.test_real_credential_in_same_block_remains_detectable) ... ok
+2026-10-17T22:39:36.3474772Z test_real_other_digest_and_context_remain_detectable (test_gitleaks_snapshot.RealDenoDigestAllowlistTests.test_real_other_digest_and_context_remain_detectable) ... ok
+2026-10-17T22:39:36.9371257Z   test_real_verified_digest_accepts_lf_crlf_and_initial_newline (test_gitleaks_snapshot.RealDenoDigestAllowlistTests.test_real_verified_digest_accepts_lf_crlf_and_initial_newline) (newline="'\\n'", initial=False, final=False) ... ERROR
+2026-10-17T22:39:38.0980101Z   test_real_verified_digest_accepts_lf_crlf_and_initial_newline (test_gitleaks_snapshot.RealDenoDigestAllowlistTests.test_real_verified_digest_accepts_lf_crlf_and_initial_newline) (newline="'\\n'", initial=True, final=False) ... ERROR
+2026-10-17T22:39:39.2379986Z   test_real_verified_digest_accepts_lf_crlf_and_initial_newline (test_gitleaks_snapshot.RealDenoDigestAllowlistTests.test_real_verified_digest_accepts_lf_crlf_and_initial_newline) (newline="'\\r\\n'", initial=False, final=False) ... ERROR
+2026-10-17T22:39:39.8233258Z   test_real_verified_digest_accepts_lf_crlf_and_initial_newline (test_gitleaks_snapshot.RealDenoDigestAllowlistTests.test_real_verified_digest_accepts_lf_crlf_and_initial_newline) (newline="'\\r\\n'", initial=False, final=True) ... ERROR
+2026-10-17T22:39:40.3926017Z   test_real_verified_digest_accepts_lf_crlf_and_initial_newline (test_gitleaks_snapshot.RealDenoDigestAllowlistTests.test_real_verified_digest_accepts_lf_crlf_and_initial_newline) (newline="'\\r\\n'", initial=True, final=False) ... ERROR
+2026-10-17T22:39:40.9836402Z   test_real_verified_digest_accepts_lf_crlf_and_initial_newline (test_gitleaks_snapshot.RealDenoDigestAllowlistTests.test_real_verified_digest_accepts_lf_crlf_and_initial_newline) (newline="'\\r\\n'", initial=True, final=True) ... ERROR
+2026-10-17T22:39:42.7038358Z test_real_verified_digest_requires_the_exact_readme_path (test_gitleaks_snapshot.RealDenoDigestAllowlistTests.test_real_verified_digest_requires_the_exact_readme_path) ... ok
+2026-10-17T22:40:13.6597245Z Ran 54 tests in 54.391s

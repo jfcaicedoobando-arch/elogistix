@@ -69,6 +69,23 @@ describe("deferred ERP fresh evidence checks", () => {
     expect(await readJson(root, "reports/deferred-erp/validation-results.json")).toEqual(proof);
   });
 
+  it("normalizes fresh stdout and stderr before hashing with exactly one final LF", async () => {
+    const root = await fixture();
+    const execute = vi.fn<ValidationExecutor>(() => ({
+      status: 0, signal: null,
+      stdout: "compilación: línea 1  \r\nok\t\r\n\r\n",
+      stderr: "aviso: última línea\t  \r\n\r\n\r\n",
+    }));
+    const proof = await runValidation({ root, execute });
+    const expected = "compilación: línea 1\nok\n\n\n[stderr]\naviso: última línea\n";
+    for (const command of proof.commands) {
+      expect(await readFile(join(root, command.log.path), "utf8")).toBe(expected);
+      expect(command.log.sha256).toBe(createHash("sha256").update(expected).digest("hex"));
+      expect(command.log.bytes).toBe(Buffer.byteLength(expected));
+    }
+    expect(proof.commands).toHaveLength(3);
+  });
+
   it.each([
     ["nonzero", { ...passed, status: 1 }],
     ["null exit status", { ...passed, status: null }],

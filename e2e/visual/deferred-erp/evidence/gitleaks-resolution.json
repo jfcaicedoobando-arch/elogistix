@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
   "sourceHashes": {
-    "configuration": "705ca0ce6aeafdb2c80dba256ae61919ad3c3da81ffe7aff9fd6e9e85e479527",
-    "snapshotTests": "28c7df6f91412747ba0e0be97c783e8dd8c4f51749071b203d62810330794eb5"
+    "configuration": "5d9d994d7c3c244cbee6419791dbfa1530b315635f0d5f3a3f9a2a766aaa34cc",
+    "snapshotTests": "5b155547e97c38b14266bf8e1e73a562138f3e031133cddb91ebda03241230a1"
   },
   "originalFullLogSha256": "eebc1d19ec304dc156131c7d65d92eacfcd3760afb8ac30bffbafcda21efb2a8",
   "originalExcerpt": {
@@ -57,18 +57,49 @@
     "exitCode": 0,
     "log": {
       "path": "validation/gitleaks-config-tests.txt",
-      "sha256": "6cb1d32080855ccfd53a63e633d841a60acc620bf5a3bd544ed3a3c3ccdcac66",
-      "bytes": 1261
+      "sha256": "078f691ec94749c28c45f19ec35bbd6268be7ad13642a9e32fc29ea4b15d3f7f",
+      "bytes": 1267
     },
-    "scope": "Configuration and fixture-construction contracts; not a local CLI scan"
+    "scope": "Configuration and fixture-construction contracts; not a local CLI scan",
+    "payloadComparison": {
+      "status": "passed",
+      "payloadsUnchanged": 28,
+      "previousNegativeCasesPreserved": 20,
+      "previousExpectedAllowed": 8,
+      "currentExpectedAllowed": 2,
+      "currentExpectedDetected": 26,
+      "additionalExpectedDetections": 6,
+      "scope": "Only six EOF/CRLF outcomes became stricter; no input was removed or changed"
+    }
   },
   "realCliControls": {
     "requiredByExistingCi": true,
     "version": "8.24.3",
     "newScenarios": 28,
-    "expectedAllowed": 8,
-    "expectedDetected": 20,
+    "expectedAllowed": 2,
+    "expectedDetected": 26,
     "localExecution": false,
-    "reason": "No local Gitleaks binary; no download or bypass attempted"
+    "reason": "No local Gitleaks binary; no download or bypass attempted",
+    "formatPolicy": "Only the complete published LF block is allowed. EOF and CRLF projections remain detectable; no exception for truncated context."
+  },
+  "intermediateCi": {
+    "head": "26d962dba8ebf22e7475c929a3825c1bb9ccde30",
+    "runId": 39075931879,
+    "jobId": 117522960104,
+    "url": "https://github.com/jfcaicedoobando-arch/elogistix/actions/runs/39075931879/job/117522960104",
+    "history": "passed; 6 commits and 420619 bytes",
+    "contracts": {
+      "tests": 54,
+      "errors": 6,
+      "reason": "EOF/CRLF cases remained detectable but the initial positive contract incorrectly expected them to be allowed"
+    },
+    "finalSnapshot": "not executed after failed contracts",
+    "fullLogSha256": "6b3584ca18c26e980dacb135b8170c7631f90e9b9940be729b091d3855041380",
+    "excerpt": {
+      "path": "validation/gitleaks-format-before.txt",
+      "sha256": "180889f2c1c7c422d4f51e1c9550a0822ea1b33df6f1d69ef734552a30340afe"
+    },
+    "correction": "Tighten to LF only and preserve all 28 payloads; require detection for the six unsupported boundary formats instead of broadening the exception",
+    "upstream": "https://github.com/gitleaks/gitleaks/blob/v8.24.3/detect/detect.go#L377-L393"
   }
 }

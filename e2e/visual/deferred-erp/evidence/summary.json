@@ -1,16 +1,16 @@
 {
   "status": "passed",
-  "runId": "0f740211-a6dc-460e-aedd-e93636166959",
-  "startedAt": "2026-10-17T22:37:25.457Z",
+  "runId": "13684419-7698-421d-8557-4e3348b6b508",
+  "startedAt": "2026-10-17T22:47:24.685Z",
   "baseCommit": "b02c3391a97ea7d54b0a6b0b514c4626738ab639",
   "initialBaseCommit": "9af3859fabd6e57343cb5fadd4494a0a14579cb2",
   "integration": "main PR387 retained unchanged; validation repeated on integrated tree",
-  "generatedAt": "2026-10-17T22:38:23.235Z",
+  "generatedAt": "2026-10-17T22:48:15.340Z",
   "scope": "Local synthetic components and in-memory backend only; no production/staging certification",
   "validation": {
     "status": "passed",
     "proof": "validation-results.json",
-    "runId": "0f740211-a6dc-460e-aedd-e93636166959",
+    "runId": "13684419-7698-421d-8557-4e3348b6b508",
     "commands": [
       {
         "name": "typecheck",
@@ -33,12 +33,12 @@
     ],
     "sourceBefore": {
       "algorithm": "sha256",
-      "digest": "42ee6d57e55c43fbedc3b8be9d5674833a60167e6f0593c19e687d5a9bb75f74",
+      "digest": "18057c2e338ebffd89ddc095e8b06de28f7677f3ec80d46b2499028d88117179",
       "fileCount": 6885
     },
     "sourceAfter": {
       "algorithm": "sha256",
-      "digest": "42ee6d57e55c43fbedc3b8be9d5674833a60167e6f0593c19e687d5a9bb75f74",
+      "digest": "18057c2e338ebffd89ddc095e8b06de28f7677f3ec80d46b2499028d88117179",
       "fileCount": 6885
     }
   },
@@ -165,7 +165,7 @@
     },
     {
       "path": "e2e/visual/deferred-erp/README.md",
-      "sha256": "9f847338b3dd89e4f6ff0a1c600e51b9aa6be09ce23c60ff7cf1a72fd97616a5"
+      "sha256": "19d6930f01b87fa2c0363a4b3f325cada19d222e58a00d29a908004dee853ebf"
     },
     {
       "path": "e2e/visual/deferred-erp/run-deno-original.mjs",
@@ -205,7 +205,7 @@
     },
     {
       "path": "e2e/visual/deferred-erp/validation-checks.mjs",
-      "sha256": "a5a10e0a7b5e91aaec7c025e1f74f7bd0b939bb548a4fe6eb0c367811638628a"
+      "sha256": "04c06529c7b16ced5ce7a68c72bff100c517f982b6121d36d34da43dec4b79ea"
     },
     {
       "path": "e2e/visual/deferred-erp/vite.config.ts",

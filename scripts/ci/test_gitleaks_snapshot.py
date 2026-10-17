@@ -658,19 +658,22 @@ class DenoDigestAllowlistConfigTests(unittest.TestCase):
         context = "su SHA256 coincide con el digest publicado por la " + "AP" + "I oficial de GitHub:"
         return context + newline + "`" + cls.artifact_digest + "`."
 
-    def test_exact_readme_and_complete_two_line_block_are_required(self):
+    def test_exact_readme_and_complete_lf_block_reject_other_newlines(self):
         allowlist = tomllib.loads(CONFIG.decode())["rules"][0]["allowlists"][2]
         self.assertEqual(set(allowlist), {"description", "condition", "paths", "regexTarget", "regexes"})
         self.assertEqual(allowlist["condition"], "AND")
         self.assertEqual(allowlist["regexTarget"], "line")
         self.assertEqual(allowlist["paths"], [r"^e2e/visual/deferred-erp/README\.md$"])
-        expected = (r"^(?:\r?\n)?su SHA256 coincide con el digest publicado por la AP[I] oficial de GitHub:\r?\n`"
-                    + self.artifact_digest + r"`\.[ \t]*(?:\r?\n)?$")
+        expected = (r"^(?:\n)?su SHA256 coincide con el digest publicado por la AP[I] oficial de GitHub:\n`"
+                    + self.artifact_digest + r"`\.[ \t]*(?:\n)?$")
         self.assertEqual(allowlist["regexes"], [expected])
 
-        def allowed(path, block):
+        # Validate the already projected finding.Line, not raw file bytes. A
+        # complete LF block may match without final LF here; raw-file EOF
+        # truncation is exercised by the real CLI boundary guards below.
+        def allowed(path, line):
             return bool(re.search(allowlist["paths"][0], path)
-                        and re.search(allowlist["regexes"][0], block))
+                        and re.search(allowlist["regexes"][0], line))
 
         for newline in ("\n", "\r\n"):
             for initial_newline in (False, True):
@@ -678,7 +681,7 @@ class DenoDigestAllowlistConfigTests(unittest.TestCase):
                     block = ((newline if initial_newline else "") + self.block(newline)
                              + (newline if final_newline else ""))
                     with self.subTest(newline=repr(newline), initial=initial_newline, final=final_newline):
-                        self.assertTrue(allowed(self.readme_path, block))
+                        self.assertEqual(allowed(self.readme_path, block), newline == "\n")
         for path in ("other.md", self.readme_path + ".bak", "backup/" + self.readme_path,
                      self.readme_path + "/nested", "prefix" + self.readme_path):
             with self.subTest(path=path):
@@ -695,6 +698,9 @@ class DenoDigestAllowlistConfigTests(unittest.TestCase):
             block.replace(":\n", ": \n"),
             block.replace("\n", " "),
             block.split("\n")[1],
+            block[:-2],  # Projection truncated before closing backtick/period.
+            block[:-1],  # A missing terminal period is never complete context.
+            block + "\r",  # Residual CR must not be treated as permitted LF.
             "prefix " + block,
             block + " injected",
             block + "\n" + credential,
@@ -718,8 +724,13 @@ class RealDenoDigestAllowlistTests(RealSQLAllowlistTests):
         # Preserve CRLF bytes in the root snapshot on every host.
         self.git("config", "core.autocrlf", "false")
 
-    def test_real_verified_digest_accepts_lf_crlf_and_initial_newline(self):
+    def test_real_lf_terminated_block_is_allowed_other_boundaries_fail_closed(self):
         path = DenoDigestAllowlistConfigTests.readme_path
+        # v8.24.3's finding.Line projection truncates the match's final line
+        # at EOF and preserves carriage returns for CRLF (detect.go 383-393;
+        # location.go). Keep all six unsupported formats as detection guards:
+        # two LF-without-final-LF cases and all four CRLF cases. Never widen
+        # the allowlist to accept that truncated context or remove the cases.
         for newline in ("\n", "\r\n"):
             for initial_newline in (False, True):
                 for final_newline in (False, True):
@@ -727,7 +738,8 @@ class RealDenoDigestAllowlistTests(RealSQLAllowlistTests):
                                + DenoDigestAllowlistConfigTests.block(newline)
                                + (newline if final_newline else ""))
                     with self.subTest(newline=repr(newline), initial=initial_newline, final=final_newline):
-                        self.scan_case(path, content, expected_leak=False)
+                        permitted = newline == "\n" and final_newline
+                        self.scan_case(path, content, expected_leak=not permitted)
 
     def test_real_verified_digest_requires_the_exact_readme_path(self):
         path = DenoDigestAllowlistConfigTests.readme_path
@@ -775,13 +787,16 @@ class DenoDigestFixtureConstructionTests(unittest.TestCase):
         fixture = RealDenoDigestAllowlistTests()
         cases = []
         with patch.object(fixture, "scan_case", side_effect=lambda *args, **kwargs: cases.append([args, kwargs])):
-            fixture.test_real_verified_digest_accepts_lf_crlf_and_initial_newline()
+            fixture.test_real_lf_terminated_block_is_allowed_other_boundaries_fail_closed()
             fixture.test_real_verified_digest_requires_the_exact_readme_path()
             fixture.test_real_other_digest_and_context_remain_detectable()
             fixture.test_real_credential_in_same_block_remains_detectable()
         self.assertEqual(len(cases), 28)
-        self.assertEqual(sum(not kwargs["expected_leak"] for _, kwargs in cases), 8)
-        self.assertEqual(sum(kwargs["expected_leak"] for _, kwargs in cases), 20)
+        self.assertEqual(sum(not kwargs["expected_leak"] for _, kwargs in cases), 2)
+        self.assertEqual(sum(kwargs["expected_leak"] for _, kwargs in cases), 26)
+        self.assertEqual([kwargs["expected_leak"] for _, kwargs in cases[:8]],
+                         [True, False, True, False, True, True, True, True])
+        self.assertTrue(all(kwargs["expected_leak"] for _, kwargs in cases[8:]))
         self.assertTrue(all(args[0] == DenoDigestAllowlistConfigTests.readme_path
                             for args, kwargs in cases if not kwargs["expected_leak"]))
 

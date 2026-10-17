@@ -1,10 +1,10 @@
 {
   "schemaVersion": 1,
-  "validatedWorkingTreeParent": "a2d3762953dbc98bf69c43167d5263bae2b6aec5",
+  "validatedWorkingTreeParent": "26d962dba8ebf22e7475c929a3825c1bb9ccde30",
   "catalog": {
     "command": "node scripts/ci/test-catalog.mjs --output reports/deferred-erp/catalog-after.json",
     "exitCode": 0,
-    "treeDigest": "d1a130017f9df3f404acfcdaedf24967421d413676c676d07c1ba5d7f235c4fa",
+    "treeDigest": "0699aa7eeac5e76efe754d6589870c20975ca4d8f9295b6606776ed73f0abb66",
     "entries": [
       {
         "path": "e2e/visual/deferred-erp/specs/correo.spec.ts",
@@ -27,7 +27,7 @@
     ]
   },
   "regressions": {
-    "passed": 65,
+    "passed": 66,
     "failed": 0,
     "pending": 0,
     "files": 4
@@ -74,7 +74,7 @@
     },
     {
       "path": "src/__tests__/scripts/deferredErpEvidence.test.ts",
-      "sha256": "f185e46d6171313dd191c4944dc2e28dd40f2493ca5a9d2491ef6f19fe6c97f9"
+      "sha256": "e260815690b96dcb3687d23349af2735832c55010353479b20b0f579c22b9b13"
     }
   ]
 }
