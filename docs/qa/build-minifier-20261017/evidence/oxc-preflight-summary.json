@@ -1,0 +1,224 @@
+{
+  "schemaVersion": 1,
+  "status": "failed",
+  "startedAt": "2026-10-17T23:06:51.145Z",
+  "output": "reports/build-minifier/oxc-policy-blocked",
+  "measurements": [],
+  "command": [
+    "C:\\Users\\torta\\Documents\\Codex\\2026-10-17\\task-6\\.tools\\node.exe",
+    "C:\\Users\\torta\\Documents\\Codex\\2026-10-17\\task-6\\elogistix-benchmark\\docs\\qa\\build-minifier-20261017\\run-benchmark.mjs",
+    "--variants",
+    "terser,oxc",
+    "--runs",
+    "3",
+    "--output",
+    "reports/build-minifier/oxc-policy-blocked",
+    "--idle-window",
+    "No application measurements requested: verify policy gate stops before warmups.",
+    "--bun",
+    "../.tools/bun.exe"
+  ],
+  "idleWindowStatement": "No application measurements requested: verify policy gate stops before warmups.",
+  "conditions": {
+    "mode": "production",
+    "process": "fresh Node process for every build; elapsed wall time from spawn to close",
+    "caches": "Fresh output/cacheDir and cleared checkout-local Vite config-loader cache per build. OS filesystem cache is warm/uncontrolled, not cold.",
+    "warmups": "One discarded warmup per selected variant; then measured repetitions (alternating T/O and O/T pairs when both variants are selected).",
+    "compression": "Outside build timer; gzip level 9, Brotli quality 11 TEXT mode with per-file size hint; aggregate is sum of independently compressed files.",
+    "inference": "Descriptive sample statistics only; no confidence interval or population-wide performance claim.",
+    "installation": {
+      "requiredCommand": "bun install --frozen-lockfile --ignore-scripts",
+      "performedByHarness": false,
+      "excludedFromTiming": true,
+      "evidence": "Consult the accompanying installation record; this harness does not assert that a prior install ran."
+    },
+    "backend": "Synthetic public Supabase URL points to closed loopback port 9; no browser or backend is invoked by this runner."
+  },
+  "environment": {
+    "inheritedKeys": [
+      "ComSpec",
+      "LANG",
+      "LC_ALL",
+      "LC_CTYPE",
+      "NUMBER_OF_PROCESSORS",
+      "PATHEXT",
+      "PROCESSOR_ARCHITECTURE",
+      "PROCESSOR_IDENTIFIER",
+      "PROCESSOR_LEVEL",
+      "PROCESSOR_REVISION",
+      "Path",
+      "ProgramFiles",
+      "ProgramFiles(x86)",
+      "ProgramW6432",
+      "SystemDrive",
+      "SystemRoot",
+      "TEMP",
+      "TMP",
+      "windir"
+    ],
+    "explicit": {
+      "NODE_OPTIONS": "--max-old-space-size=8192",
+      "ANALYZE": "false",
+      "CI_REPORT_COMPRESSED_SIZE": "false",
+      "VITE_SUPABASE_URL": "http://127.0.0.1:9",
+      "VITE_SUPABASE_PUBLISHABLE_KEY": "benchmark-public-placeholder"
+    },
+    "envDir": false,
+    "buildSourcemapsOverride": false,
+    "sentryCredentialsInherited": false
+  },
+  "harness": {
+    "directory": "docs/qa/build-minifier-20261017/",
+    "included": "All .mjs files recursively, including untracked files",
+    "initialSha256": "9bccb55775bd288e69211b5442b1bcfa6cd4af9829067724b121c90a97a62a20",
+    "initialFiles": 6
+  },
+  "runtime": {
+    "node": "v24.22.0",
+    "nodeExecutable": "C:\\Users\\torta\\Documents\\Codex\\2026-10-17\\task-6\\.tools\\node.exe",
+    "versions": {
+      "node": "24.22.0",
+      "acorn": "8.18.0",
+      "ada": "4.0.0",
+      "amaro": "1.1.11",
+      "ares": "1.34.8",
+      "brotli": "1.2.0",
+      "cldr": "48.0",
+      "icu": "78.3",
+      "llhttp": "9.4.3",
+      "merve": "1.2.2",
+      "modules": "137",
+      "napi": "10",
+      "nbytes": "0.1.4",
+      "ncrypto": "0.0.1",
+      "nghttp2": "1.70.0",
+      "nghttp3": "",
+      "ngtcp2": "",
+      "openssl": "3.5.8",
+      "simdjson": "4.6.11",
+      "simdutf": "6.4.0",
+      "sqlite": "3.53.4",
+      "tz": "2026c",
+      "undici": "7.29.1",
+      "unicode": "17.0",
+      "uv": "1.52.1",
+      "uvwasi": "0.0.23",
+      "v8": "13.6.233.17-node.57",
+      "zlib": "1.3.2.1-motley-285e94b",
+      "zstd": "1.5.7"
+    },
+    "bun": "1.4.0",
+    "bunCommand": "C:\\Users\\torta\\Documents\\Codex\\2026-10-17\\task-6\\.tools\\bun.exe",
+    "bunExecutable": "C:\\Users\\torta\\Documents\\Codex\\2026-10-17\\task-6\\.tools\\bun.exe",
+    "bunResolution": "explicit path",
+    "os": {
+      "platform": "win32",
+      "release": "10.0.26300",
+      "version": "Windows 11 Home",
+      "arch": "x64"
+    },
+    "cpu": {
+      "model": "AMD Ryzen 9 270 w/ Radeon 780M Graphics        ",
+      "logicalCount": 16,
+      "availableParallelism": 16
+    },
+    "totalMemoryBytes": 16422010880
+  },
+  "packages": {
+    "vite": {
+      "version": "8.3.4",
+      "packageJson": "node_modules/vite/package.json"
+    },
+    "rolldown": {
+      "version": "1.2.13",
+      "packageJson": "node_modules/rolldown/package.json"
+    },
+    "terser": {
+      "version": "5.51.2",
+      "packageJson": "node_modules/terser/package.json"
+    },
+    "lightningcss": {
+      "version": "1.33.0",
+      "packageJson": "node_modules/lightningcss/package.json"
+    },
+    "postcss": {
+      "version": "8.5.29",
+      "packageJson": "node_modules/postcss/package.json"
+    },
+    "tailwindcss": {
+      "version": "4.3.3",
+      "packageJson": "node_modules/tailwindcss/package.json"
+    },
+    "@tailwindcss/postcss": {
+      "version": "4.3.3",
+      "packageJson": "node_modules/@tailwindcss/postcss/package.json"
+    }
+  },
+  "base": {
+    "head": "366e896df775490c29f87475db32ac7a9c126c30",
+    "sourceSha256": "b602115146b79c5aa259810606d685a984fe102120456fcd3368adae3866ca0a",
+    "trackedInputFiles": 9982,
+    "excludedTrackedPrefix": "docs/qa/build-minifier-20261017/",
+    "hashes": {
+      "package.json": "ed0b99d12e1fea69b8aa47522e53979fbcb828806114d3fdddb72584b2c67662",
+      "bun.lock": "be059f24a5e00112b4ff49a74fac064c5b53a43c7449774b2dc6a336fc42e150",
+      "vite.config.ts": "3fcf047dd7b4328dd1fc3137857f19fd3ab8621d3769d9152275823aa25a95fa",
+      "postcss.config.js": "9dd791ad9c0238477d84d4e06c0ccfceebe8dcb37dcdb581f5682c5ad42fc77e",
+      "tailwind.config.ts": "b603ef20c62b6e42e284c52bd9dd7fe1679986c63345f8d4bfe3918e02e5fbb4"
+    }
+  },
+  "selectedVariants": [
+    "terser",
+    "oxc"
+  ],
+  "preflight": {
+    "fixtureSha256": "da37cc4599c47e2eafde8d7fe3b03d5e15ef87b5f769d06c33e391306d802552",
+    "command": [
+      "C:\\Users\\torta\\Documents\\Codex\\2026-10-17\\task-6\\.tools\\node.exe",
+      "C:\\Users\\torta\\Documents\\Codex\\2026-10-17\\task-6\\elogistix-benchmark\\docs\\qa\\build-minifier-20261017\\policy-fixture.mjs",
+      "--output",
+      "C:\\Users\\torta\\Documents\\Codex\\2026-10-17\\task-6\\elogistix-benchmark\\reports\\build-minifier\\oxc-policy-blocked\\policy-fixture.json"
+    ],
+    "startedAt": "2026-10-17T23:06:55.513Z",
+    "exitCode": 1,
+    "signal": null,
+    "elapsedMs": 905.3972000000003,
+    "endedAt": "2026-10-17T23:06:56.418Z",
+    "spawnError": null,
+    "logs": {
+      "stdout": {
+        "path": "reports/build-minifier/oxc-policy-blocked/logs/policy-fixture.stdout.txt",
+        "sha256": "7b590e38885b26281b77e212d57a0010ca6f9652d5334b59b82466f6498d5324"
+      },
+      "stderr": {
+        "path": "reports/build-minifier/oxc-policy-blocked/logs/policy-fixture.stderr.txt",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      }
+    }
+  },
+  "error": {
+    "name": "AssertionError",
+    "message": "Oxc policy-fixture failed; comparison is blocked before application builds",
+    "stack": "AssertionError [ERR_ASSERTION]: Oxc policy-fixture failed; comparison is blocked before application builds\n    at main (file:///C:/Users/torta/Documents/Codex/2026-10-17/task-6/elogistix-benchmark/docs/qa/build-minifier-20261017/run-benchmark.mjs:307:14)\n    at async file:///C:/Users/torta/Documents/Codex/2026-10-17/task-6/elogistix-benchmark/docs/qa/build-minifier-20261017/run-benchmark.mjs:395:17"
+  },
+  "sourceIntegrity": {
+    "beforeHead": "366e896df775490c29f87475db32ac7a9c126c30",
+    "afterHead": "366e896df775490c29f87475db32ac7a9c126c30",
+    "beforeSha256": "b602115146b79c5aa259810606d685a984fe102120456fcd3368adae3866ca0a",
+    "afterSha256": "b602115146b79c5aa259810606d685a984fe102120456fcd3368adae3866ca0a",
+    "changedPaths": [],
+    "unchanged": true
+  },
+  "harnessIntegrity": {
+    "beforeSha256": "9bccb55775bd288e69211b5442b1bcfa6cd4af9829067724b121c90a97a62a20",
+    "afterSha256": "9bccb55775bd288e69211b5442b1bcfa6cd4af9829067724b121c90a97a62a20",
+    "changedPaths": [],
+    "unchanged": true
+  },
+  "statistics": {
+    "byVariant": {},
+    "pairs": [],
+    "pairedStatistics": null
+  },
+  "endedAt": "2026-10-17T23:07:01.769Z"
+}

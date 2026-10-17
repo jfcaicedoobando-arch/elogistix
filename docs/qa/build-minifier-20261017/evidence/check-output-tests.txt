@@ -1,0 +1,16 @@
+Γ£ö identical CSS bytes pass even if asset names differ (36.9641ms)
+Γ£ö a single build can be checked without claiming CSS equivalence (9.8281ms)
+Γ£ö CSS content or duplicate-count changes fail (26.6155ms)
+Γ£ö a dangling HTML script or stylesheet is rejected (8.837ms)
+Γ£ö sourcemap files and inline or file directives are rejected (11.8558ms)
+Γ£ö a data-id attribute cannot replace the application root (10.4764ms)
+Γ£ö fixture observes argument side effects and rejects an unapplied drop policy (2.3318ms)
+Γ£ö catalog registers this exact manual checker and rejects neighboring unregistered tests (2653.8339ms)
+Γä╣ tests 8
+Γä╣ suites 0
+Γä╣ pass 8
+Γä╣ fail 0
+Γä╣ cancelled 0
+Γä╣ skipped 0
+Γä╣ todo 0
+Γä╣ duration_ms 2872.0027

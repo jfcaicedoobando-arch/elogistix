@@ -1,0 +1,7 @@
+{
+  "command": "../.tools/node.exe docs/qa/build-minifier-20261017/browser-smoke.mjs reports/build-minifier/baseline-20261017/outputs/pair-01-terser reports/build-minifier/baseline-20261017/outputs/pair-05-terser --output docs/qa/build-minifier-20261017/evidence/browser-smoke.json",
+  "startedAt": "2026-10-17T23:05:02.3742126Z",
+  "finishedAt": "2026-10-17T23:05:03.5746430Z",
+  "elapsedSeconds": 1.2004304,
+  "exitCode": 1
+}

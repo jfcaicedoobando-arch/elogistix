@@ -1,0 +1,92 @@
+import assert from 'node:assert/strict';
+import { mkdtemp, mkdir, rm, writeFile } from 'node:fs/promises';
+import os from 'node:os';
+import path from 'node:path';
+import test from 'node:test';
+import { compareBuildOutputs, inspectBuild } from './check-output.mjs';
+import { assertDirectConsolePolicy, evaluateFixture, fixtureSource } from './policy-fixture.mjs';
+import { buildCatalog, classifyFiles } from '../../../scripts/ci/test-catalog.mjs';
+
+async function temporaryBuild(testContext, name = 'main') {
+  const directory = await mkdtemp(path.join(os.tmpdir(), 'minifier-output-test-'));
+  testContext.after(() => rm(directory, { recursive: true, force: true }));
+  await mkdir(path.join(directory, 'assets'));
+  await writeFile(path.join(directory, 'index.html'), `<div id="root"></div><script type="module" src="/assets/${name}.js"></script><link rel="stylesheet" href="/assets/${name}.css">`);
+  await writeFile(path.join(directory, 'assets', `${name}.js`), 'globalThis.fixture = 1;');
+  await writeFile(path.join(directory, 'assets', `${name}.css`), 'body{color:red}');
+  return directory;
+}
+
+test('identical CSS bytes pass even if asset names differ', async (t) => {
+  const baseline = await temporaryBuild(t, 'baseline');
+  const candidate = await temporaryBuild(t, 'candidate');
+  const result = await compareBuildOutputs(baseline, candidate);
+  assert.equal(result.ok, true);
+  assert.equal(result.cssEquivalent, true);
+});
+
+test('a single build can be checked without claiming CSS equivalence', async (t) => {
+  const directory = await temporaryBuild(t);
+  const result = await compareBuildOutputs(directory);
+  assert.equal(result.ok, true);
+  assert.equal(result.candidate, null);
+  assert.equal(result.cssEquivalent, null);
+});
+
+test('CSS content or duplicate-count changes fail', async (t) => {
+  const baseline = await temporaryBuild(t);
+  const candidate = await temporaryBuild(t);
+  await writeFile(path.join(candidate, 'assets', 'main.css'), 'body{color:blue}');
+  assert.equal((await compareBuildOutputs(baseline, candidate)).cssEquivalent, false);
+  await writeFile(path.join(candidate, 'assets', 'main.css'), 'body{color:red}');
+  await writeFile(path.join(candidate, 'assets', 'duplicate.css'), 'body{color:red}');
+  assert.equal((await compareBuildOutputs(baseline, candidate)).cssEquivalent, false);
+});
+
+test('a dangling HTML script or stylesheet is rejected', async (t) => {
+  const directory = await temporaryBuild(t);
+  await rm(path.join(directory, 'assets', 'main.js'));
+  await rm(path.join(directory, 'assets', 'main.css'));
+  const result = await inspectBuild(directory);
+  assert.equal(result.ok, false);
+  assert.ok(result.failures.some((failure) => failure.includes('missing /assets/main.js')));
+  assert.ok(result.failures.some((failure) => failure.includes('missing /assets/main.css')));
+});
+
+test('sourcemap files and inline or file directives are rejected', async (t) => {
+  const directory = await temporaryBuild(t);
+  await writeFile(path.join(directory, 'assets', 'main.js.map'), '{}');
+  await writeFile(path.join(directory, 'assets', 'main.js'), 'globalThis.fixture = 1;\n//# sourceMappingURL=data:application/json;base64,e30=');
+  const result = await inspectBuild(directory);
+  assert.equal(result.ok, false);
+  assert.ok(result.failures.some((failure) => failure === 'Sourcemap file: assets/main.js.map'));
+  assert.ok(result.failures.some((failure) => failure === 'sourceMappingURL marker: assets/main.js'));
+});
+
+test('a data-id attribute cannot replace the application root', async (t) => {
+  const directory = await temporaryBuild(t);
+  await writeFile(path.join(directory, 'index.html'), '<div data-id="root"></div><script type="module" src="/assets/main.js"></script>');
+  assert.ok((await inspectBuild(directory)).failures.includes('index.html: missing div#root'));
+});
+
+test('fixture observes argument side effects and rejects an unapplied drop policy', () => {
+  const observation = evaluateFixture(fixtureSource);
+  assert.ok(observation.trace.includes('direct-log-argument'));
+  assert.ok(observation.trace.includes('indirect-argument'));
+  assert.ok(observation.trace.includes('shadowed-call:shadowed-argument'));
+  assert.equal(observation.consoleCalls.length, 10);
+  assert.throws(() => assertDirectConsolePolicy(observation, 'unminified'), /drop console/);
+});
+
+test('catalog registers this exact manual checker and rejects neighboring unregistered tests', () => {
+  const catalog = buildCatalog();
+  const checker = 'docs/qa/build-minifier-20261017/check-output.test.mjs';
+  const entry = catalog.entries.find((item) => item.path === checker);
+  assert.equal(entry?.lane, 'node-build-minifier');
+  assert.equal(entry?.mode, 'manual');
+  assert.match(entry.reason, /no ordinary CI workflow/);
+  const files = catalog.entries.map((item) => item.path);
+  const guards = catalog.entries.filter((item) => item.lane === 'sql-guards').map((item) => item.path);
+  const support = Object.fromEntries(catalog.entries.filter((item) => item.lane === 'sql-support').map((item) => [item.path, item.reason]));
+  assert.throws(() => classifyFiles([...files, 'docs/qa/build-minifier-20261017/new.test.mjs'], guards, support), /no execution lane/);
+});

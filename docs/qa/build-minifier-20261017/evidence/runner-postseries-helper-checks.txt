@@ -1,0 +1,7 @@
+UTC 2026-10-17T23:06:27.777Z
+Node v24.22.0
+PASS: bare bun/bun.exe follow PATH; relative and absolute Bun paths resolve correctly; bare Bun executed --version => 1.4.0.
+PASS: recursive .mjs inventory, same bytes, modified bytes, added untracked helper, removed helper, restored bytes, and exclusion of .mjs.txt archive.
+PASS: actual harness filesystem inventory covers 6 .mjs files, including untracked files.
+PASS: archived measured runner and unchanged build worker still match the manual warmup manifest.
+No application builds, installations or backend access executed by these helper checks.
