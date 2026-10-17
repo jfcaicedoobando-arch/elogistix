@@ -1,0 +1,140 @@
+{
+  "note": "Unmodified generated artifacts. Identical inventories and before/after source manifests share one published copy. Inventory file parts are additional review aids.",
+  "mappings": {
+    "reports/build-minifier/baseline-20261017/summary.json": {
+      "published": "summary.json",
+      "bytes": 26862,
+      "sha256": "a64e8bf96cca2b81cdb58ed906f6beee66cda719450360b7813ba4c008b2714c"
+    },
+    "reports/build-minifier/baseline-20261017/inventories/warmup-terser.json": {
+      "published": "inventory.json",
+      "bytes": 311200,
+      "sha256": "75927861eb0ac92382cff3f0d144186e7610482049102a64a27a4f2adcf35962"
+    },
+    "reports/build-minifier/baseline-20261017/sources/before.json": {
+      "published": "source-inputs.json",
+      "bytes": 1720005,
+      "sha256": "de65a81b3a5ddac3cfeb663ba5030d103e3d6cf56204269df5d89c6c68269ef1"
+    },
+    "reports/build-minifier/baseline-20261017/sources/after.json": {
+      "published": "source-inputs.json",
+      "bytes": 1720005,
+      "sha256": "de65a81b3a5ddac3cfeb663ba5030d103e3d6cf56204269df5d89c6c68269ef1"
+    },
+    "reports/build-minifier/baseline-20261017/config/warmup-terser.json": {
+      "published": "config/warmup-terser.json",
+      "bytes": 2879,
+      "sha256": "c8bf6e4a0e5f537f65aef615ef0de6b9b2b088103899edde9a342574918e29ba"
+    },
+    "reports/build-minifier/baseline-20261017/logs/warmup-terser.stdout.txt": {
+      "published": "logs/warmup-terser.stdout.txt",
+      "bytes": 97960,
+      "sha256": "29834a576bbe6804ff1e5c956e74ae54a71cb46e589c3e0d90494f917414e81d"
+    },
+    "reports/build-minifier/baseline-20261017/logs/warmup-terser.stderr.txt": {
+      "published": "logs/warmup-terser.stderr.txt",
+      "bytes": 1841,
+      "sha256": "569efc3f6e4053614a95e76bbf81e63b5368956af1d9a22105a444c5cd607f7d"
+    },
+    "reports/build-minifier/baseline-20261017/inventories/pair-01-terser.json": {
+      "published": "inventory.json",
+      "bytes": 311200,
+      "sha256": "75927861eb0ac92382cff3f0d144186e7610482049102a64a27a4f2adcf35962"
+    },
+    "reports/build-minifier/baseline-20261017/config/pair-01-terser.json": {
+      "published": "config/pair-01-terser.json",
+      "bytes": 2881,
+      "sha256": "c77107962d0ff7e31336ec29bc0405b0d75208778039e54008f6c9b4e84d018f"
+    },
+    "reports/build-minifier/baseline-20261017/logs/pair-01-terser.stdout.txt": {
+      "published": "logs/pair-01-terser.stdout.txt",
+      "bytes": 98706,
+      "sha256": "db386b638bfafc3647286ba836d27c0d8c59e65cb909149bd66c70e5a1be4147"
+    },
+    "reports/build-minifier/baseline-20261017/logs/pair-01-terser.stderr.txt": {
+      "published": "logs/pair-01-terser.stderr.txt",
+      "bytes": 1841,
+      "sha256": "59e8b504bda3dd1dc1ee775813d1f81c0f6a05fd1e3ac5d0aae89e9d28697956"
+    },
+    "reports/build-minifier/baseline-20261017/inventories/pair-02-terser.json": {
+      "published": "inventory.json",
+      "bytes": 311200,
+      "sha256": "75927861eb0ac92382cff3f0d144186e7610482049102a64a27a4f2adcf35962"
+    },
+    "reports/build-minifier/baseline-20261017/config/pair-02-terser.json": {
+      "published": "config/pair-02-terser.json",
+      "bytes": 2881,
+      "sha256": "7da102ef27a033f86cc80be0192681a0a3f192a82e1daa5c90c354f94be57a61"
+    },
+    "reports/build-minifier/baseline-20261017/logs/pair-02-terser.stdout.txt": {
+      "published": "logs/pair-02-terser.stdout.txt",
+      "bytes": 98706,
+      "sha256": "3adbf137859f5921c7bf93c477dce1f2d0af416a2a9720bb39bc0d007ae5be87"
+    },
+    "reports/build-minifier/baseline-20261017/logs/pair-02-terser.stderr.txt": {
+      "published": "logs/pair-02-terser.stderr.txt",
+      "bytes": 1841,
+      "sha256": "3cc842d1f64b1c0fc6c0a0e3acfa98f9f7d40497d35b90db953f0bb8997e186e"
+    },
+    "reports/build-minifier/baseline-20261017/inventories/pair-03-terser.json": {
+      "published": "inventory.json",
+      "bytes": 311200,
+      "sha256": "75927861eb0ac92382cff3f0d144186e7610482049102a64a27a4f2adcf35962"
+    },
+    "reports/build-minifier/baseline-20261017/config/pair-03-terser.json": {
+      "published": "config/pair-03-terser.json",
+      "bytes": 2881,
+      "sha256": "efc76388db31541b99377b741b10590f9fa758a100711370bdfca3eff9526094"
+    },
+    "reports/build-minifier/baseline-20261017/logs/pair-03-terser.stdout.txt": {
+      "published": "logs/pair-03-terser.stdout.txt",
+      "bytes": 98706,
+      "sha256": "69f4eafd4db38a15a3a730da42e255cdbb398f6b86ece55264f245026c6994b0"
+    },
+    "reports/build-minifier/baseline-20261017/logs/pair-03-terser.stderr.txt": {
+      "published": "logs/pair-03-terser.stderr.txt",
+      "bytes": 1841,
+      "sha256": "547eeb2f52066636f1c01dcc4a099d69e35c2db72debba0c08d2356c09b9bb5e"
+    },
+    "reports/build-minifier/baseline-20261017/inventories/pair-04-terser.json": {
+      "published": "inventory.json",
+      "bytes": 311200,
+      "sha256": "75927861eb0ac92382cff3f0d144186e7610482049102a64a27a4f2adcf35962"
+    },
+    "reports/build-minifier/baseline-20261017/config/pair-04-terser.json": {
+      "published": "config/pair-04-terser.json",
+      "bytes": 2881,
+      "sha256": "85a360b4939f19ccdc268057d472fbd8a49552770dd9c9febe467eaaa9b19b76"
+    },
+    "reports/build-minifier/baseline-20261017/logs/pair-04-terser.stdout.txt": {
+      "published": "logs/pair-04-terser.stdout.txt",
+      "bytes": 98706,
+      "sha256": "44356ce5b49ccb69054560bd58e8271b5c23832f922ed5b1384df900f16a67ea"
+    },
+    "reports/build-minifier/baseline-20261017/logs/pair-04-terser.stderr.txt": {
+      "published": "logs/pair-04-terser.stderr.txt",
+      "bytes": 1099,
+      "sha256": "688db9a68c79cd303673511ab6dbf4cb1b6a079aaf747bbffbc6634644026237"
+    },
+    "reports/build-minifier/baseline-20261017/inventories/pair-05-terser.json": {
+      "published": "inventory.json",
+      "bytes": 311200,
+      "sha256": "75927861eb0ac92382cff3f0d144186e7610482049102a64a27a4f2adcf35962"
+    },
+    "reports/build-minifier/baseline-20261017/config/pair-05-terser.json": {
+      "published": "config/pair-05-terser.json",
+      "bytes": 2881,
+      "sha256": "41ef7139827e98d7e4dc4a28dd834de6fe4149358527ba024957dd99df5f4198"
+    },
+    "reports/build-minifier/baseline-20261017/logs/pair-05-terser.stdout.txt": {
+      "published": "logs/pair-05-terser.stdout.txt",
+      "bytes": 98706,
+      "sha256": "fbc599b00ca2663f05ace1c0fadc5313a076915980812661220a4f9c6980da59"
+    },
+    "reports/build-minifier/baseline-20261017/logs/pair-05-terser.stderr.txt": {
+      "published": "logs/pair-05-terser.stderr.txt",
+      "bytes": 1841,
+      "sha256": "6ce6cadc3d6d6f4b2627cb7fee0640b0856128640e2186c54094fe02076b1483"
+    }
+  }
+}

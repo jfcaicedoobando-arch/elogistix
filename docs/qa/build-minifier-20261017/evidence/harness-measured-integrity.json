@@ -1,0 +1,63 @@
+{
+  "schemaVersion": 1,
+  "capturedDuringWarmup": true,
+  "startCapture": {
+    "manifest": "harness-measured-hashes.json",
+    "manifestFileMtimeUtc": "2026-10-17T23:01:13.073Z",
+    "timing": "Captured manually during the warmup, as reported by the coordinator; not captured automatically before process startup."
+  },
+  "afterCaptureUtc": "2026-10-17T23:05:19.229Z",
+  "comparison": "The same five manifest entries were rehashed after the complete baseline series and before editing the runner.",
+  "before": {
+    "run-benchmark.mjs": {
+      "sha256": "7dbed488832637ccfb1e7f84c4c76b9017f35fda966d9244f4260ead2cff9ef5",
+      "bytes": 22060
+    },
+    "build-worker.mjs": {
+      "sha256": "3a387416502cd7e88019da9c7951e546f5091660cd0c58dd428d3f4e541293d4",
+      "bytes": 4865
+    },
+    "check-output.mjs": {
+      "sha256": "fc9aec0a6e5c918abb3b0bbb3d0c7625c58de4d56ab7816ac5b6c10b02b07097",
+      "bytes": 7155
+    },
+    "check-output.test.mjs": {
+      "sha256": "aadc82adfc42931423e92637c99aaab6533bbe7d2e7c277f69d55836bf0dc4b7",
+      "bytes": 4243
+    },
+    "policy-fixture.mjs": {
+      "sha256": "da37cc4599c47e2eafde8d7fe3b03d5e15ef87b5f769d06c33e391306d802552",
+      "bytes": 7946
+    }
+  },
+  "after": {
+    "run-benchmark.mjs": {
+      "sha256": "7dbed488832637ccfb1e7f84c4c76b9017f35fda966d9244f4260ead2cff9ef5",
+      "bytes": 22060
+    },
+    "build-worker.mjs": {
+      "sha256": "3a387416502cd7e88019da9c7951e546f5091660cd0c58dd428d3f4e541293d4",
+      "bytes": 4865
+    },
+    "check-output.mjs": {
+      "sha256": "fc9aec0a6e5c918abb3b0bbb3d0c7625c58de4d56ab7816ac5b6c10b02b07097",
+      "bytes": 7155
+    },
+    "check-output.test.mjs": {
+      "sha256": "aadc82adfc42931423e92637c99aaab6533bbe7d2e7c277f69d55836bf0dc4b7",
+      "bytes": 4243
+    },
+    "policy-fixture.mjs": {
+      "sha256": "da37cc4599c47e2eafde8d7fe3b03d5e15ef87b5f769d06c33e391306d802552",
+      "bytes": 7946
+    }
+  },
+  "unchanged": true,
+  "buildWorkerUnchanged": true,
+  "preservedRunner": {
+    "path": "measured-run-benchmark.mjs.txt",
+    "sha256": "7dbed488832637ccfb1e7f84c4c76b9017f35fda966d9244f4260ead2cff9ef5",
+    "bytes": 22060
+  },
+  "limits": "The measured runner excluded the harness documentation directory from the tracked-input fingerprint. This manual comparison supplements that evidence; it does not retroactively provide automatic process-start hashing or prove absence of intermediate edits between the two captures."
+}

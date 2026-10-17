@@ -1,0 +1,731 @@
+{
+  "schemaVersion": 1,
+  "status": "complete",
+  "startedAt": "2026-10-17T23:00:28.347Z",
+  "output": "reports/build-minifier/baseline-20261017",
+  "measurements": [
+    {
+      "id": "warmup-terser",
+      "variant": "terser",
+      "warmup": true,
+      "pair": null,
+      "outDir": "reports/build-minifier/baseline-20261017/outputs/warmup-terser",
+      "cacheDir": "reports/build-minifier/baseline-20261017/cache/warmup-terser",
+      "configReport": "reports/build-minifier/baseline-20261017/config/warmup-terser.json",
+      "configLoaderCacheBefore": {
+        "path": "node_modules/.vite-temp",
+        "policy": "remove only the verified .vite-temp in this checkout before each build",
+        "removedFiles": []
+      },
+      "freeMemoryBytesBefore": 1917054976,
+      "command": [
+        "C:\\Users\\torta\\Documents\\Codex\\2026-10-17\\task-6\\.tools\\node.exe",
+        "C:\\Users\\torta\\Documents\\Codex\\2026-10-17\\task-6\\elogistix-benchmark\\docs\\qa\\build-minifier-20261017\\build-worker.mjs",
+        "--variant",
+        "terser",
+        "--out-dir",
+        "C:\\Users\\torta\\Documents\\Codex\\2026-10-17\\task-6\\elogistix-benchmark\\reports\\build-minifier\\baseline-20261017\\outputs\\warmup-terser",
+        "--cache-dir",
+        "C:\\Users\\torta\\Documents\\Codex\\2026-10-17\\task-6\\elogistix-benchmark\\reports\\build-minifier\\baseline-20261017\\cache\\warmup-terser",
+        "--config-report",
+        "C:\\Users\\torta\\Documents\\Codex\\2026-10-17\\task-6\\elogistix-benchmark\\reports\\build-minifier\\baseline-20261017\\config\\warmup-terser.json"
+      ],
+      "startedAt": "2026-10-17T23:00:32.869Z",
+      "exitCode": 0,
+      "signal": null,
+      "elapsedMs": 30704.428799999998,
+      "endedAt": "2026-10-17T23:01:03.573Z",
+      "spawnError": null,
+      "logs": {
+        "stdout": {
+          "path": "reports/build-minifier/baseline-20261017/logs/warmup-terser.stdout.txt",
+          "sha256": "29834a576bbe6804ff1e5c956e74ae54a71cb46e589c3e0d90494f917414e81d"
+        },
+        "stderr": {
+          "path": "reports/build-minifier/baseline-20261017/logs/warmup-terser.stderr.txt",
+          "sha256": "569efc3f6e4053614a95e76bbf81e63b5368956af1d9a22105a444c5cd607f7d"
+        }
+      },
+      "configSha256": "c8bf6e4a0e5f537f65aef615ef0de6b9b2b088103899edde9a342574918e29ba",
+      "inventory": {
+        "path": "reports/build-minifier/baseline-20261017/inventories/warmup-terser.json",
+        "sha256": "75927861eb0ac92382cff3f0d144186e7610482049102a64a27a4f2adcf35962"
+      },
+      "totals": {
+        "js": {
+          "files": 741,
+          "rawBytes": 9386347,
+          "gzipBytes": 3082508,
+          "brotliBytes": 2630347
+        },
+        "css": {
+          "files": 1,
+          "rawBytes": 196588,
+          "gzipBytes": 27568,
+          "brotliBytes": 21163
+        },
+        "combined": {
+          "files": 742,
+          "rawBytes": 9582935,
+          "gzipBytes": 3110076,
+          "brotliBytes": 2651510
+        }
+      }
+    },
+    {
+      "id": "pair-01-terser",
+      "variant": "terser",
+      "warmup": false,
+      "pair": 1,
+      "outDir": "reports/build-minifier/baseline-20261017/outputs/pair-01-terser",
+      "cacheDir": "reports/build-minifier/baseline-20261017/cache/pair-01-terser",
+      "configReport": "reports/build-minifier/baseline-20261017/config/pair-01-terser.json",
+      "configLoaderCacheBefore": {
+        "path": "node_modules/.vite-temp",
+        "policy": "remove only the verified .vite-temp in this checkout before each build",
+        "removedFiles": []
+      },
+      "freeMemoryBytesBefore": 5023842304,
+      "command": [
+        "C:\\Users\\torta\\Documents\\Codex\\2026-10-17\\task-6\\.tools\\node.exe",
+        "C:\\Users\\torta\\Documents\\Codex\\2026-10-17\\task-6\\elogistix-benchmark\\docs\\qa\\build-minifier-20261017\\build-worker.mjs",
+        "--variant",
+        "terser",
+        "--out-dir",
+        "C:\\Users\\torta\\Documents\\Codex\\2026-10-17\\task-6\\elogistix-benchmark\\reports\\build-minifier\\baseline-20261017\\outputs\\pair-01-terser",
+        "--cache-dir",
+        "C:\\Users\\torta\\Documents\\Codex\\2026-10-17\\task-6\\elogistix-benchmark\\reports\\build-minifier\\baseline-20261017\\cache\\pair-01-terser",
+        "--config-report",
+        "C:\\Users\\torta\\Documents\\Codex\\2026-10-17\\task-6\\elogistix-benchmark\\reports\\build-minifier\\baseline-20261017\\config\\pair-01-terser.json"
+      ],
+      "startedAt": "2026-10-17T23:01:19.749Z",
+      "exitCode": 0,
+      "signal": null,
+      "elapsedMs": 26165.256999999998,
+      "endedAt": "2026-10-17T23:01:45.914Z",
+      "spawnError": null,
+      "logs": {
+        "stdout": {
+          "path": "reports/build-minifier/baseline-20261017/logs/pair-01-terser.stdout.txt",
+          "sha256": "db386b638bfafc3647286ba836d27c0d8c59e65cb909149bd66c70e5a1be4147"
+        },
+        "stderr": {
+          "path": "reports/build-minifier/baseline-20261017/logs/pair-01-terser.stderr.txt",
+          "sha256": "59e8b504bda3dd1dc1ee775813d1f81c0f6a05fd1e3ac5d0aae89e9d28697956"
+        }
+      },
+      "configSha256": "c77107962d0ff7e31336ec29bc0405b0d75208778039e54008f6c9b4e84d018f",
+      "inventory": {
+        "path": "reports/build-minifier/baseline-20261017/inventories/pair-01-terser.json",
+        "sha256": "75927861eb0ac92382cff3f0d144186e7610482049102a64a27a4f2adcf35962"
+      },
+      "totals": {
+        "js": {
+          "files": 741,
+          "rawBytes": 9386347,
+          "gzipBytes": 3082508,
+          "brotliBytes": 2630347
+        },
+        "css": {
+          "files": 1,
+          "rawBytes": 196588,
+          "gzipBytes": 27568,
+          "brotliBytes": 21163
+        },
+        "combined": {
+          "files": 742,
+          "rawBytes": 9582935,
+          "gzipBytes": 3110076,
+          "brotliBytes": 2651510
+        }
+      }
+    },
+    {
+      "id": "pair-02-terser",
+      "variant": "terser",
+      "warmup": false,
+      "pair": 2,
+      "outDir": "reports/build-minifier/baseline-20261017/outputs/pair-02-terser",
+      "cacheDir": "reports/build-minifier/baseline-20261017/cache/pair-02-terser",
+      "configReport": "reports/build-minifier/baseline-20261017/config/pair-02-terser.json",
+      "configLoaderCacheBefore": {
+        "path": "node_modules/.vite-temp",
+        "policy": "remove only the verified .vite-temp in this checkout before each build",
+        "removedFiles": []
+      },
+      "freeMemoryBytesBefore": 5084868608,
+      "command": [
+        "C:\\Users\\torta\\Documents\\Codex\\2026-10-17\\task-6\\.tools\\node.exe",
+        "C:\\Users\\torta\\Documents\\Codex\\2026-10-17\\task-6\\elogistix-benchmark\\docs\\qa\\build-minifier-20261017\\build-worker.mjs",
+        "--variant",
+        "terser",
+        "--out-dir",
+        "C:\\Users\\torta\\Documents\\Codex\\2026-10-17\\task-6\\elogistix-benchmark\\reports\\build-minifier\\baseline-20261017\\outputs\\pair-02-terser",
+        "--cache-dir",
+        "C:\\Users\\torta\\Documents\\Codex\\2026-10-17\\task-6\\elogistix-benchmark\\reports\\build-minifier\\baseline-20261017\\cache\\pair-02-terser",
+        "--config-report",
+        "C:\\Users\\torta\\Documents\\Codex\\2026-10-17\\task-6\\elogistix-benchmark\\reports\\build-minifier\\baseline-20261017\\config\\pair-02-terser.json"
+      ],
+      "startedAt": "2026-10-17T23:02:01.495Z",
+      "exitCode": 0,
+      "signal": null,
+      "elapsedMs": 23814.583000000013,
+      "endedAt": "2026-10-17T23:02:25.309Z",
+      "spawnError": null,
+      "logs": {
+        "stdout": {
+          "path": "reports/build-minifier/baseline-20261017/logs/pair-02-terser.stdout.txt",
+          "sha256": "3adbf137859f5921c7bf93c477dce1f2d0af416a2a9720bb39bc0d007ae5be87"
+        },
+        "stderr": {
+          "path": "reports/build-minifier/baseline-20261017/logs/pair-02-terser.stderr.txt",
+          "sha256": "3cc842d1f64b1c0fc6c0a0e3acfa98f9f7d40497d35b90db953f0bb8997e186e"
+        }
+      },
+      "configSha256": "7da102ef27a033f86cc80be0192681a0a3f192a82e1daa5c90c354f94be57a61",
+      "inventory": {
+        "path": "reports/build-minifier/baseline-20261017/inventories/pair-02-terser.json",
+        "sha256": "75927861eb0ac92382cff3f0d144186e7610482049102a64a27a4f2adcf35962"
+      },
+      "totals": {
+        "js": {
+          "files": 741,
+          "rawBytes": 9386347,
+          "gzipBytes": 3082508,
+          "brotliBytes": 2630347
+        },
+        "css": {
+          "files": 1,
+          "rawBytes": 196588,
+          "gzipBytes": 27568,
+          "brotliBytes": 21163
+        },
+        "combined": {
+          "files": 742,
+          "rawBytes": 9582935,
+          "gzipBytes": 3110076,
+          "brotliBytes": 2651510
+        }
+      }
+    },
+    {
+      "id": "pair-03-terser",
+      "variant": "terser",
+      "warmup": false,
+      "pair": 3,
+      "outDir": "reports/build-minifier/baseline-20261017/outputs/pair-03-terser",
+      "cacheDir": "reports/build-minifier/baseline-20261017/cache/pair-03-terser",
+      "configReport": "reports/build-minifier/baseline-20261017/config/pair-03-terser.json",
+      "configLoaderCacheBefore": {
+        "path": "node_modules/.vite-temp",
+        "policy": "remove only the verified .vite-temp in this checkout before each build",
+        "removedFiles": []
+      },
+      "freeMemoryBytesBefore": 5088124928,
+      "command": [
+        "C:\\Users\\torta\\Documents\\Codex\\2026-10-17\\task-6\\.tools\\node.exe",
+        "C:\\Users\\torta\\Documents\\Codex\\2026-10-17\\task-6\\elogistix-benchmark\\docs\\qa\\build-minifier-20261017\\build-worker.mjs",
+        "--variant",
+        "terser",
+        "--out-dir",
+        "C:\\Users\\torta\\Documents\\Codex\\2026-10-17\\task-6\\elogistix-benchmark\\reports\\build-minifier\\baseline-20261017\\outputs\\pair-03-terser",
+        "--cache-dir",
+        "C:\\Users\\torta\\Documents\\Codex\\2026-10-17\\task-6\\elogistix-benchmark\\reports\\build-minifier\\baseline-20261017\\cache\\pair-03-terser",
+        "--config-report",
+        "C:\\Users\\torta\\Documents\\Codex\\2026-10-17\\task-6\\elogistix-benchmark\\reports\\build-minifier\\baseline-20261017\\config\\pair-03-terser.json"
+      ],
+      "startedAt": "2026-10-17T23:02:41.242Z",
+      "exitCode": 0,
+      "signal": null,
+      "elapsedMs": 23448.86739999999,
+      "endedAt": "2026-10-17T23:03:04.691Z",
+      "spawnError": null,
+      "logs": {
+        "stdout": {
+          "path": "reports/build-minifier/baseline-20261017/logs/pair-03-terser.stdout.txt",
+          "sha256": "69f4eafd4db38a15a3a730da42e255cdbb398f6b86ece55264f245026c6994b0"
+        },
+        "stderr": {
+          "path": "reports/build-minifier/baseline-20261017/logs/pair-03-terser.stderr.txt",
+          "sha256": "547eeb2f52066636f1c01dcc4a099d69e35c2db72debba0c08d2356c09b9bb5e"
+        }
+      },
+      "configSha256": "efc76388db31541b99377b741b10590f9fa758a100711370bdfca3eff9526094",
+      "inventory": {
+        "path": "reports/build-minifier/baseline-20261017/inventories/pair-03-terser.json",
+        "sha256": "75927861eb0ac92382cff3f0d144186e7610482049102a64a27a4f2adcf35962"
+      },
+      "totals": {
+        "js": {
+          "files": 741,
+          "rawBytes": 9386347,
+          "gzipBytes": 3082508,
+          "brotliBytes": 2630347
+        },
+        "css": {
+          "files": 1,
+          "rawBytes": 196588,
+          "gzipBytes": 27568,
+          "brotliBytes": 21163
+        },
+        "combined": {
+          "files": 742,
+          "rawBytes": 9582935,
+          "gzipBytes": 3110076,
+          "brotliBytes": 2651510
+        }
+      }
+    },
+    {
+      "id": "pair-04-terser",
+      "variant": "terser",
+      "warmup": false,
+      "pair": 4,
+      "outDir": "reports/build-minifier/baseline-20261017/outputs/pair-04-terser",
+      "cacheDir": "reports/build-minifier/baseline-20261017/cache/pair-04-terser",
+      "configReport": "reports/build-minifier/baseline-20261017/config/pair-04-terser.json",
+      "configLoaderCacheBefore": {
+        "path": "node_modules/.vite-temp",
+        "policy": "remove only the verified .vite-temp in this checkout before each build",
+        "removedFiles": []
+      },
+      "freeMemoryBytesBefore": 5082976256,
+      "command": [
+        "C:\\Users\\torta\\Documents\\Codex\\2026-10-17\\task-6\\.tools\\node.exe",
+        "C:\\Users\\torta\\Documents\\Codex\\2026-10-17\\task-6\\elogistix-benchmark\\docs\\qa\\build-minifier-20261017\\build-worker.mjs",
+        "--variant",
+        "terser",
+        "--out-dir",
+        "C:\\Users\\torta\\Documents\\Codex\\2026-10-17\\task-6\\elogistix-benchmark\\reports\\build-minifier\\baseline-20261017\\outputs\\pair-04-terser",
+        "--cache-dir",
+        "C:\\Users\\torta\\Documents\\Codex\\2026-10-17\\task-6\\elogistix-benchmark\\reports\\build-minifier\\baseline-20261017\\cache\\pair-04-terser",
+        "--config-report",
+        "C:\\Users\\torta\\Documents\\Codex\\2026-10-17\\task-6\\elogistix-benchmark\\reports\\build-minifier\\baseline-20261017\\config\\pair-04-terser.json"
+      ],
+      "startedAt": "2026-10-17T23:03:20.487Z",
+      "exitCode": 0,
+      "signal": null,
+      "elapsedMs": 24246.147800000006,
+      "endedAt": "2026-10-17T23:03:44.733Z",
+      "spawnError": null,
+      "logs": {
+        "stdout": {
+          "path": "reports/build-minifier/baseline-20261017/logs/pair-04-terser.stdout.txt",
+          "sha256": "44356ce5b49ccb69054560bd58e8271b5c23832f922ed5b1384df900f16a67ea"
+        },
+        "stderr": {
+          "path": "reports/build-minifier/baseline-20261017/logs/pair-04-terser.stderr.txt",
+          "sha256": "688db9a68c79cd303673511ab6dbf4cb1b6a079aaf747bbffbc6634644026237"
+        }
+      },
+      "configSha256": "85a360b4939f19ccdc268057d472fbd8a49552770dd9c9febe467eaaa9b19b76",
+      "inventory": {
+        "path": "reports/build-minifier/baseline-20261017/inventories/pair-04-terser.json",
+        "sha256": "75927861eb0ac92382cff3f0d144186e7610482049102a64a27a4f2adcf35962"
+      },
+      "totals": {
+        "js": {
+          "files": 741,
+          "rawBytes": 9386347,
+          "gzipBytes": 3082508,
+          "brotliBytes": 2630347
+        },
+        "css": {
+          "files": 1,
+          "rawBytes": 196588,
+          "gzipBytes": 27568,
+          "brotliBytes": 21163
+        },
+        "combined": {
+          "files": 742,
+          "rawBytes": 9582935,
+          "gzipBytes": 3110076,
+          "brotliBytes": 2651510
+        }
+      }
+    },
+    {
+      "id": "pair-05-terser",
+      "variant": "terser",
+      "warmup": false,
+      "pair": 5,
+      "outDir": "reports/build-minifier/baseline-20261017/outputs/pair-05-terser",
+      "cacheDir": "reports/build-minifier/baseline-20261017/cache/pair-05-terser",
+      "configReport": "reports/build-minifier/baseline-20261017/config/pair-05-terser.json",
+      "configLoaderCacheBefore": {
+        "path": "node_modules/.vite-temp",
+        "policy": "remove only the verified .vite-temp in this checkout before each build",
+        "removedFiles": []
+      },
+      "freeMemoryBytesBefore": 5213708288,
+      "command": [
+        "C:\\Users\\torta\\Documents\\Codex\\2026-10-17\\task-6\\.tools\\node.exe",
+        "C:\\Users\\torta\\Documents\\Codex\\2026-10-17\\task-6\\elogistix-benchmark\\docs\\qa\\build-minifier-20261017\\build-worker.mjs",
+        "--variant",
+        "terser",
+        "--out-dir",
+        "C:\\Users\\torta\\Documents\\Codex\\2026-10-17\\task-6\\elogistix-benchmark\\reports\\build-minifier\\baseline-20261017\\outputs\\pair-05-terser",
+        "--cache-dir",
+        "C:\\Users\\torta\\Documents\\Codex\\2026-10-17\\task-6\\elogistix-benchmark\\reports\\build-minifier\\baseline-20261017\\cache\\pair-05-terser",
+        "--config-report",
+        "C:\\Users\\torta\\Documents\\Codex\\2026-10-17\\task-6\\elogistix-benchmark\\reports\\build-minifier\\baseline-20261017\\config\\pair-05-terser.json"
+      ],
+      "startedAt": "2026-10-17T23:04:00.251Z",
+      "exitCode": 0,
+      "signal": null,
+      "elapsedMs": 22795.069499999983,
+      "endedAt": "2026-10-17T23:04:23.047Z",
+      "spawnError": null,
+      "logs": {
+        "stdout": {
+          "path": "reports/build-minifier/baseline-20261017/logs/pair-05-terser.stdout.txt",
+          "sha256": "fbc599b00ca2663f05ace1c0fadc5313a076915980812661220a4f9c6980da59"
+        },
+        "stderr": {
+          "path": "reports/build-minifier/baseline-20261017/logs/pair-05-terser.stderr.txt",
+          "sha256": "6ce6cadc3d6d6f4b2627cb7fee0640b0856128640e2186c54094fe02076b1483"
+        }
+      },
+      "configSha256": "41ef7139827e98d7e4dc4a28dd834de6fe4149358527ba024957dd99df5f4198",
+      "inventory": {
+        "path": "reports/build-minifier/baseline-20261017/inventories/pair-05-terser.json",
+        "sha256": "75927861eb0ac92382cff3f0d144186e7610482049102a64a27a4f2adcf35962"
+      },
+      "totals": {
+        "js": {
+          "files": 741,
+          "rawBytes": 9386347,
+          "gzipBytes": 3082508,
+          "brotliBytes": 2630347
+        },
+        "css": {
+          "files": 1,
+          "rawBytes": 196588,
+          "gzipBytes": 27568,
+          "brotliBytes": 21163
+        },
+        "combined": {
+          "files": 742,
+          "rawBytes": 9582935,
+          "gzipBytes": 3110076,
+          "brotliBytes": 2651510
+        }
+      }
+    }
+  ],
+  "command": [
+    "C:\\Users\\torta\\Documents\\Codex\\2026-10-17\\task-6\\.tools\\node.exe",
+    "C:\\Users\\torta\\Documents\\Codex\\2026-10-17\\task-6\\elogistix-benchmark\\docs\\qa\\build-minifier-20261017\\run-benchmark.mjs",
+    "--variants",
+    "terser",
+    "--runs",
+    "5",
+    "--output",
+    "reports/build-minifier/baseline-20261017",
+    "--idle-window",
+    "PR388 local work finished and reserved; coordinator confirms PR388/390 local work ended and ASUS available. No known concurrent local heavy tasks; operating-system activity is uncontrolled.",
+    "--bun",
+    "../.tools/bun.exe"
+  ],
+  "idleWindowStatement": "PR388 local work finished and reserved; coordinator confirms PR388/390 local work ended and ASUS available. No known concurrent local heavy tasks; operating-system activity is uncontrolled.",
+  "conditions": {
+    "mode": "production",
+    "process": "fresh Node process for every build; elapsed wall time from spawn to close",
+    "caches": "Fresh output/cacheDir and cleared checkout-local Vite config-loader cache per build. OS filesystem cache is warm/uncontrolled, not cold.",
+    "warmups": "One discarded warmup per selected variant; then measured repetitions (alternating T/O and O/T pairs when both variants are selected).",
+    "compression": "Outside build timer; gzip level 9, Brotli quality 11 TEXT mode with per-file size hint; aggregate is sum of independently compressed files.",
+    "inference": "Descriptive sample statistics only; no confidence interval or population-wide performance claim.",
+    "installation": {
+      "requiredCommand": "bun install --frozen-lockfile --ignore-scripts",
+      "performedByHarness": false,
+      "excludedFromTiming": true,
+      "evidence": "Consult the accompanying installation record; this harness does not assert that a prior install ran."
+    },
+    "backend": "Synthetic public Supabase URL points to closed loopback port 9; no browser or backend is invoked by this runner."
+  },
+  "environment": {
+    "inheritedKeys": [
+      "ComSpec",
+      "LANG",
+      "LC_ALL",
+      "LC_CTYPE",
+      "NUMBER_OF_PROCESSORS",
+      "PATHEXT",
+      "PROCESSOR_ARCHITECTURE",
+      "PROCESSOR_IDENTIFIER",
+      "PROCESSOR_LEVEL",
+      "PROCESSOR_REVISION",
+      "Path",
+      "ProgramFiles",
+      "ProgramFiles(x86)",
+      "ProgramW6432",
+      "SystemDrive",
+      "SystemRoot",
+      "TEMP",
+      "TMP",
+      "windir"
+    ],
+    "explicit": {
+      "NODE_OPTIONS": "--max-old-space-size=8192",
+      "ANALYZE": "false",
+      "CI_REPORT_COMPRESSED_SIZE": "false",
+      "VITE_SUPABASE_URL": "http://127.0.0.1:9",
+      "VITE_SUPABASE_PUBLISHABLE_KEY": "benchmark-public-placeholder"
+    },
+    "envDir": false,
+    "buildSourcemapsOverride": false,
+    "sentryCredentialsInherited": false
+  },
+  "runtime": {
+    "node": "v24.22.0",
+    "nodeExecutable": "C:\\Users\\torta\\Documents\\Codex\\2026-10-17\\task-6\\.tools\\node.exe",
+    "versions": {
+      "node": "24.22.0",
+      "acorn": "8.18.0",
+      "ada": "4.0.0",
+      "amaro": "1.1.11",
+      "ares": "1.34.8",
+      "brotli": "1.2.0",
+      "cldr": "48.0",
+      "icu": "78.3",
+      "llhttp": "9.4.3",
+      "merve": "1.2.2",
+      "modules": "137",
+      "napi": "10",
+      "nbytes": "0.1.4",
+      "ncrypto": "0.0.1",
+      "nghttp2": "1.70.0",
+      "nghttp3": "",
+      "ngtcp2": "",
+      "openssl": "3.5.8",
+      "simdjson": "4.6.11",
+      "simdutf": "6.4.0",
+      "sqlite": "3.53.4",
+      "tz": "2026c",
+      "undici": "7.29.1",
+      "unicode": "17.0",
+      "uv": "1.52.1",
+      "uvwasi": "0.0.23",
+      "v8": "13.6.233.17-node.57",
+      "zlib": "1.3.2.1-motley-285e94b",
+      "zstd": "1.5.7"
+    },
+    "bun": "1.4.0",
+    "bunExecutable": "C:\\Users\\torta\\Documents\\Codex\\2026-10-17\\task-6\\.tools\\bun.exe",
+    "os": {
+      "platform": "win32",
+      "release": "10.0.26300",
+      "version": "Windows 11 Home",
+      "arch": "x64"
+    },
+    "cpu": {
+      "model": "AMD Ryzen 9 270 w/ Radeon 780M Graphics        ",
+      "logicalCount": 16,
+      "availableParallelism": 16
+    },
+    "totalMemoryBytes": 16422010880
+  },
+  "packages": {
+    "vite": {
+      "version": "8.3.4",
+      "packageJson": "node_modules/vite/package.json"
+    },
+    "rolldown": {
+      "version": "1.2.13",
+      "packageJson": "node_modules/rolldown/package.json"
+    },
+    "terser": {
+      "version": "5.51.2",
+      "packageJson": "node_modules/terser/package.json"
+    },
+    "lightningcss": {
+      "version": "1.33.0",
+      "packageJson": "node_modules/lightningcss/package.json"
+    },
+    "postcss": {
+      "version": "8.5.29",
+      "packageJson": "node_modules/postcss/package.json"
+    },
+    "tailwindcss": {
+      "version": "4.3.3",
+      "packageJson": "node_modules/tailwindcss/package.json"
+    },
+    "@tailwindcss/postcss": {
+      "version": "4.3.3",
+      "packageJson": "node_modules/@tailwindcss/postcss/package.json"
+    }
+  },
+  "base": {
+    "head": "366e896df775490c29f87475db32ac7a9c126c30",
+    "sourceSha256": "b602115146b79c5aa259810606d685a984fe102120456fcd3368adae3866ca0a",
+    "trackedInputFiles": 9982,
+    "excludedTrackedPrefix": "docs/qa/build-minifier-20261017/",
+    "hashes": {
+      "package.json": "ed0b99d12e1fea69b8aa47522e53979fbcb828806114d3fdddb72584b2c67662",
+      "bun.lock": "be059f24a5e00112b4ff49a74fac064c5b53a43c7449774b2dc6a336fc42e150",
+      "vite.config.ts": "3fcf047dd7b4328dd1fc3137857f19fd3ab8621d3769d9152275823aa25a95fa",
+      "postcss.config.js": "9dd791ad9c0238477d84d4e06c0ccfceebe8dcb37dcdb581f5682c5ad42fc77e",
+      "tailwind.config.ts": "b603ef20c62b6e42e284c52bd9dd7fe1679986c63345f8d4bfe3918e02e5fbb4"
+    }
+  },
+  "selectedVariants": [
+    "terser"
+  ],
+  "preflight": {
+    "skipped": true,
+    "reason": "Terser-only baseline; no Oxc comparison requested"
+  },
+  "plan": [
+    {
+      "id": "warmup-terser",
+      "variant": "terser",
+      "warmup": true,
+      "pair": null
+    },
+    {
+      "id": "pair-01-terser",
+      "variant": "terser",
+      "warmup": false,
+      "pair": 1
+    },
+    {
+      "id": "pair-02-terser",
+      "variant": "terser",
+      "warmup": false,
+      "pair": 2
+    },
+    {
+      "id": "pair-03-terser",
+      "variant": "terser",
+      "warmup": false,
+      "pair": 3
+    },
+    {
+      "id": "pair-04-terser",
+      "variant": "terser",
+      "warmup": false,
+      "pair": 4
+    },
+    {
+      "id": "pair-05-terser",
+      "variant": "terser",
+      "warmup": false,
+      "pair": 5
+    }
+  ],
+  "statistics": {
+    "byVariant": {
+      "terser": {
+        "elapsedMs": {
+          "n": 5,
+          "min": 22795.069499999983,
+          "max": 26165.256999999998,
+          "mean": 24093.98494,
+          "median": 23814.583000000013,
+          "sampleSD": 1274.2394680025686,
+          "cv": 0.05288620670992122
+        },
+        "sizes": {
+          "js": {
+            "rawBytes": {
+              "n": 5,
+              "min": 9386347,
+              "max": 9386347,
+              "mean": 9386347,
+              "median": 9386347,
+              "sampleSD": 0,
+              "cv": 0
+            },
+            "gzipBytes": {
+              "n": 5,
+              "min": 3082508,
+              "max": 3082508,
+              "mean": 3082508,
+              "median": 3082508,
+              "sampleSD": 0,
+              "cv": 0
+            },
+            "brotliBytes": {
+              "n": 5,
+              "min": 2630347,
+              "max": 2630347,
+              "mean": 2630347,
+              "median": 2630347,
+              "sampleSD": 0,
+              "cv": 0
+            }
+          },
+          "css": {
+            "rawBytes": {
+              "n": 5,
+              "min": 196588,
+              "max": 196588,
+              "mean": 196588,
+              "median": 196588,
+              "sampleSD": 0,
+              "cv": 0
+            },
+            "gzipBytes": {
+              "n": 5,
+              "min": 27568,
+              "max": 27568,
+              "mean": 27568,
+              "median": 27568,
+              "sampleSD": 0,
+              "cv": 0
+            },
+            "brotliBytes": {
+              "n": 5,
+              "min": 21163,
+              "max": 21163,
+              "mean": 21163,
+              "median": 21163,
+              "sampleSD": 0,
+              "cv": 0
+            }
+          },
+          "combined": {
+            "rawBytes": {
+              "n": 5,
+              "min": 9582935,
+              "max": 9582935,
+              "mean": 9582935,
+              "median": 9582935,
+              "sampleSD": 0,
+              "cv": 0
+            },
+            "gzipBytes": {
+              "n": 5,
+              "min": 3110076,
+              "max": 3110076,
+              "mean": 3110076,
+              "median": 3110076,
+              "sampleSD": 0,
+              "cv": 0
+            },
+            "brotliBytes": {
+              "n": 5,
+              "min": 2651510,
+              "max": 2651510,
+              "mean": 2651510,
+              "median": 2651510,
+              "sampleSD": 0,
+              "cv": 0
+            }
+          }
+        }
+      }
+    },
+    "pairs": [],
+    "pairedStatistics": null
+  },
+  "sourceIntegrity": {
+    "beforeHead": "366e896df775490c29f87475db32ac7a9c126c30",
+    "afterHead": "366e896df775490c29f87475db32ac7a9c126c30",
+    "beforeSha256": "b602115146b79c5aa259810606d685a984fe102120456fcd3368adae3866ca0a",
+    "afterSha256": "b602115146b79c5aa259810606d685a984fe102120456fcd3368adae3866ca0a",
+    "changedPaths": [],
+    "unchanged": true
+  },
+  "endedAt": "2026-10-17T23:04:45.098Z"
+}

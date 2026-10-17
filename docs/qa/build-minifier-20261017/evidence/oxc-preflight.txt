@@ -1,0 +1,2 @@
+[benchmark] Oxc requested: policy-fixture must pass before any application warmup/build
+{"status":"failed","summary":"reports/build-minifier/oxc-policy-blocked/summary.json","error":"Oxc policy-fixture failed; comparison is blocked before application builds"}

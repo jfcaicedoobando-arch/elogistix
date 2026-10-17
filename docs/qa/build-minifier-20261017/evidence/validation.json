@@ -1,0 +1,79 @@
+{
+  "baseSha": "366e896df775490c29f87475db32ac7a9c126c30",
+  "node": "v24.22.0",
+  "validations": [
+    {
+      "command": "bun install --frozen-lockfile --ignore-scripts --cache-dir <workspace>/.tools/bun-cache",
+      "exitCode": 0,
+      "evidence": "install.json"
+    },
+    {
+      "command": "node run-benchmark.mjs --variants terser --runs 5 ...",
+      "exitCode": 0,
+      "measured": 5,
+      "discardedWarmups": 1,
+      "evidence": "baseline/summary.json"
+    },
+    {
+      "command": "node --test docs/qa/build-minifier-20261017/check-output.test.mjs",
+      "exitCode": 0,
+      "passed": 8,
+      "evidence": "check-output-tests.txt"
+    },
+    {
+      "command": "node node_modules/vitest/vitest.mjs run src/__tests__/scripts/verifyHtmlBundle.test.ts --maxWorkers=1",
+      "exitCode": 0,
+      "passed": 4,
+      "evidence": "html-verifier-tests.txt"
+    },
+    {
+      "command": "node node_modules/eslint/bin/eslint.js scripts/ci/test-catalog.mjs docs/qa/build-minifier-20261017/*.mjs --max-warnings=0",
+      "exitCode": 0,
+      "evidence": "eslint.txt"
+    },
+    {
+      "command": "node scripts/ci/test-catalog.mjs --output reports/build-minifier/catalog-final.json",
+      "exitCode": 0,
+      "evidence": "test-catalog.txt"
+    },
+    {
+      "command": "node check-output.mjs <pair-01-terser> <pair-05-terser> --output evidence/output-check.json",
+      "exitCode": 0,
+      "evidence": "output-check.json"
+    },
+    {
+      "command": "node scripts/check-css-size.mjs <pair-05-terser>/assets",
+      "exitCode": 0,
+      "evidence": "css-budget.txt"
+    },
+    {
+      "command": "node browser-smoke.mjs <pair-01-terser> <pair-05-terser> --output evidence/browser-smoke.json",
+      "exitCode": 0,
+      "passed": 8,
+      "uiComparisons": 4,
+      "evidence": "browser-smoke-command.json"
+    },
+    {
+      "command": "node run-benchmark.mjs --variants terser,oxc --runs 3 ...",
+      "exitCode": 1,
+      "expected": "Console-policy inequivalence blocks before all application warmups/builds",
+      "applicationBuilds": 0,
+      "evidence": "oxc-preflight-summary.json"
+    },
+    {
+      "command": "git diff --cached --check",
+      "exitCode": 0
+    }
+  ],
+  "notRun": [
+    "Full Vitest/typecheck/RLS/authenticated E2E suites",
+    "Bash JS bundle/sourcemap wrappers (Bash unavailable)",
+    "Sentry authenticated source-map upload/deletion profile"
+  ],
+  "limitations": [
+    "Oxc full build timing/size comparison not accepted: synthetic console behavior differs.",
+    "Shared baseline video /demo-libre-carga.mp4 returns 404; not covered by public UI PASS.",
+    "Remote fonts blocked; no complete visual or application equivalence claim.",
+    "The measured harness manual hashes were captured during warmup; exact measured runner and test are archived."
+  ]
+}

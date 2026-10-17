@@ -1,0 +1,298 @@
+{
+  "schemaVersion": 1,
+  "ok": false,
+  "scope": "Synthetic fixture only; equal observations do not prove complete application equivalence.",
+  "policies": {
+    "terser": {
+      "drop_console": true,
+      "drop_debugger": true
+    },
+    "oxc": {
+      "dropConsole": true,
+      "dropDebugger": true
+    }
+  },
+  "target": "Inherited installed Vite default, matching the application config which has no explicit build.target.",
+  "resolvedTargetEquivalent": true,
+  "observationEquivalent": false,
+  "fixtureSource": "\nconst trace = [];\nfunction mark(label) { trace.push(label); return label; }\nconsole.log(mark('direct-log-argument'));\nconsole.warn(mark('direct-warn-argument'));\nconsole.error(mark('direct-error-argument'));\nconsole.debug(mark('direct-debug-argument'));\nconsole['log'](mark('computed-argument'));\nconsole.log?.(mark('optional-method-argument'));\nconsole?.log(mark('optional-object-argument'));\nconst method = 'info';\nconsole[method](mark('computed-variable-argument'));\nglobalThis.console.log(mark('global-property-argument'));\nconst indirect = console.log;\nindirect(mark('indirect-argument'));\nfunction localConsole(console) {\n  console.log(mark('shadowed-argument'));\n}\nlocalConsole({ log(value) { trace.push('shadowed-call:' + value); } });\nfunction normal(value) {\n  debugger;\n  trace.push('normal-call:' + value);\n  return value * 2;\n}\nglobalThis.__minifierPolicyResult = { trace, result: normal(21) };\n",
+  "results": {
+    "terser": {
+      "ok": true,
+      "buildConfig": {
+        "configFile": false,
+        "envDir": false,
+        "logLevel": "silent",
+        "publicDir": false,
+        "plugins": [
+          {
+            "name": "minifier-policy-fixture"
+          }
+        ],
+        "build": {
+          "write": false,
+          "emptyOutDir": false,
+          "copyPublicDir": false,
+          "sourcemap": false,
+          "reportCompressedSize": false,
+          "minify": "terser",
+          "rolldownOptions": {
+            "input": "virtual:minifier-policy-fixture",
+            "output": {
+              "format": "iife",
+              "name": "MinifierPolicyFixture"
+            }
+          },
+          "terserOptions": {
+            "compress": {
+              "drop_console": true,
+              "drop_debugger": true
+            }
+          }
+        }
+      },
+      "resolved": {
+        "mode": "production",
+        "target": [
+          "chrome111",
+          "edge111",
+          "firefox114",
+          "safari16.4",
+          "ios16.4"
+        ],
+        "sourcemap": false,
+        "minify": "terser"
+      },
+      "bytes": 321,
+      "sha256": "b01785f3964211a730a1a439e27bec57f44b507ad65b42b16b1393f0cbf9ec29",
+      "debuggerRemoved": true,
+      "code": "!function(){var l,o=[];function n(l){return o.push(l),l}globalThis.console.log(n(\"global-property-argument\")),(0,console.log)(n(\"indirect-argument\")),function(l){l.log(n(\"shadowed-argument\"))}({log(l){o.push(\"shadowed-call:\"+l)}}),globalThis.__minifierPolicyResult={trace:o,result:(l=21,o.push(\"normal-call:\"+l),2*l)}}();",
+      "observation": {
+        "trace": [
+          "global-property-argument",
+          "indirect-argument",
+          "shadowed-argument",
+          "shadowed-call:shadowed-argument",
+          "normal-call:21"
+        ],
+        "result": 42,
+        "consoleCalls": [
+          {
+            "method": "log",
+            "values": [
+              "global-property-argument"
+            ]
+          },
+          {
+            "method": "log",
+            "values": [
+              "indirect-argument"
+            ]
+          }
+        ]
+      },
+      "cases": {
+        "direct-log-argument": {
+          "argumentEffectObserved": false,
+          "consoleMethodsObserved": []
+        },
+        "direct-warn-argument": {
+          "argumentEffectObserved": false,
+          "consoleMethodsObserved": []
+        },
+        "direct-error-argument": {
+          "argumentEffectObserved": false,
+          "consoleMethodsObserved": []
+        },
+        "direct-debug-argument": {
+          "argumentEffectObserved": false,
+          "consoleMethodsObserved": []
+        },
+        "computed-argument": {
+          "argumentEffectObserved": false,
+          "consoleMethodsObserved": []
+        },
+        "optional-method-argument": {
+          "argumentEffectObserved": false,
+          "consoleMethodsObserved": []
+        },
+        "optional-object-argument": {
+          "argumentEffectObserved": false,
+          "consoleMethodsObserved": []
+        },
+        "computed-variable-argument": {
+          "argumentEffectObserved": false,
+          "consoleMethodsObserved": []
+        },
+        "global-property-argument": {
+          "argumentEffectObserved": true,
+          "consoleMethodsObserved": [
+            "log"
+          ]
+        },
+        "indirect-argument": {
+          "argumentEffectObserved": true,
+          "consoleMethodsObserved": [
+            "log"
+          ]
+        },
+        "shadowed-argument": {
+          "argumentEffectObserved": true,
+          "consoleMethodsObserved": [],
+          "shadowedCustomCallObserved": true
+        }
+      }
+    },
+    "oxc": {
+      "ok": true,
+      "buildConfig": {
+        "configFile": false,
+        "envDir": false,
+        "logLevel": "silent",
+        "publicDir": false,
+        "plugins": [
+          {
+            "name": "minifier-policy-fixture"
+          }
+        ],
+        "build": {
+          "write": false,
+          "emptyOutDir": false,
+          "copyPublicDir": false,
+          "sourcemap": false,
+          "reportCompressedSize": false,
+          "minify": "oxc",
+          "rolldownOptions": {
+            "input": "virtual:minifier-policy-fixture",
+            "output": {
+              "format": "iife",
+              "name": "MinifierPolicyFixture",
+              "minify": {
+                "compress": {
+                  "dropConsole": true,
+                  "dropDebugger": true
+                },
+                "mangle": true,
+                "codegen": true
+              }
+            }
+          }
+        }
+      },
+      "resolved": {
+        "mode": "production",
+        "target": [
+          "chrome111",
+          "edge111",
+          "firefox114",
+          "safari16.4",
+          "ios16.4"
+        ],
+        "sourcemap": false,
+        "minify": "oxc"
+      },
+      "bytes": 352,
+      "sha256": "63d0c37e5b77141aae8e366f17c136aac2008000f6e069ca1468194ccb6ae5fa",
+      "debuggerRemoved": true,
+      "code": "(function(){var e=[];function t(t){return e.push(t),t}console.log?.(t(`optional-method-argument`)),console?.log(t(`optional-object-argument`)),globalThis.console.log(t(`global-property-argument`));var n=console.log;n(t(`indirect-argument`));function r(t){return e.push(`normal-call:`+t),t*2}globalThis.__minifierPolicyResult={trace:e,result:r(21)}})();",
+      "observation": {
+        "trace": [
+          "optional-method-argument",
+          "optional-object-argument",
+          "global-property-argument",
+          "indirect-argument",
+          "normal-call:21"
+        ],
+        "result": 42,
+        "consoleCalls": [
+          {
+            "method": "log",
+            "values": [
+              "optional-method-argument"
+            ]
+          },
+          {
+            "method": "log",
+            "values": [
+              "optional-object-argument"
+            ]
+          },
+          {
+            "method": "log",
+            "values": [
+              "global-property-argument"
+            ]
+          },
+          {
+            "method": "log",
+            "values": [
+              "indirect-argument"
+            ]
+          }
+        ]
+      },
+      "cases": {
+        "direct-log-argument": {
+          "argumentEffectObserved": false,
+          "consoleMethodsObserved": []
+        },
+        "direct-warn-argument": {
+          "argumentEffectObserved": false,
+          "consoleMethodsObserved": []
+        },
+        "direct-error-argument": {
+          "argumentEffectObserved": false,
+          "consoleMethodsObserved": []
+        },
+        "direct-debug-argument": {
+          "argumentEffectObserved": false,
+          "consoleMethodsObserved": []
+        },
+        "computed-argument": {
+          "argumentEffectObserved": false,
+          "consoleMethodsObserved": []
+        },
+        "optional-method-argument": {
+          "argumentEffectObserved": true,
+          "consoleMethodsObserved": [
+            "log"
+          ]
+        },
+        "optional-object-argument": {
+          "argumentEffectObserved": true,
+          "consoleMethodsObserved": [
+            "log"
+          ]
+        },
+        "computed-variable-argument": {
+          "argumentEffectObserved": false,
+          "consoleMethodsObserved": []
+        },
+        "global-property-argument": {
+          "argumentEffectObserved": true,
+          "consoleMethodsObserved": [
+            "log"
+          ]
+        },
+        "indirect-argument": {
+          "argumentEffectObserved": true,
+          "consoleMethodsObserved": [
+            "log"
+          ]
+        },
+        "shadowed-argument": {
+          "argumentEffectObserved": false,
+          "consoleMethodsObserved": [],
+          "shadowedCustomCallObserved": false
+        }
+      }
+    }
+  },
+  "versions": {
+    "node": "v24.22.0",
+    "vite": "8.3.4",
+    "rolldown": "1.2.13",
+    "terser": "5.51.2"
+  },
+  "exitCode": 1
+}

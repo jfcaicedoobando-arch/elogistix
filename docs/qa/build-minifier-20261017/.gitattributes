@@ -1,0 +1,4 @@
+# Captured evidence and the measured harness retain their exact bytes.
+** -text whitespace=cr-at-eol
+# Vite prints a trailing space after its reporter label; retain hashed raw logs.
+evidence/baseline/logs/*.stderr.txt whitespace=cr-at-eol,-blank-at-eol

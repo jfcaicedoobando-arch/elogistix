@@ -1,0 +1,20 @@
+{
+  "sourceSha": "366e896df775490c29f87475db32ac7a9c126c30",
+  "command": "bun install --frozen-lockfile --ignore-scripts --cache-dir <workspace>/.tools/bun-cache",
+  "exitCode": 0,
+  "bun": "1.4.0",
+  "node": "v24.22.0",
+  "conditions": "New checkout and new dedicated Bun cache; package installation excluded from build timings. Bun install loads the repository-tracked public .env; lifecycle scripts were disabled. Build workers disable env files and supply only explicit synthetic VITE values.",
+  "lockSha256": "be059f24a5e00112b4ff49a74fac064c5b53a43c7449774b2dc6a336fc42e150",
+  "packageSha256": "ed0b99d12e1fea69b8aa47522e53979fbcb828806114d3fdddb72584b2c67662",
+  "runtimeCopies": {
+    "nodeSha256": "ba93f9a70bd86fce3ebbb39ec758501458453467aa92a34a0a3602d1e3fc2b9c",
+    "source": "Read-only copies from existing 2026-10-16/task-10/.tools binaries; hashes matched source and destination.",
+    "bunSha256": "627d2e4775c24bdedee2cd7ccc18dcadae061e5345274ab6e3c4c797927bfb8f"
+  },
+  "attempts": [
+    "Sandbox clone failed DNS/thread startup; elevated clone succeeded.",
+    "Sandbox installs failed EBADF before installation; elevated frozen install succeeded in 71.88s per Bun log."
+  ],
+  "noPackageOrLockChanges": true
+}

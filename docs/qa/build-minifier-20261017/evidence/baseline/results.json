@@ -1,0 +1,156 @@
+{
+  "baseSha": "366e896df775490c29f87475db32ac7a9c126c30",
+  "status": "complete",
+  "startedAt": "2026-10-17T23:00:28.347Z",
+  "endedAt": "2026-10-17T23:04:45.098Z",
+  "runtime": {
+    "node": "v24.22.0",
+    "nodeExecutable": "C:\\Users\\torta\\Documents\\Codex\\2026-10-17\\task-6\\.tools\\node.exe",
+    "versions": {
+      "node": "24.22.0",
+      "acorn": "8.18.0",
+      "ada": "4.0.0",
+      "amaro": "1.1.11",
+      "ares": "1.34.8",
+      "brotli": "1.2.0",
+      "cldr": "48.0",
+      "icu": "78.3",
+      "llhttp": "9.4.3",
+      "merve": "1.2.2",
+      "modules": "137",
+      "napi": "10",
+      "nbytes": "0.1.4",
+      "ncrypto": "0.0.1",
+      "nghttp2": "1.70.0",
+      "nghttp3": "",
+      "ngtcp2": "",
+      "openssl": "3.5.8",
+      "simdjson": "4.6.11",
+      "simdutf": "6.4.0",
+      "sqlite": "3.53.4",
+      "tz": "2026c",
+      "undici": "7.29.1",
+      "unicode": "17.0",
+      "uv": "1.52.1",
+      "uvwasi": "0.0.23",
+      "v8": "13.6.233.17-node.57",
+      "zlib": "1.3.2.1-motley-285e94b",
+      "zstd": "1.5.7"
+    },
+    "bun": "1.4.0",
+    "bunExecutable": "C:\\Users\\torta\\Documents\\Codex\\2026-10-17\\task-6\\.tools\\bun.exe",
+    "os": {
+      "platform": "win32",
+      "release": "10.0.26300",
+      "version": "Windows 11 Home",
+      "arch": "x64"
+    },
+    "cpu": {
+      "model": "AMD Ryzen 9 270 w/ Radeon 780M Graphics        ",
+      "logicalCount": 16,
+      "availableParallelism": 16
+    },
+    "totalMemoryBytes": 16422010880
+  },
+  "installed": {
+    "vite": {
+      "version": "8.3.4",
+      "packageJson": "node_modules/vite/package.json"
+    },
+    "rolldown": {
+      "version": "1.2.13",
+      "packageJson": "node_modules/rolldown/package.json"
+    },
+    "terser": {
+      "version": "5.51.2",
+      "packageJson": "node_modules/terser/package.json"
+    },
+    "lightningcss": {
+      "version": "1.33.0",
+      "packageJson": "node_modules/lightningcss/package.json"
+    },
+    "postcss": {
+      "version": "8.5.29",
+      "packageJson": "node_modules/postcss/package.json"
+    },
+    "tailwindcss": {
+      "version": "4.3.3",
+      "packageJson": "node_modules/tailwindcss/package.json"
+    },
+    "@tailwindcss/postcss": {
+      "version": "4.3.3",
+      "packageJson": "node_modules/@tailwindcss/postcss/package.json"
+    }
+  },
+  "warmupSeconds": 30.7044288,
+  "measuredSeconds": [
+    {
+      "id": "pair-01-terser",
+      "seconds": 26.165256999999997,
+      "exitCode": 0
+    },
+    {
+      "id": "pair-02-terser",
+      "seconds": 23.814583000000013,
+      "exitCode": 0
+    },
+    {
+      "id": "pair-03-terser",
+      "seconds": 23.448867399999987,
+      "exitCode": 0
+    },
+    {
+      "id": "pair-04-terser",
+      "seconds": 24.246147800000006,
+      "exitCode": 0
+    },
+    {
+      "id": "pair-05-terser",
+      "seconds": 22.795069499999983,
+      "exitCode": 0
+    }
+  ],
+  "elapsedSeconds": {
+    "n": 5,
+    "min": 22.795069499999983,
+    "max": 26.165256999999997,
+    "mean": 24.09398494,
+    "median": 23.814583000000013,
+    "sampleSD": 1.2742394680025686,
+    "cv": 0.05288620670992122
+  },
+  "emitted": {
+    "js": {
+      "files": 741,
+      "rawBytes": 9386347,
+      "gzipBytes": 3082508,
+      "brotliBytes": 2630347
+    },
+    "css": {
+      "files": 1,
+      "rawBytes": 196588,
+      "gzipBytes": 27568,
+      "brotliBytes": 21163
+    },
+    "combined": {
+      "files": 742,
+      "rawBytes": 9582935,
+      "gzipBytes": 3110076,
+      "brotliBytes": 2651510
+    }
+  },
+  "identicalInventoriesAllSix": true,
+  "inventorySha256": "75927861eb0ac92382cff3f0d144186e7610482049102a64a27a4f2adcf35962",
+  "sourceIntegrity": {
+    "beforeHead": "366e896df775490c29f87475db32ac7a9c126c30",
+    "afterHead": "366e896df775490c29f87475db32ac7a9c126c30",
+    "beforeSha256": "b602115146b79c5aa259810606d685a984fe102120456fcd3368adae3866ca0a",
+    "afterSha256": "b602115146b79c5aa259810606d685a984fe102120456fcd3368adae3866ca0a",
+    "changedPaths": [],
+    "unchanged": true
+  },
+  "oxc": {
+    "fullBuildsMeasured": 0,
+    "reason": "Officially supported but console-policy fixture differs from Terser; no equivalent comparison accepted."
+  }
+}

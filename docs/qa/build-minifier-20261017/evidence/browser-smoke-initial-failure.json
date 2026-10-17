@@ -1,0 +1,14 @@
+{
+  "schemaVersion": 1,
+  "startedAt": "2026-10-17T23:05:02.830Z",
+  "node": "v24.22.0",
+  "playwright": "1.64.0",
+  "scope": "Unauthenticated public routes, light theme, empty isolated contexts; text/links/fields/buttons and small local UI interactions. No form submission or backend. Remote fonts are unavailable. This does not establish complete functional or visual equivalence, authorization, authenticated modules, or performance.",
+  "networkPolicy": "Before navigation, context routing aborts every request except GET/HEAD to its exact ephemeral loopback static origin; service workers blocked and every WebSocket closed without connecting. The temporary HTTP response removes preconnect/dns-prefetch links, and browser DNS resolution denies every hostname except 127.0.0.1. Input HTML/assets are not modified.",
+  "builds": [],
+  "comparison": null,
+  "passed": false,
+  "playwrightBrowserRevision": "1248",
+  "error": "browserType.launch: Executable doesn't exist at C:\\Users\\torta\\AppData\\Local\\Packages\\sandbox.{ab720b7e-ec3c-4a42-908e-4b13f72d9044}\\AC\\ms-playwright\\chromium_headless_shell-1248\\chrome-headless-shell-win64\\chrome-headless-shell.exe ╔════════════════════════════════════════════════════════════╗ ║ Looks like Playwright was just installed or updated. ║ ║ Please run the following command to download new browsers: ║ ║ ║ ║ npx playwright install ║ ║ ║ ║ <3 Playwright Team ║ ╚════════════════════════════════════════════════════════════╝",
+  "finishedAt": "2026-10-17T23:05:03.548Z"
+}

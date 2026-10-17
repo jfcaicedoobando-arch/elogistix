@@ -1,0 +1,8 @@
+{
+  "command": "$env:PLAYWRIGHT_BROWSERS_PATH='C:/Users/torta/AppData/Local/ms-playwright'; ../.tools/node.exe docs/qa/build-minifier-20261017/browser-smoke.mjs reports/build-minifier/baseline-20261017/outputs/pair-01-terser reports/build-minifier/baseline-20261017/outputs/pair-05-terser --output docs/qa/build-minifier-20261017/evidence/browser-smoke.json",
+  "execution": "outside sandbox for ephemeral loopback",
+  "startedAt": "2026-10-17T23:05:51.9208428Z",
+  "finishedAt": "2026-10-17T23:06:04.4618022Z",
+  "elapsedSeconds": 12.5409594,
+  "exitCode": 1
+}

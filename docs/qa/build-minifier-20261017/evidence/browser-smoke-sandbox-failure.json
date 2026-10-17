@@ -1,0 +1,259 @@
+{
+  "schemaVersion": 1,
+  "startedAt": "2026-10-17T23:05:29.400Z",
+  "node": "v24.22.0",
+  "playwright": "1.64.0",
+  "scope": "Unauthenticated public routes, light theme, empty isolated contexts; text/links/fields/buttons and small local UI interactions. No form submission or backend. Remote fonts are unavailable. This does not establish complete functional or visual equivalence, authorization, authenticated modules, or performance.",
+  "networkPolicy": "Before navigation, context routing aborts every request except GET/HEAD to its exact ephemeral loopback static origin; service workers blocked and every WebSocket closed without connecting. The temporary HTTP response removes preconnect/dns-prefetch links, and browser DNS resolution denies every hostname except 127.0.0.1. Input HTML/assets are not modified.",
+  "builds": [
+    {
+      "label": "build-1",
+      "directory": "pair-01-terser",
+      "indexSha256": "bc0a2aac2eb619feec5388584360c52c844e1d3b77158dfb06eea935583a4c80",
+      "javascriptFiles": 741,
+      "syntheticUrlPresent": true,
+      "syntheticKeyPresent": true,
+      "cases": [
+        {
+          "route": "/",
+          "viewport": {
+            "width": 1280,
+            "height": 720
+          },
+          "passed": false,
+          "error": "page.goto: net::ERR_NETWORK_ACCESS_DENIED at http://127.0.0.1:60926/ Call log: \u001b[2m - navigating to \"http://127.0.0.1:60926/\", waiting until \"load\"\u001b[22m",
+          "pageerrors": [],
+          "scripts": [],
+          "resourcesFailed": [],
+          "failedLocalRequests": [
+            {
+              "type": "document",
+              "path": "/"
+            }
+          ],
+          "network": {
+            "blockedRequests": [],
+            "blockedWebSockets": []
+          }
+        },
+        {
+          "route": "/login",
+          "viewport": {
+            "width": 1280,
+            "height": 720
+          },
+          "passed": false,
+          "error": "page.goto: net::ERR_NETWORK_ACCESS_DENIED at http://127.0.0.1:60926/login Call log: \u001b[2m - navigating to \"http://127.0.0.1:60926/login\", waiting until \"load\"\u001b[22m",
+          "pageerrors": [],
+          "scripts": [],
+          "resourcesFailed": [],
+          "failedLocalRequests": [
+            {
+              "type": "document",
+              "path": "/login"
+            }
+          ],
+          "network": {
+            "blockedRequests": [],
+            "blockedWebSockets": []
+          }
+        },
+        {
+          "route": "/",
+          "viewport": {
+            "width": 390,
+            "height": 640
+          },
+          "passed": false,
+          "error": "page.goto: net::ERR_NETWORK_ACCESS_DENIED at http://127.0.0.1:60926/ Call log: \u001b[2m - navigating to \"http://127.0.0.1:60926/\", waiting until \"load\"\u001b[22m",
+          "pageerrors": [],
+          "scripts": [],
+          "resourcesFailed": [],
+          "failedLocalRequests": [
+            {
+              "type": "document",
+              "path": "/"
+            }
+          ],
+          "network": {
+            "blockedRequests": [],
+            "blockedWebSockets": []
+          }
+        },
+        {
+          "route": "/login",
+          "viewport": {
+            "width": 390,
+            "height": 640
+          },
+          "passed": false,
+          "error": "page.goto: net::ERR_NETWORK_ACCESS_DENIED at http://127.0.0.1:60926/login Call log: \u001b[2m - navigating to \"http://127.0.0.1:60926/login\", waiting until \"load\"\u001b[22m",
+          "pageerrors": [],
+          "scripts": [],
+          "resourcesFailed": [],
+          "failedLocalRequests": [
+            {
+              "type": "document",
+              "path": "/login"
+            }
+          ],
+          "network": {
+            "blockedRequests": [],
+            "blockedWebSockets": []
+          }
+        }
+      ],
+      "staticServer": {
+        "requests": 0,
+        "connectionHintsRemoved": 0,
+        "failed": []
+      }
+    },
+    {
+      "label": "build-2",
+      "directory": "pair-05-terser",
+      "indexSha256": "bc0a2aac2eb619feec5388584360c52c844e1d3b77158dfb06eea935583a4c80",
+      "javascriptFiles": 741,
+      "syntheticUrlPresent": true,
+      "syntheticKeyPresent": true,
+      "cases": [
+        {
+          "route": "/",
+          "viewport": {
+            "width": 1280,
+            "height": 720
+          },
+          "passed": false,
+          "error": "page.goto: net::ERR_NETWORK_ACCESS_DENIED at http://127.0.0.1:61544/ Call log: \u001b[2m - navigating to \"http://127.0.0.1:61544/\", waiting until \"load\"\u001b[22m",
+          "pageerrors": [],
+          "scripts": [],
+          "resourcesFailed": [],
+          "failedLocalRequests": [
+            {
+              "type": "document",
+              "path": "/"
+            }
+          ],
+          "network": {
+            "blockedRequests": [],
+            "blockedWebSockets": []
+          }
+        },
+        {
+          "route": "/login",
+          "viewport": {
+            "width": 1280,
+            "height": 720
+          },
+          "passed": false,
+          "error": "page.goto: net::ERR_NETWORK_ACCESS_DENIED at http://127.0.0.1:61544/login Call log: \u001b[2m - navigating to \"http://127.0.0.1:61544/login\", waiting until \"load\"\u001b[22m",
+          "pageerrors": [],
+          "scripts": [],
+          "resourcesFailed": [],
+          "failedLocalRequests": [
+            {
+              "type": "document",
+              "path": "/login"
+            }
+          ],
+          "network": {
+            "blockedRequests": [],
+            "blockedWebSockets": []
+          }
+        },
+        {
+          "route": "/",
+          "viewport": {
+            "width": 390,
+            "height": 640
+          },
+          "passed": false,
+          "error": "page.goto: net::ERR_NETWORK_ACCESS_DENIED at http://127.0.0.1:61544/ Call log: \u001b[2m - navigating to \"http://127.0.0.1:61544/\", waiting until \"load\"\u001b[22m",
+          "pageerrors": [],
+          "scripts": [],
+          "resourcesFailed": [],
+          "failedLocalRequests": [
+            {
+              "type": "document",
+              "path": "/"
+            }
+          ],
+          "network": {
+            "blockedRequests": [],
+            "blockedWebSockets": []
+          }
+        },
+        {
+          "route": "/login",
+          "viewport": {
+            "width": 390,
+            "height": 640
+          },
+          "passed": false,
+          "error": "page.goto: net::ERR_NETWORK_ACCESS_DENIED at http://127.0.0.1:61544/login Call log: \u001b[2m - navigating to \"http://127.0.0.1:61544/login\", waiting until \"load\"\u001b[22m",
+          "pageerrors": [],
+          "scripts": [],
+          "resourcesFailed": [],
+          "failedLocalRequests": [
+            {
+              "type": "document",
+              "path": "/login"
+            }
+          ],
+          "network": {
+            "blockedRequests": [],
+            "blockedWebSockets": []
+          }
+        }
+      ],
+      "staticServer": {
+        "requests": 0,
+        "connectionHintsRemoved": 0,
+        "failed": []
+      }
+    }
+  ],
+  "comparison": {
+    "kind": "Visible UI comparison only; caller identifies build variants",
+    "cases": [
+      {
+        "route": "/",
+        "viewport": {
+          "width": 1280,
+          "height": 720
+        },
+        "passed": false
+      },
+      {
+        "route": "/login",
+        "viewport": {
+          "width": 1280,
+          "height": 720
+        },
+        "passed": false
+      },
+      {
+        "route": "/",
+        "viewport": {
+          "width": 390,
+          "height": 640
+        },
+        "passed": false
+      },
+      {
+        "route": "/login",
+        "viewport": {
+          "width": 390,
+          "height": 640
+        },
+        "passed": false
+      }
+    ],
+    "passed": false
+  },
+  "passed": false,
+  "playwrightBrowserRevision": "1248",
+  "chromium": "156.0.8078.4",
+  "browserBinary": "Playwright-managed Chromium; no channel or custom executablePath",
+  "finishedAt": "2026-10-17T23:05:31.272Z"
+}
