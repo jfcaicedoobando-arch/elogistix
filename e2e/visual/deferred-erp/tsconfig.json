@@ -1,0 +1,9 @@
+{
+  "extends": "../../../tsconfig.app.json",
+  "compilerOptions": { "incremental": false, "types": ["node", "vite/client"] },
+  "include": [
+    "./**/*.ts", "./**/*.tsx",
+    "../../../src/__tests__/scripts/deferredErpCatalog.test.ts",
+    "../../../src/__tests__/scripts/deferredErpEvidence.test.ts"
+  ]
+}

@@ -1,0 +1,80 @@
+{
+  "schemaVersion": 1,
+  "validatedWorkingTreeParent": "26d962dba8ebf22e7475c929a3825c1bb9ccde30",
+  "catalog": {
+    "command": "node scripts/ci/test-catalog.mjs --output reports/deferred-erp/catalog-after.json",
+    "exitCode": 0,
+    "treeDigest": "0699aa7eeac5e76efe754d6589870c20975ca4d8f9295b6606776ed73f0abb66",
+    "entries": [
+      {
+        "path": "e2e/visual/deferred-erp/specs/correo.spec.ts",
+        "lane": "playwright-isolated",
+        "mode": "manual",
+        "sha256": "0d15694ead6f0f86063f736da5c0dff54465321b035307d6a5517c4866d3d77b"
+      },
+      {
+        "path": "e2e/visual/deferred-erp/specs/crm.spec.ts",
+        "lane": "playwright-isolated",
+        "mode": "manual",
+        "sha256": "fea527c6234c6c016bc78ec271ba1c37b25551faddfd217453faafa4521adf00"
+      },
+      {
+        "path": "e2e/visual/deferred-erp/specs/xml.spec.ts",
+        "lane": "playwright-isolated",
+        "mode": "manual",
+        "sha256": "760b89304ed668e6c9fdf2d6473a6e75b97783170b697228c420b85f677a6a50"
+      }
+    ]
+  },
+  "regressions": {
+    "passed": 66,
+    "failed": 0,
+    "pending": 0,
+    "files": 4
+  },
+  "existingNodeCatalogTests": {
+    "command": "node --test scripts/ci/test-catalog/demo-durable-owner.test.mjs scripts/ci/test-catalog/demo-wire-lab.test.mjs",
+    "exitCode": 0,
+    "passed": 7,
+    "failed": 0
+  },
+  "additionalExistingSuiteOnWindows": {
+    "path": "src/__tests__/scripts/ciTestEvidence.test.ts",
+    "passed": 26,
+    "failed": 4,
+    "failures": [
+      {
+        "test": "CI catalog: effective discovery routes the exact package script contract to an unconditional detector step after Node and Bun setup",
+        "status": "failed"
+      },
+      {
+        "test": "RLS runner: discovery and red controls without a database rejects empty and formerly orphaned SQL before invoking psql",
+        "status": "failed"
+      },
+      {
+        "test": "RLS runner: discovery and red controls without a database executes the discovered CRM name and records only path/status/duration",
+        "status": "failed"
+      },
+      {
+        "test": "RLS runner: discovery and red controls without a database preserves a psql failure and records failed evidence",
+        "status": "failed"
+      }
+    ],
+    "limitation": "One untouched contract assumes LF YAML, three untouched contracts require Bash absent from this Windows runtime; no controls changed or skipped."
+  },
+  "deferredErpWorkflowExecution": "manual/local only; existing Isolated UI audit workflow does not run this harness",
+  "sourceHashes": [
+    {
+      "path": "scripts/ci/test-catalog.mjs",
+      "sha256": "e418ba328d55aa709f60686c8b24634443872ab6bc37feb522b621e7a08bb998"
+    },
+    {
+      "path": "src/__tests__/scripts/deferredErpCatalog.test.ts",
+      "sha256": "c1a58f8cd457cdf47720e3028eb963362328df8c9de42b26c96b6f726a2da429"
+    },
+    {
+      "path": "src/__tests__/scripts/deferredErpEvidence.test.ts",
+      "sha256": "e260815690b96dcb3687d23349af2735832c55010353479b20b0f579c22b9b13"
+    }
+  ]
+}

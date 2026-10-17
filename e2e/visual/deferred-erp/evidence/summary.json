@@ -1,0 +1,231 @@
+{
+  "status": "passed",
+  "runId": "13684419-7698-421d-8557-4e3348b6b508",
+  "startedAt": "2026-10-17T22:47:24.685Z",
+  "baseCommit": "b02c3391a97ea7d54b0a6b0b514c4626738ab639",
+  "initialBaseCommit": "9af3859fabd6e57343cb5fadd4494a0a14579cb2",
+  "integration": "main PR387 retained unchanged; validation repeated on integrated tree",
+  "generatedAt": "2026-10-17T22:48:15.340Z",
+  "scope": "Local synthetic components and in-memory backend only; no production/staging certification",
+  "validation": {
+    "status": "passed",
+    "proof": "validation-results.json",
+    "runId": "13684419-7698-421d-8557-4e3348b6b508",
+    "commands": [
+      {
+        "name": "typecheck",
+        "exitCode": 0,
+        "signal": null,
+        "spawnError": null
+      },
+      {
+        "name": "lint",
+        "exitCode": 0,
+        "signal": null,
+        "spawnError": null
+      },
+      {
+        "name": "build",
+        "exitCode": 0,
+        "signal": null,
+        "spawnError": null
+      }
+    ],
+    "sourceBefore": {
+      "algorithm": "sha256",
+      "digest": "18057c2e338ebffd89ddc095e8b06de28f7677f3ec80d46b2499028d88117179",
+      "fileCount": 6885
+    },
+    "sourceAfter": {
+      "algorithm": "sha256",
+      "digest": "18057c2e338ebffd89ddc095e8b06de28f7677f3ec80d46b2499028d88117179",
+      "fileCount": 6885
+    }
+  },
+  "unit": {
+    "files": 7,
+    "passed": 100,
+    "failed": 0,
+    "pending": 0
+  },
+  "gui": {
+    "passed": 26,
+    "failed": 0,
+    "flaky": 0,
+    "skipped": 0,
+    "retries": 0,
+    "viewports": [
+      "1280x720",
+      "390x640"
+    ],
+    "browser": "Isolated Playwright Chromium 156.0.8078.4 (revision1248)",
+    "screenshotCount": 34
+  },
+  "network": {
+    "fixtureGetRequests": 78,
+    "blockedAttempts": 0,
+    "browserErrors": 0,
+    "externalRequests": 0,
+    "nonGetRequests": 0,
+    "serviceWorkers": "blocked",
+    "webSockets": "blocked"
+  },
+  "localXmlParser": {
+    "assertions": 22,
+    "passed": true,
+    "denoSuiteExecuted": false
+  },
+  "originalDenoSuite": {
+    "status": "passed",
+    "runId": "063518e9-07e0-4093-ae3e-a38f0dbba2a6",
+    "suite": "supabase/functions/parse-cfdi-xml/validarNcProveedor_test.ts",
+    "runtime": "2.9.7",
+    "counts": {
+      "total": 3,
+      "failed": 0,
+      "skipped": 0,
+      "passed": 3
+    },
+    "proof": "deno-original-results.json",
+    "proofSha256": "f522d9fbfff7b9217fe169321c9274623311f74bf60a6f8db9bf4268ab3e1f41",
+    "log": "validation/deno-original.txt",
+    "junit": "validation/deno-original.junit.xml",
+    "typecheck": true,
+    "runtimePermissionGrants": [],
+    "loader": "cached-only",
+    "scope": "Original local Deno suite with in-memory client; no backend, ACL/RLS or production certification"
+  },
+  "notExecuted": [
+    "real Gmail",
+    "real Supabase/database/RLS/ACL",
+    "real writes/deletes/uploads",
+    "SAT or stamping",
+    "production/staging E2E",
+    "merge or deployment"
+  ],
+  "productDefectsObserved": [],
+  "harnessCorrectionsBeforeFinalRun": [
+    "Add QueryClientProvider to XML fixture",
+    "Match accessible typographic dash and normalized case in Correo selectors",
+    "Refactor CRM mock to satisfy complexity rule",
+    "Use production Toaster and ThemeProvider for matching toast placement"
+  ],
+  "fixtureInputs": [
+    {
+      "path": "e2e/visual/deferred-erp/backend.ts",
+      "sha256": "7dbb999e51dcb86adf384f9aa6981427bbf4591730f9751f777cb2a13d04178a"
+    },
+    {
+      "path": "e2e/visual/deferred-erp/collect-evidence.d.mts",
+      "sha256": "d4c6961406ddae9e6b2f9de83dc20bf6c749cfd6634535a2e302b6f2729cdc07"
+    },
+    {
+      "path": "e2e/visual/deferred-erp/collect-evidence.mjs",
+      "sha256": "a442fdf2ac0ebf7998b0e3d6541fe23434658b9d5c0328b259a1c0c476f92324"
+    },
+    {
+      "path": "e2e/visual/deferred-erp/correo-backend.ts",
+      "sha256": "609abedf0a36eb4f9b4cc48c0f1beb9891b608a8bd7dcb9d484dad82b0790f5d"
+    },
+    {
+      "path": "e2e/visual/deferred-erp/CorreoFixture.tsx",
+      "sha256": "0e037f4241671cd915b7b5be55804093c579a29f8bd01a5585d8d6006d26a737"
+    },
+    {
+      "path": "e2e/visual/deferred-erp/crm-backend.ts",
+      "sha256": "195ee6c6fa1c66174dd4e9621895601339133dd1f60da3ad75d022022f2e0747"
+    },
+    {
+      "path": "e2e/visual/deferred-erp/CrmFixture.tsx",
+      "sha256": "984cc49442a5609b3a8ac9d0430f61ce06b9506ed67c2aff4d8b3483b50cc5db"
+    },
+    {
+      "path": "e2e/visual/deferred-erp/deno-evidence.d.mts",
+      "sha256": "ba6b18008afb388db520a886c1584f054dc652c32b9ac5f962ac49267770c66c"
+    },
+    {
+      "path": "e2e/visual/deferred-erp/deno-evidence.mjs",
+      "sha256": "ef161acb3f07905af6037a0d84ff99ab68d47854a0c4c6737c1d1c66129db666"
+    },
+    {
+      "path": "e2e/visual/deferred-erp/empty-env/.gitkeep",
+      "sha256": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b"
+    },
+    {
+      "path": "e2e/visual/deferred-erp/index.html",
+      "sha256": "21001acc2e4be1b0be9706023774bd70c1ec51408cb5b12c9e923574a97e625d"
+    },
+    {
+      "path": "e2e/visual/deferred-erp/main.tsx",
+      "sha256": "cfd3ebb4c4cc7a7ef3e9658ed1beb9eac0f57d6508b57e86db0c5044183e88af"
+    },
+    {
+      "path": "e2e/visual/deferred-erp/playwright.config.ts",
+      "sha256": "e310934e7c3ffe24b0c793f23dadb204eda616a6d657551bb5714ee6c75e3248"
+    },
+    {
+      "path": "e2e/visual/deferred-erp/README.md",
+      "sha256": "19d6930f01b87fa2c0363a4b3f325cada19d222e58a00d29a908004dee853ebf"
+    },
+    {
+      "path": "e2e/visual/deferred-erp/run-deno-original.mjs",
+      "sha256": "cc6eaec24e199ac4948ebd9b7211b5f60cf685f69d7b81c4351e5069b54a2038"
+    },
+    {
+      "path": "e2e/visual/deferred-erp/specs/correo.spec.ts",
+      "sha256": "0d15694ead6f0f86063f736da5c0dff54465321b035307d6a5517c4866d3d77b"
+    },
+    {
+      "path": "e2e/visual/deferred-erp/specs/crm.spec.ts",
+      "sha256": "fea527c6234c6c016bc78ec271ba1c37b25551faddfd217453faafa4521adf00"
+    },
+    {
+      "path": "e2e/visual/deferred-erp/specs/helpers.ts",
+      "sha256": "4153ac8a4b73594120c718095383621c8e19877f7defe3ed926ee94cf9f36101"
+    },
+    {
+      "path": "e2e/visual/deferred-erp/specs/xml.spec.ts",
+      "sha256": "760b89304ed668e6c9fdf2d6473a6e75b97783170b697228c420b85f677a6a50"
+    },
+    {
+      "path": "e2e/visual/deferred-erp/tsconfig.json",
+      "sha256": "a3e7eabb3c9983ff632289d7135884561d4bceaa6bb7634c48bbdb20f8533ef7"
+    },
+    {
+      "path": "e2e/visual/deferred-erp/unit-network-guard.ts",
+      "sha256": "0f83904dcff06dbc8378d7e059964722e76d1b72fd6561201506f2cfc864559f"
+    },
+    {
+      "path": "e2e/visual/deferred-erp/unit-no-backend.ts",
+      "sha256": "00a75d6d2a804ea933289402fa090f726af11d32ba589766d7a135e655b18dfb"
+    },
+    {
+      "path": "e2e/visual/deferred-erp/validation-checks.d.mts",
+      "sha256": "07d225be5ee02515c5cef6a56317946c6c90a94df2760e62cbf861c98ed50916"
+    },
+    {
+      "path": "e2e/visual/deferred-erp/validation-checks.mjs",
+      "sha256": "04c06529c7b16ced5ce7a68c72bff100c517f982b6121d36d34da43dec4b79ea"
+    },
+    {
+      "path": "e2e/visual/deferred-erp/vite.config.ts",
+      "sha256": "149c54a6d19eca7ae368327275a6f9b499dd92ba8d2da4233388e2ecf29b10d7"
+    },
+    {
+      "path": "e2e/visual/deferred-erp/vitest.config.ts",
+      "sha256": "8430c8ef3d376f754d3f1022b1d6fadb8511785bad5fff319039abf01c465311"
+    },
+    {
+      "path": "e2e/visual/deferred-erp/xml-backend.ts",
+      "sha256": "ceb875fa77425241ae478e01513cb85bd0c41cfc2493ef4b7c7e04579f53d220"
+    },
+    {
+      "path": "e2e/visual/deferred-erp/xml-parser-local.mjs",
+      "sha256": "918f7103e17e2353f937b69f32b282f9699b026f47bb4a189b15e71dd6eca108"
+    },
+    {
+      "path": "e2e/visual/deferred-erp/XmlFixture.tsx",
+      "sha256": "8f5fb4f3e2d369ab10bad5a624d71da449f9556e333f8194fa827dee8ae330ff"
+    }
+  ]
+}

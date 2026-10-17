@@ -1,0 +1,11 @@
+test_default_rules_and_detection_parameters_are_not_overridden (scripts.ci.test_gitleaks_snapshot.SQLAllowlistConfigTests.test_default_rules_and_detection_parameters_are_not_overridden) ... ok
+test_exact_match_allowlist_rejects_identifier_suffixes (scripts.ci.test_gitleaks_snapshot.SQLAllowlistConfigTests.test_exact_match_allowlist_rejects_identifier_suffixes) ... ok
+test_exact_path_and_full_line_are_both_required (scripts.ci.test_gitleaks_snapshot.ArtifactDigestAllowlistConfigTests.test_exact_path_and_full_line_are_both_required) ... ok
+test_exact_readme_and_complete_lf_block_reject_other_newlines (scripts.ci.test_gitleaks_snapshot.DenoDigestAllowlistConfigTests.test_exact_readme_and_complete_lf_block_reject_other_newlines) ... ok
+test_runtime_construction_preserves_all_forty_two_scanner_scenarios (scripts.ci.test_gitleaks_snapshot.SQLFixtureConstructionTests.test_runtime_construction_preserves_all_forty_two_scanner_scenarios) ... ok
+test_runtime_construction_preserves_all_twenty_eight_scanner_scenarios (scripts.ci.test_gitleaks_snapshot.DenoDigestFixtureConstructionTests.test_runtime_construction_preserves_all_twenty_eight_scanner_scenarios) ... ok
+
+----------------------------------------------------------------------
+Ran 6 tests in 0.004s
+
+OK

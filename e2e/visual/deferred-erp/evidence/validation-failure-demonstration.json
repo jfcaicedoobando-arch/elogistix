@@ -1,0 +1,76 @@
+{
+  "purpose": "Actual fresh compiler run failed lint and replaced the prior PASS summary before publication",
+  "validation": {
+    "schemaVersion": 1,
+    "runId": "0998c82f-3558-484d-9ea4-97b5fa955789",
+    "status": "failed",
+    "startedAt": "2026-10-17T20:59:48.915Z",
+    "completedAt": "2026-10-17T21:00:18.798Z",
+    "sourceBefore": {
+      "algorithm": "sha256",
+      "digest": "628c5e4718b233d224de5bf698e3b016555eff6fe8972bef9d4bd958935fa76a",
+      "fileCount": 6882
+    },
+    "sourceAfter": null,
+    "commands": [
+      {
+        "name": "typecheck",
+        "executable": "C:\\Users\\torta\\.cache\\codex-runtimes\\codex-primary-runtime\\dependencies\\node\\bin\\node.exe",
+        "args": [
+          "node_modules/typescript/bin/tsc",
+          "-p",
+          "e2e/visual/deferred-erp/tsconfig.json"
+        ],
+        "cwd": ".",
+        "shell": false,
+        "timeoutMs": 120000,
+        "maxBufferBytes": 16777216,
+        "startedAt": "2026-10-17T20:59:52.318Z",
+        "completedAt": "2026-10-17T21:00:14.115Z",
+        "exitCode": 0,
+        "signal": null,
+        "spawnError": null,
+        "log": {
+          "path": "reports/deferred-erp/typecheck.log",
+          "sha256": "a9f982d8cb8dbc81e6965814c7d33f2249d63fbd3467f8331ddca475f7e4377e",
+          "bytes": 10
+        }
+      },
+      {
+        "name": "lint",
+        "executable": "C:\\Users\\torta\\.cache\\codex-runtimes\\codex-primary-runtime\\dependencies\\node\\bin\\node.exe",
+        "args": [
+          "node_modules/eslint/bin/eslint.js",
+          "--no-cache",
+          "e2e/visual/deferred-erp"
+        ],
+        "cwd": ".",
+        "shell": false,
+        "timeoutMs": 120000,
+        "maxBufferBytes": 16777216,
+        "startedAt": "2026-10-17T21:00:14.12Z",
+        "completedAt": "2026-10-17T21:00:18.797Z",
+        "exitCode": 1,
+        "signal": null,
+        "spawnError": null,
+        "log": {
+          "path": "reports/deferred-erp/lint.log",
+          "sha256": "e14dc380bae329f97d469c71760aff9a5ac8c86a49867c46ece2a88dd2161dea",
+          "bytes": 265
+        }
+      }
+    ],
+    "failure": {
+      "name": "Error",
+      "message": "Fresh validation failed: lint; exitCode=1; signal=none; error=none",
+      "code": null
+    }
+  },
+  "summary": {
+    "status": "failed",
+    "runId": "0998c82f-3558-484d-9ea4-97b5fa955789",
+    "startedAt": "2026-10-17T20:59:48.911Z",
+    "generatedAt": "2026-10-17T21:00:18.8Z",
+    "error": "Fresh validation failed: lint; exitCode=1; signal=none; error=none"
+  }
+}

@@ -1,0 +1,28 @@
+(!) Your Vite config uses features that are unsupported by `configLoader: 'native'`, which is planned to become the default in a future major version of Vite:
+  - import "../../../vitest.config" without a file extension (e2e/visual/deferred-erp/vitest.config.ts:3:18). Add the file extension
+  - `__dirname` (vitest.config.ts:15:14). Use `import.meta.dirname` instead
+  - import "./scripts/lib/testEnvSplit" without a file extension (vitest.config.ts:3:41). Add the file extension
+  - import "./vitest.shared" without a file extension (vitest.config.ts:9:8). Add the file extension
+Set `VITE_CONFIG_NATIVE_IGNORE_WARNING=true` to suppress this warning.
+[vite:react-swc] We recommend switching to `@vitejs/plugin-react` for improved performance as no swc plugins are used. More information at https://vite.dev/rolldown
+[vite:react-swc] We recommend switching to `@vitejs/plugin-react` for improved performance as no swc plugins are used. More information at https://vite.dev/rolldown
+[vite:react-swc] We recommend switching to `@vitejs/plugin-react` for improved performance as no swc plugins are used. More information at https://vite.dev/rolldown
+
+ RUN  v5.0.3 C:/Users/torta/Documents/Codex/2026-10-17/task-3/elogistix-deferred
+
+ Γ£ô |jsdom| src/features/costeo/tarifario/__tests__/ExtraerCorreoDialog.test.tsx (22 tests) 1507ms
+ Γ£ô |jsdom| src/features/cxp/components/__tests__/DialogNotaCreditoProveedor.identidad.test.tsx (4 tests) 764ms
+   Γ£ô 95ΓÇô96 ┬╖ XML de NC y validaci├│n de identidad (4)
+     Γ£ô Quitar XML funciona, borra validaci├│n/adjuntos y exige procesarlo de nuevo 351ms
+ Γ£ô |jsdom| src/features/crm/components/objetos/__tests__/VinculosCard.test.tsx (9 tests) 376ms
+ Γ£ô |jsdom| src/features/cxp/hooks/__tests__/useCargaCfdi.test.tsx (15 tests) 80ms
+ Γ£ô |node| src/features/costeo/services/__tests__/extraerTarifasCorreo.test.ts (24 tests) 53ms
+ Γ£ô |node| src/features/costeo/services/__tests__/importacionTarifasCorreo.test.ts (16 tests) 80ms
+ Γ£ô |node| src/features/crm/services/__tests__/vinculosCrm.test.ts (10 tests) 52ms
+
+ Test Files  7 passed (7)
+      Tests  100 passed (100)
+   Start at  14:58:20
+   Duration  11.04s (import 41%, environment 26%, tests 14%, transform 10%, setup 8%)
+
+JSON report written to C:/Users/torta/Documents/Codex/2026-10-17/task-3/elogistix-deferred/reports/deferred-erp/unit-results.json

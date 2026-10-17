@@ -1,0 +1,446 @@
+{
+  "files": [
+    {
+      "path": "src/features/costeo/tarifario/__tests__/ExtraerCorreoDialog.test.tsx",
+      "status": "passed",
+      "assertions": [
+        {
+          "name": "ExtraerCorreoDialog prepara con la organización activa y no escribe antes de confirmar",
+          "status": "passed"
+        },
+        {
+          "name": "ExtraerCorreoDialog muestra errores de invoke sin consultar catálogos ni importar",
+          "status": "passed"
+        },
+        {
+          "name": "ExtraerCorreoDialog muestra errores de invoke sin consultar catálogos ni importar",
+          "status": "passed"
+        },
+        {
+          "name": "ExtraerCorreoDialog muestra respuesta inválida y no la interpreta como cero correos",
+          "status": "passed"
+        },
+        {
+          "name": "ExtraerCorreoDialog muestra el fallo al cargar tarifas existentes sin ofrecer importación",
+          "status": "passed"
+        },
+        {
+          "name": "ExtraerCorreoDialog bloquea preparación y altas si falla una página posterior de catalogos",
+          "status": "passed"
+        },
+        {
+          "name": "ExtraerCorreoDialog bloquea preparación y altas si falla una página posterior de existentes",
+          "status": "passed"
+        },
+        {
+          "name": "ExtraerCorreoDialog muestra inactivos existentes sin ofrecer su alta ni importación",
+          "status": "passed"
+        },
+        {
+          "name": "ExtraerCorreoDialog desmarca un conflicto por alias y guarda el UUID preparado sólo al elegir conservarlo",
+          "status": "passed"
+        },
+        {
+          "name": "ExtraerCorreoDialog retira los pendientes anteriores y muestra el fallo al volver a prepararlos",
+          "status": "passed"
+        },
+        {
+          "name": "ExtraerCorreoDialog conserva la selección inicial de main e importa únicamente la fila sin conflicto",
+          "status": "passed"
+        },
+        {
+          "name": "ExtraerCorreoDialog permite conservar un conflicto existente de forma explícita",
+          "status": "passed"
+        },
+        {
+          "name": "ExtraerCorreoDialog permite desmarcar conflictos y conservar sólo el repetido elegido",
+          "status": "passed"
+        },
+        {
+          "name": "ExtraerCorreoDialog impide cargar cuando todos los renglones están deseleccionados",
+          "status": "passed"
+        },
+        {
+          "name": "ExtraerCorreoDialog reutiliza una ruta nueva sólo para las filas seleccionadas de la misma organización",
+          "status": "passed"
+        },
+        {
+          "name": "ExtraerCorreoDialog muestra errores de importación y cuenta únicamente las creaciones exitosas",
+          "status": "passed"
+        },
+        {
+          "name": "ExtraerCorreoDialog oculta la extracción de otra organización y exige una nueva antes de importar",
+          "status": "passed"
+        },
+        {
+          "name": "ExtraerCorreoDialog conserva la organización capturada si cambia durante una extracción pendiente",
+          "status": "passed"
+        },
+        {
+          "name": "ExtraerCorreoDialog no invoca la extracción sin organización",
+          "status": "passed"
+        },
+        {
+          "name": "ExtraerCorreoDialog conserva el acordeón por proveedor y permite desplegar las tarifas",
+          "status": "passed"
+        },
+        {
+          "name": "ExtraerCorreoDialog preserva el alta mock de faltantes y prepara sus tarifas con catálogos frescos",
+          "status": "passed"
+        },
+        {
+          "name": "ExtraerCorreoDialog no ofrece faltantes ni reintentos de otra organización",
+          "status": "passed"
+        }
+      ]
+    },
+    {
+      "path": "src/features/cxp/components/__tests__/DialogNotaCreditoProveedor.identidad.test.tsx",
+      "status": "passed",
+      "assertions": [
+        {
+          "name": "95–96 · XML de NC y validación de identidad Quitar XML funciona, borra validación/adjuntos y exige procesarlo de nuevo",
+          "status": "passed"
+        },
+        {
+          "name": "95–96 · XML de NC y validación de identidad una respuesta sin validación coincidente no precarga ni permite registrar: undefined",
+          "status": "passed"
+        },
+        {
+          "name": "95–96 · XML de NC y validación de identidad una respuesta sin validación coincidente no precarga ni permite registrar: { factura_id: 'otra-factura' }",
+          "status": "passed"
+        },
+        {
+          "name": "95–96 · XML de NC y validación de identidad rechazo de identidad del servidor no registra y el flujo manual sigue disponible",
+          "status": "passed"
+        }
+      ]
+    },
+    {
+      "path": "src/features/cxp/hooks/__tests__/useCargaCfdi.test.tsx",
+      "status": "passed",
+      "assertions": [
+        {
+          "name": "useCargaCfdi rechaza archivos que no terminan en .xml",
+          "status": "passed"
+        },
+        {
+          "name": "useCargaCfdi rechaza XML mayor a 2 MB",
+          "status": "passed"
+        },
+        {
+          "name": "useCargaCfdi ignora null en handleXml sin tocar estado",
+          "status": "passed"
+        },
+        {
+          "name": "useCargaCfdi procesar happy path llama parseCfdiXml y onParsed",
+          "status": "passed"
+        },
+        {
+          "name": "useCargaCfdi procesar sin xml no hace nada",
+          "status": "passed"
+        },
+        {
+          "name": "useCargaCfdi reset limpia xml y pdf",
+          "status": "passed"
+        },
+        {
+          "name": "useCargaCfdi mapea CfdiUploadError fase=response al título HTTP",
+          "status": "passed"
+        },
+        {
+          "name": "useCargaCfdi mapea CfdiUploadError fase=request offline al título de sin conexión",
+          "status": "passed"
+        },
+        {
+          "name": "useCargaCfdi dispara mensaje de timeout cuando parseCfdiXml tarda demasiado",
+          "status": "passed"
+        },
+        {
+          "name": "Auditoría 95 · quitar XML y descartar respuestas tardías Quitar XML limpia selección, adjunto y validación previa; permite elegir el mismo archivo de nuevo",
+          "status": "passed"
+        },
+        {
+          "name": "Auditoría 95 · quitar XML y descartar respuestas tardías un parseo tardío no restaura XML después de reset",
+          "status": "passed"
+        },
+        {
+          "name": "Auditoría 95 · quitar XML y descartar respuestas tardías un parseo tardío no restaura XML después de remove",
+          "status": "passed"
+        },
+        {
+          "name": "Auditoría 95 · quitar XML y descartar respuestas tardías un parseo tardío no restaura XML después de replace",
+          "status": "passed"
+        },
+        {
+          "name": "Auditoría 95 · quitar XML y descartar respuestas tardías un parseo tardío no restaura XML después de unmount",
+          "status": "passed"
+        },
+        {
+          "name": "Auditoría 95 · quitar XML y descartar respuestas tardías envía la factura objetivo al parser de NC",
+          "status": "passed"
+        }
+      ]
+    },
+    {
+      "path": "src/features/crm/components/objetos/__tests__/VinculosCard.test.tsx",
+      "status": "passed",
+      "assertions": [
+        {
+          "name": "VinculosCard: empresas-de-contacto mantiene el enlace activo y muestra el nombre histórico con etiqueta y sin anchor",
+          "status": "passed"
+        },
+        {
+          "name": "VinculosCard: empresas-de-contacto no ofrece unlink sin permiso y configuración: {\"canEdit\":false,\"conEdicion\":true}",
+          "status": "passed"
+        },
+        {
+          "name": "VinculosCard: empresas-de-contacto no ofrece unlink sin permiso y configuración: {\"canEdit\":true,\"conEdicion\":false}",
+          "status": "passed"
+        },
+        {
+          "name": "VinculosCard: empresas-de-contacto no revela nombres, estados ni controles cuando RLS devuelve únicamente embeds nulos",
+          "status": "passed"
+        },
+        {
+          "name": "VinculosCard: empresas-de-oportunidad mantiene el enlace activo y muestra el nombre histórico con etiqueta y sin anchor",
+          "status": "passed"
+        },
+        {
+          "name": "VinculosCard: empresas-de-oportunidad no ofrece unlink sin permiso y configuración: {\"canEdit\":false,\"conEdicion\":true}",
+          "status": "passed"
+        },
+        {
+          "name": "VinculosCard: empresas-de-oportunidad no ofrece unlink sin permiso y configuración: {\"canEdit\":true,\"conEdicion\":false}",
+          "status": "passed"
+        },
+        {
+          "name": "VinculosCard: empresas-de-oportunidad no revela nombres, estados ni controles cuando RLS devuelve únicamente embeds nulos",
+          "status": "passed"
+        },
+        {
+          "name": "conserva la navegación de contactos sin ampliar la etiqueta a otros objetos",
+          "status": "passed"
+        }
+      ]
+    },
+    {
+      "path": "src/features/costeo/services/__tests__/extraerTarifasCorreo.test.ts",
+      "status": "passed",
+      "assertions": [
+        {
+          "name": "extraerTarifasCorreo conserva la organización y valida los cuatro proveedores y sus errores parciales",
+          "status": "passed"
+        },
+        {
+          "name": "extraerTarifasCorreo acepta el lote vacío y los adjuntos de texto",
+          "status": "passed"
+        },
+        {
+          "name": "extraerTarifasCorreo propaga el error de invoke sin tratarlo como un lote vacío",
+          "status": "passed"
+        },
+        {
+          "name": "extraerTarifasCorreo propaga el error de invoke sin tratarlo como un lote vacío",
+          "status": "passed"
+        },
+        {
+          "name": "extraerTarifasCorreo propaga el rechazo de la promesa",
+          "status": "passed"
+        },
+        {
+          "name": "extraerTarifasCorreo rechaza una respuesta inválida completa sin devolver filas parciales (0)",
+          "status": "passed"
+        },
+        {
+          "name": "extraerTarifasCorreo rechaza una respuesta inválida completa sin devolver filas parciales (1)",
+          "status": "passed"
+        },
+        {
+          "name": "extraerTarifasCorreo rechaza una respuesta inválida completa sin devolver filas parciales (2)",
+          "status": "passed"
+        },
+        {
+          "name": "extraerTarifasCorreo rechaza una respuesta inválida completa sin devolver filas parciales (3)",
+          "status": "passed"
+        },
+        {
+          "name": "extraerTarifasCorreo rechaza una respuesta inválida completa sin devolver filas parciales (4)",
+          "status": "passed"
+        },
+        {
+          "name": "extraerTarifasCorreo rechaza una respuesta inválida completa sin devolver filas parciales (5)",
+          "status": "passed"
+        },
+        {
+          "name": "extraerTarifasCorreo rechaza una respuesta inválida completa sin devolver filas parciales (6)",
+          "status": "passed"
+        },
+        {
+          "name": "extraerTarifasCorreo rechaza una respuesta inválida completa sin devolver filas parciales (7)",
+          "status": "passed"
+        },
+        {
+          "name": "extraerTarifasCorreo rechaza una respuesta inválida completa sin devolver filas parciales (8)",
+          "status": "passed"
+        },
+        {
+          "name": "extraerTarifasCorreo rechaza una respuesta inválida completa sin devolver filas parciales (9)",
+          "status": "passed"
+        },
+        {
+          "name": "extraerTarifasCorreo rechaza una respuesta inválida completa sin devolver filas parciales (10)",
+          "status": "passed"
+        },
+        {
+          "name": "extraerTarifasCorreo rechaza una respuesta inválida completa sin devolver filas parciales (11)",
+          "status": "passed"
+        },
+        {
+          "name": "extraerTarifasCorreo rechaza una respuesta inválida completa sin devolver filas parciales (12)",
+          "status": "passed"
+        },
+        {
+          "name": "extraerTarifasCorreo rechaza una respuesta inválida completa sin devolver filas parciales (13)",
+          "status": "passed"
+        },
+        {
+          "name": "extraerTarifasCorreo rechaza una respuesta inválida completa sin devolver filas parciales (14)",
+          "status": "passed"
+        },
+        {
+          "name": "extraerTarifasCorreo rechaza una respuesta inválida completa sin devolver filas parciales (15)",
+          "status": "passed"
+        },
+        {
+          "name": "extraerTarifasCorreo rechaza una respuesta inválida completa sin devolver filas parciales (16)",
+          "status": "passed"
+        },
+        {
+          "name": "extraerTarifasCorreo rechaza una organización vacía antes de invocar (0)",
+          "status": "passed"
+        },
+        {
+          "name": "extraerTarifasCorreo rechaza una organización vacía antes de invocar (1)",
+          "status": "passed"
+        }
+      ]
+    },
+    {
+      "path": "src/features/costeo/services/__tests__/importacionTarifasCorreo.test.ts",
+      "status": "passed",
+      "assertions": [
+        {
+          "name": "lecturas completas de importación de correo detecta la coincidencia en la segunda página sin incluir otra organización",
+          "status": "passed"
+        },
+        {
+          "name": "lecturas completas de importación de correo consulta una página vacía tras una página exacta de conflictos",
+          "status": "passed"
+        },
+        {
+          "name": "lecturas completas de importación de correo propaga el error posterior de conflictos sin devolver el parcial",
+          "status": "passed"
+        },
+        {
+          "name": "lecturas completas de importación de correo reconoce puertos y navieras después de 500 y de 1000 y valida sus filas",
+          "status": "passed"
+        },
+        {
+          "name": "lecturas completas de importación de correo no devuelve catálogos parciales si falla la segunda página de puertos",
+          "status": "passed"
+        },
+        {
+          "name": "lecturas completas de importación de correo no devuelve catálogos parciales si falla la segunda página de navieras",
+          "status": "passed"
+        },
+        {
+          "name": "lecturas completas de importación de correo no devuelve catálogos parciales si falla la segunda página de tipos_contenedor",
+          "status": "passed"
+        },
+        {
+          "name": "lecturas completas de importación de correo no devuelve catálogos parciales si falla la segunda página de catalogo_org_desactivado",
+          "status": "passed"
+        },
+        {
+          "name": "lecturas completas de importación de correo no devuelve catálogos parciales si falla la segunda página de costeo_agentes",
+          "status": "passed"
+        },
+        {
+          "name": "lecturas completas de importación de correo no devuelve catálogos parciales si falla la segunda página de costeo_rutas",
+          "status": "passed"
+        },
+        {
+          "name": "lecturas completas de importación de correo reconoce inactivos a nivel global sin ofrecer altas ni validar la tarifa",
+          "status": "passed"
+        },
+        {
+          "name": "lecturas completas de importación de correo reconoce inactivos a nivel organización sin ofrecer altas ni validar la tarifa",
+          "status": "passed"
+        },
+        {
+          "name": "lecturas completas de importación de correo pagina la visibilidad con scope de organización e ignora apagados ajenos",
+          "status": "passed"
+        },
+        {
+          "name": "lecturas completas de importación de correo recupera agentes y rutas de otra página con filtro de organización",
+          "status": "passed"
+        },
+        {
+          "name": "lecturas completas de importación de correo reconoce un alias histórico inactivo en otra página sin cambiar el UUID preparado",
+          "status": "passed"
+        },
+        {
+          "name": "lecturas completas de importación de correo conserva el resultado pequeño y las altas sólo para registros inexistentes",
+          "status": "passed"
+        }
+      ]
+    },
+    {
+      "path": "src/features/crm/services/__tests__/vinculosCrm.test.ts",
+      "status": "passed",
+      "assertions": [
+        {
+          "name": "empresas vinculadas desde crm_empresa_contacto conserva id/nombre e historial y proyecta el estado sin devolver la fecha",
+          "status": "passed"
+        },
+        {
+          "name": "empresas vinculadas desde crm_empresa_contacto no inventa una empresa para datos vacíos u ocultos: {\"data\":null}",
+          "status": "passed"
+        },
+        {
+          "name": "empresas vinculadas desde crm_empresa_contacto no inventa una empresa para datos vacíos u ocultos: {\"data\":[]}",
+          "status": "passed"
+        },
+        {
+          "name": "empresas vinculadas desde crm_empresa_contacto no inventa una empresa para datos vacíos u ocultos: {\"data\":[{\"crm_empresas\":null}]}",
+          "status": "passed"
+        },
+        {
+          "name": "empresas vinculadas desde crm_empresa_contacto propaga los errores de lectura",
+          "status": "passed"
+        },
+        {
+          "name": "empresas vinculadas desde crm_oportunidad_empresa conserva id/nombre e historial y proyecta el estado sin devolver la fecha",
+          "status": "passed"
+        },
+        {
+          "name": "empresas vinculadas desde crm_oportunidad_empresa no inventa una empresa para datos vacíos u ocultos: {\"data\":null}",
+          "status": "passed"
+        },
+        {
+          "name": "empresas vinculadas desde crm_oportunidad_empresa no inventa una empresa para datos vacíos u ocultos: {\"data\":[]}",
+          "status": "passed"
+        },
+        {
+          "name": "empresas vinculadas desde crm_oportunidad_empresa no inventa una empresa para datos vacíos u ocultos: {\"data\":[{\"crm_empresas\":null}]}",
+          "status": "passed"
+        },
+        {
+          "name": "empresas vinculadas desde crm_oportunidad_empresa propaga los errores de lectura",
+          "status": "passed"
+        }
+      ]
+    }
+  ]
+}

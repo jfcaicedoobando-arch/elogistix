@@ -1,0 +1,9 @@
+running 3 tests from ./supabase/functions/parse-cfdi-xml/validarNcProveedor_test.ts
+96: conserva la relación del XML y acepta identidad completa coincidente ... ok (9ms)
+96: rechaza emisor, receptor, tipo, UUID y relación antes del prefill ... ok (997µs)
+96: lecturas aisladas por organización y rechaza duplicados o factura ajena ... ok (641µs)
+
+ok | 3 passed | 0 failed (18ms)
+
+
+[stderr]

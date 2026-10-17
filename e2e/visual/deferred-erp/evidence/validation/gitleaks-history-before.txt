@@ -1,0 +1,10 @@
+2026-10-17T22:30:18.7966775Z gitleaks version: 8.24.3
+2026-10-17T22:30:19.3429446Z gitleaks cmd: gitleaks detect --redact -v --exit-code=2 --report-format=sarif --report-path=results.sarif --log-level=debug --log-opts=--no-merges --first-parent aeb187463d1e9c0305811228ba89c5747ebd53c7^..05eb8b86d8af019b6953fa2a70fc4a7acb4ab089
+2026-10-17T22:30:19.8196453Z RuleID:      generic-api-key
+2026-10-17T22:30:19.8197084Z File:        e2e/visual/deferred-erp/README.md
+2026-10-17T22:30:19.8197381Z Line:        100
+2026-10-17T22:30:19.8197640Z Commit:      05eb8b86d8af019b6953fa2a70fc4a7acb4ab089
+2026-10-17T22:30:19.8199351Z Fingerprint: 05eb8b86d8af019b6953fa2a70fc4a7acb4ab089:e2e/visual/deferred-erp/README.md:generic-api-key:100
+2026-10-17T22:30:19.8211387Z 10:30PM INF 5 commits scanned.
+2026-10-17T22:30:19.8213253Z 10:30PM INF scanned ~405634 bytes (405.63 KB) in 211ms
+2026-10-17T22:30:19.8213768Z 10:30PM WRN leaks found: 1

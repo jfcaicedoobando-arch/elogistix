@@ -1,0 +1,206 @@
+[
+  {
+    "case": "01",
+    "project": "desktop-1280x720",
+    "name": "correo-preparacion-sin-escrituras",
+    "path": "screenshots/01-desktop-1280x720-correo-preparacion-sin-escrituras-ac0eb4b06e74975d87e64139d487d472c13c5f13.png"
+  },
+  {
+    "case": "02",
+    "project": "desktop-1280x720",
+    "name": "correo-conflicto-excluido-segunda-pagina",
+    "path": "screenshots/02-desktop-1280x720-correo-conflicto-excluido-segunda-pagina-6c22caef32a007a776fddacbe30535cc46e1769b.png"
+  },
+  {
+    "case": "02",
+    "project": "desktop-1280x720",
+    "name": "correo-confirmacion-escritor-en-memoria",
+    "path": "screenshots/02-desktop-1280x720-correo-confirmacion-escritor-en-memoria-33d6aa8fd2e2b64f9235e5eef920da8bbe9182e4.png"
+  },
+  {
+    "case": "03",
+    "project": "desktop-1280x720",
+    "name": "correo-error-conflicts",
+    "path": "screenshots/03-desktop-1280x720-correo-error-conflicts-7a772d60c9b8e771266222ead3e9c4c8272b0c28.png"
+  },
+  {
+    "case": "04",
+    "project": "desktop-1280x720",
+    "name": "correo-error-catalog",
+    "path": "screenshots/04-desktop-1280x720-correo-error-catalog-7d95a3ca958976810817e3f167d78a119fb8f184.png"
+  },
+  {
+    "case": "05",
+    "project": "desktop-1280x720",
+    "name": "correo-inactive-global",
+    "path": "screenshots/05-desktop-1280x720-correo-inactive-global-07495251c178c84df41443d2cb99c056a8cf3cef.png"
+  },
+  {
+    "case": "06",
+    "project": "desktop-1280x720",
+    "name": "correo-inactive-org",
+    "path": "screenshots/06-desktop-1280x720-correo-inactive-org-5651dff9efbbc8968ade91b70584060f029389e5.png"
+  },
+  {
+    "case": "07",
+    "project": "desktop-1280x720",
+    "name": "correo-organizacion-invalida-extraccion",
+    "path": "screenshots/07-desktop-1280x720-correo-organizacion-invalida-extraccion-662f9429ebeb9dde37a2e18ac0b4fa51a867fdcd.png"
+  },
+  {
+    "case": "08",
+    "project": "mobile-390x640",
+    "name": "correo-preparacion-sin-escrituras",
+    "path": "screenshots/08-mobile-390x640-correo-preparacion-sin-escrituras-e8a0e84166b623f37f0b15b11382b2af658da668.png"
+  },
+  {
+    "case": "09",
+    "project": "mobile-390x640",
+    "name": "correo-conflicto-excluido-segunda-pagina",
+    "path": "screenshots/09-mobile-390x640-correo-conflicto-excluido-segunda-pagina-83435cf58cf6b1c1db954ea121aa157923d8f262.png"
+  },
+  {
+    "case": "09",
+    "project": "mobile-390x640",
+    "name": "correo-confirmacion-escritor-en-memoria",
+    "path": "screenshots/09-mobile-390x640-correo-confirmacion-escritor-en-memoria-29f2643fa01768f76b9511a12ff3a5733fa3d81a.png"
+  },
+  {
+    "case": "10",
+    "project": "mobile-390x640",
+    "name": "correo-error-conflicts",
+    "path": "screenshots/10-mobile-390x640-correo-error-conflicts-606eb08e1d15bba505fd011a9febb60063ff1b7e.png"
+  },
+  {
+    "case": "11",
+    "project": "mobile-390x640",
+    "name": "correo-error-catalog",
+    "path": "screenshots/11-mobile-390x640-correo-error-catalog-c46b9d55f392538bfedb8908564d32ed9924095f.png"
+  },
+  {
+    "case": "12",
+    "project": "mobile-390x640",
+    "name": "correo-inactive-global",
+    "path": "screenshots/12-mobile-390x640-correo-inactive-global-2ce8db0518e16181e99316d5c7534c7e5ed06742.png"
+  },
+  {
+    "case": "13",
+    "project": "mobile-390x640",
+    "name": "correo-inactive-org",
+    "path": "screenshots/13-mobile-390x640-correo-inactive-org-8e45831b262030e1b13dc4780593c6cdab271388.png"
+  },
+  {
+    "case": "14",
+    "project": "mobile-390x640",
+    "name": "correo-organizacion-invalida-extraccion",
+    "path": "screenshots/14-mobile-390x640-correo-organizacion-invalida-extraccion-96ef9d01c7b48fbf033593e412c79c00166b8a53.png"
+  },
+  {
+    "case": "15",
+    "project": "desktop-1280x720",
+    "name": "crm-history-and-permissions",
+    "path": "screenshots/15-desktop-1280x720-crm-history-and-permissions-51ba1db799b1e6ff4ae2163f762112a5117768ba.png"
+  },
+  {
+    "case": "15",
+    "project": "desktop-1280x720",
+    "name": "crm-memory-unlink-only",
+    "path": "screenshots/15-desktop-1280x720-crm-memory-unlink-only-56d38b1abd164b3348233960a9546fed250c09ce.png"
+  },
+  {
+    "case": "16",
+    "project": "mobile-390x640",
+    "name": "crm-history-and-permissions",
+    "path": "screenshots/16-mobile-390x640-crm-history-and-permissions-8531ec2903c12a56180be1eaaa6a9b972cabdc7c.png"
+  },
+  {
+    "case": "16",
+    "project": "mobile-390x640",
+    "name": "crm-memory-unlink-only",
+    "path": "screenshots/16-mobile-390x640-crm-memory-unlink-only-638968fe7ba47c772b682475e99e422d0ff0931c.png"
+  },
+  {
+    "case": "17",
+    "project": "desktop-1280x720",
+    "name": "xml-matching-prefill",
+    "path": "screenshots/17-desktop-1280x720-xml-matching-prefill-f55b68154b9cc3e574608a91f0e78a4599da1397.png"
+  },
+  {
+    "case": "18",
+    "project": "desktop-1280x720",
+    "name": "xml-validation-missing",
+    "path": "screenshots/18-desktop-1280x720-xml-validation-missing-a0e2580af8e451350ce814015334d73c67cc30ff.png"
+  },
+  {
+    "case": "19",
+    "project": "desktop-1280x720",
+    "name": "xml-validation-different",
+    "path": "screenshots/19-desktop-1280x720-xml-validation-different-022e07544e44e0a6fef177d500455e50d2bfb45e.png"
+  },
+  {
+    "case": "20",
+    "project": "desktop-1280x720",
+    "name": "xml-rejected",
+    "path": "screenshots/20-desktop-1280x720-xml-rejected-c381c4d9cafc633849dbf4f0f8476f271f61ef56.png"
+  },
+  {
+    "case": "20",
+    "project": "desktop-1280x720",
+    "name": "xml-manual-available",
+    "path": "screenshots/20-desktop-1280x720-xml-manual-available-004c7d2d25b9d3745acef2a407690f7f9b2c9c6a.png"
+  },
+  {
+    "case": "21",
+    "project": "desktop-1280x720",
+    "name": "xml-removed-invalidated",
+    "path": "screenshots/21-desktop-1280x720-xml-removed-invalidated-80a2e8b5b10f412ef79a01331b8e6265a83b481c.png"
+  },
+  {
+    "case": "21",
+    "project": "desktop-1280x720",
+    "name": "xml-reselected-requires-processing",
+    "path": "screenshots/21-desktop-1280x720-xml-reselected-requires-processing-8f35b67d6531648b25e8c4723409e1945e49db07.png"
+  },
+  {
+    "case": "22",
+    "project": "mobile-390x640",
+    "name": "xml-matching-prefill",
+    "path": "screenshots/22-mobile-390x640-xml-matching-prefill-bde88327d4a0166b4292a568a915ed5380ece8a5.png"
+  },
+  {
+    "case": "23",
+    "project": "mobile-390x640",
+    "name": "xml-validation-missing",
+    "path": "screenshots/23-mobile-390x640-xml-validation-missing-db6bd3e3bda66a1b06622566ba9fcc7f55f05871.png"
+  },
+  {
+    "case": "24",
+    "project": "mobile-390x640",
+    "name": "xml-validation-different",
+    "path": "screenshots/24-mobile-390x640-xml-validation-different-00123a9461b6fc98959ce5b50368bbb2fbe279cd.png"
+  },
+  {
+    "case": "25",
+    "project": "mobile-390x640",
+    "name": "xml-rejected",
+    "path": "screenshots/25-mobile-390x640-xml-rejected-a73f34d5007fefa7ba4e590290d0c72ec1b45d64.png"
+  },
+  {
+    "case": "25",
+    "project": "mobile-390x640",
+    "name": "xml-manual-available",
+    "path": "screenshots/25-mobile-390x640-xml-manual-available-dd157effa487935a9b8fdb7c249785f3b0957122.png"
+  },
+  {
+    "case": "26",
+    "project": "mobile-390x640",
+    "name": "xml-removed-invalidated",
+    "path": "screenshots/26-mobile-390x640-xml-removed-invalidated-4a0d7a19362df0cc125825d3b75895723172546d.png"
+  },
+  {
+    "case": "26",
+    "project": "mobile-390x640",
+    "name": "xml-reselected-requires-processing",
+    "path": "screenshots/26-mobile-390x640-xml-reselected-requires-processing-5ec670e4c5df96bce8a7521e3f07f2dcfeb59804.png"
+  }
+]

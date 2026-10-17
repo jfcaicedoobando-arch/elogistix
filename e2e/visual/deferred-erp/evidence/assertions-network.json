@@ -1,0 +1,4654 @@
+{
+  "cases": [
+    {
+      "id": "01",
+      "project": "desktop-1280x720",
+      "title": "correo.spec.ts / prepara sin escrituras ni conexiones a Gmail",
+      "status": "passed",
+      "durationMs": 3440,
+      "facts": [
+        {
+          "name": "correo-assertions-and-network",
+          "test": "prepara sin escrituras ni conexiones a Gmail",
+          "status": "passed",
+          "viewport": {
+            "width": 1280,
+            "height": 720
+          },
+          "assertions": {
+            "scenario": "ready",
+            "organizationId": "10000000-0000-4000-8000-000000000001",
+            "reads": [
+              {
+                "table": "costeo_agentes",
+                "from": 0,
+                "to": 999,
+                "filters": [
+                  [
+                    "organization_id",
+                    "10000000-0000-4000-8000-000000000001"
+                  ]
+                ],
+                "orders": [
+                  "nombre",
+                  "id"
+                ],
+                "count": 1,
+                "error": null
+              },
+              {
+                "table": "puertos",
+                "from": 0,
+                "to": 999,
+                "filters": [],
+                "orders": [
+                  "country",
+                  "name",
+                  "id"
+                ],
+                "count": 1000,
+                "error": null
+              },
+              {
+                "table": "navieras",
+                "from": 0,
+                "to": 999,
+                "filters": [],
+                "orders": [
+                  "name",
+                  "id"
+                ],
+                "count": 1,
+                "error": null
+              },
+              {
+                "table": "tipos_contenedor",
+                "from": 0,
+                "to": 999,
+                "filters": [],
+                "orders": [
+                  "name",
+                  "id"
+                ],
+                "count": 2,
+                "error": null
+              },
+              {
+                "table": "catalogo_org_desactivado",
+                "from": 0,
+                "to": 999,
+                "filters": [
+                  [
+                    "organization_id",
+                    "10000000-0000-4000-8000-000000000001"
+                  ]
+                ],
+                "orders": [
+                  "catalogo",
+                  "item_id"
+                ],
+                "count": 0,
+                "error": null
+              },
+              {
+                "table": "costeo_agentes",
+                "from": 0,
+                "to": 999,
+                "filters": [
+                  [
+                    "organization_id",
+                    "10000000-0000-4000-8000-000000000001"
+                  ]
+                ],
+                "orders": [
+                  "nombre",
+                  "id"
+                ],
+                "count": 1,
+                "error": null
+              },
+              {
+                "table": "costeo_rutas",
+                "from": 0,
+                "to": 999,
+                "filters": [
+                  [
+                    "organization_id",
+                    "10000000-0000-4000-8000-000000000001"
+                  ]
+                ],
+                "orders": [
+                  "id"
+                ],
+                "count": 1,
+                "error": null
+              },
+              {
+                "table": "costeo_tarifas",
+                "from": 0,
+                "to": 999,
+                "filters": [
+                  [
+                    "organization_id",
+                    "10000000-0000-4000-8000-000000000001"
+                  ]
+                ],
+                "orders": [
+                  "id"
+                ],
+                "count": 0,
+                "error": null
+              },
+              {
+                "table": "puertos",
+                "from": 1000,
+                "to": 1999,
+                "filters": [],
+                "orders": [
+                  "country",
+                  "name",
+                  "id"
+                ],
+                "count": 2,
+                "error": null
+              }
+            ],
+            "writes": [],
+            "invocations": [
+              {
+                "name": "extraer-tarifas-correo",
+                "organizationId": "10000000-0000-4000-8000-000000000001"
+              }
+            ],
+            "preparedType": "60000000-0000-4000-8000-000000000001",
+            "legacyType": "60000000-0000-4000-8000-000000000002"
+          },
+          "network": {
+            "requests": [
+              "GET http://127.0.0.1:8097/",
+              "GET http://127.0.0.1:8097/assets/index-C-yc-kqi.js",
+              "GET http://127.0.0.1:8097/assets/index-a26HoMQR.css"
+            ],
+            "blocked": [],
+            "errors": []
+          }
+        }
+      ],
+      "screenshots": [
+        "screenshots/01-desktop-1280x720-correo-preparacion-sin-escrituras-ac0eb4b06e74975d87e64139d487d472c13c5f13.png"
+      ]
+    },
+    {
+      "id": "02",
+      "project": "desktop-1280x720",
+      "title": "correo.spec.ts / excluye el conflicto de segunda página y conserva UUID preparado sólo por elección explícita",
+      "status": "passed",
+      "durationMs": 877,
+      "facts": [
+        {
+          "name": "correo-assertions-and-network",
+          "test": "excluye el conflicto de segunda página y conserva UUID preparado sólo por elección explícita",
+          "status": "passed",
+          "viewport": {
+            "width": 1280,
+            "height": 720
+          },
+          "assertions": {
+            "scenario": "conflict-late",
+            "organizationId": "10000000-0000-4000-8000-000000000001",
+            "reads": [
+              {
+                "table": "costeo_agentes",
+                "from": 0,
+                "to": 999,
+                "filters": [
+                  [
+                    "organization_id",
+                    "10000000-0000-4000-8000-000000000001"
+                  ]
+                ],
+                "orders": [
+                  "nombre",
+                  "id"
+                ],
+                "count": 1,
+                "error": null
+              },
+              {
+                "table": "puertos",
+                "from": 0,
+                "to": 999,
+                "filters": [],
+                "orders": [
+                  "country",
+                  "name",
+                  "id"
+                ],
+                "count": 1000,
+                "error": null
+              },
+              {
+                "table": "navieras",
+                "from": 0,
+                "to": 999,
+                "filters": [],
+                "orders": [
+                  "name",
+                  "id"
+                ],
+                "count": 1,
+                "error": null
+              },
+              {
+                "table": "tipos_contenedor",
+                "from": 0,
+                "to": 999,
+                "filters": [],
+                "orders": [
+                  "name",
+                  "id"
+                ],
+                "count": 2,
+                "error": null
+              },
+              {
+                "table": "catalogo_org_desactivado",
+                "from": 0,
+                "to": 999,
+                "filters": [
+                  [
+                    "organization_id",
+                    "10000000-0000-4000-8000-000000000001"
+                  ]
+                ],
+                "orders": [
+                  "catalogo",
+                  "item_id"
+                ],
+                "count": 0,
+                "error": null
+              },
+              {
+                "table": "costeo_agentes",
+                "from": 0,
+                "to": 999,
+                "filters": [
+                  [
+                    "organization_id",
+                    "10000000-0000-4000-8000-000000000001"
+                  ]
+                ],
+                "orders": [
+                  "nombre",
+                  "id"
+                ],
+                "count": 1,
+                "error": null
+              },
+              {
+                "table": "costeo_rutas",
+                "from": 0,
+                "to": 999,
+                "filters": [
+                  [
+                    "organization_id",
+                    "10000000-0000-4000-8000-000000000001"
+                  ]
+                ],
+                "orders": [
+                  "id"
+                ],
+                "count": 1,
+                "error": null
+              },
+              {
+                "table": "costeo_tarifas",
+                "from": 0,
+                "to": 999,
+                "filters": [
+                  [
+                    "organization_id",
+                    "10000000-0000-4000-8000-000000000001"
+                  ]
+                ],
+                "orders": [
+                  "id"
+                ],
+                "count": 1000,
+                "error": null
+              },
+              {
+                "table": "puertos",
+                "from": 1000,
+                "to": 1999,
+                "filters": [],
+                "orders": [
+                  "country",
+                  "name",
+                  "id"
+                ],
+                "count": 2,
+                "error": null
+              },
+              {
+                "table": "costeo_tarifas",
+                "from": 1000,
+                "to": 1999,
+                "filters": [
+                  [
+                    "organization_id",
+                    "10000000-0000-4000-8000-000000000001"
+                  ]
+                ],
+                "orders": [
+                  "id"
+                ],
+                "count": 1,
+                "error": null
+              }
+            ],
+            "writes": [
+              {
+                "kind": "tarifa",
+                "organizationId": "10000000-0000-4000-8000-000000000001",
+                "input": {
+                  "agente_id": "30000000-0000-4000-8000-000000000001",
+                  "naviera_id": "40000000-0000-4000-8000-000000000001",
+                  "ruta_id": "50000000-0000-4000-8000-000000000001",
+                  "dias_libres_demoras": 21,
+                  "vigente_desde": "2026-10-17",
+                  "vigente_hasta": "2026-10-31",
+                  "notas": "ETD 19-Oct. Naviera: MSK",
+                  "recargos": [],
+                  "tipo_contenedor_id": "60000000-0000-4000-8000-000000000001",
+                  "flete_base": 1000
+                }
+              }
+            ],
+            "invocations": [
+              {
+                "name": "extraer-tarifas-correo",
+                "organizationId": "10000000-0000-4000-8000-000000000001"
+              }
+            ],
+            "preparedType": "60000000-0000-4000-8000-000000000001",
+            "legacyType": "60000000-0000-4000-8000-000000000002"
+          },
+          "network": {
+            "requests": [
+              "GET http://127.0.0.1:8097/",
+              "GET http://127.0.0.1:8097/assets/index-C-yc-kqi.js",
+              "GET http://127.0.0.1:8097/assets/index-a26HoMQR.css"
+            ],
+            "blocked": [],
+            "errors": []
+          }
+        }
+      ],
+      "screenshots": [
+        "screenshots/02-desktop-1280x720-correo-conflicto-excluido-segunda-pagina-6c22caef32a007a776fddacbe30535cc46e1769b.png",
+        "screenshots/02-desktop-1280x720-correo-confirmacion-escritor-en-memoria-33d6aa8fd2e2b64f9235e5eef920da8bbe9182e4.png"
+      ]
+    },
+    {
+      "id": "03",
+      "project": "desktop-1280x720",
+      "title": "correo.spec.ts / error-conflicts: error en segunda página bloquea carga y altas",
+      "status": "passed",
+      "durationMs": 667,
+      "facts": [
+        {
+          "name": "correo-assertions-and-network",
+          "test": "error-conflicts: error en segunda página bloquea carga y altas",
+          "status": "passed",
+          "viewport": {
+            "width": 1280,
+            "height": 720
+          },
+          "assertions": {
+            "scenario": "error-conflicts",
+            "organizationId": "10000000-0000-4000-8000-000000000001",
+            "reads": [
+              {
+                "table": "costeo_agentes",
+                "from": 0,
+                "to": 999,
+                "filters": [
+                  [
+                    "organization_id",
+                    "10000000-0000-4000-8000-000000000001"
+                  ]
+                ],
+                "orders": [
+                  "nombre",
+                  "id"
+                ],
+                "count": 1,
+                "error": null
+              },
+              {
+                "table": "puertos",
+                "from": 0,
+                "to": 999,
+                "filters": [],
+                "orders": [
+                  "country",
+                  "name",
+                  "id"
+                ],
+                "count": 1000,
+                "error": null
+              },
+              {
+                "table": "navieras",
+                "from": 0,
+                "to": 999,
+                "filters": [],
+                "orders": [
+                  "name",
+                  "id"
+                ],
+                "count": 1,
+                "error": null
+              },
+              {
+                "table": "tipos_contenedor",
+                "from": 0,
+                "to": 999,
+                "filters": [],
+                "orders": [
+                  "name",
+                  "id"
+                ],
+                "count": 2,
+                "error": null
+              },
+              {
+                "table": "catalogo_org_desactivado",
+                "from": 0,
+                "to": 999,
+                "filters": [
+                  [
+                    "organization_id",
+                    "10000000-0000-4000-8000-000000000001"
+                  ]
+                ],
+                "orders": [
+                  "catalogo",
+                  "item_id"
+                ],
+                "count": 0,
+                "error": null
+              },
+              {
+                "table": "costeo_agentes",
+                "from": 0,
+                "to": 999,
+                "filters": [
+                  [
+                    "organization_id",
+                    "10000000-0000-4000-8000-000000000001"
+                  ]
+                ],
+                "orders": [
+                  "nombre",
+                  "id"
+                ],
+                "count": 1,
+                "error": null
+              },
+              {
+                "table": "costeo_rutas",
+                "from": 0,
+                "to": 999,
+                "filters": [
+                  [
+                    "organization_id",
+                    "10000000-0000-4000-8000-000000000001"
+                  ]
+                ],
+                "orders": [
+                  "id"
+                ],
+                "count": 1,
+                "error": null
+              },
+              {
+                "table": "costeo_tarifas",
+                "from": 0,
+                "to": 999,
+                "filters": [
+                  [
+                    "organization_id",
+                    "10000000-0000-4000-8000-000000000001"
+                  ]
+                ],
+                "orders": [
+                  "id"
+                ],
+                "count": 1000,
+                "error": null
+              },
+              {
+                "table": "puertos",
+                "from": 1000,
+                "to": 1999,
+                "filters": [],
+                "orders": [
+                  "country",
+                  "name",
+                  "id"
+                ],
+                "count": 2,
+                "error": null
+              },
+              {
+                "table": "costeo_tarifas",
+                "from": 1000,
+                "to": 1999,
+                "filters": [
+                  [
+                    "organization_id",
+                    "10000000-0000-4000-8000-000000000001"
+                  ]
+                ],
+                "orders": [
+                  "id"
+                ],
+                "count": 0,
+                "error": "Fallo sintético en segunda página"
+              }
+            ],
+            "writes": [],
+            "invocations": [
+              {
+                "name": "extraer-tarifas-correo",
+                "organizationId": "10000000-0000-4000-8000-000000000001"
+              }
+            ],
+            "preparedType": "60000000-0000-4000-8000-000000000001",
+            "legacyType": "60000000-0000-4000-8000-000000000002"
+          },
+          "network": {
+            "requests": [
+              "GET http://127.0.0.1:8097/",
+              "GET http://127.0.0.1:8097/assets/index-C-yc-kqi.js",
+              "GET http://127.0.0.1:8097/assets/index-a26HoMQR.css"
+            ],
+            "blocked": [],
+            "errors": []
+          }
+        }
+      ],
+      "screenshots": [
+        "screenshots/03-desktop-1280x720-correo-error-conflicts-7a772d60c9b8e771266222ead3e9c4c8272b0c28.png"
+      ]
+    },
+    {
+      "id": "04",
+      "project": "desktop-1280x720",
+      "title": "correo.spec.ts / error-catalog: error en segunda página bloquea carga y altas",
+      "status": "passed",
+      "durationMs": 739,
+      "facts": [
+        {
+          "name": "correo-assertions-and-network",
+          "test": "error-catalog: error en segunda página bloquea carga y altas",
+          "status": "passed",
+          "viewport": {
+            "width": 1280,
+            "height": 720
+          },
+          "assertions": {
+            "scenario": "error-catalog",
+            "organizationId": "10000000-0000-4000-8000-000000000001",
+            "reads": [
+              {
+                "table": "costeo_agentes",
+                "from": 0,
+                "to": 999,
+                "filters": [
+                  [
+                    "organization_id",
+                    "10000000-0000-4000-8000-000000000001"
+                  ]
+                ],
+                "orders": [
+                  "nombre",
+                  "id"
+                ],
+                "count": 1,
+                "error": null
+              },
+              {
+                "table": "puertos",
+                "from": 0,
+                "to": 999,
+                "filters": [],
+                "orders": [
+                  "country",
+                  "name",
+                  "id"
+                ],
+                "count": 1000,
+                "error": null
+              },
+              {
+                "table": "navieras",
+                "from": 0,
+                "to": 999,
+                "filters": [],
+                "orders": [
+                  "name",
+                  "id"
+                ],
+                "count": 1,
+                "error": null
+              },
+              {
+                "table": "tipos_contenedor",
+                "from": 0,
+                "to": 999,
+                "filters": [],
+                "orders": [
+                  "name",
+                  "id"
+                ],
+                "count": 2,
+                "error": null
+              },
+              {
+                "table": "catalogo_org_desactivado",
+                "from": 0,
+                "to": 999,
+                "filters": [
+                  [
+                    "organization_id",
+                    "10000000-0000-4000-8000-000000000001"
+                  ]
+                ],
+                "orders": [
+                  "catalogo",
+                  "item_id"
+                ],
+                "count": 0,
+                "error": null
+              },
+              {
+                "table": "costeo_agentes",
+                "from": 0,
+                "to": 999,
+                "filters": [
+                  [
+                    "organization_id",
+                    "10000000-0000-4000-8000-000000000001"
+                  ]
+                ],
+                "orders": [
+                  "nombre",
+                  "id"
+                ],
+                "count": 1,
+                "error": null
+              },
+              {
+                "table": "costeo_rutas",
+                "from": 0,
+                "to": 999,
+                "filters": [
+                  [
+                    "organization_id",
+                    "10000000-0000-4000-8000-000000000001"
+                  ]
+                ],
+                "orders": [
+                  "id"
+                ],
+                "count": 1,
+                "error": null
+              },
+              {
+                "table": "costeo_tarifas",
+                "from": 0,
+                "to": 999,
+                "filters": [
+                  [
+                    "organization_id",
+                    "10000000-0000-4000-8000-000000000001"
+                  ]
+                ],
+                "orders": [
+                  "id"
+                ],
+                "count": 0,
+                "error": null
+              },
+              {
+                "table": "puertos",
+                "from": 1000,
+                "to": 1999,
+                "filters": [],
+                "orders": [
+                  "country",
+                  "name",
+                  "id"
+                ],
+                "count": 0,
+                "error": "Fallo sintético en segunda página"
+              }
+            ],
+            "writes": [],
+            "invocations": [
+              {
+                "name": "extraer-tarifas-correo",
+                "organizationId": "10000000-0000-4000-8000-000000000001"
+              }
+            ],
+            "preparedType": "60000000-0000-4000-8000-000000000001",
+            "legacyType": "60000000-0000-4000-8000-000000000002"
+          },
+          "network": {
+            "requests": [
+              "GET http://127.0.0.1:8097/",
+              "GET http://127.0.0.1:8097/assets/index-C-yc-kqi.js",
+              "GET http://127.0.0.1:8097/assets/index-a26HoMQR.css"
+            ],
+            "blocked": [],
+            "errors": []
+          }
+        }
+      ],
+      "screenshots": [
+        "screenshots/04-desktop-1280x720-correo-error-catalog-7d95a3ca958976810817e3f167d78a119fb8f184.png"
+      ]
+    },
+    {
+      "id": "05",
+      "project": "desktop-1280x720",
+      "title": "correo.spec.ts / inactive-global: catálogo existente inactivo no se ofrece para alta ni importación",
+      "status": "passed",
+      "durationMs": 665,
+      "facts": [
+        {
+          "name": "correo-assertions-and-network",
+          "test": "inactive-global: catálogo existente inactivo no se ofrece para alta ni importación",
+          "status": "passed",
+          "viewport": {
+            "width": 1280,
+            "height": 720
+          },
+          "assertions": {
+            "scenario": "inactive-global",
+            "organizationId": "10000000-0000-4000-8000-000000000001",
+            "reads": [
+              {
+                "table": "costeo_agentes",
+                "from": 0,
+                "to": 999,
+                "filters": [
+                  [
+                    "organization_id",
+                    "10000000-0000-4000-8000-000000000001"
+                  ]
+                ],
+                "orders": [
+                  "nombre",
+                  "id"
+                ],
+                "count": 1,
+                "error": null
+              },
+              {
+                "table": "puertos",
+                "from": 0,
+                "to": 999,
+                "filters": [],
+                "orders": [
+                  "country",
+                  "name",
+                  "id"
+                ],
+                "count": 1000,
+                "error": null
+              },
+              {
+                "table": "navieras",
+                "from": 0,
+                "to": 999,
+                "filters": [],
+                "orders": [
+                  "name",
+                  "id"
+                ],
+                "count": 1,
+                "error": null
+              },
+              {
+                "table": "tipos_contenedor",
+                "from": 0,
+                "to": 999,
+                "filters": [],
+                "orders": [
+                  "name",
+                  "id"
+                ],
+                "count": 2,
+                "error": null
+              },
+              {
+                "table": "catalogo_org_desactivado",
+                "from": 0,
+                "to": 999,
+                "filters": [
+                  [
+                    "organization_id",
+                    "10000000-0000-4000-8000-000000000001"
+                  ]
+                ],
+                "orders": [
+                  "catalogo",
+                  "item_id"
+                ],
+                "count": 0,
+                "error": null
+              },
+              {
+                "table": "costeo_agentes",
+                "from": 0,
+                "to": 999,
+                "filters": [
+                  [
+                    "organization_id",
+                    "10000000-0000-4000-8000-000000000001"
+                  ]
+                ],
+                "orders": [
+                  "nombre",
+                  "id"
+                ],
+                "count": 1,
+                "error": null
+              },
+              {
+                "table": "costeo_rutas",
+                "from": 0,
+                "to": 999,
+                "filters": [
+                  [
+                    "organization_id",
+                    "10000000-0000-4000-8000-000000000001"
+                  ]
+                ],
+                "orders": [
+                  "id"
+                ],
+                "count": 1,
+                "error": null
+              },
+              {
+                "table": "costeo_tarifas",
+                "from": 0,
+                "to": 999,
+                "filters": [
+                  [
+                    "organization_id",
+                    "10000000-0000-4000-8000-000000000001"
+                  ]
+                ],
+                "orders": [
+                  "id"
+                ],
+                "count": 0,
+                "error": null
+              },
+              {
+                "table": "puertos",
+                "from": 1000,
+                "to": 1999,
+                "filters": [],
+                "orders": [
+                  "country",
+                  "name",
+                  "id"
+                ],
+                "count": 2,
+                "error": null
+              }
+            ],
+            "writes": [],
+            "invocations": [
+              {
+                "name": "extraer-tarifas-correo",
+                "organizationId": "10000000-0000-4000-8000-000000000001"
+              }
+            ],
+            "preparedType": "60000000-0000-4000-8000-000000000001",
+            "legacyType": "60000000-0000-4000-8000-000000000002"
+          },
+          "network": {
+            "requests": [
+              "GET http://127.0.0.1:8097/",
+              "GET http://127.0.0.1:8097/assets/index-C-yc-kqi.js",
+              "GET http://127.0.0.1:8097/assets/index-a26HoMQR.css"
+            ],
+            "blocked": [],
+            "errors": []
+          }
+        }
+      ],
+      "screenshots": [
+        "screenshots/05-desktop-1280x720-correo-inactive-global-07495251c178c84df41443d2cb99c056a8cf3cef.png"
+      ]
+    },
+    {
+      "id": "06",
+      "project": "desktop-1280x720",
+      "title": "correo.spec.ts / inactive-org: catálogo existente inactivo no se ofrece para alta ni importación",
+      "status": "passed",
+      "durationMs": 654,
+      "facts": [
+        {
+          "name": "correo-assertions-and-network",
+          "test": "inactive-org: catálogo existente inactivo no se ofrece para alta ni importación",
+          "status": "passed",
+          "viewport": {
+            "width": 1280,
+            "height": 720
+          },
+          "assertions": {
+            "scenario": "inactive-org",
+            "organizationId": "10000000-0000-4000-8000-000000000001",
+            "reads": [
+              {
+                "table": "costeo_agentes",
+                "from": 0,
+                "to": 999,
+                "filters": [
+                  [
+                    "organization_id",
+                    "10000000-0000-4000-8000-000000000001"
+                  ]
+                ],
+                "orders": [
+                  "nombre",
+                  "id"
+                ],
+                "count": 1,
+                "error": null
+              },
+              {
+                "table": "puertos",
+                "from": 0,
+                "to": 999,
+                "filters": [],
+                "orders": [
+                  "country",
+                  "name",
+                  "id"
+                ],
+                "count": 1000,
+                "error": null
+              },
+              {
+                "table": "navieras",
+                "from": 0,
+                "to": 999,
+                "filters": [],
+                "orders": [
+                  "name",
+                  "id"
+                ],
+                "count": 1,
+                "error": null
+              },
+              {
+                "table": "tipos_contenedor",
+                "from": 0,
+                "to": 999,
+                "filters": [],
+                "orders": [
+                  "name",
+                  "id"
+                ],
+                "count": 2,
+                "error": null
+              },
+              {
+                "table": "catalogo_org_desactivado",
+                "from": 0,
+                "to": 999,
+                "filters": [
+                  [
+                    "organization_id",
+                    "10000000-0000-4000-8000-000000000001"
+                  ]
+                ],
+                "orders": [
+                  "catalogo",
+                  "item_id"
+                ],
+                "count": 3,
+                "error": null
+              },
+              {
+                "table": "costeo_agentes",
+                "from": 0,
+                "to": 999,
+                "filters": [
+                  [
+                    "organization_id",
+                    "10000000-0000-4000-8000-000000000001"
+                  ]
+                ],
+                "orders": [
+                  "nombre",
+                  "id"
+                ],
+                "count": 1,
+                "error": null
+              },
+              {
+                "table": "costeo_rutas",
+                "from": 0,
+                "to": 999,
+                "filters": [
+                  [
+                    "organization_id",
+                    "10000000-0000-4000-8000-000000000001"
+                  ]
+                ],
+                "orders": [
+                  "id"
+                ],
+                "count": 1,
+                "error": null
+              },
+              {
+                "table": "costeo_tarifas",
+                "from": 0,
+                "to": 999,
+                "filters": [
+                  [
+                    "organization_id",
+                    "10000000-0000-4000-8000-000000000001"
+                  ]
+                ],
+                "orders": [
+                  "id"
+                ],
+                "count": 0,
+                "error": null
+              },
+              {
+                "table": "puertos",
+                "from": 1000,
+                "to": 1999,
+                "filters": [],
+                "orders": [
+                  "country",
+                  "name",
+                  "id"
+                ],
+                "count": 2,
+                "error": null
+              }
+            ],
+            "writes": [],
+            "invocations": [
+              {
+                "name": "extraer-tarifas-correo",
+                "organizationId": "10000000-0000-4000-8000-000000000001"
+              }
+            ],
+            "preparedType": "60000000-0000-4000-8000-000000000001",
+            "legacyType": "60000000-0000-4000-8000-000000000002"
+          },
+          "network": {
+            "requests": [
+              "GET http://127.0.0.1:8097/",
+              "GET http://127.0.0.1:8097/assets/index-C-yc-kqi.js",
+              "GET http://127.0.0.1:8097/assets/index-a26HoMQR.css"
+            ],
+            "blocked": [],
+            "errors": []
+          }
+        }
+      ],
+      "screenshots": [
+        "screenshots/06-desktop-1280x720-correo-inactive-org-5651dff9efbbc8968ade91b70584060f029389e5.png"
+      ]
+    },
+    {
+      "id": "07",
+      "project": "desktop-1280x720",
+      "title": "correo.spec.ts / cambio de organización invalida resultados y exige nueva extracción",
+      "status": "passed",
+      "durationMs": 803,
+      "facts": [
+        {
+          "name": "correo-assertions-and-network",
+          "test": "cambio de organización invalida resultados y exige nueva extracción",
+          "status": "passed",
+          "viewport": {
+            "width": 1280,
+            "height": 720
+          },
+          "assertions": {
+            "scenario": "ready",
+            "organizationId": "10000000-0000-4000-8000-000000000002",
+            "reads": [
+              {
+                "table": "costeo_agentes",
+                "from": 0,
+                "to": 999,
+                "filters": [
+                  [
+                    "organization_id",
+                    "10000000-0000-4000-8000-000000000001"
+                  ]
+                ],
+                "orders": [
+                  "nombre",
+                  "id"
+                ],
+                "count": 1,
+                "error": null
+              },
+              {
+                "table": "puertos",
+                "from": 0,
+                "to": 999,
+                "filters": [],
+                "orders": [
+                  "country",
+                  "name",
+                  "id"
+                ],
+                "count": 1000,
+                "error": null
+              },
+              {
+                "table": "navieras",
+                "from": 0,
+                "to": 999,
+                "filters": [],
+                "orders": [
+                  "name",
+                  "id"
+                ],
+                "count": 1,
+                "error": null
+              },
+              {
+                "table": "tipos_contenedor",
+                "from": 0,
+                "to": 999,
+                "filters": [],
+                "orders": [
+                  "name",
+                  "id"
+                ],
+                "count": 2,
+                "error": null
+              },
+              {
+                "table": "catalogo_org_desactivado",
+                "from": 0,
+                "to": 999,
+                "filters": [
+                  [
+                    "organization_id",
+                    "10000000-0000-4000-8000-000000000001"
+                  ]
+                ],
+                "orders": [
+                  "catalogo",
+                  "item_id"
+                ],
+                "count": 0,
+                "error": null
+              },
+              {
+                "table": "costeo_agentes",
+                "from": 0,
+                "to": 999,
+                "filters": [
+                  [
+                    "organization_id",
+                    "10000000-0000-4000-8000-000000000001"
+                  ]
+                ],
+                "orders": [
+                  "nombre",
+                  "id"
+                ],
+                "count": 1,
+                "error": null
+              },
+              {
+                "table": "costeo_rutas",
+                "from": 0,
+                "to": 999,
+                "filters": [
+                  [
+                    "organization_id",
+                    "10000000-0000-4000-8000-000000000001"
+                  ]
+                ],
+                "orders": [
+                  "id"
+                ],
+                "count": 1,
+                "error": null
+              },
+              {
+                "table": "costeo_tarifas",
+                "from": 0,
+                "to": 999,
+                "filters": [
+                  [
+                    "organization_id",
+                    "10000000-0000-4000-8000-000000000001"
+                  ]
+                ],
+                "orders": [
+                  "id"
+                ],
+                "count": 0,
+                "error": null
+              },
+              {
+                "table": "puertos",
+                "from": 1000,
+                "to": 1999,
+                "filters": [],
+                "orders": [
+                  "country",
+                  "name",
+                  "id"
+                ],
+                "count": 2,
+                "error": null
+              },
+              {
+                "table": "costeo_agentes",
+                "from": 0,
+                "to": 999,
+                "filters": [
+                  [
+                    "organization_id",
+                    "10000000-0000-4000-8000-000000000002"
+                  ]
+                ],
+                "orders": [
+                  "nombre",
+                  "id"
+                ],
+                "count": 1,
+                "error": null
+              },
+              {
+                "table": "puertos",
+                "from": 0,
+                "to": 999,
+                "filters": [],
+                "orders": [
+                  "country",
+                  "name",
+                  "id"
+                ],
+                "count": 1000,
+                "error": null
+              },
+              {
+                "table": "navieras",
+                "from": 0,
+                "to": 999,
+                "filters": [],
+                "orders": [
+                  "name",
+                  "id"
+                ],
+                "count": 1,
+                "error": null
+              },
+              {
+                "table": "tipos_contenedor",
+                "from": 0,
+                "to": 999,
+                "filters": [],
+                "orders": [
+                  "name",
+                  "id"
+                ],
+                "count": 2,
+                "error": null
+              },
+              {
+                "table": "catalogo_org_desactivado",
+                "from": 0,
+                "to": 999,
+                "filters": [
+                  [
+                    "organization_id",
+                    "10000000-0000-4000-8000-000000000002"
+                  ]
+                ],
+                "orders": [
+                  "catalogo",
+                  "item_id"
+                ],
+                "count": 0,
+                "error": null
+              },
+              {
+                "table": "costeo_agentes",
+                "from": 0,
+                "to": 999,
+                "filters": [
+                  [
+                    "organization_id",
+                    "10000000-0000-4000-8000-000000000002"
+                  ]
+                ],
+                "orders": [
+                  "nombre",
+                  "id"
+                ],
+                "count": 1,
+                "error": null
+              },
+              {
+                "table": "costeo_rutas",
+                "from": 0,
+                "to": 999,
+                "filters": [
+                  [
+                    "organization_id",
+                    "10000000-0000-4000-8000-000000000002"
+                  ]
+                ],
+                "orders": [
+                  "id"
+                ],
+                "count": 1,
+                "error": null
+              },
+              {
+                "table": "costeo_tarifas",
+                "from": 0,
+                "to": 999,
+                "filters": [
+                  [
+                    "organization_id",
+                    "10000000-0000-4000-8000-000000000002"
+                  ]
+                ],
+                "orders": [
+                  "id"
+                ],
+                "count": 0,
+                "error": null
+              },
+              {
+                "table": "puertos",
+                "from": 1000,
+                "to": 1999,
+                "filters": [],
+                "orders": [
+                  "country",
+                  "name",
+                  "id"
+                ],
+                "count": 2,
+                "error": null
+              }
+            ],
+            "writes": [
+              {
+                "kind": "tarifa",
+                "organizationId": "10000000-0000-4000-8000-000000000002",
+                "input": {
+                  "agente_id": "30000000-0000-4000-8000-000000000001",
+                  "naviera_id": "40000000-0000-4000-8000-000000000001",
+                  "ruta_id": "50000000-0000-4000-8000-000000000001",
+                  "dias_libres_demoras": 21,
+                  "vigente_desde": "2026-10-17",
+                  "vigente_hasta": "2026-10-31",
+                  "notas": "ETD 19-Oct. Naviera: MSK",
+                  "recargos": [],
+                  "tipo_contenedor_id": "60000000-0000-4000-8000-000000000001",
+                  "flete_base": 1000
+                }
+              }
+            ],
+            "invocations": [
+              {
+                "name": "extraer-tarifas-correo",
+                "organizationId": "10000000-0000-4000-8000-000000000001"
+              },
+              {
+                "name": "extraer-tarifas-correo",
+                "organizationId": "10000000-0000-4000-8000-000000000002"
+              }
+            ],
+            "preparedType": "60000000-0000-4000-8000-000000000001",
+            "legacyType": "60000000-0000-4000-8000-000000000002"
+          },
+          "network": {
+            "requests": [
+              "GET http://127.0.0.1:8097/",
+              "GET http://127.0.0.1:8097/assets/index-C-yc-kqi.js",
+              "GET http://127.0.0.1:8097/assets/index-a26HoMQR.css"
+            ],
+            "blocked": [],
+            "errors": []
+          }
+        }
+      ],
+      "screenshots": [
+        "screenshots/07-desktop-1280x720-correo-organizacion-invalida-extraccion-662f9429ebeb9dde37a2e18ac0b4fa51a867fdcd.png"
+      ]
+    },
+    {
+      "id": "08",
+      "project": "mobile-390x640",
+      "title": "correo.spec.ts / prepara sin escrituras ni conexiones a Gmail",
+      "status": "passed",
+      "durationMs": 1320,
+      "facts": [
+        {
+          "name": "correo-assertions-and-network",
+          "test": "prepara sin escrituras ni conexiones a Gmail",
+          "status": "passed",
+          "viewport": {
+            "width": 390,
+            "height": 640
+          },
+          "assertions": {
+            "scenario": "ready",
+            "organizationId": "10000000-0000-4000-8000-000000000001",
+            "reads": [
+              {
+                "table": "costeo_agentes",
+                "from": 0,
+                "to": 999,
+                "filters": [
+                  [
+                    "organization_id",
+                    "10000000-0000-4000-8000-000000000001"
+                  ]
+                ],
+                "orders": [
+                  "nombre",
+                  "id"
+                ],
+                "count": 1,
+                "error": null
+              },
+              {
+                "table": "puertos",
+                "from": 0,
+                "to": 999,
+                "filters": [],
+                "orders": [
+                  "country",
+                  "name",
+                  "id"
+                ],
+                "count": 1000,
+                "error": null
+              },
+              {
+                "table": "navieras",
+                "from": 0,
+                "to": 999,
+                "filters": [],
+                "orders": [
+                  "name",
+                  "id"
+                ],
+                "count": 1,
+                "error": null
+              },
+              {
+                "table": "tipos_contenedor",
+                "from": 0,
+                "to": 999,
+                "filters": [],
+                "orders": [
+                  "name",
+                  "id"
+                ],
+                "count": 2,
+                "error": null
+              },
+              {
+                "table": "catalogo_org_desactivado",
+                "from": 0,
+                "to": 999,
+                "filters": [
+                  [
+                    "organization_id",
+                    "10000000-0000-4000-8000-000000000001"
+                  ]
+                ],
+                "orders": [
+                  "catalogo",
+                  "item_id"
+                ],
+                "count": 0,
+                "error": null
+              },
+              {
+                "table": "costeo_agentes",
+                "from": 0,
+                "to": 999,
+                "filters": [
+                  [
+                    "organization_id",
+                    "10000000-0000-4000-8000-000000000001"
+                  ]
+                ],
+                "orders": [
+                  "nombre",
+                  "id"
+                ],
+                "count": 1,
+                "error": null
+              },
+              {
+                "table": "costeo_rutas",
+                "from": 0,
+                "to": 999,
+                "filters": [
+                  [
+                    "organization_id",
+                    "10000000-0000-4000-8000-000000000001"
+                  ]
+                ],
+                "orders": [
+                  "id"
+                ],
+                "count": 1,
+                "error": null
+              },
+              {
+                "table": "costeo_tarifas",
+                "from": 0,
+                "to": 999,
+                "filters": [
+                  [
+                    "organization_id",
+                    "10000000-0000-4000-8000-000000000001"
+                  ]
+                ],
+                "orders": [
+                  "id"
+                ],
+                "count": 0,
+                "error": null
+              },
+              {
+                "table": "puertos",
+                "from": 1000,
+                "to": 1999,
+                "filters": [],
+                "orders": [
+                  "country",
+                  "name",
+                  "id"
+                ],
+                "count": 2,
+                "error": null
+              }
+            ],
+            "writes": [],
+            "invocations": [
+              {
+                "name": "extraer-tarifas-correo",
+                "organizationId": "10000000-0000-4000-8000-000000000001"
+              }
+            ],
+            "preparedType": "60000000-0000-4000-8000-000000000001",
+            "legacyType": "60000000-0000-4000-8000-000000000002"
+          },
+          "network": {
+            "requests": [
+              "GET http://127.0.0.1:8097/",
+              "GET http://127.0.0.1:8097/assets/index-C-yc-kqi.js",
+              "GET http://127.0.0.1:8097/assets/index-a26HoMQR.css"
+            ],
+            "blocked": [],
+            "errors": []
+          }
+        }
+      ],
+      "screenshots": [
+        "screenshots/08-mobile-390x640-correo-preparacion-sin-escrituras-e8a0e84166b623f37f0b15b11382b2af658da668.png"
+      ]
+    },
+    {
+      "id": "09",
+      "project": "mobile-390x640",
+      "title": "correo.spec.ts / excluye el conflicto de segunda página y conserva UUID preparado sólo por elección explícita",
+      "status": "passed",
+      "durationMs": 804,
+      "facts": [
+        {
+          "name": "correo-assertions-and-network",
+          "test": "excluye el conflicto de segunda página y conserva UUID preparado sólo por elección explícita",
+          "status": "passed",
+          "viewport": {
+            "width": 390,
+            "height": 640
+          },
+          "assertions": {
+            "scenario": "conflict-late",
+            "organizationId": "10000000-0000-4000-8000-000000000001",
+            "reads": [
+              {
+                "table": "costeo_agentes",
+                "from": 0,
+                "to": 999,
+                "filters": [
+                  [
+                    "organization_id",
+                    "10000000-0000-4000-8000-000000000001"
+                  ]
+                ],
+                "orders": [
+                  "nombre",
+                  "id"
+                ],
+                "count": 1,
+                "error": null
+              },
+              {
+                "table": "puertos",
+                "from": 0,
+                "to": 999,
+                "filters": [],
+                "orders": [
+                  "country",
+                  "name",
+                  "id"
+                ],
+                "count": 1000,
+                "error": null
+              },
+              {
+                "table": "navieras",
+                "from": 0,
+                "to": 999,
+                "filters": [],
+                "orders": [
+                  "name",
+                  "id"
+                ],
+                "count": 1,
+                "error": null
+              },
+              {
+                "table": "tipos_contenedor",
+                "from": 0,
+                "to": 999,
+                "filters": [],
+                "orders": [
+                  "name",
+                  "id"
+                ],
+                "count": 2,
+                "error": null
+              },
+              {
+                "table": "catalogo_org_desactivado",
+                "from": 0,
+                "to": 999,
+                "filters": [
+                  [
+                    "organization_id",
+                    "10000000-0000-4000-8000-000000000001"
+                  ]
+                ],
+                "orders": [
+                  "catalogo",
+                  "item_id"
+                ],
+                "count": 0,
+                "error": null
+              },
+              {
+                "table": "costeo_agentes",
+                "from": 0,
+                "to": 999,
+                "filters": [
+                  [
+                    "organization_id",
+                    "10000000-0000-4000-8000-000000000001"
+                  ]
+                ],
+                "orders": [
+                  "nombre",
+                  "id"
+                ],
+                "count": 1,
+                "error": null
+              },
+              {
+                "table": "costeo_rutas",
+                "from": 0,
+                "to": 999,
+                "filters": [
+                  [
+                    "organization_id",
+                    "10000000-0000-4000-8000-000000000001"
+                  ]
+                ],
+                "orders": [
+                  "id"
+                ],
+                "count": 1,
+                "error": null
+              },
+              {
+                "table": "costeo_tarifas",
+                "from": 0,
+                "to": 999,
+                "filters": [
+                  [
+                    "organization_id",
+                    "10000000-0000-4000-8000-000000000001"
+                  ]
+                ],
+                "orders": [
+                  "id"
+                ],
+                "count": 1000,
+                "error": null
+              },
+              {
+                "table": "puertos",
+                "from": 1000,
+                "to": 1999,
+                "filters": [],
+                "orders": [
+                  "country",
+                  "name",
+                  "id"
+                ],
+                "count": 2,
+                "error": null
+              },
+              {
+                "table": "costeo_tarifas",
+                "from": 1000,
+                "to": 1999,
+                "filters": [
+                  [
+                    "organization_id",
+                    "10000000-0000-4000-8000-000000000001"
+                  ]
+                ],
+                "orders": [
+                  "id"
+                ],
+                "count": 1,
+                "error": null
+              }
+            ],
+            "writes": [
+              {
+                "kind": "tarifa",
+                "organizationId": "10000000-0000-4000-8000-000000000001",
+                "input": {
+                  "agente_id": "30000000-0000-4000-8000-000000000001",
+                  "naviera_id": "40000000-0000-4000-8000-000000000001",
+                  "ruta_id": "50000000-0000-4000-8000-000000000001",
+                  "dias_libres_demoras": 21,
+                  "vigente_desde": "2026-10-17",
+                  "vigente_hasta": "2026-10-31",
+                  "notas": "ETD 19-Oct. Naviera: MSK",
+                  "recargos": [],
+                  "tipo_contenedor_id": "60000000-0000-4000-8000-000000000001",
+                  "flete_base": 1000
+                }
+              }
+            ],
+            "invocations": [
+              {
+                "name": "extraer-tarifas-correo",
+                "organizationId": "10000000-0000-4000-8000-000000000001"
+              }
+            ],
+            "preparedType": "60000000-0000-4000-8000-000000000001",
+            "legacyType": "60000000-0000-4000-8000-000000000002"
+          },
+          "network": {
+            "requests": [
+              "GET http://127.0.0.1:8097/",
+              "GET http://127.0.0.1:8097/assets/index-C-yc-kqi.js",
+              "GET http://127.0.0.1:8097/assets/index-a26HoMQR.css"
+            ],
+            "blocked": [],
+            "errors": []
+          }
+        }
+      ],
+      "screenshots": [
+        "screenshots/09-mobile-390x640-correo-conflicto-excluido-segunda-pagina-83435cf58cf6b1c1db954ea121aa157923d8f262.png",
+        "screenshots/09-mobile-390x640-correo-confirmacion-escritor-en-memoria-29f2643fa01768f76b9511a12ff3a5733fa3d81a.png"
+      ]
+    },
+    {
+      "id": "10",
+      "project": "mobile-390x640",
+      "title": "correo.spec.ts / error-conflicts: error en segunda página bloquea carga y altas",
+      "status": "passed",
+      "durationMs": 691,
+      "facts": [
+        {
+          "name": "correo-assertions-and-network",
+          "test": "error-conflicts: error en segunda página bloquea carga y altas",
+          "status": "passed",
+          "viewport": {
+            "width": 390,
+            "height": 640
+          },
+          "assertions": {
+            "scenario": "error-conflicts",
+            "organizationId": "10000000-0000-4000-8000-000000000001",
+            "reads": [
+              {
+                "table": "costeo_agentes",
+                "from": 0,
+                "to": 999,
+                "filters": [
+                  [
+                    "organization_id",
+                    "10000000-0000-4000-8000-000000000001"
+                  ]
+                ],
+                "orders": [
+                  "nombre",
+                  "id"
+                ],
+                "count": 1,
+                "error": null
+              },
+              {
+                "table": "puertos",
+                "from": 0,
+                "to": 999,
+                "filters": [],
+                "orders": [
+                  "country",
+                  "name",
+                  "id"
+                ],
+                "count": 1000,
+                "error": null
+              },
+              {
+                "table": "navieras",
+                "from": 0,
+                "to": 999,
+                "filters": [],
+                "orders": [
+                  "name",
+                  "id"
+                ],
+                "count": 1,
+                "error": null
+              },
+              {
+                "table": "tipos_contenedor",
+                "from": 0,
+                "to": 999,
+                "filters": [],
+                "orders": [
+                  "name",
+                  "id"
+                ],
+                "count": 2,
+                "error": null
+              },
+              {
+                "table": "catalogo_org_desactivado",
+                "from": 0,
+                "to": 999,
+                "filters": [
+                  [
+                    "organization_id",
+                    "10000000-0000-4000-8000-000000000001"
+                  ]
+                ],
+                "orders": [
+                  "catalogo",
+                  "item_id"
+                ],
+                "count": 0,
+                "error": null
+              },
+              {
+                "table": "costeo_agentes",
+                "from": 0,
+                "to": 999,
+                "filters": [
+                  [
+                    "organization_id",
+                    "10000000-0000-4000-8000-000000000001"
+                  ]
+                ],
+                "orders": [
+                  "nombre",
+                  "id"
+                ],
+                "count": 1,
+                "error": null
+              },
+              {
+                "table": "costeo_rutas",
+                "from": 0,
+                "to": 999,
+                "filters": [
+                  [
+                    "organization_id",
+                    "10000000-0000-4000-8000-000000000001"
+                  ]
+                ],
+                "orders": [
+                  "id"
+                ],
+                "count": 1,
+                "error": null
+              },
+              {
+                "table": "costeo_tarifas",
+                "from": 0,
+                "to": 999,
+                "filters": [
+                  [
+                    "organization_id",
+                    "10000000-0000-4000-8000-000000000001"
+                  ]
+                ],
+                "orders": [
+                  "id"
+                ],
+                "count": 1000,
+                "error": null
+              },
+              {
+                "table": "puertos",
+                "from": 1000,
+                "to": 1999,
+                "filters": [],
+                "orders": [
+                  "country",
+                  "name",
+                  "id"
+                ],
+                "count": 2,
+                "error": null
+              },
+              {
+                "table": "costeo_tarifas",
+                "from": 1000,
+                "to": 1999,
+                "filters": [
+                  [
+                    "organization_id",
+                    "10000000-0000-4000-8000-000000000001"
+                  ]
+                ],
+                "orders": [
+                  "id"
+                ],
+                "count": 0,
+                "error": "Fallo sintético en segunda página"
+              }
+            ],
+            "writes": [],
+            "invocations": [
+              {
+                "name": "extraer-tarifas-correo",
+                "organizationId": "10000000-0000-4000-8000-000000000001"
+              }
+            ],
+            "preparedType": "60000000-0000-4000-8000-000000000001",
+            "legacyType": "60000000-0000-4000-8000-000000000002"
+          },
+          "network": {
+            "requests": [
+              "GET http://127.0.0.1:8097/",
+              "GET http://127.0.0.1:8097/assets/index-C-yc-kqi.js",
+              "GET http://127.0.0.1:8097/assets/index-a26HoMQR.css"
+            ],
+            "blocked": [],
+            "errors": []
+          }
+        }
+      ],
+      "screenshots": [
+        "screenshots/10-mobile-390x640-correo-error-conflicts-606eb08e1d15bba505fd011a9febb60063ff1b7e.png"
+      ]
+    },
+    {
+      "id": "11",
+      "project": "mobile-390x640",
+      "title": "correo.spec.ts / error-catalog: error en segunda página bloquea carga y altas",
+      "status": "passed",
+      "durationMs": 658,
+      "facts": [
+        {
+          "name": "correo-assertions-and-network",
+          "test": "error-catalog: error en segunda página bloquea carga y altas",
+          "status": "passed",
+          "viewport": {
+            "width": 390,
+            "height": 640
+          },
+          "assertions": {
+            "scenario": "error-catalog",
+            "organizationId": "10000000-0000-4000-8000-000000000001",
+            "reads": [
+              {
+                "table": "costeo_agentes",
+                "from": 0,
+                "to": 999,
+                "filters": [
+                  [
+                    "organization_id",
+                    "10000000-0000-4000-8000-000000000001"
+                  ]
+                ],
+                "orders": [
+                  "nombre",
+                  "id"
+                ],
+                "count": 1,
+                "error": null
+              },
+              {
+                "table": "puertos",
+                "from": 0,
+                "to": 999,
+                "filters": [],
+                "orders": [
+                  "country",
+                  "name",
+                  "id"
+                ],
+                "count": 1000,
+                "error": null
+              },
+              {
+                "table": "navieras",
+                "from": 0,
+                "to": 999,
+                "filters": [],
+                "orders": [
+                  "name",
+                  "id"
+                ],
+                "count": 1,
+                "error": null
+              },
+              {
+                "table": "tipos_contenedor",
+                "from": 0,
+                "to": 999,
+                "filters": [],
+                "orders": [
+                  "name",
+                  "id"
+                ],
+                "count": 2,
+                "error": null
+              },
+              {
+                "table": "catalogo_org_desactivado",
+                "from": 0,
+                "to": 999,
+                "filters": [
+                  [
+                    "organization_id",
+                    "10000000-0000-4000-8000-000000000001"
+                  ]
+                ],
+                "orders": [
+                  "catalogo",
+                  "item_id"
+                ],
+                "count": 0,
+                "error": null
+              },
+              {
+                "table": "costeo_agentes",
+                "from": 0,
+                "to": 999,
+                "filters": [
+                  [
+                    "organization_id",
+                    "10000000-0000-4000-8000-000000000001"
+                  ]
+                ],
+                "orders": [
+                  "nombre",
+                  "id"
+                ],
+                "count": 1,
+                "error": null
+              },
+              {
+                "table": "costeo_rutas",
+                "from": 0,
+                "to": 999,
+                "filters": [
+                  [
+                    "organization_id",
+                    "10000000-0000-4000-8000-000000000001"
+                  ]
+                ],
+                "orders": [
+                  "id"
+                ],
+                "count": 1,
+                "error": null
+              },
+              {
+                "table": "costeo_tarifas",
+                "from": 0,
+                "to": 999,
+                "filters": [
+                  [
+                    "organization_id",
+                    "10000000-0000-4000-8000-000000000001"
+                  ]
+                ],
+                "orders": [
+                  "id"
+                ],
+                "count": 0,
+                "error": null
+              },
+              {
+                "table": "puertos",
+                "from": 1000,
+                "to": 1999,
+                "filters": [],
+                "orders": [
+                  "country",
+                  "name",
+                  "id"
+                ],
+                "count": 0,
+                "error": "Fallo sintético en segunda página"
+              }
+            ],
+            "writes": [],
+            "invocations": [
+              {
+                "name": "extraer-tarifas-correo",
+                "organizationId": "10000000-0000-4000-8000-000000000001"
+              }
+            ],
+            "preparedType": "60000000-0000-4000-8000-000000000001",
+            "legacyType": "60000000-0000-4000-8000-000000000002"
+          },
+          "network": {
+            "requests": [
+              "GET http://127.0.0.1:8097/",
+              "GET http://127.0.0.1:8097/assets/index-C-yc-kqi.js",
+              "GET http://127.0.0.1:8097/assets/index-a26HoMQR.css"
+            ],
+            "blocked": [],
+            "errors": []
+          }
+        }
+      ],
+      "screenshots": [
+        "screenshots/11-mobile-390x640-correo-error-catalog-c46b9d55f392538bfedb8908564d32ed9924095f.png"
+      ]
+    },
+    {
+      "id": "12",
+      "project": "mobile-390x640",
+      "title": "correo.spec.ts / inactive-global: catálogo existente inactivo no se ofrece para alta ni importación",
+      "status": "passed",
+      "durationMs": 665,
+      "facts": [
+        {
+          "name": "correo-assertions-and-network",
+          "test": "inactive-global: catálogo existente inactivo no se ofrece para alta ni importación",
+          "status": "passed",
+          "viewport": {
+            "width": 390,
+            "height": 640
+          },
+          "assertions": {
+            "scenario": "inactive-global",
+            "organizationId": "10000000-0000-4000-8000-000000000001",
+            "reads": [
+              {
+                "table": "costeo_agentes",
+                "from": 0,
+                "to": 999,
+                "filters": [
+                  [
+                    "organization_id",
+                    "10000000-0000-4000-8000-000000000001"
+                  ]
+                ],
+                "orders": [
+                  "nombre",
+                  "id"
+                ],
+                "count": 1,
+                "error": null
+              },
+              {
+                "table": "puertos",
+                "from": 0,
+                "to": 999,
+                "filters": [],
+                "orders": [
+                  "country",
+                  "name",
+                  "id"
+                ],
+                "count": 1000,
+                "error": null
+              },
+              {
+                "table": "navieras",
+                "from": 0,
+                "to": 999,
+                "filters": [],
+                "orders": [
+                  "name",
+                  "id"
+                ],
+                "count": 1,
+                "error": null
+              },
+              {
+                "table": "tipos_contenedor",
+                "from": 0,
+                "to": 999,
+                "filters": [],
+                "orders": [
+                  "name",
+                  "id"
+                ],
+                "count": 2,
+                "error": null
+              },
+              {
+                "table": "catalogo_org_desactivado",
+                "from": 0,
+                "to": 999,
+                "filters": [
+                  [
+                    "organization_id",
+                    "10000000-0000-4000-8000-000000000001"
+                  ]
+                ],
+                "orders": [
+                  "catalogo",
+                  "item_id"
+                ],
+                "count": 0,
+                "error": null
+              },
+              {
+                "table": "costeo_agentes",
+                "from": 0,
+                "to": 999,
+                "filters": [
+                  [
+                    "organization_id",
+                    "10000000-0000-4000-8000-000000000001"
+                  ]
+                ],
+                "orders": [
+                  "nombre",
+                  "id"
+                ],
+                "count": 1,
+                "error": null
+              },
+              {
+                "table": "costeo_rutas",
+                "from": 0,
+                "to": 999,
+                "filters": [
+                  [
+                    "organization_id",
+                    "10000000-0000-4000-8000-000000000001"
+                  ]
+                ],
+                "orders": [
+                  "id"
+                ],
+                "count": 1,
+                "error": null
+              },
+              {
+                "table": "costeo_tarifas",
+                "from": 0,
+                "to": 999,
+                "filters": [
+                  [
+                    "organization_id",
+                    "10000000-0000-4000-8000-000000000001"
+                  ]
+                ],
+                "orders": [
+                  "id"
+                ],
+                "count": 0,
+                "error": null
+              },
+              {
+                "table": "puertos",
+                "from": 1000,
+                "to": 1999,
+                "filters": [],
+                "orders": [
+                  "country",
+                  "name",
+                  "id"
+                ],
+                "count": 2,
+                "error": null
+              }
+            ],
+            "writes": [],
+            "invocations": [
+              {
+                "name": "extraer-tarifas-correo",
+                "organizationId": "10000000-0000-4000-8000-000000000001"
+              }
+            ],
+            "preparedType": "60000000-0000-4000-8000-000000000001",
+            "legacyType": "60000000-0000-4000-8000-000000000002"
+          },
+          "network": {
+            "requests": [
+              "GET http://127.0.0.1:8097/",
+              "GET http://127.0.0.1:8097/assets/index-C-yc-kqi.js",
+              "GET http://127.0.0.1:8097/assets/index-a26HoMQR.css"
+            ],
+            "blocked": [],
+            "errors": []
+          }
+        }
+      ],
+      "screenshots": [
+        "screenshots/12-mobile-390x640-correo-inactive-global-2ce8db0518e16181e99316d5c7534c7e5ed06742.png"
+      ]
+    },
+    {
+      "id": "13",
+      "project": "mobile-390x640",
+      "title": "correo.spec.ts / inactive-org: catálogo existente inactivo no se ofrece para alta ni importación",
+      "status": "passed",
+      "durationMs": 655,
+      "facts": [
+        {
+          "name": "correo-assertions-and-network",
+          "test": "inactive-org: catálogo existente inactivo no se ofrece para alta ni importación",
+          "status": "passed",
+          "viewport": {
+            "width": 390,
+            "height": 640
+          },
+          "assertions": {
+            "scenario": "inactive-org",
+            "organizationId": "10000000-0000-4000-8000-000000000001",
+            "reads": [
+              {
+                "table": "costeo_agentes",
+                "from": 0,
+                "to": 999,
+                "filters": [
+                  [
+                    "organization_id",
+                    "10000000-0000-4000-8000-000000000001"
+                  ]
+                ],
+                "orders": [
+                  "nombre",
+                  "id"
+                ],
+                "count": 1,
+                "error": null
+              },
+              {
+                "table": "puertos",
+                "from": 0,
+                "to": 999,
+                "filters": [],
+                "orders": [
+                  "country",
+                  "name",
+                  "id"
+                ],
+                "count": 1000,
+                "error": null
+              },
+              {
+                "table": "navieras",
+                "from": 0,
+                "to": 999,
+                "filters": [],
+                "orders": [
+                  "name",
+                  "id"
+                ],
+                "count": 1,
+                "error": null
+              },
+              {
+                "table": "tipos_contenedor",
+                "from": 0,
+                "to": 999,
+                "filters": [],
+                "orders": [
+                  "name",
+                  "id"
+                ],
+                "count": 2,
+                "error": null
+              },
+              {
+                "table": "catalogo_org_desactivado",
+                "from": 0,
+                "to": 999,
+                "filters": [
+                  [
+                    "organization_id",
+                    "10000000-0000-4000-8000-000000000001"
+                  ]
+                ],
+                "orders": [
+                  "catalogo",
+                  "item_id"
+                ],
+                "count": 3,
+                "error": null
+              },
+              {
+                "table": "costeo_agentes",
+                "from": 0,
+                "to": 999,
+                "filters": [
+                  [
+                    "organization_id",
+                    "10000000-0000-4000-8000-000000000001"
+                  ]
+                ],
+                "orders": [
+                  "nombre",
+                  "id"
+                ],
+                "count": 1,
+                "error": null
+              },
+              {
+                "table": "costeo_rutas",
+                "from": 0,
+                "to": 999,
+                "filters": [
+                  [
+                    "organization_id",
+                    "10000000-0000-4000-8000-000000000001"
+                  ]
+                ],
+                "orders": [
+                  "id"
+                ],
+                "count": 1,
+                "error": null
+              },
+              {
+                "table": "costeo_tarifas",
+                "from": 0,
+                "to": 999,
+                "filters": [
+                  [
+                    "organization_id",
+                    "10000000-0000-4000-8000-000000000001"
+                  ]
+                ],
+                "orders": [
+                  "id"
+                ],
+                "count": 0,
+                "error": null
+              },
+              {
+                "table": "puertos",
+                "from": 1000,
+                "to": 1999,
+                "filters": [],
+                "orders": [
+                  "country",
+                  "name",
+                  "id"
+                ],
+                "count": 2,
+                "error": null
+              }
+            ],
+            "writes": [],
+            "invocations": [
+              {
+                "name": "extraer-tarifas-correo",
+                "organizationId": "10000000-0000-4000-8000-000000000001"
+              }
+            ],
+            "preparedType": "60000000-0000-4000-8000-000000000001",
+            "legacyType": "60000000-0000-4000-8000-000000000002"
+          },
+          "network": {
+            "requests": [
+              "GET http://127.0.0.1:8097/",
+              "GET http://127.0.0.1:8097/assets/index-C-yc-kqi.js",
+              "GET http://127.0.0.1:8097/assets/index-a26HoMQR.css"
+            ],
+            "blocked": [],
+            "errors": []
+          }
+        }
+      ],
+      "screenshots": [
+        "screenshots/13-mobile-390x640-correo-inactive-org-8e45831b262030e1b13dc4780593c6cdab271388.png"
+      ]
+    },
+    {
+      "id": "14",
+      "project": "mobile-390x640",
+      "title": "correo.spec.ts / cambio de organización invalida resultados y exige nueva extracción",
+      "status": "passed",
+      "durationMs": 813,
+      "facts": [
+        {
+          "name": "correo-assertions-and-network",
+          "test": "cambio de organización invalida resultados y exige nueva extracción",
+          "status": "passed",
+          "viewport": {
+            "width": 390,
+            "height": 640
+          },
+          "assertions": {
+            "scenario": "ready",
+            "organizationId": "10000000-0000-4000-8000-000000000002",
+            "reads": [
+              {
+                "table": "costeo_agentes",
+                "from": 0,
+                "to": 999,
+                "filters": [
+                  [
+                    "organization_id",
+                    "10000000-0000-4000-8000-000000000001"
+                  ]
+                ],
+                "orders": [
+                  "nombre",
+                  "id"
+                ],
+                "count": 1,
+                "error": null
+              },
+              {
+                "table": "puertos",
+                "from": 0,
+                "to": 999,
+                "filters": [],
+                "orders": [
+                  "country",
+                  "name",
+                  "id"
+                ],
+                "count": 1000,
+                "error": null
+              },
+              {
+                "table": "navieras",
+                "from": 0,
+                "to": 999,
+                "filters": [],
+                "orders": [
+                  "name",
+                  "id"
+                ],
+                "count": 1,
+                "error": null
+              },
+              {
+                "table": "tipos_contenedor",
+                "from": 0,
+                "to": 999,
+                "filters": [],
+                "orders": [
+                  "name",
+                  "id"
+                ],
+                "count": 2,
+                "error": null
+              },
+              {
+                "table": "catalogo_org_desactivado",
+                "from": 0,
+                "to": 999,
+                "filters": [
+                  [
+                    "organization_id",
+                    "10000000-0000-4000-8000-000000000001"
+                  ]
+                ],
+                "orders": [
+                  "catalogo",
+                  "item_id"
+                ],
+                "count": 0,
+                "error": null
+              },
+              {
+                "table": "costeo_agentes",
+                "from": 0,
+                "to": 999,
+                "filters": [
+                  [
+                    "organization_id",
+                    "10000000-0000-4000-8000-000000000001"
+                  ]
+                ],
+                "orders": [
+                  "nombre",
+                  "id"
+                ],
+                "count": 1,
+                "error": null
+              },
+              {
+                "table": "costeo_rutas",
+                "from": 0,
+                "to": 999,
+                "filters": [
+                  [
+                    "organization_id",
+                    "10000000-0000-4000-8000-000000000001"
+                  ]
+                ],
+                "orders": [
+                  "id"
+                ],
+                "count": 1,
+                "error": null
+              },
+              {
+                "table": "costeo_tarifas",
+                "from": 0,
+                "to": 999,
+                "filters": [
+                  [
+                    "organization_id",
+                    "10000000-0000-4000-8000-000000000001"
+                  ]
+                ],
+                "orders": [
+                  "id"
+                ],
+                "count": 0,
+                "error": null
+              },
+              {
+                "table": "puertos",
+                "from": 1000,
+                "to": 1999,
+                "filters": [],
+                "orders": [
+                  "country",
+                  "name",
+                  "id"
+                ],
+                "count": 2,
+                "error": null
+              },
+              {
+                "table": "costeo_agentes",
+                "from": 0,
+                "to": 999,
+                "filters": [
+                  [
+                    "organization_id",
+                    "10000000-0000-4000-8000-000000000002"
+                  ]
+                ],
+                "orders": [
+                  "nombre",
+                  "id"
+                ],
+                "count": 1,
+                "error": null
+              },
+              {
+                "table": "puertos",
+                "from": 0,
+                "to": 999,
+                "filters": [],
+                "orders": [
+                  "country",
+                  "name",
+                  "id"
+                ],
+                "count": 1000,
+                "error": null
+              },
+              {
+                "table": "navieras",
+                "from": 0,
+                "to": 999,
+                "filters": [],
+                "orders": [
+                  "name",
+                  "id"
+                ],
+                "count": 1,
+                "error": null
+              },
+              {
+                "table": "tipos_contenedor",
+                "from": 0,
+                "to": 999,
+                "filters": [],
+                "orders": [
+                  "name",
+                  "id"
+                ],
+                "count": 2,
+                "error": null
+              },
+              {
+                "table": "catalogo_org_desactivado",
+                "from": 0,
+                "to": 999,
+                "filters": [
+                  [
+                    "organization_id",
+                    "10000000-0000-4000-8000-000000000002"
+                  ]
+                ],
+                "orders": [
+                  "catalogo",
+                  "item_id"
+                ],
+                "count": 0,
+                "error": null
+              },
+              {
+                "table": "costeo_agentes",
+                "from": 0,
+                "to": 999,
+                "filters": [
+                  [
+                    "organization_id",
+                    "10000000-0000-4000-8000-000000000002"
+                  ]
+                ],
+                "orders": [
+                  "nombre",
+                  "id"
+                ],
+                "count": 1,
+                "error": null
+              },
+              {
+                "table": "costeo_rutas",
+                "from": 0,
+                "to": 999,
+                "filters": [
+                  [
+                    "organization_id",
+                    "10000000-0000-4000-8000-000000000002"
+                  ]
+                ],
+                "orders": [
+                  "id"
+                ],
+                "count": 1,
+                "error": null
+              },
+              {
+                "table": "costeo_tarifas",
+                "from": 0,
+                "to": 999,
+                "filters": [
+                  [
+                    "organization_id",
+                    "10000000-0000-4000-8000-000000000002"
+                  ]
+                ],
+                "orders": [
+                  "id"
+                ],
+                "count": 0,
+                "error": null
+              },
+              {
+                "table": "puertos",
+                "from": 1000,
+                "to": 1999,
+                "filters": [],
+                "orders": [
+                  "country",
+                  "name",
+                  "id"
+                ],
+                "count": 2,
+                "error": null
+              }
+            ],
+            "writes": [
+              {
+                "kind": "tarifa",
+                "organizationId": "10000000-0000-4000-8000-000000000002",
+                "input": {
+                  "agente_id": "30000000-0000-4000-8000-000000000001",
+                  "naviera_id": "40000000-0000-4000-8000-000000000001",
+                  "ruta_id": "50000000-0000-4000-8000-000000000001",
+                  "dias_libres_demoras": 21,
+                  "vigente_desde": "2026-10-17",
+                  "vigente_hasta": "2026-10-31",
+                  "notas": "ETD 19-Oct. Naviera: MSK",
+                  "recargos": [],
+                  "tipo_contenedor_id": "60000000-0000-4000-8000-000000000001",
+                  "flete_base": 1000
+                }
+              }
+            ],
+            "invocations": [
+              {
+                "name": "extraer-tarifas-correo",
+                "organizationId": "10000000-0000-4000-8000-000000000001"
+              },
+              {
+                "name": "extraer-tarifas-correo",
+                "organizationId": "10000000-0000-4000-8000-000000000002"
+              }
+            ],
+            "preparedType": "60000000-0000-4000-8000-000000000001",
+            "legacyType": "60000000-0000-4000-8000-000000000002"
+          },
+          "network": {
+            "requests": [
+              "GET http://127.0.0.1:8097/",
+              "GET http://127.0.0.1:8097/assets/index-C-yc-kqi.js",
+              "GET http://127.0.0.1:8097/assets/index-a26HoMQR.css"
+            ],
+            "blocked": [],
+            "errors": []
+          }
+        }
+      ],
+      "screenshots": [
+        "screenshots/14-mobile-390x640-correo-organizacion-invalida-extraccion-96ef9d01c7b48fbf033593e412c79c00166b8a53.png"
+      ]
+    },
+    {
+      "id": "15",
+      "project": "desktop-1280x720",
+      "title": "PR373: real linked-company cards preserve history and restrict unlink to editing",
+      "status": "passed",
+      "durationMs": 1300,
+      "facts": [
+        {
+          "name": "crm-diagnostics",
+          "project": "desktop-1280x720",
+          "facts": {
+            "contactoInitial": {
+              "activeAnchor": true,
+              "historicalNameAndLabelWithoutAnchor": true,
+              "nullEmbedOmitted": true,
+              "permissionAndConfigurationRequired": true
+            },
+            "oportunidadInitial": {
+              "activeAnchor": true,
+              "historicalNameAndLabelWithoutAnchor": true,
+              "nullEmbedOmitted": true,
+              "permissionAndConfigurationRequired": true
+            },
+            "contactoUnlink": {
+              "removedOnlyLinkedHistoricalCompany": true,
+              "activeAnchorPreserved": true,
+              "readonlyOwnerUnaffected": true
+            },
+            "oportunidadUnlink": {
+              "removedOnlyLinkedHistoricalCompany": true,
+              "activeAnchorPreserved": true,
+              "readonlyOwnerUnaffected": true
+            },
+            "backend": {
+              "reads": [
+                {
+                  "table": "crm_empresas",
+                  "columns": "id, nombre, cliente_id, estado_crm, created_at",
+                  "filters": {
+                    "deleted_at": null
+                  }
+                },
+                {
+                  "table": "crm_contactos",
+                  "columns": "id, nombre, email, telefono, created_at",
+                  "filters": {
+                    "deleted_at": null
+                  }
+                },
+                {
+                  "table": "crm_empresa_contacto",
+                  "columns": "crm_empresas(id, nombre, deleted_at)",
+                  "filters": {
+                    "contacto_id": "fixture-contacto-edicion"
+                  },
+                  "limit": 200
+                },
+                {
+                  "table": "crm_empresa_contacto",
+                  "columns": "crm_empresas(id, nombre, deleted_at)",
+                  "filters": {
+                    "contacto_id": "fixture-contacto-lectura"
+                  },
+                  "limit": 200
+                },
+                {
+                  "table": "crm_empresa_contacto",
+                  "columns": "crm_empresas(id, nombre, deleted_at)",
+                  "filters": {
+                    "contacto_id": "fixture-contacto-sin-config"
+                  },
+                  "limit": 200
+                },
+                {
+                  "table": "crm_empresa_contacto",
+                  "columns": "crm_empresas(id, nombre, deleted_at)",
+                  "filters": {
+                    "contacto_id": "fixture-contacto-oculto"
+                  },
+                  "limit": 200
+                },
+                {
+                  "table": "crm_oportunidad_empresa",
+                  "columns": "crm_empresas(id, nombre, deleted_at)",
+                  "filters": {
+                    "oportunidad_id": "fixture-oportunidad-edicion"
+                  },
+                  "limit": 200
+                },
+                {
+                  "table": "crm_oportunidad_empresa",
+                  "columns": "crm_empresas(id, nombre, deleted_at)",
+                  "filters": {
+                    "oportunidad_id": "fixture-oportunidad-lectura"
+                  },
+                  "limit": 200
+                },
+                {
+                  "table": "crm_oportunidad_empresa",
+                  "columns": "crm_empresas(id, nombre, deleted_at)",
+                  "filters": {
+                    "oportunidad_id": "fixture-oportunidad-sin-config"
+                  },
+                  "limit": 200
+                },
+                {
+                  "table": "crm_oportunidad_empresa",
+                  "columns": "crm_empresas(id, nombre, deleted_at)",
+                  "filters": {
+                    "oportunidad_id": "fixture-oportunidad-oculto"
+                  },
+                  "limit": 200
+                },
+                {
+                  "table": "crm_empresa_contacto",
+                  "columns": "crm_empresas(id, nombre, deleted_at)",
+                  "filters": {
+                    "contacto_id": "fixture-contacto-edicion"
+                  },
+                  "limit": 200
+                },
+                {
+                  "table": "crm_empresas",
+                  "columns": "id, nombre, cliente_id, estado_crm, created_at",
+                  "filters": {
+                    "deleted_at": null
+                  }
+                },
+                {
+                  "table": "crm_contactos",
+                  "columns": "id, nombre, email, telefono, created_at",
+                  "filters": {
+                    "deleted_at": null
+                  }
+                },
+                {
+                  "table": "crm_empresa_contacto",
+                  "columns": "crm_empresas(id, nombre, deleted_at)",
+                  "filters": {
+                    "contacto_id": "fixture-contacto-lectura"
+                  },
+                  "limit": 200
+                },
+                {
+                  "table": "crm_empresa_contacto",
+                  "columns": "crm_empresas(id, nombre, deleted_at)",
+                  "filters": {
+                    "contacto_id": "fixture-contacto-sin-config"
+                  },
+                  "limit": 200
+                },
+                {
+                  "table": "crm_empresa_contacto",
+                  "columns": "crm_empresas(id, nombre, deleted_at)",
+                  "filters": {
+                    "contacto_id": "fixture-contacto-oculto"
+                  },
+                  "limit": 200
+                },
+                {
+                  "table": "crm_oportunidad_empresa",
+                  "columns": "crm_empresas(id, nombre, deleted_at)",
+                  "filters": {
+                    "oportunidad_id": "fixture-oportunidad-edicion"
+                  },
+                  "limit": 200
+                },
+                {
+                  "table": "crm_oportunidad_empresa",
+                  "columns": "crm_empresas(id, nombre, deleted_at)",
+                  "filters": {
+                    "oportunidad_id": "fixture-oportunidad-lectura"
+                  },
+                  "limit": 200
+                },
+                {
+                  "table": "crm_oportunidad_empresa",
+                  "columns": "crm_empresas(id, nombre, deleted_at)",
+                  "filters": {
+                    "oportunidad_id": "fixture-oportunidad-sin-config"
+                  },
+                  "limit": 200
+                },
+                {
+                  "table": "crm_oportunidad_empresa",
+                  "columns": "crm_empresas(id, nombre, deleted_at)",
+                  "filters": {
+                    "oportunidad_id": "fixture-oportunidad-oculto"
+                  },
+                  "limit": 200
+                },
+                {
+                  "table": "crm_empresa_contacto",
+                  "columns": "crm_empresas(id, nombre, deleted_at)",
+                  "filters": {
+                    "contacto_id": "fixture-contacto-edicion"
+                  },
+                  "limit": 200
+                },
+                {
+                  "table": "crm_empresas",
+                  "columns": "id, nombre, cliente_id, estado_crm, created_at",
+                  "filters": {
+                    "deleted_at": null
+                  }
+                },
+                {
+                  "table": "crm_contactos",
+                  "columns": "id, nombre, email, telefono, created_at",
+                  "filters": {
+                    "deleted_at": null
+                  }
+                },
+                {
+                  "table": "crm_empresa_contacto",
+                  "columns": "crm_empresas(id, nombre, deleted_at)",
+                  "filters": {
+                    "contacto_id": "fixture-contacto-lectura"
+                  },
+                  "limit": 200
+                },
+                {
+                  "table": "crm_empresa_contacto",
+                  "columns": "crm_empresas(id, nombre, deleted_at)",
+                  "filters": {
+                    "contacto_id": "fixture-contacto-sin-config"
+                  },
+                  "limit": 200
+                },
+                {
+                  "table": "crm_empresa_contacto",
+                  "columns": "crm_empresas(id, nombre, deleted_at)",
+                  "filters": {
+                    "contacto_id": "fixture-contacto-oculto"
+                  },
+                  "limit": 200
+                },
+                {
+                  "table": "crm_oportunidad_empresa",
+                  "columns": "crm_empresas(id, nombre, deleted_at)",
+                  "filters": {
+                    "oportunidad_id": "fixture-oportunidad-edicion"
+                  },
+                  "limit": 200
+                },
+                {
+                  "table": "crm_oportunidad_empresa",
+                  "columns": "crm_empresas(id, nombre, deleted_at)",
+                  "filters": {
+                    "oportunidad_id": "fixture-oportunidad-lectura"
+                  },
+                  "limit": 200
+                },
+                {
+                  "table": "crm_oportunidad_empresa",
+                  "columns": "crm_empresas(id, nombre, deleted_at)",
+                  "filters": {
+                    "oportunidad_id": "fixture-oportunidad-sin-config"
+                  },
+                  "limit": 200
+                },
+                {
+                  "table": "crm_oportunidad_empresa",
+                  "columns": "crm_empresas(id, nombre, deleted_at)",
+                  "filters": {
+                    "oportunidad_id": "fixture-oportunidad-oculto"
+                  },
+                  "limit": 200
+                }
+              ],
+              "writes": [
+                {
+                  "table": "crm_empresa_contacto",
+                  "action": "delete-link",
+                  "filters": {
+                    "empresa_id": "fixture-empresa-eliminada",
+                    "contacto_id": "fixture-contacto-edicion"
+                  }
+                },
+                {
+                  "table": "crm_oportunidad_empresa",
+                  "action": "delete-link",
+                  "filters": {
+                    "oportunidad_id": "fixture-oportunidad-edicion",
+                    "empresa_id": "fixture-empresa-eliminada"
+                  }
+                }
+              ],
+              "blocked": []
+            }
+          },
+          "network": {
+            "requests": [
+              "GET http://127.0.0.1:8097/",
+              "GET http://127.0.0.1:8097/assets/index-C-yc-kqi.js",
+              "GET http://127.0.0.1:8097/assets/index-a26HoMQR.css"
+            ],
+            "blocked": [],
+            "errors": []
+          }
+        },
+        {
+          "name": "assertions-network",
+          "facts": {
+            "contactoInitial": {
+              "activeAnchor": true,
+              "historicalNameAndLabelWithoutAnchor": true,
+              "nullEmbedOmitted": true,
+              "permissionAndConfigurationRequired": true
+            },
+            "oportunidadInitial": {
+              "activeAnchor": true,
+              "historicalNameAndLabelWithoutAnchor": true,
+              "nullEmbedOmitted": true,
+              "permissionAndConfigurationRequired": true
+            },
+            "contactoUnlink": {
+              "removedOnlyLinkedHistoricalCompany": true,
+              "activeAnchorPreserved": true,
+              "readonlyOwnerUnaffected": true
+            },
+            "oportunidadUnlink": {
+              "removedOnlyLinkedHistoricalCompany": true,
+              "activeAnchorPreserved": true,
+              "readonlyOwnerUnaffected": true
+            },
+            "backend": {
+              "reads": [
+                {
+                  "table": "crm_empresas",
+                  "columns": "id, nombre, cliente_id, estado_crm, created_at",
+                  "filters": {
+                    "deleted_at": null
+                  }
+                },
+                {
+                  "table": "crm_contactos",
+                  "columns": "id, nombre, email, telefono, created_at",
+                  "filters": {
+                    "deleted_at": null
+                  }
+                },
+                {
+                  "table": "crm_empresa_contacto",
+                  "columns": "crm_empresas(id, nombre, deleted_at)",
+                  "filters": {
+                    "contacto_id": "fixture-contacto-edicion"
+                  },
+                  "limit": 200
+                },
+                {
+                  "table": "crm_empresa_contacto",
+                  "columns": "crm_empresas(id, nombre, deleted_at)",
+                  "filters": {
+                    "contacto_id": "fixture-contacto-lectura"
+                  },
+                  "limit": 200
+                },
+                {
+                  "table": "crm_empresa_contacto",
+                  "columns": "crm_empresas(id, nombre, deleted_at)",
+                  "filters": {
+                    "contacto_id": "fixture-contacto-sin-config"
+                  },
+                  "limit": 200
+                },
+                {
+                  "table": "crm_empresa_contacto",
+                  "columns": "crm_empresas(id, nombre, deleted_at)",
+                  "filters": {
+                    "contacto_id": "fixture-contacto-oculto"
+                  },
+                  "limit": 200
+                },
+                {
+                  "table": "crm_oportunidad_empresa",
+                  "columns": "crm_empresas(id, nombre, deleted_at)",
+                  "filters": {
+                    "oportunidad_id": "fixture-oportunidad-edicion"
+                  },
+                  "limit": 200
+                },
+                {
+                  "table": "crm_oportunidad_empresa",
+                  "columns": "crm_empresas(id, nombre, deleted_at)",
+                  "filters": {
+                    "oportunidad_id": "fixture-oportunidad-lectura"
+                  },
+                  "limit": 200
+                },
+                {
+                  "table": "crm_oportunidad_empresa",
+                  "columns": "crm_empresas(id, nombre, deleted_at)",
+                  "filters": {
+                    "oportunidad_id": "fixture-oportunidad-sin-config"
+                  },
+                  "limit": 200
+                },
+                {
+                  "table": "crm_oportunidad_empresa",
+                  "columns": "crm_empresas(id, nombre, deleted_at)",
+                  "filters": {
+                    "oportunidad_id": "fixture-oportunidad-oculto"
+                  },
+                  "limit": 200
+                },
+                {
+                  "table": "crm_empresa_contacto",
+                  "columns": "crm_empresas(id, nombre, deleted_at)",
+                  "filters": {
+                    "contacto_id": "fixture-contacto-edicion"
+                  },
+                  "limit": 200
+                },
+                {
+                  "table": "crm_empresas",
+                  "columns": "id, nombre, cliente_id, estado_crm, created_at",
+                  "filters": {
+                    "deleted_at": null
+                  }
+                },
+                {
+                  "table": "crm_contactos",
+                  "columns": "id, nombre, email, telefono, created_at",
+                  "filters": {
+                    "deleted_at": null
+                  }
+                },
+                {
+                  "table": "crm_empresa_contacto",
+                  "columns": "crm_empresas(id, nombre, deleted_at)",
+                  "filters": {
+                    "contacto_id": "fixture-contacto-lectura"
+                  },
+                  "limit": 200
+                },
+                {
+                  "table": "crm_empresa_contacto",
+                  "columns": "crm_empresas(id, nombre, deleted_at)",
+                  "filters": {
+                    "contacto_id": "fixture-contacto-sin-config"
+                  },
+                  "limit": 200
+                },
+                {
+                  "table": "crm_empresa_contacto",
+                  "columns": "crm_empresas(id, nombre, deleted_at)",
+                  "filters": {
+                    "contacto_id": "fixture-contacto-oculto"
+                  },
+                  "limit": 200
+                },
+                {
+                  "table": "crm_oportunidad_empresa",
+                  "columns": "crm_empresas(id, nombre, deleted_at)",
+                  "filters": {
+                    "oportunidad_id": "fixture-oportunidad-edicion"
+                  },
+                  "limit": 200
+                },
+                {
+                  "table": "crm_oportunidad_empresa",
+                  "columns": "crm_empresas(id, nombre, deleted_at)",
+                  "filters": {
+                    "oportunidad_id": "fixture-oportunidad-lectura"
+                  },
+                  "limit": 200
+                },
+                {
+                  "table": "crm_oportunidad_empresa",
+                  "columns": "crm_empresas(id, nombre, deleted_at)",
+                  "filters": {
+                    "oportunidad_id": "fixture-oportunidad-sin-config"
+                  },
+                  "limit": 200
+                },
+                {
+                  "table": "crm_oportunidad_empresa",
+                  "columns": "crm_empresas(id, nombre, deleted_at)",
+                  "filters": {
+                    "oportunidad_id": "fixture-oportunidad-oculto"
+                  },
+                  "limit": 200
+                },
+                {
+                  "table": "crm_empresa_contacto",
+                  "columns": "crm_empresas(id, nombre, deleted_at)",
+                  "filters": {
+                    "contacto_id": "fixture-contacto-edicion"
+                  },
+                  "limit": 200
+                },
+                {
+                  "table": "crm_empresas",
+                  "columns": "id, nombre, cliente_id, estado_crm, created_at",
+                  "filters": {
+                    "deleted_at": null
+                  }
+                },
+                {
+                  "table": "crm_contactos",
+                  "columns": "id, nombre, email, telefono, created_at",
+                  "filters": {
+                    "deleted_at": null
+                  }
+                },
+                {
+                  "table": "crm_empresa_contacto",
+                  "columns": "crm_empresas(id, nombre, deleted_at)",
+                  "filters": {
+                    "contacto_id": "fixture-contacto-lectura"
+                  },
+                  "limit": 200
+                },
+                {
+                  "table": "crm_empresa_contacto",
+                  "columns": "crm_empresas(id, nombre, deleted_at)",
+                  "filters": {
+                    "contacto_id": "fixture-contacto-sin-config"
+                  },
+                  "limit": 200
+                },
+                {
+                  "table": "crm_empresa_contacto",
+                  "columns": "crm_empresas(id, nombre, deleted_at)",
+                  "filters": {
+                    "contacto_id": "fixture-contacto-oculto"
+                  },
+                  "limit": 200
+                },
+                {
+                  "table": "crm_oportunidad_empresa",
+                  "columns": "crm_empresas(id, nombre, deleted_at)",
+                  "filters": {
+                    "oportunidad_id": "fixture-oportunidad-edicion"
+                  },
+                  "limit": 200
+                },
+                {
+                  "table": "crm_oportunidad_empresa",
+                  "columns": "crm_empresas(id, nombre, deleted_at)",
+                  "filters": {
+                    "oportunidad_id": "fixture-oportunidad-lectura"
+                  },
+                  "limit": 200
+                },
+                {
+                  "table": "crm_oportunidad_empresa",
+                  "columns": "crm_empresas(id, nombre, deleted_at)",
+                  "filters": {
+                    "oportunidad_id": "fixture-oportunidad-sin-config"
+                  },
+                  "limit": 200
+                },
+                {
+                  "table": "crm_oportunidad_empresa",
+                  "columns": "crm_empresas(id, nombre, deleted_at)",
+                  "filters": {
+                    "oportunidad_id": "fixture-oportunidad-oculto"
+                  },
+                  "limit": 200
+                }
+              ],
+              "writes": [
+                {
+                  "table": "crm_empresa_contacto",
+                  "action": "delete-link",
+                  "filters": {
+                    "empresa_id": "fixture-empresa-eliminada",
+                    "contacto_id": "fixture-contacto-edicion"
+                  }
+                },
+                {
+                  "table": "crm_oportunidad_empresa",
+                  "action": "delete-link",
+                  "filters": {
+                    "oportunidad_id": "fixture-oportunidad-edicion",
+                    "empresa_id": "fixture-empresa-eliminada"
+                  }
+                }
+              ],
+              "blocked": []
+            }
+          },
+          "network": {
+            "requests": [
+              "GET http://127.0.0.1:8097/",
+              "GET http://127.0.0.1:8097/assets/index-C-yc-kqi.js",
+              "GET http://127.0.0.1:8097/assets/index-a26HoMQR.css"
+            ],
+            "blocked": [],
+            "errors": []
+          }
+        }
+      ],
+      "screenshots": [
+        "screenshots/15-desktop-1280x720-crm-history-and-permissions-51ba1db799b1e6ff4ae2163f762112a5117768ba.png",
+        "screenshots/15-desktop-1280x720-crm-memory-unlink-only-56d38b1abd164b3348233960a9546fed250c09ce.png"
+      ]
+    },
+    {
+      "id": "16",
+      "project": "mobile-390x640",
+      "title": "PR373: real linked-company cards preserve history and restrict unlink to editing",
+      "status": "passed",
+      "durationMs": 1245,
+      "facts": [
+        {
+          "name": "crm-diagnostics",
+          "project": "mobile-390x640",
+          "facts": {
+            "contactoInitial": {
+              "activeAnchor": true,
+              "historicalNameAndLabelWithoutAnchor": true,
+              "nullEmbedOmitted": true,
+              "permissionAndConfigurationRequired": true
+            },
+            "oportunidadInitial": {
+              "activeAnchor": true,
+              "historicalNameAndLabelWithoutAnchor": true,
+              "nullEmbedOmitted": true,
+              "permissionAndConfigurationRequired": true
+            },
+            "contactoUnlink": {
+              "removedOnlyLinkedHistoricalCompany": true,
+              "activeAnchorPreserved": true,
+              "readonlyOwnerUnaffected": true
+            },
+            "oportunidadUnlink": {
+              "removedOnlyLinkedHistoricalCompany": true,
+              "activeAnchorPreserved": true,
+              "readonlyOwnerUnaffected": true
+            },
+            "backend": {
+              "reads": [
+                {
+                  "table": "crm_empresas",
+                  "columns": "id, nombre, cliente_id, estado_crm, created_at",
+                  "filters": {
+                    "deleted_at": null
+                  }
+                },
+                {
+                  "table": "crm_contactos",
+                  "columns": "id, nombre, email, telefono, created_at",
+                  "filters": {
+                    "deleted_at": null
+                  }
+                },
+                {
+                  "table": "crm_empresa_contacto",
+                  "columns": "crm_empresas(id, nombre, deleted_at)",
+                  "filters": {
+                    "contacto_id": "fixture-contacto-edicion"
+                  },
+                  "limit": 200
+                },
+                {
+                  "table": "crm_empresa_contacto",
+                  "columns": "crm_empresas(id, nombre, deleted_at)",
+                  "filters": {
+                    "contacto_id": "fixture-contacto-lectura"
+                  },
+                  "limit": 200
+                },
+                {
+                  "table": "crm_empresa_contacto",
+                  "columns": "crm_empresas(id, nombre, deleted_at)",
+                  "filters": {
+                    "contacto_id": "fixture-contacto-sin-config"
+                  },
+                  "limit": 200
+                },
+                {
+                  "table": "crm_empresa_contacto",
+                  "columns": "crm_empresas(id, nombre, deleted_at)",
+                  "filters": {
+                    "contacto_id": "fixture-contacto-oculto"
+                  },
+                  "limit": 200
+                },
+                {
+                  "table": "crm_oportunidad_empresa",
+                  "columns": "crm_empresas(id, nombre, deleted_at)",
+                  "filters": {
+                    "oportunidad_id": "fixture-oportunidad-edicion"
+                  },
+                  "limit": 200
+                },
+                {
+                  "table": "crm_oportunidad_empresa",
+                  "columns": "crm_empresas(id, nombre, deleted_at)",
+                  "filters": {
+                    "oportunidad_id": "fixture-oportunidad-lectura"
+                  },
+                  "limit": 200
+                },
+                {
+                  "table": "crm_oportunidad_empresa",
+                  "columns": "crm_empresas(id, nombre, deleted_at)",
+                  "filters": {
+                    "oportunidad_id": "fixture-oportunidad-sin-config"
+                  },
+                  "limit": 200
+                },
+                {
+                  "table": "crm_oportunidad_empresa",
+                  "columns": "crm_empresas(id, nombre, deleted_at)",
+                  "filters": {
+                    "oportunidad_id": "fixture-oportunidad-oculto"
+                  },
+                  "limit": 200
+                },
+                {
+                  "table": "crm_empresa_contacto",
+                  "columns": "crm_empresas(id, nombre, deleted_at)",
+                  "filters": {
+                    "contacto_id": "fixture-contacto-edicion"
+                  },
+                  "limit": 200
+                },
+                {
+                  "table": "crm_empresas",
+                  "columns": "id, nombre, cliente_id, estado_crm, created_at",
+                  "filters": {
+                    "deleted_at": null
+                  }
+                },
+                {
+                  "table": "crm_contactos",
+                  "columns": "id, nombre, email, telefono, created_at",
+                  "filters": {
+                    "deleted_at": null
+                  }
+                },
+                {
+                  "table": "crm_empresa_contacto",
+                  "columns": "crm_empresas(id, nombre, deleted_at)",
+                  "filters": {
+                    "contacto_id": "fixture-contacto-lectura"
+                  },
+                  "limit": 200
+                },
+                {
+                  "table": "crm_empresa_contacto",
+                  "columns": "crm_empresas(id, nombre, deleted_at)",
+                  "filters": {
+                    "contacto_id": "fixture-contacto-sin-config"
+                  },
+                  "limit": 200
+                },
+                {
+                  "table": "crm_empresa_contacto",
+                  "columns": "crm_empresas(id, nombre, deleted_at)",
+                  "filters": {
+                    "contacto_id": "fixture-contacto-oculto"
+                  },
+                  "limit": 200
+                },
+                {
+                  "table": "crm_oportunidad_empresa",
+                  "columns": "crm_empresas(id, nombre, deleted_at)",
+                  "filters": {
+                    "oportunidad_id": "fixture-oportunidad-edicion"
+                  },
+                  "limit": 200
+                },
+                {
+                  "table": "crm_oportunidad_empresa",
+                  "columns": "crm_empresas(id, nombre, deleted_at)",
+                  "filters": {
+                    "oportunidad_id": "fixture-oportunidad-lectura"
+                  },
+                  "limit": 200
+                },
+                {
+                  "table": "crm_oportunidad_empresa",
+                  "columns": "crm_empresas(id, nombre, deleted_at)",
+                  "filters": {
+                    "oportunidad_id": "fixture-oportunidad-sin-config"
+                  },
+                  "limit": 200
+                },
+                {
+                  "table": "crm_oportunidad_empresa",
+                  "columns": "crm_empresas(id, nombre, deleted_at)",
+                  "filters": {
+                    "oportunidad_id": "fixture-oportunidad-oculto"
+                  },
+                  "limit": 200
+                },
+                {
+                  "table": "crm_empresa_contacto",
+                  "columns": "crm_empresas(id, nombre, deleted_at)",
+                  "filters": {
+                    "contacto_id": "fixture-contacto-edicion"
+                  },
+                  "limit": 200
+                },
+                {
+                  "table": "crm_empresas",
+                  "columns": "id, nombre, cliente_id, estado_crm, created_at",
+                  "filters": {
+                    "deleted_at": null
+                  }
+                },
+                {
+                  "table": "crm_contactos",
+                  "columns": "id, nombre, email, telefono, created_at",
+                  "filters": {
+                    "deleted_at": null
+                  }
+                },
+                {
+                  "table": "crm_empresa_contacto",
+                  "columns": "crm_empresas(id, nombre, deleted_at)",
+                  "filters": {
+                    "contacto_id": "fixture-contacto-lectura"
+                  },
+                  "limit": 200
+                },
+                {
+                  "table": "crm_empresa_contacto",
+                  "columns": "crm_empresas(id, nombre, deleted_at)",
+                  "filters": {
+                    "contacto_id": "fixture-contacto-sin-config"
+                  },
+                  "limit": 200
+                },
+                {
+                  "table": "crm_empresa_contacto",
+                  "columns": "crm_empresas(id, nombre, deleted_at)",
+                  "filters": {
+                    "contacto_id": "fixture-contacto-oculto"
+                  },
+                  "limit": 200
+                },
+                {
+                  "table": "crm_oportunidad_empresa",
+                  "columns": "crm_empresas(id, nombre, deleted_at)",
+                  "filters": {
+                    "oportunidad_id": "fixture-oportunidad-edicion"
+                  },
+                  "limit": 200
+                },
+                {
+                  "table": "crm_oportunidad_empresa",
+                  "columns": "crm_empresas(id, nombre, deleted_at)",
+                  "filters": {
+                    "oportunidad_id": "fixture-oportunidad-lectura"
+                  },
+                  "limit": 200
+                },
+                {
+                  "table": "crm_oportunidad_empresa",
+                  "columns": "crm_empresas(id, nombre, deleted_at)",
+                  "filters": {
+                    "oportunidad_id": "fixture-oportunidad-sin-config"
+                  },
+                  "limit": 200
+                },
+                {
+                  "table": "crm_oportunidad_empresa",
+                  "columns": "crm_empresas(id, nombre, deleted_at)",
+                  "filters": {
+                    "oportunidad_id": "fixture-oportunidad-oculto"
+                  },
+                  "limit": 200
+                }
+              ],
+              "writes": [
+                {
+                  "table": "crm_empresa_contacto",
+                  "action": "delete-link",
+                  "filters": {
+                    "empresa_id": "fixture-empresa-eliminada",
+                    "contacto_id": "fixture-contacto-edicion"
+                  }
+                },
+                {
+                  "table": "crm_oportunidad_empresa",
+                  "action": "delete-link",
+                  "filters": {
+                    "oportunidad_id": "fixture-oportunidad-edicion",
+                    "empresa_id": "fixture-empresa-eliminada"
+                  }
+                }
+              ],
+              "blocked": []
+            }
+          },
+          "network": {
+            "requests": [
+              "GET http://127.0.0.1:8097/",
+              "GET http://127.0.0.1:8097/assets/index-C-yc-kqi.js",
+              "GET http://127.0.0.1:8097/assets/index-a26HoMQR.css"
+            ],
+            "blocked": [],
+            "errors": []
+          }
+        },
+        {
+          "name": "assertions-network",
+          "facts": {
+            "contactoInitial": {
+              "activeAnchor": true,
+              "historicalNameAndLabelWithoutAnchor": true,
+              "nullEmbedOmitted": true,
+              "permissionAndConfigurationRequired": true
+            },
+            "oportunidadInitial": {
+              "activeAnchor": true,
+              "historicalNameAndLabelWithoutAnchor": true,
+              "nullEmbedOmitted": true,
+              "permissionAndConfigurationRequired": true
+            },
+            "contactoUnlink": {
+              "removedOnlyLinkedHistoricalCompany": true,
+              "activeAnchorPreserved": true,
+              "readonlyOwnerUnaffected": true
+            },
+            "oportunidadUnlink": {
+              "removedOnlyLinkedHistoricalCompany": true,
+              "activeAnchorPreserved": true,
+              "readonlyOwnerUnaffected": true
+            },
+            "backend": {
+              "reads": [
+                {
+                  "table": "crm_empresas",
+                  "columns": "id, nombre, cliente_id, estado_crm, created_at",
+                  "filters": {
+                    "deleted_at": null
+                  }
+                },
+                {
+                  "table": "crm_contactos",
+                  "columns": "id, nombre, email, telefono, created_at",
+                  "filters": {
+                    "deleted_at": null
+                  }
+                },
+                {
+                  "table": "crm_empresa_contacto",
+                  "columns": "crm_empresas(id, nombre, deleted_at)",
+                  "filters": {
+                    "contacto_id": "fixture-contacto-edicion"
+                  },
+                  "limit": 200
+                },
+                {
+                  "table": "crm_empresa_contacto",
+                  "columns": "crm_empresas(id, nombre, deleted_at)",
+                  "filters": {
+                    "contacto_id": "fixture-contacto-lectura"
+                  },
+                  "limit": 200
+                },
+                {
+                  "table": "crm_empresa_contacto",
+                  "columns": "crm_empresas(id, nombre, deleted_at)",
+                  "filters": {
+                    "contacto_id": "fixture-contacto-sin-config"
+                  },
+                  "limit": 200
+                },
+                {
+                  "table": "crm_empresa_contacto",
+                  "columns": "crm_empresas(id, nombre, deleted_at)",
+                  "filters": {
+                    "contacto_id": "fixture-contacto-oculto"
+                  },
+                  "limit": 200
+                },
+                {
+                  "table": "crm_oportunidad_empresa",
+                  "columns": "crm_empresas(id, nombre, deleted_at)",
+                  "filters": {
+                    "oportunidad_id": "fixture-oportunidad-edicion"
+                  },
+                  "limit": 200
+                },
+                {
+                  "table": "crm_oportunidad_empresa",
+                  "columns": "crm_empresas(id, nombre, deleted_at)",
+                  "filters": {
+                    "oportunidad_id": "fixture-oportunidad-lectura"
+                  },
+                  "limit": 200
+                },
+                {
+                  "table": "crm_oportunidad_empresa",
+                  "columns": "crm_empresas(id, nombre, deleted_at)",
+                  "filters": {
+                    "oportunidad_id": "fixture-oportunidad-sin-config"
+                  },
+                  "limit": 200
+                },
+                {
+                  "table": "crm_oportunidad_empresa",
+                  "columns": "crm_empresas(id, nombre, deleted_at)",
+                  "filters": {
+                    "oportunidad_id": "fixture-oportunidad-oculto"
+                  },
+                  "limit": 200
+                },
+                {
+                  "table": "crm_empresa_contacto",
+                  "columns": "crm_empresas(id, nombre, deleted_at)",
+                  "filters": {
+                    "contacto_id": "fixture-contacto-edicion"
+                  },
+                  "limit": 200
+                },
+                {
+                  "table": "crm_empresas",
+                  "columns": "id, nombre, cliente_id, estado_crm, created_at",
+                  "filters": {
+                    "deleted_at": null
+                  }
+                },
+                {
+                  "table": "crm_contactos",
+                  "columns": "id, nombre, email, telefono, created_at",
+                  "filters": {
+                    "deleted_at": null
+                  }
+                },
+                {
+                  "table": "crm_empresa_contacto",
+                  "columns": "crm_empresas(id, nombre, deleted_at)",
+                  "filters": {
+                    "contacto_id": "fixture-contacto-lectura"
+                  },
+                  "limit": 200
+                },
+                {
+                  "table": "crm_empresa_contacto",
+                  "columns": "crm_empresas(id, nombre, deleted_at)",
+                  "filters": {
+                    "contacto_id": "fixture-contacto-sin-config"
+                  },
+                  "limit": 200
+                },
+                {
+                  "table": "crm_empresa_contacto",
+                  "columns": "crm_empresas(id, nombre, deleted_at)",
+                  "filters": {
+                    "contacto_id": "fixture-contacto-oculto"
+                  },
+                  "limit": 200
+                },
+                {
+                  "table": "crm_oportunidad_empresa",
+                  "columns": "crm_empresas(id, nombre, deleted_at)",
+                  "filters": {
+                    "oportunidad_id": "fixture-oportunidad-edicion"
+                  },
+                  "limit": 200
+                },
+                {
+                  "table": "crm_oportunidad_empresa",
+                  "columns": "crm_empresas(id, nombre, deleted_at)",
+                  "filters": {
+                    "oportunidad_id": "fixture-oportunidad-lectura"
+                  },
+                  "limit": 200
+                },
+                {
+                  "table": "crm_oportunidad_empresa",
+                  "columns": "crm_empresas(id, nombre, deleted_at)",
+                  "filters": {
+                    "oportunidad_id": "fixture-oportunidad-sin-config"
+                  },
+                  "limit": 200
+                },
+                {
+                  "table": "crm_oportunidad_empresa",
+                  "columns": "crm_empresas(id, nombre, deleted_at)",
+                  "filters": {
+                    "oportunidad_id": "fixture-oportunidad-oculto"
+                  },
+                  "limit": 200
+                },
+                {
+                  "table": "crm_empresa_contacto",
+                  "columns": "crm_empresas(id, nombre, deleted_at)",
+                  "filters": {
+                    "contacto_id": "fixture-contacto-edicion"
+                  },
+                  "limit": 200
+                },
+                {
+                  "table": "crm_empresas",
+                  "columns": "id, nombre, cliente_id, estado_crm, created_at",
+                  "filters": {
+                    "deleted_at": null
+                  }
+                },
+                {
+                  "table": "crm_contactos",
+                  "columns": "id, nombre, email, telefono, created_at",
+                  "filters": {
+                    "deleted_at": null
+                  }
+                },
+                {
+                  "table": "crm_empresa_contacto",
+                  "columns": "crm_empresas(id, nombre, deleted_at)",
+                  "filters": {
+                    "contacto_id": "fixture-contacto-lectura"
+                  },
+                  "limit": 200
+                },
+                {
+                  "table": "crm_empresa_contacto",
+                  "columns": "crm_empresas(id, nombre, deleted_at)",
+                  "filters": {
+                    "contacto_id": "fixture-contacto-sin-config"
+                  },
+                  "limit": 200
+                },
+                {
+                  "table": "crm_empresa_contacto",
+                  "columns": "crm_empresas(id, nombre, deleted_at)",
+                  "filters": {
+                    "contacto_id": "fixture-contacto-oculto"
+                  },
+                  "limit": 200
+                },
+                {
+                  "table": "crm_oportunidad_empresa",
+                  "columns": "crm_empresas(id, nombre, deleted_at)",
+                  "filters": {
+                    "oportunidad_id": "fixture-oportunidad-edicion"
+                  },
+                  "limit": 200
+                },
+                {
+                  "table": "crm_oportunidad_empresa",
+                  "columns": "crm_empresas(id, nombre, deleted_at)",
+                  "filters": {
+                    "oportunidad_id": "fixture-oportunidad-lectura"
+                  },
+                  "limit": 200
+                },
+                {
+                  "table": "crm_oportunidad_empresa",
+                  "columns": "crm_empresas(id, nombre, deleted_at)",
+                  "filters": {
+                    "oportunidad_id": "fixture-oportunidad-sin-config"
+                  },
+                  "limit": 200
+                },
+                {
+                  "table": "crm_oportunidad_empresa",
+                  "columns": "crm_empresas(id, nombre, deleted_at)",
+                  "filters": {
+                    "oportunidad_id": "fixture-oportunidad-oculto"
+                  },
+                  "limit": 200
+                }
+              ],
+              "writes": [
+                {
+                  "table": "crm_empresa_contacto",
+                  "action": "delete-link",
+                  "filters": {
+                    "empresa_id": "fixture-empresa-eliminada",
+                    "contacto_id": "fixture-contacto-edicion"
+                  }
+                },
+                {
+                  "table": "crm_oportunidad_empresa",
+                  "action": "delete-link",
+                  "filters": {
+                    "oportunidad_id": "fixture-oportunidad-edicion",
+                    "empresa_id": "fixture-empresa-eliminada"
+                  }
+                }
+              ],
+              "blocked": []
+            }
+          },
+          "network": {
+            "requests": [
+              "GET http://127.0.0.1:8097/",
+              "GET http://127.0.0.1:8097/assets/index-C-yc-kqi.js",
+              "GET http://127.0.0.1:8097/assets/index-a26HoMQR.css"
+            ],
+            "blocked": [],
+            "errors": []
+          }
+        }
+      ],
+      "screenshots": [
+        "screenshots/16-mobile-390x640-crm-history-and-permissions-8531ec2903c12a56180be1eaaa6a9b972cabdc7c.png",
+        "screenshots/16-mobile-390x640-crm-memory-unlink-only-638968fe7ba47c772b682475e99e422d0ff0931c.png"
+      ]
+    },
+    {
+      "id": "17",
+      "project": "desktop-1280x720",
+      "title": "XML 96: factura coincidente prellena y sólo escribe en memoria",
+      "status": "passed",
+      "durationMs": 1148,
+      "facts": [
+        {
+          "name": "xml-assertions-network",
+          "assertions": [
+            "matching factura_id enables prefill and Registrar",
+            "no write before explicit Registrar",
+            "writer and attachment adapter record only in memory"
+          ],
+          "fixture": {
+            "scenario": "matching",
+            "parses": [
+              {
+                "name": "nota-ficticia.xml",
+                "contentMatches": true,
+                "organizationId": "33333333-3333-4333-8333-333333333333",
+                "facturaId": "11111111-1111-4111-8111-111111111111"
+              }
+            ],
+            "writes": [
+              {
+                "proveedor_factura_id": "11111111-1111-4111-8111-111111111111",
+                "folio_nc": "NC-1",
+                "fecha": "2026-10-04",
+                "monto": 58,
+                "subtotal": 50,
+                "tipo_cambio_mxn": 1,
+                "moneda": "MXN",
+                "tipo_cambio": null,
+                "motivo": "Bonificacion",
+                "descripcion": "Bonificación ficticia",
+                "estado": "Borrador",
+                "uuid_fiscal": "22222222-2222-4222-8222-222222222222"
+              }
+            ],
+            "uploads": [
+              {
+                "ncId": "xml-fixture-nc",
+                "organizationId": "33333333-3333-4333-8333-333333333333",
+                "xmlName": "nota-ficticia.xml",
+                "pdfName": "nota-ficticia.pdf"
+              }
+            ],
+            "guardFailures": []
+          },
+          "network": {
+            "requests": [
+              "GET http://127.0.0.1:8097/",
+              "GET http://127.0.0.1:8097/assets/index-C-yc-kqi.js",
+              "GET http://127.0.0.1:8097/assets/index-a26HoMQR.css"
+            ],
+            "blocked": [],
+            "errors": []
+          }
+        }
+      ],
+      "screenshots": [
+        "screenshots/17-desktop-1280x720-xml-matching-prefill-f55b68154b9cc3e574608a91f0e78a4599da1397.png"
+      ]
+    },
+    {
+      "id": "18",
+      "project": "desktop-1280x720",
+      "title": "XML 96: validación missing bloquea precarga y registro",
+      "status": "passed",
+      "durationMs": 896,
+      "facts": [
+        {
+          "name": "xml-assertions-network",
+          "assertions": [
+            "missing or different factura_id does not prefill",
+            "identity failure visible",
+            "Registrar disabled; no memory writes/uploads"
+          ],
+          "fixture": {
+            "scenario": "missing",
+            "parses": [
+              {
+                "name": "nota-ficticia.xml",
+                "contentMatches": true,
+                "organizationId": "33333333-3333-4333-8333-333333333333",
+                "facturaId": "11111111-1111-4111-8111-111111111111"
+              }
+            ],
+            "writes": [],
+            "uploads": [],
+            "guardFailures": []
+          },
+          "network": {
+            "requests": [
+              "GET http://127.0.0.1:8097/",
+              "GET http://127.0.0.1:8097/assets/index-C-yc-kqi.js",
+              "GET http://127.0.0.1:8097/assets/index-a26HoMQR.css"
+            ],
+            "blocked": [],
+            "errors": []
+          }
+        }
+      ],
+      "screenshots": [
+        "screenshots/18-desktop-1280x720-xml-validation-missing-a0e2580af8e451350ce814015334d73c67cc30ff.png"
+      ]
+    },
+    {
+      "id": "19",
+      "project": "desktop-1280x720",
+      "title": "XML 96: validación different bloquea precarga y registro",
+      "status": "passed",
+      "durationMs": 893,
+      "facts": [
+        {
+          "name": "xml-assertions-network",
+          "assertions": [
+            "missing or different factura_id does not prefill",
+            "identity failure visible",
+            "Registrar disabled; no memory writes/uploads"
+          ],
+          "fixture": {
+            "scenario": "different",
+            "parses": [
+              {
+                "name": "nota-ficticia.xml",
+                "contentMatches": true,
+                "organizationId": "33333333-3333-4333-8333-333333333333",
+                "facturaId": "11111111-1111-4111-8111-111111111111"
+              }
+            ],
+            "writes": [],
+            "uploads": [],
+            "guardFailures": []
+          },
+          "network": {
+            "requests": [
+              "GET http://127.0.0.1:8097/",
+              "GET http://127.0.0.1:8097/assets/index-C-yc-kqi.js",
+              "GET http://127.0.0.1:8097/assets/index-a26HoMQR.css"
+            ],
+            "blocked": [],
+            "errors": []
+          }
+        }
+      ],
+      "screenshots": [
+        "screenshots/19-desktop-1280x720-xml-validation-different-022e07544e44e0a6fef177d500455e50d2bfb45e.png"
+      ]
+    },
+    {
+      "id": "20",
+      "project": "desktop-1280x720",
+      "title": "XML 96: rechazo visible conserva captura manual sin UUID ni adjuntos",
+      "status": "passed",
+      "durationMs": 1177,
+      "facts": [
+        {
+          "name": "xml-assertions-network",
+          "assertions": [
+            "parser rejection visible and blocks XML",
+            "manual capture remains available",
+            "manual writer has null UUID and no attachments"
+          ],
+          "fixture": {
+            "scenario": "rejected",
+            "parses": [
+              {
+                "name": "nota-ficticia.xml",
+                "contentMatches": true,
+                "organizationId": "33333333-3333-4333-8333-333333333333",
+                "facturaId": "11111111-1111-4111-8111-111111111111"
+              }
+            ],
+            "writes": [
+              {
+                "proveedor_factura_id": "11111111-1111-4111-8111-111111111111",
+                "folio_nc": "MANUAL-FICTICIA",
+                "fecha": "2026-10-17",
+                "monto": 10,
+                "subtotal": 10,
+                "tipo_cambio_mxn": 1,
+                "moneda": "MXN",
+                "tipo_cambio": null,
+                "motivo": "Bonificacion",
+                "descripcion": "",
+                "estado": "Borrador",
+                "uuid_fiscal": null
+              }
+            ],
+            "uploads": [],
+            "guardFailures": []
+          },
+          "network": {
+            "requests": [
+              "GET http://127.0.0.1:8097/",
+              "GET http://127.0.0.1:8097/assets/index-C-yc-kqi.js",
+              "GET http://127.0.0.1:8097/assets/index-a26HoMQR.css"
+            ],
+            "blocked": [],
+            "errors": []
+          }
+        }
+      ],
+      "screenshots": [
+        "screenshots/20-desktop-1280x720-xml-rejected-c381c4d9cafc633849dbf4f0f8476f271f61ef56.png",
+        "screenshots/20-desktop-1280x720-xml-manual-available-004c7d2d25b9d3745acef2a407690f7f9b2c9c6a.png"
+      ]
+    },
+    {
+      "id": "21",
+      "project": "desktop-1280x720",
+      "title": "XML 96: retirar XML invalida UUID, validación y ambos adjuntos",
+      "status": "passed",
+      "durationMs": 1445,
+      "facts": [
+        {
+          "name": "xml-assertions-network",
+          "assertions": [
+            "remove clears XML/PDF and validation",
+            "reselecting same XML requires processing again",
+            "stale UUID and files do not leak into manual writer"
+          ],
+          "fixture": {
+            "scenario": "matching",
+            "parses": [
+              {
+                "name": "nota-ficticia.xml",
+                "contentMatches": true,
+                "organizationId": "33333333-3333-4333-8333-333333333333",
+                "facturaId": "11111111-1111-4111-8111-111111111111"
+              },
+              {
+                "name": "nota-ficticia.xml",
+                "contentMatches": true,
+                "organizationId": "33333333-3333-4333-8333-333333333333",
+                "facturaId": "11111111-1111-4111-8111-111111111111"
+              }
+            ],
+            "writes": [
+              {
+                "proveedor_factura_id": "11111111-1111-4111-8111-111111111111",
+                "folio_nc": "NC-1",
+                "fecha": "2026-10-04",
+                "monto": 58,
+                "subtotal": 50,
+                "tipo_cambio_mxn": 1,
+                "moneda": "MXN",
+                "tipo_cambio": null,
+                "motivo": "Bonificacion",
+                "descripcion": "Bonificación ficticia",
+                "estado": "Borrador",
+                "uuid_fiscal": null
+              }
+            ],
+            "uploads": [],
+            "guardFailures": []
+          },
+          "network": {
+            "requests": [
+              "GET http://127.0.0.1:8097/",
+              "GET http://127.0.0.1:8097/assets/index-C-yc-kqi.js",
+              "GET http://127.0.0.1:8097/assets/index-a26HoMQR.css"
+            ],
+            "blocked": [],
+            "errors": []
+          }
+        }
+      ],
+      "screenshots": [
+        "screenshots/21-desktop-1280x720-xml-removed-invalidated-80a2e8b5b10f412ef79a01331b8e6265a83b481c.png",
+        "screenshots/21-desktop-1280x720-xml-reselected-requires-processing-8f35b67d6531648b25e8c4723409e1945e49db07.png"
+      ]
+    },
+    {
+      "id": "22",
+      "project": "mobile-390x640",
+      "title": "XML 96: factura coincidente prellena y sólo escribe en memoria",
+      "status": "passed",
+      "durationMs": 844,
+      "facts": [
+        {
+          "name": "xml-assertions-network",
+          "assertions": [
+            "matching factura_id enables prefill and Registrar",
+            "no write before explicit Registrar",
+            "writer and attachment adapter record only in memory"
+          ],
+          "fixture": {
+            "scenario": "matching",
+            "parses": [
+              {
+                "name": "nota-ficticia.xml",
+                "contentMatches": true,
+                "organizationId": "33333333-3333-4333-8333-333333333333",
+                "facturaId": "11111111-1111-4111-8111-111111111111"
+              }
+            ],
+            "writes": [
+              {
+                "proveedor_factura_id": "11111111-1111-4111-8111-111111111111",
+                "folio_nc": "NC-1",
+                "fecha": "2026-10-04",
+                "monto": 58,
+                "subtotal": 50,
+                "tipo_cambio_mxn": 1,
+                "moneda": "MXN",
+                "tipo_cambio": null,
+                "motivo": "Bonificacion",
+                "descripcion": "Bonificación ficticia",
+                "estado": "Borrador",
+                "uuid_fiscal": "22222222-2222-4222-8222-222222222222"
+              }
+            ],
+            "uploads": [
+              {
+                "ncId": "xml-fixture-nc",
+                "organizationId": "33333333-3333-4333-8333-333333333333",
+                "xmlName": "nota-ficticia.xml",
+                "pdfName": "nota-ficticia.pdf"
+              }
+            ],
+            "guardFailures": []
+          },
+          "network": {
+            "requests": [
+              "GET http://127.0.0.1:8097/",
+              "GET http://127.0.0.1:8097/assets/index-C-yc-kqi.js",
+              "GET http://127.0.0.1:8097/assets/index-a26HoMQR.css"
+            ],
+            "blocked": [],
+            "errors": []
+          }
+        }
+      ],
+      "screenshots": [
+        "screenshots/22-mobile-390x640-xml-matching-prefill-bde88327d4a0166b4292a568a915ed5380ece8a5.png"
+      ]
+    },
+    {
+      "id": "23",
+      "project": "mobile-390x640",
+      "title": "XML 96: validación missing bloquea precarga y registro",
+      "status": "passed",
+      "durationMs": 750,
+      "facts": [
+        {
+          "name": "xml-assertions-network",
+          "assertions": [
+            "missing or different factura_id does not prefill",
+            "identity failure visible",
+            "Registrar disabled; no memory writes/uploads"
+          ],
+          "fixture": {
+            "scenario": "missing",
+            "parses": [
+              {
+                "name": "nota-ficticia.xml",
+                "contentMatches": true,
+                "organizationId": "33333333-3333-4333-8333-333333333333",
+                "facturaId": "11111111-1111-4111-8111-111111111111"
+              }
+            ],
+            "writes": [],
+            "uploads": [],
+            "guardFailures": []
+          },
+          "network": {
+            "requests": [
+              "GET http://127.0.0.1:8097/",
+              "GET http://127.0.0.1:8097/assets/index-C-yc-kqi.js",
+              "GET http://127.0.0.1:8097/assets/index-a26HoMQR.css"
+            ],
+            "blocked": [],
+            "errors": []
+          }
+        }
+      ],
+      "screenshots": [
+        "screenshots/23-mobile-390x640-xml-validation-missing-db6bd3e3bda66a1b06622566ba9fcc7f55f05871.png"
+      ]
+    },
+    {
+      "id": "24",
+      "project": "mobile-390x640",
+      "title": "XML 96: validación different bloquea precarga y registro",
+      "status": "passed",
+      "durationMs": 861,
+      "facts": [
+        {
+          "name": "xml-assertions-network",
+          "assertions": [
+            "missing or different factura_id does not prefill",
+            "identity failure visible",
+            "Registrar disabled; no memory writes/uploads"
+          ],
+          "fixture": {
+            "scenario": "different",
+            "parses": [
+              {
+                "name": "nota-ficticia.xml",
+                "contentMatches": true,
+                "organizationId": "33333333-3333-4333-8333-333333333333",
+                "facturaId": "11111111-1111-4111-8111-111111111111"
+              }
+            ],
+            "writes": [],
+            "uploads": [],
+            "guardFailures": []
+          },
+          "network": {
+            "requests": [
+              "GET http://127.0.0.1:8097/",
+              "GET http://127.0.0.1:8097/assets/index-C-yc-kqi.js",
+              "GET http://127.0.0.1:8097/assets/index-a26HoMQR.css"
+            ],
+            "blocked": [],
+            "errors": []
+          }
+        }
+      ],
+      "screenshots": [
+        "screenshots/24-mobile-390x640-xml-validation-different-00123a9461b6fc98959ce5b50368bbb2fbe279cd.png"
+      ]
+    },
+    {
+      "id": "25",
+      "project": "mobile-390x640",
+      "title": "XML 96: rechazo visible conserva captura manual sin UUID ni adjuntos",
+      "status": "passed",
+      "durationMs": 1033,
+      "facts": [
+        {
+          "name": "xml-assertions-network",
+          "assertions": [
+            "parser rejection visible and blocks XML",
+            "manual capture remains available",
+            "manual writer has null UUID and no attachments"
+          ],
+          "fixture": {
+            "scenario": "rejected",
+            "parses": [
+              {
+                "name": "nota-ficticia.xml",
+                "contentMatches": true,
+                "organizationId": "33333333-3333-4333-8333-333333333333",
+                "facturaId": "11111111-1111-4111-8111-111111111111"
+              }
+            ],
+            "writes": [
+              {
+                "proveedor_factura_id": "11111111-1111-4111-8111-111111111111",
+                "folio_nc": "MANUAL-FICTICIA",
+                "fecha": "2026-10-17",
+                "monto": 10,
+                "subtotal": 10,
+                "tipo_cambio_mxn": 1,
+                "moneda": "MXN",
+                "tipo_cambio": null,
+                "motivo": "Bonificacion",
+                "descripcion": "",
+                "estado": "Borrador",
+                "uuid_fiscal": null
+              }
+            ],
+            "uploads": [],
+            "guardFailures": []
+          },
+          "network": {
+            "requests": [
+              "GET http://127.0.0.1:8097/",
+              "GET http://127.0.0.1:8097/assets/index-C-yc-kqi.js",
+              "GET http://127.0.0.1:8097/assets/index-a26HoMQR.css"
+            ],
+            "blocked": [],
+            "errors": []
+          }
+        }
+      ],
+      "screenshots": [
+        "screenshots/25-mobile-390x640-xml-rejected-a73f34d5007fefa7ba4e590290d0c72ec1b45d64.png",
+        "screenshots/25-mobile-390x640-xml-manual-available-dd157effa487935a9b8fdb7c249785f3b0957122.png"
+      ]
+    },
+    {
+      "id": "26",
+      "project": "mobile-390x640",
+      "title": "XML 96: retirar XML invalida UUID, validación y ambos adjuntos",
+      "status": "passed",
+      "durationMs": 1179,
+      "facts": [
+        {
+          "name": "xml-assertions-network",
+          "assertions": [
+            "remove clears XML/PDF and validation",
+            "reselecting same XML requires processing again",
+            "stale UUID and files do not leak into manual writer"
+          ],
+          "fixture": {
+            "scenario": "matching",
+            "parses": [
+              {
+                "name": "nota-ficticia.xml",
+                "contentMatches": true,
+                "organizationId": "33333333-3333-4333-8333-333333333333",
+                "facturaId": "11111111-1111-4111-8111-111111111111"
+              },
+              {
+                "name": "nota-ficticia.xml",
+                "contentMatches": true,
+                "organizationId": "33333333-3333-4333-8333-333333333333",
+                "facturaId": "11111111-1111-4111-8111-111111111111"
+              }
+            ],
+            "writes": [
+              {
+                "proveedor_factura_id": "11111111-1111-4111-8111-111111111111",
+                "folio_nc": "NC-1",
+                "fecha": "2026-10-04",
+                "monto": 58,
+                "subtotal": 50,
+                "tipo_cambio_mxn": 1,
+                "moneda": "MXN",
+                "tipo_cambio": null,
+                "motivo": "Bonificacion",
+                "descripcion": "Bonificación ficticia",
+                "estado": "Borrador",
+                "uuid_fiscal": null
+              }
+            ],
+            "uploads": [],
+            "guardFailures": []
+          },
+          "network": {
+            "requests": [
+              "GET http://127.0.0.1:8097/",
+              "GET http://127.0.0.1:8097/assets/index-C-yc-kqi.js",
+              "GET http://127.0.0.1:8097/assets/index-a26HoMQR.css"
+            ],
+            "blocked": [],
+            "errors": []
+          }
+        }
+      ],
+      "screenshots": [
+        "screenshots/26-mobile-390x640-xml-removed-invalidated-4a0d7a19362df0cc125825d3b75895723172546d.png",
+        "screenshots/26-mobile-390x640-xml-reselected-requires-processing-5ec670e4c5df96bce8a7521e3f07f2dcfeb59804.png"
+      ]
+    }
+  ]
+}
