@@ -1,6 +1,6 @@
 {
   "baseCommit": "9af3859fabd6e57343cb5fadd4494a0a14579cb2",
-  "generatedAt": "2026-10-17T20:46:27.405Z",
+  "generatedAt": "2026-10-17T20:47:50.869Z",
   "scope": "Local synthetic components and in-memory backend only; no production/staging certification",
   "validation": {
     "typecheck": "passed",
@@ -63,7 +63,7 @@
     },
     {
       "path": "e2e/visual/deferred-erp/collect-evidence.mjs",
-      "sha256": "14a9d1a2db152929c45b198c44995af817b854ce8d1567c74e45c75a787c3615"
+      "sha256": "0d2182f48dfa320df09bdea931a0ea97da30f24ffbc6eb08c17f4024e3f57c91"
     },
     {
       "path": "e2e/visual/deferred-erp/correo-backend.ts",

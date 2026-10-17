@@ -21,7 +21,7 @@ if (parser.assertions.length !== 22 || parser.assertions.some(item => !item.pass
   throw new Error("Require separate local parser evidence with Deno limitation preserved");
 }
 await mkdir(join(output, "screenshots"), { recursive: true });
-await mkdir(join(output, "logs"), { recursive: true });
+await mkdir(join(output, "validation"), { recursive: true });
 const cases = [];
 const screenshots = [];
 async function visit(suite, parents = []) {
@@ -68,7 +68,8 @@ const unitFiles = unit.testResults.map(file => ({
   assertions: file.assertionResults.map(assertion => ({ name: assertion.fullName, status: assertion.status })),
 }));
 for (const name of ["build", "typecheck", "lint", "unit", "browser"]) {
-  await copyFile(join(root, "reports", "deferred-erp", `${name}.log`), join(output, "logs", `${name}.txt`));
+  const log = await readFile(join(root, "reports", "deferred-erp", `${name}.log`), "utf8");
+  await writeFile(join(output, "validation", `${name}.txt`), log.replaceAll("\r\n", "\n").replace(/[ \t]+$/gm, ""));
 }
 const network = cases.map(item => item.facts.find(fact => fact.network).network);
 const summary = {
