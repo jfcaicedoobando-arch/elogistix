@@ -1,0 +1,927 @@
+{
+  "schemaVersion": 1,
+  "runId": "063518e9-07e0-4093-ae3e-a38f0dbba2a6",
+  "status": "passed",
+  "suite": "supabase/functions/parse-cfdi-xml/validarNcProveedor_test.ts",
+  "startedAt": "2026-10-17T22:20:21.614Z",
+  "completedAt": "2026-10-17T22:20:21.767Z",
+  "command": {
+    "executable": "test-results/xml-deno-runtime/deno.exe",
+    "args": [
+      "test",
+      "--no-config",
+      "--no-lock",
+      "--cached-only",
+      "--node-modules-dir=none",
+      "--sanitize-ops",
+      "--sanitize-resources",
+      "--no-prompt",
+      "--check",
+      "--deny-env",
+      "--deny-net",
+      "--deny-read",
+      "--deny-write",
+      "--deny-run",
+      "--deny-ffi",
+      "--deny-sys",
+      "--junit-path=reports/deferred-erp/deno-original.junit.xml",
+      "supabase/functions/parse-cfdi-xml/validarNcProveedor_test.ts"
+    ],
+    "cwd": ".",
+    "shell": false
+  },
+  "runtime": {
+    "version": "2.9.7",
+    "versionOutput": [
+      "deno 2.9.7 (stable, release, x86_64-pc-windows-msvc)",
+      "v8 15.0.245.2-rusty",
+      "typescript 6.0.3"
+    ],
+    "versionExitCode": 0,
+    "executableSha256": "e020f3e232bd16e33768dee528e5983349c962952051ced0a5d58ad42f5d9b33"
+  },
+  "download": {
+    "repositoryPinnedVersion": "2.9.7",
+    "previouslyProposedVersion": "2.5.6",
+    "releaseMetadataUrl": "https://api.github.com/repos/denoland/deno/releases/tags/v2.9.7",
+    "sourceUrl": "https://github.com/denoland/deno/releases/download/v2.9.7/deno-x86_64-pc-windows-msvc.zip",
+    "officialAssetDigest": "sha256:a0c3101b4158d1dfb7d6a78a7bf0f3de80c96bb423c152beec8beb22786f2238",
+    "archiveSha256": "a0c3101b4158d1dfb7d6a78a7bf0f3de80c96bb423c152beec8beb22786f2238",
+    "executableSha256": "e020f3e232bd16e33768dee528e5983349c962952051ced0a5d58ad42f5d9b33",
+    "version": [
+      "deno 2.9.7 (stable, release, x86_64-pc-windows-msvc)",
+      "v8 15.0.245.2-rusty",
+      "typescript 6.0.3"
+    ],
+    "versionExitCode": 0,
+    "userAuthorization": "Explicit user Autorizo Deno, 2026-10-17",
+    "downloadedAt": "2026-10-17T22:16:01.1231370Z"
+  },
+  "exitCode": 0,
+  "signal": null,
+  "spawnError": null,
+  "counts": {
+    "total": 3,
+    "failed": 0,
+    "skipped": 0,
+    "passed": 3
+  },
+  "log": {
+    "path": "reports/deferred-erp/deno-original.log",
+    "sha256": "704d88e4af9aa2e89e6e5e6cff92ef911a6cc335ff9595c3437317d6e0767471",
+    "bytes": 395
+  },
+  "junit": {
+    "path": "reports/deferred-erp/deno-original.junit.xml",
+    "sha256": "6c6efcf1493a3759406115e4590d766afe55598cb4f3b470a661613c6c02392e"
+  },
+  "sourcesBefore": [
+    {
+      "path": "supabase/functions/parse-cfdi-xml/aiHelpers_test.ts",
+      "sha256": "cb8b6243728c695a66f326273ef308cb5663a63f6064fa6a3930f47efcd91293"
+    },
+    {
+      "path": "supabase/functions/parse-cfdi-xml/aiHelpers.ts",
+      "sha256": "4d77f5cf84e909940d52728ca63871de4741fc8207f84cfc59e9010ba4064706"
+    },
+    {
+      "path": "supabase/functions/parse-cfdi-xml/index_test.ts",
+      "sha256": "fe08371a0c8b1306a68c7abef8103933442d91590250ccd090875001586ec7df"
+    },
+    {
+      "path": "supabase/functions/parse-cfdi-xml/index.ts",
+      "sha256": "8ae494563893b75775bccb179995ac675e39f3d8e5c6293527d52ce171de0c6d"
+    },
+    {
+      "path": "supabase/functions/parse-cfdi-xml/sugerirCategoria.ts",
+      "sha256": "8e442903c85db8fef4862cff4fdfae9be9b82094bde7b5dcf368f3c2fc950d25"
+    },
+    {
+      "path": "supabase/functions/parse-cfdi-xml/validarNcProveedor_test.ts",
+      "sha256": "214b8e0c6605c587589f7ea7d824ea73f98168b82ff59fff0fd3a7f76c374340"
+    },
+    {
+      "path": "supabase/functions/parse-cfdi-xml/validarNcProveedor.ts",
+      "sha256": "325f19f84f856c63bb464afea70af0fdfa02038188a816a417dd9eed7109c6c0"
+    },
+    {
+      "path": "supabase/functions/_shared/_test_helpers/satBarridoSoftDeleteFixtures.ts",
+      "sha256": "2062c2c9998a19f7709a12090fc7f2441cde9b57cc9698082bb9a8432c2a65eb"
+    },
+    {
+      "path": "supabase/functions/_shared/_test_helpers/satBarridoSoftDeleteMock.ts",
+      "sha256": "fb5e1940f1d146c5dc17ccc69f6ab17eef0cbe3ed03bb0ce0822c9e5b9e911bd"
+    },
+    {
+      "path": "supabase/functions/_shared/auth_test.ts",
+      "sha256": "02c693b2e2609a6b838c8d2f03451b1ff68dc370b847df80cd9fc9714c162c2b"
+    },
+    {
+      "path": "supabase/functions/_shared/auth.ts",
+      "sha256": "2495004c818e8d159257c7e5ca54c1a09e7c37549d1c506ab62f148a4a7ebf58"
+    },
+    {
+      "path": "supabase/functions/_shared/banxicoDof.ts",
+      "sha256": "1f2fb7decb7b78800bcc244c8322a296ad7ae7a03a71097b1df30c705e3b0144"
+    },
+    {
+      "path": "supabase/functions/_shared/bitacora.ts",
+      "sha256": "837be26c21a0075e5d5c4e6b70ab01761779369f55827b77ecd15abb20262ed3"
+    },
+    {
+      "path": "supabase/functions/_shared/cfdiParser_p2_test.ts",
+      "sha256": "4ba8719a6511c3eac59884b7e2a113056d14ad9f7de9047e9bc2e0c50de895d3"
+    },
+    {
+      "path": "supabase/functions/_shared/cfdiParser_test.ts",
+      "sha256": "4ce9e07a59c7a121ca8015484054056e064d16a0662532afcf344161dfd07b00"
+    },
+    {
+      "path": "supabase/functions/_shared/cfdiParser.ts",
+      "sha256": "e71e31099db01a440d3733a7af375bd4f385c2487f21eed5186f0dcce7eab9a4"
+    },
+    {
+      "path": "supabase/functions/_shared/coherenciaIva.ts",
+      "sha256": "774f3c07697b6cc40f48d6e2abf8b02c8a4155d0a74bb4312e7f20eafea26ecd"
+    },
+    {
+      "path": "supabase/functions/_shared/coherenciaIvaP1_test.ts",
+      "sha256": "060b6cf9a98b2fee2ffb8bae81634de940741351bc424a48209fd06afb8a25c6"
+    },
+    {
+      "path": "supabase/functions/_shared/conceptosSoftDelete_test.ts",
+      "sha256": "a7de967fbe5a6906d7caace3da755eda1616188cf05015be144d1997410f27c1"
+    },
+    {
+      "path": "supabase/functions/_shared/cors_test.ts",
+      "sha256": "30e7229af60c39a3ad2bfa59b1a0345dc505f042e77f9d7d4e7cb8de5e6c115d"
+    },
+    {
+      "path": "supabase/functions/_shared/cors.ts",
+      "sha256": "218cb7f92d6b75066f5f40bc90f9f36374df3b97523c614c1c5f5fe0d811b15e"
+    },
+    {
+      "path": "supabase/functions/_shared/cronLock_test.ts",
+      "sha256": "33470259650d9f5c2f76594a51c79390d45d6cbc6dea2dbedefdbf1f6f3e1885"
+    },
+    {
+      "path": "supabase/functions/_shared/cronLock.ts",
+      "sha256": "e70c72cd16e02501a8630bb6d1acefacf5cff0baf208a47afb68cb01681aa1c6"
+    },
+    {
+      "path": "supabase/functions/_shared/cronSecret_test.ts",
+      "sha256": "7e12b63170190ed2d2dd4469cacdc846409e33bd198bb571d142cd4ffc64246e"
+    },
+    {
+      "path": "supabase/functions/_shared/cxpGuard_test.ts",
+      "sha256": "f01021bb350e20eaecd5d66d311679f1ed779e7152ff633fbcf5b237f98a5113"
+    },
+    {
+      "path": "supabase/functions/_shared/cxpGuard.ts",
+      "sha256": "642002923a13ed1dbe1d78f7b78c22ec32c0c7a798e76016eeb3c363c7122645"
+    },
+    {
+      "path": "supabase/functions/_shared/cxpGuardFixtures.ts",
+      "sha256": "0a7765422842c22ee5c039dc58e5678a6ae6040cfab54ab1d5b752207b73e385"
+    },
+    {
+      "path": "supabase/functions/_shared/cxpGuardRateLimit_test.ts",
+      "sha256": "f65302ab86c8e9ed0b4f392cdaacfd5f52cc7f0f37b4fe0db6499e5cbc761a0d"
+    },
+    {
+      "path": "supabase/functions/_shared/destinatarioCliente.ts",
+      "sha256": "206acc3dc61d7ef5b942beb219b8dc2e76a72dd7604c9a7c54b88f1dc9e3fcdb"
+    },
+    {
+      "path": "supabase/functions/_shared/email-templates/email-change.tsx",
+      "sha256": "5e2f839c47992270cc0d56696b5a3908496d0dde2321c364c5f60d66f6e036eb"
+    },
+    {
+      "path": "supabase/functions/_shared/email-templates/invite.tsx",
+      "sha256": "c83990b2e3e0227ac0ec21f70e1cb1b2e9fa6713c3b0583b0de50dce634d0908"
+    },
+    {
+      "path": "supabase/functions/_shared/email-templates/magic-link.tsx",
+      "sha256": "202749a4eed66ec75e9df208c1c9246a48a942cb60d84911f18c9baac0989ecf"
+    },
+    {
+      "path": "supabase/functions/_shared/email-templates/reauthentication.tsx",
+      "sha256": "b683b4c8bbff421415bed1d9716c78563e8321f4d596d1e2ea03fa4176b45627"
+    },
+    {
+      "path": "supabase/functions/_shared/email-templates/recovery.tsx",
+      "sha256": "f3cfecbf4c2c1dddf11c2283d24cacc63c36ce9be79664b7c90b05ded41bbf31"
+    },
+    {
+      "path": "supabase/functions/_shared/email-templates/signup.tsx",
+      "sha256": "59460f1df1e0ec056c71fd106622b3cab674e333e86b055b63a417ea3e0fc11d"
+    },
+    {
+      "path": "supabase/functions/_shared/email-templates/styles.ts",
+      "sha256": "8c6532609b54fd3246888c48a16e0a94ea6e33ae31f91a2d5f2707af11b2db78"
+    },
+    {
+      "path": "supabase/functions/_shared/emailSendLog_test.ts",
+      "sha256": "dfba7f5b316d238e753078ba838b97dada56de71b2acf6395e2e7a81b19a0b2c"
+    },
+    {
+      "path": "supabase/functions/_shared/emailSendLog.ts",
+      "sha256": "74acf8dc099a0529cbc7e6b36164bde094d370acb2b50484c844deba627fe37c"
+    },
+    {
+      "path": "supabase/functions/_shared/enviarEmailPlantilla.ts",
+      "sha256": "f37c7a072084596abb900a5240df9f9bffec80cad31e54d5a7b7ad91d53aa474"
+    },
+    {
+      "path": "supabase/functions/_shared/facturaFilename_test.ts",
+      "sha256": "6ef1ccb7dbb8dd0aad50c5449072aa122fcbea80803049ff4612e7863773e09e"
+    },
+    {
+      "path": "supabase/functions/_shared/facturaFilename.ts",
+      "sha256": "eee353433becef58df8ca309350993f396ea51cf75d6e384ee5453fb61402d1c"
+    },
+    {
+      "path": "supabase/functions/_shared/facturapiAuth_test.ts",
+      "sha256": "7f69efcb9583517e8fc7adf64bc58a6082637c7295dc28974d084c7c29a1e0fb"
+    },
+    {
+      "path": "supabase/functions/_shared/facturapiAuth.ts",
+      "sha256": "5995d253ea39fbbdde61cce319510942fbdb11437ebf28590c815afcfa636652"
+    },
+    {
+      "path": "supabase/functions/_shared/facturapiClient_test.ts",
+      "sha256": "c5482ffb12abb1993bf7af33144351428205a9273903d73d5b79f4f0340cda1b"
+    },
+    {
+      "path": "supabase/functions/_shared/facturapiClient.ts",
+      "sha256": "61efd3fa59a7ceb6a8726d5fc00363f17213e5006b23b0aab3323c9ea7702a5a"
+    },
+    {
+      "path": "supabase/functions/_shared/facturapiErrorNormalizado_test.ts",
+      "sha256": "ae956d8080dbe081dd2ad019e67a8d0f30fb25e3f0e79554b56f604554a75cda"
+    },
+    {
+      "path": "supabase/functions/_shared/facturapiErrorNormalizado.ts",
+      "sha256": "b9df041b6e06a95384d71ed46db04b378d5f8e835b750685a7fa1b5bb753e2ef"
+    },
+    {
+      "path": "supabase/functions/_shared/facturapiRateLimit_test.ts",
+      "sha256": "66fd143554c49e1a8084f66c6c9378b212907948d535e66f35c1afb4d68755ed"
+    },
+    {
+      "path": "supabase/functions/_shared/facturapiRateLimit.ts",
+      "sha256": "97e9b8df3b9a4ac084f6e3779201739ed31137f0619da3c199901bd469aa2a0a"
+    },
+    {
+      "path": "supabase/functions/_shared/facturapiSdk_test.ts",
+      "sha256": "42266cdc1c17ea11d223201fd3905fac5382aefd9292cda9d1d738091d2acb4a"
+    },
+    {
+      "path": "supabase/functions/_shared/facturapiSdk.ts",
+      "sha256": "c0b3fda2144d6c25f0b0d4c6b36693af72979147269b687154b3ad9bea79cccb"
+    },
+    {
+      "path": "supabase/functions/_shared/facturapiWebhookConfig_test.ts",
+      "sha256": "dbbcf0ef49849f1f5a948aaf6a5149601a84cc2d6e008070c52d163e6fee25ce"
+    },
+    {
+      "path": "supabase/functions/_shared/facturapiWebhookConfig.ts",
+      "sha256": "32d7c33bcf370ce34364f73d6ac76dab1533b67fdb25320e89e4944bc119f7ed"
+    },
+    {
+      "path": "supabase/functions/_shared/formaMetodoPago_test.ts",
+      "sha256": "de6864d22336e3f6f2afa72543ebb5388856c03d1dbbe7078b2e7f56b73f6723"
+    },
+    {
+      "path": "supabase/functions/_shared/formaMetodoPago.ts",
+      "sha256": "aab6a074e2f9c250c7b4302729138361e22283a4687464a65ca46ca33c0ca4a2"
+    },
+    {
+      "path": "supabase/functions/_shared/logger.ts",
+      "sha256": "90a93a7e8e4cd3dcdcbb6fe1a1cf2d80d60e67d28bdacb7170122a08d36901b1"
+    },
+    {
+      "path": "supabase/functions/_shared/money_test.ts",
+      "sha256": "b3195e10fa14de36e0c05445c783713ad3980b7a5072f5ac2bdb2af991a90b35"
+    },
+    {
+      "path": "supabase/functions/_shared/money.ts",
+      "sha256": "91dea26c3a51c0da42f27c8bae9dfae74dbbf66e027382883ce567371a49022e"
+    },
+    {
+      "path": "supabase/functions/_shared/noObjetoFiscal.ts",
+      "sha256": "fa215affaa39e78d22b650c1843178aad2355415ce47958b35121472d33cfcfc"
+    },
+    {
+      "path": "supabase/functions/_shared/orgSlug.ts",
+      "sha256": "3015c0948096d3e34f2daa8defe0bb65f90e50cf48c8b137dadca52800c0c305"
+    },
+    {
+      "path": "supabase/functions/_shared/piiScrub.ts",
+      "sha256": "c6629f4906da527e36040765ce5dd730172d00c1b89fc3c353f47e7c09ddc9f7"
+    },
+    {
+      "path": "supabase/functions/_shared/ratelimit.ts",
+      "sha256": "39debf5e27247b190181d84199510099786ffb0d714089ebd44bfe8d9362c7b9"
+    },
+    {
+      "path": "supabase/functions/_shared/redact_test.ts",
+      "sha256": "3083bc341a49e63a9dbb906565c3c3682c69ad1b4540bfe0803ac90501466d2d"
+    },
+    {
+      "path": "supabase/functions/_shared/redact.ts",
+      "sha256": "d323fed7290efacd7090201c14e2e709f6b2931d1b2ce44a95d31d3642672966"
+    },
+    {
+      "path": "supabase/functions/_shared/referenciasEmbarque_test.ts",
+      "sha256": "384aaf5ae14d09eeb858ac4b4f785c793e99693d47175cb58c215eaf016e18fe"
+    },
+    {
+      "path": "supabase/functions/_shared/referenciasEmbarque.ts",
+      "sha256": "62243dafe34618c6832d3190bb8c83b107dc5620a3ebe442d90cfa58ba7cbe6f"
+    },
+    {
+      "path": "supabase/functions/_shared/respaldarXmlTimbrado.ts",
+      "sha256": "aeb6cdc6c63613927e64d75798d1dc8503016c1a4979b6c8d1d3b7ece177be81"
+    },
+    {
+      "path": "supabase/functions/_shared/response_test.ts",
+      "sha256": "19bb2d480a88e3d7723a89cf60406146d22f77371a43a43a9e608f9350649016"
+    },
+    {
+      "path": "supabase/functions/_shared/response.ts",
+      "sha256": "cf1803eb68d32a940a43f7b19236ea28b626262a2f658b5b9430413e66f7b4ae"
+    },
+    {
+      "path": "supabase/functions/_shared/satBarrido_softDelete_test.ts",
+      "sha256": "3f50bd7b7a1f50f3ba68f00d25906bc2c9c6d65c77796d9124b1cb29b84455d9"
+    },
+    {
+      "path": "supabase/functions/_shared/satBarrido_test.ts",
+      "sha256": "621099e54a94bc643e001f3c333b33a27f391795b81b9ef319ebf7290613befa"
+    },
+    {
+      "path": "supabase/functions/_shared/satBarrido.ts",
+      "sha256": "dc400c9e688b18a57a7e7f45e12b88f53fb81fca811333a1164f1cea75aa5daa"
+    },
+    {
+      "path": "supabase/functions/_shared/satConsulta.ts",
+      "sha256": "e24c37747630369bb17eaf82b5534c23c031e5deb09ef60a3fa71926a2c0941a"
+    },
+    {
+      "path": "supabase/functions/_shared/satExpresion.ts",
+      "sha256": "93f05f2ba5d20b3d778cd1dbc576314fa464a4dd6bc008bf3b2fd27b0809f0ed"
+    },
+    {
+      "path": "supabase/functions/_shared/scrubTelemetryData.ts",
+      "sha256": "65d7d39cf3672de37cfd25431a6673d0bfc638b04ed8cfe6108c3b8a0e75ad29"
+    },
+    {
+      "path": "supabase/functions/_shared/sentry_contract_test.ts",
+      "sha256": "4666a44bd6666873f1c300ec9b18f48087d7e412880f8b6c208f752bfe4ce902"
+    },
+    {
+      "path": "supabase/functions/_shared/sentry_test.ts",
+      "sha256": "a23c2c850d1ec9760b553c52e11c63feb3818b404a57e9e65f838aaa8c044ef3"
+    },
+    {
+      "path": "supabase/functions/_shared/sentry.ts",
+      "sha256": "997f60e55b9d21bf90347ba3371b019c79be58425e0e98079944eb98d6d60529"
+    },
+    {
+      "path": "supabase/functions/_shared/sentryContext.ts",
+      "sha256": "6142d386f5cc0cb920b3236cbf7d613dad5745ab50ba8ee7f433fdca23973bc4"
+    },
+    {
+      "path": "supabase/functions/_shared/sentryContractHarness.ts",
+      "sha256": "6df7ae59fc524c5982ecd8163a40b64e001667c651aabbde25630ebd69d28289"
+    },
+    {
+      "path": "supabase/functions/_shared/sentryRequestScope.ts",
+      "sha256": "f53da160f6481ecde0ddbcb729097c177452fe62dd05bc233d6bc3bf6730a410"
+    },
+    {
+      "path": "supabase/functions/_shared/sentryRuntime.ts",
+      "sha256": "9dc69ab387897a32fb7169748db6f46267a4860159b8471c6e3711f15bb000f3"
+    },
+    {
+      "path": "supabase/functions/_shared/tcBanda_test.ts",
+      "sha256": "b0ddfad94b5e55599526a7edc4505363f31105af4e22b2b357f43e0b1e12f025"
+    },
+    {
+      "path": "supabase/functions/_shared/tcBanda.ts",
+      "sha256": "1f82edf60ef3b35c9c7f82f05c86cae4b600dd363c73a9453afb2f21f29716ac"
+    },
+    {
+      "path": "supabase/functions/_shared/timbradoPendiente_test.ts",
+      "sha256": "6e4e2a251bf29558ecc39f182d2dc1511ee5c116561e0dfb856f6463546c0c63"
+    },
+    {
+      "path": "supabase/functions/_shared/timbradoPendiente.ts",
+      "sha256": "f2789fde1cd51a195af86b7d3f46d13bad2f6cd17190852470ee5e4573058917"
+    },
+    {
+      "path": "supabase/functions/_shared/timingSafe_test.ts",
+      "sha256": "f00db6e31a9f371b6c2d6eaea58bb6d4b4396ce9a238253780248cdadc9209d3"
+    },
+    {
+      "path": "supabase/functions/_shared/timingSafe.ts",
+      "sha256": "e1d44dedaa13365d27ae6b82df58c8d8750ec7615be8d7232a1c3fc96f0de4d6"
+    },
+    {
+      "path": "supabase/functions/_shared/transactional-email-templates/_layout/EmailLayout.tsx",
+      "sha256": "63cafec8445e2632fb04938ca0edd99aa4e4bcd46e5caee3c2f40181ad2e6552"
+    },
+    {
+      "path": "supabase/functions/_shared/transactional-email-templates/_layout/styles.ts",
+      "sha256": "a41af832e0abd10c7d28e8ae4c491841f0a55ea9cb9d4bf384fd4d0e7dd54b9d"
+    },
+    {
+      "path": "supabase/functions/_shared/transactional-email-templates/_layout/tokens.ts",
+      "sha256": "afee043511c3e6849610b5da70cef9bc373b7a01f4445c7a32c358cfac9cd47d"
+    },
+    {
+      "path": "supabase/functions/_shared/transactional-email-templates/cotizacion-enviada.tsx",
+      "sha256": "6cdb660b662a290de160ff04f4df986d5d5f15c832fdaeb3bba225dac0986163"
+    },
+    {
+      "path": "supabase/functions/_shared/transactional-email-templates/cotizacion-respuesta.tsx",
+      "sha256": "35276cda0a526f151b1d2489cc244a40b71a5c0853025ca61cbb8d68a4b0605f"
+    },
+    {
+      "path": "supabase/functions/_shared/transactional-email-templates/estado-cuenta-cliente.tsx",
+      "sha256": "cc5a3873685addc056918bc262919068d45c10657f81c8eebdafead06c836343"
+    },
+    {
+      "path": "supabase/functions/_shared/transactional-email-templates/factura-enviada.tsx",
+      "sha256": "11745989f6de418371c688620bab943666557c02c52f2ecbda080af58e93f659"
+    },
+    {
+      "path": "supabase/functions/_shared/transactional-email-templates/nota-credito-enviada.tsx",
+      "sha256": "70c396acf05b73b88053397fbad46c10bc260371fa08f8108a9d1d3e067b117f"
+    },
+    {
+      "path": "supabase/functions/_shared/transactional-email-templates/proforma-enviada.tsx",
+      "sha256": "e43afd47190c95d1c0ab765724ba7d8529578324ca2aebdc9552e6696e39414f"
+    },
+    {
+      "path": "supabase/functions/_shared/transactional-email-templates/recordatorio-cobranza.tsx",
+      "sha256": "fc17a4a0d380482b324cc62134f570c3f80c15d72e0d6a0e818ae0c8c501e13f"
+    },
+    {
+      "path": "supabase/functions/_shared/transactional-email-templates/registry.ts",
+      "sha256": "8adc60e83f3e8b718d412f326a38794e5de2ceb308d0d2d0294a1ebdf001ff30"
+    },
+    {
+      "path": "supabase/functions/_shared/transactional-email-templates/rep-enviado.tsx",
+      "sha256": "a27b5fcfd12e0d102eb8462be39deaebf4540b2c8b461673b9c9045f654bb73d"
+    },
+    {
+      "path": "supabase/functions/_shared/transactional-email-templates/send-email.ts",
+      "sha256": "dd7d9aea7529af3a662764a8fd9bd4e057e6b1fb5a72e56bf42be9a88a03e9f8"
+    },
+    {
+      "path": "supabase/functions/_shared/usoCfdiEfectivo.ts",
+      "sha256": "a37114fc9f1f3e0a08256e72958021ed90ed3ed74ee28c1d562117c3960e604d"
+    },
+    {
+      "path": "supabase/functions/_shared/usoCfdiFiscal.ts",
+      "sha256": "de71e2510a3270f8f742c423b504bc0c40eddc7398c5dc6f531780a2fce5524a"
+    },
+    {
+      "path": "supabase/functions/_shared/uuid.ts",
+      "sha256": "368e094026b2b7a9060f8d3d0f9f1c31cbe14ef5a841944b66cfd8948ad6addc"
+    }
+  ],
+  "sourcesAfter": [
+    {
+      "path": "supabase/functions/parse-cfdi-xml/aiHelpers_test.ts",
+      "sha256": "cb8b6243728c695a66f326273ef308cb5663a63f6064fa6a3930f47efcd91293"
+    },
+    {
+      "path": "supabase/functions/parse-cfdi-xml/aiHelpers.ts",
+      "sha256": "4d77f5cf84e909940d52728ca63871de4741fc8207f84cfc59e9010ba4064706"
+    },
+    {
+      "path": "supabase/functions/parse-cfdi-xml/index_test.ts",
+      "sha256": "fe08371a0c8b1306a68c7abef8103933442d91590250ccd090875001586ec7df"
+    },
+    {
+      "path": "supabase/functions/parse-cfdi-xml/index.ts",
+      "sha256": "8ae494563893b75775bccb179995ac675e39f3d8e5c6293527d52ce171de0c6d"
+    },
+    {
+      "path": "supabase/functions/parse-cfdi-xml/sugerirCategoria.ts",
+      "sha256": "8e442903c85db8fef4862cff4fdfae9be9b82094bde7b5dcf368f3c2fc950d25"
+    },
+    {
+      "path": "supabase/functions/parse-cfdi-xml/validarNcProveedor_test.ts",
+      "sha256": "214b8e0c6605c587589f7ea7d824ea73f98168b82ff59fff0fd3a7f76c374340"
+    },
+    {
+      "path": "supabase/functions/parse-cfdi-xml/validarNcProveedor.ts",
+      "sha256": "325f19f84f856c63bb464afea70af0fdfa02038188a816a417dd9eed7109c6c0"
+    },
+    {
+      "path": "supabase/functions/_shared/_test_helpers/satBarridoSoftDeleteFixtures.ts",
+      "sha256": "2062c2c9998a19f7709a12090fc7f2441cde9b57cc9698082bb9a8432c2a65eb"
+    },
+    {
+      "path": "supabase/functions/_shared/_test_helpers/satBarridoSoftDeleteMock.ts",
+      "sha256": "fb5e1940f1d146c5dc17ccc69f6ab17eef0cbe3ed03bb0ce0822c9e5b9e911bd"
+    },
+    {
+      "path": "supabase/functions/_shared/auth_test.ts",
+      "sha256": "02c693b2e2609a6b838c8d2f03451b1ff68dc370b847df80cd9fc9714c162c2b"
+    },
+    {
+      "path": "supabase/functions/_shared/auth.ts",
+      "sha256": "2495004c818e8d159257c7e5ca54c1a09e7c37549d1c506ab62f148a4a7ebf58"
+    },
+    {
+      "path": "supabase/functions/_shared/banxicoDof.ts",
+      "sha256": "1f2fb7decb7b78800bcc244c8322a296ad7ae7a03a71097b1df30c705e3b0144"
+    },
+    {
+      "path": "supabase/functions/_shared/bitacora.ts",
+      "sha256": "837be26c21a0075e5d5c4e6b70ab01761779369f55827b77ecd15abb20262ed3"
+    },
+    {
+      "path": "supabase/functions/_shared/cfdiParser_p2_test.ts",
+      "sha256": "4ba8719a6511c3eac59884b7e2a113056d14ad9f7de9047e9bc2e0c50de895d3"
+    },
+    {
+      "path": "supabase/functions/_shared/cfdiParser_test.ts",
+      "sha256": "4ce9e07a59c7a121ca8015484054056e064d16a0662532afcf344161dfd07b00"
+    },
+    {
+      "path": "supabase/functions/_shared/cfdiParser.ts",
+      "sha256": "e71e31099db01a440d3733a7af375bd4f385c2487f21eed5186f0dcce7eab9a4"
+    },
+    {
+      "path": "supabase/functions/_shared/coherenciaIva.ts",
+      "sha256": "774f3c07697b6cc40f48d6e2abf8b02c8a4155d0a74bb4312e7f20eafea26ecd"
+    },
+    {
+      "path": "supabase/functions/_shared/coherenciaIvaP1_test.ts",
+      "sha256": "060b6cf9a98b2fee2ffb8bae81634de940741351bc424a48209fd06afb8a25c6"
+    },
+    {
+      "path": "supabase/functions/_shared/conceptosSoftDelete_test.ts",
+      "sha256": "a7de967fbe5a6906d7caace3da755eda1616188cf05015be144d1997410f27c1"
+    },
+    {
+      "path": "supabase/functions/_shared/cors_test.ts",
+      "sha256": "30e7229af60c39a3ad2bfa59b1a0345dc505f042e77f9d7d4e7cb8de5e6c115d"
+    },
+    {
+      "path": "supabase/functions/_shared/cors.ts",
+      "sha256": "218cb7f92d6b75066f5f40bc90f9f36374df3b97523c614c1c5f5fe0d811b15e"
+    },
+    {
+      "path": "supabase/functions/_shared/cronLock_test.ts",
+      "sha256": "33470259650d9f5c2f76594a51c79390d45d6cbc6dea2dbedefdbf1f6f3e1885"
+    },
+    {
+      "path": "supabase/functions/_shared/cronLock.ts",
+      "sha256": "e70c72cd16e02501a8630bb6d1acefacf5cff0baf208a47afb68cb01681aa1c6"
+    },
+    {
+      "path": "supabase/functions/_shared/cronSecret_test.ts",
+      "sha256": "7e12b63170190ed2d2dd4469cacdc846409e33bd198bb571d142cd4ffc64246e"
+    },
+    {
+      "path": "supabase/functions/_shared/cxpGuard_test.ts",
+      "sha256": "f01021bb350e20eaecd5d66d311679f1ed779e7152ff633fbcf5b237f98a5113"
+    },
+    {
+      "path": "supabase/functions/_shared/cxpGuard.ts",
+      "sha256": "642002923a13ed1dbe1d78f7b78c22ec32c0c7a798e76016eeb3c363c7122645"
+    },
+    {
+      "path": "supabase/functions/_shared/cxpGuardFixtures.ts",
+      "sha256": "0a7765422842c22ee5c039dc58e5678a6ae6040cfab54ab1d5b752207b73e385"
+    },
+    {
+      "path": "supabase/functions/_shared/cxpGuardRateLimit_test.ts",
+      "sha256": "f65302ab86c8e9ed0b4f392cdaacfd5f52cc7f0f37b4fe0db6499e5cbc761a0d"
+    },
+    {
+      "path": "supabase/functions/_shared/destinatarioCliente.ts",
+      "sha256": "206acc3dc61d7ef5b942beb219b8dc2e76a72dd7604c9a7c54b88f1dc9e3fcdb"
+    },
+    {
+      "path": "supabase/functions/_shared/email-templates/email-change.tsx",
+      "sha256": "5e2f839c47992270cc0d56696b5a3908496d0dde2321c364c5f60d66f6e036eb"
+    },
+    {
+      "path": "supabase/functions/_shared/email-templates/invite.tsx",
+      "sha256": "c83990b2e3e0227ac0ec21f70e1cb1b2e9fa6713c3b0583b0de50dce634d0908"
+    },
+    {
+      "path": "supabase/functions/_shared/email-templates/magic-link.tsx",
+      "sha256": "202749a4eed66ec75e9df208c1c9246a48a942cb60d84911f18c9baac0989ecf"
+    },
+    {
+      "path": "supabase/functions/_shared/email-templates/reauthentication.tsx",
+      "sha256": "b683b4c8bbff421415bed1d9716c78563e8321f4d596d1e2ea03fa4176b45627"
+    },
+    {
+      "path": "supabase/functions/_shared/email-templates/recovery.tsx",
+      "sha256": "f3cfecbf4c2c1dddf11c2283d24cacc63c36ce9be79664b7c90b05ded41bbf31"
+    },
+    {
+      "path": "supabase/functions/_shared/email-templates/signup.tsx",
+      "sha256": "59460f1df1e0ec056c71fd106622b3cab674e333e86b055b63a417ea3e0fc11d"
+    },
+    {
+      "path": "supabase/functions/_shared/email-templates/styles.ts",
+      "sha256": "8c6532609b54fd3246888c48a16e0a94ea6e33ae31f91a2d5f2707af11b2db78"
+    },
+    {
+      "path": "supabase/functions/_shared/emailSendLog_test.ts",
+      "sha256": "dfba7f5b316d238e753078ba838b97dada56de71b2acf6395e2e7a81b19a0b2c"
+    },
+    {
+      "path": "supabase/functions/_shared/emailSendLog.ts",
+      "sha256": "74acf8dc099a0529cbc7e6b36164bde094d370acb2b50484c844deba627fe37c"
+    },
+    {
+      "path": "supabase/functions/_shared/enviarEmailPlantilla.ts",
+      "sha256": "f37c7a072084596abb900a5240df9f9bffec80cad31e54d5a7b7ad91d53aa474"
+    },
+    {
+      "path": "supabase/functions/_shared/facturaFilename_test.ts",
+      "sha256": "6ef1ccb7dbb8dd0aad50c5449072aa122fcbea80803049ff4612e7863773e09e"
+    },
+    {
+      "path": "supabase/functions/_shared/facturaFilename.ts",
+      "sha256": "eee353433becef58df8ca309350993f396ea51cf75d6e384ee5453fb61402d1c"
+    },
+    {
+      "path": "supabase/functions/_shared/facturapiAuth_test.ts",
+      "sha256": "7f69efcb9583517e8fc7adf64bc58a6082637c7295dc28974d084c7c29a1e0fb"
+    },
+    {
+      "path": "supabase/functions/_shared/facturapiAuth.ts",
+      "sha256": "5995d253ea39fbbdde61cce319510942fbdb11437ebf28590c815afcfa636652"
+    },
+    {
+      "path": "supabase/functions/_shared/facturapiClient_test.ts",
+      "sha256": "c5482ffb12abb1993bf7af33144351428205a9273903d73d5b79f4f0340cda1b"
+    },
+    {
+      "path": "supabase/functions/_shared/facturapiClient.ts",
+      "sha256": "61efd3fa59a7ceb6a8726d5fc00363f17213e5006b23b0aab3323c9ea7702a5a"
+    },
+    {
+      "path": "supabase/functions/_shared/facturapiErrorNormalizado_test.ts",
+      "sha256": "ae956d8080dbe081dd2ad019e67a8d0f30fb25e3f0e79554b56f604554a75cda"
+    },
+    {
+      "path": "supabase/functions/_shared/facturapiErrorNormalizado.ts",
+      "sha256": "b9df041b6e06a95384d71ed46db04b378d5f8e835b750685a7fa1b5bb753e2ef"
+    },
+    {
+      "path": "supabase/functions/_shared/facturapiRateLimit_test.ts",
+      "sha256": "66fd143554c49e1a8084f66c6c9378b212907948d535e66f35c1afb4d68755ed"
+    },
+    {
+      "path": "supabase/functions/_shared/facturapiRateLimit.ts",
+      "sha256": "97e9b8df3b9a4ac084f6e3779201739ed31137f0619da3c199901bd469aa2a0a"
+    },
+    {
+      "path": "supabase/functions/_shared/facturapiSdk_test.ts",
+      "sha256": "42266cdc1c17ea11d223201fd3905fac5382aefd9292cda9d1d738091d2acb4a"
+    },
+    {
+      "path": "supabase/functions/_shared/facturapiSdk.ts",
+      "sha256": "c0b3fda2144d6c25f0b0d4c6b36693af72979147269b687154b3ad9bea79cccb"
+    },
+    {
+      "path": "supabase/functions/_shared/facturapiWebhookConfig_test.ts",
+      "sha256": "dbbcf0ef49849f1f5a948aaf6a5149601a84cc2d6e008070c52d163e6fee25ce"
+    },
+    {
+      "path": "supabase/functions/_shared/facturapiWebhookConfig.ts",
+      "sha256": "32d7c33bcf370ce34364f73d6ac76dab1533b67fdb25320e89e4944bc119f7ed"
+    },
+    {
+      "path": "supabase/functions/_shared/formaMetodoPago_test.ts",
+      "sha256": "de6864d22336e3f6f2afa72543ebb5388856c03d1dbbe7078b2e7f56b73f6723"
+    },
+    {
+      "path": "supabase/functions/_shared/formaMetodoPago.ts",
+      "sha256": "aab6a074e2f9c250c7b4302729138361e22283a4687464a65ca46ca33c0ca4a2"
+    },
+    {
+      "path": "supabase/functions/_shared/logger.ts",
+      "sha256": "90a93a7e8e4cd3dcdcbb6fe1a1cf2d80d60e67d28bdacb7170122a08d36901b1"
+    },
+    {
+      "path": "supabase/functions/_shared/money_test.ts",
+      "sha256": "b3195e10fa14de36e0c05445c783713ad3980b7a5072f5ac2bdb2af991a90b35"
+    },
+    {
+      "path": "supabase/functions/_shared/money.ts",
+      "sha256": "91dea26c3a51c0da42f27c8bae9dfae74dbbf66e027382883ce567371a49022e"
+    },
+    {
+      "path": "supabase/functions/_shared/noObjetoFiscal.ts",
+      "sha256": "fa215affaa39e78d22b650c1843178aad2355415ce47958b35121472d33cfcfc"
+    },
+    {
+      "path": "supabase/functions/_shared/orgSlug.ts",
+      "sha256": "3015c0948096d3e34f2daa8defe0bb65f90e50cf48c8b137dadca52800c0c305"
+    },
+    {
+      "path": "supabase/functions/_shared/piiScrub.ts",
+      "sha256": "c6629f4906da527e36040765ce5dd730172d00c1b89fc3c353f47e7c09ddc9f7"
+    },
+    {
+      "path": "supabase/functions/_shared/ratelimit.ts",
+      "sha256": "39debf5e27247b190181d84199510099786ffb0d714089ebd44bfe8d9362c7b9"
+    },
+    {
+      "path": "supabase/functions/_shared/redact_test.ts",
+      "sha256": "3083bc341a49e63a9dbb906565c3c3682c69ad1b4540bfe0803ac90501466d2d"
+    },
+    {
+      "path": "supabase/functions/_shared/redact.ts",
+      "sha256": "d323fed7290efacd7090201c14e2e709f6b2931d1b2ce44a95d31d3642672966"
+    },
+    {
+      "path": "supabase/functions/_shared/referenciasEmbarque_test.ts",
+      "sha256": "384aaf5ae14d09eeb858ac4b4f785c793e99693d47175cb58c215eaf016e18fe"
+    },
+    {
+      "path": "supabase/functions/_shared/referenciasEmbarque.ts",
+      "sha256": "62243dafe34618c6832d3190bb8c83b107dc5620a3ebe442d90cfa58ba7cbe6f"
+    },
+    {
+      "path": "supabase/functions/_shared/respaldarXmlTimbrado.ts",
+      "sha256": "aeb6cdc6c63613927e64d75798d1dc8503016c1a4979b6c8d1d3b7ece177be81"
+    },
+    {
+      "path": "supabase/functions/_shared/response_test.ts",
+      "sha256": "19bb2d480a88e3d7723a89cf60406146d22f77371a43a43a9e608f9350649016"
+    },
+    {
+      "path": "supabase/functions/_shared/response.ts",
+      "sha256": "cf1803eb68d32a940a43f7b19236ea28b626262a2f658b5b9430413e66f7b4ae"
+    },
+    {
+      "path": "supabase/functions/_shared/satBarrido_softDelete_test.ts",
+      "sha256": "3f50bd7b7a1f50f3ba68f00d25906bc2c9c6d65c77796d9124b1cb29b84455d9"
+    },
+    {
+      "path": "supabase/functions/_shared/satBarrido_test.ts",
+      "sha256": "621099e54a94bc643e001f3c333b33a27f391795b81b9ef319ebf7290613befa"
+    },
+    {
+      "path": "supabase/functions/_shared/satBarrido.ts",
+      "sha256": "dc400c9e688b18a57a7e7f45e12b88f53fb81fca811333a1164f1cea75aa5daa"
+    },
+    {
+      "path": "supabase/functions/_shared/satConsulta.ts",
+      "sha256": "e24c37747630369bb17eaf82b5534c23c031e5deb09ef60a3fa71926a2c0941a"
+    },
+    {
+      "path": "supabase/functions/_shared/satExpresion.ts",
+      "sha256": "93f05f2ba5d20b3d778cd1dbc576314fa464a4dd6bc008bf3b2fd27b0809f0ed"
+    },
+    {
+      "path": "supabase/functions/_shared/scrubTelemetryData.ts",
+      "sha256": "65d7d39cf3672de37cfd25431a6673d0bfc638b04ed8cfe6108c3b8a0e75ad29"
+    },
+    {
+      "path": "supabase/functions/_shared/sentry_contract_test.ts",
+      "sha256": "4666a44bd6666873f1c300ec9b18f48087d7e412880f8b6c208f752bfe4ce902"
+    },
+    {
+      "path": "supabase/functions/_shared/sentry_test.ts",
+      "sha256": "a23c2c850d1ec9760b553c52e11c63feb3818b404a57e9e65f838aaa8c044ef3"
+    },
+    {
+      "path": "supabase/functions/_shared/sentry.ts",
+      "sha256": "997f60e55b9d21bf90347ba3371b019c79be58425e0e98079944eb98d6d60529"
+    },
+    {
+      "path": "supabase/functions/_shared/sentryContext.ts",
+      "sha256": "6142d386f5cc0cb920b3236cbf7d613dad5745ab50ba8ee7f433fdca23973bc4"
+    },
+    {
+      "path": "supabase/functions/_shared/sentryContractHarness.ts",
+      "sha256": "6df7ae59fc524c5982ecd8163a40b64e001667c651aabbde25630ebd69d28289"
+    },
+    {
+      "path": "supabase/functions/_shared/sentryRequestScope.ts",
+      "sha256": "f53da160f6481ecde0ddbcb729097c177452fe62dd05bc233d6bc3bf6730a410"
+    },
+    {
+      "path": "supabase/functions/_shared/sentryRuntime.ts",
+      "sha256": "9dc69ab387897a32fb7169748db6f46267a4860159b8471c6e3711f15bb000f3"
+    },
+    {
+      "path": "supabase/functions/_shared/tcBanda_test.ts",
+      "sha256": "b0ddfad94b5e55599526a7edc4505363f31105af4e22b2b357f43e0b1e12f025"
+    },
+    {
+      "path": "supabase/functions/_shared/tcBanda.ts",
+      "sha256": "1f82edf60ef3b35c9c7f82f05c86cae4b600dd363c73a9453afb2f21f29716ac"
+    },
+    {
+      "path": "supabase/functions/_shared/timbradoPendiente_test.ts",
+      "sha256": "6e4e2a251bf29558ecc39f182d2dc1511ee5c116561e0dfb856f6463546c0c63"
+    },
+    {
+      "path": "supabase/functions/_shared/timbradoPendiente.ts",
+      "sha256": "f2789fde1cd51a195af86b7d3f46d13bad2f6cd17190852470ee5e4573058917"
+    },
+    {
+      "path": "supabase/functions/_shared/timingSafe_test.ts",
+      "sha256": "f00db6e31a9f371b6c2d6eaea58bb6d4b4396ce9a238253780248cdadc9209d3"
+    },
+    {
+      "path": "supabase/functions/_shared/timingSafe.ts",
+      "sha256": "e1d44dedaa13365d27ae6b82df58c8d8750ec7615be8d7232a1c3fc96f0de4d6"
+    },
+    {
+      "path": "supabase/functions/_shared/transactional-email-templates/_layout/EmailLayout.tsx",
+      "sha256": "63cafec8445e2632fb04938ca0edd99aa4e4bcd46e5caee3c2f40181ad2e6552"
+    },
+    {
+      "path": "supabase/functions/_shared/transactional-email-templates/_layout/styles.ts",
+      "sha256": "a41af832e0abd10c7d28e8ae4c491841f0a55ea9cb9d4bf384fd4d0e7dd54b9d"
+    },
+    {
+      "path": "supabase/functions/_shared/transactional-email-templates/_layout/tokens.ts",
+      "sha256": "afee043511c3e6849610b5da70cef9bc373b7a01f4445c7a32c358cfac9cd47d"
+    },
+    {
+      "path": "supabase/functions/_shared/transactional-email-templates/cotizacion-enviada.tsx",
+      "sha256": "6cdb660b662a290de160ff04f4df986d5d5f15c832fdaeb3bba225dac0986163"
+    },
+    {
+      "path": "supabase/functions/_shared/transactional-email-templates/cotizacion-respuesta.tsx",
+      "sha256": "35276cda0a526f151b1d2489cc244a40b71a5c0853025ca61cbb8d68a4b0605f"
+    },
+    {
+      "path": "supabase/functions/_shared/transactional-email-templates/estado-cuenta-cliente.tsx",
+      "sha256": "cc5a3873685addc056918bc262919068d45c10657f81c8eebdafead06c836343"
+    },
+    {
+      "path": "supabase/functions/_shared/transactional-email-templates/factura-enviada.tsx",
+      "sha256": "11745989f6de418371c688620bab943666557c02c52f2ecbda080af58e93f659"
+    },
+    {
+      "path": "supabase/functions/_shared/transactional-email-templates/nota-credito-enviada.tsx",
+      "sha256": "70c396acf05b73b88053397fbad46c10bc260371fa08f8108a9d1d3e067b117f"
+    },
+    {
+      "path": "supabase/functions/_shared/transactional-email-templates/proforma-enviada.tsx",
+      "sha256": "e43afd47190c95d1c0ab765724ba7d8529578324ca2aebdc9552e6696e39414f"
+    },
+    {
+      "path": "supabase/functions/_shared/transactional-email-templates/recordatorio-cobranza.tsx",
+      "sha256": "fc17a4a0d380482b324cc62134f570c3f80c15d72e0d6a0e818ae0c8c501e13f"
+    },
+    {
+      "path": "supabase/functions/_shared/transactional-email-templates/registry.ts",
+      "sha256": "8adc60e83f3e8b718d412f326a38794e5de2ceb308d0d2d0294a1ebdf001ff30"
+    },
+    {
+      "path": "supabase/functions/_shared/transactional-email-templates/rep-enviado.tsx",
+      "sha256": "a27b5fcfd12e0d102eb8462be39deaebf4540b2c8b461673b9c9045f654bb73d"
+    },
+    {
+      "path": "supabase/functions/_shared/transactional-email-templates/send-email.ts",
+      "sha256": "dd7d9aea7529af3a662764a8fd9bd4e057e6b1fb5a72e56bf42be9a88a03e9f8"
+    },
+    {
+      "path": "supabase/functions/_shared/usoCfdiEfectivo.ts",
+      "sha256": "a37114fc9f1f3e0a08256e72958021ed90ed3ed74ee28c1d562117c3960e604d"
+    },
+    {
+      "path": "supabase/functions/_shared/usoCfdiFiscal.ts",
+      "sha256": "de71e2510a3270f8f742c423b504bc0c40eddc7398c5dc6f531780a2fce5524a"
+    },
+    {
+      "path": "supabase/functions/_shared/uuid.ts",
+      "sha256": "368e094026b2b7a9060f8d3d0f9f1c31cbe14ef5a841944b66cfd8948ad6addc"
+    }
+  ],
+  "isolation": {
+    "environment": "OS allowlist plus isolated Deno cache/temp; no secrets or backend environment",
+    "runtimePermissionGrants": [],
+    "loader": "cached-only",
+    "typecheck": true,
+    "sanitizeOps": true,
+    "sanitizeResources": true
+  },
+  "limits": [
+    "Original three-test suite with in-memory client only",
+    "No production/backend, SAT, stamping, upload, or real ACL/RLS certification",
+    "GUI parser remains simulated; 22 Node assertions remain separate"
+  ]
+}

@@ -10,14 +10,14 @@ Set `VITE_CONFIG_NATIVE_IGNORE_WARNING=true` to suppress this warning.
 
  RUN  v5.0.3 C:/Users/torta/Documents/Codex/2026-10-17/task-3/elogistix-deferred
 
- Γ£ô |node| src/__tests__/scripts/deferredErpCatalog.test.ts (6 tests) 65ms
- Γ£ô |node| src/__tests__/scripts/virtualizationCatalog.test.ts (6 tests) 44ms
- Γ£ô |node| src/__tests__/scripts/deferredErpEvidence.test.ts (13 tests) 360ms
- Γ£ô |node| src/__tests__/scripts/dependencyAuditCatalog.test.ts (5 tests) 44ms
+ Γ£ô |node| src/__tests__/scripts/deferredErpCatalog.test.ts (6 tests) 82ms
+ Γ£ô |node| src/__tests__/scripts/dependencyAuditCatalog.test.ts (5 tests) 68ms
+ Γ£ô |node| src/__tests__/scripts/virtualizationCatalog.test.ts (6 tests) 63ms
+ Γ£ô |node| src/__tests__/scripts/deferredErpEvidence.test.ts (48 tests) 2398ms
 
  Test Files  4 passed (4)
-      Tests  30 passed (30)
-   Start at  14:59:45
-   Duration  995ms (tests 50%, transform 32%, setup 6%, import 6%, worker 6%)
+      Tests  65 passed (65)
+   Start at  16:27:39
+   Duration  4.92s (tests 50%, import 39%, transform 9%, setup 2%, worker 1%)
 
 JSON report written to C:/Users/torta/Documents/Codex/2026-10-17/task-3/elogistix-deferred/reports/deferred-erp/catalog-regression-results.json

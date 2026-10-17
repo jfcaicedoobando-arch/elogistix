@@ -1,10 +1,10 @@
-Γ£ö census routes the original owner path and its regression to one automatic lane (8.945ms)
-Γ£ö nearby or renamed tests remain unknown instead of broadening the owner lane (0.5269ms)
-Γ£ö runner accepts only the exact catalogued owner and regression bytes (3.8493ms)
-Γ£ö missing, extra, duplicate and manual owner entries reject before execution (0.7627ms)
-Γ£ö CI executes the owner lane through the catalog after inventory and Node setup (0.5481ms)
-Γ£ö physical wire files have an automatic exact catalog lane and unchanged bytes (2383.8338ms)
-Γ£ö general CI runs offline wire tests unconditionally after the complete inventory (1.6534ms)
+Γ£ö census routes the original owner path and its regression to one automatic lane (16.1803ms)
+Γ£ö nearby or renamed tests remain unknown instead of broadening the owner lane (0.8639ms)
+Γ£ö runner accepts only the exact catalogued owner and regression bytes (4.8615ms)
+Γ£ö missing, extra, duplicate and manual owner entries reject before execution (1.183ms)
+Γ£ö CI executes the owner lane through the catalog after inventory and Node setup (2.8676ms)
+Γ£ö physical wire files have an automatic exact catalog lane and unchanged bytes (3628.0245ms)
+Γ£ö general CI runs offline wire tests unconditionally after the complete inventory (2.2812ms)
 Γä╣ tests 7
 Γä╣ suites 0
 Γä╣ pass 7
@@ -12,4 +12,4 @@
 Γä╣ cancelled 0
 Γä╣ skipped 0
 Γä╣ todo 0
-Γä╣ duration_ms 2500.7881
+Γä╣ duration_ms 3786.0932

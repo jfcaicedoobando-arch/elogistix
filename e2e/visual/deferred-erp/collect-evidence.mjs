@@ -3,6 +3,7 @@ import { copyFile, mkdir, readFile, readdir, writeFile } from "node:fs/promises"
 import { basename, join, relative, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { fingerprintSources, runValidation } from "./validation-checks.mjs";
+import { collectDenoEvidence, verifyDenoEvidence } from "./deno-evidence.mjs";
 
 const repositoryRoot = fileURLToPath(new URL("../../../", import.meta.url));
 
@@ -38,8 +39,9 @@ if (!unit.success || unit.numPassedTests !== 100 || unit.numFailedTests !== 0 ||
   throw new Error("Require all 100 existing unit tests");
 }
 if (parser.assertions.length !== 22 || parser.assertions.some(item => !item.passed) || parser.denoSuiteExecuted !== false || parser.networkAttempts.length) {
-  throw new Error("Require separate local parser evidence with Deno limitation preserved");
+  throw new Error("Require separate Node parser evidence; never relabel it as a Deno execution");
 }
+const originalDenoSuite = await collectDenoEvidence({ root, output });
 await mkdir(join(output, "screenshots"), { recursive: true });
 await mkdir(join(output, "validation"), { recursive: true });
 const cases = [];
@@ -108,7 +110,7 @@ const summary = {
   gui: { passed: expected, failed: unexpected, flaky, skipped, retries: 0, viewports: ["1280x720", "390x640"], browser: "Isolated Playwright Chromium 156.0.8078.4 (revision1248)", screenshotCount: screenshots.length },
   network: { fixtureGetRequests: network.reduce((count, item) => count + item.requests.length, 0), blockedAttempts: network.reduce((count, item) => count + item.blocked.length, 0), browserErrors: network.reduce((count, item) => count + item.errors.length, 0), externalRequests: 0, nonGetRequests: 0, serviceWorkers: "blocked", webSockets: "blocked" },
   localXmlParser: { assertions: parser.assertions.length, passed: true, denoSuiteExecuted: false },
-  blocker: "Original Deno suite not executed: runtime unavailable; auto-review rejected network download. Requires a locally authorized Deno runtime.",
+  originalDenoSuite,
   notExecuted: ["real Gmail", "real Supabase/database/RLS/ACL", "real writes/deletes/uploads", "SAT or stamping", "production/staging E2E", "merge or deployment"],
   productDefectsObserved: [],
   harnessCorrectionsBeforeFinalRun: ["Add QueryClientProvider to XML fixture", "Match accessible typographic dash and normalized case in Correo selectors", "Refactor CRM mock to satisfy complexity rule", "Use production Toaster and ThemeProvider for matching toast placement"],
@@ -119,8 +121,9 @@ await writeFile(join(output, "unit-results.json"), JSON.stringify({ files: unitF
 await writeFile(join(output, "xml-parser-local.json"), JSON.stringify(parser, null, 2) + "\n");
 await writeFile(join(output, "screenshots.json"), JSON.stringify(screenshots, null, 2) + "\n");
 if ((await fingerprintSources(root)).digest !== validation.sourceAfter.digest) throw new Error("Validation source drift: inputs changed before evidence publication");
+if ((await verifyDenoEvidence(root)).proofSha256 !== originalDenoSuite.proofSha256) throw new Error("Deno evidence: proof changed before evidence publication");
 await writeFile(join(output, "summary.json"), JSON.stringify(summary, null, 2) + "\n");
-console.log(`Collected ${cases.length} passing GUI cases, ${screenshots.length} screenshots, 100 unit tests and 22 local parser assertions.`);
+console.log(`Collected ${cases.length} passing GUI cases, ${screenshots.length} screenshots, 100 unit tests, 22 Node parser assertions and ${originalDenoSuite.counts.passed} original Deno tests.`);
 return summary;
 } catch (error) {
   const failure = { status: "failed", runId, startedAt, generatedAt: new Date().toISOString(), error: error.message ?? String(error) };

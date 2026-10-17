@@ -24,6 +24,7 @@ node node_modules/eslint/bin/eslint.js --no-cache e2e/visual/deferred-erp
 node node_modules/vite/bin/vite.js build --config e2e/visual/deferred-erp/vite.config.ts
 node node_modules/@playwright/test/cli.js test --config e2e/visual/deferred-erp/playwright.config.ts
 node node_modules/tsx/dist/cli.mjs e2e/visual/deferred-erp/xml-parser-local.mjs
+node e2e/visual/deferred-erp/run-deno-original.mjs
 ```
 
 Suites existentes, con entorno vacío y cliente Supabase fail-closed:
@@ -90,13 +91,38 @@ GET a los archivos del fixture. CSP niega conexiones, workers, formularios,
 objetos y base externa. Los JSON guardan rutas de solicitudes sin queries,
 headers, cookies ni variables de entorno. Todo dato es ficticio.
 
-La suite Deno original
-`supabase/functions/parse-cfdi-xml/validarNcProveedor_test.ts` **no se ejecutó**:
-no había runtime local y la revisión automática rechazó descargarlo por la
-restricción de red externa. El script Node local se reporta separadamente y
-no sustituye esa ejecución. Requiere un Deno local autorizado para cerrar ese
-pendiente. No se consultaron Gmail, backend, BD, SAT ni servicios de timbrado;
-no hubo registro, borrado, subida, merge o despliegue reales.
+La suite original
+`supabase/functions/parse-cfdi-xml/validarNcProveedor_test.ts` pasó sus **3 tests**
+con Deno **2.9.7**, la versión fijada por `.github/workflows/ci.yml:272`.
+La propuesta inicial 2.5.6 se descartó para conservar esa paridad. Tras la
+autorización explícita del usuario se descargó una vez el ZIP oficial desde
+`https://github.com/denoland/deno/releases/download/v2.9.7/deno-x86_64-pc-windows-msvc.zip`;
+su SHA256 coincide con el digest publicado por la API oficial de GitHub:
+`a0c3101b4158d1dfb7d6a78a7bf0f3de80c96bb423c152beec8beb22786f2238`.
+
+El ejecutable y la caché están aislados bajo `test-results/xml-deno-runtime`
+y `test-results/xml-deno-cache`. Sólo se copió la caché pública existente de
+`deno.land` y `esm.sh`; la ejecución usa `--cached-only`, sin descargar módulos.
+El comando exacto, versión, procedencia, hashes de fuentes, log y JUnit están
+en `evidence/deno-original-results.json`. El runner conserva typecheck y ambos
+sanitizadores, sin configuración/lockfile automáticos, con entorno permitido
+sólo para el runtime y todos los permisos de aplicación denegados:
+
+```text
+deno test --no-config --no-lock --cached-only --node-modules-dir=none --sanitize-ops --sanitize-resources --no-prompt --check --deny-env --deny-net --deny-read --deny-write --deny-run --deny-ffi --deny-sys --junit-path=reports/deferred-erp/deno-original.junit.xml supabase/functions/parse-cfdi-xml/validarNcProveedor_test.ts
+```
+
+El recolector verifica hashes y fuentes y analiza el JUnit como XML sin
+scripts ni recursos externos. Exige los tres nombres originales únicos;
+rechaza comentarios como casos, CDATA, duplicados, XML malformado y DOCTYPE.
+
+La adquisición autorizada del runtime se distingue de la ejecución del test,
+que no tuvo permisos de red ni secretos. El parser de la GUI sigue simulado;
+las 22 aserciones Node son una comprobación separada y su propio reporte
+conserva `denoSuiteExecuted: false` porque ese script no ejecuta Deno.
+No se acreditan ACL/RLS ni estado fiscal reales. No se consultaron Gmail,
+backend, BD, SAT ni servicios de timbrado; no hubo registro, borrado, subida,
+merge del PR o despliegue reales.
 
 `evidence/` contiene un resumen JSON, aserciones/red por caso, capturas sintéticas
 y logs de validación. Los reportes completos temporales quedan ignorados en
