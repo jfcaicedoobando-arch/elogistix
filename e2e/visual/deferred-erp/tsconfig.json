@@ -1,0 +1,5 @@
+{
+  "extends": "../../../tsconfig.app.json",
+  "compilerOptions": { "incremental": false, "types": ["node", "vite/client"] },
+  "include": ["./**/*.ts", "./**/*.tsx"]
+}

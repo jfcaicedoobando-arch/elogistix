@@ -1,0 +1,153 @@
+{
+  "baseCommit": "9af3859fabd6e57343cb5fadd4494a0a14579cb2",
+  "generatedAt": "2026-10-17T20:46:27.405Z",
+  "scope": "Local synthetic components and in-memory backend only; no production/staging certification",
+  "validation": {
+    "typecheck": "passed",
+    "eslint": "passed",
+    "isolatedBuild": "passed; forbidden dependency guard active"
+  },
+  "unit": {
+    "files": 7,
+    "passed": 100,
+    "failed": 0,
+    "pending": 0
+  },
+  "gui": {
+    "passed": 26,
+    "failed": 0,
+    "flaky": 0,
+    "skipped": 0,
+    "retries": 0,
+    "viewports": [
+      "1280x720",
+      "390x640"
+    ],
+    "browser": "Isolated Playwright Chromium 156.0.8078.4 (revision1248)",
+    "screenshotCount": 34
+  },
+  "network": {
+    "fixtureGetRequests": 78,
+    "blockedAttempts": 0,
+    "browserErrors": 0,
+    "externalRequests": 0,
+    "nonGetRequests": 0,
+    "serviceWorkers": "blocked",
+    "webSockets": "blocked"
+  },
+  "localXmlParser": {
+    "assertions": 22,
+    "passed": true,
+    "denoSuiteExecuted": false
+  },
+  "blocker": "Original Deno suite not executed: runtime unavailable; auto-review rejected network download. Requires a locally authorized Deno runtime.",
+  "notExecuted": [
+    "real Gmail",
+    "real Supabase/database/RLS/ACL",
+    "real writes/deletes/uploads",
+    "SAT or stamping",
+    "production/staging E2E",
+    "merge or deployment"
+  ],
+  "productDefectsObserved": [],
+  "harnessCorrectionsBeforeFinalRun": [
+    "Add QueryClientProvider to XML fixture",
+    "Match accessible typographic dash and normalized case in Correo selectors",
+    "Refactor CRM mock to satisfy complexity rule",
+    "Use production Toaster and ThemeProvider for matching toast placement"
+  ],
+  "fixtureInputs": [
+    {
+      "path": "e2e/visual/deferred-erp/backend.ts",
+      "sha256": "7dbb999e51dcb86adf384f9aa6981427bbf4591730f9751f777cb2a13d04178a"
+    },
+    {
+      "path": "e2e/visual/deferred-erp/collect-evidence.mjs",
+      "sha256": "14a9d1a2db152929c45b198c44995af817b854ce8d1567c74e45c75a787c3615"
+    },
+    {
+      "path": "e2e/visual/deferred-erp/correo-backend.ts",
+      "sha256": "cd482ac24d92b9a5ac36621594daaf890121022673e27959ad0834c3d27c5f2e"
+    },
+    {
+      "path": "e2e/visual/deferred-erp/CorreoFixture.tsx",
+      "sha256": "0e037f4241671cd915b7b5be55804093c579a29f8bd01a5585d8d6006d26a737"
+    },
+    {
+      "path": "e2e/visual/deferred-erp/crm-backend.ts",
+      "sha256": "195ee6c6fa1c66174dd4e9621895601339133dd1f60da3ad75d022022f2e0747"
+    },
+    {
+      "path": "e2e/visual/deferred-erp/CrmFixture.tsx",
+      "sha256": "984cc49442a5609b3a8ac9d0430f61ce06b9506ed67c2aff4d8b3483b50cc5db"
+    },
+    {
+      "path": "e2e/visual/deferred-erp/empty-env/.gitkeep",
+      "sha256": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b"
+    },
+    {
+      "path": "e2e/visual/deferred-erp/index.html",
+      "sha256": "21001acc2e4be1b0be9706023774bd70c1ec51408cb5b12c9e923574a97e625d"
+    },
+    {
+      "path": "e2e/visual/deferred-erp/main.tsx",
+      "sha256": "cfd3ebb4c4cc7a7ef3e9658ed1beb9eac0f57d6508b57e86db0c5044183e88af"
+    },
+    {
+      "path": "e2e/visual/deferred-erp/playwright.config.ts",
+      "sha256": "e310934e7c3ffe24b0c793f23dadb204eda616a6d657551bb5714ee6c75e3248"
+    },
+    {
+      "path": "e2e/visual/deferred-erp/README.md",
+      "sha256": "3634ff9db0f2fb292f5dafa577d8d290831dd4a0068288b715948806b4696e37"
+    },
+    {
+      "path": "e2e/visual/deferred-erp/specs/correo.spec.ts",
+      "sha256": "0d15694ead6f0f86063f736da5c0dff54465321b035307d6a5517c4866d3d77b"
+    },
+    {
+      "path": "e2e/visual/deferred-erp/specs/crm.spec.ts",
+      "sha256": "fea527c6234c6c016bc78ec271ba1c37b25551faddfd217453faafa4521adf00"
+    },
+    {
+      "path": "e2e/visual/deferred-erp/specs/helpers.ts",
+      "sha256": "4153ac8a4b73594120c718095383621c8e19877f7defe3ed926ee94cf9f36101"
+    },
+    {
+      "path": "e2e/visual/deferred-erp/specs/xml.spec.ts",
+      "sha256": "0eeebd1da9cc34c29b6837031a24f5ffaf979c11f40970a1568529e1d7eb0e73"
+    },
+    {
+      "path": "e2e/visual/deferred-erp/tsconfig.json",
+      "sha256": "a9b5d2396697b447266792cf25d486848b7622c5b68261ee51eef19521ba4e77"
+    },
+    {
+      "path": "e2e/visual/deferred-erp/unit-network-guard.ts",
+      "sha256": "0f83904dcff06dbc8378d7e059964722e76d1b72fd6561201506f2cfc864559f"
+    },
+    {
+      "path": "e2e/visual/deferred-erp/unit-no-backend.ts",
+      "sha256": "00a75d6d2a804ea933289402fa090f726af11d32ba589766d7a135e655b18dfb"
+    },
+    {
+      "path": "e2e/visual/deferred-erp/vite.config.ts",
+      "sha256": "149c54a6d19eca7ae368327275a6f9b499dd92ba8d2da4233388e2ecf29b10d7"
+    },
+    {
+      "path": "e2e/visual/deferred-erp/vitest.config.ts",
+      "sha256": "8430c8ef3d376f754d3f1022b1d6fadb8511785bad5fff319039abf01c465311"
+    },
+    {
+      "path": "e2e/visual/deferred-erp/xml-backend.ts",
+      "sha256": "64deef8f8710810a44992afdb19d70d76b1b9ef62337c06bdc719d48eecdd365"
+    },
+    {
+      "path": "e2e/visual/deferred-erp/xml-parser-local.mjs",
+      "sha256": "918f7103e17e2353f937b69f32b282f9699b026f47bb4a189b15e71dd6eca108"
+    },
+    {
+      "path": "e2e/visual/deferred-erp/XmlFixture.tsx",
+      "sha256": "8f5fb4f3e2d369ab10bad5a624d71da449f9556e333f8194fa827dee8ae330ff"
+    }
+  ]
+}
