@@ -1,0 +1,23 @@
+{
+  "runtimes": { "node": "v24.22.0", "bun": "1.4.0", "knip": "6.41.0" },
+  "checks": [
+    { "command": "bun install --frozen-lockfile --ignore-scripts", "exit": 0, "lockfileChanged": false },
+    { "command": "node node_modules/knip/bin/knip.js --no-progress", "phase": "before", "exit": 0, "cssConfigurationHints": 1 },
+    { "command": "node node_modules/knip/bin/knip.js --no-progress --reporter json", "phase": "before", "exit": 0, "issues": 0 },
+    { "command": "node node_modules/knip/bin/knip.js --no-progress", "phase": "after", "exit": 0, "configurationHints": 0 },
+    { "command": "node node_modules/knip/bin/knip.js --no-progress --reporter json", "phase": "after", "exit": 0, "issues": 0 },
+    { "command": "node node_modules/knip/bin/knip.js --no-progress", "phase": "after-probe-cleanup", "exit": 0, "configurationHints": 0 },
+    { "command": "node node_modules/vitest/vitest.mjs run src/pdf/theme/__tests__/fontAssets.test.ts scripts/__tests__/check-css-size.test.ts", "exit": 0, "filesPassed": 2, "testsPassed": 21 },
+    { "command": "node node_modules/typescript/bin/tsc -b", "exit": 0 },
+    { "command": "node node_modules/eslint/bin/eslint.js . --max-warnings=0", "exit": 0 },
+    { "command": "node node_modules/vite/bin/vite.js build", "exit": 0, "htmlBundleVerification": "passed", "sentryUploadEnabled": false },
+    { "command": "node scripts/check-css-size.mjs dist/assets --json", "exit": 0, "budgetPassed": true },
+    { "command": "git diff --check", "exit": 0 },
+    { "command": "git diff --exit-code 9af3859fabd6e57343cb5fadd4494a0a14579cb2 -- src scripts .github package.json bun.lock", "exit": 0 }
+  ],
+  "coverageControls": { "cssOrphanRejected": true, "transitiveCssUnlistedDependencyRejected": true, "cleanupVerified": true },
+  "review": { "readOnlySubagent": "css_coverage_review", "findings": 0 },
+  "remainingDiagnostics": ["Sentry auth token absent", "Vite native config recommendation", "React SWC recommendation in focused tests", "Vite large chunks"],
+  "omitted": ["Full ERP test suite", "Database/RLS suites", "Browser suites", "Deployments"],
+  "mergeRequested": false
+}
