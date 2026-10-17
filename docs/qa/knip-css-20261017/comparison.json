@@ -1,0 +1,37 @@
+{
+  "base": "9af3859fabd6e57343cb5fadd4494a0a14579cb2",
+  "runtimes": {
+    "node": "v24.22.0",
+    "bun": "1.4.0",
+    "knip": "6.41.0"
+  },
+  "projectChange": {
+    "before": "src/**/*.{ts,tsx}",
+    "after": "src/**/*.{ts,tsx,css}"
+  },
+  "configurationEqualsBaseWithOnlyProjectExtensionAdded": true,
+  "configurationComparisonNormalizesWindowsLineEndings": true,
+  "inventory": {
+    "before": {
+      "issues": []
+    },
+    "after": {
+      "issues": []
+    },
+    "exactEqual": true,
+    "beforeSha256": "32a45b2a0dfc651ccd5a8355d6f4cb56b8a6b1bc10cbd8281506e37622317d19",
+    "afterSha256": "32a45b2a0dfc651ccd5a8355d6f4cb56b8a6b1bc10cbd8281506e37622317d19"
+  },
+  "cssHint": {
+    "before": 1,
+    "after": 0,
+    "final": 0
+  },
+  "protectedPathsEqualBase": [
+    "src",
+    "scripts",
+    ".github",
+    "package.json",
+    "bun.lock"
+  ]
+}

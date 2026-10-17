@@ -1,0 +1,16 @@
+{
+  "files": [
+    {
+      "file": "index-CIDV54XG.css",
+      "sha256": "1a4adb8b8a74f032d85f6fed40998849f1daf79e191db0a5b1ebf0f893aeb7cf",
+      "raw": 196588,
+      "gzip": 27568,
+      "brotli": 21163
+    }
+  ],
+  "total": {
+    "raw": 196588,
+    "gzip": 27568,
+    "brotli": 21163
+  }
+}
