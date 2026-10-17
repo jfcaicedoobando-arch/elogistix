@@ -1,13 +1,46 @@
 {
+  "status": "passed",
+  "runId": "e0dff401-003e-4ab7-9c14-0920fd797c2c",
+  "startedAt": "2026-10-17T21:02:28.494Z",
   "baseCommit": "b02c3391a97ea7d54b0a6b0b514c4626738ab639",
   "initialBaseCommit": "9af3859fabd6e57343cb5fadd4494a0a14579cb2",
   "integration": "main PR387 retained unchanged; validation repeated on integrated tree",
-  "generatedAt": "2026-10-17T20:49:49.233Z",
+  "generatedAt": "2026-10-17T21:02:55.947Z",
   "scope": "Local synthetic components and in-memory backend only; no production/staging certification",
   "validation": {
-    "typecheck": "passed",
-    "eslint": "passed",
-    "isolatedBuild": "passed; forbidden dependency guard active"
+    "status": "passed",
+    "proof": "validation-results.json",
+    "runId": "e0dff401-003e-4ab7-9c14-0920fd797c2c",
+    "commands": [
+      {
+        "name": "typecheck",
+        "exitCode": 0,
+        "signal": null,
+        "spawnError": null
+      },
+      {
+        "name": "lint",
+        "exitCode": 0,
+        "signal": null,
+        "spawnError": null
+      },
+      {
+        "name": "build",
+        "exitCode": 0,
+        "signal": null,
+        "spawnError": null
+      }
+    ],
+    "sourceBefore": {
+      "algorithm": "sha256",
+      "digest": "de70f14c49ba332e0257fd84326daaa56d2abcbef625a6ccccbf4be4e6a55f83",
+      "fileCount": 6882
+    },
+    "sourceAfter": {
+      "algorithm": "sha256",
+      "digest": "de70f14c49ba332e0257fd84326daaa56d2abcbef625a6ccccbf4be4e6a55f83",
+      "fileCount": 6882
+    }
   },
   "unit": {
     "files": 7,
@@ -64,12 +97,16 @@
       "sha256": "7dbb999e51dcb86adf384f9aa6981427bbf4591730f9751f777cb2a13d04178a"
     },
     {
+      "path": "e2e/visual/deferred-erp/collect-evidence.d.mts",
+      "sha256": "d4c6961406ddae9e6b2f9de83dc20bf6c749cfd6634535a2e302b6f2729cdc07"
+    },
+    {
       "path": "e2e/visual/deferred-erp/collect-evidence.mjs",
-      "sha256": "5d42342b048111fc757ad9a09a4382bfe8472d08b1090c1b73cc2bd5a62552b0"
+      "sha256": "f4d72122ffed3652b720175b65d8ccc1ce5680745db9c28ca2236ad2135c14f3"
     },
     {
       "path": "e2e/visual/deferred-erp/correo-backend.ts",
-      "sha256": "cd482ac24d92b9a5ac36621594daaf890121022673e27959ad0834c3d27c5f2e"
+      "sha256": "609abedf0a36eb4f9b4cc48c0f1beb9891b608a8bd7dcb9d484dad82b0790f5d"
     },
     {
       "path": "e2e/visual/deferred-erp/CorreoFixture.tsx",
@@ -101,7 +138,7 @@
     },
     {
       "path": "e2e/visual/deferred-erp/README.md",
-      "sha256": "37c86686968c4a6c7d089faaa746aed3c181e8a192458cc890338b657ccb6f20"
+      "sha256": "6cf00d8569d15210923f0792f082bd7d905ede5600c9fa2d089d4a4a38882937"
     },
     {
       "path": "e2e/visual/deferred-erp/specs/correo.spec.ts",
@@ -117,11 +154,11 @@
     },
     {
       "path": "e2e/visual/deferred-erp/specs/xml.spec.ts",
-      "sha256": "0eeebd1da9cc34c29b6837031a24f5ffaf979c11f40970a1568529e1d7eb0e73"
+      "sha256": "760b89304ed668e6c9fdf2d6473a6e75b97783170b697228c420b85f677a6a50"
     },
     {
       "path": "e2e/visual/deferred-erp/tsconfig.json",
-      "sha256": "a9b5d2396697b447266792cf25d486848b7622c5b68261ee51eef19521ba4e77"
+      "sha256": "a3e7eabb3c9983ff632289d7135884561d4bceaa6bb7634c48bbdb20f8533ef7"
     },
     {
       "path": "e2e/visual/deferred-erp/unit-network-guard.ts",
@@ -130,6 +167,14 @@
     {
       "path": "e2e/visual/deferred-erp/unit-no-backend.ts",
       "sha256": "00a75d6d2a804ea933289402fa090f726af11d32ba589766d7a135e655b18dfb"
+    },
+    {
+      "path": "e2e/visual/deferred-erp/validation-checks.d.mts",
+      "sha256": "07d225be5ee02515c5cef6a56317946c6c90a94df2760e62cbf861c98ed50916"
+    },
+    {
+      "path": "e2e/visual/deferred-erp/validation-checks.mjs",
+      "sha256": "a5a10e0a7b5e91aaec7c025e1f74f7bd0b939bb548a4fe6eb0c367811638628a"
     },
     {
       "path": "e2e/visual/deferred-erp/vite.config.ts",
@@ -141,7 +186,7 @@
     },
     {
       "path": "e2e/visual/deferred-erp/xml-backend.ts",
-      "sha256": "64deef8f8710810a44992afdb19d70d76b1b9ef62337c06bdc719d48eecdd365"
+      "sha256": "ceb875fa77425241ae478e01513cb85bd0c41cfc2493ef4b7c7e04579f53d220"
     },
     {
       "path": "e2e/visual/deferred-erp/xml-parser-local.mjs",

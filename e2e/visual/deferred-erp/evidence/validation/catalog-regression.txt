@@ -1,0 +1,23 @@
+(!) Your Vite config uses features that are unsupported by `configLoader: 'native'`, which is planned to become the default in a future major version of Vite:
+  - import "../../../vitest.config" without a file extension (e2e/visual/deferred-erp/vitest.config.ts:3:18). Add the file extension
+  - `__dirname` (vitest.config.ts:15:14). Use `import.meta.dirname` instead
+  - import "./scripts/lib/testEnvSplit" without a file extension (vitest.config.ts:3:41). Add the file extension
+  - import "./vitest.shared" without a file extension (vitest.config.ts:9:8). Add the file extension
+Set `VITE_CONFIG_NATIVE_IGNORE_WARNING=true` to suppress this warning.
+[vite:react-swc] We recommend switching to `@vitejs/plugin-react` for improved performance as no swc plugins are used. More information at https://vite.dev/rolldown
+[vite:react-swc] We recommend switching to `@vitejs/plugin-react` for improved performance as no swc plugins are used. More information at https://vite.dev/rolldown
+[vite:react-swc] We recommend switching to `@vitejs/plugin-react` for improved performance as no swc plugins are used. More information at https://vite.dev/rolldown
+
+ RUN  v5.0.3 C:/Users/torta/Documents/Codex/2026-10-17/task-3/elogistix-deferred
+
+ Γ£ô |node| src/__tests__/scripts/deferredErpCatalog.test.ts (6 tests) 65ms
+ Γ£ô |node| src/__tests__/scripts/virtualizationCatalog.test.ts (6 tests) 44ms
+ Γ£ô |node| src/__tests__/scripts/deferredErpEvidence.test.ts (13 tests) 360ms
+ Γ£ô |node| src/__tests__/scripts/dependencyAuditCatalog.test.ts (5 tests) 44ms
+
+ Test Files  4 passed (4)
+      Tests  30 passed (30)
+   Start at  14:59:45
+   Duration  995ms (tests 50%, transform 32%, setup 6%, import 6%, worker 6%)
+
+JSON report written to C:/Users/torta/Documents/Codex/2026-10-17/task-3/elogistix-deferred/reports/deferred-erp/catalog-regression-results.json

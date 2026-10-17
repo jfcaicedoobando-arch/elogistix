@@ -1,11 +1,31 @@
-import { createHash } from "node:crypto";
+import { createHash, randomUUID } from "node:crypto";
 import { copyFile, mkdir, readFile, readdir, writeFile } from "node:fs/promises";
-import { basename, dirname, join, relative } from "node:path";
+import { basename, join, relative, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
+import { fingerprintSources, runValidation } from "./validation-checks.mjs";
 
-const fixture = dirname(fileURLToPath(import.meta.url));
-const root = fileURLToPath(new URL("../../../", import.meta.url));
+const repositoryRoot = fileURLToPath(new URL("../../../", import.meta.url));
+
+export async function collectEvidence({ root = repositoryRoot, execute } = {}) {
+const fixture = join(root, "e2e/visual/deferred-erp");
 const output = join(fixture, "evidence");
+const runId = randomUUID();
+const startedAt = new Date().toISOString();
+await mkdir(output, { recursive: true });
+// Immediately replace an earlier PASS, including when fresh checks fail before
+// any GUI/unit reports can be loaded. Old screenshots cannot certify this run.
+await writeFile(join(output, "summary.json"), JSON.stringify({ status: "running", runId, startedAt }, null, 2) + "\n");
+await writeFile(join(output, "validation-results.json"), JSON.stringify({ status: "running", runId, startedAt }, null, 2) + "\n");
+try {
+const validation = await runValidation({ root, runId, ...(execute ? { execute } : {}) });
+await mkdir(join(output, "validation"), { recursive: true });
+for (const command of validation.commands) {
+  const log = await readFile(join(root, command.log.path));
+  if (createHash("sha256").update(log).digest("hex") !== command.log.sha256) throw new Error(`Validation log changed: ${command.name}`);
+  command.log.evidencePath = `validation/${command.name}.txt`;
+  await writeFile(join(output, command.log.evidencePath), log);
+}
+await writeFile(join(output, "validation-results.json"), JSON.stringify(validation, null, 2) + "\n");
 const readJson = async path => JSON.parse(await readFile(join(root, path), "utf8"));
 const browser = await readJson("reports/deferred-erp/results.json");
 const unit = await readJson("reports/deferred-erp/unit-results.json");
@@ -67,18 +87,23 @@ const unitFiles = unit.testResults.map(file => ({
   path: relative(root, file.name).replaceAll("\\", "/"), status: file.status,
   assertions: file.assertionResults.map(assertion => ({ name: assertion.fullName, status: assertion.status })),
 }));
-for (const name of ["build", "typecheck", "lint", "unit", "browser"]) {
+for (const name of ["unit", "browser"]) {
   const log = await readFile(join(root, "reports", "deferred-erp", `${name}.log`), "utf8");
   await writeFile(join(output, "validation", `${name}.txt`), log.replaceAll("\r\n", "\n").replace(/[ \t]+$/gm, ""));
 }
 const network = cases.map(item => item.facts.find(fact => fact.network).network);
 const summary = {
+  status: "passed", runId, startedAt,
   baseCommit: "b02c3391a97ea7d54b0a6b0b514c4626738ab639",
   initialBaseCommit: "9af3859fabd6e57343cb5fadd4494a0a14579cb2",
   integration: "main PR387 retained unchanged; validation repeated on integrated tree",
   generatedAt: new Date().toISOString(),
   scope: "Local synthetic components and in-memory backend only; no production/staging certification",
-  validation: { typecheck: "passed", eslint: "passed", isolatedBuild: "passed; forbidden dependency guard active" },
+  validation: {
+    status: validation.status, proof: "validation-results.json", runId: validation.runId,
+    commands: validation.commands.map(({ name, exitCode, signal, spawnError }) => ({ name, exitCode, signal, spawnError })),
+    sourceBefore: validation.sourceBefore, sourceAfter: validation.sourceAfter,
+  },
   unit: { files: unitFiles.length, passed: unit.numPassedTests, failed: unit.numFailedTests, pending: unit.numPendingTests },
   gui: { passed: expected, failed: unexpected, flaky, skipped, retries: 0, viewports: ["1280x720", "390x640"], browser: "Isolated Playwright Chromium 156.0.8078.4 (revision1248)", screenshotCount: screenshots.length },
   network: { fixtureGetRequests: network.reduce((count, item) => count + item.requests.length, 0), blockedAttempts: network.reduce((count, item) => count + item.blocked.length, 0), browserErrors: network.reduce((count, item) => count + item.errors.length, 0), externalRequests: 0, nonGetRequests: 0, serviceWorkers: "blocked", webSockets: "blocked" },
@@ -89,9 +114,28 @@ const summary = {
   harnessCorrectionsBeforeFinalRun: ["Add QueryClientProvider to XML fixture", "Match accessible typographic dash and normalized case in Correo selectors", "Refactor CRM mock to satisfy complexity rule", "Use production Toaster and ThemeProvider for matching toast placement"],
   fixtureInputs: inputs,
 };
-await writeFile(join(output, "summary.json"), JSON.stringify(summary, null, 2) + "\n");
 await writeFile(join(output, "assertions-network.json"), JSON.stringify({ cases }, null, 2) + "\n");
 await writeFile(join(output, "unit-results.json"), JSON.stringify({ files: unitFiles }, null, 2) + "\n");
 await writeFile(join(output, "xml-parser-local.json"), JSON.stringify(parser, null, 2) + "\n");
 await writeFile(join(output, "screenshots.json"), JSON.stringify(screenshots, null, 2) + "\n");
+if ((await fingerprintSources(root)).digest !== validation.sourceAfter.digest) throw new Error("Validation source drift: inputs changed before evidence publication");
+await writeFile(join(output, "summary.json"), JSON.stringify(summary, null, 2) + "\n");
 console.log(`Collected ${cases.length} passing GUI cases, ${screenshots.length} screenshots, 100 unit tests and 22 local parser assertions.`);
+return summary;
+} catch (error) {
+  const failure = { status: "failed", runId, startedAt, generatedAt: new Date().toISOString(), error: error.message ?? String(error) };
+  await writeFile(join(output, "summary.json"), JSON.stringify(failure, null, 2) + "\n");
+  let proof = failure;
+  try {
+    const freshProof = JSON.parse(await readFile(join(root, "reports/deferred-erp/validation-results.json"), "utf8"));
+    if (freshProof.runId === runId) proof = freshProof;
+  } catch { /* An absent proof remains failed; never reuse a previous run. */ }
+  await writeFile(join(output, "validation-results.json"), JSON.stringify(proof, null, 2) + "\n");
+  throw error;
+}
+}
+
+if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
+  if (process.argv.length !== 2) throw new Error("The evidence CLI does not accept validation overrides");
+  await collectEvidence();
+}

@@ -101,15 +101,58 @@ export const correoSupabase = {
   },
 };
 
+function assertTarifaWriteScope(org: string) {
+  if ((scenario !== "ready" && scenario !== "conflict-late") || org !== organizationId ||
+    (org !== CORREO_IDS.orgA && org !== CORREO_IDS.orgB) || writes.length !== 0 ||
+    invocations[invocations.length - 1]?.organizationId !== org) {
+    throw new Error("Unexpected synthetic tariff write scope or scenario");
+  }
+}
+
+function assertTarifaPreparation(org: string) {
+  const completedRead = reads.some(read => read.table === "costeo_tarifas" && read.error === null && read.count < 1000 &&
+    read.filters.length === 1 && read.filters[0][0] === "organization_id" && read.filters[0][1] === org);
+  if (!completedRead || reads.some(read => read.error !== null)) throw new Error("Synthetic tariff write requires complete successful preparation");
+}
+
+function assertTarifaPayload(input: Row) {
+  const expected: Row = {
+    agente_id: CORREO_IDS.agent, naviera_id: CORREO_IDS.carrier, ruta_id: CORREO_IDS.route,
+    tipo_contenedor_id: CORREO_IDS.preparedType, flete_base: 1000, dias_libres_demoras: 21,
+    vigente_desde: "2026-10-17", vigente_hasta: "2026-10-31", notas: "ETD 19-Oct. Naviera: MSK", recargos: [],
+  };
+  // TarifaInput has no currency/status/scope fields: adding moneda, estado,
+  // estado_aprobacion, organization_id or any other unexpected property rejects.
+  const keys = Object.keys(expected);
+  if (!input || Object.getPrototypeOf(input) !== Object.prototype || Reflect.ownKeys(input).length !== keys.length ||
+    keys.some(key => !Object.prototype.hasOwnProperty.call(input, key))) {
+    throw new Error("Unexpected synthetic tariff payload properties");
+  }
+  for (const key of keys) {
+    const valid = key === "recargos"
+      ? Array.isArray(input.recargos) && input.recargos.length === 0 && Reflect.ownKeys(input.recargos).length === 1
+      : input[key] === expected[key];
+    if (!valid) throw new Error(`Unexpected synthetic tariff payload: ${key}`);
+  }
+}
+
+function assertExpectedTarifa(org: string, input: Row) {
+  assertTarifaWriteScope(org);
+  assertTarifaPreparation(org);
+  assertTarifaPayload(input);
+}
+
 export async function insertTarifaConRecargos(org: string, input: Row) {
+  assertExpectedTarifa(org, input);
   writes.push({ kind: "tarifa", organizationId: org, input: structuredClone(input) }); notify(); return { id: "synthetic-created-rate" };
 }
-export async function insertCosteoRuta(org: string, input: Row) {
-  writes.push({ kind: "ruta", organizationId: org, input: structuredClone(input) }); notify(); return { id: "synthetic-created-route" };
+// Every scenario supplies its existing route and catalogs. No creation is allowed.
+export async function insertCosteoRuta(_org: string, _input: Row): Promise<never> {
+  throw new Error("Route creation is forbidden in the synthetic correo scenarios");
 }
-export async function insertPuerto(input: Row) {
-  writes.push({ kind: "puerto", input: structuredClone(input) }); notify(); return { id: "synthetic-created-port" };
+export async function insertPuerto(_input: Row): Promise<never> {
+  throw new Error("Port creation is forbidden in the synthetic correo scenarios");
 }
-export async function insertNaviera(input: Row) {
-  writes.push({ kind: "naviera", input: structuredClone(input) }); notify(); return { id: "synthetic-created-carrier" };
+export async function insertNaviera(_input: Row): Promise<never> {
+  throw new Error("Carrier creation is forbidden in the synthetic correo scenarios");
 }

@@ -2,9 +2,9 @@
 
 Base inicial: `9af3859fabd6e57343cb5fadd4494a0a14579cb2`. Se incorporó `main`
 `b02c3391a97ea7d54b0a6b0b514c4626738ab639` conservando íntegro el PR387 de Knip.
-Frente a esa base sólo se añade este harness; no modifica producción,
-package/lock, Knip, permisos ni datos. La evidencia final se repitió sobre el
-árbol integrado.
+Frente a esa base se añade este harness y el registro mínimo del catálogo con
+su prueba de regresión; no modifica producción, package/lock, Knip, permisos
+ni datos. La evidencia final se repitió sobre el árbol integrado.
 `AGENTS.md` y `src/features/crm/AGENTS.md` se leyeron; `.agents/skills` no existe
 en esta base/clon. El patrón de aislamiento es `../audit119-126`.
 
@@ -38,6 +38,12 @@ Después de una ejecución completa se puede consolidar la evidencia:
 node e2e/visual/deferred-erp/collect-evidence.mjs
 ```
 
+El recolector ejecuta de nuevo typecheck, ESLint y build. Sólo publica `passed`
+con códigos de salida reales iguales a cero, sin señal ni error de proceso.
+`validation-results.json` registra comandos, tiempos, hashes de logs y de
+fuentes antes/después. Un fallo, resultado ausente o cambio de fuentes deja el
+resumen en `failed`; se invalida el resumen previo al iniciar la ejecución.
+
 ## Cobertura
 
 - Correo PR372: `ExtraerCorreoDialog`, servicios de lectura/preparación/selección
@@ -63,12 +69,20 @@ La GUI tiene 26 casos, 13 por viewport (1280x720 y 390x640), reloj/idioma/zona f
 sin retries ni skips. Capturas y JSON prueban comportamiento, no comparación
 contra un baseline de píxeles ni una certificación de producción/staging.
 
+Los tres specs están registrados por ruta exacta en el catálogo como
+`playwright-isolated` con `mode: manual`. El workflow `Isolated UI audit`
+actual sólo ejecuta los otros cinco fixtures; no ejecuta `deferred-erp`.
+La evidencia de estos 26 casos corresponde a la ejecución local de Chromium.
+
 ## Aislamiento y límites
 
 Vite independiente: `publicDir:false`, directorio env vacío, sin sourcemaps ni
 config de aplicación. Alias reemplazan fronteras de backend; el build rechaza
 bootstrap, main/App, persistBootstrap, cliente real Supabase y SDK Supabase/Sentry.
 La UI usa feedback real Sonner con transporte de telemetría sustituido.
+Los escritores simulados comprueban organización/factura, preparación, modo y
+payload exactos antes de registrar efectos; también rechazan altas no usadas,
+UUIDs inesperados y adjuntos que no correspondan al contenido ficticio.
 
 Sólo se sirve el build estático en `127.0.0.1:8097`. Playwright lanza su Chromium
 headless aislado, bloquea service workers, WebSockets y toda petición fuera de
@@ -87,3 +101,10 @@ no hubo registro, borrado, subida, merge o despliegue reales.
 `evidence/` contiene un resumen JSON, aserciones/red por caso, capturas sintéticas
 y logs de validación. Los reportes completos temporales quedan ignorados en
 `reports/deferred-erp/` y `test-results/deferred-erp/`.
+
+Las regresiones de registro manual y evidencia se verifican por separado de las
+100 pruebas funcionales originales. La comprobación auxiliar completa
+`ciTestEvidence.test.ts` tuvo cuatro fallos locales de plataforma en Windows:
+un contrato lee YAML suponiendo LF y tres contratos requieren Bash ausente.
+No se modificaron ni omitieron esos controles; el resultado se conserva en
+`evidence/catalog-registration.json` junto con las regresiones del clasificador.

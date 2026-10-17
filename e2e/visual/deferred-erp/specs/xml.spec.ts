@@ -25,6 +25,7 @@ async function evidence(page: Page, testInfo: TestInfo, network: Awaited<ReturnT
   expect(network.blocked).toEqual([]);
   expect(network.errors).toEqual([]);
   const state = await page.evaluate(() => window.__xmlEvidence);
+  expect(state.guardFailures).toEqual([]);
   expect(state.parses.every(call => call.contentMatches && call.facturaId === FACTURA)).toBe(true);
   await testInfo.attach("xml-assertions-network", { body: JSON.stringify({ assertions, fixture: state, network }, null, 2), contentType: "application/json" });
 }

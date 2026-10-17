@@ -98,6 +98,12 @@ export function classifyFiles(files, guards, sqlSupport) {
       else if (file === 'e2e/visual/virtualization/specs/keyboard-sorting.spec.ts') lane = 'playwright-isolated';
       else if (file === 'e2e/visual/cxp-filters/specs/focus.spec.ts') lane = 'playwright-isolated';
       else if (file === 'e2e/visual/dependency-audit/specs/demo.spec.ts') lane = 'playwright-isolated';
+      // Local isolated evidence exists; no ordinary CI runner executes these specs yet.
+      else if ([
+        'e2e/visual/deferred-erp/specs/correo.spec.ts',
+        'e2e/visual/deferred-erp/specs/crm.spec.ts',
+        'e2e/visual/deferred-erp/specs/xml.spec.ts',
+      ].includes(file)) { lane = 'playwright-isolated'; mode = 'manual'; }
       else if (file === 'e2e/visual/specs/shared-ui.spec.ts') { lane = 'playwright-visual'; mode = 'manual'; }
       else throw new Error(`Test has no execution lane: ${file}`);
     }

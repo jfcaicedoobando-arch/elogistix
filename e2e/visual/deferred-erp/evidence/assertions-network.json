@@ -5,7 +5,7 @@
       "project": "desktop-1280x720",
       "title": "correo.spec.ts / prepara sin escrituras ni conexiones a Gmail",
       "status": "passed",
-      "durationMs": 3542,
+      "durationMs": 3440,
       "facts": [
         {
           "name": "correo-assertions-and-network",
@@ -166,7 +166,7 @@
           "network": {
             "requests": [
               "GET http://127.0.0.1:8097/",
-              "GET http://127.0.0.1:8097/assets/index-CQP3O7Lh.js",
+              "GET http://127.0.0.1:8097/assets/index-C-yc-kqi.js",
               "GET http://127.0.0.1:8097/assets/index-a26HoMQR.css"
             ],
             "blocked": [],
@@ -183,7 +183,7 @@
       "project": "desktop-1280x720",
       "title": "correo.spec.ts / excluye el conflicto de segunda página y conserva UUID preparado sólo por elección explícita",
       "status": "passed",
-      "durationMs": 1054,
+      "durationMs": 877,
       "facts": [
         {
           "name": "correo-assertions-and-network",
@@ -377,7 +377,7 @@
           "network": {
             "requests": [
               "GET http://127.0.0.1:8097/",
-              "GET http://127.0.0.1:8097/assets/index-CQP3O7Lh.js",
+              "GET http://127.0.0.1:8097/assets/index-C-yc-kqi.js",
               "GET http://127.0.0.1:8097/assets/index-a26HoMQR.css"
             ],
             "blocked": [],
@@ -395,7 +395,7 @@
       "project": "desktop-1280x720",
       "title": "correo.spec.ts / error-conflicts: error en segunda página bloquea carga y altas",
       "status": "passed",
-      "durationMs": 698,
+      "durationMs": 667,
       "facts": [
         {
           "name": "correo-assertions-and-network",
@@ -572,7 +572,7 @@
           "network": {
             "requests": [
               "GET http://127.0.0.1:8097/",
-              "GET http://127.0.0.1:8097/assets/index-CQP3O7Lh.js",
+              "GET http://127.0.0.1:8097/assets/index-C-yc-kqi.js",
               "GET http://127.0.0.1:8097/assets/index-a26HoMQR.css"
             ],
             "blocked": [],
@@ -589,7 +589,7 @@
       "project": "desktop-1280x720",
       "title": "correo.spec.ts / error-catalog: error en segunda página bloquea carga y altas",
       "status": "passed",
-      "durationMs": 702,
+      "durationMs": 739,
       "facts": [
         {
           "name": "correo-assertions-and-network",
@@ -750,7 +750,7 @@
           "network": {
             "requests": [
               "GET http://127.0.0.1:8097/",
-              "GET http://127.0.0.1:8097/assets/index-CQP3O7Lh.js",
+              "GET http://127.0.0.1:8097/assets/index-C-yc-kqi.js",
               "GET http://127.0.0.1:8097/assets/index-a26HoMQR.css"
             ],
             "blocked": [],
@@ -767,7 +767,7 @@
       "project": "desktop-1280x720",
       "title": "correo.spec.ts / inactive-global: catálogo existente inactivo no se ofrece para alta ni importación",
       "status": "passed",
-      "durationMs": 745,
+      "durationMs": 665,
       "facts": [
         {
           "name": "correo-assertions-and-network",
@@ -928,7 +928,7 @@
           "network": {
             "requests": [
               "GET http://127.0.0.1:8097/",
-              "GET http://127.0.0.1:8097/assets/index-CQP3O7Lh.js",
+              "GET http://127.0.0.1:8097/assets/index-C-yc-kqi.js",
               "GET http://127.0.0.1:8097/assets/index-a26HoMQR.css"
             ],
             "blocked": [],
@@ -945,7 +945,7 @@
       "project": "desktop-1280x720",
       "title": "correo.spec.ts / inactive-org: catálogo existente inactivo no se ofrece para alta ni importación",
       "status": "passed",
-      "durationMs": 707,
+      "durationMs": 654,
       "facts": [
         {
           "name": "correo-assertions-and-network",
@@ -1106,7 +1106,7 @@
           "network": {
             "requests": [
               "GET http://127.0.0.1:8097/",
-              "GET http://127.0.0.1:8097/assets/index-CQP3O7Lh.js",
+              "GET http://127.0.0.1:8097/assets/index-C-yc-kqi.js",
               "GET http://127.0.0.1:8097/assets/index-a26HoMQR.css"
             ],
             "blocked": [],
@@ -1123,7 +1123,7 @@
       "project": "desktop-1280x720",
       "title": "correo.spec.ts / cambio de organización invalida resultados y exige nueva extracción",
       "status": "passed",
-      "durationMs": 883,
+      "durationMs": 803,
       "facts": [
         {
           "name": "correo-assertions-and-network",
@@ -1438,7 +1438,7 @@
           "network": {
             "requests": [
               "GET http://127.0.0.1:8097/",
-              "GET http://127.0.0.1:8097/assets/index-CQP3O7Lh.js",
+              "GET http://127.0.0.1:8097/assets/index-C-yc-kqi.js",
               "GET http://127.0.0.1:8097/assets/index-a26HoMQR.css"
             ],
             "blocked": [],
@@ -1455,7 +1455,7 @@
       "project": "mobile-390x640",
       "title": "correo.spec.ts / prepara sin escrituras ni conexiones a Gmail",
       "status": "passed",
-      "durationMs": 1420,
+      "durationMs": 1320,
       "facts": [
         {
           "name": "correo-assertions-and-network",
@@ -1616,7 +1616,7 @@
           "network": {
             "requests": [
               "GET http://127.0.0.1:8097/",
-              "GET http://127.0.0.1:8097/assets/index-CQP3O7Lh.js",
+              "GET http://127.0.0.1:8097/assets/index-C-yc-kqi.js",
               "GET http://127.0.0.1:8097/assets/index-a26HoMQR.css"
             ],
             "blocked": [],
@@ -1633,7 +1633,7 @@
       "project": "mobile-390x640",
       "title": "correo.spec.ts / excluye el conflicto de segunda página y conserva UUID preparado sólo por elección explícita",
       "status": "passed",
-      "durationMs": 875,
+      "durationMs": 804,
       "facts": [
         {
           "name": "correo-assertions-and-network",
@@ -1827,7 +1827,7 @@
           "network": {
             "requests": [
               "GET http://127.0.0.1:8097/",
-              "GET http://127.0.0.1:8097/assets/index-CQP3O7Lh.js",
+              "GET http://127.0.0.1:8097/assets/index-C-yc-kqi.js",
               "GET http://127.0.0.1:8097/assets/index-a26HoMQR.css"
             ],
             "blocked": [],
@@ -1845,7 +1845,7 @@
       "project": "mobile-390x640",
       "title": "correo.spec.ts / error-conflicts: error en segunda página bloquea carga y altas",
       "status": "passed",
-      "durationMs": 721,
+      "durationMs": 691,
       "facts": [
         {
           "name": "correo-assertions-and-network",
@@ -2022,7 +2022,7 @@
           "network": {
             "requests": [
               "GET http://127.0.0.1:8097/",
-              "GET http://127.0.0.1:8097/assets/index-CQP3O7Lh.js",
+              "GET http://127.0.0.1:8097/assets/index-C-yc-kqi.js",
               "GET http://127.0.0.1:8097/assets/index-a26HoMQR.css"
             ],
             "blocked": [],
@@ -2039,7 +2039,7 @@
       "project": "mobile-390x640",
       "title": "correo.spec.ts / error-catalog: error en segunda página bloquea carga y altas",
       "status": "passed",
-      "durationMs": 689,
+      "durationMs": 658,
       "facts": [
         {
           "name": "correo-assertions-and-network",
@@ -2200,7 +2200,7 @@
           "network": {
             "requests": [
               "GET http://127.0.0.1:8097/",
-              "GET http://127.0.0.1:8097/assets/index-CQP3O7Lh.js",
+              "GET http://127.0.0.1:8097/assets/index-C-yc-kqi.js",
               "GET http://127.0.0.1:8097/assets/index-a26HoMQR.css"
             ],
             "blocked": [],
@@ -2217,7 +2217,7 @@
       "project": "mobile-390x640",
       "title": "correo.spec.ts / inactive-global: catálogo existente inactivo no se ofrece para alta ni importación",
       "status": "passed",
-      "durationMs": 706,
+      "durationMs": 665,
       "facts": [
         {
           "name": "correo-assertions-and-network",
@@ -2378,7 +2378,7 @@
           "network": {
             "requests": [
               "GET http://127.0.0.1:8097/",
-              "GET http://127.0.0.1:8097/assets/index-CQP3O7Lh.js",
+              "GET http://127.0.0.1:8097/assets/index-C-yc-kqi.js",
               "GET http://127.0.0.1:8097/assets/index-a26HoMQR.css"
             ],
             "blocked": [],
@@ -2395,7 +2395,7 @@
       "project": "mobile-390x640",
       "title": "correo.spec.ts / inactive-org: catálogo existente inactivo no se ofrece para alta ni importación",
       "status": "passed",
-      "durationMs": 693,
+      "durationMs": 655,
       "facts": [
         {
           "name": "correo-assertions-and-network",
@@ -2556,7 +2556,7 @@
           "network": {
             "requests": [
               "GET http://127.0.0.1:8097/",
-              "GET http://127.0.0.1:8097/assets/index-CQP3O7Lh.js",
+              "GET http://127.0.0.1:8097/assets/index-C-yc-kqi.js",
               "GET http://127.0.0.1:8097/assets/index-a26HoMQR.css"
             ],
             "blocked": [],
@@ -2573,7 +2573,7 @@
       "project": "mobile-390x640",
       "title": "correo.spec.ts / cambio de organización invalida resultados y exige nueva extracción",
       "status": "passed",
-      "durationMs": 829,
+      "durationMs": 813,
       "facts": [
         {
           "name": "correo-assertions-and-network",
@@ -2888,7 +2888,7 @@
           "network": {
             "requests": [
               "GET http://127.0.0.1:8097/",
-              "GET http://127.0.0.1:8097/assets/index-CQP3O7Lh.js",
+              "GET http://127.0.0.1:8097/assets/index-C-yc-kqi.js",
               "GET http://127.0.0.1:8097/assets/index-a26HoMQR.css"
             ],
             "blocked": [],
@@ -2905,7 +2905,7 @@
       "project": "desktop-1280x720",
       "title": "PR373: real linked-company cards preserve history and restrict unlink to editing",
       "status": "passed",
-      "durationMs": 1465,
+      "durationMs": 1300,
       "facts": [
         {
           "name": "crm-diagnostics",
@@ -3194,7 +3194,7 @@
           "network": {
             "requests": [
               "GET http://127.0.0.1:8097/",
-              "GET http://127.0.0.1:8097/assets/index-CQP3O7Lh.js",
+              "GET http://127.0.0.1:8097/assets/index-C-yc-kqi.js",
               "GET http://127.0.0.1:8097/assets/index-a26HoMQR.css"
             ],
             "blocked": [],
@@ -3487,7 +3487,7 @@
           "network": {
             "requests": [
               "GET http://127.0.0.1:8097/",
-              "GET http://127.0.0.1:8097/assets/index-CQP3O7Lh.js",
+              "GET http://127.0.0.1:8097/assets/index-C-yc-kqi.js",
               "GET http://127.0.0.1:8097/assets/index-a26HoMQR.css"
             ],
             "blocked": [],
@@ -3505,7 +3505,7 @@
       "project": "mobile-390x640",
       "title": "PR373: real linked-company cards preserve history and restrict unlink to editing",
       "status": "passed",
-      "durationMs": 1362,
+      "durationMs": 1245,
       "facts": [
         {
           "name": "crm-diagnostics",
@@ -3794,7 +3794,7 @@
           "network": {
             "requests": [
               "GET http://127.0.0.1:8097/",
-              "GET http://127.0.0.1:8097/assets/index-CQP3O7Lh.js",
+              "GET http://127.0.0.1:8097/assets/index-C-yc-kqi.js",
               "GET http://127.0.0.1:8097/assets/index-a26HoMQR.css"
             ],
             "blocked": [],
@@ -4087,7 +4087,7 @@
           "network": {
             "requests": [
               "GET http://127.0.0.1:8097/",
-              "GET http://127.0.0.1:8097/assets/index-CQP3O7Lh.js",
+              "GET http://127.0.0.1:8097/assets/index-C-yc-kqi.js",
               "GET http://127.0.0.1:8097/assets/index-a26HoMQR.css"
             ],
             "blocked": [],
@@ -4105,7 +4105,7 @@
       "project": "desktop-1280x720",
       "title": "XML 96: factura coincidente prellena y sólo escribe en memoria",
       "status": "passed",
-      "durationMs": 1104,
+      "durationMs": 1148,
       "facts": [
         {
           "name": "xml-assertions-network",
@@ -4147,12 +4147,13 @@
                 "xmlName": "nota-ficticia.xml",
                 "pdfName": "nota-ficticia.pdf"
               }
-            ]
+            ],
+            "guardFailures": []
           },
           "network": {
             "requests": [
               "GET http://127.0.0.1:8097/",
-              "GET http://127.0.0.1:8097/assets/index-CQP3O7Lh.js",
+              "GET http://127.0.0.1:8097/assets/index-C-yc-kqi.js",
               "GET http://127.0.0.1:8097/assets/index-a26HoMQR.css"
             ],
             "blocked": [],
@@ -4169,7 +4170,7 @@
       "project": "desktop-1280x720",
       "title": "XML 96: validación missing bloquea precarga y registro",
       "status": "passed",
-      "durationMs": 1021,
+      "durationMs": 896,
       "facts": [
         {
           "name": "xml-assertions-network",
@@ -4189,12 +4190,13 @@
               }
             ],
             "writes": [],
-            "uploads": []
+            "uploads": [],
+            "guardFailures": []
           },
           "network": {
             "requests": [
               "GET http://127.0.0.1:8097/",
-              "GET http://127.0.0.1:8097/assets/index-CQP3O7Lh.js",
+              "GET http://127.0.0.1:8097/assets/index-C-yc-kqi.js",
               "GET http://127.0.0.1:8097/assets/index-a26HoMQR.css"
             ],
             "blocked": [],
@@ -4211,7 +4213,7 @@
       "project": "desktop-1280x720",
       "title": "XML 96: validación different bloquea precarga y registro",
       "status": "passed",
-      "durationMs": 995,
+      "durationMs": 893,
       "facts": [
         {
           "name": "xml-assertions-network",
@@ -4231,12 +4233,13 @@
               }
             ],
             "writes": [],
-            "uploads": []
+            "uploads": [],
+            "guardFailures": []
           },
           "network": {
             "requests": [
               "GET http://127.0.0.1:8097/",
-              "GET http://127.0.0.1:8097/assets/index-CQP3O7Lh.js",
+              "GET http://127.0.0.1:8097/assets/index-C-yc-kqi.js",
               "GET http://127.0.0.1:8097/assets/index-a26HoMQR.css"
             ],
             "blocked": [],
@@ -4253,7 +4256,7 @@
       "project": "desktop-1280x720",
       "title": "XML 96: rechazo visible conserva captura manual sin UUID ni adjuntos",
       "status": "passed",
-      "durationMs": 1221,
+      "durationMs": 1177,
       "facts": [
         {
           "name": "xml-assertions-network",
@@ -4288,12 +4291,13 @@
                 "uuid_fiscal": null
               }
             ],
-            "uploads": []
+            "uploads": [],
+            "guardFailures": []
           },
           "network": {
             "requests": [
               "GET http://127.0.0.1:8097/",
-              "GET http://127.0.0.1:8097/assets/index-CQP3O7Lh.js",
+              "GET http://127.0.0.1:8097/assets/index-C-yc-kqi.js",
               "GET http://127.0.0.1:8097/assets/index-a26HoMQR.css"
             ],
             "blocked": [],
@@ -4311,7 +4315,7 @@
       "project": "desktop-1280x720",
       "title": "XML 96: retirar XML invalida UUID, validación y ambos adjuntos",
       "status": "passed",
-      "durationMs": 1415,
+      "durationMs": 1445,
       "facts": [
         {
           "name": "xml-assertions-network",
@@ -4352,12 +4356,13 @@
                 "uuid_fiscal": null
               }
             ],
-            "uploads": []
+            "uploads": [],
+            "guardFailures": []
           },
           "network": {
             "requests": [
               "GET http://127.0.0.1:8097/",
-              "GET http://127.0.0.1:8097/assets/index-CQP3O7Lh.js",
+              "GET http://127.0.0.1:8097/assets/index-C-yc-kqi.js",
               "GET http://127.0.0.1:8097/assets/index-a26HoMQR.css"
             ],
             "blocked": [],
@@ -4375,7 +4380,7 @@
       "project": "mobile-390x640",
       "title": "XML 96: factura coincidente prellena y sólo escribe en memoria",
       "status": "passed",
-      "durationMs": 910,
+      "durationMs": 844,
       "facts": [
         {
           "name": "xml-assertions-network",
@@ -4417,12 +4422,13 @@
                 "xmlName": "nota-ficticia.xml",
                 "pdfName": "nota-ficticia.pdf"
               }
-            ]
+            ],
+            "guardFailures": []
           },
           "network": {
             "requests": [
               "GET http://127.0.0.1:8097/",
-              "GET http://127.0.0.1:8097/assets/index-CQP3O7Lh.js",
+              "GET http://127.0.0.1:8097/assets/index-C-yc-kqi.js",
               "GET http://127.0.0.1:8097/assets/index-a26HoMQR.css"
             ],
             "blocked": [],
@@ -4439,7 +4445,7 @@
       "project": "mobile-390x640",
       "title": "XML 96: validación missing bloquea precarga y registro",
       "status": "passed",
-      "durationMs": 832,
+      "durationMs": 750,
       "facts": [
         {
           "name": "xml-assertions-network",
@@ -4459,12 +4465,13 @@
               }
             ],
             "writes": [],
-            "uploads": []
+            "uploads": [],
+            "guardFailures": []
           },
           "network": {
             "requests": [
               "GET http://127.0.0.1:8097/",
-              "GET http://127.0.0.1:8097/assets/index-CQP3O7Lh.js",
+              "GET http://127.0.0.1:8097/assets/index-C-yc-kqi.js",
               "GET http://127.0.0.1:8097/assets/index-a26HoMQR.css"
             ],
             "blocked": [],
@@ -4481,7 +4488,7 @@
       "project": "mobile-390x640",
       "title": "XML 96: validación different bloquea precarga y registro",
       "status": "passed",
-      "durationMs": 891,
+      "durationMs": 861,
       "facts": [
         {
           "name": "xml-assertions-network",
@@ -4501,12 +4508,13 @@
               }
             ],
             "writes": [],
-            "uploads": []
+            "uploads": [],
+            "guardFailures": []
           },
           "network": {
             "requests": [
               "GET http://127.0.0.1:8097/",
-              "GET http://127.0.0.1:8097/assets/index-CQP3O7Lh.js",
+              "GET http://127.0.0.1:8097/assets/index-C-yc-kqi.js",
               "GET http://127.0.0.1:8097/assets/index-a26HoMQR.css"
             ],
             "blocked": [],
@@ -4523,7 +4531,7 @@
       "project": "mobile-390x640",
       "title": "XML 96: rechazo visible conserva captura manual sin UUID ni adjuntos",
       "status": "passed",
-      "durationMs": 1054,
+      "durationMs": 1033,
       "facts": [
         {
           "name": "xml-assertions-network",
@@ -4558,12 +4566,13 @@
                 "uuid_fiscal": null
               }
             ],
-            "uploads": []
+            "uploads": [],
+            "guardFailures": []
           },
           "network": {
             "requests": [
               "GET http://127.0.0.1:8097/",
-              "GET http://127.0.0.1:8097/assets/index-CQP3O7Lh.js",
+              "GET http://127.0.0.1:8097/assets/index-C-yc-kqi.js",
               "GET http://127.0.0.1:8097/assets/index-a26HoMQR.css"
             ],
             "blocked": [],
@@ -4581,7 +4590,7 @@
       "project": "mobile-390x640",
       "title": "XML 96: retirar XML invalida UUID, validación y ambos adjuntos",
       "status": "passed",
-      "durationMs": 1246,
+      "durationMs": 1179,
       "facts": [
         {
           "name": "xml-assertions-network",
@@ -4622,12 +4631,13 @@
                 "uuid_fiscal": null
               }
             ],
-            "uploads": []
+            "uploads": [],
+            "guardFailures": []
           },
           "network": {
             "requests": [
               "GET http://127.0.0.1:8097/",
-              "GET http://127.0.0.1:8097/assets/index-CQP3O7Lh.js",
+              "GET http://127.0.0.1:8097/assets/index-C-yc-kqi.js",
               "GET http://127.0.0.1:8097/assets/index-a26HoMQR.css"
             ],
             "blocked": [],
