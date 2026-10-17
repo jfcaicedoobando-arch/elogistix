@@ -1,0 +1,64 @@
+{
+  "results": [
+    {
+      "name": "probe-orphan",
+      "exit": 1,
+      "inventory": {
+        "issues": [
+          {
+            "file": "src/__knip_css_probe_orphan__.css",
+            "catalog": [],
+            "catalogReferences": [],
+            "dependencies": [],
+            "devDependencies": [],
+            "duplicates": [],
+            "exports": [],
+            "files": [
+              {
+                "name": "src/__knip_css_probe_orphan__.css"
+              }
+            ],
+            "namespaceMembers": [],
+            "optionalPeerDependencies": [],
+            "types": [],
+            "unlisted": []
+          }
+        ]
+      }
+    },
+    {
+      "name": "probe-transitive-import",
+      "exit": 1,
+      "inventory": {
+        "issues": [
+          {
+            "file": "src/__knip_css_probe_transitive__.css",
+            "catalog": [],
+            "catalogReferences": [],
+            "dependencies": [],
+            "devDependencies": [],
+            "duplicates": [],
+            "exports": [],
+            "files": [],
+            "namespaceMembers": [],
+            "optionalPeerDependencies": [],
+            "types": [],
+            "unlisted": [
+              {
+                "name": "knip-css-probe-missing",
+                "line": 1,
+                "col": 17,
+                "pos": 16
+              }
+            ]
+          }
+        ]
+      }
+    }
+  ],
+  "cleanup": {
+    "entryRestored": true,
+    "entrySha256": "2145da531b9725faad9b0e5123c789a37c0397a88317295ab713cd1273778423",
+    "probeFilesAbsent": true
+  }
+}

@@ -11,7 +11,7 @@
         "src/features/*/index.ts"
       ],
       "project": [
-        "src/**/*.{ts,tsx}",
+        "src/**/*.{ts,tsx,css}",
         "scripts/**/*.ts"
       ],
       "ignoreDependencies": [
