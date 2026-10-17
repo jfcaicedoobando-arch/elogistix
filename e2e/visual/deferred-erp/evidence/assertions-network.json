@@ -5,7 +5,7 @@
       "project": "desktop-1280x720",
       "title": "correo.spec.ts / prepara sin escrituras ni conexiones a Gmail",
       "status": "passed",
-      "durationMs": 3216,
+      "durationMs": 3542,
       "facts": [
         {
           "name": "correo-assertions-and-network",
@@ -183,7 +183,7 @@
       "project": "desktop-1280x720",
       "title": "correo.spec.ts / excluye el conflicto de segunda página y conserva UUID preparado sólo por elección explícita",
       "status": "passed",
-      "durationMs": 1071,
+      "durationMs": 1054,
       "facts": [
         {
           "name": "correo-assertions-and-network",
@@ -395,7 +395,7 @@
       "project": "desktop-1280x720",
       "title": "correo.spec.ts / error-conflicts: error en segunda página bloquea carga y altas",
       "status": "passed",
-      "durationMs": 696,
+      "durationMs": 698,
       "facts": [
         {
           "name": "correo-assertions-and-network",
@@ -589,7 +589,7 @@
       "project": "desktop-1280x720",
       "title": "correo.spec.ts / error-catalog: error en segunda página bloquea carga y altas",
       "status": "passed",
-      "durationMs": 675,
+      "durationMs": 702,
       "facts": [
         {
           "name": "correo-assertions-and-network",
@@ -767,7 +767,7 @@
       "project": "desktop-1280x720",
       "title": "correo.spec.ts / inactive-global: catálogo existente inactivo no se ofrece para alta ni importación",
       "status": "passed",
-      "durationMs": 683,
+      "durationMs": 745,
       "facts": [
         {
           "name": "correo-assertions-and-network",
@@ -945,7 +945,7 @@
       "project": "desktop-1280x720",
       "title": "correo.spec.ts / inactive-org: catálogo existente inactivo no se ofrece para alta ni importación",
       "status": "passed",
-      "durationMs": 684,
+      "durationMs": 707,
       "facts": [
         {
           "name": "correo-assertions-and-network",
@@ -1123,7 +1123,7 @@
       "project": "desktop-1280x720",
       "title": "correo.spec.ts / cambio de organización invalida resultados y exige nueva extracción",
       "status": "passed",
-      "durationMs": 827,
+      "durationMs": 883,
       "facts": [
         {
           "name": "correo-assertions-and-network",
@@ -1455,7 +1455,7 @@
       "project": "mobile-390x640",
       "title": "correo.spec.ts / prepara sin escrituras ni conexiones a Gmail",
       "status": "passed",
-      "durationMs": 1397,
+      "durationMs": 1420,
       "facts": [
         {
           "name": "correo-assertions-and-network",
@@ -1633,7 +1633,7 @@
       "project": "mobile-390x640",
       "title": "correo.spec.ts / excluye el conflicto de segunda página y conserva UUID preparado sólo por elección explícita",
       "status": "passed",
-      "durationMs": 851,
+      "durationMs": 875,
       "facts": [
         {
           "name": "correo-assertions-and-network",
@@ -1845,7 +1845,7 @@
       "project": "mobile-390x640",
       "title": "correo.spec.ts / error-conflicts: error en segunda página bloquea carga y altas",
       "status": "passed",
-      "durationMs": 673,
+      "durationMs": 721,
       "facts": [
         {
           "name": "correo-assertions-and-network",
@@ -2039,7 +2039,7 @@
       "project": "mobile-390x640",
       "title": "correo.spec.ts / error-catalog: error en segunda página bloquea carga y altas",
       "status": "passed",
-      "durationMs": 697,
+      "durationMs": 689,
       "facts": [
         {
           "name": "correo-assertions-and-network",
@@ -2217,7 +2217,7 @@
       "project": "mobile-390x640",
       "title": "correo.spec.ts / inactive-global: catálogo existente inactivo no se ofrece para alta ni importación",
       "status": "passed",
-      "durationMs": 736,
+      "durationMs": 706,
       "facts": [
         {
           "name": "correo-assertions-and-network",
@@ -2395,7 +2395,7 @@
       "project": "mobile-390x640",
       "title": "correo.spec.ts / inactive-org: catálogo existente inactivo no se ofrece para alta ni importación",
       "status": "passed",
-      "durationMs": 699,
+      "durationMs": 693,
       "facts": [
         {
           "name": "correo-assertions-and-network",
@@ -2573,7 +2573,7 @@
       "project": "mobile-390x640",
       "title": "correo.spec.ts / cambio de organización invalida resultados y exige nueva extracción",
       "status": "passed",
-      "durationMs": 844,
+      "durationMs": 829,
       "facts": [
         {
           "name": "correo-assertions-and-network",
@@ -2905,7 +2905,7 @@
       "project": "desktop-1280x720",
       "title": "PR373: real linked-company cards preserve history and restrict unlink to editing",
       "status": "passed",
-      "durationMs": 1294,
+      "durationMs": 1465,
       "facts": [
         {
           "name": "crm-diagnostics",
@@ -3505,7 +3505,7 @@
       "project": "mobile-390x640",
       "title": "PR373: real linked-company cards preserve history and restrict unlink to editing",
       "status": "passed",
-      "durationMs": 1328,
+      "durationMs": 1362,
       "facts": [
         {
           "name": "crm-diagnostics",
@@ -4105,7 +4105,7 @@
       "project": "desktop-1280x720",
       "title": "XML 96: factura coincidente prellena y sólo escribe en memoria",
       "status": "passed",
-      "durationMs": 1000,
+      "durationMs": 1104,
       "facts": [
         {
           "name": "xml-assertions-network",
@@ -4169,7 +4169,7 @@
       "project": "desktop-1280x720",
       "title": "XML 96: validación missing bloquea precarga y registro",
       "status": "passed",
-      "durationMs": 885,
+      "durationMs": 1021,
       "facts": [
         {
           "name": "xml-assertions-network",
@@ -4211,7 +4211,7 @@
       "project": "desktop-1280x720",
       "title": "XML 96: validación different bloquea precarga y registro",
       "status": "passed",
-      "durationMs": 993,
+      "durationMs": 995,
       "facts": [
         {
           "name": "xml-assertions-network",
@@ -4253,7 +4253,7 @@
       "project": "desktop-1280x720",
       "title": "XML 96: rechazo visible conserva captura manual sin UUID ni adjuntos",
       "status": "passed",
-      "durationMs": 1240,
+      "durationMs": 1221,
       "facts": [
         {
           "name": "xml-assertions-network",
@@ -4311,7 +4311,7 @@
       "project": "desktop-1280x720",
       "title": "XML 96: retirar XML invalida UUID, validación y ambos adjuntos",
       "status": "passed",
-      "durationMs": 1360,
+      "durationMs": 1415,
       "facts": [
         {
           "name": "xml-assertions-network",
@@ -4375,7 +4375,7 @@
       "project": "mobile-390x640",
       "title": "XML 96: factura coincidente prellena y sólo escribe en memoria",
       "status": "passed",
-      "durationMs": 893,
+      "durationMs": 910,
       "facts": [
         {
           "name": "xml-assertions-network",
@@ -4439,7 +4439,7 @@
       "project": "mobile-390x640",
       "title": "XML 96: validación missing bloquea precarga y registro",
       "status": "passed",
-      "durationMs": 915,
+      "durationMs": 832,
       "facts": [
         {
           "name": "xml-assertions-network",
@@ -4481,7 +4481,7 @@
       "project": "mobile-390x640",
       "title": "XML 96: validación different bloquea precarga y registro",
       "status": "passed",
-      "durationMs": 812,
+      "durationMs": 891,
       "facts": [
         {
           "name": "xml-assertions-network",
@@ -4523,7 +4523,7 @@
       "project": "mobile-390x640",
       "title": "XML 96: rechazo visible conserva captura manual sin UUID ni adjuntos",
       "status": "passed",
-      "durationMs": 1082,
+      "durationMs": 1054,
       "facts": [
         {
           "name": "xml-assertions-network",
@@ -4581,7 +4581,7 @@
       "project": "mobile-390x640",
       "title": "XML 96: retirar XML invalida UUID, validación y ambos adjuntos",
       "status": "passed",
-      "durationMs": 1313,
+      "durationMs": 1246,
       "facts": [
         {
           "name": "xml-assertions-network",

@@ -1,7 +1,10 @@
 # Deferred ERP: pruebas locales y GUI aislada
 
-Base revisada: `9af3859fabd6e57343cb5fadd4494a0a14579cb2`. Sólo se añade este
-harness; no modifica producción, package/lock, Knip, permisos ni datos.
+Base inicial: `9af3859fabd6e57343cb5fadd4494a0a14579cb2`. Se incorporó `main`
+`b02c3391a97ea7d54b0a6b0b514c4626738ab639` conservando íntegro el PR387 de Knip.
+Frente a esa base sólo se añade este harness; no modifica producción,
+package/lock, Knip, permisos ni datos. La evidencia final se repitió sobre el
+árbol integrado.
 `AGENTS.md` y `src/features/crm/AGENTS.md` se leyeron; `.agents/skills` no existe
 en esta base/clon. El patrón de aislamiento es `../audit119-126`.
 

@@ -13,4 +13,4 @@ test-results/deferred-erp-fixture/assets/index-CQP3O7Lh.js   938.40 kB Γöé gz
 - Using dynamic import() to code-split the application
 - Use build.rolldownOptions.output.codeSplitting to improve chunking: https://rolldown.rs/reference/OutputOptions.codeSplitting
 - Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.
-Γ£ô built in 2.65s
+Γ£ô built in 2.56s

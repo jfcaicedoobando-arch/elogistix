@@ -73,7 +73,9 @@ for (const name of ["build", "typecheck", "lint", "unit", "browser"]) {
 }
 const network = cases.map(item => item.facts.find(fact => fact.network).network);
 const summary = {
-  baseCommit: "9af3859fabd6e57343cb5fadd4494a0a14579cb2",
+  baseCommit: "b02c3391a97ea7d54b0a6b0b514c4626738ab639",
+  initialBaseCommit: "9af3859fabd6e57343cb5fadd4494a0a14579cb2",
+  integration: "main PR387 retained unchanged; validation repeated on integrated tree",
   generatedAt: new Date().toISOString(),
   scope: "Local synthetic components and in-memory backend only; no production/staging certification",
   validation: { typecheck: "passed", eslint: "passed", isolatedBuild: "passed; forbidden dependency guard active" },

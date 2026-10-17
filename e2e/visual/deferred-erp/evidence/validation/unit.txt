@@ -10,19 +10,19 @@ Set `VITE_CONFIG_NATIVE_IGNORE_WARNING=true` to suppress this warning.
 
  RUN  v5.0.3 C:/Users/torta/Documents/Codex/2026-10-17/task-3/elogistix-deferred
 
- Γ£ô |jsdom| src/features/costeo/tarifario/__tests__/ExtraerCorreoDialog.test.tsx (22 tests) 1397ms
- Γ£ô |jsdom| src/features/cxp/components/__tests__/DialogNotaCreditoProveedor.identidad.test.tsx (4 tests) 716ms
+ Γ£ô |jsdom| src/features/costeo/tarifario/__tests__/ExtraerCorreoDialog.test.tsx (22 tests) 1548ms
+ Γ£ô |jsdom| src/features/cxp/components/__tests__/DialogNotaCreditoProveedor.identidad.test.tsx (4 tests) 878ms
    Γ£ô 95ΓÇô96 ┬╖ XML de NC y validaci├│n de identidad (4)
-     Γ£ô Quitar XML funciona, borra validaci├│n/adjuntos y exige procesarlo de nuevo 339ms
- Γ£ô |jsdom| src/features/crm/components/objetos/__tests__/VinculosCard.test.tsx (9 tests) 376ms
- Γ£ô |jsdom| src/features/cxp/hooks/__tests__/useCargaCfdi.test.tsx (15 tests) 65ms
- Γ£ô |node| src/features/crm/services/__tests__/vinculosCrm.test.ts (10 tests) 49ms
- Γ£ô |node| src/features/costeo/services/__tests__/importacionTarifasCorreo.test.ts (16 tests) 85ms
- Γ£ô |node| src/features/costeo/services/__tests__/extraerTarifasCorreo.test.ts (24 tests) 56ms
+     Γ£ô Quitar XML funciona, borra validaci├│n/adjuntos y exige procesarlo de nuevo 388ms
+ Γ£ô |jsdom| src/features/crm/components/objetos/__tests__/VinculosCard.test.tsx (9 tests) 386ms
+ Γ£ô |node| src/features/costeo/services/__tests__/importacionTarifasCorreo.test.ts (16 tests) 86ms
+ Γ£ô |jsdom| src/features/cxp/hooks/__tests__/useCargaCfdi.test.tsx (15 tests) 90ms
+ Γ£ô |node| src/features/crm/services/__tests__/vinculosCrm.test.ts (10 tests) 51ms
+ Γ£ô |node| src/features/costeo/services/__tests__/extraerTarifasCorreo.test.ts (24 tests) 54ms
 
  Test Files  7 passed (7)
       Tests  100 passed (100)
-   Start at  14:44:10
-   Duration  10.44s (import 41%, environment 25%, tests 14%, transform 10%, setup 9%, worker 1%)
+   Start at  14:48:52
+   Duration  12.12s (import 42%, environment 26%, tests 14%, transform 10%, setup 8%)
 
 JSON report written to C:/Users/torta/Documents/Codex/2026-10-17/task-3/elogistix-deferred/reports/deferred-erp/unit-results.json

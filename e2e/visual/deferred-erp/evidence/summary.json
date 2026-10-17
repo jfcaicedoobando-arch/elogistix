@@ -1,6 +1,8 @@
 {
-  "baseCommit": "9af3859fabd6e57343cb5fadd4494a0a14579cb2",
-  "generatedAt": "2026-10-17T20:47:50.869Z",
+  "baseCommit": "b02c3391a97ea7d54b0a6b0b514c4626738ab639",
+  "initialBaseCommit": "9af3859fabd6e57343cb5fadd4494a0a14579cb2",
+  "integration": "main PR387 retained unchanged; validation repeated on integrated tree",
+  "generatedAt": "2026-10-17T20:49:49.233Z",
   "scope": "Local synthetic components and in-memory backend only; no production/staging certification",
   "validation": {
     "typecheck": "passed",
@@ -63,7 +65,7 @@
     },
     {
       "path": "e2e/visual/deferred-erp/collect-evidence.mjs",
-      "sha256": "0d2182f48dfa320df09bdea931a0ea97da30f24ffbc6eb08c17f4024e3f57c91"
+      "sha256": "5d42342b048111fc757ad9a09a4382bfe8472d08b1090c1b73cc2bd5a62552b0"
     },
     {
       "path": "e2e/visual/deferred-erp/correo-backend.ts",
@@ -99,7 +101,7 @@
     },
     {
       "path": "e2e/visual/deferred-erp/README.md",
-      "sha256": "3634ff9db0f2fb292f5dafa577d8d290831dd4a0068288b715948806b4696e37"
+      "sha256": "37c86686968c4a6c7d089faaa746aed3c181e8a192458cc890338b657ccb6f20"
     },
     {
       "path": "e2e/visual/deferred-erp/specs/correo.spec.ts",
