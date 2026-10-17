@@ -3,8 +3,11 @@
 Documento de gobierno para la implementación de Sentry (front + edge functions).
 Fuente de la verdad para on-call y para futuras auditorías.
 
-> Revisión documental: 2026-10-03. React/Core y bundler: 11.4.0;
-> Edge Deno: 10.76.0, por compatibilidad con Lovable Cloud.
+> Revisión de versiones en Git: 2026-10-17. React/Core y bundler: 11.6.0;
+> Edge: `npm:@sentry/deno@11.4.0` en `_shared/sentryRuntime.ts` desde
+> [PR240](https://github.com/jfcaicedoobando-arch/elogistix/pull/240).
+> [PR382](https://github.com/jfcaicedoobando-arch/elogistix/pull/382) retiró
+> `@sentry/deno` raíz sin modificar el import Edge. CLI de CI: Deno 2.9.7.
 > Describe código/configurable; no certifica
 > alertas, destinatarios, retención o crons activos en el dashboard remoto.
 
@@ -74,7 +77,7 @@ del final. Un HTTP 5xx marca error sin alterar la respuesta HTTP del handler.
 - `wrapEdgeHandler` crea span/scope de forma síncrona con APIs públicas y
   conserva el scope propio por request en AsyncLocalStorage. Continúa la traza
   y abre `http.server` con fn/request ID/status; también traza requests sin padre.
-  SDK 10 con `defaultIntegrations: false` no instala aislamiento asíncrono:
+  El wrapper mantiene `defaultIntegrations: false` y su aislamiento propio:
   no usar `withIsolationScope` alrededor de callbacks asíncronos en este modo.
   No instrumentar `Deno.serve` ni sustituir el proveedor OpenTelemetry de Cloud.
 - El frontend envuelve `Routes` con `wrapReactRouterRouting` y re-renderiza
@@ -102,7 +105,8 @@ del final. Un HTTP 5xx marca error sin alterar la respuesta HTTP del handler.
 - Front y Edge comparten `supabase/functions/_shared/piiScrub.ts` y
   `scrubTelemetryData.ts`: extra/context/cause/query keys/spans, claves camelCase
   y credenciales/PII en texto. Traversal acotado; ciclos y exceso se truncan.
-- Edge SDK 10 usa spans estáticos: `beforeSendSpan` limpia hijos;
+- Edge SDK 11.4.0 usa `traceLifecycle: "static"`: `beforeSendSpan`, adaptado
+  con `withStaticSpan`, limpia hijos;
   `beforeSendTransaction` limpia raíz/sampling metadata. Se conservan únicamente
   los IDs de traza/span con formato hexadecimal válido para correlación técnica.
 - SQLSTATE 23514/23505/P0001 ni un prefijo LC_ genérico prueban que sea esperado.
@@ -183,11 +187,23 @@ con compatibilidad general certificada ni cambiar a ciegas el runtime gestionado
 El SDK normaliza el tag `runtime`; verificar Edge por `fn`, request ID y
 `sentry.javascript.deno`, no sólo por el tag literal `runtime:deno-edge`.
 
-Decisión posterior: fijar únicamente Edge en **10.76.0**, rama mantenida y
-compatible con Deno 2.x, conservando frontend/bundler en 11.4.0 y CLI/CI en
-2.9.7. Contratos locales aprobados en **2.1.4** y **2.9.7**, con typecheck y
-sanitizers. La evidencia anterior es histórica del SDK 11, no prueba el
-despliegue de SDK 10: confirmar nueva recepción remota y su versión tras deploy.
+Decisión histórica posterior a esa prueba: fijar únicamente Edge en
+**10.76.0** ([PR117](https://github.com/jfcaicedoobando-arch/elogistix/pull/117)),
+conservando entonces frontend/bundler en 11.4.0. Los contratos de SDK 10
+aprobados en **2.1.4** y **2.9.7**, con typecheck y sanitizers, corresponden
+a esa etapa; no prueban SDK 11 en Deno 2.1.4 ni su despliegue.
+
+Estado posterior en Git: [PR240](https://github.com/jfcaicedoobando-arch/elogistix/pull/240),
+fusionado el **2026-10-11** en `cd0bcdd3d2c13fb5c292dc7ae9b1140076c78b5c`,
+migró el import efectivo a **11.4.0** con controles de privacidad explícitos.
+Registra contratos locales en Deno **2.9.6** y CI en **2.9.7** con transporte
+falso; su actualización final autorizó la fusión y dejó pendiente un
+despliegue controlado. [PR382](https://github.com/jfcaicedoobando-arch/elogistix/pull/382)
+retiró después la dependencia raíz sin alterar el SDK importado por Edge.
+Esta revisión documental no repite esas pruebas ni consulta el entorno
+desplegado. Confirmar versión de runtime, inicialización del SDK y recepción
+remota correspondientes al deploy actual; la ingesta del 2026-10-03 y las
+pruebas CLI no acreditan ese estado.
 
 - Confirmar DSN/release/dist del deploy; Debug IDs/maps sólo si existe build token.
 - Verificar trace front→edge, tenant/rol del usuario actual y ninguno anterior al logout.

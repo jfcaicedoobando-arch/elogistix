@@ -25,7 +25,7 @@ más nuevas. No incluye dependencias transitivas.
 | --- | --- | --- |
 | Supabase JS | `https://esm.sh/@supabase/supabase-js@2.45.0`; preview usa `npm:@supabase/supabase-js@2/cors` | Revisar ambos canales; el segundo no fija una versión exacta. No sustituir HTTP por npm junto con un upgrade. |
 | FacturAPI | `npm:facturapi@5.1.0` en `_shared/facturapiClient.ts` | SDK/adaptador y contratos I/E/P, idempotencia y recuperación; pruebas fiscales sólo en Sandbox autorizado. |
-| Sentry Deno | `npm:@sentry/deno@10.76.0` en `_shared/sentryRuntime.ts` | Confirmar runtime remoto; el pin homónimo en `package.json` no actualiza el import. No subir Edge a SDK 11 sólo porque CI use Deno nuevo. |
+| Sentry Deno (revisado 2026-10-17) | `npm:@sentry/deno@11.4.0` en `_shared/sentryRuntime.ts`, migrado en [PR240](https://github.com/jfcaicedoobando-arch/elogistix/pull/240) | [PR382](https://github.com/jfcaicedoobando-arch/elogistix/pull/382) retiró el paquete raíz, sin cambiar el import Edge. SDK 11 requiere Deno ≥2.8.3; el CLI de CI 2.9.7 no acredita el runtime ni el SDK desplegados. Confirmar compatibilidad remota; ver [historial y pendientes](sentry-runbook.md#11-validación-operativa-pendiente-de-dashboarddespliegue). |
 | React de correos | React/DOM y `@types/react` `18.3.1` | Mantener familia y JSX compatibles; no heredar React 19 del frontend. |
 | React Email / correo Lovable | `@react-email/components@0.0.22`, `@lovable.dev/email-js@0.1.0` | Renderizar plantillas sin enviar correos y revisar contratos del proveedor. |
 | Zod de cobranza | `npm:zod@3.23.8` | Validaciones de los dos handlers CxC; no copiar Zod 4 del frontend sin adaptar y probar. |
