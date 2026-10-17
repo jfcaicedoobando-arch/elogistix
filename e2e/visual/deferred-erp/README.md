@@ -134,3 +134,14 @@ Las regresiones de registro manual y evidencia se verifican por separado de las
 un contrato lee YAML suponiendo LF y tres contratos requieren Bash ausente.
 No se modificaron ni omitieron esos controles; el resultado se conserva en
 `evidence/catalog-registration.json` junto con las regresiones del clasificador.
+
+El escaneo histórico de Gitleaks del commit `05eb8b86d` reportó un falso
+positivo en el digest público del ZIP documentado arriba. `.gitleaks.toml`
+extiende únicamente `generic-api-key`: exige esta ruta exacta y las dos líneas
+completas con ese digest, mediante condición `AND`. No excluye archivos,
+directorios, commits ni valores por sí solos, y mantiene las reglas default.
+La configuración del head cubre el bloque histórico sin reescribir commits.
+Los controles de ruta, contexto, digest y credencial sintética adicional
+quedan en `scripts/ci/test_gitleaks_snapshot.py`; CI exige el CLI real 8.24.3.
+El diagnóstico original se conserva en
+`evidence/validation/gitleaks-history-before.txt`.

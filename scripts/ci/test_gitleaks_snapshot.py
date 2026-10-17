@@ -468,7 +468,7 @@ class SQLAllowlistConfigTests(unittest.TestCase):
         # existing allowlists. Never disable rules or substitute weaker rules.
         self.assertEqual(set(rule), {"id", "allowlists"})
         self.assertEqual(rule["id"], "generic-api-key")
-        self.assertEqual(len(rule["allowlists"]), 2)
+        self.assertEqual(len(rule["allowlists"]), 3)
         allowlist = rule["allowlists"][0]
         self.assertEqual(set(allowlist), {
             "description", "condition", "paths", "regexTarget", "regexes",
@@ -645,6 +645,145 @@ class RealArtifactDigestAllowlistTests(RealSQLAllowlistTests):
                 self.scan_case(path, content, expected_leak=True)
         canary = "".join(("Q8z4V2n9", "B7x5L3p6", "R1s0T4m8"))
         self.scan_case(path, line + "api" + "_key = '" + canary + "'\n", expected_leak=True)
+
+
+class DenoDigestAllowlistConfigTests(unittest.TestCase):
+    readme_path = "e2e/visual/deferred-erp/README.md"
+    artifact_digest = "a0c3101b4158d1dfb7d6a78a7bf0f3de80c96bb423c152beec8beb22786f2238"
+
+    @classmethod
+    def block(cls, newline="\n"):
+        # Construct the detector input at runtime. Do not place a contiguous
+        # keyword plus the digest in this test source or exempt this file.
+        context = "su SHA256 coincide con el digest publicado por la " + "AP" + "I oficial de GitHub:"
+        return context + newline + "`" + cls.artifact_digest + "`."
+
+    def test_exact_readme_and_complete_two_line_block_are_required(self):
+        allowlist = tomllib.loads(CONFIG.decode())["rules"][0]["allowlists"][2]
+        self.assertEqual(set(allowlist), {"description", "condition", "paths", "regexTarget", "regexes"})
+        self.assertEqual(allowlist["condition"], "AND")
+        self.assertEqual(allowlist["regexTarget"], "line")
+        self.assertEqual(allowlist["paths"], [r"^e2e/visual/deferred-erp/README\.md$"])
+        expected = (r"^(?:\r?\n)?su SHA256 coincide con el digest publicado por la AP[I] oficial de GitHub:\r?\n`"
+                    + self.artifact_digest + r"`\.[ \t]*(?:\r?\n)?$")
+        self.assertEqual(allowlist["regexes"], [expected])
+
+        def allowed(path, block):
+            return bool(re.search(allowlist["paths"][0], path)
+                        and re.search(allowlist["regexes"][0], block))
+
+        for newline in ("\n", "\r\n"):
+            for initial_newline in (False, True):
+                for final_newline in (False, True):
+                    block = ((newline if initial_newline else "") + self.block(newline)
+                             + (newline if final_newline else ""))
+                    with self.subTest(newline=repr(newline), initial=initial_newline, final=final_newline):
+                        self.assertTrue(allowed(self.readme_path, block))
+        for path in ("other.md", self.readme_path + ".bak", "backup/" + self.readme_path,
+                     self.readme_path + "/nested", "prefix" + self.readme_path):
+            with self.subTest(path=path):
+                self.assertFalse(allowed(path, self.block()))
+
+        block = self.block()
+        other_digest = hashlib.sha256(b"synthetic-other-deno-release-digest").hexdigest()
+        canary = "".join(("Q8z4V2n9", "B7x5L3p6", "R1s0T4m8"))
+        credential = "api" + "_key = '" + canary + "'"
+        for content in (
+            block.replace(self.artifact_digest, other_digest),
+            block.replace("su SHA256", "su SHA512"),
+            block.replace("publicado", "verificado"),
+            block.replace(":\n", ": \n"),
+            block.replace("\n", " "),
+            block.split("\n")[1],
+            "prefix " + block,
+            block + " injected",
+            block + "\n" + credential,
+            block + " " + credential,
+            block.replace(":\n", ": " + credential + "\n"),
+        ):
+            with self.subTest(mutated_context=True):
+                self.assertFalse(allowed(self.readme_path, content))
+
+
+@unittest.skipUnless(REAL_BINARY, "Gitleaks not installed locally; real controls are required in CI")
+class RealDenoDigestAllowlistTests(RealSQLAllowlistTests):
+    # Reuse only the scanner fixture, preserving the previous real SQL tests.
+    test_real_each_verified_join_is_allowed_only_in_exact_baseline = None
+    test_real_mutated_sql_context_is_not_allowlisted = None
+    test_real_synthetic_credential_literals_in_baseline_are_detected = None
+    test_real_other_default_rule_remains_active_in_baseline = None
+
+    def setUp(self):
+        super().setUp()
+        # Preserve CRLF bytes in the root snapshot on every host.
+        self.git("config", "core.autocrlf", "false")
+
+    def test_real_verified_digest_accepts_lf_crlf_and_initial_newline(self):
+        path = DenoDigestAllowlistConfigTests.readme_path
+        for newline in ("\n", "\r\n"):
+            for initial_newline in (False, True):
+                for final_newline in (False, True):
+                    content = ((newline if initial_newline else "")
+                               + DenoDigestAllowlistConfigTests.block(newline)
+                               + (newline if final_newline else ""))
+                    with self.subTest(newline=repr(newline), initial=initial_newline, final=final_newline):
+                        self.scan_case(path, content, expected_leak=False)
+
+    def test_real_verified_digest_requires_the_exact_readme_path(self):
+        path = DenoDigestAllowlistConfigTests.readme_path
+        content = DenoDigestAllowlistConfigTests.block() + "\n"
+        for wrong_path in ("other.md", path + ".bak", "backup/" + path):
+            with self.subTest(path=wrong_path):
+                self.scan_case(wrong_path, content, expected_leak=True)
+
+    def test_real_other_digest_and_context_remain_detectable(self):
+        path = DenoDigestAllowlistConfigTests.readme_path
+        block = DenoDigestAllowlistConfigTests.block()
+        digest = DenoDigestAllowlistConfigTests.artifact_digest
+        other_digest = hashlib.sha256(b"synthetic-other-deno-release-digest").hexdigest()
+        # Keep the inherited detector keyword and a high-entropy value in each
+        # mutation. Off-path controls prove the negative input is detectable.
+        for content in (
+            block.replace(digest, other_digest),
+            block.replace("su SHA256", "su SHA512"),
+            block.replace("publicado", "verificado"),
+            block.replace("su SHA256", "SHA256"),
+            block.replace("digest publicado", "digest mostrado"),
+            "prefix " + block,
+            block + " injected",
+        ):
+            for selected_path in ("other.md", path):
+                with self.subTest(path=selected_path, mutated_context=True):
+                    self.scan_case(selected_path, content + "\n", expected_leak=True)
+
+    def test_real_credential_in_same_block_remains_detectable(self):
+        path = DenoDigestAllowlistConfigTests.readme_path
+        block = DenoDigestAllowlistConfigTests.block()
+        canary = "".join(("Q8z4V2n9", "B7x5L3p6", "R1s0T4m8"))
+        credential = "api" + "_key = '" + canary + "'"
+        for content in (
+            block + "\n" + credential,
+            block + " " + credential,
+            block.replace(":\n", ": " + credential + "\n"),
+        ):
+            with self.subTest(credential_in_block=True):
+                self.scan_case(path, content + "\n", expected_leak=True)
+
+
+class DenoDigestFixtureConstructionTests(unittest.TestCase):
+    def test_runtime_construction_preserves_all_twenty_eight_scanner_scenarios(self):
+        fixture = RealDenoDigestAllowlistTests()
+        cases = []
+        with patch.object(fixture, "scan_case", side_effect=lambda *args, **kwargs: cases.append([args, kwargs])):
+            fixture.test_real_verified_digest_accepts_lf_crlf_and_initial_newline()
+            fixture.test_real_verified_digest_requires_the_exact_readme_path()
+            fixture.test_real_other_digest_and_context_remain_detectable()
+            fixture.test_real_credential_in_same_block_remains_detectable()
+        self.assertEqual(len(cases), 28)
+        self.assertEqual(sum(not kwargs["expected_leak"] for _, kwargs in cases), 8)
+        self.assertEqual(sum(kwargs["expected_leak"] for _, kwargs in cases), 20)
+        self.assertTrue(all(args[0] == DenoDigestAllowlistConfigTests.readme_path
+                            for args, kwargs in cases if not kwargs["expected_leak"]))
 
 
 if __name__ == "__main__":

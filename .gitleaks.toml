@@ -41,3 +41,13 @@ paths = ['''^scripts/ci/demo-financial-retry-negative-review/origin-v2-evidence\
 regexTarget = "line"
 # v8.24.3 location.go includes the preceding newline in finding.Line.
 regexes = ['''^(?:\r?\n)?[ \t]*"api[_]sha256": "8b45e68934272812c51c75579c3c6f0b2c9602e057d653254b4f9605e2182607",[ \t]*(?:\r?\n)?$''']
+
+[[rules.allowlists]]
+description = "Verified Deno 2.9.7 official Windows ZIP digest; exact Markdown context only"
+condition = "AND"
+paths = ['''^e2e/visual/deferred-erp/README\.md$''']
+regexTarget = "line"
+# Public release integrity digest, verified against the official asset metadata.
+# HEAD configuration covers this exact historical block without rewriting commits.
+# The character class preserves the literal context without flagging this regex.
+regexes = ['''^(?:\r?\n)?su SHA256 coincide con el digest publicado por la AP[I] oficial de GitHub:\r?\n`a0c3101b4158d1dfb7d6a78a7bf0f3de80c96bb423c152beec8beb22786f2238`\.[ \t]*(?:\r?\n)?$''']

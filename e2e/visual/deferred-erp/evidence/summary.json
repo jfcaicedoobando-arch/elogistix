@@ -1,16 +1,16 @@
 {
   "status": "passed",
-  "runId": "8ab66fc1-eb86-487e-80d9-24eff2b13929",
-  "startedAt": "2026-10-17T22:28:06.637Z",
+  "runId": "0f740211-a6dc-460e-aedd-e93636166959",
+  "startedAt": "2026-10-17T22:37:25.457Z",
   "baseCommit": "b02c3391a97ea7d54b0a6b0b514c4626738ab639",
   "initialBaseCommit": "9af3859fabd6e57343cb5fadd4494a0a14579cb2",
   "integration": "main PR387 retained unchanged; validation repeated on integrated tree",
-  "generatedAt": "2026-10-17T22:28:55.909Z",
+  "generatedAt": "2026-10-17T22:38:23.235Z",
   "scope": "Local synthetic components and in-memory backend only; no production/staging certification",
   "validation": {
     "status": "passed",
     "proof": "validation-results.json",
-    "runId": "8ab66fc1-eb86-487e-80d9-24eff2b13929",
+    "runId": "0f740211-a6dc-460e-aedd-e93636166959",
     "commands": [
       {
         "name": "typecheck",
@@ -33,12 +33,12 @@
     ],
     "sourceBefore": {
       "algorithm": "sha256",
-      "digest": "9f8e11d81c18e8e7efd57c2745941ed454b62094d03a5efbc7f77b8c50e1fca9",
+      "digest": "42ee6d57e55c43fbedc3b8be9d5674833a60167e6f0593c19e687d5a9bb75f74",
       "fileCount": 6885
     },
     "sourceAfter": {
       "algorithm": "sha256",
-      "digest": "9f8e11d81c18e8e7efd57c2745941ed454b62094d03a5efbc7f77b8c50e1fca9",
+      "digest": "42ee6d57e55c43fbedc3b8be9d5674833a60167e6f0593c19e687d5a9bb75f74",
       "fileCount": 6885
     }
   },
@@ -165,7 +165,7 @@
     },
     {
       "path": "e2e/visual/deferred-erp/README.md",
-      "sha256": "129447c348416516293d22ef46b481a9ccfdd3d5629aebf3c77802413c82ba92"
+      "sha256": "9f847338b3dd89e4f6ff0a1c600e51b9aa6be09ce23c60ff7cf1a72fd97616a5"
     },
     {
       "path": "e2e/visual/deferred-erp/run-deno-original.mjs",

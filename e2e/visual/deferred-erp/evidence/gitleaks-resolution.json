@@ -1,0 +1,74 @@
+{
+  "schemaVersion": 1,
+  "sourceHashes": {
+    "configuration": "705ca0ce6aeafdb2c80dba256ae61919ad3c3da81ffe7aff9fd6e9e85e479527",
+    "snapshotTests": "28c7df6f91412747ba0e0be97c783e8dd8c4f51749071b203d62810330794eb5"
+  },
+  "originalFullLogSha256": "eebc1d19ec304dc156131c7d65d92eacfcd3760afb8ac30bffbafcda21efb2a8",
+  "originalExcerpt": {
+    "path": "validation/gitleaks-history-before.txt",
+    "sha256": "30f2e68b21bfe84f2227eb46198b918013e8ee918a19c56b2b1bf6fcc7ba1f4f"
+  },
+  "originalFailure": {
+    "head": "05eb8b86d8af019b6953fa2a70fc4a7acb4ab089",
+    "runId": 39075314734,
+    "jobId": 117521155592,
+    "url": "https://github.com/jfcaicedoobando-arch/elogistix/actions/runs/39075314734/job/117521155592",
+    "finding": {
+      "path": "e2e/visual/deferred-erp/README.md",
+      "line": 100,
+      "rule": "generic-api-key",
+      "count": 1
+    },
+    "scannedCommits": 5,
+    "scannedBytes": 405634
+  },
+  "correction": {
+    "strategy": "Append one rule-scoped allowlist; current configuration also covers historical patches without rewriting commits",
+    "condition": "AND",
+    "path": "^e2e/visual/deferred-erp/README\\.md$",
+    "target": "line",
+    "context": "Complete exact two-line prose block and verified public Deno ZIP digest",
+    "defaults": "Unchanged",
+    "globalPaths": "Unchanged",
+    "previousRuleAllowlists": "Unchanged",
+    "valueOnlyExceptions": false,
+    "ignoredCommits": false,
+    "workflowChanges": false
+  },
+  "localValidation": {
+    "python": "3.12.14",
+    "command": {
+      "executable": "C:/Users/torta/.cache/codex-runtimes/codex-primary-runtime/dependencies/python/python.exe",
+      "args": [
+        "-m",
+        "unittest",
+        "scripts.ci.test_gitleaks_snapshot.SQLAllowlistConfigTests",
+        "scripts.ci.test_gitleaks_snapshot.ArtifactDigestAllowlistConfigTests",
+        "scripts.ci.test_gitleaks_snapshot.DenoDigestAllowlistConfigTests",
+        "scripts.ci.test_gitleaks_snapshot.SQLFixtureConstructionTests",
+        "scripts.ci.test_gitleaks_snapshot.DenoDigestFixtureConstructionTests",
+        "-v"
+      ],
+      "cwd": "."
+    },
+    "passed": 6,
+    "failed": 0,
+    "exitCode": 0,
+    "log": {
+      "path": "validation/gitleaks-config-tests.txt",
+      "sha256": "6cb1d32080855ccfd53a63e633d841a60acc620bf5a3bd544ed3a3c3ccdcac66",
+      "bytes": 1261
+    },
+    "scope": "Configuration and fixture-construction contracts; not a local CLI scan"
+  },
+  "realCliControls": {
+    "requiredByExistingCi": true,
+    "version": "8.24.3",
+    "newScenarios": 28,
+    "expectedAllowed": 8,
+    "expectedDetected": 20,
+    "localExecution": false,
+    "reason": "No local Gitleaks binary; no download or bypass attempted"
+  }
+}
