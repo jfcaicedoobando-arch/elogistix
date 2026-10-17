@@ -165,8 +165,12 @@ siguen presentes; una omisión válida no es evidencia de ejecución de suites.
 
 ### Deno: CLI de pruebas vs. runtime desplegado
 
-`ci.yml` y `post-deploy-smoke.yml` fijan el CLI en **2.9.7**. Edge usa Sentry
-**10.76.0**, no SDK 11 (éste requiere Deno ≥2.8.3). Ambos comandos mantienen
+`ci.yml` y `post-deploy-smoke.yml` fijan el CLI en **2.9.7**. En Git, Edge
+importa `npm:@sentry/deno@11.4.0` desde `_shared/sentryRuntime.ts`, migrado en
+[PR240](https://github.com/jfcaicedoobando-arch/elogistix/pull/240).
+SDK 11 requiere Deno ≥2.8.3. [PR382](https://github.com/jfcaicedoobando-arch/elogistix/pull/382)
+retiró el paquete raíz `@sentry/deno`; ese cambio no modifica el import Edge.
+Ambos comandos mantienen
 `--sanitize-ops` y `--sanitize-resources`: desde Deno 2.8 cambiaron sus
 defaults y la actualización no debe relajar la detección de fugas.
 Se conserva typecheck, sin `--no-check`, y `--node-modules-dir=none`.
@@ -192,9 +196,12 @@ versión, solicitar confirmación al proveedor: ese log no la certifica.
 Un smoke aprobado prueba contratos HTTP,
 no la versión exacta del runtime remoto.
 
-El runtime observado el 2026-10-03 fue Edge Runtime 1.77.0 / Deno 2.1.4;
-los contratos Sentry también se ejecutaron localmente en ese Deno antiguo.
-Esto no cambia el CLI del workflow ni agrega otro pipeline. Ver
+El runtime observado el 2026-10-03 fue Edge Runtime 1.77.0 / Deno 2.1.4.
+Los contratos locales de SDK 10.76.0 en ese Deno antiguo son evidencia
+histórica; no acreditan SDK 11.4.0 en ese runtime. PR240 registra pruebas
+locales en Deno 2.9.6 y CI en 2.9.7, separadas del despliegue pendiente.
+Ni ese PR ni esta revisión documental del **2026-10-17** certifican la
+versión o compatibilidad del entorno remoto actual. Ver
 [runbook y evidencia histórica](../sentry-runbook.md#11-validación-operativa-pendiente-de-dashboarddespliegue).
 
 ## Otros workflows
