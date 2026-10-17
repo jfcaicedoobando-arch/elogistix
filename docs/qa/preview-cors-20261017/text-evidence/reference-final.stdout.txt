@@ -1,0 +1,8 @@
+running 1 test from ../cors-evidence/handler_contract_test.ts
+actual preview index.ts: offline auth, OPTIONS, exact CORS, eight real renders ...
+------- output -------
+{"label":"reference","corsImport":"npm:@supabase/supabase-js@2/cors","sourceUtf8Sha256":"d195f253cf05aa23f6bcbdb40af7429f409c3dc599b3937bfd23650dad61b878","cases":["optionsWithoutKey","missingKey","emptyKey","optionsWithWrongToken","missingToken","wrongToken","validPost","lowercaseBearer","validGET","validPUT","validPATCH","validDELETE"],"templates":["cotizacion-respuesta","cotizacion-enviada","proforma-enviada","factura-enviada","nota-credito-enviada","rep-enviado","recordatorio-cobranza","estado-cuenta-cliente"],"comparedAgainst":null,"networkAttempts":0}
+----- output end -----
+actual preview index.ts: offline auth, OPTIONS, exact CORS, eight real renders ... ok (1s)
+
+ok | 1 passed | 0 failed (1s)

@@ -1,0 +1,17 @@
+running 1 test from ../cors-evidence/handler_contract_test.ts
+actual preview index.ts: offline auth, OPTIONS, exact CORS, eight real renders ... FAILED (134ms)
+
+ ERRORS
+
+actual preview index.ts: offline auth, OPTIONS, exact CORS, eight real renders => ../cors-evidence/handler_contract_test.ts:76:6
+error: TypeError: Requires read access to "C:\Users\torta\Documents\Codex\2026-10-17\task-5\elogistix\supabase\functions\_shared\transactional-email-templates\registry.ts", run again with the --allow-read flag
+    at file:///C:/Users/torta/Documents/Codex/2026-10-17/task-5/elogistix/supabase/functions/preview-transactional-email/index.ts:4:27
+      await import(entry.href);
+      ^
+    at async fn (file:///C:/Users/torta/Documents/Codex/2026-10-17/task-5/cors-evidence/handler_contract_test.ts:114:7)
+
+ FAILURES
+
+actual preview index.ts: offline auth, OPTIONS, exact CORS, eight real renders => ../cors-evidence/handler_contract_test.ts:76:6
+
+FAILED | 0 passed | 1 failed (143ms)

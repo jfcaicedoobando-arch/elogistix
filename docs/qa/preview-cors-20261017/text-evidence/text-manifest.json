@@ -1,0 +1,974 @@
+{
+  "schemaVersion": 1,
+  "archiveSha256": "55d27ad4da2bfe8c83b11ec846c5d1affe0f3a497e1b1f21b7fdcb93a8eddbac",
+  "purpose": "Complete textual review of the immutable manual evidence archive; code suffix .txt denotes documentation copies, not new automatic tests",
+  "mapping": {
+    "assertions.ts": {
+      "textPath": "assertions.ts.txt",
+      "archiveBytes": 2060,
+      "archiveSha256": "025acb18e954721da81e9e48d9ce1470979b6517ecd11201c80474b920148565",
+      "textBytes": 2060,
+      "textSha256": "025acb18e954721da81e9e48d9ce1470979b6517ecd11201c80474b920148565",
+      "normalization": "CRLF to LF only; no code or values changed"
+    },
+    "build-summary.mjs": {
+      "textPath": "build-summary.mjs.txt",
+      "archiveBytes": 6844,
+      "archiveSha256": "ca9df7be154a2c926a85048b02a96e2884a2449822139026ae96c88c583b2b09",
+      "textBytes": 6844,
+      "textSha256": "ca9df7be154a2c926a85048b02a96e2884a2449822139026ae96c88c583b2b09",
+      "normalization": "CRLF to LF only; no code or values changed"
+    },
+    "candidate-check.execution.json": {
+      "textPath": "candidate-check.execution.json",
+      "archiveBytes": 1685,
+      "archiveSha256": "a6b78154a714a1daefa5ae6751fd1b19684ff4b49711a2259c3fb8f858bdfeaa",
+      "textBytes": 1685,
+      "textSha256": "a6b78154a714a1daefa5ae6751fd1b19684ff4b49711a2259c3fb8f858bdfeaa",
+      "normalization": "CRLF to LF only; no code or values changed"
+    },
+    "candidate-check.stderr.txt": {
+      "textPath": "candidate-check.stderr.txt",
+      "archiveBytes": 157,
+      "archiveSha256": "7f85d3987de5f68a5d804aa89aa00690a321554c980081091bc7ccf64a5f0fb5",
+      "textBytes": 157,
+      "textSha256": "7f85d3987de5f68a5d804aa89aa00690a321554c980081091bc7ccf64a5f0fb5",
+      "normalization": "CRLF to LF, trailing spaces removed, terminal blank lines reduced to one newline; no diagnostic text or outcome removed"
+    },
+    "candidate-check.stdout.txt": {
+      "textPath": "candidate-check.stdout.txt",
+      "archiveBytes": 0,
+      "archiveSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "textBytes": 0,
+      "textSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "normalization": "CRLF to LF, trailing spaces removed, terminal blank lines reduced to one newline; no diagnostic text or outcome removed"
+    },
+    "candidate-ci-check.execution.json": {
+      "textPath": "candidate-ci-check.execution.json",
+      "archiveBytes": 1373,
+      "archiveSha256": "b7e1d05caa1e5cbed78b2b52313785f240032f31c8a441c93d3e22a9708db9c6",
+      "textBytes": 1373,
+      "textSha256": "b7e1d05caa1e5cbed78b2b52313785f240032f31c8a441c93d3e22a9708db9c6",
+      "normalization": "CRLF to LF only; no code or values changed"
+    },
+    "candidate-ci-check.stderr.txt": {
+      "textPath": "candidate-ci-check.stderr.txt",
+      "archiveBytes": 62,
+      "archiveSha256": "e816b5b653508ad57cea2e1a283019317e138ee68a0aac94da9fc2f4014dee31",
+      "textBytes": 62,
+      "textSha256": "e816b5b653508ad57cea2e1a283019317e138ee68a0aac94da9fc2f4014dee31",
+      "normalization": "CRLF to LF, trailing spaces removed, terminal blank lines reduced to one newline; no diagnostic text or outcome removed"
+    },
+    "candidate-ci-check.stdout.txt": {
+      "textPath": "candidate-ci-check.stdout.txt",
+      "archiveBytes": 0,
+      "archiveSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "textBytes": 0,
+      "textSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "normalization": "CRLF to LF, trailing spaces removed, terminal blank lines reduced to one newline; no diagnostic text or outcome removed"
+    },
+    "candidate-final.execution.json": {
+      "textPath": "candidate-final.execution.json",
+      "archiveBytes": 2446,
+      "archiveSha256": "00a9069c78c2f57752c36d69ae2a3c13a34488c08a2925ca712eb7d63311fc03",
+      "textBytes": 2446,
+      "textSha256": "00a9069c78c2f57752c36d69ae2a3c13a34488c08a2925ca712eb7d63311fc03",
+      "normalization": "CRLF to LF only; no code or values changed"
+    },
+    "candidate-final.stderr.txt": {
+      "textPath": "candidate-final.stderr.txt",
+      "archiveBytes": 0,
+      "archiveSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "textBytes": 0,
+      "textSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "normalization": "CRLF to LF, trailing spaces removed, terminal blank lines reduced to one newline; no diagnostic text or outcome removed"
+    },
+    "candidate-final.stdout.txt": {
+      "textPath": "candidate-final.stdout.txt",
+      "archiveBytes": 975,
+      "archiveSha256": "331f6311c2bfe4c02631ab8919033d26063a38830075ff3d1296052c1b31ce91",
+      "textBytes": 974,
+      "textSha256": "051f5618639652460c56490c330a2107dc82f1f00fdb317356aef7ee9f0492b7",
+      "normalization": "CRLF to LF, trailing spaces removed, terminal blank lines reduced to one newline; no diagnostic text or outcome removed"
+    },
+    "candidate-handler.json": {
+      "archiveBytes": 435263,
+      "archiveSha256": "306b712c63b2a28561a9a6aa13d728205f16c5758ece32028a3076fca2045b1e",
+      "metadataPath": "candidate/metadata.json",
+      "caseOrder": [
+        "optionsWithoutKey",
+        "missingKey",
+        "emptyKey",
+        "optionsWithWrongToken",
+        "missingToken",
+        "wrongToken",
+        "validPost",
+        "lowercaseBearer",
+        "validGET",
+        "validPUT",
+        "validPATCH",
+        "validDELETE"
+      ],
+      "casePaths": {
+        "optionsWithoutKey": "candidate/responses/optionsWithoutKey.json",
+        "missingKey": "candidate/responses/missingKey.json",
+        "emptyKey": "candidate/responses/emptyKey.json",
+        "optionsWithWrongToken": "candidate/responses/optionsWithWrongToken.json",
+        "missingToken": "candidate/responses/missingToken.json",
+        "wrongToken": "candidate/responses/wrongToken.json",
+        "validPost": "candidate/responses/validPost.json",
+        "lowercaseBearer": "candidate/responses/lowercaseBearer.json",
+        "validGET": "candidate/responses/validGET.json",
+        "validPUT": "candidate/responses/validPUT.json",
+        "validPATCH": "candidate/responses/validPATCH.json",
+        "validDELETE": "candidate/responses/validDELETE.json"
+      },
+      "reconstruction": "JSON.stringify({...metadata,snapshots:Object.fromEntries(caseOrder.map(name=>[name,caseJson]))},null,2)+newline; byte-identical verified"
+    },
+    "candidate-info.execution.json": {
+      "textPath": "candidate-info.execution.json",
+      "archiveBytes": 1296,
+      "archiveSha256": "309fbaeb877c0f52c307005cf3cd8a58bf3375f1e8e6a11dddbdebeefd3b0a52",
+      "textBytes": 1296,
+      "textSha256": "309fbaeb877c0f52c307005cf3cd8a58bf3375f1e8e6a11dddbdebeefd3b0a52",
+      "normalization": "CRLF to LF only; no code or values changed"
+    },
+    "candidate-info.stderr.txt": {
+      "textPath": "candidate-info.stderr.txt",
+      "archiveBytes": 0,
+      "archiveSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "textBytes": 0,
+      "textSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "normalization": "CRLF to LF, trailing spaces removed, terminal blank lines reduced to one newline; no diagnostic text or outcome removed"
+    },
+    "candidate-info.stdout.txt": {
+      "textPath": "candidate-info.stdout.txt",
+      "archiveBytes": 3754,
+      "archiveSha256": "b808700037d8094cb8f0e435e943839d91f4a1d9759de874193ffaf14b52dac3",
+      "textBytes": 3754,
+      "textSha256": "b808700037d8094cb8f0e435e943839d91f4a1d9759de874193ffaf14b52dac3",
+      "normalization": "CRLF to LF, trailing spaces removed, terminal blank lines reduced to one newline; no diagnostic text or outcome removed"
+    },
+    "candidate-lint.execution.json": {
+      "textPath": "candidate-lint.execution.json",
+      "archiveBytes": 1310,
+      "archiveSha256": "d79a318c4b9e8d80b7b9ddb7a20cb57a05ae4e73d863c2a5d882c1e980ac8323",
+      "textBytes": 1310,
+      "textSha256": "d79a318c4b9e8d80b7b9ddb7a20cb57a05ae4e73d863c2a5d882c1e980ac8323",
+      "normalization": "CRLF to LF only; no code or values changed"
+    },
+    "candidate-lint.stderr.txt": {
+      "textPath": "candidate-lint.stderr.txt",
+      "archiveBytes": 15,
+      "archiveSha256": "2575a1b59e90591280fb03b5c22f783810b1dde862cd5891b5cfc9282a8f77c7",
+      "textBytes": 15,
+      "textSha256": "2575a1b59e90591280fb03b5c22f783810b1dde862cd5891b5cfc9282a8f77c7",
+      "normalization": "CRLF to LF, trailing spaces removed, terminal blank lines reduced to one newline; no diagnostic text or outcome removed"
+    },
+    "candidate-lint.stdout.txt": {
+      "textPath": "candidate-lint.stdout.txt",
+      "archiveBytes": 0,
+      "archiveSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "textBytes": 0,
+      "textSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "normalization": "CRLF to LF, trailing spaces removed, terminal blank lines reduced to one newline; no diagnostic text or outcome removed"
+    },
+    "cors-published.mjs": {
+      "textPath": "cors-published.mjs.txt",
+      "archiveBytes": 2568,
+      "archiveSha256": "f49d75dea0d7447055b5be6a8b427bb81103f0e5ce9bc9c5c30b9d7d3ed869ec",
+      "textBytes": 2568,
+      "textSha256": "f49d75dea0d7447055b5be6a8b427bb81103f0e5ce9bc9c5c30b9d7d3ed869ec",
+      "normalization": "CRLF to LF only; no code or values changed"
+    },
+    "cors_resolution_test.ts": {
+      "textPath": "cors_resolution_test.ts.txt",
+      "archiveBytes": 3085,
+      "archiveSha256": "43ac77b06de72ef053ad8632f80b7a00ec1e5f92a6fef559c9859b6102d8e9bd",
+      "textBytes": 3085,
+      "textSha256": "43ac77b06de72ef053ad8632f80b7a00ec1e5f92a6fef559c9859b6102d8e9bd",
+      "normalization": "CRLF to LF only; no code or values changed"
+    },
+    "expected.ts": {
+      "textPath": "expected.ts.txt",
+      "archiveBytes": 2303,
+      "archiveSha256": "a38ac96f114e545b11fe42c83c7d9ca3474fc7da682ec9c5d15df4fd9f91f6b0",
+      "textBytes": 2303,
+      "textSha256": "a38ac96f114e545b11fe42c83c7d9ca3474fc7da682ec9c5d15df4fd9f91f6b0",
+      "normalization": "CRLF to LF only; no code or values changed"
+    },
+    "handler_contract_test.ts": {
+      "textPath": "handler_contract_test.ts.txt",
+      "archiveBytes": 10101,
+      "archiveSha256": "4825044c274233cb07d03b6ae04dc97c6dcdf8e6c50adfc20072692b6779c326",
+      "textBytes": 10101,
+      "textSha256": "4825044c274233cb07d03b6ae04dc97c6dcdf8e6c50adfc20072692b6779c326",
+      "normalization": "CRLF to LF only; no code or values changed"
+    },
+    "inspect-package.mjs": {
+      "textPath": "inspect-package.mjs.txt",
+      "archiveBytes": 2492,
+      "archiveSha256": "86f7330ac02d3ce0b6fff483c6b928dc1943f81b3daba8bddc1d4cb9d7cc1c34",
+      "textBytes": 2492,
+      "textSha256": "86f7330ac02d3ce0b6fff483c6b928dc1943f81b3daba8bddc1d4cb9d7cc1c34",
+      "normalization": "CRLF to LF only; no code or values changed"
+    },
+    "manifest.json": {
+      "textPath": "archive-manifest.json",
+      "archiveBytes": 8595,
+      "archiveSha256": "fa359857c51f96688b389c9f82dc0004ed34de09acd0c49466d089c0cf07c061",
+      "textBytes": 8353,
+      "textSha256": "564eb1a08bd7a2f083df0753ea743dc5199caa9864a74569b9e8d93fc1dad9aa",
+      "normalization": "CRLF to LF only; no code or values changed"
+    },
+    "published-export.json": {
+      "textPath": "published-export.json",
+      "archiveBytes": 2173,
+      "archiveSha256": "e79276148cde704477232f34bb66c6afe564cfa940957516cdcaebcbfc430868",
+      "textBytes": 2173,
+      "textSha256": "e79276148cde704477232f34bb66c6afe564cfa940957516cdcaebcbfc430868",
+      "normalization": "CRLF to LF only; no code or values changed"
+    },
+    "README.md": {
+      "textPath": "archive-README.md",
+      "archiveBytes": 7468,
+      "archiveSha256": "3049718fc2ff8342e5e1034586d58999249bb89bbd6ebd6eba007ff05135caf2",
+      "textBytes": 7468,
+      "textSha256": "3049718fc2ff8342e5e1034586d58999249bb89bbd6ebd6eba007ff05135caf2",
+      "normalization": "CRLF to LF only; no code or values changed"
+    },
+    "reference-cache.execution.json": {
+      "textPath": "reference-cache.execution.json",
+      "archiveBytes": 1577,
+      "archiveSha256": "36908d731744014c1bf53c3187e149071785a073833c5cb2597dc4053849a578",
+      "textBytes": 1577,
+      "textSha256": "36908d731744014c1bf53c3187e149071785a073833c5cb2597dc4053849a578",
+      "normalization": "CRLF to LF only; no code or values changed"
+    },
+    "reference-cache.stderr.txt": {
+      "textPath": "reference-cache.stderr.txt",
+      "archiveBytes": 11525,
+      "archiveSha256": "6b77a04db0f5e5588ffd26e57baef1c131625179ca5a76fb1177d30ded744e99",
+      "textBytes": 11524,
+      "textSha256": "b8513f01a0e858074225ab56d5bd650d76a5ada010e713cbbf06c6c050c336ff",
+      "normalization": "CRLF to LF, trailing spaces removed, terminal blank lines reduced to one newline; no diagnostic text or outcome removed"
+    },
+    "reference-cache.stdout.txt": {
+      "textPath": "reference-cache.stdout.txt",
+      "archiveBytes": 0,
+      "archiveSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "textBytes": 0,
+      "textSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "normalization": "CRLF to LF, trailing spaces removed, terminal blank lines reduced to one newline; no diagnostic text or outcome removed"
+    },
+    "reference-check-fixed.execution.json": {
+      "textPath": "reference-check-fixed.execution.json",
+      "archiveBytes": 1703,
+      "archiveSha256": "1c3441221bcfe80fefa346a49ccaf355bbf995388d4aadc12b596eb32a1d2164",
+      "textBytes": 1703,
+      "textSha256": "1c3441221bcfe80fefa346a49ccaf355bbf995388d4aadc12b596eb32a1d2164",
+      "normalization": "CRLF to LF only; no code or values changed"
+    },
+    "reference-check-fixed.stderr.txt": {
+      "textPath": "reference-check-fixed.stderr.txt",
+      "archiveBytes": 157,
+      "archiveSha256": "7f85d3987de5f68a5d804aa89aa00690a321554c980081091bc7ccf64a5f0fb5",
+      "textBytes": 157,
+      "textSha256": "7f85d3987de5f68a5d804aa89aa00690a321554c980081091bc7ccf64a5f0fb5",
+      "normalization": "CRLF to LF, trailing spaces removed, terminal blank lines reduced to one newline; no diagnostic text or outcome removed"
+    },
+    "reference-check-fixed.stdout.txt": {
+      "textPath": "reference-check-fixed.stdout.txt",
+      "archiveBytes": 0,
+      "archiveSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "textBytes": 0,
+      "textSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "normalization": "CRLF to LF, trailing spaces removed, terminal blank lines reduced to one newline; no diagnostic text or outcome removed"
+    },
+    "reference-check.execution.json": {
+      "textPath": "reference-check.execution.json",
+      "archiveBytes": 1685,
+      "archiveSha256": "be2ba746a717499fa3c86f842a113b338b2db050f624af55da570ebc3c6f20a9",
+      "textBytes": 1685,
+      "textSha256": "be2ba746a717499fa3c86f842a113b338b2db050f624af55da570ebc3c6f20a9",
+      "normalization": "CRLF to LF only; no code or values changed"
+    },
+    "reference-check.stderr.txt": {
+      "textPath": "reference-check.stderr.txt",
+      "archiveBytes": 966,
+      "archiveSha256": "aa8f6b5a45abf0cfaf82bc16139aa6f1d9939cf33a2123a164f25475f0cb3a77",
+      "textBytes": 966,
+      "textSha256": "aa8f6b5a45abf0cfaf82bc16139aa6f1d9939cf33a2123a164f25475f0cb3a77",
+      "normalization": "CRLF to LF, trailing spaces removed, terminal blank lines reduced to one newline; no diagnostic text or outcome removed"
+    },
+    "reference-check.stdout.txt": {
+      "textPath": "reference-check.stdout.txt",
+      "archiveBytes": 0,
+      "archiveSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "textBytes": 0,
+      "textSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "normalization": "CRLF to LF, trailing spaces removed, terminal blank lines reduced to one newline; no diagnostic text or outcome removed"
+    },
+    "reference-final.execution.json": {
+      "textPath": "reference-final.execution.json",
+      "archiveBytes": 2249,
+      "archiveSha256": "3a0aeb6fe2ee4dde4fda89b4e14ad1a8a4cbc196a19e2e5402c488f24fd2dc3d",
+      "textBytes": 2249,
+      "textSha256": "3a0aeb6fe2ee4dde4fda89b4e14ad1a8a4cbc196a19e2e5402c488f24fd2dc3d",
+      "normalization": "CRLF to LF only; no code or values changed"
+    },
+    "reference-final.stderr.txt": {
+      "textPath": "reference-final.stderr.txt",
+      "archiveBytes": 48,
+      "archiveSha256": "805baad9a392df44bb6727b7e0a05794408931896d1e4717bc68c64f67240629",
+      "textBytes": 48,
+      "textSha256": "805baad9a392df44bb6727b7e0a05794408931896d1e4717bc68c64f67240629",
+      "normalization": "CRLF to LF, trailing spaces removed, terminal blank lines reduced to one newline; no diagnostic text or outcome removed"
+    },
+    "reference-final.stdout.txt": {
+      "textPath": "reference-final.stdout.txt",
+      "archiveBytes": 878,
+      "archiveSha256": "79341532e488b7a2927c62087c073c661c8077ef1eede0ff8673ba092be36659",
+      "textBytes": 877,
+      "textSha256": "3e79d66160dbec66e1f211f5c899c0cc334a3916ca8ede50d541d6fdc7907681",
+      "normalization": "CRLF to LF, trailing spaces removed, terminal blank lines reduced to one newline; no diagnostic text or outcome removed"
+    },
+    "reference-handler-first.execution.json": {
+      "textPath": "reference-handler-first.execution.json",
+      "archiveBytes": 2157,
+      "archiveSha256": "69a5ef84ded38105e3e600ddbea26d6f56ae7ca3f659a08b1da4edcd8a6304da",
+      "textBytes": 2157,
+      "textSha256": "69a5ef84ded38105e3e600ddbea26d6f56ae7ca3f659a08b1da4edcd8a6304da",
+      "normalization": "CRLF to LF only; no code or values changed"
+    },
+    "reference-handler-first.stderr.txt": {
+      "textPath": "reference-handler-first.stderr.txt",
+      "archiveBytes": 67,
+      "archiveSha256": "e6419cca1a171188256140475110a64de6a7532db1bb17b684f2e2c738cdb037",
+      "textBytes": 67,
+      "textSha256": "e6419cca1a171188256140475110a64de6a7532db1bb17b684f2e2c738cdb037",
+      "normalization": "CRLF to LF, trailing spaces removed, terminal blank lines reduced to one newline; no diagnostic text or outcome removed"
+    },
+    "reference-handler-first.stdout.txt": {
+      "textPath": "reference-handler-first.stdout.txt",
+      "archiveBytes": 946,
+      "archiveSha256": "1f38779a7777c92da765bf1757ece976083326ce8fa0133c8ee1702004875c3a",
+      "textBytes": 943,
+      "textSha256": "4722ebabb42cb91ec081032e442168baf111b06dc4737a4544f74286c9cb2bb0",
+      "normalization": "CRLF to LF, trailing spaces removed, terminal blank lines reduced to one newline; no diagnostic text or outcome removed"
+    },
+    "reference-handler-serve-fixed.execution.json": {
+      "textPath": "reference-handler-serve-fixed.execution.json",
+      "archiveBytes": 2175,
+      "archiveSha256": "2029af0987cd6e5f005e97ff12052cf4b02c13623d23e5ae13616184ed5691b7",
+      "textBytes": 2175,
+      "textSha256": "2029af0987cd6e5f005e97ff12052cf4b02c13623d23e5ae13616184ed5691b7",
+      "normalization": "CRLF to LF only; no code or values changed"
+    },
+    "reference-handler-serve-fixed.stderr.txt": {
+      "textPath": "reference-handler-serve-fixed.stderr.txt",
+      "archiveBytes": 67,
+      "archiveSha256": "e6419cca1a171188256140475110a64de6a7532db1bb17b684f2e2c738cdb037",
+      "textBytes": 67,
+      "textSha256": "e6419cca1a171188256140475110a64de6a7532db1bb17b684f2e2c738cdb037",
+      "normalization": "CRLF to LF, trailing spaces removed, terminal blank lines reduced to one newline; no diagnostic text or outcome removed"
+    },
+    "reference-handler-serve-fixed.stdout.txt": {
+      "textPath": "reference-handler-serve-fixed.stdout.txt",
+      "archiveBytes": 986,
+      "archiveSha256": "2117a04640c88e754ebe2fc70d2377a312b98c2ce7c7980b06ecaff2162fdd3d",
+      "textBytes": 983,
+      "textSha256": "f696a4f3abcdfe226c57f33cab4dcf25a2fdeeff7a6d4e25db50bf66f24dd6f5",
+      "normalization": "CRLF to LF, trailing spaces removed, terminal blank lines reduced to one newline; no diagnostic text or outcome removed"
+    },
+    "reference-handler-source-read.execution.json": {
+      "textPath": "reference-handler-source-read.execution.json",
+      "archiveBytes": 2291,
+      "archiveSha256": "3c3f4174439e427f7fcd324d614cae5da8719e6f699c7f643940bb76304997cf",
+      "textBytes": 2291,
+      "textSha256": "3c3f4174439e427f7fcd324d614cae5da8719e6f699c7f643940bb76304997cf",
+      "normalization": "CRLF to LF only; no code or values changed"
+    },
+    "reference-handler-source-read.stderr.txt": {
+      "textPath": "reference-handler-source-read.stderr.txt",
+      "archiveBytes": 19,
+      "archiveSha256": "4f229c116cbae2c6dff7f06196beb073c09053a73c31d9b53e0560bd21231525",
+      "textBytes": 19,
+      "textSha256": "4f229c116cbae2c6dff7f06196beb073c09053a73c31d9b53e0560bd21231525",
+      "normalization": "CRLF to LF, trailing spaces removed, terminal blank lines reduced to one newline; no diagnostic text or outcome removed"
+    },
+    "reference-handler-source-read.stdout.txt": {
+      "textPath": "reference-handler-source-read.stdout.txt",
+      "archiveBytes": 1593,
+      "archiveSha256": "3656f3158f4bc91bfc6d962cd369cc40b83eafe7943d99d15bc08ba8135451db",
+      "textBytes": 1590,
+      "textSha256": "6c0944374d2546918f9d47dbfe889bc12c5d0bc62b2034f89dcfd5fbff1116fb",
+      "normalization": "CRLF to LF, trailing spaces removed, terminal blank lines reduced to one newline; no diagnostic text or outcome removed"
+    },
+    "reference-handler.json": {
+      "archiveBytes": 435166,
+      "archiveSha256": "287c8411ef74b1e1197da16d1643124d24e33ed54cc8eac9f4f41964b03597f2",
+      "metadataPath": "reference/metadata.json",
+      "caseOrder": [
+        "optionsWithoutKey",
+        "missingKey",
+        "emptyKey",
+        "optionsWithWrongToken",
+        "missingToken",
+        "wrongToken",
+        "validPost",
+        "lowercaseBearer",
+        "validGET",
+        "validPUT",
+        "validPATCH",
+        "validDELETE"
+      ],
+      "casePaths": {
+        "optionsWithoutKey": "reference/responses/optionsWithoutKey.json",
+        "missingKey": "reference/responses/missingKey.json",
+        "emptyKey": "reference/responses/emptyKey.json",
+        "optionsWithWrongToken": "reference/responses/optionsWithWrongToken.json",
+        "missingToken": "reference/responses/missingToken.json",
+        "wrongToken": "reference/responses/wrongToken.json",
+        "validPost": "reference/responses/validPost.json",
+        "lowercaseBearer": "reference/responses/lowercaseBearer.json",
+        "validGET": "reference/responses/validGET.json",
+        "validPUT": "reference/responses/validPUT.json",
+        "validPATCH": "reference/responses/validPATCH.json",
+        "validDELETE": "reference/responses/validDELETE.json"
+      },
+      "reconstruction": "JSON.stringify({...metadata,snapshots:Object.fromEntries(caseOrder.map(name=>[name,caseJson]))},null,2)+newline; byte-identical verified"
+    },
+    "reference-info.execution.json": {
+      "textPath": "reference-info.execution.json",
+      "archiveBytes": 1290,
+      "archiveSha256": "287a6378a86162675d23a086f4717ea7a102d1a86f7d69ca4d57b6f6b16257d3",
+      "textBytes": 1290,
+      "textSha256": "287a6378a86162675d23a086f4717ea7a102d1a86f7d69ca4d57b6f6b16257d3",
+      "normalization": "CRLF to LF only; no code or values changed"
+    },
+    "reference-info.stderr.txt": {
+      "textPath": "reference-info.stderr.txt",
+      "archiveBytes": 1261,
+      "archiveSha256": "43e85508741394a28b98653bb53d4bdbab91785611dfe7d3a9cdc93a04485d46",
+      "textBytes": 1261,
+      "textSha256": "43e85508741394a28b98653bb53d4bdbab91785611dfe7d3a9cdc93a04485d46",
+      "normalization": "CRLF to LF, trailing spaces removed, terminal blank lines reduced to one newline; no diagnostic text or outcome removed"
+    },
+    "reference-info.stdout.txt": {
+      "textPath": "reference-info.stdout.txt",
+      "archiveBytes": 3742,
+      "archiveSha256": "a0a11c7c55de03814697a8af975069fa66c9c9a58ed0669114160e731b47e55d",
+      "textBytes": 3742,
+      "textSha256": "a0a11c7c55de03814697a8af975069fa66c9c9a58ed0669114160e731b47e55d",
+      "normalization": "CRLF to LF, trailing spaces removed, terminal blank lines reduced to one newline; no diagnostic text or outcome removed"
+    },
+    "registry-reference.json": {
+      "textPath": "registry-reference.json",
+      "archiveBytes": 2613,
+      "archiveSha256": "db6b5dfc914acaca7148a4b9892daab328f6615ee809b3d156dcef728862eb28",
+      "textBytes": 2533,
+      "textSha256": "6a02a4d355a2521a225763ce98dfb80673cf046bed40cc71f6b2107f39560a92",
+      "normalization": "CRLF to LF only; no code or values changed"
+    },
+    "resolution-final.execution.json": {
+      "textPath": "resolution-final.execution.json",
+      "archiveBytes": 1869,
+      "archiveSha256": "035d91a187f058e594a3076977db04505679efae9698f7561c02d1af5a22a187",
+      "textBytes": 1869,
+      "textSha256": "035d91a187f058e594a3076977db04505679efae9698f7561c02d1af5a22a187",
+      "normalization": "CRLF to LF only; no code or values changed"
+    },
+    "resolution-final.stderr.txt": {
+      "textPath": "resolution-final.stderr.txt",
+      "archiveBytes": 47,
+      "archiveSha256": "ebcc7c70ca9d051277f6e5d6b309ed760cd51f7ad88d0c073fcf657c98118626",
+      "textBytes": 47,
+      "textSha256": "ebcc7c70ca9d051277f6e5d6b309ed760cd51f7ad88d0c073fcf657c98118626",
+      "normalization": "CRLF to LF, trailing spaces removed, terminal blank lines reduced to one newline; no diagnostic text or outcome removed"
+    },
+    "resolution-final.stdout.txt": {
+      "textPath": "resolution-final.stdout.txt",
+      "archiveBytes": 894,
+      "archiveSha256": "c14015cf569685e89fecb6382f9d51fb491518e1dabdcc3ae37c93e8d2fe4724",
+      "textBytes": 893,
+      "textSha256": "0511b92b20ec75aa2713021dcaa567eaa02a002f6e502fbf26581c24860601f6",
+      "normalization": "CRLF to LF, trailing spaces removed, terminal blank lines reduced to one newline; no diagnostic text or outcome removed"
+    },
+    "resolution.json": {
+      "textPath": "resolution.json",
+      "archiveBytes": 666,
+      "archiveSha256": "1cf34d431d3ce78c501adecda3b337dcc4961969fd7a2e115935bae1bc0bef94",
+      "textBytes": 666,
+      "textSha256": "1cf34d431d3ce78c501adecda3b337dcc4961969fd7a2e115935bae1bc0bef94",
+      "normalization": "CRLF to LF only; no code or values changed"
+    },
+    "run-deno.mjs": {
+      "textPath": "run-deno.mjs.txt",
+      "archiveBytes": 2688,
+      "archiveSha256": "207274a71658f8d9b56273e01df801234a7e2903c569165ebff9cfcb5dce4b5d",
+      "textBytes": 2688,
+      "textSha256": "207274a71658f8d9b56273e01df801234a7e2903c569165ebff9cfcb5dce4b5d",
+      "normalization": "CRLF to LF only; no code or values changed"
+    },
+    "runtime-provenance.json": {
+      "textPath": "runtime-provenance.json",
+      "archiveBytes": 620,
+      "archiveSha256": "f9a74ca6235c11cb285c1a544f0d841c5106eaa5894bb25d688ef970281d06c5",
+      "textBytes": 607,
+      "textSha256": "bde3374af4eb2582c1b7d36d711f8a11d2671f3ba6889b8048ca9a10d9767d0f",
+      "normalization": "CRLF to LF only; no code or values changed"
+    },
+    "source/candidate-index.ts": {
+      "textPath": "source/candidate-index.ts.txt",
+      "archiveBytes": 2776,
+      "archiveSha256": "0bc2d8df39dd1575f16563917195775358db2d6fad8d42234dc85fe29ecb5a28",
+      "textBytes": 2680,
+      "textSha256": "4b4f4726cfa2cc815a43c1c92e84f03db91611a5dc9314e3d0fb196e56809e5e",
+      "normalization": "CRLF to LF only; no code or values changed"
+    },
+    "source/reference-index.ts": {
+      "textPath": "source/reference-index.ts.txt",
+      "archiveBytes": 2770,
+      "archiveSha256": "d195f253cf05aa23f6bcbdb40af7429f409c3dc599b3937bfd23650dad61b878",
+      "textBytes": 2674,
+      "textSha256": "0bec04640e90b32d5b111efc5ce1920e7a7aef91aa8b72c0087d04473edafa50",
+      "normalization": "CRLF to LF only; no code or values changed"
+    },
+    "summary.json": {
+      "textPath": "summary.json",
+      "archiveBytes": 10359,
+      "archiveSha256": "9f6106fcd4cf48c96bc7c6b8fdd4f739ccd4983eb632c8dc313c6adbe8518424",
+      "textBytes": 10359,
+      "textSha256": "9f6106fcd4cf48c96bc7c6b8fdd4f739ccd4983eb632c8dc313c6adbe8518424",
+      "normalization": "CRLF to LF only; no code or values changed"
+    }
+  },
+  "inputs": [
+    {
+      "path": "archive-manifest.json",
+      "bytes": 8353,
+      "sha256": "564eb1a08bd7a2f083df0753ea743dc5199caa9864a74569b9e8d93fc1dad9aa"
+    },
+    {
+      "path": "archive-README.md",
+      "bytes": 7468,
+      "sha256": "3049718fc2ff8342e5e1034586d58999249bb89bbd6ebd6eba007ff05135caf2"
+    },
+    {
+      "path": "assertions.ts.txt",
+      "bytes": 2060,
+      "sha256": "025acb18e954721da81e9e48d9ce1470979b6517ecd11201c80474b920148565"
+    },
+    {
+      "path": "build-summary.mjs.txt",
+      "bytes": 6844,
+      "sha256": "ca9df7be154a2c926a85048b02a96e2884a2449822139026ae96c88c583b2b09"
+    },
+    {
+      "path": "candidate/metadata.json",
+      "bytes": 1257,
+      "sha256": "e7c84c94269485817d85650d0a9d0073a02793cc322ba695aa9892034e5b4fca"
+    },
+    {
+      "path": "candidate/responses/emptyKey.json",
+      "bytes": 392,
+      "sha256": "b531ab0fbd92119f6e292cbefa79a6f9c529f3cc353c35dd3045981097647411"
+    },
+    {
+      "path": "candidate/responses/lowercaseBearer.json",
+      "bytes": 71859,
+      "sha256": "727f6198ce07506861e0e15856b9e15c7bc7cd43340225bb2b11afca33ca91b3"
+    },
+    {
+      "path": "candidate/responses/missingKey.json",
+      "bytes": 392,
+      "sha256": "b531ab0fbd92119f6e292cbefa79a6f9c529f3cc353c35dd3045981097647411"
+    },
+    {
+      "path": "candidate/responses/missingToken.json",
+      "bytes": 378,
+      "sha256": "1cc1469816d114a633fa2a3c911e1e32ac43fc661ed1f15ed9713175444c49c8"
+    },
+    {
+      "path": "candidate/responses/optionsWithoutKey.json",
+      "bytes": 310,
+      "sha256": "1e021589238077cbb23359cefd9302d17c01a57b4621e4a444d29ec7a2a87209"
+    },
+    {
+      "path": "candidate/responses/optionsWithWrongToken.json",
+      "bytes": 310,
+      "sha256": "1e021589238077cbb23359cefd9302d17c01a57b4621e4a444d29ec7a2a87209"
+    },
+    {
+      "path": "candidate/responses/validDELETE.json",
+      "bytes": 71859,
+      "sha256": "727f6198ce07506861e0e15856b9e15c7bc7cd43340225bb2b11afca33ca91b3"
+    },
+    {
+      "path": "candidate/responses/validGET.json",
+      "bytes": 71859,
+      "sha256": "727f6198ce07506861e0e15856b9e15c7bc7cd43340225bb2b11afca33ca91b3"
+    },
+    {
+      "path": "candidate/responses/validPATCH.json",
+      "bytes": 71859,
+      "sha256": "727f6198ce07506861e0e15856b9e15c7bc7cd43340225bb2b11afca33ca91b3"
+    },
+    {
+      "path": "candidate/responses/validPost.json",
+      "bytes": 71859,
+      "sha256": "727f6198ce07506861e0e15856b9e15c7bc7cd43340225bb2b11afca33ca91b3"
+    },
+    {
+      "path": "candidate/responses/validPUT.json",
+      "bytes": 71859,
+      "sha256": "727f6198ce07506861e0e15856b9e15c7bc7cd43340225bb2b11afca33ca91b3"
+    },
+    {
+      "path": "candidate/responses/wrongToken.json",
+      "bytes": 378,
+      "sha256": "1cc1469816d114a633fa2a3c911e1e32ac43fc661ed1f15ed9713175444c49c8"
+    },
+    {
+      "path": "candidate-check.execution.json",
+      "bytes": 1685,
+      "sha256": "a6b78154a714a1daefa5ae6751fd1b19684ff4b49711a2259c3fb8f858bdfeaa"
+    },
+    {
+      "path": "candidate-check.stderr.txt",
+      "bytes": 157,
+      "sha256": "7f85d3987de5f68a5d804aa89aa00690a321554c980081091bc7ccf64a5f0fb5"
+    },
+    {
+      "path": "candidate-check.stdout.txt",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "candidate-ci-check.execution.json",
+      "bytes": 1373,
+      "sha256": "b7e1d05caa1e5cbed78b2b52313785f240032f31c8a441c93d3e22a9708db9c6"
+    },
+    {
+      "path": "candidate-ci-check.stderr.txt",
+      "bytes": 62,
+      "sha256": "e816b5b653508ad57cea2e1a283019317e138ee68a0aac94da9fc2f4014dee31"
+    },
+    {
+      "path": "candidate-ci-check.stdout.txt",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "candidate-final.execution.json",
+      "bytes": 2446,
+      "sha256": "00a9069c78c2f57752c36d69ae2a3c13a34488c08a2925ca712eb7d63311fc03"
+    },
+    {
+      "path": "candidate-final.stderr.txt",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "candidate-final.stdout.txt",
+      "bytes": 974,
+      "sha256": "051f5618639652460c56490c330a2107dc82f1f00fdb317356aef7ee9f0492b7"
+    },
+    {
+      "path": "candidate-info.execution.json",
+      "bytes": 1296,
+      "sha256": "309fbaeb877c0f52c307005cf3cd8a58bf3375f1e8e6a11dddbdebeefd3b0a52"
+    },
+    {
+      "path": "candidate-info.stderr.txt",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "candidate-info.stdout.txt",
+      "bytes": 3754,
+      "sha256": "b808700037d8094cb8f0e435e943839d91f4a1d9759de874193ffaf14b52dac3"
+    },
+    {
+      "path": "candidate-lint.execution.json",
+      "bytes": 1310,
+      "sha256": "d79a318c4b9e8d80b7b9ddb7a20cb57a05ae4e73d863c2a5d882c1e980ac8323"
+    },
+    {
+      "path": "candidate-lint.stderr.txt",
+      "bytes": 15,
+      "sha256": "2575a1b59e90591280fb03b5c22f783810b1dde862cd5891b5cfc9282a8f77c7"
+    },
+    {
+      "path": "candidate-lint.stdout.txt",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "cors-published.mjs.txt",
+      "bytes": 2568,
+      "sha256": "f49d75dea0d7447055b5be6a8b427bb81103f0e5ce9bc9c5c30b9d7d3ed869ec"
+    },
+    {
+      "path": "cors_resolution_test.ts.txt",
+      "bytes": 3085,
+      "sha256": "43ac77b06de72ef053ad8632f80b7a00ec1e5f92a6fef559c9859b6102d8e9bd"
+    },
+    {
+      "path": "expected.ts.txt",
+      "bytes": 2303,
+      "sha256": "a38ac96f114e545b11fe42c83c7d9ca3474fc7da682ec9c5d15df4fd9f91f6b0"
+    },
+    {
+      "path": "handler_contract_test.ts.txt",
+      "bytes": 10101,
+      "sha256": "4825044c274233cb07d03b6ae04dc97c6dcdf8e6c50adfc20072692b6779c326"
+    },
+    {
+      "path": "inspect-package.mjs.txt",
+      "bytes": 2492,
+      "sha256": "86f7330ac02d3ce0b6fff483c6b928dc1943f81b3daba8bddc1d4cb9d7cc1c34"
+    },
+    {
+      "path": "published-export.json",
+      "bytes": 2173,
+      "sha256": "e79276148cde704477232f34bb66c6afe564cfa940957516cdcaebcbfc430868"
+    },
+    {
+      "path": "reference/metadata.json",
+      "bytes": 1160,
+      "sha256": "9f7a5f71b0184053d797cc1807537759d2001c41a51144404ea8d1787794511a"
+    },
+    {
+      "path": "reference/responses/emptyKey.json",
+      "bytes": 392,
+      "sha256": "b531ab0fbd92119f6e292cbefa79a6f9c529f3cc353c35dd3045981097647411"
+    },
+    {
+      "path": "reference/responses/lowercaseBearer.json",
+      "bytes": 71859,
+      "sha256": "727f6198ce07506861e0e15856b9e15c7bc7cd43340225bb2b11afca33ca91b3"
+    },
+    {
+      "path": "reference/responses/missingKey.json",
+      "bytes": 392,
+      "sha256": "b531ab0fbd92119f6e292cbefa79a6f9c529f3cc353c35dd3045981097647411"
+    },
+    {
+      "path": "reference/responses/missingToken.json",
+      "bytes": 378,
+      "sha256": "1cc1469816d114a633fa2a3c911e1e32ac43fc661ed1f15ed9713175444c49c8"
+    },
+    {
+      "path": "reference/responses/optionsWithoutKey.json",
+      "bytes": 310,
+      "sha256": "1e021589238077cbb23359cefd9302d17c01a57b4621e4a444d29ec7a2a87209"
+    },
+    {
+      "path": "reference/responses/optionsWithWrongToken.json",
+      "bytes": 310,
+      "sha256": "1e021589238077cbb23359cefd9302d17c01a57b4621e4a444d29ec7a2a87209"
+    },
+    {
+      "path": "reference/responses/validDELETE.json",
+      "bytes": 71859,
+      "sha256": "727f6198ce07506861e0e15856b9e15c7bc7cd43340225bb2b11afca33ca91b3"
+    },
+    {
+      "path": "reference/responses/validGET.json",
+      "bytes": 71859,
+      "sha256": "727f6198ce07506861e0e15856b9e15c7bc7cd43340225bb2b11afca33ca91b3"
+    },
+    {
+      "path": "reference/responses/validPATCH.json",
+      "bytes": 71859,
+      "sha256": "727f6198ce07506861e0e15856b9e15c7bc7cd43340225bb2b11afca33ca91b3"
+    },
+    {
+      "path": "reference/responses/validPost.json",
+      "bytes": 71859,
+      "sha256": "727f6198ce07506861e0e15856b9e15c7bc7cd43340225bb2b11afca33ca91b3"
+    },
+    {
+      "path": "reference/responses/validPUT.json",
+      "bytes": 71859,
+      "sha256": "727f6198ce07506861e0e15856b9e15c7bc7cd43340225bb2b11afca33ca91b3"
+    },
+    {
+      "path": "reference/responses/wrongToken.json",
+      "bytes": 378,
+      "sha256": "1cc1469816d114a633fa2a3c911e1e32ac43fc661ed1f15ed9713175444c49c8"
+    },
+    {
+      "path": "reference-cache.execution.json",
+      "bytes": 1577,
+      "sha256": "36908d731744014c1bf53c3187e149071785a073833c5cb2597dc4053849a578"
+    },
+    {
+      "path": "reference-cache.stderr.txt",
+      "bytes": 11524,
+      "sha256": "b8513f01a0e858074225ab56d5bd650d76a5ada010e713cbbf06c6c050c336ff"
+    },
+    {
+      "path": "reference-cache.stdout.txt",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "reference-check-fixed.execution.json",
+      "bytes": 1703,
+      "sha256": "1c3441221bcfe80fefa346a49ccaf355bbf995388d4aadc12b596eb32a1d2164"
+    },
+    {
+      "path": "reference-check-fixed.stderr.txt",
+      "bytes": 157,
+      "sha256": "7f85d3987de5f68a5d804aa89aa00690a321554c980081091bc7ccf64a5f0fb5"
+    },
+    {
+      "path": "reference-check-fixed.stdout.txt",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "reference-check.execution.json",
+      "bytes": 1685,
+      "sha256": "be2ba746a717499fa3c86f842a113b338b2db050f624af55da570ebc3c6f20a9"
+    },
+    {
+      "path": "reference-check.stderr.txt",
+      "bytes": 966,
+      "sha256": "aa8f6b5a45abf0cfaf82bc16139aa6f1d9939cf33a2123a164f25475f0cb3a77"
+    },
+    {
+      "path": "reference-check.stdout.txt",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "reference-final.execution.json",
+      "bytes": 2249,
+      "sha256": "3a0aeb6fe2ee4dde4fda89b4e14ad1a8a4cbc196a19e2e5402c488f24fd2dc3d"
+    },
+    {
+      "path": "reference-final.stderr.txt",
+      "bytes": 48,
+      "sha256": "805baad9a392df44bb6727b7e0a05794408931896d1e4717bc68c64f67240629"
+    },
+    {
+      "path": "reference-final.stdout.txt",
+      "bytes": 877,
+      "sha256": "3e79d66160dbec66e1f211f5c899c0cc334a3916ca8ede50d541d6fdc7907681"
+    },
+    {
+      "path": "reference-handler-first.execution.json",
+      "bytes": 2157,
+      "sha256": "69a5ef84ded38105e3e600ddbea26d6f56ae7ca3f659a08b1da4edcd8a6304da"
+    },
+    {
+      "path": "reference-handler-first.stderr.txt",
+      "bytes": 67,
+      "sha256": "e6419cca1a171188256140475110a64de6a7532db1bb17b684f2e2c738cdb037"
+    },
+    {
+      "path": "reference-handler-first.stdout.txt",
+      "bytes": 943,
+      "sha256": "4722ebabb42cb91ec081032e442168baf111b06dc4737a4544f74286c9cb2bb0"
+    },
+    {
+      "path": "reference-handler-serve-fixed.execution.json",
+      "bytes": 2175,
+      "sha256": "2029af0987cd6e5f005e97ff12052cf4b02c13623d23e5ae13616184ed5691b7"
+    },
+    {
+      "path": "reference-handler-serve-fixed.stderr.txt",
+      "bytes": 67,
+      "sha256": "e6419cca1a171188256140475110a64de6a7532db1bb17b684f2e2c738cdb037"
+    },
+    {
+      "path": "reference-handler-serve-fixed.stdout.txt",
+      "bytes": 983,
+      "sha256": "f696a4f3abcdfe226c57f33cab4dcf25a2fdeeff7a6d4e25db50bf66f24dd6f5"
+    },
+    {
+      "path": "reference-handler-source-read.execution.json",
+      "bytes": 2291,
+      "sha256": "3c3f4174439e427f7fcd324d614cae5da8719e6f699c7f643940bb76304997cf"
+    },
+    {
+      "path": "reference-handler-source-read.stderr.txt",
+      "bytes": 19,
+      "sha256": "4f229c116cbae2c6dff7f06196beb073c09053a73c31d9b53e0560bd21231525"
+    },
+    {
+      "path": "reference-handler-source-read.stdout.txt",
+      "bytes": 1590,
+      "sha256": "6c0944374d2546918f9d47dbfe889bc12c5d0bc62b2034f89dcfd5fbff1116fb"
+    },
+    {
+      "path": "reference-info.execution.json",
+      "bytes": 1290,
+      "sha256": "287a6378a86162675d23a086f4717ea7a102d1a86f7d69ca4d57b6f6b16257d3"
+    },
+    {
+      "path": "reference-info.stderr.txt",
+      "bytes": 1261,
+      "sha256": "43e85508741394a28b98653bb53d4bdbab91785611dfe7d3a9cdc93a04485d46"
+    },
+    {
+      "path": "reference-info.stdout.txt",
+      "bytes": 3742,
+      "sha256": "a0a11c7c55de03814697a8af975069fa66c9c9a58ed0669114160e731b47e55d"
+    },
+    {
+      "path": "registry-reference.json",
+      "bytes": 2533,
+      "sha256": "6a02a4d355a2521a225763ce98dfb80673cf046bed40cc71f6b2107f39560a92"
+    },
+    {
+      "path": "resolution-final.execution.json",
+      "bytes": 1869,
+      "sha256": "035d91a187f058e594a3076977db04505679efae9698f7561c02d1af5a22a187"
+    },
+    {
+      "path": "resolution-final.stderr.txt",
+      "bytes": 47,
+      "sha256": "ebcc7c70ca9d051277f6e5d6b309ed760cd51f7ad88d0c073fcf657c98118626"
+    },
+    {
+      "path": "resolution-final.stdout.txt",
+      "bytes": 893,
+      "sha256": "0511b92b20ec75aa2713021dcaa567eaa02a002f6e502fbf26581c24860601f6"
+    },
+    {
+      "path": "resolution.json",
+      "bytes": 666,
+      "sha256": "1cf34d431d3ce78c501adecda3b337dcc4961969fd7a2e115935bae1bc0bef94"
+    },
+    {
+      "path": "run-deno.mjs.txt",
+      "bytes": 2688,
+      "sha256": "207274a71658f8d9b56273e01df801234a7e2903c569165ebff9cfcb5dce4b5d"
+    },
+    {
+      "path": "runtime-provenance.json",
+      "bytes": 607,
+      "sha256": "bde3374af4eb2582c1b7d36d711f8a11d2671f3ba6889b8048ca9a10d9767d0f"
+    },
+    {
+      "path": "source/candidate-index.ts.txt",
+      "bytes": 2680,
+      "sha256": "4b4f4726cfa2cc815a43c1c92e84f03db91611a5dc9314e3d0fb196e56809e5e"
+    },
+    {
+      "path": "source/reference-index.ts.txt",
+      "bytes": 2674,
+      "sha256": "0bec04640e90b32d5b111efc5ce1920e7a7aef91aa8b72c0087d04473edafa50"
+    },
+    {
+      "path": "summary.json",
+      "bytes": 10359,
+      "sha256": "9f6106fcd4cf48c96bc7c6b8fdd4f739ccd4983eb632c8dc313c6adbe8518424"
+    }
+  ]
+}

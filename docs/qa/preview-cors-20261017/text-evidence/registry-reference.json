@@ -1,0 +1,80 @@
+{
+  "observedAt": "2026-10-17T22:25:34.6367884Z",
+  "source": "https://registry.npmjs.org/@supabase/supabase-js",
+  "highestStableV2": "2.118.0",
+  "denoResolutionVerified": false,
+  "candidate": {
+    "version": "2.118.0",
+    "exports": {
+      ".": {
+        "import": {
+          "types": "./dist/index.d.mts",
+          "default": "./dist/index.mjs"
+        },
+        "require": {
+          "types": "./dist/index.d.cts",
+          "default": "./dist/index.cjs"
+        },
+        "react-native": {
+          "types": "./dist/index.d.cts",
+          "default": "./dist/index.cjs"
+        }
+      },
+      "./cors": {
+        "import": {
+          "types": "./dist/cors.d.mts",
+          "default": "./dist/cors.mjs"
+        },
+        "require": {
+          "types": "./dist/cors.d.cts",
+          "default": "./dist/cors.cjs"
+        },
+        "react-native": {
+          "types": "./dist/cors.d.cts",
+          "default": "./dist/cors.cjs"
+        }
+      },
+      "./dist/*": "./dist/*",
+      "./tracing": {
+        "import": {
+          "types": "./dist/tracing.d.mts",
+          "default": "./dist/tracing.mjs"
+        },
+        "require": {
+          "types": "./dist/tracing.d.cts",
+          "default": "./dist/tracing.cjs"
+        },
+        "react-native": {
+          "types": "./dist/tracing.d.cts",
+          "default": "./dist/tracing.cjs"
+        }
+      },
+      "./package.json": "./package.json"
+    },
+    "dist": {
+      "shasum": "a590a3a0b301cb336c771a81c8d37a4bbc2647cf",
+      "tarball": "https://registry.npmjs.org/@supabase/supabase-js/-/supabase-js-2.118.0.tgz",
+      "fileCount": 45,
+      "integrity": "sha512-FxI8UXMVC2UG7IkeiI8fuQZqq2oI3JeSuN8MPIC2RLVaoEAxKS0nqE6kii9Ewpq8f9gNPM6git1Y8f0vN/QLFw==",
+      "signatures": [
+        {
+          "sig": "MEQCIG4S1xmTqQ7f9HM2PmkdGAtVVB668IukDFKOWcYdjVhnAiAwmVH7r/68x6FsPuWV8InbFBBsEvwltBW5abtVkMu1Ow==",
+          "keyid": "SHA256:DhQ8wR5APBvFHLF/+Tc+AYvPOdTpcIDqOhxsBHRwC7U"
+        },
+        {
+          "keyid": "SHA256:DhQ8wR5APBvFHLF/+Tc+AYvPOdTpcIDqOhxsBHRwC7U",
+          "sig": "MEQCIE8bCfARJ3x7xbucbhx0nJhDxmPVf3bn/tcJZFuTdOH4AiBRkiOnZ/chCFIHAM/7QXBno4hlLYQyOHSu6i7qWaZR7g=="
+        }
+      ],
+      "attestations": {
+        "url": "https://registry.npmjs.org/-/npm/v1/attestations/@supabase%2fsupabase-js@2.118.0",
+        "provenance": {
+          "predicateType": "https://slsa.dev/provenance/v1"
+        }
+      },
+      "unpackedSize": 652315
+    },
+    "publishedAt": "2026-10-15T12:57:17.683Z"
+  },
+  "integrityVerified": true
+}

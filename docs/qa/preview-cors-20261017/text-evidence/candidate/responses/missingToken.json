@@ -1,0 +1,10 @@
+{
+  "status": 401,
+  "headers": {
+    "access-control-allow-headers": "authorization, x-client-info, apikey, content-type, x-retry-count, traceparent, tracestate, baggage",
+    "access-control-allow-methods": "GET, POST, PUT, PATCH, DELETE, OPTIONS",
+    "access-control-allow-origin": "*",
+    "content-type": "application/json"
+  },
+  "body": "{\"error\":\"Unauthorized\"}"
+}

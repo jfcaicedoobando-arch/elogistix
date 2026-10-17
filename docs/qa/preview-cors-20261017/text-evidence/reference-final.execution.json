@@ -1,0 +1,50 @@
+{
+  "name": "reference-final",
+  "executable": "C:\\Users\\torta\\Documents\\Codex\\2026-10-17\\task-5\\cors-runtime\\deno.exe",
+  "args": [
+    "test",
+    "--cached-only",
+    "--no-lock",
+    "--node-modules-dir=none",
+    "--config=C:/Users/torta/Documents/Codex/2026-10-17/task-5/elogistix/supabase/functions/preview-transactional-email/deno.json",
+    "--sanitize-ops",
+    "--sanitize-resources",
+    "--deny-net",
+    "--deny-env",
+    "--deny-run",
+    "--deny-ffi",
+    "--deny-sys",
+    "--allow-read=C:/Users/torta/Documents/Codex/2026-10-17/task-5/elogistix/supabase/functions/preview-transactional-email/index.ts,C:/Users/torta/Documents/Codex/2026-10-17/task-5/elogistix/supabase/functions/_shared/transactional-email-templates",
+    "--allow-write=C:/Users/torta/Documents/Codex/2026-10-17/task-5/cors-evidence/reference-handler.json",
+    "C:/Users/torta/Documents/Codex/2026-10-17/task-5/cors-evidence/handler_contract_test.ts",
+    "--",
+    "--entry=file:///C:/Users/torta/Documents/Codex/2026-10-17/task-5/elogistix/supabase/functions/preview-transactional-email/index.ts",
+    "--label=reference",
+    "--output=file:///C:/Users/torta/Documents/Codex/2026-10-17/task-5/cors-evidence/reference-handler.json"
+  ],
+  "cwd": "C:\\Users\\torta\\Documents\\Codex\\2026-10-17\\task-5\\elogistix\\",
+  "cache": "C:\\Users\\torta\\Documents\\Codex\\2026-10-17\\task-5\\cors-deno-cache\\",
+  "config": "C:\\Users\\torta\\Documents\\Codex\\2026-10-17\\task-5\\elogistix\\supabase\\functions\\preview-transactional-email\\deno.json",
+  "entry": "C:\\Users\\torta\\Documents\\Codex\\2026-10-17\\task-5\\elogistix\\supabase\\functions\\preview-transactional-email\\index.ts",
+  "inheritedEnvironmentKeys": [
+    "SYSTEMROOT",
+    "SystemRoot",
+    "WINDIR",
+    "TEMP",
+    "TMP"
+  ],
+  "DENO_NO_PACKAGE_JSON": "1",
+  "startedAt": "2026-10-17T22:35:40.815Z",
+  "completedAt": "2026-10-17T22:35:42.997Z",
+  "exitCode": 0,
+  "signal": null,
+  "error": null,
+  "stdout": {
+    "path": "reference-final.stdout.txt",
+    "sha256": "79341532e488b7a2927c62087c073c661c8077ef1eede0ff8673ba092be36659"
+  },
+  "stderr": {
+    "path": "reference-final.stderr.txt",
+    "sha256": "805baad9a392df44bb6727b7e0a05794408931896d1e4717bc68c64f67240629"
+  }
+}

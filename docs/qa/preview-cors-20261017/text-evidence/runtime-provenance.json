@@ -1,0 +1,13 @@
+{
+  "source": "C:\\Users\\torta\\Documents\\Codex\\2026-10-17\\task-3\\elogistix-deferred\\test-results\\xml-deno-runtime\\deno.exe",
+  "sourceBeforeSha256": "e020f3e232bd16e33768dee528e5983349c962952051ced0a5d58ad42f5d9b33",
+  "sourceAfterSha256": "e020f3e232bd16e33768dee528e5983349c962952051ced0a5d58ad42f5d9b33",
+  "copiedSha256": "e020f3e232bd16e33768dee528e5983349c962952051ced0a5d58ad42f5d9b33",
+  "version": [
+    "deno 2.9.7 (stable, release, x86_64-pc-windows-msvc)",
+    "v8 15.0.245.2-rusty",
+    "typescript 6.0.3"
+  ],
+  "sourceModified": false,
+  "copiedAt": "2026-10-17T22:31:41.8641923Z"
+}

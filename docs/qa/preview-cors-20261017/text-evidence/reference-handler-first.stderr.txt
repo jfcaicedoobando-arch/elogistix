@@ -1,0 +1,2 @@
+Check ../cors-evidence/handler_contract_test.ts
+error: Test failed

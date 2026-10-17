@@ -1,0 +1,1 @@
+Check ../cors-evidence/cors_resolution_test.ts

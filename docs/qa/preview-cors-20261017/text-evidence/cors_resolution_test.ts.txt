@@ -1,0 +1,56 @@
+import { assert, assertEquals, assertRecord, fileUrl, options } from "./assertions.ts";
+import { EXPECTED_CORS } from "./expected.ts";
+
+function normalizedHeaders(value: unknown): Record<string, string> {
+  assertRecord(value, "corsHeaders export");
+  const headers: Record<string, string> = {};
+  for (const [key, item] of Object.entries(value)) {
+    assert(typeof item === "string", `${key}: CORS value must be a string`);
+    headers[key.toLowerCase()] = item;
+  }
+  return headers;
+}
+
+Deno.test({
+  name: "actual npm floating /cors resolution equals explicitly supplied exact candidate",
+  sanitizeOps: true,
+  sanitizeResources: true,
+  sanitizeExit: true,
+  async fn() {
+    const opts = options(Deno.args, ["candidate", "output"]);
+    const candidate = opts.get("candidate");
+    assert(candidate && /^2\.\d+\.\d+$/.test(candidate), "Supply --candidate=<exact stable 2.x.y>; do not infer a version");
+    for (const name of ["net", "env", "run", "ffi", "sys"] as const) {
+      assertEquals((await Deno.permissions.query({ name })).state, "denied", `Explicit --deny-${name} required`);
+    }
+    const referenceSpecifier = "npm:@supabase/supabase-js@2/cors";
+    const candidateSpecifier = `npm:@supabase/supabase-js@${candidate}/cors`;
+    const reference: unknown = await import(referenceSpecifier);
+    const pinned: unknown = await import(candidateSpecifier);
+    const referencePackage: unknown = await import("npm:@supabase/supabase-js@2/package.json", { with: { type: "json" } });
+    const pinnedPackage: unknown = await import(`npm:@supabase/supabase-js@${candidate}/package.json`, { with: { type: "json" } });
+    assertRecord(reference, "reference module");
+    assertRecord(pinned, "candidate module");
+    assertRecord(referencePackage, "reference package module");
+    assertRecord(pinnedPackage, "candidate package module");
+    assertRecord(referencePackage.default, "reference package metadata");
+    assertRecord(pinnedPackage.default, "candidate package metadata");
+    assertEquals(pinnedPackage.default.version, candidate, "exact candidate actually resolved");
+    assertEquals(referencePackage.default.version, candidate, "floating reference resolves to the candidate");
+    assertEquals(normalizedHeaders(reference.corsHeaders), EXPECTED_CORS, "actual reference export exact contract");
+    assertEquals(normalizedHeaders(pinned.corsHeaders), EXPECTED_CORS, "actual exact candidate export contract");
+    assertEquals(reference.corsHeaders, pinned.corsHeaders, "actual npm export equality");
+    const evidence = {
+      runtime: Deno.version,
+      referenceSpecifier,
+      candidateSpecifier,
+      referenceVersion: referencePackage.default.version,
+      candidateVersion: pinnedPackage.default.version,
+      referenceExports: Object.keys(reference).sort(),
+      candidateExports: Object.keys(pinned).sort(),
+      corsHeaders: reference.corsHeaders,
+    };
+    if (opts.has("output")) await Deno.writeTextFile(fileUrl(opts.get("output")!, "output"), JSON.stringify(evidence, null, 2) + "\n");
+    console.log(JSON.stringify(evidence));
+  },
+});
