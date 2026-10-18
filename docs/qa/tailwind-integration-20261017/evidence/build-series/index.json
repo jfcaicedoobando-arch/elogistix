@@ -1,0 +1,1875 @@
+{
+  "schemaVersion": 1,
+  "status": "verified",
+  "createdAt": "2026-10-18T00:01:03.787Z",
+  "command": [
+    "C:\\Users\\torta\\Documents\\Codex\\2026-10-17\\task-6\\.tools\\node.exe",
+    "C:\\Users\\torta\\Documents\\Codex\\2026-10-17\\task-6\\elogistix-tailwind4\\docs\\qa\\tailwind-integration-20261017\\archive-builds.mjs",
+    "--input",
+    "reports/tailwind-integration/build-series",
+    "--output",
+    "docs/qa/tailwind-integration-20261017/evidence/build-series"
+  ],
+  "sourceOutput": "reports/tailwind-integration/build-series",
+  "baseHead": "0552b3648c041dd19e027bb1370a5277501b59dc",
+  "originalSummary": {
+    "sourcePath": "reports/tailwind-integration/build-series/summary.json",
+    "archivePath": "summary.json",
+    "sha256": "596d22a2ed5b0450bca06866ec27736af990fe32637646ead24d13844419c500",
+    "bytes": 115122,
+    "kind": "original-summary"
+  },
+  "compression": {
+    "sourcePath": "reports/tailwind-integration/build-series/compression-cache.json",
+    "archivePath": "compression-cache.json",
+    "sha256": "824e773f3cef4931c0c1ee0eb09dc6bdd9b3736dbff2250a648d3db743295f25",
+    "bytes": 305727,
+    "kind": "compression-cache"
+  },
+  "sources": [
+    {
+      "sourcePath": "reports/tailwind-integration/build-series/sources/tracked-before.json",
+      "archivePath": "execution/sources/tracked-before.json",
+      "sha256": "08a7fc55183a7e0c78d48cd0a247cf37f0d3fb86787b975a678c1095be029480",
+      "bytes": 1753826,
+      "kind": "source-tracked-before"
+    },
+    {
+      "sourcePath": "reports/tailwind-integration/build-series/sources/tracked-after.json",
+      "archivePath": "execution/sources/tracked-after.json",
+      "sha256": "3643f61bd488b90f5e03c7a3ffe588d5f3e206f0559ba0ac3d54f1fadfb62635",
+      "bytes": 1753826,
+      "kind": "source-tracked-after"
+    },
+    {
+      "sourcePath": "reports/tailwind-integration/build-series/sources/harness-before.json",
+      "archivePath": "execution/sources/harness-before.json",
+      "sha256": "1dc3065790a6e07ac04cf52e271265ec253a3af5c033a477cc6d0a4adf009ec0",
+      "bytes": 3263,
+      "kind": "source-harness-before"
+    },
+    {
+      "sourcePath": "reports/tailwind-integration/build-series/sources/harness-after.json",
+      "archivePath": "execution/sources/harness-after.json",
+      "sha256": "2fdec5fb39d00bfc987ae9f1429158596dde0f44969142fee51575f32d68824f",
+      "bytes": 3263,
+      "kind": "source-harness-after"
+    }
+  ],
+  "runs": [
+    {
+      "id": "initial-01-postcss",
+      "phase": "initial",
+      "pair": 1,
+      "variant": "postcss",
+      "elapsedMs": 25463.825100000002,
+      "config": {
+        "sourcePath": "reports/tailwind-integration/build-series/config/initial-01-postcss.json",
+        "archivePath": "execution/config/initial-01-postcss.json",
+        "sha256": "060fb8fcc746f7f2fd1b6bbd2a6b223f945185efdfa9b8c58fa51f5c04c5739e",
+        "bytes": 2912,
+        "kind": "resolved-config"
+      },
+      "logs": {
+        "stdout": {
+          "sourcePath": "reports/tailwind-integration/build-series/logs/initial-01-postcss.stdout.txt",
+          "archivePath": "execution/initial-01-postcss.stdout.txt",
+          "sha256": "88ca4e094832984246421055c97773e91fe410f10dd6a3fab6af59b19282143d",
+          "bytes": 102436,
+          "kind": "stdout"
+        },
+        "stderr": {
+          "sourcePath": "reports/tailwind-integration/build-series/logs/initial-01-postcss.stderr.txt",
+          "archivePath": "execution/initial-01-postcss.stderr.txt",
+          "sha256": "78016d9c6d9de6a4a97c69037c0284667f97ecf58840486cfc63eb892d7f7b56",
+          "bytes": 1615,
+          "kind": "stderr"
+        }
+      },
+      "inventory": {
+        "sourcePath": "reports/tailwind-integration/build-series/inventories/initial-01-postcss.json",
+        "archivePath": "objects/e2161506340cd132f902106cec744fbaec7565e207745e770b32a251258ac308.json",
+        "sha256": "e2161506340cd132f902106cec744fbaec7565e207745e770b32a251258ac308",
+        "bytes": 494612,
+        "kind": "inventory"
+      },
+      "bundleMetadata": {
+        "sourcePath": "reports/tailwind-integration/build-series/outputs/initial-01-postcss/.qa-build-metadata.json",
+        "archivePath": "objects/3e84096ce4d1575ec3d3758f5855f6a7b72ceb277eb5aed56e30a00bc91605f2.json",
+        "sha256": "3e84096ce4d1575ec3d3758f5855f6a7b72ceb277eb5aed56e30a00bc91605f2",
+        "bytes": 806487,
+        "kind": "bundle-metadata"
+      },
+      "rawAssetsVerified": 742,
+      "totals": {
+        "js": {
+          "files": 741,
+          "rawBytes": 9386347,
+          "gzipBytes": 3082508,
+          "brotliBytes": 2630347,
+          "rules": 0
+        },
+        "css": {
+          "files": 1,
+          "rawBytes": 196588,
+          "gzipBytes": 27568,
+          "brotliBytes": 21163,
+          "rules": 2272
+        },
+        "combined": {
+          "files": 742,
+          "rawBytes": 9582935,
+          "gzipBytes": 3110076,
+          "brotliBytes": 2651510,
+          "rules": 2272
+        }
+      }
+    },
+    {
+      "id": "initial-01-vite",
+      "phase": "initial",
+      "pair": 1,
+      "variant": "vite",
+      "elapsedMs": 22759.329900000004,
+      "config": {
+        "sourcePath": "reports/tailwind-integration/build-series/config/initial-01-vite.json",
+        "archivePath": "execution/config/initial-01-vite.json",
+        "sha256": "ef877144a4a34ef532c295bb72c384234d259d8f690f710a333128ac37c7010c",
+        "bytes": 2963,
+        "kind": "resolved-config"
+      },
+      "logs": {
+        "stdout": {
+          "sourcePath": "reports/tailwind-integration/build-series/logs/initial-01-vite.stdout.txt",
+          "archivePath": "execution/initial-01-vite.stdout.txt",
+          "sha256": "78b1573d73d61e466058d2532f1c786ac5c155ae240001d5b203acc3d8addb80",
+          "bytes": 100198,
+          "kind": "stdout"
+        },
+        "stderr": {
+          "sourcePath": "reports/tailwind-integration/build-series/logs/initial-01-vite.stderr.txt",
+          "archivePath": "execution/initial-01-vite.stderr.txt",
+          "sha256": "610e57032462682c61828dfece432e40f0054ae9bc726bdb429349b12232247c",
+          "bytes": 1639,
+          "kind": "stderr"
+        }
+      },
+      "inventory": {
+        "sourcePath": "reports/tailwind-integration/build-series/inventories/initial-01-vite.json",
+        "archivePath": "objects/e2161506340cd132f902106cec744fbaec7565e207745e770b32a251258ac308.json",
+        "sha256": "e2161506340cd132f902106cec744fbaec7565e207745e770b32a251258ac308",
+        "bytes": 494612,
+        "kind": "inventory"
+      },
+      "bundleMetadata": {
+        "sourcePath": "reports/tailwind-integration/build-series/outputs/initial-01-vite/.qa-build-metadata.json",
+        "archivePath": "objects/71f00955f622b4e332da9b5efca1473e52990994b49ef0649eb0239d02644871.json",
+        "sha256": "71f00955f622b4e332da9b5efca1473e52990994b49ef0649eb0239d02644871",
+        "bytes": 806484,
+        "kind": "bundle-metadata"
+      },
+      "rawAssetsVerified": 742,
+      "totals": {
+        "js": {
+          "files": 741,
+          "rawBytes": 9386347,
+          "gzipBytes": 3082508,
+          "brotliBytes": 2630347,
+          "rules": 0
+        },
+        "css": {
+          "files": 1,
+          "rawBytes": 196588,
+          "gzipBytes": 27568,
+          "brotliBytes": 21163,
+          "rules": 2272
+        },
+        "combined": {
+          "files": 742,
+          "rawBytes": 9582935,
+          "gzipBytes": 3110076,
+          "brotliBytes": 2651510,
+          "rules": 2272
+        }
+      }
+    },
+    {
+      "id": "initial-02-vite",
+      "phase": "initial",
+      "pair": 2,
+      "variant": "vite",
+      "elapsedMs": 21737.078400000006,
+      "config": {
+        "sourcePath": "reports/tailwind-integration/build-series/config/initial-02-vite.json",
+        "archivePath": "execution/config/initial-02-vite.json",
+        "sha256": "8297c5a13ea3a4f39044e73e65278e473ad775a8bcf55d5716e128c3139787c0",
+        "bytes": 2963,
+        "kind": "resolved-config"
+      },
+      "logs": {
+        "stdout": {
+          "sourcePath": "reports/tailwind-integration/build-series/logs/initial-02-vite.stdout.txt",
+          "archivePath": "execution/initial-02-vite.stdout.txt",
+          "sha256": "00d0eca44d6e38bc336c65d632295c3a71af9f72f5c8dda1c68f98f371665afa",
+          "bytes": 100198,
+          "kind": "stdout"
+        },
+        "stderr": {
+          "sourcePath": "reports/tailwind-integration/build-series/logs/initial-02-vite.stderr.txt",
+          "archivePath": "execution/initial-02-vite.stderr.txt",
+          "sha256": "688db9a68c79cd303673511ab6dbf4cb1b6a079aaf747bbffbc6634644026237",
+          "bytes": 1099,
+          "kind": "stderr"
+        }
+      },
+      "inventory": {
+        "sourcePath": "reports/tailwind-integration/build-series/inventories/initial-02-vite.json",
+        "archivePath": "objects/e2161506340cd132f902106cec744fbaec7565e207745e770b32a251258ac308.json",
+        "sha256": "e2161506340cd132f902106cec744fbaec7565e207745e770b32a251258ac308",
+        "bytes": 494612,
+        "kind": "inventory"
+      },
+      "bundleMetadata": {
+        "sourcePath": "reports/tailwind-integration/build-series/outputs/initial-02-vite/.qa-build-metadata.json",
+        "archivePath": "objects/71f00955f622b4e332da9b5efca1473e52990994b49ef0649eb0239d02644871.json",
+        "sha256": "71f00955f622b4e332da9b5efca1473e52990994b49ef0649eb0239d02644871",
+        "bytes": 806484,
+        "kind": "bundle-metadata"
+      },
+      "rawAssetsVerified": 742,
+      "totals": {
+        "js": {
+          "files": 741,
+          "rawBytes": 9386347,
+          "gzipBytes": 3082508,
+          "brotliBytes": 2630347,
+          "rules": 0
+        },
+        "css": {
+          "files": 1,
+          "rawBytes": 196588,
+          "gzipBytes": 27568,
+          "brotliBytes": 21163,
+          "rules": 2272
+        },
+        "combined": {
+          "files": 742,
+          "rawBytes": 9582935,
+          "gzipBytes": 3110076,
+          "brotliBytes": 2651510,
+          "rules": 2272
+        }
+      }
+    },
+    {
+      "id": "initial-02-postcss",
+      "phase": "initial",
+      "pair": 2,
+      "variant": "postcss",
+      "elapsedMs": 22802.898,
+      "config": {
+        "sourcePath": "reports/tailwind-integration/build-series/config/initial-02-postcss.json",
+        "archivePath": "execution/config/initial-02-postcss.json",
+        "sha256": "1615bc12cd4cad619fc8938693f37fed1b133d25912f2466cfc1185e5dd595f7",
+        "bytes": 2912,
+        "kind": "resolved-config"
+      },
+      "logs": {
+        "stdout": {
+          "sourcePath": "reports/tailwind-integration/build-series/logs/initial-02-postcss.stdout.txt",
+          "archivePath": "execution/initial-02-postcss.stdout.txt",
+          "sha256": "ccdfbfdf7a1930f71b93a397d69d754ec0b0f25373baeac173ce54f9bbed060c",
+          "bytes": 102436,
+          "kind": "stdout"
+        },
+        "stderr": {
+          "sourcePath": "reports/tailwind-integration/build-series/logs/initial-02-postcss.stderr.txt",
+          "archivePath": "execution/initial-02-postcss.stderr.txt",
+          "sha256": "688db9a68c79cd303673511ab6dbf4cb1b6a079aaf747bbffbc6634644026237",
+          "bytes": 1099,
+          "kind": "stderr"
+        }
+      },
+      "inventory": {
+        "sourcePath": "reports/tailwind-integration/build-series/inventories/initial-02-postcss.json",
+        "archivePath": "objects/e2161506340cd132f902106cec744fbaec7565e207745e770b32a251258ac308.json",
+        "sha256": "e2161506340cd132f902106cec744fbaec7565e207745e770b32a251258ac308",
+        "bytes": 494612,
+        "kind": "inventory"
+      },
+      "bundleMetadata": {
+        "sourcePath": "reports/tailwind-integration/build-series/outputs/initial-02-postcss/.qa-build-metadata.json",
+        "archivePath": "objects/3e84096ce4d1575ec3d3758f5855f6a7b72ceb277eb5aed56e30a00bc91605f2.json",
+        "sha256": "3e84096ce4d1575ec3d3758f5855f6a7b72ceb277eb5aed56e30a00bc91605f2",
+        "bytes": 806487,
+        "kind": "bundle-metadata"
+      },
+      "rawAssetsVerified": 742,
+      "totals": {
+        "js": {
+          "files": 741,
+          "rawBytes": 9386347,
+          "gzipBytes": 3082508,
+          "brotliBytes": 2630347,
+          "rules": 0
+        },
+        "css": {
+          "files": 1,
+          "rawBytes": 196588,
+          "gzipBytes": 27568,
+          "brotliBytes": 21163,
+          "rules": 2272
+        },
+        "combined": {
+          "files": 742,
+          "rawBytes": 9582935,
+          "gzipBytes": 3110076,
+          "brotliBytes": 2651510,
+          "rules": 2272
+        }
+      }
+    },
+    {
+      "id": "initial-03-postcss",
+      "phase": "initial",
+      "pair": 3,
+      "variant": "postcss",
+      "elapsedMs": 20260.641000000003,
+      "config": {
+        "sourcePath": "reports/tailwind-integration/build-series/config/initial-03-postcss.json",
+        "archivePath": "execution/config/initial-03-postcss.json",
+        "sha256": "7236a4829b1ed36c815e793755b4a4b108a1503a53c361ecf197848969eab9d7",
+        "bytes": 2912,
+        "kind": "resolved-config"
+      },
+      "logs": {
+        "stdout": {
+          "sourcePath": "reports/tailwind-integration/build-series/logs/initial-03-postcss.stdout.txt",
+          "archivePath": "execution/initial-03-postcss.stdout.txt",
+          "sha256": "e0b3336af8a36db95b02c45bb53c5434cfb529818064d946dc02667b2463552a",
+          "bytes": 102436,
+          "kind": "stdout"
+        },
+        "stderr": {
+          "sourcePath": "reports/tailwind-integration/build-series/logs/initial-03-postcss.stderr.txt",
+          "archivePath": "execution/initial-03-postcss.stderr.txt",
+          "sha256": "688db9a68c79cd303673511ab6dbf4cb1b6a079aaf747bbffbc6634644026237",
+          "bytes": 1099,
+          "kind": "stderr"
+        }
+      },
+      "inventory": {
+        "sourcePath": "reports/tailwind-integration/build-series/inventories/initial-03-postcss.json",
+        "archivePath": "objects/e2161506340cd132f902106cec744fbaec7565e207745e770b32a251258ac308.json",
+        "sha256": "e2161506340cd132f902106cec744fbaec7565e207745e770b32a251258ac308",
+        "bytes": 494612,
+        "kind": "inventory"
+      },
+      "bundleMetadata": {
+        "sourcePath": "reports/tailwind-integration/build-series/outputs/initial-03-postcss/.qa-build-metadata.json",
+        "archivePath": "objects/3e84096ce4d1575ec3d3758f5855f6a7b72ceb277eb5aed56e30a00bc91605f2.json",
+        "sha256": "3e84096ce4d1575ec3d3758f5855f6a7b72ceb277eb5aed56e30a00bc91605f2",
+        "bytes": 806487,
+        "kind": "bundle-metadata"
+      },
+      "rawAssetsVerified": 742,
+      "totals": {
+        "js": {
+          "files": 741,
+          "rawBytes": 9386347,
+          "gzipBytes": 3082508,
+          "brotliBytes": 2630347,
+          "rules": 0
+        },
+        "css": {
+          "files": 1,
+          "rawBytes": 196588,
+          "gzipBytes": 27568,
+          "brotliBytes": 21163,
+          "rules": 2272
+        },
+        "combined": {
+          "files": 742,
+          "rawBytes": 9582935,
+          "gzipBytes": 3110076,
+          "brotliBytes": 2651510,
+          "rules": 2272
+        }
+      }
+    },
+    {
+      "id": "initial-03-vite",
+      "phase": "initial",
+      "pair": 3,
+      "variant": "vite",
+      "elapsedMs": 21891.96639999999,
+      "config": {
+        "sourcePath": "reports/tailwind-integration/build-series/config/initial-03-vite.json",
+        "archivePath": "execution/config/initial-03-vite.json",
+        "sha256": "dc51d776fd7e582ad4105f344d42c3c3c17c26bb714a05dac1a8963b7c324507",
+        "bytes": 2963,
+        "kind": "resolved-config"
+      },
+      "logs": {
+        "stdout": {
+          "sourcePath": "reports/tailwind-integration/build-series/logs/initial-03-vite.stdout.txt",
+          "archivePath": "execution/initial-03-vite.stdout.txt",
+          "sha256": "6a1370540a3252ba893a58d3bae474afa9e48fc17c9b74e1544d2a4717f73dce",
+          "bytes": 100198,
+          "kind": "stdout"
+        },
+        "stderr": {
+          "sourcePath": "reports/tailwind-integration/build-series/logs/initial-03-vite.stderr.txt",
+          "archivePath": "execution/initial-03-vite.stderr.txt",
+          "sha256": "688db9a68c79cd303673511ab6dbf4cb1b6a079aaf747bbffbc6634644026237",
+          "bytes": 1099,
+          "kind": "stderr"
+        }
+      },
+      "inventory": {
+        "sourcePath": "reports/tailwind-integration/build-series/inventories/initial-03-vite.json",
+        "archivePath": "objects/e2161506340cd132f902106cec744fbaec7565e207745e770b32a251258ac308.json",
+        "sha256": "e2161506340cd132f902106cec744fbaec7565e207745e770b32a251258ac308",
+        "bytes": 494612,
+        "kind": "inventory"
+      },
+      "bundleMetadata": {
+        "sourcePath": "reports/tailwind-integration/build-series/outputs/initial-03-vite/.qa-build-metadata.json",
+        "archivePath": "objects/71f00955f622b4e332da9b5efca1473e52990994b49ef0649eb0239d02644871.json",
+        "sha256": "71f00955f622b4e332da9b5efca1473e52990994b49ef0649eb0239d02644871",
+        "bytes": 806484,
+        "kind": "bundle-metadata"
+      },
+      "rawAssetsVerified": 742,
+      "totals": {
+        "js": {
+          "files": 741,
+          "rawBytes": 9386347,
+          "gzipBytes": 3082508,
+          "brotliBytes": 2630347,
+          "rules": 0
+        },
+        "css": {
+          "files": 1,
+          "rawBytes": 196588,
+          "gzipBytes": 27568,
+          "brotliBytes": 21163,
+          "rules": 2272
+        },
+        "combined": {
+          "files": 742,
+          "rawBytes": 9582935,
+          "gzipBytes": 3110076,
+          "brotliBytes": 2651510,
+          "rules": 2272
+        }
+      }
+    },
+    {
+      "id": "repeated-04-vite",
+      "phase": "repeated",
+      "pair": 4,
+      "variant": "vite",
+      "elapsedMs": 19140.33189999999,
+      "config": {
+        "sourcePath": "reports/tailwind-integration/build-series/config/repeated-04-vite.json",
+        "archivePath": "execution/config/repeated-04-vite.json",
+        "sha256": "28d23d09c6af5faef4bada22245f17877fa95e44a7ba32f3d8c9365ea191e445",
+        "bytes": 2965,
+        "kind": "resolved-config"
+      },
+      "logs": {
+        "stdout": {
+          "sourcePath": "reports/tailwind-integration/build-series/logs/repeated-04-vite.stdout.txt",
+          "archivePath": "execution/repeated-04-vite.stdout.txt",
+          "sha256": "e5d4766cba88fe6575f97a62af4a7f6c64863cccb63179c092f0dad6c0f91bfa",
+          "bytes": 100944,
+          "kind": "stdout"
+        },
+        "stderr": {
+          "sourcePath": "reports/tailwind-integration/build-series/logs/repeated-04-vite.stderr.txt",
+          "archivePath": "execution/repeated-04-vite.stderr.txt",
+          "sha256": "688db9a68c79cd303673511ab6dbf4cb1b6a079aaf747bbffbc6634644026237",
+          "bytes": 1099,
+          "kind": "stderr"
+        }
+      },
+      "inventory": {
+        "sourcePath": "reports/tailwind-integration/build-series/inventories/repeated-04-vite.json",
+        "archivePath": "objects/e2161506340cd132f902106cec744fbaec7565e207745e770b32a251258ac308.json",
+        "sha256": "e2161506340cd132f902106cec744fbaec7565e207745e770b32a251258ac308",
+        "bytes": 494612,
+        "kind": "inventory"
+      },
+      "bundleMetadata": {
+        "sourcePath": "reports/tailwind-integration/build-series/outputs/repeated-04-vite/.qa-build-metadata.json",
+        "archivePath": "objects/71f00955f622b4e332da9b5efca1473e52990994b49ef0649eb0239d02644871.json",
+        "sha256": "71f00955f622b4e332da9b5efca1473e52990994b49ef0649eb0239d02644871",
+        "bytes": 806484,
+        "kind": "bundle-metadata"
+      },
+      "rawAssetsVerified": 742,
+      "totals": {
+        "js": {
+          "files": 741,
+          "rawBytes": 9386347,
+          "gzipBytes": 3082508,
+          "brotliBytes": 2630347,
+          "rules": 0
+        },
+        "css": {
+          "files": 1,
+          "rawBytes": 196588,
+          "gzipBytes": 27568,
+          "brotliBytes": 21163,
+          "rules": 2272
+        },
+        "combined": {
+          "files": 742,
+          "rawBytes": 9582935,
+          "gzipBytes": 3110076,
+          "brotliBytes": 2651510,
+          "rules": 2272
+        }
+      }
+    },
+    {
+      "id": "repeated-04-postcss",
+      "phase": "repeated",
+      "pair": 4,
+      "variant": "postcss",
+      "elapsedMs": 20806.680699999997,
+      "config": {
+        "sourcePath": "reports/tailwind-integration/build-series/config/repeated-04-postcss.json",
+        "archivePath": "execution/config/repeated-04-postcss.json",
+        "sha256": "1c32797131d533e1677dd6f5fbb6ec1ef662836eefef996d6ee7dac68960153f",
+        "bytes": 2914,
+        "kind": "resolved-config"
+      },
+      "logs": {
+        "stdout": {
+          "sourcePath": "reports/tailwind-integration/build-series/logs/repeated-04-postcss.stdout.txt",
+          "archivePath": "execution/repeated-04-postcss.stdout.txt",
+          "sha256": "62ed75e648247c7e1a3cddae57b70a85abde69441dd5c216e409379c9cf361d1",
+          "bytes": 103182,
+          "kind": "stdout"
+        },
+        "stderr": {
+          "sourcePath": "reports/tailwind-integration/build-series/logs/repeated-04-postcss.stderr.txt",
+          "archivePath": "execution/repeated-04-postcss.stderr.txt",
+          "sha256": "a946cd35c82e2f7fa7744f91cbafb0ae3cd9888f6f212f9ee967408a71b051a0",
+          "bytes": 1841,
+          "kind": "stderr"
+        }
+      },
+      "inventory": {
+        "sourcePath": "reports/tailwind-integration/build-series/inventories/repeated-04-postcss.json",
+        "archivePath": "objects/e2161506340cd132f902106cec744fbaec7565e207745e770b32a251258ac308.json",
+        "sha256": "e2161506340cd132f902106cec744fbaec7565e207745e770b32a251258ac308",
+        "bytes": 494612,
+        "kind": "inventory"
+      },
+      "bundleMetadata": {
+        "sourcePath": "reports/tailwind-integration/build-series/outputs/repeated-04-postcss/.qa-build-metadata.json",
+        "archivePath": "objects/3e84096ce4d1575ec3d3758f5855f6a7b72ceb277eb5aed56e30a00bc91605f2.json",
+        "sha256": "3e84096ce4d1575ec3d3758f5855f6a7b72ceb277eb5aed56e30a00bc91605f2",
+        "bytes": 806487,
+        "kind": "bundle-metadata"
+      },
+      "rawAssetsVerified": 742,
+      "totals": {
+        "js": {
+          "files": 741,
+          "rawBytes": 9386347,
+          "gzipBytes": 3082508,
+          "brotliBytes": 2630347,
+          "rules": 0
+        },
+        "css": {
+          "files": 1,
+          "rawBytes": 196588,
+          "gzipBytes": 27568,
+          "brotliBytes": 21163,
+          "rules": 2272
+        },
+        "combined": {
+          "files": 742,
+          "rawBytes": 9582935,
+          "gzipBytes": 3110076,
+          "brotliBytes": 2651510,
+          "rules": 2272
+        }
+      }
+    },
+    {
+      "id": "repeated-05-postcss",
+      "phase": "repeated",
+      "pair": 5,
+      "variant": "postcss",
+      "elapsedMs": 21829.51250000001,
+      "config": {
+        "sourcePath": "reports/tailwind-integration/build-series/config/repeated-05-postcss.json",
+        "archivePath": "execution/config/repeated-05-postcss.json",
+        "sha256": "914c850d4cd81aa1e73995746b8b81b784467166aa2d414aeeed559fc2d1abd4",
+        "bytes": 2914,
+        "kind": "resolved-config"
+      },
+      "logs": {
+        "stdout": {
+          "sourcePath": "reports/tailwind-integration/build-series/logs/repeated-05-postcss.stdout.txt",
+          "archivePath": "execution/repeated-05-postcss.stdout.txt",
+          "sha256": "fe9811737447f4d4a32a3022d6cf88e594b6794f16a196e06f480b787a15cde9",
+          "bytes": 103182,
+          "kind": "stdout"
+        },
+        "stderr": {
+          "sourcePath": "reports/tailwind-integration/build-series/logs/repeated-05-postcss.stderr.txt",
+          "archivePath": "execution/repeated-05-postcss.stderr.txt",
+          "sha256": "688db9a68c79cd303673511ab6dbf4cb1b6a079aaf747bbffbc6634644026237",
+          "bytes": 1099,
+          "kind": "stderr"
+        }
+      },
+      "inventory": {
+        "sourcePath": "reports/tailwind-integration/build-series/inventories/repeated-05-postcss.json",
+        "archivePath": "objects/e2161506340cd132f902106cec744fbaec7565e207745e770b32a251258ac308.json",
+        "sha256": "e2161506340cd132f902106cec744fbaec7565e207745e770b32a251258ac308",
+        "bytes": 494612,
+        "kind": "inventory"
+      },
+      "bundleMetadata": {
+        "sourcePath": "reports/tailwind-integration/build-series/outputs/repeated-05-postcss/.qa-build-metadata.json",
+        "archivePath": "objects/3e84096ce4d1575ec3d3758f5855f6a7b72ceb277eb5aed56e30a00bc91605f2.json",
+        "sha256": "3e84096ce4d1575ec3d3758f5855f6a7b72ceb277eb5aed56e30a00bc91605f2",
+        "bytes": 806487,
+        "kind": "bundle-metadata"
+      },
+      "rawAssetsVerified": 742,
+      "totals": {
+        "js": {
+          "files": 741,
+          "rawBytes": 9386347,
+          "gzipBytes": 3082508,
+          "brotliBytes": 2630347,
+          "rules": 0
+        },
+        "css": {
+          "files": 1,
+          "rawBytes": 196588,
+          "gzipBytes": 27568,
+          "brotliBytes": 21163,
+          "rules": 2272
+        },
+        "combined": {
+          "files": 742,
+          "rawBytes": 9582935,
+          "gzipBytes": 3110076,
+          "brotliBytes": 2651510,
+          "rules": 2272
+        }
+      }
+    },
+    {
+      "id": "repeated-05-vite",
+      "phase": "repeated",
+      "pair": 5,
+      "variant": "vite",
+      "elapsedMs": 21546.14970000001,
+      "config": {
+        "sourcePath": "reports/tailwind-integration/build-series/config/repeated-05-vite.json",
+        "archivePath": "execution/config/repeated-05-vite.json",
+        "sha256": "4783357255cf968144e607bfd3b2e8bcc8af0cd6a7f051d06e8770e200200978",
+        "bytes": 2965,
+        "kind": "resolved-config"
+      },
+      "logs": {
+        "stdout": {
+          "sourcePath": "reports/tailwind-integration/build-series/logs/repeated-05-vite.stdout.txt",
+          "archivePath": "execution/repeated-05-vite.stdout.txt",
+          "sha256": "5be42dbcbe3347afe4e3e9312a97bbb52fc35317bce55488ed60cd052e39279a",
+          "bytes": 100944,
+          "kind": "stdout"
+        },
+        "stderr": {
+          "sourcePath": "reports/tailwind-integration/build-series/logs/repeated-05-vite.stderr.txt",
+          "archivePath": "execution/repeated-05-vite.stderr.txt",
+          "sha256": "16ec9d5c9c2db039f60b607345641204d79fd592c947a50555080add86154d96",
+          "bytes": 1639,
+          "kind": "stderr"
+        }
+      },
+      "inventory": {
+        "sourcePath": "reports/tailwind-integration/build-series/inventories/repeated-05-vite.json",
+        "archivePath": "objects/e2161506340cd132f902106cec744fbaec7565e207745e770b32a251258ac308.json",
+        "sha256": "e2161506340cd132f902106cec744fbaec7565e207745e770b32a251258ac308",
+        "bytes": 494612,
+        "kind": "inventory"
+      },
+      "bundleMetadata": {
+        "sourcePath": "reports/tailwind-integration/build-series/outputs/repeated-05-vite/.qa-build-metadata.json",
+        "archivePath": "objects/71f00955f622b4e332da9b5efca1473e52990994b49ef0649eb0239d02644871.json",
+        "sha256": "71f00955f622b4e332da9b5efca1473e52990994b49ef0649eb0239d02644871",
+        "bytes": 806484,
+        "kind": "bundle-metadata"
+      },
+      "rawAssetsVerified": 742,
+      "totals": {
+        "js": {
+          "files": 741,
+          "rawBytes": 9386347,
+          "gzipBytes": 3082508,
+          "brotliBytes": 2630347,
+          "rules": 0
+        },
+        "css": {
+          "files": 1,
+          "rawBytes": 196588,
+          "gzipBytes": 27568,
+          "brotliBytes": 21163,
+          "rules": 2272
+        },
+        "combined": {
+          "files": 742,
+          "rawBytes": 9582935,
+          "gzipBytes": 3110076,
+          "brotliBytes": 2651510,
+          "rules": 2272
+        }
+      }
+    },
+    {
+      "id": "repeated-06-vite",
+      "phase": "repeated",
+      "pair": 6,
+      "variant": "vite",
+      "elapsedMs": 21897.0386,
+      "config": {
+        "sourcePath": "reports/tailwind-integration/build-series/config/repeated-06-vite.json",
+        "archivePath": "execution/config/repeated-06-vite.json",
+        "sha256": "131bfb1efb7a4733768af9e31df9f177c20a319e1ec4036657993f81da5ca0e5",
+        "bytes": 2965,
+        "kind": "resolved-config"
+      },
+      "logs": {
+        "stdout": {
+          "sourcePath": "reports/tailwind-integration/build-series/logs/repeated-06-vite.stdout.txt",
+          "archivePath": "execution/repeated-06-vite.stdout.txt",
+          "sha256": "7a3cb3d71104473377655fc0796adda9dccbefc0d31addc5d10bfd2208253610",
+          "bytes": 100944,
+          "kind": "stdout"
+        },
+        "stderr": {
+          "sourcePath": "reports/tailwind-integration/build-series/logs/repeated-06-vite.stderr.txt",
+          "archivePath": "execution/repeated-06-vite.stderr.txt",
+          "sha256": "688db9a68c79cd303673511ab6dbf4cb1b6a079aaf747bbffbc6634644026237",
+          "bytes": 1099,
+          "kind": "stderr"
+        }
+      },
+      "inventory": {
+        "sourcePath": "reports/tailwind-integration/build-series/inventories/repeated-06-vite.json",
+        "archivePath": "objects/e2161506340cd132f902106cec744fbaec7565e207745e770b32a251258ac308.json",
+        "sha256": "e2161506340cd132f902106cec744fbaec7565e207745e770b32a251258ac308",
+        "bytes": 494612,
+        "kind": "inventory"
+      },
+      "bundleMetadata": {
+        "sourcePath": "reports/tailwind-integration/build-series/outputs/repeated-06-vite/.qa-build-metadata.json",
+        "archivePath": "objects/71f00955f622b4e332da9b5efca1473e52990994b49ef0649eb0239d02644871.json",
+        "sha256": "71f00955f622b4e332da9b5efca1473e52990994b49ef0649eb0239d02644871",
+        "bytes": 806484,
+        "kind": "bundle-metadata"
+      },
+      "rawAssetsVerified": 742,
+      "totals": {
+        "js": {
+          "files": 741,
+          "rawBytes": 9386347,
+          "gzipBytes": 3082508,
+          "brotliBytes": 2630347,
+          "rules": 0
+        },
+        "css": {
+          "files": 1,
+          "rawBytes": 196588,
+          "gzipBytes": 27568,
+          "brotliBytes": 21163,
+          "rules": 2272
+        },
+        "combined": {
+          "files": 742,
+          "rawBytes": 9582935,
+          "gzipBytes": 3110076,
+          "brotliBytes": 2651510,
+          "rules": 2272
+        }
+      }
+    },
+    {
+      "id": "repeated-06-postcss",
+      "phase": "repeated",
+      "pair": 6,
+      "variant": "postcss",
+      "elapsedMs": 21606.11619999999,
+      "config": {
+        "sourcePath": "reports/tailwind-integration/build-series/config/repeated-06-postcss.json",
+        "archivePath": "execution/config/repeated-06-postcss.json",
+        "sha256": "ef79e3a9d8c49ad21ac63e0be1c92a7ed6c227c9e4e7243d8e442268315eff14",
+        "bytes": 2914,
+        "kind": "resolved-config"
+      },
+      "logs": {
+        "stdout": {
+          "sourcePath": "reports/tailwind-integration/build-series/logs/repeated-06-postcss.stdout.txt",
+          "archivePath": "execution/repeated-06-postcss.stdout.txt",
+          "sha256": "2bbe0e2282bdecfe6716637b99909e547697134d8567606d3c61ab25c7e4f362",
+          "bytes": 103182,
+          "kind": "stdout"
+        },
+        "stderr": {
+          "sourcePath": "reports/tailwind-integration/build-series/logs/repeated-06-postcss.stderr.txt",
+          "archivePath": "execution/repeated-06-postcss.stderr.txt",
+          "sha256": "688db9a68c79cd303673511ab6dbf4cb1b6a079aaf747bbffbc6634644026237",
+          "bytes": 1099,
+          "kind": "stderr"
+        }
+      },
+      "inventory": {
+        "sourcePath": "reports/tailwind-integration/build-series/inventories/repeated-06-postcss.json",
+        "archivePath": "objects/e2161506340cd132f902106cec744fbaec7565e207745e770b32a251258ac308.json",
+        "sha256": "e2161506340cd132f902106cec744fbaec7565e207745e770b32a251258ac308",
+        "bytes": 494612,
+        "kind": "inventory"
+      },
+      "bundleMetadata": {
+        "sourcePath": "reports/tailwind-integration/build-series/outputs/repeated-06-postcss/.qa-build-metadata.json",
+        "archivePath": "objects/3e84096ce4d1575ec3d3758f5855f6a7b72ceb277eb5aed56e30a00bc91605f2.json",
+        "sha256": "3e84096ce4d1575ec3d3758f5855f6a7b72ceb277eb5aed56e30a00bc91605f2",
+        "bytes": 806487,
+        "kind": "bundle-metadata"
+      },
+      "rawAssetsVerified": 742,
+      "totals": {
+        "js": {
+          "files": 741,
+          "rawBytes": 9386347,
+          "gzipBytes": 3082508,
+          "brotliBytes": 2630347,
+          "rules": 0
+        },
+        "css": {
+          "files": 1,
+          "rawBytes": 196588,
+          "gzipBytes": 27568,
+          "brotliBytes": 21163,
+          "rules": 2272
+        },
+        "combined": {
+          "files": 742,
+          "rawBytes": 9582935,
+          "gzipBytes": 3110076,
+          "brotliBytes": 2651510,
+          "rules": 2272
+        }
+      }
+    },
+    {
+      "id": "repeated-07-postcss",
+      "phase": "repeated",
+      "pair": 7,
+      "variant": "postcss",
+      "elapsedMs": 23526.03899999999,
+      "config": {
+        "sourcePath": "reports/tailwind-integration/build-series/config/repeated-07-postcss.json",
+        "archivePath": "execution/config/repeated-07-postcss.json",
+        "sha256": "a822923eb4290253367f3376ca99c32315f72c8f2384416fbe4847df35bdc823",
+        "bytes": 2914,
+        "kind": "resolved-config"
+      },
+      "logs": {
+        "stdout": {
+          "sourcePath": "reports/tailwind-integration/build-series/logs/repeated-07-postcss.stdout.txt",
+          "archivePath": "execution/repeated-07-postcss.stdout.txt",
+          "sha256": "c465f87e6f379c5eee9bee65300ee81712d58dc4b167f2d5577c7092b2015a81",
+          "bytes": 103182,
+          "kind": "stdout"
+        },
+        "stderr": {
+          "sourcePath": "reports/tailwind-integration/build-series/logs/repeated-07-postcss.stderr.txt",
+          "archivePath": "execution/repeated-07-postcss.stderr.txt",
+          "sha256": "688db9a68c79cd303673511ab6dbf4cb1b6a079aaf747bbffbc6634644026237",
+          "bytes": 1099,
+          "kind": "stderr"
+        }
+      },
+      "inventory": {
+        "sourcePath": "reports/tailwind-integration/build-series/inventories/repeated-07-postcss.json",
+        "archivePath": "objects/e2161506340cd132f902106cec744fbaec7565e207745e770b32a251258ac308.json",
+        "sha256": "e2161506340cd132f902106cec744fbaec7565e207745e770b32a251258ac308",
+        "bytes": 494612,
+        "kind": "inventory"
+      },
+      "bundleMetadata": {
+        "sourcePath": "reports/tailwind-integration/build-series/outputs/repeated-07-postcss/.qa-build-metadata.json",
+        "archivePath": "objects/3e84096ce4d1575ec3d3758f5855f6a7b72ceb277eb5aed56e30a00bc91605f2.json",
+        "sha256": "3e84096ce4d1575ec3d3758f5855f6a7b72ceb277eb5aed56e30a00bc91605f2",
+        "bytes": 806487,
+        "kind": "bundle-metadata"
+      },
+      "rawAssetsVerified": 742,
+      "totals": {
+        "js": {
+          "files": 741,
+          "rawBytes": 9386347,
+          "gzipBytes": 3082508,
+          "brotliBytes": 2630347,
+          "rules": 0
+        },
+        "css": {
+          "files": 1,
+          "rawBytes": 196588,
+          "gzipBytes": 27568,
+          "brotliBytes": 21163,
+          "rules": 2272
+        },
+        "combined": {
+          "files": 742,
+          "rawBytes": 9582935,
+          "gzipBytes": 3110076,
+          "brotliBytes": 2651510,
+          "rules": 2272
+        }
+      }
+    },
+    {
+      "id": "repeated-07-vite",
+      "phase": "repeated",
+      "pair": 7,
+      "variant": "vite",
+      "elapsedMs": 22640.75429999997,
+      "config": {
+        "sourcePath": "reports/tailwind-integration/build-series/config/repeated-07-vite.json",
+        "archivePath": "execution/config/repeated-07-vite.json",
+        "sha256": "a634614db3d1f566e6928a9b47cb9913468f7a95c805520b1cea20f46d1b37b8",
+        "bytes": 2965,
+        "kind": "resolved-config"
+      },
+      "logs": {
+        "stdout": {
+          "sourcePath": "reports/tailwind-integration/build-series/logs/repeated-07-vite.stdout.txt",
+          "archivePath": "execution/repeated-07-vite.stdout.txt",
+          "sha256": "61cd60ba725d075bcfcc36e508ff5aa0e1f67935c15782d8f5769abe7a87c263",
+          "bytes": 100944,
+          "kind": "stdout"
+        },
+        "stderr": {
+          "sourcePath": "reports/tailwind-integration/build-series/logs/repeated-07-vite.stderr.txt",
+          "archivePath": "execution/repeated-07-vite.stderr.txt",
+          "sha256": "688db9a68c79cd303673511ab6dbf4cb1b6a079aaf747bbffbc6634644026237",
+          "bytes": 1099,
+          "kind": "stderr"
+        }
+      },
+      "inventory": {
+        "sourcePath": "reports/tailwind-integration/build-series/inventories/repeated-07-vite.json",
+        "archivePath": "objects/e2161506340cd132f902106cec744fbaec7565e207745e770b32a251258ac308.json",
+        "sha256": "e2161506340cd132f902106cec744fbaec7565e207745e770b32a251258ac308",
+        "bytes": 494612,
+        "kind": "inventory"
+      },
+      "bundleMetadata": {
+        "sourcePath": "reports/tailwind-integration/build-series/outputs/repeated-07-vite/.qa-build-metadata.json",
+        "archivePath": "objects/71f00955f622b4e332da9b5efca1473e52990994b49ef0649eb0239d02644871.json",
+        "sha256": "71f00955f622b4e332da9b5efca1473e52990994b49ef0649eb0239d02644871",
+        "bytes": 806484,
+        "kind": "bundle-metadata"
+      },
+      "rawAssetsVerified": 742,
+      "totals": {
+        "js": {
+          "files": 741,
+          "rawBytes": 9386347,
+          "gzipBytes": 3082508,
+          "brotliBytes": 2630347,
+          "rules": 0
+        },
+        "css": {
+          "files": 1,
+          "rawBytes": 196588,
+          "gzipBytes": 27568,
+          "brotliBytes": 21163,
+          "rules": 2272
+        },
+        "combined": {
+          "files": 742,
+          "rawBytes": 9582935,
+          "gzipBytes": 3110076,
+          "brotliBytes": 2651510,
+          "rules": 2272
+        }
+      }
+    },
+    {
+      "id": "repeated-08-vite",
+      "phase": "repeated",
+      "pair": 8,
+      "variant": "vite",
+      "elapsedMs": 20688.666199999978,
+      "config": {
+        "sourcePath": "reports/tailwind-integration/build-series/config/repeated-08-vite.json",
+        "archivePath": "execution/config/repeated-08-vite.json",
+        "sha256": "433f2508b5628724a8e7214d3d2807c57fd7fc8df08ecc39bf25699888d4b493",
+        "bytes": 2965,
+        "kind": "resolved-config"
+      },
+      "logs": {
+        "stdout": {
+          "sourcePath": "reports/tailwind-integration/build-series/logs/repeated-08-vite.stdout.txt",
+          "archivePath": "execution/repeated-08-vite.stdout.txt",
+          "sha256": "8893a60e7a9d8ef68f75072588ee1f5bb571893a3dc423530a254c77bf0d38a2",
+          "bytes": 100944,
+          "kind": "stdout"
+        },
+        "stderr": {
+          "sourcePath": "reports/tailwind-integration/build-series/logs/repeated-08-vite.stderr.txt",
+          "archivePath": "execution/repeated-08-vite.stderr.txt",
+          "sha256": "688db9a68c79cd303673511ab6dbf4cb1b6a079aaf747bbffbc6634644026237",
+          "bytes": 1099,
+          "kind": "stderr"
+        }
+      },
+      "inventory": {
+        "sourcePath": "reports/tailwind-integration/build-series/inventories/repeated-08-vite.json",
+        "archivePath": "objects/e2161506340cd132f902106cec744fbaec7565e207745e770b32a251258ac308.json",
+        "sha256": "e2161506340cd132f902106cec744fbaec7565e207745e770b32a251258ac308",
+        "bytes": 494612,
+        "kind": "inventory"
+      },
+      "bundleMetadata": {
+        "sourcePath": "reports/tailwind-integration/build-series/outputs/repeated-08-vite/.qa-build-metadata.json",
+        "archivePath": "objects/71f00955f622b4e332da9b5efca1473e52990994b49ef0649eb0239d02644871.json",
+        "sha256": "71f00955f622b4e332da9b5efca1473e52990994b49ef0649eb0239d02644871",
+        "bytes": 806484,
+        "kind": "bundle-metadata"
+      },
+      "rawAssetsVerified": 742,
+      "totals": {
+        "js": {
+          "files": 741,
+          "rawBytes": 9386347,
+          "gzipBytes": 3082508,
+          "brotliBytes": 2630347,
+          "rules": 0
+        },
+        "css": {
+          "files": 1,
+          "rawBytes": 196588,
+          "gzipBytes": 27568,
+          "brotliBytes": 21163,
+          "rules": 2272
+        },
+        "combined": {
+          "files": 742,
+          "rawBytes": 9582935,
+          "gzipBytes": 3110076,
+          "brotliBytes": 2651510,
+          "rules": 2272
+        }
+      }
+    },
+    {
+      "id": "repeated-08-postcss",
+      "phase": "repeated",
+      "pair": 8,
+      "variant": "postcss",
+      "elapsedMs": 19859.100199999986,
+      "config": {
+        "sourcePath": "reports/tailwind-integration/build-series/config/repeated-08-postcss.json",
+        "archivePath": "execution/config/repeated-08-postcss.json",
+        "sha256": "72e9a8fefe9967747abc835d1ad320918d6c91b2ccd5cdedfd5cc62e19404675",
+        "bytes": 2914,
+        "kind": "resolved-config"
+      },
+      "logs": {
+        "stdout": {
+          "sourcePath": "reports/tailwind-integration/build-series/logs/repeated-08-postcss.stdout.txt",
+          "archivePath": "execution/repeated-08-postcss.stdout.txt",
+          "sha256": "b32af9ce7174f8699231be1d22ed00f4e8cc9c3f289c1ce1b0af975dfc3109c6",
+          "bytes": 103182,
+          "kind": "stdout"
+        },
+        "stderr": {
+          "sourcePath": "reports/tailwind-integration/build-series/logs/repeated-08-postcss.stderr.txt",
+          "archivePath": "execution/repeated-08-postcss.stderr.txt",
+          "sha256": "1f25b6e55f5c792a7441ab19f04ea113deeea9c8e56b6b3ffcbf5fbfa3af24ef",
+          "bytes": 1841,
+          "kind": "stderr"
+        }
+      },
+      "inventory": {
+        "sourcePath": "reports/tailwind-integration/build-series/inventories/repeated-08-postcss.json",
+        "archivePath": "objects/e2161506340cd132f902106cec744fbaec7565e207745e770b32a251258ac308.json",
+        "sha256": "e2161506340cd132f902106cec744fbaec7565e207745e770b32a251258ac308",
+        "bytes": 494612,
+        "kind": "inventory"
+      },
+      "bundleMetadata": {
+        "sourcePath": "reports/tailwind-integration/build-series/outputs/repeated-08-postcss/.qa-build-metadata.json",
+        "archivePath": "objects/3e84096ce4d1575ec3d3758f5855f6a7b72ceb277eb5aed56e30a00bc91605f2.json",
+        "sha256": "3e84096ce4d1575ec3d3758f5855f6a7b72ceb277eb5aed56e30a00bc91605f2",
+        "bytes": 806487,
+        "kind": "bundle-metadata"
+      },
+      "rawAssetsVerified": 742,
+      "totals": {
+        "js": {
+          "files": 741,
+          "rawBytes": 9386347,
+          "gzipBytes": 3082508,
+          "brotliBytes": 2630347,
+          "rules": 0
+        },
+        "css": {
+          "files": 1,
+          "rawBytes": 196588,
+          "gzipBytes": 27568,
+          "brotliBytes": 21163,
+          "rules": 2272
+        },
+        "combined": {
+          "files": 742,
+          "rawBytes": 9582935,
+          "gzipBytes": 3110076,
+          "brotliBytes": 2651510,
+          "rules": 2272
+        }
+      }
+    },
+    {
+      "id": "repeated-09-postcss",
+      "phase": "repeated",
+      "pair": 9,
+      "variant": "postcss",
+      "elapsedMs": 20785.825100000016,
+      "config": {
+        "sourcePath": "reports/tailwind-integration/build-series/config/repeated-09-postcss.json",
+        "archivePath": "execution/config/repeated-09-postcss.json",
+        "sha256": "73e181e1cc88d1c01fa387b6dbc6141f0c3fbd3c2adae93623ef9e2552d6c0b9",
+        "bytes": 2914,
+        "kind": "resolved-config"
+      },
+      "logs": {
+        "stdout": {
+          "sourcePath": "reports/tailwind-integration/build-series/logs/repeated-09-postcss.stdout.txt",
+          "archivePath": "execution/repeated-09-postcss.stdout.txt",
+          "sha256": "ea9e2e18c7330442a3b43047981a2a368f88b33fdeda66df3a8771fada0288de",
+          "bytes": 103182,
+          "kind": "stdout"
+        },
+        "stderr": {
+          "sourcePath": "reports/tailwind-integration/build-series/logs/repeated-09-postcss.stderr.txt",
+          "archivePath": "execution/repeated-09-postcss.stderr.txt",
+          "sha256": "f3831b2d61a50085138a5baeec500977ac749f1ec49d2c3f50de36dbd4a2eb8c",
+          "bytes": 1615,
+          "kind": "stderr"
+        }
+      },
+      "inventory": {
+        "sourcePath": "reports/tailwind-integration/build-series/inventories/repeated-09-postcss.json",
+        "archivePath": "objects/e2161506340cd132f902106cec744fbaec7565e207745e770b32a251258ac308.json",
+        "sha256": "e2161506340cd132f902106cec744fbaec7565e207745e770b32a251258ac308",
+        "bytes": 494612,
+        "kind": "inventory"
+      },
+      "bundleMetadata": {
+        "sourcePath": "reports/tailwind-integration/build-series/outputs/repeated-09-postcss/.qa-build-metadata.json",
+        "archivePath": "objects/3e84096ce4d1575ec3d3758f5855f6a7b72ceb277eb5aed56e30a00bc91605f2.json",
+        "sha256": "3e84096ce4d1575ec3d3758f5855f6a7b72ceb277eb5aed56e30a00bc91605f2",
+        "bytes": 806487,
+        "kind": "bundle-metadata"
+      },
+      "rawAssetsVerified": 742,
+      "totals": {
+        "js": {
+          "files": 741,
+          "rawBytes": 9386347,
+          "gzipBytes": 3082508,
+          "brotliBytes": 2630347,
+          "rules": 0
+        },
+        "css": {
+          "files": 1,
+          "rawBytes": 196588,
+          "gzipBytes": 27568,
+          "brotliBytes": 21163,
+          "rules": 2272
+        },
+        "combined": {
+          "files": 742,
+          "rawBytes": 9582935,
+          "gzipBytes": 3110076,
+          "brotliBytes": 2651510,
+          "rules": 2272
+        }
+      }
+    },
+    {
+      "id": "repeated-09-vite",
+      "phase": "repeated",
+      "pair": 9,
+      "variant": "vite",
+      "elapsedMs": 20453.618499999982,
+      "config": {
+        "sourcePath": "reports/tailwind-integration/build-series/config/repeated-09-vite.json",
+        "archivePath": "execution/config/repeated-09-vite.json",
+        "sha256": "a52300bf55df68d56bb2c216ff2d6b27f040ce4799e8f7464f4f5c6b0eac0df3",
+        "bytes": 2965,
+        "kind": "resolved-config"
+      },
+      "logs": {
+        "stdout": {
+          "sourcePath": "reports/tailwind-integration/build-series/logs/repeated-09-vite.stdout.txt",
+          "archivePath": "execution/repeated-09-vite.stdout.txt",
+          "sha256": "eca3fb0fd4f2de0ffe65168455cdc7ac70d4ebc25ee0fdf5f0bfbe44ca94c12e",
+          "bytes": 100944,
+          "kind": "stdout"
+        },
+        "stderr": {
+          "sourcePath": "reports/tailwind-integration/build-series/logs/repeated-09-vite.stderr.txt",
+          "archivePath": "execution/repeated-09-vite.stderr.txt",
+          "sha256": "688db9a68c79cd303673511ab6dbf4cb1b6a079aaf747bbffbc6634644026237",
+          "bytes": 1099,
+          "kind": "stderr"
+        }
+      },
+      "inventory": {
+        "sourcePath": "reports/tailwind-integration/build-series/inventories/repeated-09-vite.json",
+        "archivePath": "objects/e2161506340cd132f902106cec744fbaec7565e207745e770b32a251258ac308.json",
+        "sha256": "e2161506340cd132f902106cec744fbaec7565e207745e770b32a251258ac308",
+        "bytes": 494612,
+        "kind": "inventory"
+      },
+      "bundleMetadata": {
+        "sourcePath": "reports/tailwind-integration/build-series/outputs/repeated-09-vite/.qa-build-metadata.json",
+        "archivePath": "objects/71f00955f622b4e332da9b5efca1473e52990994b49ef0649eb0239d02644871.json",
+        "sha256": "71f00955f622b4e332da9b5efca1473e52990994b49ef0649eb0239d02644871",
+        "bytes": 806484,
+        "kind": "bundle-metadata"
+      },
+      "rawAssetsVerified": 742,
+      "totals": {
+        "js": {
+          "files": 741,
+          "rawBytes": 9386347,
+          "gzipBytes": 3082508,
+          "brotliBytes": 2630347,
+          "rules": 0
+        },
+        "css": {
+          "files": 1,
+          "rawBytes": 196588,
+          "gzipBytes": 27568,
+          "brotliBytes": 21163,
+          "rules": 2272
+        },
+        "combined": {
+          "files": 742,
+          "rawBytes": 9582935,
+          "gzipBytes": 3110076,
+          "brotliBytes": 2651510,
+          "rules": 2272
+        }
+      }
+    },
+    {
+      "id": "repeated-10-vite",
+      "phase": "repeated",
+      "pair": 10,
+      "variant": "vite",
+      "elapsedMs": 19609.887199999997,
+      "config": {
+        "sourcePath": "reports/tailwind-integration/build-series/config/repeated-10-vite.json",
+        "archivePath": "execution/config/repeated-10-vite.json",
+        "sha256": "58a27a7bffe5cf4dd4dc4c8d9d5f207a01e3c76c0ab444cb435bfa803156e056",
+        "bytes": 2965,
+        "kind": "resolved-config"
+      },
+      "logs": {
+        "stdout": {
+          "sourcePath": "reports/tailwind-integration/build-series/logs/repeated-10-vite.stdout.txt",
+          "archivePath": "execution/repeated-10-vite.stdout.txt",
+          "sha256": "b5041d88c4360aa11eead7cc9e53bf437d53c60daff3b818aa81ff01c4ec2fb6",
+          "bytes": 100944,
+          "kind": "stdout"
+        },
+        "stderr": {
+          "sourcePath": "reports/tailwind-integration/build-series/logs/repeated-10-vite.stderr.txt",
+          "archivePath": "execution/repeated-10-vite.stderr.txt",
+          "sha256": "e72a9e0f01b8365c3d0426757b665feaa22219099678ad584ede8136dd9770c8",
+          "bytes": 1864,
+          "kind": "stderr"
+        }
+      },
+      "inventory": {
+        "sourcePath": "reports/tailwind-integration/build-series/inventories/repeated-10-vite.json",
+        "archivePath": "objects/e2161506340cd132f902106cec744fbaec7565e207745e770b32a251258ac308.json",
+        "sha256": "e2161506340cd132f902106cec744fbaec7565e207745e770b32a251258ac308",
+        "bytes": 494612,
+        "kind": "inventory"
+      },
+      "bundleMetadata": {
+        "sourcePath": "reports/tailwind-integration/build-series/outputs/repeated-10-vite/.qa-build-metadata.json",
+        "archivePath": "objects/71f00955f622b4e332da9b5efca1473e52990994b49ef0649eb0239d02644871.json",
+        "sha256": "71f00955f622b4e332da9b5efca1473e52990994b49ef0649eb0239d02644871",
+        "bytes": 806484,
+        "kind": "bundle-metadata"
+      },
+      "rawAssetsVerified": 742,
+      "totals": {
+        "js": {
+          "files": 741,
+          "rawBytes": 9386347,
+          "gzipBytes": 3082508,
+          "brotliBytes": 2630347,
+          "rules": 0
+        },
+        "css": {
+          "files": 1,
+          "rawBytes": 196588,
+          "gzipBytes": 27568,
+          "brotliBytes": 21163,
+          "rules": 2272
+        },
+        "combined": {
+          "files": 742,
+          "rawBytes": 9582935,
+          "gzipBytes": 3110076,
+          "brotliBytes": 2651510,
+          "rules": 2272
+        }
+      }
+    },
+    {
+      "id": "repeated-10-postcss",
+      "phase": "repeated",
+      "pair": 10,
+      "variant": "postcss",
+      "elapsedMs": 19189.75,
+      "config": {
+        "sourcePath": "reports/tailwind-integration/build-series/config/repeated-10-postcss.json",
+        "archivePath": "execution/config/repeated-10-postcss.json",
+        "sha256": "0202a171f4cc0a1d63e9b1b12f5ebb51f0f6ad4f789331d966b0a919638eec8e",
+        "bytes": 2914,
+        "kind": "resolved-config"
+      },
+      "logs": {
+        "stdout": {
+          "sourcePath": "reports/tailwind-integration/build-series/logs/repeated-10-postcss.stdout.txt",
+          "archivePath": "execution/repeated-10-postcss.stdout.txt",
+          "sha256": "ccffd67b266164b6ffb6e46654e30efcedae9505d12f01393ef245245ed38c63",
+          "bytes": 103182,
+          "kind": "stdout"
+        },
+        "stderr": {
+          "sourcePath": "reports/tailwind-integration/build-series/logs/repeated-10-postcss.stderr.txt",
+          "archivePath": "execution/repeated-10-postcss.stderr.txt",
+          "sha256": "1e1bcef23f820d25b378a1b9c3dfb24bf868a090015ab61b1a35fa0b23339faa",
+          "bytes": 1841,
+          "kind": "stderr"
+        }
+      },
+      "inventory": {
+        "sourcePath": "reports/tailwind-integration/build-series/inventories/repeated-10-postcss.json",
+        "archivePath": "objects/e2161506340cd132f902106cec744fbaec7565e207745e770b32a251258ac308.json",
+        "sha256": "e2161506340cd132f902106cec744fbaec7565e207745e770b32a251258ac308",
+        "bytes": 494612,
+        "kind": "inventory"
+      },
+      "bundleMetadata": {
+        "sourcePath": "reports/tailwind-integration/build-series/outputs/repeated-10-postcss/.qa-build-metadata.json",
+        "archivePath": "objects/3e84096ce4d1575ec3d3758f5855f6a7b72ceb277eb5aed56e30a00bc91605f2.json",
+        "sha256": "3e84096ce4d1575ec3d3758f5855f6a7b72ceb277eb5aed56e30a00bc91605f2",
+        "bytes": 806487,
+        "kind": "bundle-metadata"
+      },
+      "rawAssetsVerified": 742,
+      "totals": {
+        "js": {
+          "files": 741,
+          "rawBytes": 9386347,
+          "gzipBytes": 3082508,
+          "brotliBytes": 2630347,
+          "rules": 0
+        },
+        "css": {
+          "files": 1,
+          "rawBytes": 196588,
+          "gzipBytes": 27568,
+          "brotliBytes": 21163,
+          "rules": 2272
+        },
+        "combined": {
+          "files": 742,
+          "rawBytes": 9582935,
+          "gzipBytes": 3110076,
+          "brotliBytes": 2651510,
+          "rules": 2272
+        }
+      }
+    },
+    {
+      "id": "repeated-11-postcss",
+      "phase": "repeated",
+      "pair": 11,
+      "variant": "postcss",
+      "elapsedMs": 20055.453299999994,
+      "config": {
+        "sourcePath": "reports/tailwind-integration/build-series/config/repeated-11-postcss.json",
+        "archivePath": "execution/config/repeated-11-postcss.json",
+        "sha256": "71e37e2faacd77fec871454b84f5f4e5dc68d226129bec951af899757de6dee4",
+        "bytes": 2914,
+        "kind": "resolved-config"
+      },
+      "logs": {
+        "stdout": {
+          "sourcePath": "reports/tailwind-integration/build-series/logs/repeated-11-postcss.stdout.txt",
+          "archivePath": "execution/repeated-11-postcss.stdout.txt",
+          "sha256": "512a26a5104f9c8fbac4198a2b8ffa65e23c0de1774f01127bd5c74252e21f52",
+          "bytes": 103182,
+          "kind": "stdout"
+        },
+        "stderr": {
+          "sourcePath": "reports/tailwind-integration/build-series/logs/repeated-11-postcss.stderr.txt",
+          "archivePath": "execution/repeated-11-postcss.stderr.txt",
+          "sha256": "688db9a68c79cd303673511ab6dbf4cb1b6a079aaf747bbffbc6634644026237",
+          "bytes": 1099,
+          "kind": "stderr"
+        }
+      },
+      "inventory": {
+        "sourcePath": "reports/tailwind-integration/build-series/inventories/repeated-11-postcss.json",
+        "archivePath": "objects/e2161506340cd132f902106cec744fbaec7565e207745e770b32a251258ac308.json",
+        "sha256": "e2161506340cd132f902106cec744fbaec7565e207745e770b32a251258ac308",
+        "bytes": 494612,
+        "kind": "inventory"
+      },
+      "bundleMetadata": {
+        "sourcePath": "reports/tailwind-integration/build-series/outputs/repeated-11-postcss/.qa-build-metadata.json",
+        "archivePath": "objects/3e84096ce4d1575ec3d3758f5855f6a7b72ceb277eb5aed56e30a00bc91605f2.json",
+        "sha256": "3e84096ce4d1575ec3d3758f5855f6a7b72ceb277eb5aed56e30a00bc91605f2",
+        "bytes": 806487,
+        "kind": "bundle-metadata"
+      },
+      "rawAssetsVerified": 742,
+      "totals": {
+        "js": {
+          "files": 741,
+          "rawBytes": 9386347,
+          "gzipBytes": 3082508,
+          "brotliBytes": 2630347,
+          "rules": 0
+        },
+        "css": {
+          "files": 1,
+          "rawBytes": 196588,
+          "gzipBytes": 27568,
+          "brotliBytes": 21163,
+          "rules": 2272
+        },
+        "combined": {
+          "files": 742,
+          "rawBytes": 9582935,
+          "gzipBytes": 3110076,
+          "brotliBytes": 2651510,
+          "rules": 2272
+        }
+      }
+    },
+    {
+      "id": "repeated-11-vite",
+      "phase": "repeated",
+      "pair": 11,
+      "variant": "vite",
+      "elapsedMs": 19797.329299999983,
+      "config": {
+        "sourcePath": "reports/tailwind-integration/build-series/config/repeated-11-vite.json",
+        "archivePath": "execution/config/repeated-11-vite.json",
+        "sha256": "12581d0ecc467614bb0da7530f6a5ec1111a31fd4d38b550af5872d1da918944",
+        "bytes": 2965,
+        "kind": "resolved-config"
+      },
+      "logs": {
+        "stdout": {
+          "sourcePath": "reports/tailwind-integration/build-series/logs/repeated-11-vite.stdout.txt",
+          "archivePath": "execution/repeated-11-vite.stdout.txt",
+          "sha256": "ad2cfeb3b6e292f6c16b2fa41c8a24691ebb0dc4810848c30d3dd563d788c617",
+          "bytes": 100944,
+          "kind": "stdout"
+        },
+        "stderr": {
+          "sourcePath": "reports/tailwind-integration/build-series/logs/repeated-11-vite.stderr.txt",
+          "archivePath": "execution/repeated-11-vite.stderr.txt",
+          "sha256": "688db9a68c79cd303673511ab6dbf4cb1b6a079aaf747bbffbc6634644026237",
+          "bytes": 1099,
+          "kind": "stderr"
+        }
+      },
+      "inventory": {
+        "sourcePath": "reports/tailwind-integration/build-series/inventories/repeated-11-vite.json",
+        "archivePath": "objects/e2161506340cd132f902106cec744fbaec7565e207745e770b32a251258ac308.json",
+        "sha256": "e2161506340cd132f902106cec744fbaec7565e207745e770b32a251258ac308",
+        "bytes": 494612,
+        "kind": "inventory"
+      },
+      "bundleMetadata": {
+        "sourcePath": "reports/tailwind-integration/build-series/outputs/repeated-11-vite/.qa-build-metadata.json",
+        "archivePath": "objects/71f00955f622b4e332da9b5efca1473e52990994b49ef0649eb0239d02644871.json",
+        "sha256": "71f00955f622b4e332da9b5efca1473e52990994b49ef0649eb0239d02644871",
+        "bytes": 806484,
+        "kind": "bundle-metadata"
+      },
+      "rawAssetsVerified": 742,
+      "totals": {
+        "js": {
+          "files": 741,
+          "rawBytes": 9386347,
+          "gzipBytes": 3082508,
+          "brotliBytes": 2630347,
+          "rules": 0
+        },
+        "css": {
+          "files": 1,
+          "rawBytes": 196588,
+          "gzipBytes": 27568,
+          "brotliBytes": 21163,
+          "rules": 2272
+        },
+        "combined": {
+          "files": 742,
+          "rawBytes": 9582935,
+          "gzipBytes": 3110076,
+          "brotliBytes": 2651510,
+          "rules": 2272
+        }
+      }
+    },
+    {
+      "id": "repeated-12-vite",
+      "phase": "repeated",
+      "pair": 12,
+      "variant": "vite",
+      "elapsedMs": 20776.454000000027,
+      "config": {
+        "sourcePath": "reports/tailwind-integration/build-series/config/repeated-12-vite.json",
+        "archivePath": "execution/config/repeated-12-vite.json",
+        "sha256": "95ca03650ed99f3a998165dd88bb6ead3640a457c52ab4182bfdb3cb6379f469",
+        "bytes": 2965,
+        "kind": "resolved-config"
+      },
+      "logs": {
+        "stdout": {
+          "sourcePath": "reports/tailwind-integration/build-series/logs/repeated-12-vite.stdout.txt",
+          "archivePath": "execution/repeated-12-vite.stdout.txt",
+          "sha256": "bc60ab57c3a1ec6cf3f6fcb07f2c16bb74daeaf7fcc283c903e32234b57ebe2c",
+          "bytes": 100944,
+          "kind": "stdout"
+        },
+        "stderr": {
+          "sourcePath": "reports/tailwind-integration/build-series/logs/repeated-12-vite.stderr.txt",
+          "archivePath": "execution/repeated-12-vite.stderr.txt",
+          "sha256": "688db9a68c79cd303673511ab6dbf4cb1b6a079aaf747bbffbc6634644026237",
+          "bytes": 1099,
+          "kind": "stderr"
+        }
+      },
+      "inventory": {
+        "sourcePath": "reports/tailwind-integration/build-series/inventories/repeated-12-vite.json",
+        "archivePath": "objects/e2161506340cd132f902106cec744fbaec7565e207745e770b32a251258ac308.json",
+        "sha256": "e2161506340cd132f902106cec744fbaec7565e207745e770b32a251258ac308",
+        "bytes": 494612,
+        "kind": "inventory"
+      },
+      "bundleMetadata": {
+        "sourcePath": "reports/tailwind-integration/build-series/outputs/repeated-12-vite/.qa-build-metadata.json",
+        "archivePath": "objects/71f00955f622b4e332da9b5efca1473e52990994b49ef0649eb0239d02644871.json",
+        "sha256": "71f00955f622b4e332da9b5efca1473e52990994b49ef0649eb0239d02644871",
+        "bytes": 806484,
+        "kind": "bundle-metadata"
+      },
+      "rawAssetsVerified": 742,
+      "totals": {
+        "js": {
+          "files": 741,
+          "rawBytes": 9386347,
+          "gzipBytes": 3082508,
+          "brotliBytes": 2630347,
+          "rules": 0
+        },
+        "css": {
+          "files": 1,
+          "rawBytes": 196588,
+          "gzipBytes": 27568,
+          "brotliBytes": 21163,
+          "rules": 2272
+        },
+        "combined": {
+          "files": 742,
+          "rawBytes": 9582935,
+          "gzipBytes": 3110076,
+          "brotliBytes": 2651510,
+          "rules": 2272
+        }
+      }
+    },
+    {
+      "id": "repeated-12-postcss",
+      "phase": "repeated",
+      "pair": 12,
+      "variant": "postcss",
+      "elapsedMs": 19419.97470000002,
+      "config": {
+        "sourcePath": "reports/tailwind-integration/build-series/config/repeated-12-postcss.json",
+        "archivePath": "execution/config/repeated-12-postcss.json",
+        "sha256": "85160bca0cd8c8f0eed7ef836ca3e4343c99b4f7b3dd1a093ad6372a39f979d4",
+        "bytes": 2914,
+        "kind": "resolved-config"
+      },
+      "logs": {
+        "stdout": {
+          "sourcePath": "reports/tailwind-integration/build-series/logs/repeated-12-postcss.stdout.txt",
+          "archivePath": "execution/repeated-12-postcss.stdout.txt",
+          "sha256": "5724eda87d5c885dccf6a27c8fe0eee1f173a5b083e08b1a92536eeb347b8fa7",
+          "bytes": 103182,
+          "kind": "stdout"
+        },
+        "stderr": {
+          "sourcePath": "reports/tailwind-integration/build-series/logs/repeated-12-postcss.stderr.txt",
+          "archivePath": "execution/repeated-12-postcss.stderr.txt",
+          "sha256": "688db9a68c79cd303673511ab6dbf4cb1b6a079aaf747bbffbc6634644026237",
+          "bytes": 1099,
+          "kind": "stderr"
+        }
+      },
+      "inventory": {
+        "sourcePath": "reports/tailwind-integration/build-series/inventories/repeated-12-postcss.json",
+        "archivePath": "objects/e2161506340cd132f902106cec744fbaec7565e207745e770b32a251258ac308.json",
+        "sha256": "e2161506340cd132f902106cec744fbaec7565e207745e770b32a251258ac308",
+        "bytes": 494612,
+        "kind": "inventory"
+      },
+      "bundleMetadata": {
+        "sourcePath": "reports/tailwind-integration/build-series/outputs/repeated-12-postcss/.qa-build-metadata.json",
+        "archivePath": "objects/3e84096ce4d1575ec3d3758f5855f6a7b72ceb277eb5aed56e30a00bc91605f2.json",
+        "sha256": "3e84096ce4d1575ec3d3758f5855f6a7b72ceb277eb5aed56e30a00bc91605f2",
+        "bytes": 806487,
+        "kind": "bundle-metadata"
+      },
+      "rawAssetsVerified": 742,
+      "totals": {
+        "js": {
+          "files": 741,
+          "rawBytes": 9386347,
+          "gzipBytes": 3082508,
+          "brotliBytes": 2630347,
+          "rules": 0
+        },
+        "css": {
+          "files": 1,
+          "rawBytes": 196588,
+          "gzipBytes": 27568,
+          "brotliBytes": 21163,
+          "rules": 2272
+        },
+        "combined": {
+          "files": 742,
+          "rawBytes": 9582935,
+          "gzipBytes": 3110076,
+          "brotliBytes": 2651510,
+          "rules": 2272
+        }
+      }
+    },
+    {
+      "id": "repeated-13-postcss",
+      "phase": "repeated",
+      "pair": 13,
+      "variant": "postcss",
+      "elapsedMs": 18445.38010000001,
+      "config": {
+        "sourcePath": "reports/tailwind-integration/build-series/config/repeated-13-postcss.json",
+        "archivePath": "execution/config/repeated-13-postcss.json",
+        "sha256": "2fbd62e97ae64e346124d8f714722aa2a3410bb1929d57d9e86d41f29b8e31fa",
+        "bytes": 2914,
+        "kind": "resolved-config"
+      },
+      "logs": {
+        "stdout": {
+          "sourcePath": "reports/tailwind-integration/build-series/logs/repeated-13-postcss.stdout.txt",
+          "archivePath": "execution/repeated-13-postcss.stdout.txt",
+          "sha256": "6f415e5e7817a78183b8aef1235f58832ced7e4a2b9ea99b2bbc2c065080cbd3",
+          "bytes": 103182,
+          "kind": "stdout"
+        },
+        "stderr": {
+          "sourcePath": "reports/tailwind-integration/build-series/logs/repeated-13-postcss.stderr.txt",
+          "archivePath": "execution/repeated-13-postcss.stderr.txt",
+          "sha256": "688db9a68c79cd303673511ab6dbf4cb1b6a079aaf747bbffbc6634644026237",
+          "bytes": 1099,
+          "kind": "stderr"
+        }
+      },
+      "inventory": {
+        "sourcePath": "reports/tailwind-integration/build-series/inventories/repeated-13-postcss.json",
+        "archivePath": "objects/e2161506340cd132f902106cec744fbaec7565e207745e770b32a251258ac308.json",
+        "sha256": "e2161506340cd132f902106cec744fbaec7565e207745e770b32a251258ac308",
+        "bytes": 494612,
+        "kind": "inventory"
+      },
+      "bundleMetadata": {
+        "sourcePath": "reports/tailwind-integration/build-series/outputs/repeated-13-postcss/.qa-build-metadata.json",
+        "archivePath": "objects/3e84096ce4d1575ec3d3758f5855f6a7b72ceb277eb5aed56e30a00bc91605f2.json",
+        "sha256": "3e84096ce4d1575ec3d3758f5855f6a7b72ceb277eb5aed56e30a00bc91605f2",
+        "bytes": 806487,
+        "kind": "bundle-metadata"
+      },
+      "rawAssetsVerified": 742,
+      "totals": {
+        "js": {
+          "files": 741,
+          "rawBytes": 9386347,
+          "gzipBytes": 3082508,
+          "brotliBytes": 2630347,
+          "rules": 0
+        },
+        "css": {
+          "files": 1,
+          "rawBytes": 196588,
+          "gzipBytes": 27568,
+          "brotliBytes": 21163,
+          "rules": 2272
+        },
+        "combined": {
+          "files": 742,
+          "rawBytes": 9582935,
+          "gzipBytes": 3110076,
+          "brotliBytes": 2651510,
+          "rules": 2272
+        }
+      }
+    },
+    {
+      "id": "repeated-13-vite",
+      "phase": "repeated",
+      "pair": 13,
+      "variant": "vite",
+      "elapsedMs": 19170.994899999932,
+      "config": {
+        "sourcePath": "reports/tailwind-integration/build-series/config/repeated-13-vite.json",
+        "archivePath": "execution/config/repeated-13-vite.json",
+        "sha256": "48698f5b81d360ae2d5da092ba5147214365b7cbe8b53e2c1ad331131ee2f22e",
+        "bytes": 2965,
+        "kind": "resolved-config"
+      },
+      "logs": {
+        "stdout": {
+          "sourcePath": "reports/tailwind-integration/build-series/logs/repeated-13-vite.stdout.txt",
+          "archivePath": "execution/repeated-13-vite.stdout.txt",
+          "sha256": "fae3183f5a58a898eec1b04e0269e77ccb38f59b777250988a4483d44d8128c8",
+          "bytes": 100944,
+          "kind": "stdout"
+        },
+        "stderr": {
+          "sourcePath": "reports/tailwind-integration/build-series/logs/repeated-13-vite.stderr.txt",
+          "archivePath": "execution/repeated-13-vite.stderr.txt",
+          "sha256": "ce19739da2a2b5d0a458d9553ef08a7c8505b7f7d53e952abbd4c9ce29e01e02",
+          "bytes": 1639,
+          "kind": "stderr"
+        }
+      },
+      "inventory": {
+        "sourcePath": "reports/tailwind-integration/build-series/inventories/repeated-13-vite.json",
+        "archivePath": "objects/e2161506340cd132f902106cec744fbaec7565e207745e770b32a251258ac308.json",
+        "sha256": "e2161506340cd132f902106cec744fbaec7565e207745e770b32a251258ac308",
+        "bytes": 494612,
+        "kind": "inventory"
+      },
+      "bundleMetadata": {
+        "sourcePath": "reports/tailwind-integration/build-series/outputs/repeated-13-vite/.qa-build-metadata.json",
+        "archivePath": "objects/71f00955f622b4e332da9b5efca1473e52990994b49ef0649eb0239d02644871.json",
+        "sha256": "71f00955f622b4e332da9b5efca1473e52990994b49ef0649eb0239d02644871",
+        "bytes": 806484,
+        "kind": "bundle-metadata"
+      },
+      "rawAssetsVerified": 742,
+      "totals": {
+        "js": {
+          "files": 741,
+          "rawBytes": 9386347,
+          "gzipBytes": 3082508,
+          "brotliBytes": 2630347,
+          "rules": 0
+        },
+        "css": {
+          "files": 1,
+          "rawBytes": 196588,
+          "gzipBytes": 27568,
+          "brotliBytes": 21163,
+          "rules": 2272
+        },
+        "combined": {
+          "files": 742,
+          "rawBytes": 9582935,
+          "gzipBytes": 3110076,
+          "brotliBytes": 2651510,
+          "rules": 2272
+        }
+      }
+    }
+  ],
+  "requirements": {
+    "pairs": 13,
+    "initialPairs": 3,
+    "repeatedPairs": 10
+  },
+  "deduplication": {
+    "policy": "Exact original JSON bytes, keyed by SHA256; no path normalization or inventory rewriting.",
+    "logicalObjectReferences": 52,
+    "storedObjects": 3,
+    "logicalObjectBytes": 33828535,
+    "storedObjectBytes": 2107583,
+    "objects": [
+      {
+        "archivePath": "objects/e2161506340cd132f902106cec744fbaec7565e207745e770b32a251258ac308.json",
+        "kinds": [
+          "inventory"
+        ],
+        "sha256": "e2161506340cd132f902106cec744fbaec7565e207745e770b32a251258ac308",
+        "bytes": 494612
+      },
+      {
+        "archivePath": "objects/3e84096ce4d1575ec3d3758f5855f6a7b72ceb277eb5aed56e30a00bc91605f2.json",
+        "kinds": [
+          "bundle-metadata"
+        ],
+        "sha256": "3e84096ce4d1575ec3d3758f5855f6a7b72ceb277eb5aed56e30a00bc91605f2",
+        "bytes": 806487
+      },
+      {
+        "archivePath": "objects/71f00955f622b4e332da9b5efca1473e52990994b49ef0649eb0239d02644871.json",
+        "kinds": [
+          "bundle-metadata"
+        ],
+        "sha256": "71f00955f622b4e332da9b5efca1473e52990994b49ef0649eb0239d02644871",
+        "bytes": 806484
+      }
+    ]
+  },
+  "assets": {
+    "fullProductBundlesArchived": false,
+    "rawAssetReferencesVerified": 19292,
+    "rawAssetBytesVerified": 249156310,
+    "uniqueRawContentsVerified": 741,
+    "note": "Full product bundles are not published. Their per-run names, raw/gzip/Brotli sizes, hashes and CSS counts remain in the inventories. Complete outputs remain in the local reports directory."
+  },
+  "verificationScope": "Recorded log/config/inventory/metadata/cache hashes and raw emitted JS/CSS bytes were checked. Compression and CSS-rule analysis were not rerun; their values were cross-checked against the original hashed compression cache. Source manifests were internally hashed and checked against both captured endpoints, without re-reading current product sources."
+}

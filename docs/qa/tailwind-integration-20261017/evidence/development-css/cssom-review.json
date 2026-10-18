@@ -1,0 +1,15 @@
+{
+  "scenarios": 28,
+  "allScenariosPass": true,
+  "missingClasses": {
+    "baseline": [],
+    "candidate": []
+  },
+  "cssomDifferences": [
+    {
+      "path": "$/0/rules/7/children/2/declarations",
+      "baseline": "background-image: linear-gradient(to right, hsl(var(--primary-foreground) / 0.15) 1px, transparent 1px),\r\n      linear-gradient(to bottom, hsl(var(--primary-foreground) / 0.15) 1px, transparent 1px); background-size: 48px 48px;",
+      "candidate": "background-image: linear-gradient(to right, hsl(var(--primary-foreground) / 0.15) 1px, transparent 1px), linear-gradient(to bottom, hsl(var(--primary-foreground) / 0.15) 1px, transparent 1px); background-size: 48px 48px;"
+    }
+  ]
+}

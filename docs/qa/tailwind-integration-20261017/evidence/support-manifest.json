@@ -1,0 +1,1421 @@
+{
+  "schemaVersion": 1,
+  "inputRoot": "reports/tailwind-integration",
+  "outputRoot": "docs/qa/tailwind-integration-20261017/evidence",
+  "scope": "Allowlisted original setup, preflight, HMR and development CSS/contract evidence. No bundles, caches, application data, HTML reports, traces or build-series outputs.",
+  "preservedStates": {
+    "successfulHmrPassed": true,
+    "failedHmrPassed": false,
+    "developmentCssAuditPassed": false,
+    "productionContract": {
+      "originalOk": true,
+      "originalCssomEquivalent": true,
+      "scenarios": 28,
+      "scenarioPasses": 28,
+      "images": 56
+    },
+    "developmentContract": {
+      "originalOk": false,
+      "originalCssomEquivalent": false,
+      "scenarios": 28,
+      "scenarioPasses": 28,
+      "images": 56
+    },
+    "initialKnip": "Initial unused dependency finding is retained without requiring or claiming a pass; final validation is added separately."
+  },
+  "pngCount": 112,
+  "archiver": {
+    "pathRelativeToRepository": "docs/qa/tailwind-integration-20261017/archive-support.mjs",
+    "sha256": "2bad2dbd8cfafd3b9fd5c997b89b12e6e200344daf10ab97c8c4c5d904e023d9"
+  },
+  "rawFilesModified": false,
+  "finalValidation": "Not part of this archive; the root task will add final verification evidence separately.",
+  "fileCount": 197,
+  "totalBytes": 21992565,
+  "manifestNotSelfHashed": true,
+  "files": [
+    {
+      "originalPath": "reports/tailwind-integration/dev-css-audit/audit.json",
+      "copiedPath": "docs/qa/tailwind-integration-20261017/evidence/development-css/audit.json",
+      "role": "original-development-audit-including-false-status",
+      "bytes": 465764,
+      "sha256": "1a7ef281f7c8118ad41ca1b5fb86fb1326bccdeefee022c1408427b12340968f"
+    },
+    {
+      "originalPath": "reports/tailwind-integration/dev-css-audit/contract-styles-images/dark-1280x799-baseline.png",
+      "copiedPath": "docs/qa/tailwind-integration-20261017/evidence/development-css/contract-styles-images/dark-1280x799-baseline.png",
+      "role": "original-contract-png-path-preserved",
+      "bytes": 15524,
+      "sha256": "61d1d13e38f841b4411f01d78d92d335ce8c9ab4362d218f8b4020b9ba79b8f7"
+    },
+    {
+      "originalPath": "reports/tailwind-integration/dev-css-audit/contract-styles-images/dark-1280x799-candidate.png",
+      "copiedPath": "docs/qa/tailwind-integration-20261017/evidence/development-css/contract-styles-images/dark-1280x799-candidate.png",
+      "role": "original-contract-png-path-preserved",
+      "bytes": 15524,
+      "sha256": "61d1d13e38f841b4411f01d78d92d335ce8c9ab4362d218f8b4020b9ba79b8f7"
+    },
+    {
+      "originalPath": "reports/tailwind-integration/dev-css-audit/contract-styles-images/dark-1280x800-baseline.png",
+      "copiedPath": "docs/qa/tailwind-integration-20261017/evidence/development-css/contract-styles-images/dark-1280x800-baseline.png",
+      "role": "original-contract-png-path-preserved",
+      "bytes": 15531,
+      "sha256": "7df6d680fc7be07bb5d75396ce033903e9672a2e4fe84f0feb47c2fcaa99b240"
+    },
+    {
+      "originalPath": "reports/tailwind-integration/dev-css-audit/contract-styles-images/dark-1280x800-candidate.png",
+      "copiedPath": "docs/qa/tailwind-integration-20261017/evidence/development-css/contract-styles-images/dark-1280x800-candidate.png",
+      "role": "original-contract-png-path-preserved",
+      "bytes": 15531,
+      "sha256": "7df6d680fc7be07bb5d75396ce033903e9672a2e4fe84f0feb47c2fcaa99b240"
+    },
+    {
+      "originalPath": "reports/tailwind-integration/dev-css-audit/contract-styles-images/dark-1280x801-baseline.png",
+      "copiedPath": "docs/qa/tailwind-integration-20261017/evidence/development-css/contract-styles-images/dark-1280x801-baseline.png",
+      "role": "original-contract-png-path-preserved",
+      "bytes": 15512,
+      "sha256": "c05f28b6779b533097e2911967525752e2f15770957fcdd112b92febc7cd76e0"
+    },
+    {
+      "originalPath": "reports/tailwind-integration/dev-css-audit/contract-styles-images/dark-1280x801-candidate.png",
+      "copiedPath": "docs/qa/tailwind-integration-20261017/evidence/development-css/contract-styles-images/dark-1280x801-candidate.png",
+      "role": "original-contract-png-path-preserved",
+      "bytes": 15512,
+      "sha256": "c05f28b6779b533097e2911967525752e2f15770957fcdd112b92febc7cd76e0"
+    },
+    {
+      "originalPath": "reports/tailwind-integration/dev-css-audit/contract-styles-images/dark-1280x900-baseline.png",
+      "copiedPath": "docs/qa/tailwind-integration-20261017/evidence/development-css/contract-styles-images/dark-1280x900-baseline.png",
+      "role": "original-contract-png-path-preserved",
+      "bytes": 16119,
+      "sha256": "cf90a72685db3c13ec2ec83c20d83a070b5bd09c0961c458c5dcadb86b063a38"
+    },
+    {
+      "originalPath": "reports/tailwind-integration/dev-css-audit/contract-styles-images/dark-1280x900-candidate.png",
+      "copiedPath": "docs/qa/tailwind-integration-20261017/evidence/development-css/contract-styles-images/dark-1280x900-candidate.png",
+      "role": "original-contract-png-path-preserved",
+      "bytes": 16119,
+      "sha256": "cf90a72685db3c13ec2ec83c20d83a070b5bd09c0961c458c5dcadb86b063a38"
+    },
+    {
+      "originalPath": "reports/tailwind-integration/dev-css-audit/contract-styles-images/dark-1400x900-baseline.png",
+      "copiedPath": "docs/qa/tailwind-integration-20261017/evidence/development-css/contract-styles-images/dark-1400x900-baseline.png",
+      "role": "original-contract-png-path-preserved",
+      "bytes": 16679,
+      "sha256": "7e0a88f8407acf42ae33cfd1d95685fe2eedbaca8d3f8ee6f029a18982d091a3"
+    },
+    {
+      "originalPath": "reports/tailwind-integration/dev-css-audit/contract-styles-images/dark-1400x900-candidate.png",
+      "copiedPath": "docs/qa/tailwind-integration-20261017/evidence/development-css/contract-styles-images/dark-1400x900-candidate.png",
+      "role": "original-contract-png-path-preserved",
+      "bytes": 16679,
+      "sha256": "7e0a88f8407acf42ae33cfd1d95685fe2eedbaca8d3f8ee6f029a18982d091a3"
+    },
+    {
+      "originalPath": "reports/tailwind-integration/dev-css-audit/contract-styles-images/dark-2000x900-baseline.png",
+      "copiedPath": "docs/qa/tailwind-integration-20261017/evidence/development-css/contract-styles-images/dark-2000x900-baseline.png",
+      "role": "original-contract-png-path-preserved",
+      "bytes": 18242,
+      "sha256": "6af3b1fb31aedc2cadbe40b4debff9eaf93599b7cb2e4122dd69f6aa7fa28a20"
+    },
+    {
+      "originalPath": "reports/tailwind-integration/dev-css-audit/contract-styles-images/dark-2000x900-candidate.png",
+      "copiedPath": "docs/qa/tailwind-integration-20261017/evidence/development-css/contract-styles-images/dark-2000x900-candidate.png",
+      "role": "original-contract-png-path-preserved",
+      "bytes": 18242,
+      "sha256": "6af3b1fb31aedc2cadbe40b4debff9eaf93599b7cb2e4122dd69f6aa7fa28a20"
+    },
+    {
+      "originalPath": "reports/tailwind-integration/dev-css-audit/contract-styles-images/dark-390x799-baseline.png",
+      "copiedPath": "docs/qa/tailwind-integration-20261017/evidence/development-css/contract-styles-images/dark-390x799-baseline.png",
+      "role": "original-contract-png-path-preserved",
+      "bytes": 12911,
+      "sha256": "82fa3099c5f33cdec7132bb630583478512e055d54112373965ce9c62f44dc38"
+    },
+    {
+      "originalPath": "reports/tailwind-integration/dev-css-audit/contract-styles-images/dark-390x799-candidate.png",
+      "copiedPath": "docs/qa/tailwind-integration-20261017/evidence/development-css/contract-styles-images/dark-390x799-candidate.png",
+      "role": "original-contract-png-path-preserved",
+      "bytes": 12911,
+      "sha256": "82fa3099c5f33cdec7132bb630583478512e055d54112373965ce9c62f44dc38"
+    },
+    {
+      "originalPath": "reports/tailwind-integration/dev-css-audit/contract-styles-images/dark-390x800-baseline.png",
+      "copiedPath": "docs/qa/tailwind-integration-20261017/evidence/development-css/contract-styles-images/dark-390x800-baseline.png",
+      "role": "original-contract-png-path-preserved",
+      "bytes": 12915,
+      "sha256": "85ad2a12eec3e504beff27d5a023bb035798cd02e2e79b96cb98b810e21a3428"
+    },
+    {
+      "originalPath": "reports/tailwind-integration/dev-css-audit/contract-styles-images/dark-390x800-candidate.png",
+      "copiedPath": "docs/qa/tailwind-integration-20261017/evidence/development-css/contract-styles-images/dark-390x800-candidate.png",
+      "role": "original-contract-png-path-preserved",
+      "bytes": 12915,
+      "sha256": "85ad2a12eec3e504beff27d5a023bb035798cd02e2e79b96cb98b810e21a3428"
+    },
+    {
+      "originalPath": "reports/tailwind-integration/dev-css-audit/contract-styles-images/dark-390x801-baseline.png",
+      "copiedPath": "docs/qa/tailwind-integration-20261017/evidence/development-css/contract-styles-images/dark-390x801-baseline.png",
+      "role": "original-contract-png-path-preserved",
+      "bytes": 12924,
+      "sha256": "6053e702b78ada7af7ccf094fffe7de77eae804f7d9da9e973e403f9cf96c09f"
+    },
+    {
+      "originalPath": "reports/tailwind-integration/dev-css-audit/contract-styles-images/dark-390x801-candidate.png",
+      "copiedPath": "docs/qa/tailwind-integration-20261017/evidence/development-css/contract-styles-images/dark-390x801-candidate.png",
+      "role": "original-contract-png-path-preserved",
+      "bytes": 12924,
+      "sha256": "6053e702b78ada7af7ccf094fffe7de77eae804f7d9da9e973e403f9cf96c09f"
+    },
+    {
+      "originalPath": "reports/tailwind-integration/dev-css-audit/contract-styles-images/dark-390x900-baseline.png",
+      "copiedPath": "docs/qa/tailwind-integration-20261017/evidence/development-css/contract-styles-images/dark-390x900-baseline.png",
+      "role": "original-contract-png-path-preserved",
+      "bytes": 13326,
+      "sha256": "f459d9b12c5016c6f772affcf6108a66a6d4b2a297e716aafb74da9624a5e1ca"
+    },
+    {
+      "originalPath": "reports/tailwind-integration/dev-css-audit/contract-styles-images/dark-390x900-candidate.png",
+      "copiedPath": "docs/qa/tailwind-integration-20261017/evidence/development-css/contract-styles-images/dark-390x900-candidate.png",
+      "role": "original-contract-png-path-preserved",
+      "bytes": 13326,
+      "sha256": "f459d9b12c5016c6f772affcf6108a66a6d4b2a297e716aafb74da9624a5e1ca"
+    },
+    {
+      "originalPath": "reports/tailwind-integration/dev-css-audit/contract-styles-images/dark-691x799-baseline.png",
+      "copiedPath": "docs/qa/tailwind-integration-20261017/evidence/development-css/contract-styles-images/dark-691x799-baseline.png",
+      "role": "original-contract-png-path-preserved",
+      "bytes": 13821,
+      "sha256": "c5eee5fdf7965040774c944048e223e3e458594a5b9647869137a7080cd53ada"
+    },
+    {
+      "originalPath": "reports/tailwind-integration/dev-css-audit/contract-styles-images/dark-691x799-candidate.png",
+      "copiedPath": "docs/qa/tailwind-integration-20261017/evidence/development-css/contract-styles-images/dark-691x799-candidate.png",
+      "role": "original-contract-png-path-preserved",
+      "bytes": 13821,
+      "sha256": "c5eee5fdf7965040774c944048e223e3e458594a5b9647869137a7080cd53ada"
+    },
+    {
+      "originalPath": "reports/tailwind-integration/dev-css-audit/contract-styles-images/dark-691x800-baseline.png",
+      "copiedPath": "docs/qa/tailwind-integration-20261017/evidence/development-css/contract-styles-images/dark-691x800-baseline.png",
+      "role": "original-contract-png-path-preserved",
+      "bytes": 13825,
+      "sha256": "0d119d30e93f255999fac75f1cb1227e767041feecf49b0e5d6e14e78914c8bc"
+    },
+    {
+      "originalPath": "reports/tailwind-integration/dev-css-audit/contract-styles-images/dark-691x800-candidate.png",
+      "copiedPath": "docs/qa/tailwind-integration-20261017/evidence/development-css/contract-styles-images/dark-691x800-candidate.png",
+      "role": "original-contract-png-path-preserved",
+      "bytes": 13825,
+      "sha256": "0d119d30e93f255999fac75f1cb1227e767041feecf49b0e5d6e14e78914c8bc"
+    },
+    {
+      "originalPath": "reports/tailwind-integration/dev-css-audit/contract-styles-images/dark-691x801-baseline.png",
+      "copiedPath": "docs/qa/tailwind-integration-20261017/evidence/development-css/contract-styles-images/dark-691x801-baseline.png",
+      "role": "original-contract-png-path-preserved",
+      "bytes": 13811,
+      "sha256": "f4d2f144fe576b7ffc927f8229b07c972559161add4d4361d997f2b2727935f4"
+    },
+    {
+      "originalPath": "reports/tailwind-integration/dev-css-audit/contract-styles-images/dark-691x801-candidate.png",
+      "copiedPath": "docs/qa/tailwind-integration-20261017/evidence/development-css/contract-styles-images/dark-691x801-candidate.png",
+      "role": "original-contract-png-path-preserved",
+      "bytes": 13811,
+      "sha256": "f4d2f144fe576b7ffc927f8229b07c972559161add4d4361d997f2b2727935f4"
+    },
+    {
+      "originalPath": "reports/tailwind-integration/dev-css-audit/contract-styles-images/dark-691x900-baseline.png",
+      "copiedPath": "docs/qa/tailwind-integration-20261017/evidence/development-css/contract-styles-images/dark-691x900-baseline.png",
+      "role": "original-contract-png-path-preserved",
+      "bytes": 14219,
+      "sha256": "56c878ceb7994cd5da73fd8626ab163d92eb4b83655806460e7d2733121de943"
+    },
+    {
+      "originalPath": "reports/tailwind-integration/dev-css-audit/contract-styles-images/dark-691x900-candidate.png",
+      "copiedPath": "docs/qa/tailwind-integration-20261017/evidence/development-css/contract-styles-images/dark-691x900-candidate.png",
+      "role": "original-contract-png-path-preserved",
+      "bytes": 14219,
+      "sha256": "56c878ceb7994cd5da73fd8626ab163d92eb4b83655806460e7d2733121de943"
+    },
+    {
+      "originalPath": "reports/tailwind-integration/dev-css-audit/contract-styles-images/light-1280x799-baseline.png",
+      "copiedPath": "docs/qa/tailwind-integration-20261017/evidence/development-css/contract-styles-images/light-1280x799-baseline.png",
+      "role": "original-contract-png-path-preserved",
+      "bytes": 15485,
+      "sha256": "3884a74e14b873b7322e8f34f0250d1af8ef38639af262978327175fcbf91909"
+    },
+    {
+      "originalPath": "reports/tailwind-integration/dev-css-audit/contract-styles-images/light-1280x799-candidate.png",
+      "copiedPath": "docs/qa/tailwind-integration-20261017/evidence/development-css/contract-styles-images/light-1280x799-candidate.png",
+      "role": "original-contract-png-path-preserved",
+      "bytes": 15485,
+      "sha256": "3884a74e14b873b7322e8f34f0250d1af8ef38639af262978327175fcbf91909"
+    },
+    {
+      "originalPath": "reports/tailwind-integration/dev-css-audit/contract-styles-images/light-1280x800-baseline.png",
+      "copiedPath": "docs/qa/tailwind-integration-20261017/evidence/development-css/contract-styles-images/light-1280x800-baseline.png",
+      "role": "original-contract-png-path-preserved",
+      "bytes": 15491,
+      "sha256": "1a179932fd14e96d8ff5c3467496a86a52c1f16d1ddc9b1d4e569d0abaf0a7b4"
+    },
+    {
+      "originalPath": "reports/tailwind-integration/dev-css-audit/contract-styles-images/light-1280x800-candidate.png",
+      "copiedPath": "docs/qa/tailwind-integration-20261017/evidence/development-css/contract-styles-images/light-1280x800-candidate.png",
+      "role": "original-contract-png-path-preserved",
+      "bytes": 15491,
+      "sha256": "1a179932fd14e96d8ff5c3467496a86a52c1f16d1ddc9b1d4e569d0abaf0a7b4"
+    },
+    {
+      "originalPath": "reports/tailwind-integration/dev-css-audit/contract-styles-images/light-1280x801-baseline.png",
+      "copiedPath": "docs/qa/tailwind-integration-20261017/evidence/development-css/contract-styles-images/light-1280x801-baseline.png",
+      "role": "original-contract-png-path-preserved",
+      "bytes": 15454,
+      "sha256": "8432720c877bb009924512ff59ff10724a973d6c431a089712a9624bd4f8f873"
+    },
+    {
+      "originalPath": "reports/tailwind-integration/dev-css-audit/contract-styles-images/light-1280x801-candidate.png",
+      "copiedPath": "docs/qa/tailwind-integration-20261017/evidence/development-css/contract-styles-images/light-1280x801-candidate.png",
+      "role": "original-contract-png-path-preserved",
+      "bytes": 15454,
+      "sha256": "8432720c877bb009924512ff59ff10724a973d6c431a089712a9624bd4f8f873"
+    },
+    {
+      "originalPath": "reports/tailwind-integration/dev-css-audit/contract-styles-images/light-1280x900-baseline.png",
+      "copiedPath": "docs/qa/tailwind-integration-20261017/evidence/development-css/contract-styles-images/light-1280x900-baseline.png",
+      "role": "original-contract-png-path-preserved",
+      "bytes": 16063,
+      "sha256": "2f7d379e67eba7173db4271f1ea5b1c8f4c571e2ee0aadb58276bdaa0b7b8878"
+    },
+    {
+      "originalPath": "reports/tailwind-integration/dev-css-audit/contract-styles-images/light-1280x900-candidate.png",
+      "copiedPath": "docs/qa/tailwind-integration-20261017/evidence/development-css/contract-styles-images/light-1280x900-candidate.png",
+      "role": "original-contract-png-path-preserved",
+      "bytes": 16063,
+      "sha256": "2f7d379e67eba7173db4271f1ea5b1c8f4c571e2ee0aadb58276bdaa0b7b8878"
+    },
+    {
+      "originalPath": "reports/tailwind-integration/dev-css-audit/contract-styles-images/light-1400x900-baseline.png",
+      "copiedPath": "docs/qa/tailwind-integration-20261017/evidence/development-css/contract-styles-images/light-1400x900-baseline.png",
+      "role": "original-contract-png-path-preserved",
+      "bytes": 16597,
+      "sha256": "7037a89d17f48d3f77b48aa624c81c88a743631dea2b159df4a598e74c8ee93e"
+    },
+    {
+      "originalPath": "reports/tailwind-integration/dev-css-audit/contract-styles-images/light-1400x900-candidate.png",
+      "copiedPath": "docs/qa/tailwind-integration-20261017/evidence/development-css/contract-styles-images/light-1400x900-candidate.png",
+      "role": "original-contract-png-path-preserved",
+      "bytes": 16597,
+      "sha256": "7037a89d17f48d3f77b48aa624c81c88a743631dea2b159df4a598e74c8ee93e"
+    },
+    {
+      "originalPath": "reports/tailwind-integration/dev-css-audit/contract-styles-images/light-2000x900-baseline.png",
+      "copiedPath": "docs/qa/tailwind-integration-20261017/evidence/development-css/contract-styles-images/light-2000x900-baseline.png",
+      "role": "original-contract-png-path-preserved",
+      "bytes": 18194,
+      "sha256": "3f591b49a2aeaceed29b50c470ac89dfa86bfc874123670a186ce2be4c79343f"
+    },
+    {
+      "originalPath": "reports/tailwind-integration/dev-css-audit/contract-styles-images/light-2000x900-candidate.png",
+      "copiedPath": "docs/qa/tailwind-integration-20261017/evidence/development-css/contract-styles-images/light-2000x900-candidate.png",
+      "role": "original-contract-png-path-preserved",
+      "bytes": 18194,
+      "sha256": "3f591b49a2aeaceed29b50c470ac89dfa86bfc874123670a186ce2be4c79343f"
+    },
+    {
+      "originalPath": "reports/tailwind-integration/dev-css-audit/contract-styles-images/light-390x799-baseline.png",
+      "copiedPath": "docs/qa/tailwind-integration-20261017/evidence/development-css/contract-styles-images/light-390x799-baseline.png",
+      "role": "original-contract-png-path-preserved",
+      "bytes": 12821,
+      "sha256": "7ab266ef914c902615514c27907a9dec9717d8feab36b431c43817638390ee89"
+    },
+    {
+      "originalPath": "reports/tailwind-integration/dev-css-audit/contract-styles-images/light-390x799-candidate.png",
+      "copiedPath": "docs/qa/tailwind-integration-20261017/evidence/development-css/contract-styles-images/light-390x799-candidate.png",
+      "role": "original-contract-png-path-preserved",
+      "bytes": 12821,
+      "sha256": "7ab266ef914c902615514c27907a9dec9717d8feab36b431c43817638390ee89"
+    },
+    {
+      "originalPath": "reports/tailwind-integration/dev-css-audit/contract-styles-images/light-390x800-baseline.png",
+      "copiedPath": "docs/qa/tailwind-integration-20261017/evidence/development-css/contract-styles-images/light-390x800-baseline.png",
+      "role": "original-contract-png-path-preserved",
+      "bytes": 12825,
+      "sha256": "b66146071430d7e09b111009151eb080d3569531839794aeb512ee150f92f593"
+    },
+    {
+      "originalPath": "reports/tailwind-integration/dev-css-audit/contract-styles-images/light-390x800-candidate.png",
+      "copiedPath": "docs/qa/tailwind-integration-20261017/evidence/development-css/contract-styles-images/light-390x800-candidate.png",
+      "role": "original-contract-png-path-preserved",
+      "bytes": 12825,
+      "sha256": "b66146071430d7e09b111009151eb080d3569531839794aeb512ee150f92f593"
+    },
+    {
+      "originalPath": "reports/tailwind-integration/dev-css-audit/contract-styles-images/light-390x801-baseline.png",
+      "copiedPath": "docs/qa/tailwind-integration-20261017/evidence/development-css/contract-styles-images/light-390x801-baseline.png",
+      "role": "original-contract-png-path-preserved",
+      "bytes": 12835,
+      "sha256": "c38b6d3ec41ef90905b550228382747683b7a21e8fdbde554bf218a55250ff97"
+    },
+    {
+      "originalPath": "reports/tailwind-integration/dev-css-audit/contract-styles-images/light-390x801-candidate.png",
+      "copiedPath": "docs/qa/tailwind-integration-20261017/evidence/development-css/contract-styles-images/light-390x801-candidate.png",
+      "role": "original-contract-png-path-preserved",
+      "bytes": 12835,
+      "sha256": "c38b6d3ec41ef90905b550228382747683b7a21e8fdbde554bf218a55250ff97"
+    },
+    {
+      "originalPath": "reports/tailwind-integration/dev-css-audit/contract-styles-images/light-390x900-baseline.png",
+      "copiedPath": "docs/qa/tailwind-integration-20261017/evidence/development-css/contract-styles-images/light-390x900-baseline.png",
+      "role": "original-contract-png-path-preserved",
+      "bytes": 13238,
+      "sha256": "65b29a86144ea44d4937cc1ce1937d899346522b59701a0e992e9ee5543f5c9c"
+    },
+    {
+      "originalPath": "reports/tailwind-integration/dev-css-audit/contract-styles-images/light-390x900-candidate.png",
+      "copiedPath": "docs/qa/tailwind-integration-20261017/evidence/development-css/contract-styles-images/light-390x900-candidate.png",
+      "role": "original-contract-png-path-preserved",
+      "bytes": 13238,
+      "sha256": "65b29a86144ea44d4937cc1ce1937d899346522b59701a0e992e9ee5543f5c9c"
+    },
+    {
+      "originalPath": "reports/tailwind-integration/dev-css-audit/contract-styles-images/light-691x799-baseline.png",
+      "copiedPath": "docs/qa/tailwind-integration-20261017/evidence/development-css/contract-styles-images/light-691x799-baseline.png",
+      "role": "original-contract-png-path-preserved",
+      "bytes": 13754,
+      "sha256": "7930dc39a280eef2f612ec03b6b1bc89d283d02afc7ff7b6536cfbb9aff0a35d"
+    },
+    {
+      "originalPath": "reports/tailwind-integration/dev-css-audit/contract-styles-images/light-691x799-candidate.png",
+      "copiedPath": "docs/qa/tailwind-integration-20261017/evidence/development-css/contract-styles-images/light-691x799-candidate.png",
+      "role": "original-contract-png-path-preserved",
+      "bytes": 13754,
+      "sha256": "7930dc39a280eef2f612ec03b6b1bc89d283d02afc7ff7b6536cfbb9aff0a35d"
+    },
+    {
+      "originalPath": "reports/tailwind-integration/dev-css-audit/contract-styles-images/light-691x800-baseline.png",
+      "copiedPath": "docs/qa/tailwind-integration-20261017/evidence/development-css/contract-styles-images/light-691x800-baseline.png",
+      "role": "original-contract-png-path-preserved",
+      "bytes": 13758,
+      "sha256": "1b0d82de1bf8d7fb41a309afb01d5f38d565243693b551e78d0133763af6f3ce"
+    },
+    {
+      "originalPath": "reports/tailwind-integration/dev-css-audit/contract-styles-images/light-691x800-candidate.png",
+      "copiedPath": "docs/qa/tailwind-integration-20261017/evidence/development-css/contract-styles-images/light-691x800-candidate.png",
+      "role": "original-contract-png-path-preserved",
+      "bytes": 13758,
+      "sha256": "1b0d82de1bf8d7fb41a309afb01d5f38d565243693b551e78d0133763af6f3ce"
+    },
+    {
+      "originalPath": "reports/tailwind-integration/dev-css-audit/contract-styles-images/light-691x801-baseline.png",
+      "copiedPath": "docs/qa/tailwind-integration-20261017/evidence/development-css/contract-styles-images/light-691x801-baseline.png",
+      "role": "original-contract-png-path-preserved",
+      "bytes": 13732,
+      "sha256": "757c2c0aa136f4c1d0b4352bc8670e08790e71170010d831c1f94f24433caa41"
+    },
+    {
+      "originalPath": "reports/tailwind-integration/dev-css-audit/contract-styles-images/light-691x801-candidate.png",
+      "copiedPath": "docs/qa/tailwind-integration-20261017/evidence/development-css/contract-styles-images/light-691x801-candidate.png",
+      "role": "original-contract-png-path-preserved",
+      "bytes": 13732,
+      "sha256": "757c2c0aa136f4c1d0b4352bc8670e08790e71170010d831c1f94f24433caa41"
+    },
+    {
+      "originalPath": "reports/tailwind-integration/dev-css-audit/contract-styles-images/light-691x900-baseline.png",
+      "copiedPath": "docs/qa/tailwind-integration-20261017/evidence/development-css/contract-styles-images/light-691x900-baseline.png",
+      "role": "original-contract-png-path-preserved",
+      "bytes": 14140,
+      "sha256": "83b5c2d5b41c48fcf68ecb32e999d002365bf27cac1d3d47f42e63f3b6698922"
+    },
+    {
+      "originalPath": "reports/tailwind-integration/dev-css-audit/contract-styles-images/light-691x900-candidate.png",
+      "copiedPath": "docs/qa/tailwind-integration-20261017/evidence/development-css/contract-styles-images/light-691x900-candidate.png",
+      "role": "original-contract-png-path-preserved",
+      "bytes": 14140,
+      "sha256": "83b5c2d5b41c48fcf68ecb32e999d002365bf27cac1d3d47f42e63f3b6698922"
+    },
+    {
+      "originalPath": "reports/tailwind-integration/dev-css-audit/cssom-review.json",
+      "copiedPath": "docs/qa/tailwind-integration-20261017/evidence/development-css/cssom-review.json",
+      "role": "original-byte-exact",
+      "bytes": 719,
+      "sha256": "18512190021644bc275cac753bbb80eba531a16aa97139d512bbb5e665bbddeb"
+    },
+    {
+      "originalPath": "reports/tailwind-integration/dev-css-audit/differences.json",
+      "copiedPath": "docs/qa/tailwind-integration-20261017/evidence/development-css/differences.json",
+      "role": "original-byte-exact",
+      "bytes": 5945,
+      "sha256": "b21416e4ef8a9198a5b5527ddca45b6d761eac8a40e126fcac7c6d5333bbfa00"
+    },
+    {
+      "originalPath": "reports/tailwind-integration/dev-css-audit-execution.txt",
+      "copiedPath": "docs/qa/tailwind-integration-20261017/evidence/development-css/execution/dev-css-audit-execution.txt",
+      "role": "original-byte-exact",
+      "bytes": 83,
+      "sha256": "d5ca7c88052ccd96fd0ed163cd9ee1b2602f0c9f39443156e7ade07abfb8df69"
+    },
+    {
+      "originalPath": "reports/tailwind-integration/dev-css-audit/explanation.md",
+      "copiedPath": "docs/qa/tailwind-integration-20261017/evidence/development-css/explanation.md",
+      "role": "original-byte-exact",
+      "bytes": 1144,
+      "sha256": "929a5655331506d898ea7f619c7736fe0f9186e268503132da7e6e0f569f25bd"
+    },
+    {
+      "originalPath": "reports/tailwind-integration/dev-css-audit/postcss.dev.css",
+      "copiedPath": "docs/qa/tailwind-integration-20261017/evidence/development-css/postcss.dev.css",
+      "role": "original-unmodified-development-css",
+      "bytes": 235917,
+      "sha256": "a81eb7cbdadb3e882c4274d61ed919a30fcda14e3255e3df393bdd485a99616f"
+    },
+    {
+      "originalPath": "reports/tailwind-integration/dev-css-audit/postcss/config.json",
+      "copiedPath": "docs/qa/tailwind-integration-20261017/evidence/development-css/postcss/config.json",
+      "role": "original-byte-exact",
+      "bytes": 600,
+      "sha256": "c6deab7a6f40db077bd8db365e6961187c6ea0f101b90387e7f4cd61f2b331a0"
+    },
+    {
+      "originalPath": "reports/tailwind-integration/dev-css-audit/postcss/css-inventory.json",
+      "copiedPath": "docs/qa/tailwind-integration-20261017/evidence/development-css/postcss/css-inventory.json",
+      "role": "original-byte-exact",
+      "bytes": 183210,
+      "sha256": "e5e2d53c04a1115fdc8c9c2fc97ec8c47cf75666693c4e9881888dc58bedb6f8"
+    },
+    {
+      "originalPath": "reports/tailwind-integration/dev-css-audit/postcss/node.stderr.log",
+      "copiedPath": "docs/qa/tailwind-integration-20261017/evidence/development-css/postcss/execution/node.stderr.txt",
+      "role": "original-log-renamed-byte-exact",
+      "bytes": 251,
+      "sha256": "9893ee2f6cf25c0e25e1da02a180fdbdd1dd8ae52ffc7b66691fb6aec4a76410"
+    },
+    {
+      "originalPath": "reports/tailwind-integration/dev-css-audit/postcss/node.stdout.log",
+      "copiedPath": "docs/qa/tailwind-integration-20261017/evidence/development-css/postcss/execution/node.stdout.txt",
+      "role": "original-log-renamed-byte-exact",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "originalPath": "reports/tailwind-integration/dev-css-audit/postcss/ordered-ast.json",
+      "copiedPath": "docs/qa/tailwind-integration-20261017/evidence/development-css/postcss/ordered-ast.json",
+      "role": "original-byte-exact",
+      "bytes": 984542,
+      "sha256": "822974a1acd76bdfdae52a1f702fec6b35b5e40501d415184b8c2ef6d9bb4a07"
+    },
+    {
+      "originalPath": "reports/tailwind-integration/dev-css-audit/style-contract.json",
+      "copiedPath": "docs/qa/tailwind-integration-20261017/evidence/development-css/style-contract.json",
+      "role": "original-contract-report-including-false-status",
+      "bytes": 3151546,
+      "sha256": "983c56b4a9214ba48b5839fb4d85c4fb982f6e741da750ed63ea592a8c1ea0c0"
+    },
+    {
+      "originalPath": "reports/tailwind-integration/dev-css-audit/style-contract.txt",
+      "copiedPath": "docs/qa/tailwind-integration-20261017/evidence/development-css/style-contract.txt",
+      "role": "original-byte-exact",
+      "bytes": 207,
+      "sha256": "e9a6db61eb32b1f4df45e39616ff324bd73425b16e29e639320074866f3be946"
+    },
+    {
+      "originalPath": "reports/tailwind-integration/dev-css-audit/vite.dev.css",
+      "copiedPath": "docs/qa/tailwind-integration-20261017/evidence/development-css/vite.dev.css",
+      "role": "original-unmodified-development-css",
+      "bytes": 235821,
+      "sha256": "c4f46f0d6650ed82a3b0224a6f97e9be57d3ee3d08277bd44ef1c88901b4c10e"
+    },
+    {
+      "originalPath": "reports/tailwind-integration/dev-css-audit/vite/config.json",
+      "copiedPath": "docs/qa/tailwind-integration-20261017/evidence/development-css/vite/config.json",
+      "role": "original-byte-exact",
+      "bytes": 588,
+      "sha256": "3ea3115b1d450773a4163688baca225c329f55b3ea40cd100308998d98b457ff"
+    },
+    {
+      "originalPath": "reports/tailwind-integration/dev-css-audit/vite/css-inventory.json",
+      "copiedPath": "docs/qa/tailwind-integration-20261017/evidence/development-css/vite/css-inventory.json",
+      "role": "original-byte-exact",
+      "bytes": 183079,
+      "sha256": "4f289bcb0e0dd7c73bee45d28693d1a39d9c58d582cf5c08e702e7fa0306d37f"
+    },
+    {
+      "originalPath": "reports/tailwind-integration/dev-css-audit/vite/node.stderr.log",
+      "copiedPath": "docs/qa/tailwind-integration-20261017/evidence/development-css/vite/execution/node.stderr.txt",
+      "role": "original-log-renamed-byte-exact",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "originalPath": "reports/tailwind-integration/dev-css-audit/vite/node.stdout.log",
+      "copiedPath": "docs/qa/tailwind-integration-20261017/evidence/development-css/vite/execution/node.stdout.txt",
+      "role": "original-log-renamed-byte-exact",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "originalPath": "reports/tailwind-integration/dev-css-audit/vite/ordered-ast.json",
+      "copiedPath": "docs/qa/tailwind-integration-20261017/evidence/development-css/vite/ordered-ast.json",
+      "role": "original-byte-exact",
+      "bytes": 984400,
+      "sha256": "9bc4ac164134096f11e88c09e0fb13f8291d0e7739150b2152b947d6da08fde7"
+    },
+    {
+      "originalPath": "reports/tailwind-integration/hmr-series/pair-01-1-postcss/node.stderr.log",
+      "copiedPath": "docs/qa/tailwind-integration-20261017/evidence/hmr/execution/failed-pair-01-1-postcss.stderr.txt",
+      "role": "original-log-renamed-byte-exact",
+      "bytes": 251,
+      "sha256": "9893ee2f6cf25c0e25e1da02a180fdbdd1dd8ae52ffc7b66691fb6aec4a76410"
+    },
+    {
+      "originalPath": "reports/tailwind-integration/hmr-series/pair-01-1-postcss/node.stdout.log",
+      "copiedPath": "docs/qa/tailwind-integration-20261017/evidence/hmr/execution/failed-pair-01-1-postcss.stdout.txt",
+      "role": "original-log-renamed-byte-exact",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "originalPath": "reports/tailwind-integration/hmr-execution-local-permission.txt",
+      "copiedPath": "docs/qa/tailwind-integration-20261017/evidence/hmr/execution/hmr-execution-local-permission.txt",
+      "role": "original-byte-exact",
+      "bytes": 606,
+      "sha256": "7f7c4f39747909c91d11f283f10601bb1780dd8799fadc462e00e84525ae2ec1"
+    },
+    {
+      "originalPath": "reports/tailwind-integration/hmr-execution.txt",
+      "copiedPath": "docs/qa/tailwind-integration-20261017/evidence/hmr/execution/hmr-execution.txt",
+      "role": "original-byte-exact",
+      "bytes": 159,
+      "sha256": "fd7180506f99e82b19f7899f60f962b488deebd1c645ecec693dd50e3e25508b"
+    },
+    {
+      "originalPath": "reports/tailwind-integration/hmr-series-local-permission/pair-01-1-postcss/node.stderr.log",
+      "copiedPath": "docs/qa/tailwind-integration-20261017/evidence/hmr/execution/pair-01-1-postcss.stderr.txt",
+      "role": "original-log-renamed-byte-exact",
+      "bytes": 251,
+      "sha256": "9893ee2f6cf25c0e25e1da02a180fdbdd1dd8ae52ffc7b66691fb6aec4a76410"
+    },
+    {
+      "originalPath": "reports/tailwind-integration/hmr-series-local-permission/pair-01-1-postcss/node.stdout.log",
+      "copiedPath": "docs/qa/tailwind-integration-20261017/evidence/hmr/execution/pair-01-1-postcss.stdout.txt",
+      "role": "original-log-renamed-byte-exact",
+      "bytes": 1435,
+      "sha256": "8419167df69412790de0ccfc435662b98eb61c7086ca460c026d246b0a20f950"
+    },
+    {
+      "originalPath": "reports/tailwind-integration/hmr-series-local-permission/pair-01-2-vite/node.stderr.log",
+      "copiedPath": "docs/qa/tailwind-integration-20261017/evidence/hmr/execution/pair-01-2-vite.stderr.txt",
+      "role": "original-log-renamed-byte-exact",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "originalPath": "reports/tailwind-integration/hmr-series-local-permission/pair-01-2-vite/node.stdout.log",
+      "copiedPath": "docs/qa/tailwind-integration-20261017/evidence/hmr/execution/pair-01-2-vite.stdout.txt",
+      "role": "original-log-renamed-byte-exact",
+      "bytes": 1414,
+      "sha256": "f98fce02db4f8ce0e2b0bace1b67d916b1f2c7834eecb65c31f73545a6ee1596"
+    },
+    {
+      "originalPath": "reports/tailwind-integration/hmr-series-local-permission/pair-02-1-vite/node.stderr.log",
+      "copiedPath": "docs/qa/tailwind-integration-20261017/evidence/hmr/execution/pair-02-1-vite.stderr.txt",
+      "role": "original-log-renamed-byte-exact",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "originalPath": "reports/tailwind-integration/hmr-series-local-permission/pair-02-1-vite/node.stdout.log",
+      "copiedPath": "docs/qa/tailwind-integration-20261017/evidence/hmr/execution/pair-02-1-vite.stdout.txt",
+      "role": "original-log-renamed-byte-exact",
+      "bytes": 1414,
+      "sha256": "940512c423d76354c2a63b8eee1690d783490b2ea97f88619b8708d2d277a759"
+    },
+    {
+      "originalPath": "reports/tailwind-integration/hmr-series-local-permission/pair-02-2-postcss/node.stderr.log",
+      "copiedPath": "docs/qa/tailwind-integration-20261017/evidence/hmr/execution/pair-02-2-postcss.stderr.txt",
+      "role": "original-log-renamed-byte-exact",
+      "bytes": 251,
+      "sha256": "9893ee2f6cf25c0e25e1da02a180fdbdd1dd8ae52ffc7b66691fb6aec4a76410"
+    },
+    {
+      "originalPath": "reports/tailwind-integration/hmr-series-local-permission/pair-02-2-postcss/node.stdout.log",
+      "copiedPath": "docs/qa/tailwind-integration-20261017/evidence/hmr/execution/pair-02-2-postcss.stdout.txt",
+      "role": "original-log-renamed-byte-exact",
+      "bytes": 1435,
+      "sha256": "85d77f3f4a26a24f691d1dd9822187b4c19265f20694af10418ed0be78d46448"
+    },
+    {
+      "originalPath": "reports/tailwind-integration/hmr-series-local-permission/pair-03-1-vite/node.stderr.log",
+      "copiedPath": "docs/qa/tailwind-integration-20261017/evidence/hmr/execution/pair-03-1-vite.stderr.txt",
+      "role": "original-log-renamed-byte-exact",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "originalPath": "reports/tailwind-integration/hmr-series-local-permission/pair-03-1-vite/node.stdout.log",
+      "copiedPath": "docs/qa/tailwind-integration-20261017/evidence/hmr/execution/pair-03-1-vite.stdout.txt",
+      "role": "original-log-renamed-byte-exact",
+      "bytes": 1414,
+      "sha256": "a7a2eafec0a566eb21a84ffbed9b7e73cb109b18a89c3edea4b64579b473e914"
+    },
+    {
+      "originalPath": "reports/tailwind-integration/hmr-series-local-permission/pair-03-2-postcss/node.stderr.log",
+      "copiedPath": "docs/qa/tailwind-integration-20261017/evidence/hmr/execution/pair-03-2-postcss.stderr.txt",
+      "role": "original-log-renamed-byte-exact",
+      "bytes": 251,
+      "sha256": "9893ee2f6cf25c0e25e1da02a180fdbdd1dd8ae52ffc7b66691fb6aec4a76410"
+    },
+    {
+      "originalPath": "reports/tailwind-integration/hmr-series-local-permission/pair-03-2-postcss/node.stdout.log",
+      "copiedPath": "docs/qa/tailwind-integration-20261017/evidence/hmr/execution/pair-03-2-postcss.stdout.txt",
+      "role": "original-log-renamed-byte-exact",
+      "bytes": 1435,
+      "sha256": "538f00124ee56d2bcbc68966de00bde454c0c3c8c846ed8db465f8e3462d5e86"
+    },
+    {
+      "originalPath": "reports/tailwind-integration/hmr-series-local-permission/pair-04-1-postcss/node.stderr.log",
+      "copiedPath": "docs/qa/tailwind-integration-20261017/evidence/hmr/execution/pair-04-1-postcss.stderr.txt",
+      "role": "original-log-renamed-byte-exact",
+      "bytes": 251,
+      "sha256": "9893ee2f6cf25c0e25e1da02a180fdbdd1dd8ae52ffc7b66691fb6aec4a76410"
+    },
+    {
+      "originalPath": "reports/tailwind-integration/hmr-series-local-permission/pair-04-1-postcss/node.stdout.log",
+      "copiedPath": "docs/qa/tailwind-integration-20261017/evidence/hmr/execution/pair-04-1-postcss.stdout.txt",
+      "role": "original-log-renamed-byte-exact",
+      "bytes": 1435,
+      "sha256": "bbe5ec48117bb0fd9e60f8c4b08741a886c4b3590c52d3c82353cbe044eb89b9"
+    },
+    {
+      "originalPath": "reports/tailwind-integration/hmr-series-local-permission/pair-04-2-vite/node.stderr.log",
+      "copiedPath": "docs/qa/tailwind-integration-20261017/evidence/hmr/execution/pair-04-2-vite.stderr.txt",
+      "role": "original-log-renamed-byte-exact",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "originalPath": "reports/tailwind-integration/hmr-series-local-permission/pair-04-2-vite/node.stdout.log",
+      "copiedPath": "docs/qa/tailwind-integration-20261017/evidence/hmr/execution/pair-04-2-vite.stdout.txt",
+      "role": "original-log-renamed-byte-exact",
+      "bytes": 1414,
+      "sha256": "7fe45a70df501f79850beba14911c7ae1c6d7a06ecaaf18c14208b3cf89ba74d"
+    },
+    {
+      "originalPath": "reports/tailwind-integration/hmr-series/series.json",
+      "copiedPath": "docs/qa/tailwind-integration-20261017/evidence/hmr/failed-series.json",
+      "role": "original-failed-hmr-series-not-reclassified",
+      "bytes": 27736,
+      "sha256": "9a4e3727e2d3b74bb4f2dd2b30f61cb5b9efdf917b68bae886a36d30adbb79b8"
+    },
+    {
+      "originalPath": "reports/tailwind-integration/hmr-series/pair-01-1-postcss/session-config.json",
+      "copiedPath": "docs/qa/tailwind-integration-20261017/evidence/hmr/failed-sessions/pair-01-1-postcss/session-config.json",
+      "role": "original-session-configuration",
+      "bytes": 587,
+      "sha256": "d1da5a4178137b9298b4f831d725723f321715a5dffe79937eee02e8100d49cb"
+    },
+    {
+      "originalPath": "reports/tailwind-integration/hmr-series/pair-01-1-postcss/session.json",
+      "copiedPath": "docs/qa/tailwind-integration-20261017/evidence/hmr/failed-sessions/pair-01-1-postcss/session.json",
+      "role": "original-session-record",
+      "bytes": 19465,
+      "sha256": "5974b6db66e3901b79fc1e405926940f4eccd6f312de909101e8b5341d1d95a7"
+    },
+    {
+      "originalPath": null,
+      "copiedPath": "docs/qa/tailwind-integration-20261017/evidence/hmr/interpretation.json",
+      "role": "derived-interpretation-originals-unchanged",
+      "provenance": {
+        "originalPath": "reports/tailwind-integration/hmr-series-local-permission/series.json",
+        "sha256": "7f3ddf3d1b6e822845f2b851111079b8a256ae335bf13251b3649aca4d21d182"
+      },
+      "bytes": 1418,
+      "sha256": "2c763be3ee31479b2305ab57aa56e2aa9f12dcff860af7e72d89ca5a2df2f676"
+    },
+    {
+      "originalPath": "reports/tailwind-integration/hmr-series-local-permission/series.json",
+      "copiedPath": "docs/qa/tailwind-integration-20261017/evidence/hmr/series.json",
+      "role": "original-successful-hmr-series",
+      "bytes": 1109851,
+      "sha256": "7f3ddf3d1b6e822845f2b851111079b8a256ae335bf13251b3649aca4d21d182"
+    },
+    {
+      "originalPath": "reports/tailwind-integration/hmr-series-local-permission/pair-01-1-postcss/session-config.json",
+      "copiedPath": "docs/qa/tailwind-integration-20261017/evidence/hmr/sessions/pair-01-1-postcss/session-config.json",
+      "role": "original-session-configuration",
+      "bytes": 638,
+      "sha256": "e216da314f0a1e91e0bd5b54783ab969af0764ef0de4ebc7f0ca92795d561af3"
+    },
+    {
+      "originalPath": "reports/tailwind-integration/hmr-series-local-permission/pair-01-1-postcss/session.json",
+      "copiedPath": "docs/qa/tailwind-integration-20261017/evidence/hmr/sessions/pair-01-1-postcss/session.json",
+      "role": "original-session-record",
+      "bytes": 122960,
+      "sha256": "c7184bcf5da472ebf13797a06a4f006979732e88e69b84cefbee2ad98c6bef40"
+    },
+    {
+      "originalPath": "reports/tailwind-integration/hmr-series-local-permission/pair-01-2-vite/session-config.json",
+      "copiedPath": "docs/qa/tailwind-integration-20261017/evidence/hmr/sessions/pair-01-2-vite/session-config.json",
+      "role": "original-session-configuration",
+      "bytes": 623,
+      "sha256": "91ecee6022f97dc1cb59cacedee311887fad77c926d7d1e65d4b66da3c2c6676"
+    },
+    {
+      "originalPath": "reports/tailwind-integration/hmr-series-local-permission/pair-01-2-vite/session.json",
+      "copiedPath": "docs/qa/tailwind-integration-20261017/evidence/hmr/sessions/pair-01-2-vite/session.json",
+      "role": "original-session-record",
+      "bytes": 122450,
+      "sha256": "66b88e68f86740fd27ce555421d9c604b11cd911eba6de05a1fc18573d0eb90f"
+    },
+    {
+      "originalPath": "reports/tailwind-integration/hmr-series-local-permission/pair-02-1-vite/session-config.json",
+      "copiedPath": "docs/qa/tailwind-integration-20261017/evidence/hmr/sessions/pair-02-1-vite/session-config.json",
+      "role": "original-session-configuration",
+      "bytes": 623,
+      "sha256": "8e0aac7cf4c210e23685e1fcdfd19c77fa2993d5354a0e55e1fb8a269678c0cb"
+    },
+    {
+      "originalPath": "reports/tailwind-integration/hmr-series-local-permission/pair-02-1-vite/session.json",
+      "copiedPath": "docs/qa/tailwind-integration-20261017/evidence/hmr/sessions/pair-02-1-vite/session.json",
+      "role": "original-session-record",
+      "bytes": 122333,
+      "sha256": "0316e4ffa3b208ba3360bedb89813e2134f28cc45780d68ca993e8018a42cd40"
+    },
+    {
+      "originalPath": "reports/tailwind-integration/hmr-series-local-permission/pair-02-2-postcss/session-config.json",
+      "copiedPath": "docs/qa/tailwind-integration-20261017/evidence/hmr/sessions/pair-02-2-postcss/session-config.json",
+      "role": "original-session-configuration",
+      "bytes": 638,
+      "sha256": "7915487b96ac3f422f79f46b7c8b940e12db807138321c4dee4f4a9ec5e95d04"
+    },
+    {
+      "originalPath": "reports/tailwind-integration/hmr-series-local-permission/pair-02-2-postcss/session.json",
+      "copiedPath": "docs/qa/tailwind-integration-20261017/evidence/hmr/sessions/pair-02-2-postcss/session.json",
+      "role": "original-session-record",
+      "bytes": 122649,
+      "sha256": "82579d9be4ff8c51d8d711fe58721494bac7ff1fadb840aa8937b8f6c387fdb0"
+    },
+    {
+      "originalPath": "reports/tailwind-integration/hmr-series-local-permission/pair-03-1-vite/session-config.json",
+      "copiedPath": "docs/qa/tailwind-integration-20261017/evidence/hmr/sessions/pair-03-1-vite/session-config.json",
+      "role": "original-session-configuration",
+      "bytes": 623,
+      "sha256": "8d76d0b7e14b0ba02c7e4d9738487327e3b44ea89e914cb055da7590259044df"
+    },
+    {
+      "originalPath": "reports/tailwind-integration/hmr-series-local-permission/pair-03-1-vite/session.json",
+      "copiedPath": "docs/qa/tailwind-integration-20261017/evidence/hmr/sessions/pair-03-1-vite/session.json",
+      "role": "original-session-record",
+      "bytes": 122363,
+      "sha256": "0a530f2fe3b0de238bbba0aa96fcd21ffa565eef375070ba2da14ff5ff1ebb86"
+    },
+    {
+      "originalPath": "reports/tailwind-integration/hmr-series-local-permission/pair-03-2-postcss/session-config.json",
+      "copiedPath": "docs/qa/tailwind-integration-20261017/evidence/hmr/sessions/pair-03-2-postcss/session-config.json",
+      "role": "original-session-configuration",
+      "bytes": 638,
+      "sha256": "0c70cbe19b9b9a52688453972a533e56160adf0824e006e110af033cbbf1d8bf"
+    },
+    {
+      "originalPath": "reports/tailwind-integration/hmr-series-local-permission/pair-03-2-postcss/session.json",
+      "copiedPath": "docs/qa/tailwind-integration-20261017/evidence/hmr/sessions/pair-03-2-postcss/session.json",
+      "role": "original-session-record",
+      "bytes": 122946,
+      "sha256": "f161a6dcae4465a7bea62ed228edbc252014d1f1b056e8ef66cd21da075690e0"
+    },
+    {
+      "originalPath": "reports/tailwind-integration/hmr-series-local-permission/pair-04-1-postcss/session-config.json",
+      "copiedPath": "docs/qa/tailwind-integration-20261017/evidence/hmr/sessions/pair-04-1-postcss/session-config.json",
+      "role": "original-session-configuration",
+      "bytes": 638,
+      "sha256": "c71cfd19c1d6f099e54b9c5b046f66a76112c194c30228564634e1551ad47b91"
+    },
+    {
+      "originalPath": "reports/tailwind-integration/hmr-series-local-permission/pair-04-1-postcss/session.json",
+      "copiedPath": "docs/qa/tailwind-integration-20261017/evidence/hmr/sessions/pair-04-1-postcss/session.json",
+      "role": "original-session-record",
+      "bytes": 122949,
+      "sha256": "42d27b31c4f8769ffce5811f9eb84f28f832169e22731037dca2a69726d0dfd3"
+    },
+    {
+      "originalPath": "reports/tailwind-integration/hmr-series-local-permission/pair-04-2-vite/session-config.json",
+      "copiedPath": "docs/qa/tailwind-integration-20261017/evidence/hmr/sessions/pair-04-2-vite/session-config.json",
+      "role": "original-session-configuration",
+      "bytes": 623,
+      "sha256": "8f59ad03aecd7c21f3714723107f0b16584c394d33290e84523fc4a0aa4de807"
+    },
+    {
+      "originalPath": "reports/tailwind-integration/hmr-series-local-permission/pair-04-2-vite/session.json",
+      "copiedPath": "docs/qa/tailwind-integration-20261017/evidence/hmr/sessions/pair-04-2-vite/session.json",
+      "role": "original-session-record",
+      "bytes": 122529,
+      "sha256": "727113fb86a9eb3a2492ccac750bda0af1b0f340aff7bdd1c1a65f66cae122fd"
+    },
+    {
+      "originalPath": "reports/tailwind-integration/preflight/contract-styles-images/dark-1280x799-baseline.png",
+      "copiedPath": "docs/qa/tailwind-integration-20261017/evidence/preflight/contract-styles-images/dark-1280x799-baseline.png",
+      "role": "original-contract-png-path-preserved",
+      "bytes": 15524,
+      "sha256": "61d1d13e38f841b4411f01d78d92d335ce8c9ab4362d218f8b4020b9ba79b8f7"
+    },
+    {
+      "originalPath": "reports/tailwind-integration/preflight/contract-styles-images/dark-1280x799-candidate.png",
+      "copiedPath": "docs/qa/tailwind-integration-20261017/evidence/preflight/contract-styles-images/dark-1280x799-candidate.png",
+      "role": "original-contract-png-path-preserved",
+      "bytes": 15524,
+      "sha256": "61d1d13e38f841b4411f01d78d92d335ce8c9ab4362d218f8b4020b9ba79b8f7"
+    },
+    {
+      "originalPath": "reports/tailwind-integration/preflight/contract-styles-images/dark-1280x800-baseline.png",
+      "copiedPath": "docs/qa/tailwind-integration-20261017/evidence/preflight/contract-styles-images/dark-1280x800-baseline.png",
+      "role": "original-contract-png-path-preserved",
+      "bytes": 15531,
+      "sha256": "7df6d680fc7be07bb5d75396ce033903e9672a2e4fe84f0feb47c2fcaa99b240"
+    },
+    {
+      "originalPath": "reports/tailwind-integration/preflight/contract-styles-images/dark-1280x800-candidate.png",
+      "copiedPath": "docs/qa/tailwind-integration-20261017/evidence/preflight/contract-styles-images/dark-1280x800-candidate.png",
+      "role": "original-contract-png-path-preserved",
+      "bytes": 15531,
+      "sha256": "7df6d680fc7be07bb5d75396ce033903e9672a2e4fe84f0feb47c2fcaa99b240"
+    },
+    {
+      "originalPath": "reports/tailwind-integration/preflight/contract-styles-images/dark-1280x801-baseline.png",
+      "copiedPath": "docs/qa/tailwind-integration-20261017/evidence/preflight/contract-styles-images/dark-1280x801-baseline.png",
+      "role": "original-contract-png-path-preserved",
+      "bytes": 15512,
+      "sha256": "c05f28b6779b533097e2911967525752e2f15770957fcdd112b92febc7cd76e0"
+    },
+    {
+      "originalPath": "reports/tailwind-integration/preflight/contract-styles-images/dark-1280x801-candidate.png",
+      "copiedPath": "docs/qa/tailwind-integration-20261017/evidence/preflight/contract-styles-images/dark-1280x801-candidate.png",
+      "role": "original-contract-png-path-preserved",
+      "bytes": 15512,
+      "sha256": "c05f28b6779b533097e2911967525752e2f15770957fcdd112b92febc7cd76e0"
+    },
+    {
+      "originalPath": "reports/tailwind-integration/preflight/contract-styles-images/dark-1280x900-baseline.png",
+      "copiedPath": "docs/qa/tailwind-integration-20261017/evidence/preflight/contract-styles-images/dark-1280x900-baseline.png",
+      "role": "original-contract-png-path-preserved",
+      "bytes": 16119,
+      "sha256": "cf90a72685db3c13ec2ec83c20d83a070b5bd09c0961c458c5dcadb86b063a38"
+    },
+    {
+      "originalPath": "reports/tailwind-integration/preflight/contract-styles-images/dark-1280x900-candidate.png",
+      "copiedPath": "docs/qa/tailwind-integration-20261017/evidence/preflight/contract-styles-images/dark-1280x900-candidate.png",
+      "role": "original-contract-png-path-preserved",
+      "bytes": 16119,
+      "sha256": "cf90a72685db3c13ec2ec83c20d83a070b5bd09c0961c458c5dcadb86b063a38"
+    },
+    {
+      "originalPath": "reports/tailwind-integration/preflight/contract-styles-images/dark-1400x900-baseline.png",
+      "copiedPath": "docs/qa/tailwind-integration-20261017/evidence/preflight/contract-styles-images/dark-1400x900-baseline.png",
+      "role": "original-contract-png-path-preserved",
+      "bytes": 16679,
+      "sha256": "7e0a88f8407acf42ae33cfd1d95685fe2eedbaca8d3f8ee6f029a18982d091a3"
+    },
+    {
+      "originalPath": "reports/tailwind-integration/preflight/contract-styles-images/dark-1400x900-candidate.png",
+      "copiedPath": "docs/qa/tailwind-integration-20261017/evidence/preflight/contract-styles-images/dark-1400x900-candidate.png",
+      "role": "original-contract-png-path-preserved",
+      "bytes": 16679,
+      "sha256": "7e0a88f8407acf42ae33cfd1d95685fe2eedbaca8d3f8ee6f029a18982d091a3"
+    },
+    {
+      "originalPath": "reports/tailwind-integration/preflight/contract-styles-images/dark-2000x900-baseline.png",
+      "copiedPath": "docs/qa/tailwind-integration-20261017/evidence/preflight/contract-styles-images/dark-2000x900-baseline.png",
+      "role": "original-contract-png-path-preserved",
+      "bytes": 18242,
+      "sha256": "6af3b1fb31aedc2cadbe40b4debff9eaf93599b7cb2e4122dd69f6aa7fa28a20"
+    },
+    {
+      "originalPath": "reports/tailwind-integration/preflight/contract-styles-images/dark-2000x900-candidate.png",
+      "copiedPath": "docs/qa/tailwind-integration-20261017/evidence/preflight/contract-styles-images/dark-2000x900-candidate.png",
+      "role": "original-contract-png-path-preserved",
+      "bytes": 18242,
+      "sha256": "6af3b1fb31aedc2cadbe40b4debff9eaf93599b7cb2e4122dd69f6aa7fa28a20"
+    },
+    {
+      "originalPath": "reports/tailwind-integration/preflight/contract-styles-images/dark-390x799-baseline.png",
+      "copiedPath": "docs/qa/tailwind-integration-20261017/evidence/preflight/contract-styles-images/dark-390x799-baseline.png",
+      "role": "original-contract-png-path-preserved",
+      "bytes": 12911,
+      "sha256": "82fa3099c5f33cdec7132bb630583478512e055d54112373965ce9c62f44dc38"
+    },
+    {
+      "originalPath": "reports/tailwind-integration/preflight/contract-styles-images/dark-390x799-candidate.png",
+      "copiedPath": "docs/qa/tailwind-integration-20261017/evidence/preflight/contract-styles-images/dark-390x799-candidate.png",
+      "role": "original-contract-png-path-preserved",
+      "bytes": 12911,
+      "sha256": "82fa3099c5f33cdec7132bb630583478512e055d54112373965ce9c62f44dc38"
+    },
+    {
+      "originalPath": "reports/tailwind-integration/preflight/contract-styles-images/dark-390x800-baseline.png",
+      "copiedPath": "docs/qa/tailwind-integration-20261017/evidence/preflight/contract-styles-images/dark-390x800-baseline.png",
+      "role": "original-contract-png-path-preserved",
+      "bytes": 12915,
+      "sha256": "85ad2a12eec3e504beff27d5a023bb035798cd02e2e79b96cb98b810e21a3428"
+    },
+    {
+      "originalPath": "reports/tailwind-integration/preflight/contract-styles-images/dark-390x800-candidate.png",
+      "copiedPath": "docs/qa/tailwind-integration-20261017/evidence/preflight/contract-styles-images/dark-390x800-candidate.png",
+      "role": "original-contract-png-path-preserved",
+      "bytes": 12915,
+      "sha256": "85ad2a12eec3e504beff27d5a023bb035798cd02e2e79b96cb98b810e21a3428"
+    },
+    {
+      "originalPath": "reports/tailwind-integration/preflight/contract-styles-images/dark-390x801-baseline.png",
+      "copiedPath": "docs/qa/tailwind-integration-20261017/evidence/preflight/contract-styles-images/dark-390x801-baseline.png",
+      "role": "original-contract-png-path-preserved",
+      "bytes": 12924,
+      "sha256": "6053e702b78ada7af7ccf094fffe7de77eae804f7d9da9e973e403f9cf96c09f"
+    },
+    {
+      "originalPath": "reports/tailwind-integration/preflight/contract-styles-images/dark-390x801-candidate.png",
+      "copiedPath": "docs/qa/tailwind-integration-20261017/evidence/preflight/contract-styles-images/dark-390x801-candidate.png",
+      "role": "original-contract-png-path-preserved",
+      "bytes": 12924,
+      "sha256": "6053e702b78ada7af7ccf094fffe7de77eae804f7d9da9e973e403f9cf96c09f"
+    },
+    {
+      "originalPath": "reports/tailwind-integration/preflight/contract-styles-images/dark-390x900-baseline.png",
+      "copiedPath": "docs/qa/tailwind-integration-20261017/evidence/preflight/contract-styles-images/dark-390x900-baseline.png",
+      "role": "original-contract-png-path-preserved",
+      "bytes": 13326,
+      "sha256": "f459d9b12c5016c6f772affcf6108a66a6d4b2a297e716aafb74da9624a5e1ca"
+    },
+    {
+      "originalPath": "reports/tailwind-integration/preflight/contract-styles-images/dark-390x900-candidate.png",
+      "copiedPath": "docs/qa/tailwind-integration-20261017/evidence/preflight/contract-styles-images/dark-390x900-candidate.png",
+      "role": "original-contract-png-path-preserved",
+      "bytes": 13326,
+      "sha256": "f459d9b12c5016c6f772affcf6108a66a6d4b2a297e716aafb74da9624a5e1ca"
+    },
+    {
+      "originalPath": "reports/tailwind-integration/preflight/contract-styles-images/dark-691x799-baseline.png",
+      "copiedPath": "docs/qa/tailwind-integration-20261017/evidence/preflight/contract-styles-images/dark-691x799-baseline.png",
+      "role": "original-contract-png-path-preserved",
+      "bytes": 13821,
+      "sha256": "c5eee5fdf7965040774c944048e223e3e458594a5b9647869137a7080cd53ada"
+    },
+    {
+      "originalPath": "reports/tailwind-integration/preflight/contract-styles-images/dark-691x799-candidate.png",
+      "copiedPath": "docs/qa/tailwind-integration-20261017/evidence/preflight/contract-styles-images/dark-691x799-candidate.png",
+      "role": "original-contract-png-path-preserved",
+      "bytes": 13821,
+      "sha256": "c5eee5fdf7965040774c944048e223e3e458594a5b9647869137a7080cd53ada"
+    },
+    {
+      "originalPath": "reports/tailwind-integration/preflight/contract-styles-images/dark-691x800-baseline.png",
+      "copiedPath": "docs/qa/tailwind-integration-20261017/evidence/preflight/contract-styles-images/dark-691x800-baseline.png",
+      "role": "original-contract-png-path-preserved",
+      "bytes": 13825,
+      "sha256": "0d119d30e93f255999fac75f1cb1227e767041feecf49b0e5d6e14e78914c8bc"
+    },
+    {
+      "originalPath": "reports/tailwind-integration/preflight/contract-styles-images/dark-691x800-candidate.png",
+      "copiedPath": "docs/qa/tailwind-integration-20261017/evidence/preflight/contract-styles-images/dark-691x800-candidate.png",
+      "role": "original-contract-png-path-preserved",
+      "bytes": 13825,
+      "sha256": "0d119d30e93f255999fac75f1cb1227e767041feecf49b0e5d6e14e78914c8bc"
+    },
+    {
+      "originalPath": "reports/tailwind-integration/preflight/contract-styles-images/dark-691x801-baseline.png",
+      "copiedPath": "docs/qa/tailwind-integration-20261017/evidence/preflight/contract-styles-images/dark-691x801-baseline.png",
+      "role": "original-contract-png-path-preserved",
+      "bytes": 13811,
+      "sha256": "f4d2f144fe576b7ffc927f8229b07c972559161add4d4361d997f2b2727935f4"
+    },
+    {
+      "originalPath": "reports/tailwind-integration/preflight/contract-styles-images/dark-691x801-candidate.png",
+      "copiedPath": "docs/qa/tailwind-integration-20261017/evidence/preflight/contract-styles-images/dark-691x801-candidate.png",
+      "role": "original-contract-png-path-preserved",
+      "bytes": 13811,
+      "sha256": "f4d2f144fe576b7ffc927f8229b07c972559161add4d4361d997f2b2727935f4"
+    },
+    {
+      "originalPath": "reports/tailwind-integration/preflight/contract-styles-images/dark-691x900-baseline.png",
+      "copiedPath": "docs/qa/tailwind-integration-20261017/evidence/preflight/contract-styles-images/dark-691x900-baseline.png",
+      "role": "original-contract-png-path-preserved",
+      "bytes": 14219,
+      "sha256": "56c878ceb7994cd5da73fd8626ab163d92eb4b83655806460e7d2733121de943"
+    },
+    {
+      "originalPath": "reports/tailwind-integration/preflight/contract-styles-images/dark-691x900-candidate.png",
+      "copiedPath": "docs/qa/tailwind-integration-20261017/evidence/preflight/contract-styles-images/dark-691x900-candidate.png",
+      "role": "original-contract-png-path-preserved",
+      "bytes": 14219,
+      "sha256": "56c878ceb7994cd5da73fd8626ab163d92eb4b83655806460e7d2733121de943"
+    },
+    {
+      "originalPath": "reports/tailwind-integration/preflight/contract-styles-images/light-1280x799-baseline.png",
+      "copiedPath": "docs/qa/tailwind-integration-20261017/evidence/preflight/contract-styles-images/light-1280x799-baseline.png",
+      "role": "original-contract-png-path-preserved",
+      "bytes": 15485,
+      "sha256": "3884a74e14b873b7322e8f34f0250d1af8ef38639af262978327175fcbf91909"
+    },
+    {
+      "originalPath": "reports/tailwind-integration/preflight/contract-styles-images/light-1280x799-candidate.png",
+      "copiedPath": "docs/qa/tailwind-integration-20261017/evidence/preflight/contract-styles-images/light-1280x799-candidate.png",
+      "role": "original-contract-png-path-preserved",
+      "bytes": 15485,
+      "sha256": "3884a74e14b873b7322e8f34f0250d1af8ef38639af262978327175fcbf91909"
+    },
+    {
+      "originalPath": "reports/tailwind-integration/preflight/contract-styles-images/light-1280x800-baseline.png",
+      "copiedPath": "docs/qa/tailwind-integration-20261017/evidence/preflight/contract-styles-images/light-1280x800-baseline.png",
+      "role": "original-contract-png-path-preserved",
+      "bytes": 15491,
+      "sha256": "1a179932fd14e96d8ff5c3467496a86a52c1f16d1ddc9b1d4e569d0abaf0a7b4"
+    },
+    {
+      "originalPath": "reports/tailwind-integration/preflight/contract-styles-images/light-1280x800-candidate.png",
+      "copiedPath": "docs/qa/tailwind-integration-20261017/evidence/preflight/contract-styles-images/light-1280x800-candidate.png",
+      "role": "original-contract-png-path-preserved",
+      "bytes": 15491,
+      "sha256": "1a179932fd14e96d8ff5c3467496a86a52c1f16d1ddc9b1d4e569d0abaf0a7b4"
+    },
+    {
+      "originalPath": "reports/tailwind-integration/preflight/contract-styles-images/light-1280x801-baseline.png",
+      "copiedPath": "docs/qa/tailwind-integration-20261017/evidence/preflight/contract-styles-images/light-1280x801-baseline.png",
+      "role": "original-contract-png-path-preserved",
+      "bytes": 15454,
+      "sha256": "8432720c877bb009924512ff59ff10724a973d6c431a089712a9624bd4f8f873"
+    },
+    {
+      "originalPath": "reports/tailwind-integration/preflight/contract-styles-images/light-1280x801-candidate.png",
+      "copiedPath": "docs/qa/tailwind-integration-20261017/evidence/preflight/contract-styles-images/light-1280x801-candidate.png",
+      "role": "original-contract-png-path-preserved",
+      "bytes": 15454,
+      "sha256": "8432720c877bb009924512ff59ff10724a973d6c431a089712a9624bd4f8f873"
+    },
+    {
+      "originalPath": "reports/tailwind-integration/preflight/contract-styles-images/light-1280x900-baseline.png",
+      "copiedPath": "docs/qa/tailwind-integration-20261017/evidence/preflight/contract-styles-images/light-1280x900-baseline.png",
+      "role": "original-contract-png-path-preserved",
+      "bytes": 16063,
+      "sha256": "2f7d379e67eba7173db4271f1ea5b1c8f4c571e2ee0aadb58276bdaa0b7b8878"
+    },
+    {
+      "originalPath": "reports/tailwind-integration/preflight/contract-styles-images/light-1280x900-candidate.png",
+      "copiedPath": "docs/qa/tailwind-integration-20261017/evidence/preflight/contract-styles-images/light-1280x900-candidate.png",
+      "role": "original-contract-png-path-preserved",
+      "bytes": 16063,
+      "sha256": "2f7d379e67eba7173db4271f1ea5b1c8f4c571e2ee0aadb58276bdaa0b7b8878"
+    },
+    {
+      "originalPath": "reports/tailwind-integration/preflight/contract-styles-images/light-1400x900-baseline.png",
+      "copiedPath": "docs/qa/tailwind-integration-20261017/evidence/preflight/contract-styles-images/light-1400x900-baseline.png",
+      "role": "original-contract-png-path-preserved",
+      "bytes": 16597,
+      "sha256": "7037a89d17f48d3f77b48aa624c81c88a743631dea2b159df4a598e74c8ee93e"
+    },
+    {
+      "originalPath": "reports/tailwind-integration/preflight/contract-styles-images/light-1400x900-candidate.png",
+      "copiedPath": "docs/qa/tailwind-integration-20261017/evidence/preflight/contract-styles-images/light-1400x900-candidate.png",
+      "role": "original-contract-png-path-preserved",
+      "bytes": 16597,
+      "sha256": "7037a89d17f48d3f77b48aa624c81c88a743631dea2b159df4a598e74c8ee93e"
+    },
+    {
+      "originalPath": "reports/tailwind-integration/preflight/contract-styles-images/light-2000x900-baseline.png",
+      "copiedPath": "docs/qa/tailwind-integration-20261017/evidence/preflight/contract-styles-images/light-2000x900-baseline.png",
+      "role": "original-contract-png-path-preserved",
+      "bytes": 18194,
+      "sha256": "3f591b49a2aeaceed29b50c470ac89dfa86bfc874123670a186ce2be4c79343f"
+    },
+    {
+      "originalPath": "reports/tailwind-integration/preflight/contract-styles-images/light-2000x900-candidate.png",
+      "copiedPath": "docs/qa/tailwind-integration-20261017/evidence/preflight/contract-styles-images/light-2000x900-candidate.png",
+      "role": "original-contract-png-path-preserved",
+      "bytes": 18194,
+      "sha256": "3f591b49a2aeaceed29b50c470ac89dfa86bfc874123670a186ce2be4c79343f"
+    },
+    {
+      "originalPath": "reports/tailwind-integration/preflight/contract-styles-images/light-390x799-baseline.png",
+      "copiedPath": "docs/qa/tailwind-integration-20261017/evidence/preflight/contract-styles-images/light-390x799-baseline.png",
+      "role": "original-contract-png-path-preserved",
+      "bytes": 12821,
+      "sha256": "7ab266ef914c902615514c27907a9dec9717d8feab36b431c43817638390ee89"
+    },
+    {
+      "originalPath": "reports/tailwind-integration/preflight/contract-styles-images/light-390x799-candidate.png",
+      "copiedPath": "docs/qa/tailwind-integration-20261017/evidence/preflight/contract-styles-images/light-390x799-candidate.png",
+      "role": "original-contract-png-path-preserved",
+      "bytes": 12821,
+      "sha256": "7ab266ef914c902615514c27907a9dec9717d8feab36b431c43817638390ee89"
+    },
+    {
+      "originalPath": "reports/tailwind-integration/preflight/contract-styles-images/light-390x800-baseline.png",
+      "copiedPath": "docs/qa/tailwind-integration-20261017/evidence/preflight/contract-styles-images/light-390x800-baseline.png",
+      "role": "original-contract-png-path-preserved",
+      "bytes": 12825,
+      "sha256": "b66146071430d7e09b111009151eb080d3569531839794aeb512ee150f92f593"
+    },
+    {
+      "originalPath": "reports/tailwind-integration/preflight/contract-styles-images/light-390x800-candidate.png",
+      "copiedPath": "docs/qa/tailwind-integration-20261017/evidence/preflight/contract-styles-images/light-390x800-candidate.png",
+      "role": "original-contract-png-path-preserved",
+      "bytes": 12825,
+      "sha256": "b66146071430d7e09b111009151eb080d3569531839794aeb512ee150f92f593"
+    },
+    {
+      "originalPath": "reports/tailwind-integration/preflight/contract-styles-images/light-390x801-baseline.png",
+      "copiedPath": "docs/qa/tailwind-integration-20261017/evidence/preflight/contract-styles-images/light-390x801-baseline.png",
+      "role": "original-contract-png-path-preserved",
+      "bytes": 12835,
+      "sha256": "c38b6d3ec41ef90905b550228382747683b7a21e8fdbde554bf218a55250ff97"
+    },
+    {
+      "originalPath": "reports/tailwind-integration/preflight/contract-styles-images/light-390x801-candidate.png",
+      "copiedPath": "docs/qa/tailwind-integration-20261017/evidence/preflight/contract-styles-images/light-390x801-candidate.png",
+      "role": "original-contract-png-path-preserved",
+      "bytes": 12835,
+      "sha256": "c38b6d3ec41ef90905b550228382747683b7a21e8fdbde554bf218a55250ff97"
+    },
+    {
+      "originalPath": "reports/tailwind-integration/preflight/contract-styles-images/light-390x900-baseline.png",
+      "copiedPath": "docs/qa/tailwind-integration-20261017/evidence/preflight/contract-styles-images/light-390x900-baseline.png",
+      "role": "original-contract-png-path-preserved",
+      "bytes": 13238,
+      "sha256": "65b29a86144ea44d4937cc1ce1937d899346522b59701a0e992e9ee5543f5c9c"
+    },
+    {
+      "originalPath": "reports/tailwind-integration/preflight/contract-styles-images/light-390x900-candidate.png",
+      "copiedPath": "docs/qa/tailwind-integration-20261017/evidence/preflight/contract-styles-images/light-390x900-candidate.png",
+      "role": "original-contract-png-path-preserved",
+      "bytes": 13238,
+      "sha256": "65b29a86144ea44d4937cc1ce1937d899346522b59701a0e992e9ee5543f5c9c"
+    },
+    {
+      "originalPath": "reports/tailwind-integration/preflight/contract-styles-images/light-691x799-baseline.png",
+      "copiedPath": "docs/qa/tailwind-integration-20261017/evidence/preflight/contract-styles-images/light-691x799-baseline.png",
+      "role": "original-contract-png-path-preserved",
+      "bytes": 13754,
+      "sha256": "7930dc39a280eef2f612ec03b6b1bc89d283d02afc7ff7b6536cfbb9aff0a35d"
+    },
+    {
+      "originalPath": "reports/tailwind-integration/preflight/contract-styles-images/light-691x799-candidate.png",
+      "copiedPath": "docs/qa/tailwind-integration-20261017/evidence/preflight/contract-styles-images/light-691x799-candidate.png",
+      "role": "original-contract-png-path-preserved",
+      "bytes": 13754,
+      "sha256": "7930dc39a280eef2f612ec03b6b1bc89d283d02afc7ff7b6536cfbb9aff0a35d"
+    },
+    {
+      "originalPath": "reports/tailwind-integration/preflight/contract-styles-images/light-691x800-baseline.png",
+      "copiedPath": "docs/qa/tailwind-integration-20261017/evidence/preflight/contract-styles-images/light-691x800-baseline.png",
+      "role": "original-contract-png-path-preserved",
+      "bytes": 13758,
+      "sha256": "1b0d82de1bf8d7fb41a309afb01d5f38d565243693b551e78d0133763af6f3ce"
+    },
+    {
+      "originalPath": "reports/tailwind-integration/preflight/contract-styles-images/light-691x800-candidate.png",
+      "copiedPath": "docs/qa/tailwind-integration-20261017/evidence/preflight/contract-styles-images/light-691x800-candidate.png",
+      "role": "original-contract-png-path-preserved",
+      "bytes": 13758,
+      "sha256": "1b0d82de1bf8d7fb41a309afb01d5f38d565243693b551e78d0133763af6f3ce"
+    },
+    {
+      "originalPath": "reports/tailwind-integration/preflight/contract-styles-images/light-691x801-baseline.png",
+      "copiedPath": "docs/qa/tailwind-integration-20261017/evidence/preflight/contract-styles-images/light-691x801-baseline.png",
+      "role": "original-contract-png-path-preserved",
+      "bytes": 13732,
+      "sha256": "757c2c0aa136f4c1d0b4352bc8670e08790e71170010d831c1f94f24433caa41"
+    },
+    {
+      "originalPath": "reports/tailwind-integration/preflight/contract-styles-images/light-691x801-candidate.png",
+      "copiedPath": "docs/qa/tailwind-integration-20261017/evidence/preflight/contract-styles-images/light-691x801-candidate.png",
+      "role": "original-contract-png-path-preserved",
+      "bytes": 13732,
+      "sha256": "757c2c0aa136f4c1d0b4352bc8670e08790e71170010d831c1f94f24433caa41"
+    },
+    {
+      "originalPath": "reports/tailwind-integration/preflight/contract-styles-images/light-691x900-baseline.png",
+      "copiedPath": "docs/qa/tailwind-integration-20261017/evidence/preflight/contract-styles-images/light-691x900-baseline.png",
+      "role": "original-contract-png-path-preserved",
+      "bytes": 14140,
+      "sha256": "83b5c2d5b41c48fcf68ecb32e999d002365bf27cac1d3d47f42e63f3b6698922"
+    },
+    {
+      "originalPath": "reports/tailwind-integration/preflight/contract-styles-images/light-691x900-candidate.png",
+      "copiedPath": "docs/qa/tailwind-integration-20261017/evidence/preflight/contract-styles-images/light-691x900-candidate.png",
+      "role": "original-contract-png-path-preserved",
+      "bytes": 14140,
+      "sha256": "83b5c2d5b41c48fcf68ecb32e999d002365bf27cac1d3d47f42e63f3b6698922"
+    },
+    {
+      "originalPath": "reports/tailwind-integration/preflight/css-check-initial-failure.json",
+      "copiedPath": "docs/qa/tailwind-integration-20261017/evidence/preflight/css-check-initial-failure.json",
+      "role": "original-byte-exact",
+      "bytes": 3722804,
+      "sha256": "ce3fa2e45c510b111c33636b61b4dad3f2b1d6ef130b3c0032d2c28c6ec61ca6"
+    },
+    {
+      "originalPath": "reports/tailwind-integration/preflight/css-check-initial-failure.txt",
+      "copiedPath": "docs/qa/tailwind-integration-20261017/evidence/preflight/css-check-initial-failure.txt",
+      "role": "original-byte-exact",
+      "bytes": 232,
+      "sha256": "e2905be8d2bcc6f044a1ab97a824731d279a84b433ed34fdde93fc349912513f"
+    },
+    {
+      "originalPath": "reports/tailwind-integration/preflight/css-check.json",
+      "copiedPath": "docs/qa/tailwind-integration-20261017/evidence/preflight/css-check.json",
+      "role": "original-byte-exact",
+      "bytes": 3722470,
+      "sha256": "d2a58754404639b21f36cd2b70246a409a9aae55ee869f99ed9c402a1e0cea2e"
+    },
+    {
+      "originalPath": "reports/tailwind-integration/preflight/css-check.txt",
+      "copiedPath": "docs/qa/tailwind-integration-20261017/evidence/preflight/css-check.txt",
+      "role": "original-byte-exact",
+      "bytes": 230,
+      "sha256": "0263402b0cfd0c4bfe85d53c0fd0caecdaad878a1b74b8f9d2e9ec10b515c8e2"
+    },
+    {
+      "originalPath": "reports/tailwind-integration/preflight/postcss/config.json",
+      "copiedPath": "docs/qa/tailwind-integration-20261017/evidence/preflight/postcss/config.json",
+      "role": "original-byte-exact",
+      "bytes": 2883,
+      "sha256": "842dd4ca9c8ff8d8ed709514a04eace7eec781375adb0b2fcc477ea51c5a347d"
+    },
+    {
+      "originalPath": "reports/tailwind-integration/preflight/postcss/stderr.txt",
+      "copiedPath": "docs/qa/tailwind-integration-20261017/evidence/preflight/postcss/stderr.txt",
+      "role": "original-byte-exact",
+      "bytes": 1841,
+      "sha256": "a936f658ebffd2b1d228beb5cca469c43bf7536da0378ad947db5f6afd6a0ed3"
+    },
+    {
+      "originalPath": "reports/tailwind-integration/preflight/postcss/stdout.txt",
+      "copiedPath": "docs/qa/tailwind-integration-20261017/evidence/preflight/postcss/stdout.txt",
+      "role": "original-byte-exact",
+      "bytes": 91246,
+      "sha256": "f66017fdd6f4cd263555c1bc3276bf332486148cf671c8634eed2cadb28937cb"
+    },
+    {
+      "originalPath": "reports/tailwind-integration/preflight/style-contract.json",
+      "copiedPath": "docs/qa/tailwind-integration-20261017/evidence/preflight/style-contract.json",
+      "role": "original-contract-report-including-false-status",
+      "bytes": 3075487,
+      "sha256": "85b9eb5d101a195bed0cb8f4ff777d4f6fc068022b37b9ffca4a2d5669b27ad2"
+    },
+    {
+      "originalPath": "reports/tailwind-integration/preflight/style-contract.txt",
+      "copiedPath": "docs/qa/tailwind-integration-20261017/evidence/preflight/style-contract.txt",
+      "role": "original-byte-exact",
+      "bytes": 201,
+      "sha256": "d9bfe04467f3292afcd71225ba0181abc1ff8a824659fbe990cef60360b8354e"
+    },
+    {
+      "originalPath": "reports/tailwind-integration/preflight/summary.json",
+      "copiedPath": "docs/qa/tailwind-integration-20261017/evidence/preflight/summary.json",
+      "role": "original-byte-exact",
+      "bytes": 2744,
+      "sha256": "5760eb2cb697abc687755fbfebf56990a89da1a9e4808ca0911fa4861f075dad"
+    },
+    {
+      "originalPath": "reports/tailwind-integration/preflight/vite/config.json",
+      "copiedPath": "docs/qa/tailwind-integration-20261017/evidence/preflight/vite/config.json",
+      "role": "original-byte-exact",
+      "bytes": 2934,
+      "sha256": "9c1487b435a0e1dbed9141941da9f19ff200ee68b8d2c9d8e063a23355a89c11"
+    },
+    {
+      "originalPath": "reports/tailwind-integration/preflight/vite/stderr.txt",
+      "copiedPath": "docs/qa/tailwind-integration-20261017/evidence/preflight/vite/stderr.txt",
+      "role": "original-byte-exact",
+      "bytes": 1639,
+      "sha256": "5440be550130a62667f29eb5a449700756bec7f15c862e6e36582d24d574293e"
+    },
+    {
+      "originalPath": "reports/tailwind-integration/preflight/vite/stdout.txt",
+      "copiedPath": "docs/qa/tailwind-integration-20261017/evidence/preflight/vite/stdout.txt",
+      "role": "original-byte-exact",
+      "bytes": 89008,
+      "sha256": "4af7fd397339202621286ebc6b18066c6ebda4cb3f288f8509268da540c56cde"
+    },
+    {
+      "originalPath": "reports/tailwind-integration/add-plugin.txt",
+      "copiedPath": "docs/qa/tailwind-integration-20261017/evidence/setup/add-plugin.txt",
+      "role": "original-byte-exact",
+      "bytes": 261,
+      "sha256": "63c4b1dfa172387c616d90f53cd1f8866e9b06a9ec376756a5a1f3d1f8c6a527"
+    },
+    {
+      "originalPath": "reports/tailwind-integration/bun.before.lock",
+      "copiedPath": "docs/qa/tailwind-integration-20261017/evidence/setup/bun.before.lock",
+      "role": "original-byte-exact",
+      "bytes": 328105,
+      "sha256": "be059f24a5e00112b4ff49a74fac064c5b53a43c7449774b2dc6a336fc42e150"
+    },
+    {
+      "originalPath": "reports/tailwind-integration/dependency-diff.json",
+      "copiedPath": "docs/qa/tailwind-integration-20261017/evidence/setup/dependency-diff.json",
+      "role": "original-byte-exact",
+      "bytes": 1187,
+      "sha256": "ca13034ced2a80859f3ef4c1de4317ea2308479302aac5b8f90a430199533145"
+    },
+    {
+      "originalPath": "reports/tailwind-integration/install-base.txt",
+      "copiedPath": "docs/qa/tailwind-integration-20261017/evidence/setup/install-base.txt",
+      "role": "original-byte-exact",
+      "bytes": 2638,
+      "sha256": "e7e50a51e0d6499ba43225cd02912946a17ba8fc4e8d6df5627250419da9a8f8"
+    },
+    {
+      "originalPath": "reports/tailwind-integration/install-experiment.txt",
+      "copiedPath": "docs/qa/tailwind-integration-20261017/evidence/setup/install-experiment.txt",
+      "role": "original-byte-exact",
+      "bytes": 145,
+      "sha256": "d9299e453cad8bde9388684379263d23abe226b877f663dc635a3ca4ce49c1e4"
+    },
+    {
+      "originalPath": "reports/tailwind-integration/package.before.json",
+      "copiedPath": "docs/qa/tailwind-integration-20261017/evidence/setup/package.before.json",
+      "role": "original-byte-exact",
+      "bytes": 8242,
+      "sha256": "ed0b99d12e1fea69b8aa47522e53979fbcb828806114d3fdddb72584b2c67662"
+    },
+    {
+      "originalPath": "reports/tailwind-integration/css-checker-tests-final.txt",
+      "copiedPath": "docs/qa/tailwind-integration-20261017/evidence/verification/css-checker-tests-final.txt",
+      "role": "original-verification-output",
+      "bytes": 1109,
+      "sha256": "337101bd454a4b07c040fdce86c233d2b9cce684f2627c71472ffe682738fc04"
+    },
+    {
+      "originalPath": "reports/tailwind-integration/css-checker-tests.txt",
+      "copiedPath": "docs/qa/tailwind-integration-20261017/evidence/verification/css-checker-tests.txt",
+      "role": "original-verification-output",
+      "bytes": 991,
+      "sha256": "93473cef64e102a9f253a6071308cbde7d8343b6cf9dcf7176f1fb026c6a1d71"
+    },
+    {
+      "originalPath": "reports/tailwind-integration/harness-lint.txt",
+      "copiedPath": "docs/qa/tailwind-integration-20261017/evidence/verification/harness-lint.txt",
+      "role": "original-verification-output",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "originalPath": "reports/tailwind-integration/knip-initial.txt",
+      "copiedPath": "docs/qa/tailwind-integration-20261017/evidence/verification/knip-initial.txt",
+      "role": "original-initial-knip-failure-not-reclassified",
+      "bytes": 871,
+      "sha256": "485226210e3a603a36205e8836b0fa5496b4976a6c0a4b715fa7ba9c48bc2915"
+    },
+    {
+      "originalPath": "reports/tailwind-integration/test-catalog-final.json",
+      "copiedPath": "docs/qa/tailwind-integration-20261017/evidence/verification/test-catalog-final.json",
+      "role": "original-verification-output",
+      "bytes": 703225,
+      "sha256": "c0424647692dc5a3e8b2073ca6b6e56792b75ea6566d1fb0b16531236ddb4050"
+    },
+    {
+      "originalPath": "reports/tailwind-integration/test-catalog-final.txt",
+      "copiedPath": "docs/qa/tailwind-integration-20261017/evidence/verification/test-catalog-final.txt",
+      "role": "original-verification-output",
+      "bytes": 576,
+      "sha256": "32ff3839c31751db01eba1b2f5b43be7d58ac23499a4193f008e63405dab0dd3"
+    }
+  ]
+}

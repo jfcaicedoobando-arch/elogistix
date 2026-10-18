@@ -1,0 +1,1 @@
+{"archived":true,"files":197,"pngs":112,"bytes":21992565,"manifest":"docs/qa/tailwind-integration-20261017/evidence/support-manifest.json","developmentCssAuditPassed":false}

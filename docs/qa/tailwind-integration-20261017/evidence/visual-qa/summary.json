@@ -1,0 +1,495 @@
+{
+  "started": "2026-10-17T23:30:11.215Z",
+  "inventoryOnly": false,
+  "sha": "0552b3648c041dd19e027bb1370a5277501b59dc",
+  "lockSha256": "5d561ebf702e13a9a34670f267a870d0acb6ec21d7c6c67af3665607a983a682",
+  "node": "v24.22.0",
+  "repository": "C:\\Users\\torta\\Documents\\Codex\\2026-10-17\\task-6\\elogistix-tailwind4\\",
+  "suites": [
+    {
+      "variant": "postcss",
+      "suite": "audit119-126",
+      "port": 8096,
+      "started": "2026-10-17T23:30:13.181Z",
+      "finished": "2026-10-17T23:32:17.964Z",
+      "command": [
+        "C:\\Users\\torta\\Documents\\Codex\\2026-10-17\\task-6\\.tools\\node.exe",
+        "C:\\Users\\torta\\Documents\\Codex\\2026-10-17\\task-6\\elogistix-tailwind4\\node_modules\\@playwright\\test\\cli.js",
+        "test",
+        "--config",
+        "C:\\Users\\torta\\Documents\\Codex\\2026-10-17\\task-6\\elogistix-tailwind4\\reports\\tailwind-integration\\ui-full-20261017\\postcss\\audit119-126\\playwright.config.mjs"
+      ],
+      "status": {
+        "code": 0,
+        "signal": null
+      },
+      "expected": 20,
+      "listed": 20,
+      "stats": {
+        "startTime": "2026-10-17T23:30:13.835Z",
+        "duration": 123845.426,
+        "expected": 20,
+        "skipped": 0,
+        "unexpected": 0,
+        "flaky": 0
+      },
+      "inventoryOnly": false,
+      "passed": true,
+      "executionPassed": true,
+      "firefoxBlocked": false,
+      "blocked": [],
+      "projects": [
+        "1180x757-light-100text",
+        "1180x757-light-150text",
+        "1180x757-dark-100text",
+        "1180x757-dark-150text",
+        "1280x720-light-100text",
+        "1280x720-light-150text",
+        "1280x720-dark-100text",
+        "1280x720-dark-150text",
+        "691x763-light-100text",
+        "691x763-light-150text",
+        "691x763-dark-100text",
+        "691x763-dark-150text",
+        "691x420-light-100text",
+        "691x420-light-150text",
+        "691x420-dark-100text",
+        "691x420-dark-150text",
+        "390x640-light-100text",
+        "390x640-light-150text",
+        "390x640-dark-100text",
+        "390x640-dark-150text"
+      ]
+    },
+    {
+      "variant": "postcss",
+      "suite": "audit136-137",
+      "port": 8097,
+      "started": "2026-10-17T23:32:17.969Z",
+      "finished": "2026-10-17T23:32:42.354Z",
+      "command": [
+        "C:\\Users\\torta\\Documents\\Codex\\2026-10-17\\task-6\\.tools\\node.exe",
+        "C:\\Users\\torta\\Documents\\Codex\\2026-10-17\\task-6\\elogistix-tailwind4\\node_modules\\@playwright\\test\\cli.js",
+        "test",
+        "--config",
+        "C:\\Users\\torta\\Documents\\Codex\\2026-10-17\\task-6\\elogistix-tailwind4\\reports\\tailwind-integration\\ui-full-20261017\\postcss\\audit136-137\\playwright.config.mjs"
+      ],
+      "status": {
+        "code": 0,
+        "signal": null
+      },
+      "expected": 8,
+      "listed": 8,
+      "stats": {
+        "startTime": "2026-10-17T23:32:18.562Z",
+        "duration": 23742.795000000002,
+        "expected": 8,
+        "skipped": 0,
+        "unexpected": 0,
+        "flaky": 0
+      },
+      "inventoryOnly": false,
+      "passed": true,
+      "executionPassed": true,
+      "firefoxBlocked": false,
+      "blocked": [],
+      "projects": [
+        ""
+      ]
+    },
+    {
+      "variant": "postcss",
+      "suite": "virtualization",
+      "port": 8098,
+      "started": "2026-10-17T23:32:43.146Z",
+      "finished": "2026-10-17T23:32:54.463Z",
+      "command": [
+        "C:\\Users\\torta\\Documents\\Codex\\2026-10-17\\task-6\\.tools\\node.exe",
+        "C:\\Users\\torta\\Documents\\Codex\\2026-10-17\\task-6\\elogistix-tailwind4\\node_modules\\@playwright\\test\\cli.js",
+        "test",
+        "--config",
+        "C:\\Users\\torta\\Documents\\Codex\\2026-10-17\\task-6\\elogistix-tailwind4\\reports\\tailwind-integration\\ui-full-20261017\\postcss\\virtualization\\playwright.config.mjs",
+        "--project=chromium"
+      ],
+      "status": {
+        "code": 0,
+        "signal": null
+      },
+      "expected": 8,
+      "listed": 4,
+      "stats": {
+        "startTime": "2026-10-17T23:32:43.726Z",
+        "duration": 10672.112,
+        "expected": 4,
+        "skipped": 0,
+        "unexpected": 0,
+        "flaky": 0
+      },
+      "inventoryOnly": false,
+      "passed": false,
+      "executionPassed": true,
+      "firefoxBlocked": true,
+      "blocked": [
+        {
+          "title": "client sorting uses native Tab/Enter/Space with a visible focus ring and exact row order",
+          "file": "keyboard-sorting.spec.ts",
+          "line": 126,
+          "projectName": "firefox",
+          "status": "BLOCKED/NOT_RUN",
+          "reason": "Single managed Firefox launch preflight failed; see firefox-preflight.json"
+        },
+        {
+          "title": "server sorting emits one callback per native Enter/Space and skips the nonsortable header",
+          "file": "keyboard-sorting.spec.ts",
+          "line": 129,
+          "projectName": "firefox",
+          "status": "BLOCKED/NOT_RUN",
+          "reason": "Single managed Firefox launch preflight failed; see firefox-preflight.json"
+        },
+        {
+          "title": "real useVirtualTableState retains measured rows and IDs through scroll/filter/reorder/remount",
+          "file": "virtualization.spec.ts",
+          "line": 137,
+          "projectName": "firefox",
+          "status": "BLOCKED/NOT_RUN",
+          "reason": "Single managed Firefox launch preflight failed; see firefox-preflight.json"
+        },
+        {
+          "title": "real VirtualTimeline retains variable-height entries through scroll/filter/reorder/remount",
+          "file": "virtualization.spec.ts",
+          "line": 140,
+          "projectName": "firefox",
+          "status": "BLOCKED/NOT_RUN",
+          "reason": "Single managed Firefox launch preflight failed; see firefox-preflight.json"
+        }
+      ],
+      "projects": [
+        "chromium"
+      ]
+    },
+    {
+      "variant": "postcss",
+      "suite": "shared-ui",
+      "port": 53826,
+      "started": "2026-10-17T23:32:54.467Z",
+      "finished": "2026-10-17T23:33:51.761Z",
+      "command": [
+        "C:\\Users\\torta\\Documents\\Codex\\2026-10-17\\task-6\\.tools\\node.exe",
+        "C:\\Users\\torta\\Documents\\Codex\\2026-10-17\\task-6\\elogistix-tailwind4\\node_modules\\@playwright\\test\\cli.js",
+        "test",
+        "--config",
+        "C:\\Users\\torta\\Documents\\Codex\\2026-10-17\\task-6\\elogistix-tailwind4\\reports\\tailwind-integration\\ui-full-20261017\\postcss\\shared-ui\\playwright.config.mjs"
+      ],
+      "status": {
+        "code": 0,
+        "signal": null
+      },
+      "expected": 16,
+      "listed": 16,
+      "stats": {
+        "startTime": "2026-10-17T23:32:55.068Z",
+        "duration": 56630.275,
+        "expected": 16,
+        "skipped": 0,
+        "unexpected": 0,
+        "flaky": 0
+      },
+      "inventoryOnly": false,
+      "passed": true,
+      "executionPassed": true,
+      "firefoxBlocked": false,
+      "blocked": [],
+      "projects": [
+        "hd-light",
+        "hd-dark",
+        "compact-light",
+        "compact-dark"
+      ],
+      "supplementaryCapture": {
+        "code": 0,
+        "signal": null,
+        "manifest": "C:\\Users\\torta\\Documents\\Codex\\2026-10-17\\task-6\\elogistix-tailwind4\\reports\\tailwind-integration\\ui-full-20261017\\postcss\\shared-ui\\supplementary-captures\\captures.json"
+      }
+    },
+    {
+      "variant": "vite",
+      "suite": "audit119-126",
+      "port": 8096,
+      "started": "2026-10-17T23:34:14.146Z",
+      "finished": "2026-10-17T23:36:17.091Z",
+      "command": [
+        "C:\\Users\\torta\\Documents\\Codex\\2026-10-17\\task-6\\.tools\\node.exe",
+        "C:\\Users\\torta\\Documents\\Codex\\2026-10-17\\task-6\\elogistix-tailwind4\\node_modules\\@playwright\\test\\cli.js",
+        "test",
+        "--config",
+        "C:\\Users\\torta\\Documents\\Codex\\2026-10-17\\task-6\\elogistix-tailwind4\\reports\\tailwind-integration\\ui-full-20261017\\vite\\audit119-126\\playwright.config.mjs"
+      ],
+      "status": {
+        "code": 0,
+        "signal": null
+      },
+      "expected": 20,
+      "listed": 20,
+      "stats": {
+        "startTime": "2026-10-17T23:34:14.755Z",
+        "duration": 122106.15299999999,
+        "expected": 20,
+        "skipped": 0,
+        "unexpected": 0,
+        "flaky": 0
+      },
+      "inventoryOnly": false,
+      "passed": true,
+      "executionPassed": true,
+      "firefoxBlocked": false,
+      "blocked": [],
+      "projects": [
+        "1180x757-light-100text",
+        "1180x757-light-150text",
+        "1180x757-dark-100text",
+        "1180x757-dark-150text",
+        "1280x720-light-100text",
+        "1280x720-light-150text",
+        "1280x720-dark-100text",
+        "1280x720-dark-150text",
+        "691x763-light-100text",
+        "691x763-light-150text",
+        "691x763-dark-100text",
+        "691x763-dark-150text",
+        "691x420-light-100text",
+        "691x420-light-150text",
+        "691x420-dark-100text",
+        "691x420-dark-150text",
+        "390x640-light-100text",
+        "390x640-light-150text",
+        "390x640-dark-100text",
+        "390x640-dark-150text"
+      ]
+    },
+    {
+      "variant": "vite",
+      "suite": "audit136-137",
+      "port": 8097,
+      "started": "2026-10-17T23:36:17.094Z",
+      "finished": "2026-10-17T23:36:41.979Z",
+      "command": [
+        "C:\\Users\\torta\\Documents\\Codex\\2026-10-17\\task-6\\.tools\\node.exe",
+        "C:\\Users\\torta\\Documents\\Codex\\2026-10-17\\task-6\\elogistix-tailwind4\\node_modules\\@playwright\\test\\cli.js",
+        "test",
+        "--config",
+        "C:\\Users\\torta\\Documents\\Codex\\2026-10-17\\task-6\\elogistix-tailwind4\\reports\\tailwind-integration\\ui-full-20261017\\vite\\audit136-137\\playwright.config.mjs"
+      ],
+      "status": {
+        "code": 0,
+        "signal": null
+      },
+      "expected": 8,
+      "listed": 8,
+      "stats": {
+        "startTime": "2026-10-17T23:36:17.673Z",
+        "duration": 24244.629,
+        "expected": 8,
+        "skipped": 0,
+        "unexpected": 0,
+        "flaky": 0
+      },
+      "inventoryOnly": false,
+      "passed": true,
+      "executionPassed": true,
+      "firefoxBlocked": false,
+      "blocked": [],
+      "projects": [
+        ""
+      ]
+    },
+    {
+      "variant": "vite",
+      "suite": "virtualization",
+      "port": 8098,
+      "started": "2026-10-17T23:36:42.649Z",
+      "finished": "2026-10-17T23:36:53.550Z",
+      "command": [
+        "C:\\Users\\torta\\Documents\\Codex\\2026-10-17\\task-6\\.tools\\node.exe",
+        "C:\\Users\\torta\\Documents\\Codex\\2026-10-17\\task-6\\elogistix-tailwind4\\node_modules\\@playwright\\test\\cli.js",
+        "test",
+        "--config",
+        "C:\\Users\\torta\\Documents\\Codex\\2026-10-17\\task-6\\elogistix-tailwind4\\reports\\tailwind-integration\\ui-full-20261017\\vite\\virtualization\\playwright.config.mjs",
+        "--project=chromium"
+      ],
+      "status": {
+        "code": 0,
+        "signal": null
+      },
+      "expected": 8,
+      "listed": 4,
+      "stats": {
+        "startTime": "2026-10-17T23:36:43.200Z",
+        "duration": 10280.628,
+        "expected": 4,
+        "skipped": 0,
+        "unexpected": 0,
+        "flaky": 0
+      },
+      "inventoryOnly": false,
+      "passed": false,
+      "executionPassed": true,
+      "firefoxBlocked": true,
+      "blocked": [
+        {
+          "title": "client sorting uses native Tab/Enter/Space with a visible focus ring and exact row order",
+          "file": "keyboard-sorting.spec.ts",
+          "line": 126,
+          "projectName": "firefox",
+          "status": "BLOCKED/NOT_RUN",
+          "reason": "Single managed Firefox launch preflight failed; see firefox-preflight.json"
+        },
+        {
+          "title": "server sorting emits one callback per native Enter/Space and skips the nonsortable header",
+          "file": "keyboard-sorting.spec.ts",
+          "line": 129,
+          "projectName": "firefox",
+          "status": "BLOCKED/NOT_RUN",
+          "reason": "Single managed Firefox launch preflight failed; see firefox-preflight.json"
+        },
+        {
+          "title": "real useVirtualTableState retains measured rows and IDs through scroll/filter/reorder/remount",
+          "file": "virtualization.spec.ts",
+          "line": 137,
+          "projectName": "firefox",
+          "status": "BLOCKED/NOT_RUN",
+          "reason": "Single managed Firefox launch preflight failed; see firefox-preflight.json"
+        },
+        {
+          "title": "real VirtualTimeline retains variable-height entries through scroll/filter/reorder/remount",
+          "file": "virtualization.spec.ts",
+          "line": 140,
+          "projectName": "firefox",
+          "status": "BLOCKED/NOT_RUN",
+          "reason": "Single managed Firefox launch preflight failed; see firefox-preflight.json"
+        }
+      ],
+      "projects": [
+        "chromium"
+      ]
+    },
+    {
+      "variant": "vite",
+      "suite": "shared-ui",
+      "port": 50053,
+      "started": "2026-10-17T23:36:53.555Z",
+      "finished": "2026-10-17T23:37:52.187Z",
+      "command": [
+        "C:\\Users\\torta\\Documents\\Codex\\2026-10-17\\task-6\\.tools\\node.exe",
+        "C:\\Users\\torta\\Documents\\Codex\\2026-10-17\\task-6\\elogistix-tailwind4\\node_modules\\@playwright\\test\\cli.js",
+        "test",
+        "--config",
+        "C:\\Users\\torta\\Documents\\Codex\\2026-10-17\\task-6\\elogistix-tailwind4\\reports\\tailwind-integration\\ui-full-20261017\\vite\\shared-ui\\playwright.config.mjs"
+      ],
+      "status": {
+        "code": 0,
+        "signal": null
+      },
+      "expected": 16,
+      "listed": 16,
+      "stats": {
+        "startTime": "2026-10-17T23:36:54.105Z",
+        "duration": 58019.45,
+        "expected": 16,
+        "skipped": 0,
+        "unexpected": 0,
+        "flaky": 0
+      },
+      "inventoryOnly": false,
+      "passed": true,
+      "executionPassed": true,
+      "firefoxBlocked": false,
+      "blocked": [],
+      "projects": [
+        "hd-light",
+        "hd-dark",
+        "compact-light",
+        "compact-dark"
+      ],
+      "supplementaryCapture": {
+        "code": 0,
+        "signal": null,
+        "manifest": "C:\\Users\\torta\\Documents\\Codex\\2026-10-17\\task-6\\elogistix-tailwind4\\reports\\tailwind-integration\\ui-full-20261017\\vite\\shared-ui\\supplementary-captures\\captures.json"
+      }
+    }
+  ],
+  "notes": [
+    "No source tests, snapshots, root Vite/PostCSS, CSS or tokens modified.",
+    "Canonical fixture ports checked free before each run; strictPort and reuseExistingServer=false.",
+    "All original projects/specs retained; virtualization is 8 (including keyboard-sorting), total is 52 per arm.",
+    "Audit and virtualization build fresh into per-run outputs before preview; shared-ui preserves development mode.",
+    "Only managed Playwright browsers; no user browser channel or persistent profile."
+  ],
+  "firefox": {
+    "started": "2026-10-17T23:30:11.768Z",
+    "executablePath": "C:\\Users\\torta\\AppData\\Local\\ms-playwright\\firefox-1555\\firefox\\firefox.exe",
+    "attempts": 1,
+    "available": false,
+    "error": "browserType.launch: spawn UNKNOWN\nCall log:\n\u001b[2m  - <launching> C:\\Users\\torta\\AppData\\Local\\ms-playwright\\firefox-1555\\firefox\\firefox.exe -no-remote -headless -profile C:\\Users\\torta\\Documents\\Codex\\2026-10-17\\task-6\\.tools\\temp\\playwright_firefoxdev_profile-QnTDjA -juggler-pipe -silent\u001b[22m\n\n    at C:\\Users\\torta\\Documents\\Codex\\2026-10-17\\task-6\\elogistix-tailwind4\\docs\\qa\\tailwind-integration-20261017\\probe-firefox.mjs:12:27\n    at async node:internal/modules/esm/loader:647:26",
+    "finished": "2026-10-17T23:30:13.124Z"
+  },
+  "sharedScreenshotComparison": [
+    {
+      "project": "hd-light",
+      "name": "shell-table.png",
+      "postcssSha256": "d51842f94fec42f48d9e91fe90bfd09f59ed40dbf79e152f550b2ec5e9240028",
+      "viteSha256": "d51842f94fec42f48d9e91fe90bfd09f59ed40dbf79e152f550b2ec5e9240028",
+      "byteIdentical": true
+    },
+    {
+      "project": "hd-light",
+      "name": "form-dialog.png",
+      "postcssSha256": "94e3ead3e57bf88649aac10d3af2597ae2af4bac0501a87f9967f9098549cbc1",
+      "viteSha256": "94e3ead3e57bf88649aac10d3af2597ae2af4bac0501a87f9967f9098549cbc1",
+      "byteIdentical": true
+    },
+    {
+      "project": "hd-dark",
+      "name": "shell-table.png",
+      "postcssSha256": "91ab4d7fb5eb240f72ad8cbc668edfa7cafed652754c72bc349d42fa887b541d",
+      "viteSha256": "91ab4d7fb5eb240f72ad8cbc668edfa7cafed652754c72bc349d42fa887b541d",
+      "byteIdentical": true
+    },
+    {
+      "project": "hd-dark",
+      "name": "form-dialog.png",
+      "postcssSha256": "af0a955a7b61d6ec4ecf572ad1924038c0bfabac66fc74f4fb1a8aac227ad211",
+      "viteSha256": "af0a955a7b61d6ec4ecf572ad1924038c0bfabac66fc74f4fb1a8aac227ad211",
+      "byteIdentical": true
+    },
+    {
+      "project": "compact-light",
+      "name": "shell-table.png",
+      "postcssSha256": "e93937293c4ebbde8cb05b5337751f1c4f92df2babc11488d5b67be6c94fb9a7",
+      "viteSha256": "e93937293c4ebbde8cb05b5337751f1c4f92df2babc11488d5b67be6c94fb9a7",
+      "byteIdentical": true
+    },
+    {
+      "project": "compact-light",
+      "name": "form-dialog.png",
+      "postcssSha256": "7b9a59e9a1879b8aafb641456a9de732279ab095173d56c2067bb0c6fb8103c6",
+      "viteSha256": "7b9a59e9a1879b8aafb641456a9de732279ab095173d56c2067bb0c6fb8103c6",
+      "byteIdentical": true
+    },
+    {
+      "project": "compact-dark",
+      "name": "shell-table.png",
+      "postcssSha256": "8acb6c685e9270e0b3a29d96a85902e3753b3ca72678ad8f719f47956eebc3fb",
+      "viteSha256": "8acb6c685e9270e0b3a29d96a85902e3753b3ca72678ad8f719f47956eebc3fb",
+      "byteIdentical": true
+    },
+    {
+      "project": "compact-dark",
+      "name": "form-dialog.png",
+      "postcssSha256": "f20a9765539e986e139b7f0499d28c94345f32a36bc3117f3be025209c8ad975",
+      "viteSha256": "f20a9765539e986e139b7f0499d28c94345f32a36bc3117f3be025209c8ad975",
+      "byteIdentical": true
+    }
+  ],
+  "finished": "2026-10-17T23:38:15.104Z",
+  "passed": false
+}

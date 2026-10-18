@@ -1,0 +1,22 @@
+{
+  "compression": {
+    "gzipLevel": 9,
+    "brotliQuality": 11
+  },
+  "assets": [
+    {
+      "path": "assets/index-D3rYZw3H.js",
+      "raw": 567842,
+      "gzip": 176484,
+      "brotli": 150457,
+      "sha256": "6acafcb3eb8b8eb5ab0e24971f4e546c88e8267b379e00976d5a8b32ed392a70"
+    },
+    {
+      "path": "assets/index-D6WsstTW.css",
+      "raw": 193828,
+      "gzip": 27022,
+      "brotli": 20683,
+      "sha256": "a4a97bffc0584a3bf033a128c3c82cbfd59d40428fdcbc5fdc2b49f510d9a83b"
+    }
+  ]
+}

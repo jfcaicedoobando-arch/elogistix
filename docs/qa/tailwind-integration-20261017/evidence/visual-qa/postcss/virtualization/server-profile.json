@@ -1,0 +1,15 @@
+{
+  "suite": "virtualization",
+  "variant": "postcss",
+  "mode": "production",
+  "cwd": "C:\\Users\\torta\\Documents\\Codex\\2026-10-17\\task-6\\elogistix-tailwind4",
+  "originalConfig": "e2e/visual/virtualization/vite.config.ts",
+  "originalRoot": "C:\\Users\\torta\\Documents\\Codex\\2026-10-17\\task-6\\elogistix-tailwind4\\e2e\\visual\\virtualization\\",
+  "originalPostcss": "C:\\Users\\torta\\Documents\\Codex\\2026-10-17\\task-6\\elogistix-tailwind4\\e2e\\visual\\",
+  "experimentalPostcss": "C:\\Users\\torta\\Documents\\Codex\\2026-10-17\\task-6\\elogistix-tailwind4\\e2e\\visual\\",
+  "envDir": false,
+  "cacheDir": "C:\\Users\\torta\\Documents\\Codex\\2026-10-17\\task-6\\elogistix-tailwind4\\reports\\tailwind-integration\\ui-full-20261017\\postcss\\virtualization\\vite-cache",
+  "outDir": "C:\\Users\\torta\\Documents\\Codex\\2026-10-17\\task-6\\elogistix-tailwind4\\reports\\tailwind-integration\\ui-full-20261017\\postcss\\virtualization\\compiled-fixture",
+  "origin": "http://127.0.0.1:8098",
+  "freshBuildBeforePreview": true
+}

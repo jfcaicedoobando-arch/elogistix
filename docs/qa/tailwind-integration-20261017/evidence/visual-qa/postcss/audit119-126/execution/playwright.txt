@@ -1,0 +1,36 @@
+[WebServer] vite v8.3.4 building client environment for production...
+[WebServer] transforming...
+[WebServer] ✓ 2942 modules transformed.
+[WebServer] rendering chunks...
+[WebServer] computing gzip size...
+[WebServer] reports/tailwind-integration/ui-full-20261017/postcss/audit119-126/compiled-fixture/index.html                   0.71 kB │ gzip:   0.40 kB
+[WebServer] reports/tailwind-integration/ui-full-20261017/postcss/audit119-126/compiled-fixture/assets/index-D6WsstTW.css  193.82 kB │ gzip:  27.55 kB
+[WebServer] reports/tailwind-integration/ui-full-20261017/postcss/audit119-126/compiled-fixture/assets/index-8cBxKJdu.js   424.64 kB │ gzip: 132.97 kB
+[WebServer] 
+[WebServer] ✓ built in 2.26s
+[WebServer] [vite:react-swc] We recommend switching to `@vitejs/plugin-react` for improved performance as no swc plugins are used. More information at https://vite.dev/rolldown
+
+Running 20 tests using 1 worker
+
+  ok  1 [1180x757-light-100text] › e2e\visual\audit119-126\specs\dialog-card.spec.ts:4:1 › 119/126: currencies, bounded scroll, keyboard cancellation and reset without confirming (6.1s)
+  ok  2 [1180x757-light-150text] › e2e\visual\audit119-126\specs\dialog-card.spec.ts:4:1 › 119/126: currencies, bounded scroll, keyboard cancellation and reset without confirming (5.5s)
+  ok  3 [1180x757-dark-100text] › e2e\visual\audit119-126\specs\dialog-card.spec.ts:4:1 › 119/126: currencies, bounded scroll, keyboard cancellation and reset without confirming (5.4s)
+  ok  4 [1180x757-dark-150text] › e2e\visual\audit119-126\specs\dialog-card.spec.ts:4:1 › 119/126: currencies, bounded scroll, keyboard cancellation and reset without confirming (5.4s)
+  ok  5 [1280x720-light-100text] › e2e\visual\audit119-126\specs\dialog-card.spec.ts:4:1 › 119/126: currencies, bounded scroll, keyboard cancellation and reset without confirming (5.3s)
+  ok  6 [1280x720-light-150text] › e2e\visual\audit119-126\specs\dialog-card.spec.ts:4:1 › 119/126: currencies, bounded scroll, keyboard cancellation and reset without confirming (5.7s)
+  ok  7 [1280x720-dark-100text] › e2e\visual\audit119-126\specs\dialog-card.spec.ts:4:1 › 119/126: currencies, bounded scroll, keyboard cancellation and reset without confirming (5.3s)
+  ok  8 [1280x720-dark-150text] › e2e\visual\audit119-126\specs\dialog-card.spec.ts:4:1 › 119/126: currencies, bounded scroll, keyboard cancellation and reset without confirming (5.4s)
+  ok  9 [691x763-light-100text] › e2e\visual\audit119-126\specs\dialog-card.spec.ts:4:1 › 119/126: currencies, bounded scroll, keyboard cancellation and reset without confirming (5.4s)
+  ok 10 [691x763-light-150text] › e2e\visual\audit119-126\specs\dialog-card.spec.ts:4:1 › 119/126: currencies, bounded scroll, keyboard cancellation and reset without confirming (5.3s)
+  ok 11 [691x763-dark-100text] › e2e\visual\audit119-126\specs\dialog-card.spec.ts:4:1 › 119/126: currencies, bounded scroll, keyboard cancellation and reset without confirming (5.2s)
+  ok 12 [691x763-dark-150text] › e2e\visual\audit119-126\specs\dialog-card.spec.ts:4:1 › 119/126: currencies, bounded scroll, keyboard cancellation and reset without confirming (5.3s)
+  ok 13 [691x420-light-100text] › e2e\visual\audit119-126\specs\dialog-card.spec.ts:4:1 › 119/126: currencies, bounded scroll, keyboard cancellation and reset without confirming (5.1s)
+  ok 14 [691x420-light-150text] › e2e\visual\audit119-126\specs\dialog-card.spec.ts:4:1 › 119/126: currencies, bounded scroll, keyboard cancellation and reset without confirming (5.0s)
+  ok 15 [691x420-dark-100text] › e2e\visual\audit119-126\specs\dialog-card.spec.ts:4:1 › 119/126: currencies, bounded scroll, keyboard cancellation and reset without confirming (5.1s)
+  ok 16 [691x420-dark-150text] › e2e\visual\audit119-126\specs\dialog-card.spec.ts:4:1 › 119/126: currencies, bounded scroll, keyboard cancellation and reset without confirming (5.1s)
+  ok 17 [390x640-light-100text] › e2e\visual\audit119-126\specs\dialog-card.spec.ts:4:1 › 119/126: currencies, bounded scroll, keyboard cancellation and reset without confirming (5.1s)
+  ok 18 [390x640-light-150text] › e2e\visual\audit119-126\specs\dialog-card.spec.ts:4:1 › 119/126: currencies, bounded scroll, keyboard cancellation and reset without confirming (5.0s)
+  ok 19 [390x640-dark-100text] › e2e\visual\audit119-126\specs\dialog-card.spec.ts:4:1 › 119/126: currencies, bounded scroll, keyboard cancellation and reset without confirming (5.1s)
+  ok 20 [390x640-dark-150text] › e2e\visual\audit119-126\specs\dialog-card.spec.ts:4:1 › 119/126: currencies, bounded scroll, keyboard cancellation and reset without confirming (5.1s)
+
+  20 passed (2.1m)

@@ -1,0 +1,2018 @@
+{
+  "schemaVersion": 1,
+  "baseSha": "0552b3648c041dd19e027bb1370a5277501b59dc",
+  "createdAt": "2026-10-18T00:10:07.683Z",
+  "scope": "Published experiment deliverables; excludes this self-referential manifest and full generated product bundles",
+  "files": [
+    {
+      "path": "docs/qa/tailwind-integration-20261017/.gitattributes",
+      "bytes": 450,
+      "sha256": "b9ed4e8dbf9c6bc72873525083906869405c5776c5271d78b92838a551ba8326"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/README.md",
+      "bytes": 17506,
+      "sha256": "e0d5947516c3ef7172f86fa7b4da91a1472ec220ab20b25e81bdc14c630a5822"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/VISUAL-QA.md",
+      "bytes": 10981,
+      "sha256": "9df075d2a4f01449dff8a68f4abced90eef2aec76923ae581a74d19b6806164b"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/archive-builds.mjs",
+      "bytes": 27367,
+      "sha256": "897151bdf2ea150527ee06b3fbc159e4fcb29aa4d451354be487d11286da252e"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/archive-support.mjs",
+      "bytes": 16603,
+      "sha256": "2bad2dbd8cfafd3b9fd5c997b89b12e6e200344daf10ab97c8c4c5d904e023d9"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/archive-visual-qa.mjs",
+      "bytes": 17388,
+      "sha256": "2b8a359222c5514b950678566a3203fe61eb614441a896d1601363877279a42d"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/build-worker.mjs",
+      "bytes": 6064,
+      "sha256": "ad5fc625ebf5623c2ac41b58fe84acde6a8190fcd40276efd7c95ec331f0ac81"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/capture-shared-ui.mjs",
+      "bytes": 4037,
+      "sha256": "e183051aa0f739cd3b8dafb36318eda6adab3d87eb8bfda0836cfefdafa1aab5"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/compare-css.mjs",
+      "bytes": 14992,
+      "sha256": "d470286e60c224442b9f21f52a7a67f1549ce108942004261f684429c8f8caf3"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/compare-css.test.mjs",
+      "bytes": 5566,
+      "sha256": "96596010c2e376457ff1efdaf654cccc58712a5130ab8a9de330f6bc38e5cbbf"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/contract-styles.mjs",
+      "bytes": 18334,
+      "sha256": "264c19c93c0611a4c6d42e00cc879dbbd21ad8c165710bd46bec0526641fdc3e"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/dev-css-audit.mjs",
+      "bytes": 15919,
+      "sha256": "f5e4d9cd11e949f22aad0abe9bce6ae9c8e24b26693633dd975f09f032b89622"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/build-series/README.md",
+      "bytes": 1562,
+      "sha256": "0545d03c5287870adb1d9e237fc9eb2d73df3a2c82a326f773049adb16038674"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/build-series/archive-manifest.json",
+      "bytes": 15610,
+      "sha256": "771cebb3ed133bed2df81b562bed2852132ae50a1df77fa1a84e7df9d7dd3af4"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/build-series/archive-manifest.sha256",
+      "bytes": 88,
+      "sha256": "327ab22feddb32ac75b6d80247f024f3fde131cdd557eafe8c1fa6644858e56e"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/build-series/compression-cache.json",
+      "bytes": 305727,
+      "sha256": "824e773f3cef4931c0c1ee0eb09dc6bdd9b3736dbff2250a648d3db743295f25"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/build-series/execution/config/initial-01-postcss.json",
+      "bytes": 2912,
+      "sha256": "060fb8fcc746f7f2fd1b6bbd2a6b223f945185efdfa9b8c58fa51f5c04c5739e"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/build-series/execution/config/initial-01-vite.json",
+      "bytes": 2963,
+      "sha256": "ef877144a4a34ef532c295bb72c384234d259d8f690f710a333128ac37c7010c"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/build-series/execution/config/initial-02-postcss.json",
+      "bytes": 2912,
+      "sha256": "1615bc12cd4cad619fc8938693f37fed1b133d25912f2466cfc1185e5dd595f7"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/build-series/execution/config/initial-02-vite.json",
+      "bytes": 2963,
+      "sha256": "8297c5a13ea3a4f39044e73e65278e473ad775a8bcf55d5716e128c3139787c0"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/build-series/execution/config/initial-03-postcss.json",
+      "bytes": 2912,
+      "sha256": "7236a4829b1ed36c815e793755b4a4b108a1503a53c361ecf197848969eab9d7"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/build-series/execution/config/initial-03-vite.json",
+      "bytes": 2963,
+      "sha256": "dc51d776fd7e582ad4105f344d42c3c3c17c26bb714a05dac1a8963b7c324507"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/build-series/execution/config/repeated-04-postcss.json",
+      "bytes": 2914,
+      "sha256": "1c32797131d533e1677dd6f5fbb6ec1ef662836eefef996d6ee7dac68960153f"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/build-series/execution/config/repeated-04-vite.json",
+      "bytes": 2965,
+      "sha256": "28d23d09c6af5faef4bada22245f17877fa95e44a7ba32f3d8c9365ea191e445"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/build-series/execution/config/repeated-05-postcss.json",
+      "bytes": 2914,
+      "sha256": "914c850d4cd81aa1e73995746b8b81b784467166aa2d414aeeed559fc2d1abd4"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/build-series/execution/config/repeated-05-vite.json",
+      "bytes": 2965,
+      "sha256": "4783357255cf968144e607bfd3b2e8bcc8af0cd6a7f051d06e8770e200200978"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/build-series/execution/config/repeated-06-postcss.json",
+      "bytes": 2914,
+      "sha256": "ef79e3a9d8c49ad21ac63e0be1c92a7ed6c227c9e4e7243d8e442268315eff14"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/build-series/execution/config/repeated-06-vite.json",
+      "bytes": 2965,
+      "sha256": "131bfb1efb7a4733768af9e31df9f177c20a319e1ec4036657993f81da5ca0e5"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/build-series/execution/config/repeated-07-postcss.json",
+      "bytes": 2914,
+      "sha256": "a822923eb4290253367f3376ca99c32315f72c8f2384416fbe4847df35bdc823"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/build-series/execution/config/repeated-07-vite.json",
+      "bytes": 2965,
+      "sha256": "a634614db3d1f566e6928a9b47cb9913468f7a95c805520b1cea20f46d1b37b8"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/build-series/execution/config/repeated-08-postcss.json",
+      "bytes": 2914,
+      "sha256": "72e9a8fefe9967747abc835d1ad320918d6c91b2ccd5cdedfd5cc62e19404675"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/build-series/execution/config/repeated-08-vite.json",
+      "bytes": 2965,
+      "sha256": "433f2508b5628724a8e7214d3d2807c57fd7fc8df08ecc39bf25699888d4b493"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/build-series/execution/config/repeated-09-postcss.json",
+      "bytes": 2914,
+      "sha256": "73e181e1cc88d1c01fa387b6dbc6141f0c3fbd3c2adae93623ef9e2552d6c0b9"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/build-series/execution/config/repeated-09-vite.json",
+      "bytes": 2965,
+      "sha256": "a52300bf55df68d56bb2c216ff2d6b27f040ce4799e8f7464f4f5c6b0eac0df3"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/build-series/execution/config/repeated-10-postcss.json",
+      "bytes": 2914,
+      "sha256": "0202a171f4cc0a1d63e9b1b12f5ebb51f0f6ad4f789331d966b0a919638eec8e"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/build-series/execution/config/repeated-10-vite.json",
+      "bytes": 2965,
+      "sha256": "58a27a7bffe5cf4dd4dc4c8d9d5f207a01e3c76c0ab444cb435bfa803156e056"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/build-series/execution/config/repeated-11-postcss.json",
+      "bytes": 2914,
+      "sha256": "71e37e2faacd77fec871454b84f5f4e5dc68d226129bec951af899757de6dee4"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/build-series/execution/config/repeated-11-vite.json",
+      "bytes": 2965,
+      "sha256": "12581d0ecc467614bb0da7530f6a5ec1111a31fd4d38b550af5872d1da918944"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/build-series/execution/config/repeated-12-postcss.json",
+      "bytes": 2914,
+      "sha256": "85160bca0cd8c8f0eed7ef836ca3e4343c99b4f7b3dd1a093ad6372a39f979d4"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/build-series/execution/config/repeated-12-vite.json",
+      "bytes": 2965,
+      "sha256": "95ca03650ed99f3a998165dd88bb6ead3640a457c52ab4182bfdb3cb6379f469"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/build-series/execution/config/repeated-13-postcss.json",
+      "bytes": 2914,
+      "sha256": "2fbd62e97ae64e346124d8f714722aa2a3410bb1929d57d9e86d41f29b8e31fa"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/build-series/execution/config/repeated-13-vite.json",
+      "bytes": 2965,
+      "sha256": "48698f5b81d360ae2d5da092ba5147214365b7cbe8b53e2c1ad331131ee2f22e"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/build-series/execution/initial-01-postcss.stderr.txt",
+      "bytes": 1615,
+      "sha256": "78016d9c6d9de6a4a97c69037c0284667f97ecf58840486cfc63eb892d7f7b56"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/build-series/execution/initial-01-postcss.stdout.txt",
+      "bytes": 102436,
+      "sha256": "88ca4e094832984246421055c97773e91fe410f10dd6a3fab6af59b19282143d"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/build-series/execution/initial-01-vite.stderr.txt",
+      "bytes": 1639,
+      "sha256": "610e57032462682c61828dfece432e40f0054ae9bc726bdb429349b12232247c"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/build-series/execution/initial-01-vite.stdout.txt",
+      "bytes": 100198,
+      "sha256": "78b1573d73d61e466058d2532f1c786ac5c155ae240001d5b203acc3d8addb80"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/build-series/execution/initial-02-postcss.stderr.txt",
+      "bytes": 1099,
+      "sha256": "688db9a68c79cd303673511ab6dbf4cb1b6a079aaf747bbffbc6634644026237"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/build-series/execution/initial-02-postcss.stdout.txt",
+      "bytes": 102436,
+      "sha256": "ccdfbfdf7a1930f71b93a397d69d754ec0b0f25373baeac173ce54f9bbed060c"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/build-series/execution/initial-02-vite.stderr.txt",
+      "bytes": 1099,
+      "sha256": "688db9a68c79cd303673511ab6dbf4cb1b6a079aaf747bbffbc6634644026237"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/build-series/execution/initial-02-vite.stdout.txt",
+      "bytes": 100198,
+      "sha256": "00d0eca44d6e38bc336c65d632295c3a71af9f72f5c8dda1c68f98f371665afa"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/build-series/execution/initial-03-postcss.stderr.txt",
+      "bytes": 1099,
+      "sha256": "688db9a68c79cd303673511ab6dbf4cb1b6a079aaf747bbffbc6634644026237"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/build-series/execution/initial-03-postcss.stdout.txt",
+      "bytes": 102436,
+      "sha256": "e0b3336af8a36db95b02c45bb53c5434cfb529818064d946dc02667b2463552a"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/build-series/execution/initial-03-vite.stderr.txt",
+      "bytes": 1099,
+      "sha256": "688db9a68c79cd303673511ab6dbf4cb1b6a079aaf747bbffbc6634644026237"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/build-series/execution/initial-03-vite.stdout.txt",
+      "bytes": 100198,
+      "sha256": "6a1370540a3252ba893a58d3bae474afa9e48fc17c9b74e1544d2a4717f73dce"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/build-series/execution/repeated-04-postcss.stderr.txt",
+      "bytes": 1841,
+      "sha256": "a946cd35c82e2f7fa7744f91cbafb0ae3cd9888f6f212f9ee967408a71b051a0"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/build-series/execution/repeated-04-postcss.stdout.txt",
+      "bytes": 103182,
+      "sha256": "62ed75e648247c7e1a3cddae57b70a85abde69441dd5c216e409379c9cf361d1"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/build-series/execution/repeated-04-vite.stderr.txt",
+      "bytes": 1099,
+      "sha256": "688db9a68c79cd303673511ab6dbf4cb1b6a079aaf747bbffbc6634644026237"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/build-series/execution/repeated-04-vite.stdout.txt",
+      "bytes": 100944,
+      "sha256": "e5d4766cba88fe6575f97a62af4a7f6c64863cccb63179c092f0dad6c0f91bfa"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/build-series/execution/repeated-05-postcss.stderr.txt",
+      "bytes": 1099,
+      "sha256": "688db9a68c79cd303673511ab6dbf4cb1b6a079aaf747bbffbc6634644026237"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/build-series/execution/repeated-05-postcss.stdout.txt",
+      "bytes": 103182,
+      "sha256": "fe9811737447f4d4a32a3022d6cf88e594b6794f16a196e06f480b787a15cde9"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/build-series/execution/repeated-05-vite.stderr.txt",
+      "bytes": 1639,
+      "sha256": "16ec9d5c9c2db039f60b607345641204d79fd592c947a50555080add86154d96"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/build-series/execution/repeated-05-vite.stdout.txt",
+      "bytes": 100944,
+      "sha256": "5be42dbcbe3347afe4e3e9312a97bbb52fc35317bce55488ed60cd052e39279a"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/build-series/execution/repeated-06-postcss.stderr.txt",
+      "bytes": 1099,
+      "sha256": "688db9a68c79cd303673511ab6dbf4cb1b6a079aaf747bbffbc6634644026237"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/build-series/execution/repeated-06-postcss.stdout.txt",
+      "bytes": 103182,
+      "sha256": "2bbe0e2282bdecfe6716637b99909e547697134d8567606d3c61ab25c7e4f362"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/build-series/execution/repeated-06-vite.stderr.txt",
+      "bytes": 1099,
+      "sha256": "688db9a68c79cd303673511ab6dbf4cb1b6a079aaf747bbffbc6634644026237"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/build-series/execution/repeated-06-vite.stdout.txt",
+      "bytes": 100944,
+      "sha256": "7a3cb3d71104473377655fc0796adda9dccbefc0d31addc5d10bfd2208253610"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/build-series/execution/repeated-07-postcss.stderr.txt",
+      "bytes": 1099,
+      "sha256": "688db9a68c79cd303673511ab6dbf4cb1b6a079aaf747bbffbc6634644026237"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/build-series/execution/repeated-07-postcss.stdout.txt",
+      "bytes": 103182,
+      "sha256": "c465f87e6f379c5eee9bee65300ee81712d58dc4b167f2d5577c7092b2015a81"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/build-series/execution/repeated-07-vite.stderr.txt",
+      "bytes": 1099,
+      "sha256": "688db9a68c79cd303673511ab6dbf4cb1b6a079aaf747bbffbc6634644026237"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/build-series/execution/repeated-07-vite.stdout.txt",
+      "bytes": 100944,
+      "sha256": "61cd60ba725d075bcfcc36e508ff5aa0e1f67935c15782d8f5769abe7a87c263"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/build-series/execution/repeated-08-postcss.stderr.txt",
+      "bytes": 1841,
+      "sha256": "1f25b6e55f5c792a7441ab19f04ea113deeea9c8e56b6b3ffcbf5fbfa3af24ef"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/build-series/execution/repeated-08-postcss.stdout.txt",
+      "bytes": 103182,
+      "sha256": "b32af9ce7174f8699231be1d22ed00f4e8cc9c3f289c1ce1b0af975dfc3109c6"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/build-series/execution/repeated-08-vite.stderr.txt",
+      "bytes": 1099,
+      "sha256": "688db9a68c79cd303673511ab6dbf4cb1b6a079aaf747bbffbc6634644026237"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/build-series/execution/repeated-08-vite.stdout.txt",
+      "bytes": 100944,
+      "sha256": "8893a60e7a9d8ef68f75072588ee1f5bb571893a3dc423530a254c77bf0d38a2"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/build-series/execution/repeated-09-postcss.stderr.txt",
+      "bytes": 1615,
+      "sha256": "f3831b2d61a50085138a5baeec500977ac749f1ec49d2c3f50de36dbd4a2eb8c"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/build-series/execution/repeated-09-postcss.stdout.txt",
+      "bytes": 103182,
+      "sha256": "ea9e2e18c7330442a3b43047981a2a368f88b33fdeda66df3a8771fada0288de"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/build-series/execution/repeated-09-vite.stderr.txt",
+      "bytes": 1099,
+      "sha256": "688db9a68c79cd303673511ab6dbf4cb1b6a079aaf747bbffbc6634644026237"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/build-series/execution/repeated-09-vite.stdout.txt",
+      "bytes": 100944,
+      "sha256": "eca3fb0fd4f2de0ffe65168455cdc7ac70d4ebc25ee0fdf5f0bfbe44ca94c12e"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/build-series/execution/repeated-10-postcss.stderr.txt",
+      "bytes": 1841,
+      "sha256": "1e1bcef23f820d25b378a1b9c3dfb24bf868a090015ab61b1a35fa0b23339faa"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/build-series/execution/repeated-10-postcss.stdout.txt",
+      "bytes": 103182,
+      "sha256": "ccffd67b266164b6ffb6e46654e30efcedae9505d12f01393ef245245ed38c63"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/build-series/execution/repeated-10-vite.stderr.txt",
+      "bytes": 1864,
+      "sha256": "e72a9e0f01b8365c3d0426757b665feaa22219099678ad584ede8136dd9770c8"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/build-series/execution/repeated-10-vite.stdout.txt",
+      "bytes": 100944,
+      "sha256": "b5041d88c4360aa11eead7cc9e53bf437d53c60daff3b818aa81ff01c4ec2fb6"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/build-series/execution/repeated-11-postcss.stderr.txt",
+      "bytes": 1099,
+      "sha256": "688db9a68c79cd303673511ab6dbf4cb1b6a079aaf747bbffbc6634644026237"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/build-series/execution/repeated-11-postcss.stdout.txt",
+      "bytes": 103182,
+      "sha256": "512a26a5104f9c8fbac4198a2b8ffa65e23c0de1774f01127bd5c74252e21f52"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/build-series/execution/repeated-11-vite.stderr.txt",
+      "bytes": 1099,
+      "sha256": "688db9a68c79cd303673511ab6dbf4cb1b6a079aaf747bbffbc6634644026237"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/build-series/execution/repeated-11-vite.stdout.txt",
+      "bytes": 100944,
+      "sha256": "ad2cfeb3b6e292f6c16b2fa41c8a24691ebb0dc4810848c30d3dd563d788c617"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/build-series/execution/repeated-12-postcss.stderr.txt",
+      "bytes": 1099,
+      "sha256": "688db9a68c79cd303673511ab6dbf4cb1b6a079aaf747bbffbc6634644026237"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/build-series/execution/repeated-12-postcss.stdout.txt",
+      "bytes": 103182,
+      "sha256": "5724eda87d5c885dccf6a27c8fe0eee1f173a5b083e08b1a92536eeb347b8fa7"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/build-series/execution/repeated-12-vite.stderr.txt",
+      "bytes": 1099,
+      "sha256": "688db9a68c79cd303673511ab6dbf4cb1b6a079aaf747bbffbc6634644026237"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/build-series/execution/repeated-12-vite.stdout.txt",
+      "bytes": 100944,
+      "sha256": "bc60ab57c3a1ec6cf3f6fcb07f2c16bb74daeaf7fcc283c903e32234b57ebe2c"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/build-series/execution/repeated-13-postcss.stderr.txt",
+      "bytes": 1099,
+      "sha256": "688db9a68c79cd303673511ab6dbf4cb1b6a079aaf747bbffbc6634644026237"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/build-series/execution/repeated-13-postcss.stdout.txt",
+      "bytes": 103182,
+      "sha256": "6f415e5e7817a78183b8aef1235f58832ced7e4a2b9ea99b2bbc2c065080cbd3"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/build-series/execution/repeated-13-vite.stderr.txt",
+      "bytes": 1639,
+      "sha256": "ce19739da2a2b5d0a458d9553ef08a7c8505b7f7d53e952abbd4c9ce29e01e02"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/build-series/execution/repeated-13-vite.stdout.txt",
+      "bytes": 100944,
+      "sha256": "fae3183f5a58a898eec1b04e0269e77ccb38f59b777250988a4483d44d8128c8"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/build-series/execution/sources/harness-after.json",
+      "bytes": 3263,
+      "sha256": "2fdec5fb39d00bfc987ae9f1429158596dde0f44969142fee51575f32d68824f"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/build-series/execution/sources/harness-before.json",
+      "bytes": 3263,
+      "sha256": "1dc3065790a6e07ac04cf52e271265ec253a3af5c033a477cc6d0a4adf009ec0"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/build-series/execution/sources/tracked-after.json",
+      "bytes": 1753826,
+      "sha256": "3643f61bd488b90f5e03c7a3ffe588d5f3e206f0559ba0ac3d54f1fadfb62635"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/build-series/execution/sources/tracked-before.json",
+      "bytes": 1753826,
+      "sha256": "08a7fc55183a7e0c78d48cd0a247cf37f0d3fb86787b975a678c1095be029480"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/build-series/index.json",
+      "bytes": 70574,
+      "sha256": "c716465436279aa732256538d6df44e8ddea5dc07e5b6d98d22268bb062ae6fc"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/build-series/objects/3e84096ce4d1575ec3d3758f5855f6a7b72ceb277eb5aed56e30a00bc91605f2.json",
+      "bytes": 806487,
+      "sha256": "3e84096ce4d1575ec3d3758f5855f6a7b72ceb277eb5aed56e30a00bc91605f2"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/build-series/objects/71f00955f622b4e332da9b5efca1473e52990994b49ef0649eb0239d02644871.json",
+      "bytes": 806484,
+      "sha256": "71f00955f622b4e332da9b5efca1473e52990994b49ef0649eb0239d02644871"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/build-series/objects/e2161506340cd132f902106cec744fbaec7565e207745e770b32a251258ac308.json",
+      "bytes": 494612,
+      "sha256": "e2161506340cd132f902106cec744fbaec7565e207745e770b32a251258ac308"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/build-series/summary.json",
+      "bytes": 115122,
+      "sha256": "596d22a2ed5b0450bca06866ec27736af990fe32637646ead24d13844419c500"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/build-verification/asset-list.json",
+      "bytes": 166797,
+      "sha256": "10b7017cf2541c1d7ac0a5de1a082a91ddc76a923d18cd7a0ca006c6cbde1050"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/build-verification/first-pair-full.json",
+      "bytes": 3722500,
+      "sha256": "910d099efc5104a79b9cdd8456d3c14bf616ba2f6dae739430426e145a9a319c"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/build-verification/summary.json",
+      "bytes": 35204,
+      "sha256": "8fbfe73bfe89b9fb75efd095f130eaee79ae0c0e000f63d4dd3e38af6846b402"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/development-css/audit.json",
+      "bytes": 465764,
+      "sha256": "1a7ef281f7c8118ad41ca1b5fb86fb1326bccdeefee022c1408427b12340968f"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/development-css/contract-styles-images/dark-1280x799-baseline.png",
+      "bytes": 15524,
+      "sha256": "61d1d13e38f841b4411f01d78d92d335ce8c9ab4362d218f8b4020b9ba79b8f7"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/development-css/contract-styles-images/dark-1280x799-candidate.png",
+      "bytes": 15524,
+      "sha256": "61d1d13e38f841b4411f01d78d92d335ce8c9ab4362d218f8b4020b9ba79b8f7"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/development-css/contract-styles-images/dark-1280x800-baseline.png",
+      "bytes": 15531,
+      "sha256": "7df6d680fc7be07bb5d75396ce033903e9672a2e4fe84f0feb47c2fcaa99b240"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/development-css/contract-styles-images/dark-1280x800-candidate.png",
+      "bytes": 15531,
+      "sha256": "7df6d680fc7be07bb5d75396ce033903e9672a2e4fe84f0feb47c2fcaa99b240"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/development-css/contract-styles-images/dark-1280x801-baseline.png",
+      "bytes": 15512,
+      "sha256": "c05f28b6779b533097e2911967525752e2f15770957fcdd112b92febc7cd76e0"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/development-css/contract-styles-images/dark-1280x801-candidate.png",
+      "bytes": 15512,
+      "sha256": "c05f28b6779b533097e2911967525752e2f15770957fcdd112b92febc7cd76e0"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/development-css/contract-styles-images/dark-1280x900-baseline.png",
+      "bytes": 16119,
+      "sha256": "cf90a72685db3c13ec2ec83c20d83a070b5bd09c0961c458c5dcadb86b063a38"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/development-css/contract-styles-images/dark-1280x900-candidate.png",
+      "bytes": 16119,
+      "sha256": "cf90a72685db3c13ec2ec83c20d83a070b5bd09c0961c458c5dcadb86b063a38"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/development-css/contract-styles-images/dark-1400x900-baseline.png",
+      "bytes": 16679,
+      "sha256": "7e0a88f8407acf42ae33cfd1d95685fe2eedbaca8d3f8ee6f029a18982d091a3"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/development-css/contract-styles-images/dark-1400x900-candidate.png",
+      "bytes": 16679,
+      "sha256": "7e0a88f8407acf42ae33cfd1d95685fe2eedbaca8d3f8ee6f029a18982d091a3"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/development-css/contract-styles-images/dark-2000x900-baseline.png",
+      "bytes": 18242,
+      "sha256": "6af3b1fb31aedc2cadbe40b4debff9eaf93599b7cb2e4122dd69f6aa7fa28a20"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/development-css/contract-styles-images/dark-2000x900-candidate.png",
+      "bytes": 18242,
+      "sha256": "6af3b1fb31aedc2cadbe40b4debff9eaf93599b7cb2e4122dd69f6aa7fa28a20"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/development-css/contract-styles-images/dark-390x799-baseline.png",
+      "bytes": 12911,
+      "sha256": "82fa3099c5f33cdec7132bb630583478512e055d54112373965ce9c62f44dc38"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/development-css/contract-styles-images/dark-390x799-candidate.png",
+      "bytes": 12911,
+      "sha256": "82fa3099c5f33cdec7132bb630583478512e055d54112373965ce9c62f44dc38"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/development-css/contract-styles-images/dark-390x800-baseline.png",
+      "bytes": 12915,
+      "sha256": "85ad2a12eec3e504beff27d5a023bb035798cd02e2e79b96cb98b810e21a3428"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/development-css/contract-styles-images/dark-390x800-candidate.png",
+      "bytes": 12915,
+      "sha256": "85ad2a12eec3e504beff27d5a023bb035798cd02e2e79b96cb98b810e21a3428"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/development-css/contract-styles-images/dark-390x801-baseline.png",
+      "bytes": 12924,
+      "sha256": "6053e702b78ada7af7ccf094fffe7de77eae804f7d9da9e973e403f9cf96c09f"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/development-css/contract-styles-images/dark-390x801-candidate.png",
+      "bytes": 12924,
+      "sha256": "6053e702b78ada7af7ccf094fffe7de77eae804f7d9da9e973e403f9cf96c09f"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/development-css/contract-styles-images/dark-390x900-baseline.png",
+      "bytes": 13326,
+      "sha256": "f459d9b12c5016c6f772affcf6108a66a6d4b2a297e716aafb74da9624a5e1ca"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/development-css/contract-styles-images/dark-390x900-candidate.png",
+      "bytes": 13326,
+      "sha256": "f459d9b12c5016c6f772affcf6108a66a6d4b2a297e716aafb74da9624a5e1ca"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/development-css/contract-styles-images/dark-691x799-baseline.png",
+      "bytes": 13821,
+      "sha256": "c5eee5fdf7965040774c944048e223e3e458594a5b9647869137a7080cd53ada"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/development-css/contract-styles-images/dark-691x799-candidate.png",
+      "bytes": 13821,
+      "sha256": "c5eee5fdf7965040774c944048e223e3e458594a5b9647869137a7080cd53ada"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/development-css/contract-styles-images/dark-691x800-baseline.png",
+      "bytes": 13825,
+      "sha256": "0d119d30e93f255999fac75f1cb1227e767041feecf49b0e5d6e14e78914c8bc"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/development-css/contract-styles-images/dark-691x800-candidate.png",
+      "bytes": 13825,
+      "sha256": "0d119d30e93f255999fac75f1cb1227e767041feecf49b0e5d6e14e78914c8bc"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/development-css/contract-styles-images/dark-691x801-baseline.png",
+      "bytes": 13811,
+      "sha256": "f4d2f144fe576b7ffc927f8229b07c972559161add4d4361d997f2b2727935f4"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/development-css/contract-styles-images/dark-691x801-candidate.png",
+      "bytes": 13811,
+      "sha256": "f4d2f144fe576b7ffc927f8229b07c972559161add4d4361d997f2b2727935f4"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/development-css/contract-styles-images/dark-691x900-baseline.png",
+      "bytes": 14219,
+      "sha256": "56c878ceb7994cd5da73fd8626ab163d92eb4b83655806460e7d2733121de943"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/development-css/contract-styles-images/dark-691x900-candidate.png",
+      "bytes": 14219,
+      "sha256": "56c878ceb7994cd5da73fd8626ab163d92eb4b83655806460e7d2733121de943"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/development-css/contract-styles-images/light-1280x799-baseline.png",
+      "bytes": 15485,
+      "sha256": "3884a74e14b873b7322e8f34f0250d1af8ef38639af262978327175fcbf91909"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/development-css/contract-styles-images/light-1280x799-candidate.png",
+      "bytes": 15485,
+      "sha256": "3884a74e14b873b7322e8f34f0250d1af8ef38639af262978327175fcbf91909"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/development-css/contract-styles-images/light-1280x800-baseline.png",
+      "bytes": 15491,
+      "sha256": "1a179932fd14e96d8ff5c3467496a86a52c1f16d1ddc9b1d4e569d0abaf0a7b4"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/development-css/contract-styles-images/light-1280x800-candidate.png",
+      "bytes": 15491,
+      "sha256": "1a179932fd14e96d8ff5c3467496a86a52c1f16d1ddc9b1d4e569d0abaf0a7b4"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/development-css/contract-styles-images/light-1280x801-baseline.png",
+      "bytes": 15454,
+      "sha256": "8432720c877bb009924512ff59ff10724a973d6c431a089712a9624bd4f8f873"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/development-css/contract-styles-images/light-1280x801-candidate.png",
+      "bytes": 15454,
+      "sha256": "8432720c877bb009924512ff59ff10724a973d6c431a089712a9624bd4f8f873"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/development-css/contract-styles-images/light-1280x900-baseline.png",
+      "bytes": 16063,
+      "sha256": "2f7d379e67eba7173db4271f1ea5b1c8f4c571e2ee0aadb58276bdaa0b7b8878"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/development-css/contract-styles-images/light-1280x900-candidate.png",
+      "bytes": 16063,
+      "sha256": "2f7d379e67eba7173db4271f1ea5b1c8f4c571e2ee0aadb58276bdaa0b7b8878"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/development-css/contract-styles-images/light-1400x900-baseline.png",
+      "bytes": 16597,
+      "sha256": "7037a89d17f48d3f77b48aa624c81c88a743631dea2b159df4a598e74c8ee93e"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/development-css/contract-styles-images/light-1400x900-candidate.png",
+      "bytes": 16597,
+      "sha256": "7037a89d17f48d3f77b48aa624c81c88a743631dea2b159df4a598e74c8ee93e"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/development-css/contract-styles-images/light-2000x900-baseline.png",
+      "bytes": 18194,
+      "sha256": "3f591b49a2aeaceed29b50c470ac89dfa86bfc874123670a186ce2be4c79343f"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/development-css/contract-styles-images/light-2000x900-candidate.png",
+      "bytes": 18194,
+      "sha256": "3f591b49a2aeaceed29b50c470ac89dfa86bfc874123670a186ce2be4c79343f"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/development-css/contract-styles-images/light-390x799-baseline.png",
+      "bytes": 12821,
+      "sha256": "7ab266ef914c902615514c27907a9dec9717d8feab36b431c43817638390ee89"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/development-css/contract-styles-images/light-390x799-candidate.png",
+      "bytes": 12821,
+      "sha256": "7ab266ef914c902615514c27907a9dec9717d8feab36b431c43817638390ee89"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/development-css/contract-styles-images/light-390x800-baseline.png",
+      "bytes": 12825,
+      "sha256": "b66146071430d7e09b111009151eb080d3569531839794aeb512ee150f92f593"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/development-css/contract-styles-images/light-390x800-candidate.png",
+      "bytes": 12825,
+      "sha256": "b66146071430d7e09b111009151eb080d3569531839794aeb512ee150f92f593"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/development-css/contract-styles-images/light-390x801-baseline.png",
+      "bytes": 12835,
+      "sha256": "c38b6d3ec41ef90905b550228382747683b7a21e8fdbde554bf218a55250ff97"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/development-css/contract-styles-images/light-390x801-candidate.png",
+      "bytes": 12835,
+      "sha256": "c38b6d3ec41ef90905b550228382747683b7a21e8fdbde554bf218a55250ff97"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/development-css/contract-styles-images/light-390x900-baseline.png",
+      "bytes": 13238,
+      "sha256": "65b29a86144ea44d4937cc1ce1937d899346522b59701a0e992e9ee5543f5c9c"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/development-css/contract-styles-images/light-390x900-candidate.png",
+      "bytes": 13238,
+      "sha256": "65b29a86144ea44d4937cc1ce1937d899346522b59701a0e992e9ee5543f5c9c"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/development-css/contract-styles-images/light-691x799-baseline.png",
+      "bytes": 13754,
+      "sha256": "7930dc39a280eef2f612ec03b6b1bc89d283d02afc7ff7b6536cfbb9aff0a35d"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/development-css/contract-styles-images/light-691x799-candidate.png",
+      "bytes": 13754,
+      "sha256": "7930dc39a280eef2f612ec03b6b1bc89d283d02afc7ff7b6536cfbb9aff0a35d"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/development-css/contract-styles-images/light-691x800-baseline.png",
+      "bytes": 13758,
+      "sha256": "1b0d82de1bf8d7fb41a309afb01d5f38d565243693b551e78d0133763af6f3ce"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/development-css/contract-styles-images/light-691x800-candidate.png",
+      "bytes": 13758,
+      "sha256": "1b0d82de1bf8d7fb41a309afb01d5f38d565243693b551e78d0133763af6f3ce"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/development-css/contract-styles-images/light-691x801-baseline.png",
+      "bytes": 13732,
+      "sha256": "757c2c0aa136f4c1d0b4352bc8670e08790e71170010d831c1f94f24433caa41"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/development-css/contract-styles-images/light-691x801-candidate.png",
+      "bytes": 13732,
+      "sha256": "757c2c0aa136f4c1d0b4352bc8670e08790e71170010d831c1f94f24433caa41"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/development-css/contract-styles-images/light-691x900-baseline.png",
+      "bytes": 14140,
+      "sha256": "83b5c2d5b41c48fcf68ecb32e999d002365bf27cac1d3d47f42e63f3b6698922"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/development-css/contract-styles-images/light-691x900-candidate.png",
+      "bytes": 14140,
+      "sha256": "83b5c2d5b41c48fcf68ecb32e999d002365bf27cac1d3d47f42e63f3b6698922"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/development-css/cssom-review.json",
+      "bytes": 719,
+      "sha256": "18512190021644bc275cac753bbb80eba531a16aa97139d512bbb5e665bbddeb"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/development-css/differences.json",
+      "bytes": 5945,
+      "sha256": "b21416e4ef8a9198a5b5527ddca45b6d761eac8a40e126fcac7c6d5333bbfa00"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/development-css/execution/dev-css-audit-execution.txt",
+      "bytes": 83,
+      "sha256": "d5ca7c88052ccd96fd0ed163cd9ee1b2602f0c9f39443156e7ade07abfb8df69"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/development-css/explanation.md",
+      "bytes": 1144,
+      "sha256": "929a5655331506d898ea7f619c7736fe0f9186e268503132da7e6e0f569f25bd"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/development-css/postcss.dev.css",
+      "bytes": 235917,
+      "sha256": "a81eb7cbdadb3e882c4274d61ed919a30fcda14e3255e3df393bdd485a99616f"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/development-css/postcss/config.json",
+      "bytes": 600,
+      "sha256": "c6deab7a6f40db077bd8db365e6961187c6ea0f101b90387e7f4cd61f2b331a0"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/development-css/postcss/css-inventory.json",
+      "bytes": 183210,
+      "sha256": "e5e2d53c04a1115fdc8c9c2fc97ec8c47cf75666693c4e9881888dc58bedb6f8"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/development-css/postcss/execution/node.stderr.txt",
+      "bytes": 251,
+      "sha256": "9893ee2f6cf25c0e25e1da02a180fdbdd1dd8ae52ffc7b66691fb6aec4a76410"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/development-css/postcss/execution/node.stdout.txt",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/development-css/postcss/ordered-ast.json",
+      "bytes": 984542,
+      "sha256": "822974a1acd76bdfdae52a1f702fec6b35b5e40501d415184b8c2ef6d9bb4a07"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/development-css/style-contract.json",
+      "bytes": 3151546,
+      "sha256": "983c56b4a9214ba48b5839fb4d85c4fb982f6e741da750ed63ea592a8c1ea0c0"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/development-css/style-contract.txt",
+      "bytes": 207,
+      "sha256": "e9a6db61eb32b1f4df45e39616ff324bd73425b16e29e639320074866f3be946"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/development-css/vite.dev.css",
+      "bytes": 235821,
+      "sha256": "c4f46f0d6650ed82a3b0224a6f97e9be57d3ee3d08277bd44ef1c88901b4c10e"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/development-css/vite/config.json",
+      "bytes": 588,
+      "sha256": "3ea3115b1d450773a4163688baca225c329f55b3ea40cd100308998d98b457ff"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/development-css/vite/css-inventory.json",
+      "bytes": 183079,
+      "sha256": "4f289bcb0e0dd7c73bee45d28693d1a39d9c58d582cf5c08e702e7fa0306d37f"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/development-css/vite/execution/node.stderr.txt",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/development-css/vite/execution/node.stdout.txt",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/development-css/vite/ordered-ast.json",
+      "bytes": 984400,
+      "sha256": "9bc4ac164134096f11e88c09e0fb13f8291d0e7739150b2152b947d6da08fde7"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/hmr/execution/failed-pair-01-1-postcss.stderr.txt",
+      "bytes": 251,
+      "sha256": "9893ee2f6cf25c0e25e1da02a180fdbdd1dd8ae52ffc7b66691fb6aec4a76410"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/hmr/execution/failed-pair-01-1-postcss.stdout.txt",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/hmr/execution/hmr-execution-local-permission.txt",
+      "bytes": 606,
+      "sha256": "7f7c4f39747909c91d11f283f10601bb1780dd8799fadc462e00e84525ae2ec1"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/hmr/execution/hmr-execution.txt",
+      "bytes": 159,
+      "sha256": "fd7180506f99e82b19f7899f60f962b488deebd1c645ecec693dd50e3e25508b"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/hmr/execution/pair-01-1-postcss.stderr.txt",
+      "bytes": 251,
+      "sha256": "9893ee2f6cf25c0e25e1da02a180fdbdd1dd8ae52ffc7b66691fb6aec4a76410"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/hmr/execution/pair-01-1-postcss.stdout.txt",
+      "bytes": 1435,
+      "sha256": "8419167df69412790de0ccfc435662b98eb61c7086ca460c026d246b0a20f950"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/hmr/execution/pair-01-2-vite.stderr.txt",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/hmr/execution/pair-01-2-vite.stdout.txt",
+      "bytes": 1414,
+      "sha256": "f98fce02db4f8ce0e2b0bace1b67d916b1f2c7834eecb65c31f73545a6ee1596"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/hmr/execution/pair-02-1-vite.stderr.txt",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/hmr/execution/pair-02-1-vite.stdout.txt",
+      "bytes": 1414,
+      "sha256": "940512c423d76354c2a63b8eee1690d783490b2ea97f88619b8708d2d277a759"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/hmr/execution/pair-02-2-postcss.stderr.txt",
+      "bytes": 251,
+      "sha256": "9893ee2f6cf25c0e25e1da02a180fdbdd1dd8ae52ffc7b66691fb6aec4a76410"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/hmr/execution/pair-02-2-postcss.stdout.txt",
+      "bytes": 1435,
+      "sha256": "85d77f3f4a26a24f691d1dd9822187b4c19265f20694af10418ed0be78d46448"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/hmr/execution/pair-03-1-vite.stderr.txt",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/hmr/execution/pair-03-1-vite.stdout.txt",
+      "bytes": 1414,
+      "sha256": "a7a2eafec0a566eb21a84ffbed9b7e73cb109b18a89c3edea4b64579b473e914"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/hmr/execution/pair-03-2-postcss.stderr.txt",
+      "bytes": 251,
+      "sha256": "9893ee2f6cf25c0e25e1da02a180fdbdd1dd8ae52ffc7b66691fb6aec4a76410"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/hmr/execution/pair-03-2-postcss.stdout.txt",
+      "bytes": 1435,
+      "sha256": "538f00124ee56d2bcbc68966de00bde454c0c3c8c846ed8db465f8e3462d5e86"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/hmr/execution/pair-04-1-postcss.stderr.txt",
+      "bytes": 251,
+      "sha256": "9893ee2f6cf25c0e25e1da02a180fdbdd1dd8ae52ffc7b66691fb6aec4a76410"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/hmr/execution/pair-04-1-postcss.stdout.txt",
+      "bytes": 1435,
+      "sha256": "bbe5ec48117bb0fd9e60f8c4b08741a886c4b3590c52d3c82353cbe044eb89b9"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/hmr/execution/pair-04-2-vite.stderr.txt",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/hmr/execution/pair-04-2-vite.stdout.txt",
+      "bytes": 1414,
+      "sha256": "7fe45a70df501f79850beba14911c7ae1c6d7a06ecaaf18c14208b3cf89ba74d"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/hmr/failed-series.json",
+      "bytes": 27736,
+      "sha256": "9a4e3727e2d3b74bb4f2dd2b30f61cb5b9efdf917b68bae886a36d30adbb79b8"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/hmr/failed-sessions/pair-01-1-postcss/session-config.json",
+      "bytes": 587,
+      "sha256": "d1da5a4178137b9298b4f831d725723f321715a5dffe79937eee02e8100d49cb"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/hmr/failed-sessions/pair-01-1-postcss/session.json",
+      "bytes": 19465,
+      "sha256": "5974b6db66e3901b79fc1e405926940f4eccd6f312de909101e8b5341d1d95a7"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/hmr/interpretation.json",
+      "bytes": 1418,
+      "sha256": "2c763be3ee31479b2305ab57aa56e2aa9f12dcff860af7e72d89ca5a2df2f676"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/hmr/series.json",
+      "bytes": 1109851,
+      "sha256": "7f3ddf3d1b6e822845f2b851111079b8a256ae335bf13251b3649aca4d21d182"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/hmr/sessions/pair-01-1-postcss/session-config.json",
+      "bytes": 638,
+      "sha256": "e216da314f0a1e91e0bd5b54783ab969af0764ef0de4ebc7f0ca92795d561af3"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/hmr/sessions/pair-01-1-postcss/session.json",
+      "bytes": 122960,
+      "sha256": "c7184bcf5da472ebf13797a06a4f006979732e88e69b84cefbee2ad98c6bef40"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/hmr/sessions/pair-01-2-vite/session-config.json",
+      "bytes": 623,
+      "sha256": "91ecee6022f97dc1cb59cacedee311887fad77c926d7d1e65d4b66da3c2c6676"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/hmr/sessions/pair-01-2-vite/session.json",
+      "bytes": 122450,
+      "sha256": "66b88e68f86740fd27ce555421d9c604b11cd911eba6de05a1fc18573d0eb90f"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/hmr/sessions/pair-02-1-vite/session-config.json",
+      "bytes": 623,
+      "sha256": "8e0aac7cf4c210e23685e1fcdfd19c77fa2993d5354a0e55e1fb8a269678c0cb"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/hmr/sessions/pair-02-1-vite/session.json",
+      "bytes": 122333,
+      "sha256": "0316e4ffa3b208ba3360bedb89813e2134f28cc45780d68ca993e8018a42cd40"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/hmr/sessions/pair-02-2-postcss/session-config.json",
+      "bytes": 638,
+      "sha256": "7915487b96ac3f422f79f46b7c8b940e12db807138321c4dee4f4a9ec5e95d04"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/hmr/sessions/pair-02-2-postcss/session.json",
+      "bytes": 122649,
+      "sha256": "82579d9be4ff8c51d8d711fe58721494bac7ff1fadb840aa8937b8f6c387fdb0"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/hmr/sessions/pair-03-1-vite/session-config.json",
+      "bytes": 623,
+      "sha256": "8d76d0b7e14b0ba02c7e4d9738487327e3b44ea89e914cb055da7590259044df"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/hmr/sessions/pair-03-1-vite/session.json",
+      "bytes": 122363,
+      "sha256": "0a530f2fe3b0de238bbba0aa96fcd21ffa565eef375070ba2da14ff5ff1ebb86"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/hmr/sessions/pair-03-2-postcss/session-config.json",
+      "bytes": 638,
+      "sha256": "0c70cbe19b9b9a52688453972a533e56160adf0824e006e110af033cbbf1d8bf"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/hmr/sessions/pair-03-2-postcss/session.json",
+      "bytes": 122946,
+      "sha256": "f161a6dcae4465a7bea62ed228edbc252014d1f1b056e8ef66cd21da075690e0"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/hmr/sessions/pair-04-1-postcss/session-config.json",
+      "bytes": 638,
+      "sha256": "c71cfd19c1d6f099e54b9c5b046f66a76112c194c30228564634e1551ad47b91"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/hmr/sessions/pair-04-1-postcss/session.json",
+      "bytes": 122949,
+      "sha256": "42d27b31c4f8769ffce5811f9eb84f28f832169e22731037dca2a69726d0dfd3"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/hmr/sessions/pair-04-2-vite/session-config.json",
+      "bytes": 623,
+      "sha256": "8f59ad03aecd7c21f3714723107f0b16584c394d33290e84523fc4a0aa4de807"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/hmr/sessions/pair-04-2-vite/session.json",
+      "bytes": 122529,
+      "sha256": "727113fb86a9eb3a2492ccac750bda0af1b0f340aff7bdd1c1a65f66cae122fd"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/preflight/contract-styles-images/dark-1280x799-baseline.png",
+      "bytes": 15524,
+      "sha256": "61d1d13e38f841b4411f01d78d92d335ce8c9ab4362d218f8b4020b9ba79b8f7"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/preflight/contract-styles-images/dark-1280x799-candidate.png",
+      "bytes": 15524,
+      "sha256": "61d1d13e38f841b4411f01d78d92d335ce8c9ab4362d218f8b4020b9ba79b8f7"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/preflight/contract-styles-images/dark-1280x800-baseline.png",
+      "bytes": 15531,
+      "sha256": "7df6d680fc7be07bb5d75396ce033903e9672a2e4fe84f0feb47c2fcaa99b240"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/preflight/contract-styles-images/dark-1280x800-candidate.png",
+      "bytes": 15531,
+      "sha256": "7df6d680fc7be07bb5d75396ce033903e9672a2e4fe84f0feb47c2fcaa99b240"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/preflight/contract-styles-images/dark-1280x801-baseline.png",
+      "bytes": 15512,
+      "sha256": "c05f28b6779b533097e2911967525752e2f15770957fcdd112b92febc7cd76e0"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/preflight/contract-styles-images/dark-1280x801-candidate.png",
+      "bytes": 15512,
+      "sha256": "c05f28b6779b533097e2911967525752e2f15770957fcdd112b92febc7cd76e0"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/preflight/contract-styles-images/dark-1280x900-baseline.png",
+      "bytes": 16119,
+      "sha256": "cf90a72685db3c13ec2ec83c20d83a070b5bd09c0961c458c5dcadb86b063a38"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/preflight/contract-styles-images/dark-1280x900-candidate.png",
+      "bytes": 16119,
+      "sha256": "cf90a72685db3c13ec2ec83c20d83a070b5bd09c0961c458c5dcadb86b063a38"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/preflight/contract-styles-images/dark-1400x900-baseline.png",
+      "bytes": 16679,
+      "sha256": "7e0a88f8407acf42ae33cfd1d95685fe2eedbaca8d3f8ee6f029a18982d091a3"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/preflight/contract-styles-images/dark-1400x900-candidate.png",
+      "bytes": 16679,
+      "sha256": "7e0a88f8407acf42ae33cfd1d95685fe2eedbaca8d3f8ee6f029a18982d091a3"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/preflight/contract-styles-images/dark-2000x900-baseline.png",
+      "bytes": 18242,
+      "sha256": "6af3b1fb31aedc2cadbe40b4debff9eaf93599b7cb2e4122dd69f6aa7fa28a20"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/preflight/contract-styles-images/dark-2000x900-candidate.png",
+      "bytes": 18242,
+      "sha256": "6af3b1fb31aedc2cadbe40b4debff9eaf93599b7cb2e4122dd69f6aa7fa28a20"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/preflight/contract-styles-images/dark-390x799-baseline.png",
+      "bytes": 12911,
+      "sha256": "82fa3099c5f33cdec7132bb630583478512e055d54112373965ce9c62f44dc38"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/preflight/contract-styles-images/dark-390x799-candidate.png",
+      "bytes": 12911,
+      "sha256": "82fa3099c5f33cdec7132bb630583478512e055d54112373965ce9c62f44dc38"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/preflight/contract-styles-images/dark-390x800-baseline.png",
+      "bytes": 12915,
+      "sha256": "85ad2a12eec3e504beff27d5a023bb035798cd02e2e79b96cb98b810e21a3428"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/preflight/contract-styles-images/dark-390x800-candidate.png",
+      "bytes": 12915,
+      "sha256": "85ad2a12eec3e504beff27d5a023bb035798cd02e2e79b96cb98b810e21a3428"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/preflight/contract-styles-images/dark-390x801-baseline.png",
+      "bytes": 12924,
+      "sha256": "6053e702b78ada7af7ccf094fffe7de77eae804f7d9da9e973e403f9cf96c09f"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/preflight/contract-styles-images/dark-390x801-candidate.png",
+      "bytes": 12924,
+      "sha256": "6053e702b78ada7af7ccf094fffe7de77eae804f7d9da9e973e403f9cf96c09f"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/preflight/contract-styles-images/dark-390x900-baseline.png",
+      "bytes": 13326,
+      "sha256": "f459d9b12c5016c6f772affcf6108a66a6d4b2a297e716aafb74da9624a5e1ca"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/preflight/contract-styles-images/dark-390x900-candidate.png",
+      "bytes": 13326,
+      "sha256": "f459d9b12c5016c6f772affcf6108a66a6d4b2a297e716aafb74da9624a5e1ca"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/preflight/contract-styles-images/dark-691x799-baseline.png",
+      "bytes": 13821,
+      "sha256": "c5eee5fdf7965040774c944048e223e3e458594a5b9647869137a7080cd53ada"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/preflight/contract-styles-images/dark-691x799-candidate.png",
+      "bytes": 13821,
+      "sha256": "c5eee5fdf7965040774c944048e223e3e458594a5b9647869137a7080cd53ada"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/preflight/contract-styles-images/dark-691x800-baseline.png",
+      "bytes": 13825,
+      "sha256": "0d119d30e93f255999fac75f1cb1227e767041feecf49b0e5d6e14e78914c8bc"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/preflight/contract-styles-images/dark-691x800-candidate.png",
+      "bytes": 13825,
+      "sha256": "0d119d30e93f255999fac75f1cb1227e767041feecf49b0e5d6e14e78914c8bc"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/preflight/contract-styles-images/dark-691x801-baseline.png",
+      "bytes": 13811,
+      "sha256": "f4d2f144fe576b7ffc927f8229b07c972559161add4d4361d997f2b2727935f4"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/preflight/contract-styles-images/dark-691x801-candidate.png",
+      "bytes": 13811,
+      "sha256": "f4d2f144fe576b7ffc927f8229b07c972559161add4d4361d997f2b2727935f4"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/preflight/contract-styles-images/dark-691x900-baseline.png",
+      "bytes": 14219,
+      "sha256": "56c878ceb7994cd5da73fd8626ab163d92eb4b83655806460e7d2733121de943"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/preflight/contract-styles-images/dark-691x900-candidate.png",
+      "bytes": 14219,
+      "sha256": "56c878ceb7994cd5da73fd8626ab163d92eb4b83655806460e7d2733121de943"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/preflight/contract-styles-images/light-1280x799-baseline.png",
+      "bytes": 15485,
+      "sha256": "3884a74e14b873b7322e8f34f0250d1af8ef38639af262978327175fcbf91909"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/preflight/contract-styles-images/light-1280x799-candidate.png",
+      "bytes": 15485,
+      "sha256": "3884a74e14b873b7322e8f34f0250d1af8ef38639af262978327175fcbf91909"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/preflight/contract-styles-images/light-1280x800-baseline.png",
+      "bytes": 15491,
+      "sha256": "1a179932fd14e96d8ff5c3467496a86a52c1f16d1ddc9b1d4e569d0abaf0a7b4"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/preflight/contract-styles-images/light-1280x800-candidate.png",
+      "bytes": 15491,
+      "sha256": "1a179932fd14e96d8ff5c3467496a86a52c1f16d1ddc9b1d4e569d0abaf0a7b4"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/preflight/contract-styles-images/light-1280x801-baseline.png",
+      "bytes": 15454,
+      "sha256": "8432720c877bb009924512ff59ff10724a973d6c431a089712a9624bd4f8f873"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/preflight/contract-styles-images/light-1280x801-candidate.png",
+      "bytes": 15454,
+      "sha256": "8432720c877bb009924512ff59ff10724a973d6c431a089712a9624bd4f8f873"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/preflight/contract-styles-images/light-1280x900-baseline.png",
+      "bytes": 16063,
+      "sha256": "2f7d379e67eba7173db4271f1ea5b1c8f4c571e2ee0aadb58276bdaa0b7b8878"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/preflight/contract-styles-images/light-1280x900-candidate.png",
+      "bytes": 16063,
+      "sha256": "2f7d379e67eba7173db4271f1ea5b1c8f4c571e2ee0aadb58276bdaa0b7b8878"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/preflight/contract-styles-images/light-1400x900-baseline.png",
+      "bytes": 16597,
+      "sha256": "7037a89d17f48d3f77b48aa624c81c88a743631dea2b159df4a598e74c8ee93e"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/preflight/contract-styles-images/light-1400x900-candidate.png",
+      "bytes": 16597,
+      "sha256": "7037a89d17f48d3f77b48aa624c81c88a743631dea2b159df4a598e74c8ee93e"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/preflight/contract-styles-images/light-2000x900-baseline.png",
+      "bytes": 18194,
+      "sha256": "3f591b49a2aeaceed29b50c470ac89dfa86bfc874123670a186ce2be4c79343f"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/preflight/contract-styles-images/light-2000x900-candidate.png",
+      "bytes": 18194,
+      "sha256": "3f591b49a2aeaceed29b50c470ac89dfa86bfc874123670a186ce2be4c79343f"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/preflight/contract-styles-images/light-390x799-baseline.png",
+      "bytes": 12821,
+      "sha256": "7ab266ef914c902615514c27907a9dec9717d8feab36b431c43817638390ee89"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/preflight/contract-styles-images/light-390x799-candidate.png",
+      "bytes": 12821,
+      "sha256": "7ab266ef914c902615514c27907a9dec9717d8feab36b431c43817638390ee89"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/preflight/contract-styles-images/light-390x800-baseline.png",
+      "bytes": 12825,
+      "sha256": "b66146071430d7e09b111009151eb080d3569531839794aeb512ee150f92f593"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/preflight/contract-styles-images/light-390x800-candidate.png",
+      "bytes": 12825,
+      "sha256": "b66146071430d7e09b111009151eb080d3569531839794aeb512ee150f92f593"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/preflight/contract-styles-images/light-390x801-baseline.png",
+      "bytes": 12835,
+      "sha256": "c38b6d3ec41ef90905b550228382747683b7a21e8fdbde554bf218a55250ff97"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/preflight/contract-styles-images/light-390x801-candidate.png",
+      "bytes": 12835,
+      "sha256": "c38b6d3ec41ef90905b550228382747683b7a21e8fdbde554bf218a55250ff97"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/preflight/contract-styles-images/light-390x900-baseline.png",
+      "bytes": 13238,
+      "sha256": "65b29a86144ea44d4937cc1ce1937d899346522b59701a0e992e9ee5543f5c9c"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/preflight/contract-styles-images/light-390x900-candidate.png",
+      "bytes": 13238,
+      "sha256": "65b29a86144ea44d4937cc1ce1937d899346522b59701a0e992e9ee5543f5c9c"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/preflight/contract-styles-images/light-691x799-baseline.png",
+      "bytes": 13754,
+      "sha256": "7930dc39a280eef2f612ec03b6b1bc89d283d02afc7ff7b6536cfbb9aff0a35d"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/preflight/contract-styles-images/light-691x799-candidate.png",
+      "bytes": 13754,
+      "sha256": "7930dc39a280eef2f612ec03b6b1bc89d283d02afc7ff7b6536cfbb9aff0a35d"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/preflight/contract-styles-images/light-691x800-baseline.png",
+      "bytes": 13758,
+      "sha256": "1b0d82de1bf8d7fb41a309afb01d5f38d565243693b551e78d0133763af6f3ce"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/preflight/contract-styles-images/light-691x800-candidate.png",
+      "bytes": 13758,
+      "sha256": "1b0d82de1bf8d7fb41a309afb01d5f38d565243693b551e78d0133763af6f3ce"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/preflight/contract-styles-images/light-691x801-baseline.png",
+      "bytes": 13732,
+      "sha256": "757c2c0aa136f4c1d0b4352bc8670e08790e71170010d831c1f94f24433caa41"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/preflight/contract-styles-images/light-691x801-candidate.png",
+      "bytes": 13732,
+      "sha256": "757c2c0aa136f4c1d0b4352bc8670e08790e71170010d831c1f94f24433caa41"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/preflight/contract-styles-images/light-691x900-baseline.png",
+      "bytes": 14140,
+      "sha256": "83b5c2d5b41c48fcf68ecb32e999d002365bf27cac1d3d47f42e63f3b6698922"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/preflight/contract-styles-images/light-691x900-candidate.png",
+      "bytes": 14140,
+      "sha256": "83b5c2d5b41c48fcf68ecb32e999d002365bf27cac1d3d47f42e63f3b6698922"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/preflight/css-check-initial-failure.json",
+      "bytes": 3722804,
+      "sha256": "ce3fa2e45c510b111c33636b61b4dad3f2b1d6ef130b3c0032d2c28c6ec61ca6"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/preflight/css-check-initial-failure.txt",
+      "bytes": 232,
+      "sha256": "e2905be8d2bcc6f044a1ab97a824731d279a84b433ed34fdde93fc349912513f"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/preflight/css-check.json",
+      "bytes": 3722470,
+      "sha256": "d2a58754404639b21f36cd2b70246a409a9aae55ee869f99ed9c402a1e0cea2e"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/preflight/css-check.txt",
+      "bytes": 230,
+      "sha256": "0263402b0cfd0c4bfe85d53c0fd0caecdaad878a1b74b8f9d2e9ec10b515c8e2"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/preflight/postcss/config.json",
+      "bytes": 2883,
+      "sha256": "842dd4ca9c8ff8d8ed709514a04eace7eec781375adb0b2fcc477ea51c5a347d"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/preflight/postcss/stderr.txt",
+      "bytes": 1841,
+      "sha256": "a936f658ebffd2b1d228beb5cca469c43bf7536da0378ad947db5f6afd6a0ed3"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/preflight/postcss/stdout.txt",
+      "bytes": 91246,
+      "sha256": "f66017fdd6f4cd263555c1bc3276bf332486148cf671c8634eed2cadb28937cb"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/preflight/style-contract.json",
+      "bytes": 3075487,
+      "sha256": "85b9eb5d101a195bed0cb8f4ff777d4f6fc068022b37b9ffca4a2d5669b27ad2"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/preflight/style-contract.txt",
+      "bytes": 201,
+      "sha256": "d9bfe04467f3292afcd71225ba0181abc1ff8a824659fbe990cef60360b8354e"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/preflight/summary.json",
+      "bytes": 2744,
+      "sha256": "5760eb2cb697abc687755fbfebf56990a89da1a9e4808ca0911fa4861f075dad"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/preflight/vite/config.json",
+      "bytes": 2934,
+      "sha256": "9c1487b435a0e1dbed9141941da9f19ff200ee68b8d2c9d8e063a23355a89c11"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/preflight/vite/stderr.txt",
+      "bytes": 1639,
+      "sha256": "5440be550130a62667f29eb5a449700756bec7f15c862e6e36582d24d574293e"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/preflight/vite/stdout.txt",
+      "bytes": 89008,
+      "sha256": "4af7fd397339202621286ebc6b18066c6ebda4cb3f288f8509268da540c56cde"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/setup-add-plugin.txt",
+      "bytes": 261,
+      "sha256": "63c4b1dfa172387c616d90f53cd1f8866e9b06a9ec376756a5a1f3d1f8c6a527"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/setup-dependency-diff.json",
+      "bytes": 1187,
+      "sha256": "ca13034ced2a80859f3ef4c1de4317ea2308479302aac5b8f90a430199533145"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/setup-install-base.txt",
+      "bytes": 2638,
+      "sha256": "e7e50a51e0d6499ba43225cd02912946a17ba8fc4e8d6df5627250419da9a8f8"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/setup-install-experiment.txt",
+      "bytes": 145,
+      "sha256": "d9299e453cad8bde9388684379263d23abe226b877f663dc635a3ca4ce49c1e4"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/setup.json",
+      "bytes": 1302,
+      "sha256": "817a500066c0fb8407ba46407fdfadcab1d99c9256a99634c8c1fde4d8ea2e07"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/setup/add-plugin.txt",
+      "bytes": 261,
+      "sha256": "63c4b1dfa172387c616d90f53cd1f8866e9b06a9ec376756a5a1f3d1f8c6a527"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/setup/bun.before.lock",
+      "bytes": 328105,
+      "sha256": "be059f24a5e00112b4ff49a74fac064c5b53a43c7449774b2dc6a336fc42e150"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/setup/dependency-diff.json",
+      "bytes": 1187,
+      "sha256": "ca13034ced2a80859f3ef4c1de4317ea2308479302aac5b8f90a430199533145"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/setup/install-base.txt",
+      "bytes": 2638,
+      "sha256": "e7e50a51e0d6499ba43225cd02912946a17ba8fc4e8d6df5627250419da9a8f8"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/setup/install-experiment.txt",
+      "bytes": 145,
+      "sha256": "d9299e453cad8bde9388684379263d23abe226b877f663dc635a3ca4ce49c1e4"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/setup/package.before.json",
+      "bytes": 8242,
+      "sha256": "ed0b99d12e1fea69b8aa47522e53979fbcb828806114d3fdddb72584b2c67662"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/setup/setup.json",
+      "bytes": 1016,
+      "sha256": "b04044b621d5a74ae945f92804a7d4c8b44226fd623fd310ff3a1615b5f05eff"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/support-manifest.json",
+      "bytes": 79815,
+      "sha256": "9f9e62b9266d15be5431ad0426a53fff4a7ebc9c82db7920d2d8b469b25f13ce"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/verification/archive-builds-verify.txt",
+      "bytes": 306,
+      "sha256": "65b2a196e1ca8eda016f359725ada623cadd6a254d4080d673f214a841cd59cd"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/verification/archive-builds.txt",
+      "bytes": 2374,
+      "sha256": "bab3ac3f626ef6b56e30ae03d512e3b8d98363ed09bc39c8e8c555f59336f9ee"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/verification/archive-support.txt",
+      "bytes": 175,
+      "sha256": "1fb6d67f958a77ac3efb2549761b27650559d858b073181247b6694d60c2a840"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/verification/archive-visual-qa.txt",
+      "bytes": 393,
+      "sha256": "1eff215bb8fee09fb2d2d17963a45373dc067e37f807e6aa034280155d026603"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/verification/build-series-execution.txt",
+      "bytes": 4393,
+      "sha256": "b7cc2ac881884359055100db9bb6767a48f324b0ac73e3fdb64527b1dead5373"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/verification/css-checker-tests-final.txt",
+      "bytes": 1109,
+      "sha256": "337101bd454a4b07c040fdce86c233d2b9cce684f2627c71472ffe682738fc04"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/verification/css-checker-tests.txt",
+      "bytes": 991,
+      "sha256": "93473cef64e102a9f253a6071308cbde7d8343b6cf9dcf7176f1fb026c6a1d71"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/verification/final.json",
+      "bytes": 3021,
+      "sha256": "f4f263cae5d2134affe04963a70d833a3b23a19416a8fdea82c57a410ee13b1e"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/verification/harness-lint.txt",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/verification/knip-final.txt",
+      "bytes": 804,
+      "sha256": "c8e8777e8f74780c1181057487cfc49eb102287c14445ff23df6affd987d05b5"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/verification/knip-initial.txt",
+      "bytes": 871,
+      "sha256": "485226210e3a603a36205e8836b0fa5496b4976a6c0a4b715fa7ba9c48bc2915"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/verification/lint-final.txt",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/verification/recovery.json",
+      "bytes": 911,
+      "sha256": "083f3987d5f894560964066b7f3189b1016a1fd0ddb76ba257f7cc3aeb7849c4"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/verification/test-catalog-final.json",
+      "bytes": 703225,
+      "sha256": "c0424647692dc5a3e8b2073ca6b6e56792b75ea6566d1fb0b16531236ddb4050"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/verification/test-catalog-final.txt",
+      "bytes": 576,
+      "sha256": "32ff3839c31751db01eba1b2f5b43be7d58ac23499a4193f008e63405dab0dd3"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/verification/typecheck-final.txt",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/visual-qa/execution/firefox-preflight.txt",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/visual-qa/firefox-preflight.json",
+      "bytes": 776,
+      "sha256": "fee6f7031c6aac293b782950b08cba9fa3b2353cc5488b23e818be17c1fb4839"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/visual-qa/manifest.json",
+      "bytes": 30253,
+      "sha256": "2ef87f07aaf18359f5555b24d4ff38f70d6b7583b193b10b513699869d986e29"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/visual-qa/postcss/audit119-126/execution/playwright.txt",
+      "bytes": 4719,
+      "sha256": "c05b3b9af403cbb6286d8a0a7ae614057942d0dd7ac81e06a5cfa944e8256549"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/visual-qa/postcss/audit119-126/fixture-assets.json",
+      "bytes": 498,
+      "sha256": "7068a0ff292cf939c691521d4e0b7f460280da854cbaf9a0458a277dc4c988b2"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/visual-qa/postcss/audit119-126/playwright.config.mjs",
+      "bytes": 2020,
+      "sha256": "f4a17554218de37c889d497db5879e6a787c2def16926f25f4d0d9db657224b6"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/visual-qa/postcss/audit119-126/results.json",
+      "bytes": 224087,
+      "sha256": "444cca93d06186c2ceac35802eaa13431249a964c8bb3fb67323fe591810eb74"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/visual-qa/postcss/audit119-126/server-profile.json",
+      "bytes": 1037,
+      "sha256": "a95d0b2c5af560a63890996bf37e9c3b669d4894d8e3a9356a00ff9d5fd9526d"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/visual-qa/postcss/audit136-137/execution/playwright.txt",
+      "bytes": 2335,
+      "sha256": "e216f2b38b19ee045f01a24efd2f0f338210f525eb819c882b2f38d71fdb93a5"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/visual-qa/postcss/audit136-137/fixture-assets.json",
+      "bytes": 498,
+      "sha256": "4ec2fbfb4586a690109925a1a52dc6371143c75df3d0d2d12ba78f7e2a388877"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/visual-qa/postcss/audit136-137/playwright.config.mjs",
+      "bytes": 2020,
+      "sha256": "0a4fccc1287a808188d1eed465fdb07b588916aff0b09ec82928f499487f1380"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/visual-qa/postcss/audit136-137/results.json",
+      "bytes": 13437,
+      "sha256": "17610ab84284190a0b042aadc78fb442b287688cec30eb5354371c71f35f267b"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/visual-qa/postcss/audit136-137/server-profile.json",
+      "bytes": 1037,
+      "sha256": "e6948c32e8feedaa94300b8398670f391660f53b1213eb7cd26dcfa07e76c0db"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/visual-qa/postcss/shared-ui/execution/captures.txt",
+      "bytes": 638,
+      "sha256": "f7bd4115dcbdc1beb2de34110a84734800b216fb63d828e3163a40461dae6b6b"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/visual-qa/postcss/shared-ui/execution/playwright.txt",
+      "bytes": 2508,
+      "sha256": "b6a0315a46112dc9cba739f29cb4f305166c3345b84b2c31d8b9392d1edab179"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/visual-qa/postcss/shared-ui/playwright.config.mjs",
+      "bytes": 1998,
+      "sha256": "aab7e2a5706a69d09eba30580c8d56cd34e114beed63c05b2bff15bbde07be7f"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/visual-qa/postcss/shared-ui/results.json",
+      "bytes": 27283,
+      "sha256": "ade3b59022deb0defeaf13dd9a0c027567a817b4c9919c1b689e326edff12283"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/visual-qa/postcss/shared-ui/server-profile.json",
+      "bytes": 983,
+      "sha256": "9b2febd10b9c1cca1e0260a30ca908d4854ef75639f27e62e6e5a7f7100ac78f"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/visual-qa/postcss/shared-ui/supplementary-captures/captures.json",
+      "bytes": 2045,
+      "sha256": "db9a55f37bb7ae3b8cf524805811cac7086e7ae289d973031dd381e1969dafa6"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/visual-qa/postcss/shared-ui/supplementary-captures/compact-dark/form-dialog.png",
+      "bytes": 77143,
+      "sha256": "f20a9765539e986e139b7f0499d28c94345f32a36bc3117f3be025209c8ad975"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/visual-qa/postcss/shared-ui/supplementary-captures/compact-dark/shell-table.png",
+      "bytes": 43809,
+      "sha256": "8acb6c685e9270e0b3a29d96a85902e3753b3ca72678ad8f719f47956eebc3fb"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/visual-qa/postcss/shared-ui/supplementary-captures/compact-light/form-dialog.png",
+      "bytes": 71038,
+      "sha256": "7b9a59e9a1879b8aafb641456a9de732279ab095173d56c2067bb0c6fb8103c6"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/visual-qa/postcss/shared-ui/supplementary-captures/compact-light/shell-table.png",
+      "bytes": 44845,
+      "sha256": "e93937293c4ebbde8cb05b5337751f1c4f92df2babc11488d5b67be6c94fb9a7"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/visual-qa/postcss/shared-ui/supplementary-captures/hd-dark/form-dialog.png",
+      "bytes": 119385,
+      "sha256": "af0a955a7b61d6ec4ecf572ad1924038c0bfabac66fc74f4fb1a8aac227ad211"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/visual-qa/postcss/shared-ui/supplementary-captures/hd-dark/shell-table.png",
+      "bytes": 56110,
+      "sha256": "91ab4d7fb5eb240f72ad8cbc668edfa7cafed652754c72bc349d42fa887b541d"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/visual-qa/postcss/shared-ui/supplementary-captures/hd-light/form-dialog.png",
+      "bytes": 110445,
+      "sha256": "94e3ead3e57bf88649aac10d3af2597ae2af4bac0501a87f9967f9098549cbc1"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/visual-qa/postcss/shared-ui/supplementary-captures/hd-light/shell-table.png",
+      "bytes": 56327,
+      "sha256": "d51842f94fec42f48d9e91fe90bfd09f59ed40dbf79e152f550b2ec5e9240028"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/visual-qa/postcss/shared-ui/supplementary-captures/server/server-profile.json",
+      "bytes": 1047,
+      "sha256": "5a3df26c5f10017bfe55a2b5200abc3ec367edcef20785ee2cfe9bc9dcafb1cb"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/visual-qa/postcss/virtualization/execution/inventory.txt",
+      "bytes": 1173,
+      "sha256": "75297f3a5a0ed00cff9dc1b2dfbd051a4caccb1ac8703119775a5b704abecde5"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/visual-qa/postcss/virtualization/execution/playwright.txt",
+      "bytes": 2111,
+      "sha256": "4915484c508991ff0e3a9a2a2fa011830d31082b193c903aa1ec269a9dd7b9d5"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/visual-qa/postcss/virtualization/fixture-assets.json",
+      "bytes": 498,
+      "sha256": "67700f5cf94c12683d14564ca108b8c7ba17c9f9ad2f239579668da51a8acb43"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/visual-qa/postcss/virtualization/inventory.json",
+      "bytes": 12846,
+      "sha256": "2a9431046b828d32449b9f6478b307777f6910bdd4513b2569f2447cf757bdcf"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/visual-qa/postcss/virtualization/playwright.config.mjs",
+      "bytes": 2034,
+      "sha256": "2f131b3afb75019899183568529b38398578e5eb6975ad89f24bdd5182529d1e"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/visual-qa/postcss/virtualization/playwright.inventory.config.mjs",
+      "bytes": 2046,
+      "sha256": "a038dce384f49304fd077f6d3b2d90226a3c84722ddaa21c27e99e268fb98977"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/visual-qa/postcss/virtualization/results.json",
+      "bytes": 123490,
+      "sha256": "2add1d67284431f88c4626e1ce8b88743dc059e1c615618fd4d112ede8bcb36b"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/visual-qa/postcss/virtualization/server-profile.json",
+      "bytes": 1047,
+      "sha256": "b541a38ea18fcffd5bff1fde94c35486fdc8eaa3632b622db71fd87f7e18b090"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/visual-qa/summary.json",
+      "bytes": 18089,
+      "sha256": "f5c7265fe0011715c82902d855aa944f9b765470284e5c700ce259d87a84b447"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/visual-qa/vite/audit119-126/execution/playwright.txt",
+      "bytes": 4710,
+      "sha256": "2c77fc51bd211f49260e6b1707dbfbaa2be21430aef7711ae5f4931cf2d258b5"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/visual-qa/vite/audit119-126/fixture-assets.json",
+      "bytes": 498,
+      "sha256": "7068a0ff292cf939c691521d4e0b7f460280da854cbaf9a0458a277dc4c988b2"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/visual-qa/vite/audit119-126/playwright.config.mjs",
+      "bytes": 2005,
+      "sha256": "edacf9db13a11f7df9ee992bbbd01dfc0155a39ea0a0c100fc700d6ebf3f517e"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/visual-qa/vite/audit119-126/results.json",
+      "bytes": 223717,
+      "sha256": "8d4bbedba500ba612fd44e97b2def1df3086a24e5c95d24ed5fa0298437f33df"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/visual-qa/vite/audit119-126/server-profile.json",
+      "bytes": 959,
+      "sha256": "9fccf35943ecfb9f801b8e261b19558fd3550c60020505668eb657aaeceb9030"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/visual-qa/vite/audit136-137/execution/playwright.txt",
+      "bytes": 2326,
+      "sha256": "3220ab33c30da998fb01721476fa1df1b9f23c437f811e0cedc53fb99866b0c8"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/visual-qa/vite/audit136-137/fixture-assets.json",
+      "bytes": 498,
+      "sha256": "4ec2fbfb4586a690109925a1a52dc6371143c75df3d0d2d12ba78f7e2a388877"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/visual-qa/vite/audit136-137/playwright.config.mjs",
+      "bytes": 2005,
+      "sha256": "e097807d7d714582e1c52751d84c8b609f73a7cadfc215057c7cbae37502bc06"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/visual-qa/vite/audit136-137/results.json",
+      "bytes": 13404,
+      "sha256": "381f4e988ca393802c254e449aea832a535a104c3080f81b85e3b58331a0c870"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/visual-qa/vite/audit136-137/server-profile.json",
+      "bytes": 959,
+      "sha256": "b83de144a2fe756ccc57be543512541f2115d3d6b7d09fcf8b89653178d2ea0b"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/visual-qa/vite/shared-ui/execution/captures.txt",
+      "bytes": 387,
+      "sha256": "10415830428cfe3b09f39c7767288f63419fcbcf1fbb7483f0167035930869ed"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/visual-qa/vite/shared-ui/execution/playwright.txt",
+      "bytes": 2233,
+      "sha256": "49276a11d6a27129f2ec2cd23d0e36df48879c8904a4d92671fa80d961d7d4f9"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/visual-qa/vite/shared-ui/playwright.config.mjs",
+      "bytes": 1983,
+      "sha256": "c129aadccdbce3ee444b78b91d29a28ea49bdc6f84dd3a30b9b9897ee59df30e"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/visual-qa/vite/shared-ui/results.json",
+      "bytes": 27240,
+      "sha256": "b0d66e1f4a5a41e709724ae15c06907dd98e25b756b74d27c8427e08ceb096db"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/visual-qa/vite/shared-ui/server-profile.json",
+      "bytes": 907,
+      "sha256": "27464beac2347df864565d69072c4aa1737179b8ee143590fa0a26be2ec967d7"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/visual-qa/vite/shared-ui/supplementary-captures/captures.json",
+      "bytes": 2042,
+      "sha256": "fef610fa25306304938287317844664d568de582e7c8ddd23300bd3645bec247"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/visual-qa/vite/shared-ui/supplementary-captures/compact-dark/form-dialog.png",
+      "bytes": 77143,
+      "sha256": "f20a9765539e986e139b7f0499d28c94345f32a36bc3117f3be025209c8ad975"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/visual-qa/vite/shared-ui/supplementary-captures/compact-dark/shell-table.png",
+      "bytes": 43809,
+      "sha256": "8acb6c685e9270e0b3a29d96a85902e3753b3ca72678ad8f719f47956eebc3fb"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/visual-qa/vite/shared-ui/supplementary-captures/compact-light/form-dialog.png",
+      "bytes": 71038,
+      "sha256": "7b9a59e9a1879b8aafb641456a9de732279ab095173d56c2067bb0c6fb8103c6"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/visual-qa/vite/shared-ui/supplementary-captures/compact-light/shell-table.png",
+      "bytes": 44845,
+      "sha256": "e93937293c4ebbde8cb05b5337751f1c4f92df2babc11488d5b67be6c94fb9a7"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/visual-qa/vite/shared-ui/supplementary-captures/hd-dark/form-dialog.png",
+      "bytes": 119385,
+      "sha256": "af0a955a7b61d6ec4ecf572ad1924038c0bfabac66fc74f4fb1a8aac227ad211"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/visual-qa/vite/shared-ui/supplementary-captures/hd-dark/shell-table.png",
+      "bytes": 56110,
+      "sha256": "91ab4d7fb5eb240f72ad8cbc668edfa7cafed652754c72bc349d42fa887b541d"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/visual-qa/vite/shared-ui/supplementary-captures/hd-light/form-dialog.png",
+      "bytes": 110445,
+      "sha256": "94e3ead3e57bf88649aac10d3af2597ae2af4bac0501a87f9967f9098549cbc1"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/visual-qa/vite/shared-ui/supplementary-captures/hd-light/shell-table.png",
+      "bytes": 56327,
+      "sha256": "d51842f94fec42f48d9e91fe90bfd09f59ed40dbf79e152f550b2ec5e9240028"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/visual-qa/vite/shared-ui/supplementary-captures/server/server-profile.json",
+      "bytes": 971,
+      "sha256": "cec67bee4c998ec2af21849614220172350aff326d5a6df5f5efd5dcfa9fb72c"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/visual-qa/vite/virtualization/execution/inventory.txt",
+      "bytes": 1173,
+      "sha256": "75297f3a5a0ed00cff9dc1b2dfbd051a4caccb1ac8703119775a5b704abecde5"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/visual-qa/vite/virtualization/execution/playwright.txt",
+      "bytes": 2102,
+      "sha256": "d303cbead25d185c79c2ba4db3f1316a0328abafc673dd10d32806cba4a0cd4c"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/visual-qa/vite/virtualization/fixture-assets.json",
+      "bytes": 498,
+      "sha256": "67700f5cf94c12683d14564ca108b8c7ba17c9f9ad2f239579668da51a8acb43"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/visual-qa/vite/virtualization/inventory.json",
+      "bytes": 12826,
+      "sha256": "01c26b91ea79f4bd457c45904999c7abbbc0f26340ebade94d8d632d487bc29d"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/visual-qa/vite/virtualization/playwright.config.mjs",
+      "bytes": 2019,
+      "sha256": "17e6b92496c302add10e97509af7431c278116144385d34a449b78fe0175f381"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/visual-qa/vite/virtualization/playwright.inventory.config.mjs",
+      "bytes": 2031,
+      "sha256": "008d18e330133f6d9bf8e7201bd1e91d7592b5251983a0ca58da21df3de5dcb4"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/visual-qa/vite/virtualization/results.json",
+      "bytes": 123463,
+      "sha256": "d0e32f1265a1cf2a9d55773f7fbf113864b011d503df1a55fd3d2aa1c5a1d59c"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/visual-qa/vite/virtualization/server-profile.json",
+      "bytes": 969,
+      "sha256": "8f9dc47c4f7385d8551aa1271781d62bf5a2264107ccaea4c8e61a230392d3e6"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/hmr-client.mjs",
+      "bytes": 3552,
+      "sha256": "eff6e560d46ad3fa31ac69d91d1ee8c81b3ab066d51dc4807d9af282075689c0"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/hmr-common.mjs",
+      "bytes": 4937,
+      "sha256": "d517d8b211a9954ae9e0acc4a4970138e0d815de162f1452701f68837a74f8ac"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/hmr-method.md",
+      "bytes": 9157,
+      "sha256": "44edc81fbe3387e8474f8e2a0b440c8755b4059e1017a6147227fa480b3e14c3"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/hmr-session.mjs",
+      "bytes": 15164,
+      "sha256": "da6c8b479ef6b2968fa354d08b186f8d1883348bac5c5d43ffb5a3a94ee620c6"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/integration.mjs",
+      "bytes": 1335,
+      "sha256": "ace560d07d521b7840fe75fc90b7daecd80dac7bfbb895b0e2b895e56c483a05"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/probe-firefox.mjs",
+      "bytes": 936,
+      "sha256": "49ee406801c1412dc31c052864dd66275ba3249a4cde4f35297888e02cc17fde"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/run-builds.mjs",
+      "bytes": 25750,
+      "sha256": "39ad983714ffd6eca336f8c73d5ef5183ae70e22555213325230e0f8b9fefb98"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/run-hmr.mjs",
+      "bytes": 16667,
+      "sha256": "d6c10ad4528fc195a12af1efca0bf5de0c1653de0a7a1f1ea5354666af39a6f2"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/run-visual-qa.mjs",
+      "bytes": 11616,
+      "sha256": "d3441cc7a28190b478052dd5f3928e8baa19ffe9af4d485895c617bff1b6f985"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/ui-server.mjs",
+      "bytes": 4515,
+      "sha256": "44c0903fe6bbafa0cb9f51ecc9c0848128db807788170893ce0763ff2d5321c0"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/ui-suites.mjs",
+      "bytes": 1513,
+      "sha256": "7d1bfddf528db6ffed6705af0c84c153659dc009d386cb0b5b6a080e50fce809"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/verify-series.mjs",
+      "bytes": 16486,
+      "sha256": "a5b529e62ccdf89d8a345be0e83efade8ec4fed3f49a2905bb4afeda1be813bf"
+    }
+  ]
+}

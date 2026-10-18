@@ -1,0 +1,17 @@
+[hmr] starting pair-01-1-postcss
+[hmr] pair-01-1-postcss: PASS
+[hmr] starting pair-01-2-vite
+[hmr] pair-01-2-vite: PASS
+[hmr] starting pair-02-1-vite
+[hmr] pair-02-1-vite: PASS
+[hmr] starting pair-02-2-postcss
+[hmr] pair-02-2-postcss: PASS
+[hmr] starting pair-03-1-vite
+[hmr] pair-03-1-vite: PASS
+[hmr] starting pair-03-2-postcss
+[hmr] pair-03-2-postcss: PASS
+[hmr] starting pair-04-1-postcss
+[hmr] pair-04-1-postcss: PASS
+[hmr] starting pair-04-2-vite
+[hmr] pair-04-2-vite: PASS
+{"passed":true,"sessions":8,"output":"reports/tailwind-integration/hmr-series-local-permission/series.json"}

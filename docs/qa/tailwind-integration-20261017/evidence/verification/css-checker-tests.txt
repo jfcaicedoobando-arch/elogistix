@@ -1,0 +1,20 @@
+Γ£ö node formatting and standalone comments may differ while ordered CSS/associations match (49.0713ms)
+Γ£ö reject changes to rule cascade order (25.5415ms)
+Γ£ö reject changes to declaration cascade order (22.7171ms)
+Γ£ö reject changes to layer ordering (24.1956ms)
+Γ£ö reject changes to property value (23.0035ms)
+Γ£ö reject changes to custom token value (25.7325ms)
+Γ£ö reject changes to important priority (24.0597ms)
+Γ£ö reject changes to property registration (26.2675ms)
+Γ£ö reject changes to comment between value tokens (22.9618ms)
+Γ£ö same CSS cannot hide different chunk-to-stylesheet association (23.7086ms)
+Γ£ö missing metadata or ambiguous chunk origins cannot approve association (35.164ms)
+Γ£ö dangling HTML stylesheet references fail even when CSS bytes match (24.2529ms)
+Γä╣ tests 12
+Γä╣ suites 0
+Γä╣ pass 12
+Γä╣ fail 0
+Γä╣ cancelled 0
+Γä╣ skipped 0
+Γä╣ todo 0
+Γä╣ duration_ms 500.9664

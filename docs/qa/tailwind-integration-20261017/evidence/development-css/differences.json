@@ -1,0 +1,99 @@
+{
+  "byteEquivalent": false,
+  "orderedAstEquivalent": false,
+  "candidateMinusBaselineBytes": -96,
+  "firstOrderedAstDifferences": [
+    {
+      "path": "$/children/3/children/0/selector",
+      "baseline": "*,\n  ::after,\n  ::before,\n  ::backdrop,\n  ::file-selector-button",
+      "candidate": "*, ::after, ::before, ::backdrop, ::file-selector-button"
+    },
+    {
+      "path": "$/children/3/children/1/selector",
+      "baseline": "html,\n  :host",
+      "candidate": "html, :host"
+    },
+    {
+      "path": "$/children/3/children/4/selector",
+      "baseline": "h1,\n  h2,\n  h3,\n  h4,\n  h5,\n  h6",
+      "candidate": "h1, h2, h3, h4, h5, h6"
+    },
+    {
+      "path": "$/children/3/children/6/selector",
+      "baseline": "b,\n  strong",
+      "candidate": "b, strong"
+    },
+    {
+      "path": "$/children/3/children/7/selector",
+      "baseline": "code,\n  kbd,\n  samp,\n  pre",
+      "candidate": "code, kbd, samp, pre"
+    },
+    {
+      "path": "$/children/3/children/9/selector",
+      "baseline": "sub,\n  sup",
+      "candidate": "sub, sup"
+    },
+    {
+      "path": "$/children/3/children/16/selector",
+      "baseline": "ol,\n  ul,\n  menu",
+      "candidate": "ol, ul, menu"
+    },
+    {
+      "path": "$/children/3/children/17/selector",
+      "baseline": "img,\n  svg,\n  video,\n  canvas,\n  audio,\n  iframe,\n  embed,\n  object",
+      "candidate": "img, svg, video, canvas, audio, iframe, embed, object"
+    },
+    {
+      "path": "$/children/3/children/18/selector",
+      "baseline": "img,\n  video",
+      "candidate": "img, video"
+    },
+    {
+      "path": "$/children/3/children/19/selector",
+      "baseline": "button,\n  input,\n  select,\n  optgroup,\n  textarea,\n  ::file-selector-button",
+      "candidate": "button, input, select, optgroup, textarea, ::file-selector-button"
+    },
+    {
+      "path": "$/children/3/children/24/params",
+      "baseline": "(not (-webkit-appearance: -apple-pay-button))  or\n    (contain-intrinsic-size: 1px)",
+      "candidate": "(not (-webkit-appearance: -apple-pay-button))  or (contain-intrinsic-size: 1px)"
+    },
+    {
+      "path": "$/children/3/children/30/selector",
+      "baseline": "::-webkit-datetime-edit,\n  ::-webkit-datetime-edit-year-field,\n  ::-webkit-datetime-edit-month-field,\n  ::-webkit-datetime-edit-day-field,\n  ::-webkit-datetime-edit-hour-field,\n  ::-webkit-datetime-edit-minute-field,\n  ::-webkit-datetime-edit-second-field,\n  ::-webkit-datetime-edit-millisecond-field,\n  ::-webkit-datetime-edit-meridiem-field",
+      "candidate": "::-webkit-datetime-edit, ::-webkit-datetime-edit-year-field, ::-webkit-datetime-edit-month-field, ::-webkit-datetime-edit-day-field, ::-webkit-datetime-edit-hour-field, ::-webkit-datetime-edit-minute-field, ::-webkit-datetime-edit-second-field, ::-webkit-datetime-edit-millisecond-field, ::-webkit-datetime-edit-meridiem-field"
+    },
+    {
+      "path": "$/children/3/children/33/selector",
+      "baseline": "button,\n  input:where([type=\"button\"], [type=\"reset\"], [type=\"submit\"]),\n  ::file-selector-button",
+      "candidate": "button, input:where([type=\"button\"], [type=\"reset\"], [type=\"submit\"]), ::file-selector-button"
+    },
+    {
+      "path": "$/children/3/children/34/selector",
+      "baseline": "::-webkit-inner-spin-button,\n  ::-webkit-outer-spin-button",
+      "candidate": "::-webkit-inner-spin-button, ::-webkit-outer-spin-button"
+    },
+    {
+      "path": "$/children/7/children/2/children/0/value",
+      "baseline": "linear-gradient(to right, hsl(var(--primary-foreground) / 0.15) 1px, transparent 1px),\r\n      linear-gradient(to bottom, hsl(var(--primary-foreground) / 0.15) 1px, transparent 1px)",
+      "candidate": "linear-gradient(to right, hsl(var(--primary-foreground) / 0.15) 1px, transparent 1px), linear-gradient(to bottom, hsl(var(--primary-foreground) / 0.15) 1px, transparent 1px)"
+    },
+    {
+      "path": "$/children/8/children/0/selector",
+      "baseline": "input[type=\"number\"]::-webkit-outer-spin-button,\r\n  input[type=\"number\"]::-webkit-inner-spin-button",
+      "candidate": "input[type=\"number\"]::-webkit-outer-spin-button, input[type=\"number\"]::-webkit-inner-spin-button"
+    }
+  ],
+  "standaloneCommentDifferences": [],
+  "nodeFormattingDifferences": [],
+  "raw": {
+    "firstDifferentCharacter": 2311,
+    "commonSuffixCharacters": 10634,
+    "baselineLine": 72,
+    "candidateLine": 72,
+    "baselineContext": "ation: 150ms;\n    --default-transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);\n    --default-mono-font-family: var(--font-mono);\n  }\n}\n@layer base {\n  *,\n  ::after,\n  ::before,\n  ::backdrop,\n  ::file-selector-button {\n    box-sizing: border-box;\n    margin: 0;\n    padding: 0;\n    border: 0 solid;\n  }\n  html,\n  :host {\n    line-height: 1.5;\n    -webkit-text-size-adjust: 100%;\n    tab-size: 4;\n    font-family: Inter, sans-serif;\n    font-feature-settings: normal;\n    font-variation-settings: normal;\n    -webkit-tap-highlight-color: transparent;\n  }\n  hr {\n    height: 0;\n    color: inherit;\n    border-top-width: 1px;\n  }\n  abbr:where([title]) {\n   ",
+    "candidateContext": "ation: 150ms;\n    --default-transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);\n    --default-mono-font-family: var(--font-mono);\n  }\n}\n@layer base {\n  *, ::after, ::before, ::backdrop, ::file-selector-button {\n    box-sizing: border-box;\n    margin: 0;\n    padding: 0;\n    border: 0 solid;\n  }\n  html, :host {\n    line-height: 1.5;\n    -webkit-text-size-adjust: 100%;\n    tab-size: 4;\n    font-family: Inter, sans-serif;\n    font-feature-settings: normal;\n    font-variation-settings: normal;\n    -webkit-tap-highlight-color: transparent;\n  }\n  hr {\n    height: 0;\n    color: inherit;\n    border-top-width: 1px;\n  }\n  abbr:where([title]) {\n    -webkit-t",
+    "baselineDifferentSpanCharacters": 222972,
+    "candidateDifferentSpanCharacters": 222876
+  }
+}

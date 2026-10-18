@@ -1,0 +1,24 @@
+[WebServer] [vite:react-swc] We recommend switching to `@vitejs/plugin-react` for improved performance as no swc plugins are used. More information at https://vite.dev/rolldown
+[WebServer] 5:36:56 PM [vite] (client) [optimizer] scanning dependencies...
+
+Running 16 tests using 1 worker
+
+[WebServer] 5:37:06 PM [vite] (client) [optimizer] bundling dependencies...
+  ok  1 [hd-light] › e2e\visual\specs\shared-ui.spec.ts:15:1 › shared shell and table (15.1s)
+  ok  2 [hd-light] › e2e\visual\specs\shared-ui.spec.ts:20:1 › shared form dialog (1.8s)
+  ok  3 [hd-light] › e2e\visual\specs\shared-ui.spec.ts:26:1 › empty, error and loading remain distinct (4.9s)
+  ok  4 [hd-light] › e2e\visual\specs\shared-ui.spec.ts:38:1 › height breakpoint and CSS variable sidebar widths retain their v3 behavior (1.8s)
+  ok  5 [hd-dark] › e2e\visual\specs\shared-ui.spec.ts:15:1 › shared shell and table (1.4s)
+  ok  6 [hd-dark] › e2e\visual\specs\shared-ui.spec.ts:20:1 › shared form dialog (1.4s)
+  ok  7 [hd-dark] › e2e\visual\specs\shared-ui.spec.ts:26:1 › empty, error and loading remain distinct (5.1s)
+  ok  8 [hd-dark] › e2e\visual\specs\shared-ui.spec.ts:38:1 › height breakpoint and CSS variable sidebar widths retain their v3 behavior (1.7s)
+  ok  9 [compact-light] › e2e\visual\specs\shared-ui.spec.ts:15:1 › shared shell and table (1.3s)
+  ok 10 [compact-light] › e2e\visual\specs\shared-ui.spec.ts:20:1 › shared form dialog (1.4s)
+  ok 11 [compact-light] › e2e\visual\specs\shared-ui.spec.ts:26:1 › empty, error and loading remain distinct (4.9s)
+  ok 12 [compact-light] › e2e\visual\specs\shared-ui.spec.ts:38:1 › height breakpoint and CSS variable sidebar widths retain their v3 behavior (1.7s)
+  ok 13 [compact-dark] › e2e\visual\specs\shared-ui.spec.ts:15:1 › shared shell and table (1.4s)
+  ok 14 [compact-dark] › e2e\visual\specs\shared-ui.spec.ts:20:1 › shared form dialog (1.4s)
+  ok 15 [compact-dark] › e2e\visual\specs\shared-ui.spec.ts:26:1 › empty, error and loading remain distinct (4.7s)
+  ok 16 [compact-dark] › e2e\visual\specs\shared-ui.spec.ts:38:1 › height breakpoint and CSS variable sidebar widths retain their v3 behavior (1.7s)
+
+  16 passed (58.0s)

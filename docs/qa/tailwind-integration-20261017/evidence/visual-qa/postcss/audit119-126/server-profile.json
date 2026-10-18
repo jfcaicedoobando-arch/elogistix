@@ -1,0 +1,15 @@
+{
+  "suite": "audit119-126",
+  "variant": "postcss",
+  "mode": "production",
+  "cwd": "C:\\Users\\torta\\Documents\\Codex\\2026-10-17\\task-6\\elogistix-tailwind4",
+  "originalConfig": "e2e/visual/audit119-126/vite.config.ts",
+  "originalRoot": "C:\\Users\\torta\\Documents\\Codex\\2026-10-17\\task-6\\elogistix-tailwind4\\e2e\\visual\\audit119-126\\",
+  "originalPostcss": "C:\\Users\\torta\\Documents\\Codex\\2026-10-17\\task-6\\elogistix-tailwind4\\e2e\\visual\\",
+  "experimentalPostcss": "C:\\Users\\torta\\Documents\\Codex\\2026-10-17\\task-6\\elogistix-tailwind4\\e2e\\visual\\",
+  "envDir": false,
+  "cacheDir": "C:\\Users\\torta\\Documents\\Codex\\2026-10-17\\task-6\\elogistix-tailwind4\\reports\\tailwind-integration\\ui-full-20261017\\postcss\\audit119-126\\vite-cache",
+  "outDir": "C:\\Users\\torta\\Documents\\Codex\\2026-10-17\\task-6\\elogistix-tailwind4\\reports\\tailwind-integration\\ui-full-20261017\\postcss\\audit119-126\\compiled-fixture",
+  "origin": "http://127.0.0.1:8096",
+  "freshBuildBeforePreview": true
+}

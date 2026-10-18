@@ -1,0 +1,1 @@
+{"ok":true,"byteEquivalent":true,"cssEquivalent":true,"associationEquivalent":true,"output":"C:\\Users\\torta\\Documents\\Codex\\2026-10-17\\task-6\\elogistix-tailwind4\\reports\\tailwind-integration\\preflight\\css-check.json"}

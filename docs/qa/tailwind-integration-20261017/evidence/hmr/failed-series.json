@@ -1,0 +1,633 @@
+{
+  "schemaVersion": 1,
+  "startedAt": "2026-10-17T23:38:32.847Z",
+  "passed": false,
+  "command": [
+    "node.exe",
+    "docs/qa/tailwind-integration-20261017/run-hmr.mjs",
+    "--output",
+    "reports/tailwind-integration/hmr-series"
+  ],
+  "baseSha": "0552b3648c041dd19e027bb1370a5277501b59dc",
+  "node": "v24.22.0",
+  "versions": {
+    "vite": "8.3.4",
+    "tailwindcss": "4.3.3",
+    "@tailwindcss/postcss": "4.3.3",
+    "@tailwindcss/vite": "4.3.3",
+    "postcss": "8.5.29",
+    "@playwright/test": "1.64.0"
+  },
+  "design": {
+    "pairedOrder": [
+      [
+        "postcss",
+        "vite"
+      ],
+      [
+        "vite",
+        "postcss"
+      ],
+      [
+        "vite",
+        "postcss"
+      ],
+      [
+        "postcss",
+        "vite"
+      ]
+    ],
+    "warmupsDiscardedPerSession": 2,
+    "measuredEditsPerSession": 5,
+    "expectedMeasuredEditsPerVariant": 20,
+    "metric": "Parent Node performance.now immediately before writeFile(probe.css) through receipt of child IPC ACK after Playwright-verified computed style/geometry following two RAF. Includes file write, watcher, Tailwind/Vite processing, routed HTTP/WS, layout/frames, Playwright and IPC. No clock-domain subtraction.",
+    "cache": "Fresh child Node/Vite/browser/context and unique Vite cacheDir every session. No OS filesystem cache, thermal, antivirus or machine-load reset. Two warmup edits discarded, fully retained in raw data.",
+    "scope": "Synthetic unlayered ID rule appended to probe.css importing real src/index.css; no product writes and no new utility classes. No application JS/backend/auth. Dependency optimizer disabled in both arms. CSS dev source maps remain false."
+  },
+  "officialApis": [
+    "https://vite.dev/guide/api-javascript#createserver",
+    "https://vite.dev/guide/api-hmr#hot-on-event-cb",
+    "https://vite.dev/guide/api-hmr#hot-send-event-data",
+    "https://vite.dev/config/dep-optimization-options#optimizedeps-nodiscovery",
+    "https://playwright.dev/docs/api/class-browsercontext#browser-context-route",
+    "https://playwright.dev/docs/api/class-route#route-fetch",
+    "https://playwright.dev/docs/api/class-websocketroute#web-socket-route-connect-to-server"
+  ],
+  "sourceBefore": {
+    "sha256": "d9c24a37c1b6d1a9971d35574062c1217586f270bcb9742265f37180f22834dd",
+    "fileCount": 6278,
+    "bytes": 22459201,
+    "core": [
+      {
+        "path": "bun.lock",
+        "bytes": 326446,
+        "sha256": "5d561ebf702e13a9a34670f267a870d0acb6ec21d7c6c67af3665607a983a682"
+      },
+      {
+        "path": "package.json",
+        "bytes": 8099,
+        "sha256": "227be9436f2a0be543938ffd9852aa060effef7bc0979980e48a2d20341968d3"
+      },
+      {
+        "path": "postcss.config.js",
+        "bytes": 75,
+        "sha256": "9dd791ad9c0238477d84d4e06c0ccfceebe8dcb37dcdb581f5682c5ad42fc77e"
+      },
+      {
+        "path": "src/index.css",
+        "bytes": 130,
+        "sha256": "2145da531b9725faad9b0e5123c789a37c0397a88317295ab713cd1273778423"
+      },
+      {
+        "path": "src/styles.css",
+        "bytes": 13263,
+        "sha256": "40a70d2a6ea3b4b119987151d1dd415fdfb591c028a327ca59f1fccf820f3a32"
+      },
+      {
+        "path": "src/tailwind-compat.css",
+        "bytes": 2981,
+        "sha256": "fa8d0a3a2b2fefe00782d3e06ec48d6ab03d90170c7c77eccd7962c4adbd5397"
+      },
+      {
+        "path": "tailwind.config.ts",
+        "bytes": 10116,
+        "sha256": "b603ef20c62b6e42e284c52bd9dd7fe1679986c63345f8d4bfe3918e02e5fbb4"
+      },
+      {
+        "path": "vite.config.ts",
+        "bytes": 6674,
+        "sha256": "3fcf047dd7b4328dd1fc3137857f19fd3ab8621d3769d9152275823aa25a95fa"
+      }
+    ]
+  },
+  "harnessBefore": {
+    "run-hmr.mjs": "d6c10ad4528fc195a12af1efca0bf5de0c1653de0a7a1f1ea5354666af39a6f2",
+    "hmr-common.mjs": "d517d8b211a9954ae9e0acc4a4970138e0d815de162f1452701f68837a74f8ac",
+    "hmr-client.mjs": "eff6e560d46ad3fa31ac69d91d1ee8c81b3ab066d51dc4807d9af282075689c0",
+    "hmr-session.mjs": "a6fb0a6b3c683de96b8dee9c41489a1d4460db392fe3db2898a055d113601b52",
+    "integration.mjs": "ace560d07d521b7840fe75fc90b7daecd80dac7bfbb895b0e2b895e56c483a05"
+  },
+  "sessions": [
+    {
+      "id": "pair-01-1-postcss",
+      "pair": 1,
+      "position": 1,
+      "variant": "postcss",
+      "startedAt": "2026-10-17T23:38:34.440Z",
+      "passed": false,
+      "fixture": {
+        "directory": "reports/tailwind-integration/hmr-series/pair-01-1-postcss/fixture",
+        "htmlSha256": "f49570b7699330a407f087d48dda974c0056356e53aab8f8296a4967568159f4",
+        "moduleSha256": "eff6e560d46ad3fa31ac69d91d1ee8c81b3ab066d51dc4807d9af282075689c0",
+        "initialProbeSha256": "881bf53fa0ee6581687f739bdc3db6bb013ebaeeb6127f5d24cb0b4c636c7122",
+        "sourceImport": "src/index.css",
+        "probeAfterEditsSha256": "881bf53fa0ee6581687f739bdc3db6bb013ebaeeb6127f5d24cb0b4c636c7122",
+        "restoredProbeSha256": "881bf53fa0ee6581687f739bdc3db6bb013ebaeeb6127f5d24cb0b4c636c7122",
+        "restored": true
+      },
+      "updates": [],
+      "errors": [
+        "Error: Browser console error: WebSocket connection to 'ws://127.0.0.1:55730/?token=[redacted]' failed: Error in connection establishment: net::ERR_BLOCKED_BY_LOCAL_NETWORK_ACCESS_CHECKS\n    at check (file:///C:/Users/torta/Documents/Codex/2026-10-17/task-6/elogistix-tailwind4/docs/qa/tailwind-integration-20261017/run-hmr.mjs:45:24)\n    at ChildProcess.<anonymous> (file:///C:/Users/torta/Documents/Codex/2026-10-17/task-6/elogistix-tailwind4/docs/qa/tailwind-integration-20261017/run-hmr.mjs:52:5)\n    at ChildProcess.emit (node:events:514:28)\n    at emit (node:internal/child_process:1020:14)\n    at process.processTicksAndRejections (node:internal/process/task_queues:91:21)",
+        "Final report: Timeout: finished"
+      ],
+      "sourceBefore": {
+        "sha256": "d9c24a37c1b6d1a9971d35574062c1217586f270bcb9742265f37180f22834dd",
+        "fileCount": 6278,
+        "bytes": 22459201,
+        "core": [
+          {
+            "path": "bun.lock",
+            "bytes": 326446,
+            "sha256": "5d561ebf702e13a9a34670f267a870d0acb6ec21d7c6c67af3665607a983a682"
+          },
+          {
+            "path": "package.json",
+            "bytes": 8099,
+            "sha256": "227be9436f2a0be543938ffd9852aa060effef7bc0979980e48a2d20341968d3"
+          },
+          {
+            "path": "postcss.config.js",
+            "bytes": 75,
+            "sha256": "9dd791ad9c0238477d84d4e06c0ccfceebe8dcb37dcdb581f5682c5ad42fc77e"
+          },
+          {
+            "path": "src/index.css",
+            "bytes": 130,
+            "sha256": "2145da531b9725faad9b0e5123c789a37c0397a88317295ab713cd1273778423"
+          },
+          {
+            "path": "src/styles.css",
+            "bytes": 13263,
+            "sha256": "40a70d2a6ea3b4b119987151d1dd415fdfb591c028a327ca59f1fccf820f3a32"
+          },
+          {
+            "path": "src/tailwind-compat.css",
+            "bytes": 2981,
+            "sha256": "fa8d0a3a2b2fefe00782d3e06ec48d6ab03d90170c7c77eccd7962c4adbd5397"
+          },
+          {
+            "path": "tailwind.config.ts",
+            "bytes": 10116,
+            "sha256": "b603ef20c62b6e42e284c52bd9dd7fe1679986c63345f8d4bfe3918e02e5fbb4"
+          },
+          {
+            "path": "vite.config.ts",
+            "bytes": 6674,
+            "sha256": "3fcf047dd7b4328dd1fc3137857f19fd3ab8621d3769d9152275823aa25a95fa"
+          }
+        ]
+      },
+      "process": {
+        "node": "v24.22.0",
+        "newProcess": true,
+        "freshVite": true,
+        "freshBrowser": true,
+        "freshContext": true,
+        "cacheDir": "reports/tailwind-integration/hmr-series/pair-01-1-postcss/cache/vite",
+        "environment": "isolatedEnvironment(development); no .env files",
+        "optimizerDisabledBothArms": true,
+        "pid": 31284,
+        "exit": {
+          "code": 1,
+          "signal": null
+        },
+        "close": {
+          "code": 1,
+          "signal": null
+        }
+      },
+      "child": {
+        "id": "pair-01-1-postcss",
+        "variant": "postcss",
+        "node": "v24.22.0",
+        "startedAt": "2026-10-17T23:38:36.431Z",
+        "passed": false,
+        "failures": [
+          "Browser console error: WebSocket connection to 'ws://127.0.0.1:55730/?token=[redacted]' failed: Error in connection establishment: net::ERR_BLOCKED_BY_LOCAL_NETWORK_ACCESS_CHECKS",
+          "Unexpected WebSocket blocked",
+          "Browser console error: [vite] failed to connect to websocket.\nyour current setup:\n  (browser) 127.0.0.1:55730/ <--[HTTP]--> 127.0.0.1:0/ (server)\n  (browser) 127.0.0.1:55730/ <--[WebSocket (failing)]--> 127.0.0.1:0/ (server)\nCheck out your Vite / network configuration and https://vite.dev/config/server-options.html#server-hmr .",
+          "Browser console error: [vite] TypeError: Cannot read properties of undefined (reading 'send')\n    at Object.send (http://127.0.0.1:55730/@vite/client:251:7)\n    at Object.send (http://127.0.0.1:55730/@vite/client:983:16)\n    at Object.send (http://127.0.0.1:55730/@vite/client:110:21)\n    at Object.send (http://127.0.0.1:55730/@vite/client:190:30)",
+          "page.waitForFunction: Timeout 30000ms exceeded.\n    at C:\\Users\\torta\\Documents\\Codex\\2026-10-17\\task-6\\elogistix-tailwind4\\docs\\qa\\tailwind-integration-20261017\\hmr-session.mjs:210:14"
+        ],
+        "hmrEvents": [],
+        "watcherEvents": [],
+        "cssResponses": [
+          {
+            "path": "/reports/tailwind-integration/hmr-series/pair-01-1-postcss/fixture/probe.css",
+            "status": 200,
+            "childPerformanceMs": 11573.6248,
+            "bytes": 235917,
+            "sha256": "a81eb7cbdadb3e882c4274d61ed919a30fcda14e3255e3df393bdd485a99616f",
+            "step": 0
+          }
+        ],
+        "requests": [
+          {
+            "path": "/reports/tailwind-integration/hmr-series/pair-01-1-postcss/fixture/index.html",
+            "method": "GET",
+            "status": 200,
+            "childPerformanceMs": 2765.8094
+          },
+          {
+            "path": "/reports/tailwind-integration/hmr-series/pair-01-1-postcss/fixture/probe.mjs",
+            "method": "GET",
+            "status": 200,
+            "childPerformanceMs": 4429.5928
+          },
+          {
+            "path": "/@vite/client",
+            "method": "GET",
+            "status": 200,
+            "childPerformanceMs": 5276.8153
+          },
+          {
+            "path": "/node_modules/vite/dist/client/env.mjs",
+            "method": "GET",
+            "status": 200,
+            "childPerformanceMs": 7288.7721
+          },
+          {
+            "path": "/reports/tailwind-integration/hmr-series/pair-01-1-postcss/fixture/probe.css",
+            "method": "GET",
+            "status": 200,
+            "childPerformanceMs": 11558.8258
+          }
+        ],
+        "blockedRequests": [],
+        "sockets": [
+          {
+            "origin": "ws://127.0.0.1:55730",
+            "pathname": "/",
+            "protocol": "vite-hmr",
+            "connectedMessage": false,
+            "childPerformanceMs": 11635.9713
+          }
+        ],
+        "blockedSockets": [
+          {
+            "origin": "ws://127.0.0.1:0",
+            "pathname": "/"
+          }
+        ],
+        "pageerrors": [],
+        "consoleErrors": [
+          "WebSocket connection to 'ws://127.0.0.1:55730/?token=[redacted]' failed: Error in connection establishment: net::ERR_BLOCKED_BY_LOCAL_NETWORK_ACCESS_CHECKS",
+          "[vite] failed to connect to websocket.\nyour current setup:\n  (browser) 127.0.0.1:55730/ <--[HTTP]--> 127.0.0.1:0/ (server)\n  (browser) 127.0.0.1:55730/ <--[WebSocket (failing)]--> 127.0.0.1:0/ (server)\nCheck out your Vite / network configuration and https://vite.dev/config/server-options.html#server-hmr .",
+          "[vite] TypeError: Cannot read properties of undefined (reading 'send')\n    at Object.send (http://127.0.0.1:55730/@vite/client:251:7)\n    at Object.send (http://127.0.0.1:55730/@vite/client:983:16)\n    at Object.send (http://127.0.0.1:55730/@vite/client:110:21)\n    at Object.send (http://127.0.0.1:55730/@vite/client:190:30)"
+        ],
+        "navigationsAfterReady": [],
+        "viteErrors": [],
+        "viteWarnings": [],
+        "verifications": [],
+        "config": {
+          "configFile": false,
+          "envDir": false,
+          "root": ".",
+          "mode": "development",
+          "css": {
+            "devSourcemap": false,
+            "postcss": "implicit root postcss.config.js discovery"
+          },
+          "integrationPlugins": [],
+          "resolvedPlugins": [
+            "vite:optimized-deps",
+            "vite:watch-package-data",
+            "vite:pre-alias",
+            "alias",
+            "vite:modulepreload-polyfill",
+            "vite:bundled-dev-client-imports",
+            "vite:resolve-dev",
+            "vite:resolve-builtin:get-environment",
+            "vite:resolve-builtin",
+            "vite:html-inline-proxy",
+            "vite:css",
+            "builtin:oxc-runtime",
+            "vite:oxc",
+            "builtin:vite-json",
+            "vite:wasm-helper",
+            "vite:worker",
+            "vite:asset",
+            "vite:define",
+            "vite:css-post",
+            "vite:build-html",
+            "vite:worker-import-meta-url",
+            "vite:asset-import-meta-url",
+            "vite:dynamic-import-vars",
+            "vite:import-glob",
+            "vite:client-inject",
+            "vite:css-analysis",
+            "vite:import-analysis"
+          ],
+          "cacheDir": "reports/tailwind-integration/hmr-series/pair-01-1-postcss/cache/vite",
+          "cacheExistedBeforeStartup": false,
+          "optimizeDeps": {
+            "entries": [],
+            "noDiscovery": true,
+            "include": []
+          },
+          "server": {
+            "host": "127.0.0.1",
+            "port": 55730,
+            "requestedPort": 0,
+            "strictPort": true,
+            "hmrOverlay": false,
+            "watcher": "Vite defaults, root config not loaded; fixture outside cacheDir"
+          },
+          "fixture": "reports/tailwind-integration/hmr-series/pair-01-1-postcss/fixture/index.html",
+          "probe": "reports/tailwind-integration/hmr-series/pair-01-1-postcss/fixture/probe.css",
+          "networkInstrumentation": "HTTP GET/HEAD exact origin via route.fetch(maxRedirects:0)+fulfill; every other HTTP/WS blocked before connection; browser HTTP cache disabled by routing"
+        },
+        "playwrightBrowserRevision": "1248",
+        "chromium": "156.0.8078.4",
+        "finishedAt": "2026-10-17T23:39:17.957Z"
+      },
+      "messages": [
+        {
+          "type": "fatal",
+          "error": "Browser console error: WebSocket connection to 'ws://127.0.0.1:55730/?token=[redacted]' failed: Error in connection establishment: net::ERR_BLOCKED_BY_LOCAL_NETWORK_ACCESS_CHECKS",
+          "parentReceiptPerformanceMs": 17023.8447
+        },
+        {
+          "type": "fatal",
+          "error": "Unexpected WebSocket blocked",
+          "parentReceiptPerformanceMs": 17029.858
+        },
+        {
+          "type": "fatal",
+          "error": "Browser console error: [vite] failed to connect to websocket.\nyour current setup:\n  (browser) 127.0.0.1:55730/ <--[HTTP]--> 127.0.0.1:0/ (server)\n  (browser) 127.0.0.1:55730/ <--[WebSocket (failing)]--> 127.0.0.1:0/ (server)\nCheck out your Vite / network configuration and https://vite.dev/config/server-options.html#server-hmr .",
+          "parentReceiptPerformanceMs": 17034.6403
+        },
+        {
+          "type": "fatal",
+          "error": "Browser console error: [vite] TypeError: Cannot read properties of undefined (reading 'send')\n    at Object.send (http://127.0.0.1:55730/@vite/client:251:7)\n    at Object.send (http://127.0.0.1:55730/@vite/client:983:16)\n    at Object.send (http://127.0.0.1:55730/@vite/client:110:21)\n    at Object.send (http://127.0.0.1:55730/@vite/client:190:30)",
+          "parentReceiptPerformanceMs": 17852.1871
+        },
+        {
+          "type": "fatal",
+          "error": "page.waitForFunction: Timeout 30000ms exceeded.\n    at C:\\Users\\torta\\Documents\\Codex\\2026-10-17\\task-6\\elogistix-tailwind4\\docs\\qa\\tailwind-integration-20261017\\hmr-session.mjs:210:14",
+          "parentReceiptPerformanceMs": 44956.7663
+        },
+        {
+          "type": "finished",
+          "report": {
+            "id": "pair-01-1-postcss",
+            "variant": "postcss",
+            "node": "v24.22.0",
+            "startedAt": "2026-10-17T23:38:36.431Z",
+            "passed": false,
+            "failures": [
+              "Browser console error: WebSocket connection to 'ws://127.0.0.1:55730/?token=[redacted]' failed: Error in connection establishment: net::ERR_BLOCKED_BY_LOCAL_NETWORK_ACCESS_CHECKS",
+              "Unexpected WebSocket blocked",
+              "Browser console error: [vite] failed to connect to websocket.\nyour current setup:\n  (browser) 127.0.0.1:55730/ <--[HTTP]--> 127.0.0.1:0/ (server)\n  (browser) 127.0.0.1:55730/ <--[WebSocket (failing)]--> 127.0.0.1:0/ (server)\nCheck out your Vite / network configuration and https://vite.dev/config/server-options.html#server-hmr .",
+              "Browser console error: [vite] TypeError: Cannot read properties of undefined (reading 'send')\n    at Object.send (http://127.0.0.1:55730/@vite/client:251:7)\n    at Object.send (http://127.0.0.1:55730/@vite/client:983:16)\n    at Object.send (http://127.0.0.1:55730/@vite/client:110:21)\n    at Object.send (http://127.0.0.1:55730/@vite/client:190:30)",
+              "page.waitForFunction: Timeout 30000ms exceeded.\n    at C:\\Users\\torta\\Documents\\Codex\\2026-10-17\\task-6\\elogistix-tailwind4\\docs\\qa\\tailwind-integration-20261017\\hmr-session.mjs:210:14"
+            ],
+            "hmrEvents": [],
+            "watcherEvents": [],
+            "cssResponses": [
+              {
+                "path": "/reports/tailwind-integration/hmr-series/pair-01-1-postcss/fixture/probe.css",
+                "status": 200,
+                "childPerformanceMs": 11573.6248,
+                "bytes": 235917,
+                "sha256": "a81eb7cbdadb3e882c4274d61ed919a30fcda14e3255e3df393bdd485a99616f",
+                "step": 0
+              }
+            ],
+            "requests": [
+              {
+                "path": "/reports/tailwind-integration/hmr-series/pair-01-1-postcss/fixture/index.html",
+                "method": "GET",
+                "status": 200,
+                "childPerformanceMs": 2765.8094
+              },
+              {
+                "path": "/reports/tailwind-integration/hmr-series/pair-01-1-postcss/fixture/probe.mjs",
+                "method": "GET",
+                "status": 200,
+                "childPerformanceMs": 4429.5928
+              },
+              {
+                "path": "/@vite/client",
+                "method": "GET",
+                "status": 200,
+                "childPerformanceMs": 5276.8153
+              },
+              {
+                "path": "/node_modules/vite/dist/client/env.mjs",
+                "method": "GET",
+                "status": 200,
+                "childPerformanceMs": 7288.7721
+              },
+              {
+                "path": "/reports/tailwind-integration/hmr-series/pair-01-1-postcss/fixture/probe.css",
+                "method": "GET",
+                "status": 200,
+                "childPerformanceMs": 11558.8258
+              }
+            ],
+            "blockedRequests": [],
+            "sockets": [
+              {
+                "origin": "ws://127.0.0.1:55730",
+                "pathname": "/",
+                "protocol": "vite-hmr",
+                "connectedMessage": false,
+                "childPerformanceMs": 11635.9713
+              }
+            ],
+            "blockedSockets": [
+              {
+                "origin": "ws://127.0.0.1:0",
+                "pathname": "/"
+              }
+            ],
+            "pageerrors": [],
+            "consoleErrors": [
+              "WebSocket connection to 'ws://127.0.0.1:55730/?token=[redacted]' failed: Error in connection establishment: net::ERR_BLOCKED_BY_LOCAL_NETWORK_ACCESS_CHECKS",
+              "[vite] failed to connect to websocket.\nyour current setup:\n  (browser) 127.0.0.1:55730/ <--[HTTP]--> 127.0.0.1:0/ (server)\n  (browser) 127.0.0.1:55730/ <--[WebSocket (failing)]--> 127.0.0.1:0/ (server)\nCheck out your Vite / network configuration and https://vite.dev/config/server-options.html#server-hmr .",
+              "[vite] TypeError: Cannot read properties of undefined (reading 'send')\n    at Object.send (http://127.0.0.1:55730/@vite/client:251:7)\n    at Object.send (http://127.0.0.1:55730/@vite/client:983:16)\n    at Object.send (http://127.0.0.1:55730/@vite/client:110:21)\n    at Object.send (http://127.0.0.1:55730/@vite/client:190:30)"
+            ],
+            "navigationsAfterReady": [],
+            "viteErrors": [],
+            "viteWarnings": [],
+            "verifications": [],
+            "config": {
+              "configFile": false,
+              "envDir": false,
+              "root": ".",
+              "mode": "development",
+              "css": {
+                "devSourcemap": false,
+                "postcss": "implicit root postcss.config.js discovery"
+              },
+              "integrationPlugins": [],
+              "resolvedPlugins": [
+                "vite:optimized-deps",
+                "vite:watch-package-data",
+                "vite:pre-alias",
+                "alias",
+                "vite:modulepreload-polyfill",
+                "vite:bundled-dev-client-imports",
+                "vite:resolve-dev",
+                "vite:resolve-builtin:get-environment",
+                "vite:resolve-builtin",
+                "vite:html-inline-proxy",
+                "vite:css",
+                "builtin:oxc-runtime",
+                "vite:oxc",
+                "builtin:vite-json",
+                "vite:wasm-helper",
+                "vite:worker",
+                "vite:asset",
+                "vite:define",
+                "vite:css-post",
+                "vite:build-html",
+                "vite:worker-import-meta-url",
+                "vite:asset-import-meta-url",
+                "vite:dynamic-import-vars",
+                "vite:import-glob",
+                "vite:client-inject",
+                "vite:css-analysis",
+                "vite:import-analysis"
+              ],
+              "cacheDir": "reports/tailwind-integration/hmr-series/pair-01-1-postcss/cache/vite",
+              "cacheExistedBeforeStartup": false,
+              "optimizeDeps": {
+                "entries": [],
+                "noDiscovery": true,
+                "include": []
+              },
+              "server": {
+                "host": "127.0.0.1",
+                "port": 55730,
+                "requestedPort": 0,
+                "strictPort": true,
+                "hmrOverlay": false,
+                "watcher": "Vite defaults, root config not loaded; fixture outside cacheDir"
+              },
+              "fixture": "reports/tailwind-integration/hmr-series/pair-01-1-postcss/fixture/index.html",
+              "probe": "reports/tailwind-integration/hmr-series/pair-01-1-postcss/fixture/probe.css",
+              "networkInstrumentation": "HTTP GET/HEAD exact origin via route.fetch(maxRedirects:0)+fulfill; every other HTTP/WS blocked before connection; browser HTTP cache disabled by routing"
+            },
+            "playwrightBrowserRevision": "1248",
+            "chromium": "156.0.8078.4",
+            "finishedAt": "2026-10-17T23:39:17.957Z"
+          },
+          "parentReceiptPerformanceMs": 45230.5801
+        }
+      ],
+      "sourceAfter": {
+        "sha256": "d9c24a37c1b6d1a9971d35574062c1217586f270bcb9742265f37180f22834dd",
+        "fileCount": 6278,
+        "bytes": 22459201,
+        "core": [
+          {
+            "path": "bun.lock",
+            "bytes": 326446,
+            "sha256": "5d561ebf702e13a9a34670f267a870d0acb6ec21d7c6c67af3665607a983a682"
+          },
+          {
+            "path": "package.json",
+            "bytes": 8099,
+            "sha256": "227be9436f2a0be543938ffd9852aa060effef7bc0979980e48a2d20341968d3"
+          },
+          {
+            "path": "postcss.config.js",
+            "bytes": 75,
+            "sha256": "9dd791ad9c0238477d84d4e06c0ccfceebe8dcb37dcdb581f5682c5ad42fc77e"
+          },
+          {
+            "path": "src/index.css",
+            "bytes": 130,
+            "sha256": "2145da531b9725faad9b0e5123c789a37c0397a88317295ab713cd1273778423"
+          },
+          {
+            "path": "src/styles.css",
+            "bytes": 13263,
+            "sha256": "40a70d2a6ea3b4b119987151d1dd415fdfb591c028a327ca59f1fccf820f3a32"
+          },
+          {
+            "path": "src/tailwind-compat.css",
+            "bytes": 2981,
+            "sha256": "fa8d0a3a2b2fefe00782d3e06ec48d6ab03d90170c7c77eccd7962c4adbd5397"
+          },
+          {
+            "path": "tailwind.config.ts",
+            "bytes": 10116,
+            "sha256": "b603ef20c62b6e42e284c52bd9dd7fe1679986c63345f8d4bfe3918e02e5fbb4"
+          },
+          {
+            "path": "vite.config.ts",
+            "bytes": 6674,
+            "sha256": "3fcf047dd7b4328dd1fc3137857f19fd3ab8621d3769d9152275823aa25a95fa"
+          }
+        ]
+      },
+      "sourceUnchanged": true,
+      "productFilesWritten": [],
+      "statisticsMs": null,
+      "finishedAt": "2026-10-17T23:39:20.003Z"
+    }
+  ],
+  "errors": [
+    "AssertionError [ERR_ASSERTION]: Session failed: pair-01-1-postcss; raw results retained, series stops\n    at file:///C:/Users/torta/Documents/Codex/2026-10-17/task-6/elogistix-tailwind4/docs/qa/tailwind-integration-20261017/run-hmr.mjs:253:7"
+  ],
+  "sourceAfter": {
+    "sha256": "d9c24a37c1b6d1a9971d35574062c1217586f270bcb9742265f37180f22834dd",
+    "fileCount": 6278,
+    "bytes": 22459201,
+    "core": [
+      {
+        "path": "bun.lock",
+        "bytes": 326446,
+        "sha256": "5d561ebf702e13a9a34670f267a870d0acb6ec21d7c6c67af3665607a983a682"
+      },
+      {
+        "path": "package.json",
+        "bytes": 8099,
+        "sha256": "227be9436f2a0be543938ffd9852aa060effef7bc0979980e48a2d20341968d3"
+      },
+      {
+        "path": "postcss.config.js",
+        "bytes": 75,
+        "sha256": "9dd791ad9c0238477d84d4e06c0ccfceebe8dcb37dcdb581f5682c5ad42fc77e"
+      },
+      {
+        "path": "src/index.css",
+        "bytes": 130,
+        "sha256": "2145da531b9725faad9b0e5123c789a37c0397a88317295ab713cd1273778423"
+      },
+      {
+        "path": "src/styles.css",
+        "bytes": 13263,
+        "sha256": "40a70d2a6ea3b4b119987151d1dd415fdfb591c028a327ca59f1fccf820f3a32"
+      },
+      {
+        "path": "src/tailwind-compat.css",
+        "bytes": 2981,
+        "sha256": "fa8d0a3a2b2fefe00782d3e06ec48d6ab03d90170c7c77eccd7962c4adbd5397"
+      },
+      {
+        "path": "tailwind.config.ts",
+        "bytes": 10116,
+        "sha256": "b603ef20c62b6e42e284c52bd9dd7fe1679986c63345f8d4bfe3918e02e5fbb4"
+      },
+      {
+        "path": "vite.config.ts",
+        "bytes": 6674,
+        "sha256": "3fcf047dd7b4328dd1fc3137857f19fd3ab8621d3769d9152275823aa25a95fa"
+      }
+    ]
+  },
+  "harnessAfter": {
+    "run-hmr.mjs": "d6c10ad4528fc195a12af1efca0bf5de0c1653de0a7a1f1ea5354666af39a6f2",
+    "hmr-common.mjs": "d517d8b211a9954ae9e0acc4a4970138e0d815de162f1452701f68837a74f8ac",
+    "hmr-client.mjs": "eff6e560d46ad3fa31ac69d91d1ee8c81b3ab066d51dc4807d9af282075689c0",
+    "hmr-session.mjs": "a6fb0a6b3c683de96b8dee9c41489a1d4460db392fe3db2898a055d113601b52",
+    "integration.mjs": "ace560d07d521b7840fe75fc90b7daecd80dac7bfbb895b0e2b895e56c483a05"
+  },
+  "sourceUnchanged": true,
+  "harnessUnchanged": true,
+  "finishedAt": "2026-10-17T23:39:21.907Z"
+}

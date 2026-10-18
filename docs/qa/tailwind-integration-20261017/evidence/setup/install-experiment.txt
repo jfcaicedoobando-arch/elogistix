@@ -1,0 +1,6 @@
+[1.06ms] ".env"
+bun install v1.4.0 (34cbb9a40)
+
++ xlsx@https://cdn.sheetjs.com/xlsx-0.20.3/xlsx-0.20.3.tgz
+
+1 package installed [319.00ms]

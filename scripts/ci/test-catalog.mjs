@@ -78,6 +78,10 @@ export function classifyFiles(files, guards, sqlSupport) {
       if (file === 'scripts/ci/selector148/tests/profile.test.cjs') lane = 'node-selector148';
       else if (file === 'scripts/ci/post-deploy-smoke.test.mjs') lane = 'node-post-deploy-smoke';
       else if (file === 'scripts/ci/package-scripts.test.mjs') lane = 'node-package-scripts';
+      else if (file === 'docs/qa/tailwind-integration-20261017/compare-css.test.mjs') {
+        lane = 'node-tailwind-integration'; mode = 'manual';
+        reason = 'Local Tailwind experiment checker: node --test docs/qa/tailwind-integration-20261017/compare-css.test.mjs; not executed by ordinary CI.';
+      }
       // Review-only protocol/source tests have an automatic offline CI runner.
       else if (file === 'docs/review/demo-flow-20261015/rpc/rpc-attempt.test.mjs'
         || file === 'scripts/ci/demo-review-offline.test.mjs') lane = 'node-demo-review';
