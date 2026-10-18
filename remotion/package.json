@@ -3,24 +3,28 @@
   "module": "index.ts",
   "type": "module",
   "private": true,
-  "devDependencies": {
-    "@types/bun": "latest",
-    "@types/react": "^19.2.17",
-    "@types/react-dom": "^19.2.3"
+  "packageManager": "bun@1.4.0",
+  "scripts": {
+    "typecheck": "tsc --noEmit -p tsconfig.json",
+    "versions": "remotion versions",
+    "verify": "node node_modules/@remotion/cli/remotion-cli.js versions && node scripts/verify-remotion.mjs",
+    "render": "node scripts/render-remotion.mjs"
   },
-  "peerDependencies": {
+  "devDependencies": {
+    "@types/react": "18.3.31",
+    "@types/react-dom": "18.3.7",
     "typescript": "5.8.3"
   },
   "dependencies": {
-    "@remotion/bundler": "^4.0.488",
-    "@remotion/cli": "^4.0.488",
-    "@remotion/compositor-linux-x64-gnu": "^4.0.488",
-    "@remotion/compositor-linux-x64-musl": "^4.0.488",
-    "@remotion/google-fonts": "^4.0.488",
-    "@remotion/renderer": "^4.0.488",
-    "@remotion/transitions": "^4.0.488",
-    "react": "18",
-    "react-dom": "18",
-    "remotion": "^4.0.488"
+    "@remotion/bundler": "4.0.488",
+    "@remotion/cli": "4.0.488",
+    "@remotion/compositor-linux-x64-gnu": "4.0.488",
+    "@remotion/compositor-linux-x64-musl": "4.0.488",
+    "@remotion/google-fonts": "4.0.488",
+    "@remotion/renderer": "4.0.488",
+    "@remotion/transitions": "4.0.488",
+    "react": "18.3.1",
+    "react-dom": "18.3.1",
+    "remotion": "4.0.488"
   }
 }
