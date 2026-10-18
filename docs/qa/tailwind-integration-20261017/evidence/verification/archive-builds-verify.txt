@@ -1,0 +1,1 @@
+{"status":"verified","archive":"C:\\Users\\torta\\Documents\\Codex\\2026-10-17\\task-6\\elogistix-tailwind4\\docs\\qa\\tailwind-integration-20261017\\evidence\\build-series","files":89,"manifestSha256":"771cebb3ed133bed2df81b562bed2852132ae50a1df77fa1a84e7df9d7dd3af4","fullProductBundlesArchived":false}

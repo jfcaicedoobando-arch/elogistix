@@ -1,0 +1,29 @@
+{
+  "baseSha": "0552b3648c041dd19e027bb1370a5277501b59dc",
+  "node": "v24.22.0",
+  "bun": "1.4.0",
+  "installationExcludedFromTimers": true,
+  "commands": [
+    {
+      "command": "bun install --frozen-lockfile --ignore-scripts",
+      "exitCode": 0,
+      "log": "install-base.txt",
+      "state": "baseline lock before adding plugin"
+    },
+    {
+      "command": "bun add --dev --exact --ignore-scripts @tailwindcss/vite@4.3.3",
+      "exitCode": 0,
+      "log": "add-plugin.txt"
+    },
+    {
+      "command": "bun install --frozen-lockfile --ignore-scripts",
+      "exitCode": 0,
+      "log": "install-experiment.txt",
+      "state": "experiment lock"
+    }
+  ],
+  "existingLockResolutionsChanged": [],
+  "addedPackage": "@tailwindcss/vite@4.3.3",
+  "evidence": "dependency-diff.json",
+  "environment": "Workspace-local Bun cache/TEMP; .env public file loaded only by Bun install; lifecycle scripts disabled. Build/HMR/QA workers use allowlisted environment, envDir=false and synthetic public backend values."
+}

@@ -1,0 +1,549 @@
+{
+  "schemaVersion": 1,
+  "sourceRoot": "reports/tailwind-integration/ui-full-20261017",
+  "archiveRoot": "docs/qa/tailwind-integration-20261017/evidence/visual-qa",
+  "sourceSha": "0552b3648c041dd19e027bb1370a5277501b59dc",
+  "sourceLockSha256": "5d561ebf702e13a9a34670f267a870d0acb6ec21d7c6c67af3665607a983a682",
+  "sourceStarted": "2026-10-17T23:30:11.215Z",
+  "sourceFinished": "2026-10-17T23:38:15.104Z",
+  "originalSummaryPassed": false,
+  "qaStatus": "INCOMPLETE: 48 passed plus 4 Firefox BLOCKED/NOT_RUN per arm; this is not full GUI approval.",
+  "counts": {
+    "postcss": {
+      "expected": 52,
+      "passed": 48,
+      "blocked": 4,
+      "skipped": 0,
+      "unexpected": 0,
+      "flaky": 0,
+      "fullQaPassed": false
+    },
+    "vite": {
+      "expected": 52,
+      "passed": 48,
+      "blocked": 4,
+      "skipped": 0,
+      "unexpected": 0,
+      "flaky": 0,
+      "fullQaPassed": false
+    }
+  },
+  "screenshotComparisons": {
+    "expected": 8,
+    "observed": 8,
+    "allByteIdentical": true
+  },
+  "nonApplicable": [
+    {
+      "arm": "postcss",
+      "suite": "shared-ui",
+      "omitted": "fixture-assets.json",
+      "reason": "Original shared suite preserves development mode; no compiled fixture asset inventory was produced."
+    },
+    {
+      "arm": "vite",
+      "suite": "shared-ui",
+      "omitted": "fixture-assets.json",
+      "reason": "Original shared suite preserves development mode; no compiled fixture asset inventory was produced."
+    }
+  ],
+  "exclusions": [
+    "compiled-fixture bundles",
+    "vite-cache",
+    "HTML reports",
+    "test-results trees and traces",
+    "source tests and canonical snapshots (unchanged, not archived here)"
+  ],
+  "fileCount": 69,
+  "totalBytes": 2042429,
+  "archiver": {
+    "pathRelativeToRepository": "docs/qa/tailwind-integration-20261017/archive-visual-qa.mjs",
+    "sha256": "2b8a359222c5514b950678566a3203fe61eb614441a896d1601363877279a42d"
+  },
+  "manifestNotSelfHashed": true,
+  "files": [
+    {
+      "originalPath": "reports/tailwind-integration/ui-full-20261017/firefox-preflight.log",
+      "archivedPath": "docs/qa/tailwind-integration-20261017/evidence/visual-qa/execution/firefox-preflight.txt",
+      "role": "original-log-renamed-byte-exact",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "originalPath": "reports/tailwind-integration/ui-full-20261017/firefox-preflight.json",
+      "archivedPath": "docs/qa/tailwind-integration-20261017/evidence/visual-qa/firefox-preflight.json",
+      "role": "blocked-browser-preflight",
+      "sha256": "fee6f7031c6aac293b782950b08cba9fa3b2353cc5488b23e818be17c1fb4839",
+      "bytes": 776
+    },
+    {
+      "originalPath": "reports/tailwind-integration/ui-full-20261017/postcss/audit119-126/playwright.log",
+      "archivedPath": "docs/qa/tailwind-integration-20261017/evidence/visual-qa/postcss/audit119-126/execution/playwright.txt",
+      "role": "original-log-renamed-byte-exact",
+      "sha256": "c05b3b9af403cbb6286d8a0a7ae614057942d0dd7ac81e06a5cfa944e8256549",
+      "bytes": 4719
+    },
+    {
+      "originalPath": "reports/tailwind-integration/ui-full-20261017/postcss/audit119-126/fixture-assets.json",
+      "archivedPath": "docs/qa/tailwind-integration-20261017/evidence/visual-qa/postcss/audit119-126/fixture-assets.json",
+      "role": "original-built-asset-inventory-no-bundles",
+      "sha256": "7068a0ff292cf939c691521d4e0b7f460280da854cbaf9a0458a277dc4c988b2",
+      "bytes": 498
+    },
+    {
+      "originalPath": "reports/tailwind-integration/ui-full-20261017/postcss/audit119-126/playwright.config.mjs",
+      "archivedPath": "docs/qa/tailwind-integration-20261017/evidence/visual-qa/postcss/audit119-126/playwright.config.mjs",
+      "role": "original-generated-config-wrapper",
+      "sha256": "f4a17554218de37c889d497db5879e6a787c2def16926f25f4d0d9db657224b6",
+      "bytes": 2020
+    },
+    {
+      "originalPath": "reports/tailwind-integration/ui-full-20261017/postcss/audit119-126/results.json",
+      "archivedPath": "docs/qa/tailwind-integration-20261017/evidence/visual-qa/postcss/audit119-126/results.json",
+      "role": "original-playwright-results",
+      "sha256": "444cca93d06186c2ceac35802eaa13431249a964c8bb3fb67323fe591810eb74",
+      "bytes": 224087
+    },
+    {
+      "originalPath": "reports/tailwind-integration/ui-full-20261017/postcss/audit119-126/server-profile.json",
+      "archivedPath": "docs/qa/tailwind-integration-20261017/evidence/visual-qa/postcss/audit119-126/server-profile.json",
+      "role": "original-server-profile",
+      "sha256": "a95d0b2c5af560a63890996bf37e9c3b669d4894d8e3a9356a00ff9d5fd9526d",
+      "bytes": 1037
+    },
+    {
+      "originalPath": "reports/tailwind-integration/ui-full-20261017/postcss/audit136-137/playwright.log",
+      "archivedPath": "docs/qa/tailwind-integration-20261017/evidence/visual-qa/postcss/audit136-137/execution/playwright.txt",
+      "role": "original-log-renamed-byte-exact",
+      "sha256": "e216f2b38b19ee045f01a24efd2f0f338210f525eb819c882b2f38d71fdb93a5",
+      "bytes": 2335
+    },
+    {
+      "originalPath": "reports/tailwind-integration/ui-full-20261017/postcss/audit136-137/fixture-assets.json",
+      "archivedPath": "docs/qa/tailwind-integration-20261017/evidence/visual-qa/postcss/audit136-137/fixture-assets.json",
+      "role": "original-built-asset-inventory-no-bundles",
+      "sha256": "4ec2fbfb4586a690109925a1a52dc6371143c75df3d0d2d12ba78f7e2a388877",
+      "bytes": 498
+    },
+    {
+      "originalPath": "reports/tailwind-integration/ui-full-20261017/postcss/audit136-137/playwright.config.mjs",
+      "archivedPath": "docs/qa/tailwind-integration-20261017/evidence/visual-qa/postcss/audit136-137/playwright.config.mjs",
+      "role": "original-generated-config-wrapper",
+      "sha256": "0a4fccc1287a808188d1eed465fdb07b588916aff0b09ec82928f499487f1380",
+      "bytes": 2020
+    },
+    {
+      "originalPath": "reports/tailwind-integration/ui-full-20261017/postcss/audit136-137/results.json",
+      "archivedPath": "docs/qa/tailwind-integration-20261017/evidence/visual-qa/postcss/audit136-137/results.json",
+      "role": "original-playwright-results",
+      "sha256": "17610ab84284190a0b042aadc78fb442b287688cec30eb5354371c71f35f267b",
+      "bytes": 13437
+    },
+    {
+      "originalPath": "reports/tailwind-integration/ui-full-20261017/postcss/audit136-137/server-profile.json",
+      "archivedPath": "docs/qa/tailwind-integration-20261017/evidence/visual-qa/postcss/audit136-137/server-profile.json",
+      "role": "original-server-profile",
+      "sha256": "e6948c32e8feedaa94300b8398670f391660f53b1213eb7cd26dcfa07e76c0db",
+      "bytes": 1037
+    },
+    {
+      "originalPath": "reports/tailwind-integration/ui-full-20261017/postcss/shared-ui/captures.log",
+      "archivedPath": "docs/qa/tailwind-integration-20261017/evidence/visual-qa/postcss/shared-ui/execution/captures.txt",
+      "role": "original-log-renamed-byte-exact",
+      "sha256": "f7bd4115dcbdc1beb2de34110a84734800b216fb63d828e3163a40461dae6b6b",
+      "bytes": 638
+    },
+    {
+      "originalPath": "reports/tailwind-integration/ui-full-20261017/postcss/shared-ui/playwright.log",
+      "archivedPath": "docs/qa/tailwind-integration-20261017/evidence/visual-qa/postcss/shared-ui/execution/playwright.txt",
+      "role": "original-log-renamed-byte-exact",
+      "sha256": "b6a0315a46112dc9cba739f29cb4f305166c3345b84b2c31d8b9392d1edab179",
+      "bytes": 2508
+    },
+    {
+      "originalPath": "reports/tailwind-integration/ui-full-20261017/postcss/shared-ui/playwright.config.mjs",
+      "archivedPath": "docs/qa/tailwind-integration-20261017/evidence/visual-qa/postcss/shared-ui/playwright.config.mjs",
+      "role": "original-generated-config-wrapper",
+      "sha256": "aab7e2a5706a69d09eba30580c8d56cd34e114beed63c05b2bff15bbde07be7f",
+      "bytes": 1998
+    },
+    {
+      "originalPath": "reports/tailwind-integration/ui-full-20261017/postcss/shared-ui/results.json",
+      "archivedPath": "docs/qa/tailwind-integration-20261017/evidence/visual-qa/postcss/shared-ui/results.json",
+      "role": "original-playwright-results",
+      "sha256": "ade3b59022deb0defeaf13dd9a0c027567a817b4c9919c1b689e326edff12283",
+      "bytes": 27283
+    },
+    {
+      "originalPath": "reports/tailwind-integration/ui-full-20261017/postcss/shared-ui/server-profile.json",
+      "archivedPath": "docs/qa/tailwind-integration-20261017/evidence/visual-qa/postcss/shared-ui/server-profile.json",
+      "role": "original-server-profile",
+      "sha256": "9b2febd10b9c1cca1e0260a30ca908d4854ef75639f27e62e6e5a7f7100ac78f",
+      "bytes": 983
+    },
+    {
+      "originalPath": "reports/tailwind-integration/ui-full-20261017/postcss/shared-ui/supplementary-captures/captures.json",
+      "archivedPath": "docs/qa/tailwind-integration-20261017/evidence/visual-qa/postcss/shared-ui/supplementary-captures/captures.json",
+      "role": "original-supplementary-capture-manifest",
+      "sha256": "db9a55f37bb7ae3b8cf524805811cac7086e7ae289d973031dd381e1969dafa6",
+      "bytes": 2045
+    },
+    {
+      "originalPath": "reports/tailwind-integration/ui-full-20261017/postcss/shared-ui/supplementary-captures/compact-dark/form-dialog.png",
+      "archivedPath": "docs/qa/tailwind-integration-20261017/evidence/visual-qa/postcss/shared-ui/supplementary-captures/compact-dark/form-dialog.png",
+      "role": "original-supplementary-png",
+      "sha256": "f20a9765539e986e139b7f0499d28c94345f32a36bc3117f3be025209c8ad975",
+      "bytes": 77143
+    },
+    {
+      "originalPath": "reports/tailwind-integration/ui-full-20261017/postcss/shared-ui/supplementary-captures/compact-dark/shell-table.png",
+      "archivedPath": "docs/qa/tailwind-integration-20261017/evidence/visual-qa/postcss/shared-ui/supplementary-captures/compact-dark/shell-table.png",
+      "role": "original-supplementary-png",
+      "sha256": "8acb6c685e9270e0b3a29d96a85902e3753b3ca72678ad8f719f47956eebc3fb",
+      "bytes": 43809
+    },
+    {
+      "originalPath": "reports/tailwind-integration/ui-full-20261017/postcss/shared-ui/supplementary-captures/compact-light/form-dialog.png",
+      "archivedPath": "docs/qa/tailwind-integration-20261017/evidence/visual-qa/postcss/shared-ui/supplementary-captures/compact-light/form-dialog.png",
+      "role": "original-supplementary-png",
+      "sha256": "7b9a59e9a1879b8aafb641456a9de732279ab095173d56c2067bb0c6fb8103c6",
+      "bytes": 71038
+    },
+    {
+      "originalPath": "reports/tailwind-integration/ui-full-20261017/postcss/shared-ui/supplementary-captures/compact-light/shell-table.png",
+      "archivedPath": "docs/qa/tailwind-integration-20261017/evidence/visual-qa/postcss/shared-ui/supplementary-captures/compact-light/shell-table.png",
+      "role": "original-supplementary-png",
+      "sha256": "e93937293c4ebbde8cb05b5337751f1c4f92df2babc11488d5b67be6c94fb9a7",
+      "bytes": 44845
+    },
+    {
+      "originalPath": "reports/tailwind-integration/ui-full-20261017/postcss/shared-ui/supplementary-captures/hd-dark/form-dialog.png",
+      "archivedPath": "docs/qa/tailwind-integration-20261017/evidence/visual-qa/postcss/shared-ui/supplementary-captures/hd-dark/form-dialog.png",
+      "role": "original-supplementary-png",
+      "sha256": "af0a955a7b61d6ec4ecf572ad1924038c0bfabac66fc74f4fb1a8aac227ad211",
+      "bytes": 119385
+    },
+    {
+      "originalPath": "reports/tailwind-integration/ui-full-20261017/postcss/shared-ui/supplementary-captures/hd-dark/shell-table.png",
+      "archivedPath": "docs/qa/tailwind-integration-20261017/evidence/visual-qa/postcss/shared-ui/supplementary-captures/hd-dark/shell-table.png",
+      "role": "original-supplementary-png",
+      "sha256": "91ab4d7fb5eb240f72ad8cbc668edfa7cafed652754c72bc349d42fa887b541d",
+      "bytes": 56110
+    },
+    {
+      "originalPath": "reports/tailwind-integration/ui-full-20261017/postcss/shared-ui/supplementary-captures/hd-light/form-dialog.png",
+      "archivedPath": "docs/qa/tailwind-integration-20261017/evidence/visual-qa/postcss/shared-ui/supplementary-captures/hd-light/form-dialog.png",
+      "role": "original-supplementary-png",
+      "sha256": "94e3ead3e57bf88649aac10d3af2597ae2af4bac0501a87f9967f9098549cbc1",
+      "bytes": 110445
+    },
+    {
+      "originalPath": "reports/tailwind-integration/ui-full-20261017/postcss/shared-ui/supplementary-captures/hd-light/shell-table.png",
+      "archivedPath": "docs/qa/tailwind-integration-20261017/evidence/visual-qa/postcss/shared-ui/supplementary-captures/hd-light/shell-table.png",
+      "role": "original-supplementary-png",
+      "sha256": "d51842f94fec42f48d9e91fe90bfd09f59ed40dbf79e152f550b2ec5e9240028",
+      "bytes": 56327
+    },
+    {
+      "originalPath": "reports/tailwind-integration/ui-full-20261017/postcss/shared-ui/supplementary-captures/server/server-profile.json",
+      "archivedPath": "docs/qa/tailwind-integration-20261017/evidence/visual-qa/postcss/shared-ui/supplementary-captures/server/server-profile.json",
+      "role": "original-capture-server-profile-no-cache",
+      "sha256": "5a3df26c5f10017bfe55a2b5200abc3ec367edcef20785ee2cfe9bc9dcafb1cb",
+      "bytes": 1047
+    },
+    {
+      "originalPath": "reports/tailwind-integration/ui-full-20261017/postcss/virtualization/inventory.log",
+      "archivedPath": "docs/qa/tailwind-integration-20261017/evidence/visual-qa/postcss/virtualization/execution/inventory.txt",
+      "role": "original-log-renamed-byte-exact",
+      "sha256": "75297f3a5a0ed00cff9dc1b2dfbd051a4caccb1ac8703119775a5b704abecde5",
+      "bytes": 1173
+    },
+    {
+      "originalPath": "reports/tailwind-integration/ui-full-20261017/postcss/virtualization/playwright.log",
+      "archivedPath": "docs/qa/tailwind-integration-20261017/evidence/visual-qa/postcss/virtualization/execution/playwright.txt",
+      "role": "original-log-renamed-byte-exact",
+      "sha256": "4915484c508991ff0e3a9a2a2fa011830d31082b193c903aa1ec269a9dd7b9d5",
+      "bytes": 2111
+    },
+    {
+      "originalPath": "reports/tailwind-integration/ui-full-20261017/postcss/virtualization/fixture-assets.json",
+      "archivedPath": "docs/qa/tailwind-integration-20261017/evidence/visual-qa/postcss/virtualization/fixture-assets.json",
+      "role": "original-built-asset-inventory-no-bundles",
+      "sha256": "67700f5cf94c12683d14564ca108b8c7ba17c9f9ad2f239579668da51a8acb43",
+      "bytes": 498
+    },
+    {
+      "originalPath": "reports/tailwind-integration/ui-full-20261017/postcss/virtualization/inventory.json",
+      "archivedPath": "docs/qa/tailwind-integration-20261017/evidence/visual-qa/postcss/virtualization/inventory.json",
+      "role": "full-original-project-inventory",
+      "sha256": "2a9431046b828d32449b9f6478b307777f6910bdd4513b2569f2447cf757bdcf",
+      "bytes": 12846
+    },
+    {
+      "originalPath": "reports/tailwind-integration/ui-full-20261017/postcss/virtualization/playwright.config.mjs",
+      "archivedPath": "docs/qa/tailwind-integration-20261017/evidence/visual-qa/postcss/virtualization/playwright.config.mjs",
+      "role": "original-generated-config-wrapper",
+      "sha256": "2f131b3afb75019899183568529b38398578e5eb6975ad89f24bdd5182529d1e",
+      "bytes": 2034
+    },
+    {
+      "originalPath": "reports/tailwind-integration/ui-full-20261017/postcss/virtualization/playwright.inventory.config.mjs",
+      "archivedPath": "docs/qa/tailwind-integration-20261017/evidence/visual-qa/postcss/virtualization/playwright.inventory.config.mjs",
+      "role": "original-generated-inventory-wrapper",
+      "sha256": "a038dce384f49304fd077f6d3b2d90226a3c84722ddaa21c27e99e268fb98977",
+      "bytes": 2046
+    },
+    {
+      "originalPath": "reports/tailwind-integration/ui-full-20261017/postcss/virtualization/results.json",
+      "archivedPath": "docs/qa/tailwind-integration-20261017/evidence/visual-qa/postcss/virtualization/results.json",
+      "role": "original-playwright-results",
+      "sha256": "2add1d67284431f88c4626e1ce8b88743dc059e1c615618fd4d112ede8bcb36b",
+      "bytes": 123490
+    },
+    {
+      "originalPath": "reports/tailwind-integration/ui-full-20261017/postcss/virtualization/server-profile.json",
+      "archivedPath": "docs/qa/tailwind-integration-20261017/evidence/visual-qa/postcss/virtualization/server-profile.json",
+      "role": "original-server-profile",
+      "sha256": "b541a38ea18fcffd5bff1fde94c35486fdc8eaa3632b622db71fd87f7e18b090",
+      "bytes": 1047
+    },
+    {
+      "originalPath": "reports/tailwind-integration/ui-full-20261017/summary.json",
+      "archivedPath": "docs/qa/tailwind-integration-20261017/evidence/visual-qa/summary.json",
+      "role": "original-summary-unchanged",
+      "sha256": "f5c7265fe0011715c82902d855aa944f9b765470284e5c700ce259d87a84b447",
+      "bytes": 18089
+    },
+    {
+      "originalPath": "reports/tailwind-integration/ui-full-20261017/vite/audit119-126/playwright.log",
+      "archivedPath": "docs/qa/tailwind-integration-20261017/evidence/visual-qa/vite/audit119-126/execution/playwright.txt",
+      "role": "original-log-renamed-byte-exact",
+      "sha256": "2c77fc51bd211f49260e6b1707dbfbaa2be21430aef7711ae5f4931cf2d258b5",
+      "bytes": 4710
+    },
+    {
+      "originalPath": "reports/tailwind-integration/ui-full-20261017/vite/audit119-126/fixture-assets.json",
+      "archivedPath": "docs/qa/tailwind-integration-20261017/evidence/visual-qa/vite/audit119-126/fixture-assets.json",
+      "role": "original-built-asset-inventory-no-bundles",
+      "sha256": "7068a0ff292cf939c691521d4e0b7f460280da854cbaf9a0458a277dc4c988b2",
+      "bytes": 498
+    },
+    {
+      "originalPath": "reports/tailwind-integration/ui-full-20261017/vite/audit119-126/playwright.config.mjs",
+      "archivedPath": "docs/qa/tailwind-integration-20261017/evidence/visual-qa/vite/audit119-126/playwright.config.mjs",
+      "role": "original-generated-config-wrapper",
+      "sha256": "edacf9db13a11f7df9ee992bbbd01dfc0155a39ea0a0c100fc700d6ebf3f517e",
+      "bytes": 2005
+    },
+    {
+      "originalPath": "reports/tailwind-integration/ui-full-20261017/vite/audit119-126/results.json",
+      "archivedPath": "docs/qa/tailwind-integration-20261017/evidence/visual-qa/vite/audit119-126/results.json",
+      "role": "original-playwright-results",
+      "sha256": "8d4bbedba500ba612fd44e97b2def1df3086a24e5c95d24ed5fa0298437f33df",
+      "bytes": 223717
+    },
+    {
+      "originalPath": "reports/tailwind-integration/ui-full-20261017/vite/audit119-126/server-profile.json",
+      "archivedPath": "docs/qa/tailwind-integration-20261017/evidence/visual-qa/vite/audit119-126/server-profile.json",
+      "role": "original-server-profile",
+      "sha256": "9fccf35943ecfb9f801b8e261b19558fd3550c60020505668eb657aaeceb9030",
+      "bytes": 959
+    },
+    {
+      "originalPath": "reports/tailwind-integration/ui-full-20261017/vite/audit136-137/playwright.log",
+      "archivedPath": "docs/qa/tailwind-integration-20261017/evidence/visual-qa/vite/audit136-137/execution/playwright.txt",
+      "role": "original-log-renamed-byte-exact",
+      "sha256": "3220ab33c30da998fb01721476fa1df1b9f23c437f811e0cedc53fb99866b0c8",
+      "bytes": 2326
+    },
+    {
+      "originalPath": "reports/tailwind-integration/ui-full-20261017/vite/audit136-137/fixture-assets.json",
+      "archivedPath": "docs/qa/tailwind-integration-20261017/evidence/visual-qa/vite/audit136-137/fixture-assets.json",
+      "role": "original-built-asset-inventory-no-bundles",
+      "sha256": "4ec2fbfb4586a690109925a1a52dc6371143c75df3d0d2d12ba78f7e2a388877",
+      "bytes": 498
+    },
+    {
+      "originalPath": "reports/tailwind-integration/ui-full-20261017/vite/audit136-137/playwright.config.mjs",
+      "archivedPath": "docs/qa/tailwind-integration-20261017/evidence/visual-qa/vite/audit136-137/playwright.config.mjs",
+      "role": "original-generated-config-wrapper",
+      "sha256": "e097807d7d714582e1c52751d84c8b609f73a7cadfc215057c7cbae37502bc06",
+      "bytes": 2005
+    },
+    {
+      "originalPath": "reports/tailwind-integration/ui-full-20261017/vite/audit136-137/results.json",
+      "archivedPath": "docs/qa/tailwind-integration-20261017/evidence/visual-qa/vite/audit136-137/results.json",
+      "role": "original-playwright-results",
+      "sha256": "381f4e988ca393802c254e449aea832a535a104c3080f81b85e3b58331a0c870",
+      "bytes": 13404
+    },
+    {
+      "originalPath": "reports/tailwind-integration/ui-full-20261017/vite/audit136-137/server-profile.json",
+      "archivedPath": "docs/qa/tailwind-integration-20261017/evidence/visual-qa/vite/audit136-137/server-profile.json",
+      "role": "original-server-profile",
+      "sha256": "b83de144a2fe756ccc57be543512541f2115d3d6b7d09fcf8b89653178d2ea0b",
+      "bytes": 959
+    },
+    {
+      "originalPath": "reports/tailwind-integration/ui-full-20261017/vite/shared-ui/captures.log",
+      "archivedPath": "docs/qa/tailwind-integration-20261017/evidence/visual-qa/vite/shared-ui/execution/captures.txt",
+      "role": "original-log-renamed-byte-exact",
+      "sha256": "10415830428cfe3b09f39c7767288f63419fcbcf1fbb7483f0167035930869ed",
+      "bytes": 387
+    },
+    {
+      "originalPath": "reports/tailwind-integration/ui-full-20261017/vite/shared-ui/playwright.log",
+      "archivedPath": "docs/qa/tailwind-integration-20261017/evidence/visual-qa/vite/shared-ui/execution/playwright.txt",
+      "role": "original-log-renamed-byte-exact",
+      "sha256": "49276a11d6a27129f2ec2cd23d0e36df48879c8904a4d92671fa80d961d7d4f9",
+      "bytes": 2233
+    },
+    {
+      "originalPath": "reports/tailwind-integration/ui-full-20261017/vite/shared-ui/playwright.config.mjs",
+      "archivedPath": "docs/qa/tailwind-integration-20261017/evidence/visual-qa/vite/shared-ui/playwright.config.mjs",
+      "role": "original-generated-config-wrapper",
+      "sha256": "c129aadccdbce3ee444b78b91d29a28ea49bdc6f84dd3a30b9b9897ee59df30e",
+      "bytes": 1983
+    },
+    {
+      "originalPath": "reports/tailwind-integration/ui-full-20261017/vite/shared-ui/results.json",
+      "archivedPath": "docs/qa/tailwind-integration-20261017/evidence/visual-qa/vite/shared-ui/results.json",
+      "role": "original-playwright-results",
+      "sha256": "b0d66e1f4a5a41e709724ae15c06907dd98e25b756b74d27c8427e08ceb096db",
+      "bytes": 27240
+    },
+    {
+      "originalPath": "reports/tailwind-integration/ui-full-20261017/vite/shared-ui/server-profile.json",
+      "archivedPath": "docs/qa/tailwind-integration-20261017/evidence/visual-qa/vite/shared-ui/server-profile.json",
+      "role": "original-server-profile",
+      "sha256": "27464beac2347df864565d69072c4aa1737179b8ee143590fa0a26be2ec967d7",
+      "bytes": 907
+    },
+    {
+      "originalPath": "reports/tailwind-integration/ui-full-20261017/vite/shared-ui/supplementary-captures/captures.json",
+      "archivedPath": "docs/qa/tailwind-integration-20261017/evidence/visual-qa/vite/shared-ui/supplementary-captures/captures.json",
+      "role": "original-supplementary-capture-manifest",
+      "sha256": "fef610fa25306304938287317844664d568de582e7c8ddd23300bd3645bec247",
+      "bytes": 2042
+    },
+    {
+      "originalPath": "reports/tailwind-integration/ui-full-20261017/vite/shared-ui/supplementary-captures/compact-dark/form-dialog.png",
+      "archivedPath": "docs/qa/tailwind-integration-20261017/evidence/visual-qa/vite/shared-ui/supplementary-captures/compact-dark/form-dialog.png",
+      "role": "original-supplementary-png",
+      "sha256": "f20a9765539e986e139b7f0499d28c94345f32a36bc3117f3be025209c8ad975",
+      "bytes": 77143
+    },
+    {
+      "originalPath": "reports/tailwind-integration/ui-full-20261017/vite/shared-ui/supplementary-captures/compact-dark/shell-table.png",
+      "archivedPath": "docs/qa/tailwind-integration-20261017/evidence/visual-qa/vite/shared-ui/supplementary-captures/compact-dark/shell-table.png",
+      "role": "original-supplementary-png",
+      "sha256": "8acb6c685e9270e0b3a29d96a85902e3753b3ca72678ad8f719f47956eebc3fb",
+      "bytes": 43809
+    },
+    {
+      "originalPath": "reports/tailwind-integration/ui-full-20261017/vite/shared-ui/supplementary-captures/compact-light/form-dialog.png",
+      "archivedPath": "docs/qa/tailwind-integration-20261017/evidence/visual-qa/vite/shared-ui/supplementary-captures/compact-light/form-dialog.png",
+      "role": "original-supplementary-png",
+      "sha256": "7b9a59e9a1879b8aafb641456a9de732279ab095173d56c2067bb0c6fb8103c6",
+      "bytes": 71038
+    },
+    {
+      "originalPath": "reports/tailwind-integration/ui-full-20261017/vite/shared-ui/supplementary-captures/compact-light/shell-table.png",
+      "archivedPath": "docs/qa/tailwind-integration-20261017/evidence/visual-qa/vite/shared-ui/supplementary-captures/compact-light/shell-table.png",
+      "role": "original-supplementary-png",
+      "sha256": "e93937293c4ebbde8cb05b5337751f1c4f92df2babc11488d5b67be6c94fb9a7",
+      "bytes": 44845
+    },
+    {
+      "originalPath": "reports/tailwind-integration/ui-full-20261017/vite/shared-ui/supplementary-captures/hd-dark/form-dialog.png",
+      "archivedPath": "docs/qa/tailwind-integration-20261017/evidence/visual-qa/vite/shared-ui/supplementary-captures/hd-dark/form-dialog.png",
+      "role": "original-supplementary-png",
+      "sha256": "af0a955a7b61d6ec4ecf572ad1924038c0bfabac66fc74f4fb1a8aac227ad211",
+      "bytes": 119385
+    },
+    {
+      "originalPath": "reports/tailwind-integration/ui-full-20261017/vite/shared-ui/supplementary-captures/hd-dark/shell-table.png",
+      "archivedPath": "docs/qa/tailwind-integration-20261017/evidence/visual-qa/vite/shared-ui/supplementary-captures/hd-dark/shell-table.png",
+      "role": "original-supplementary-png",
+      "sha256": "91ab4d7fb5eb240f72ad8cbc668edfa7cafed652754c72bc349d42fa887b541d",
+      "bytes": 56110
+    },
+    {
+      "originalPath": "reports/tailwind-integration/ui-full-20261017/vite/shared-ui/supplementary-captures/hd-light/form-dialog.png",
+      "archivedPath": "docs/qa/tailwind-integration-20261017/evidence/visual-qa/vite/shared-ui/supplementary-captures/hd-light/form-dialog.png",
+      "role": "original-supplementary-png",
+      "sha256": "94e3ead3e57bf88649aac10d3af2597ae2af4bac0501a87f9967f9098549cbc1",
+      "bytes": 110445
+    },
+    {
+      "originalPath": "reports/tailwind-integration/ui-full-20261017/vite/shared-ui/supplementary-captures/hd-light/shell-table.png",
+      "archivedPath": "docs/qa/tailwind-integration-20261017/evidence/visual-qa/vite/shared-ui/supplementary-captures/hd-light/shell-table.png",
+      "role": "original-supplementary-png",
+      "sha256": "d51842f94fec42f48d9e91fe90bfd09f59ed40dbf79e152f550b2ec5e9240028",
+      "bytes": 56327
+    },
+    {
+      "originalPath": "reports/tailwind-integration/ui-full-20261017/vite/shared-ui/supplementary-captures/server/server-profile.json",
+      "archivedPath": "docs/qa/tailwind-integration-20261017/evidence/visual-qa/vite/shared-ui/supplementary-captures/server/server-profile.json",
+      "role": "original-capture-server-profile-no-cache",
+      "sha256": "cec67bee4c998ec2af21849614220172350aff326d5a6df5f5efd5dcfa9fb72c",
+      "bytes": 971
+    },
+    {
+      "originalPath": "reports/tailwind-integration/ui-full-20261017/vite/virtualization/inventory.log",
+      "archivedPath": "docs/qa/tailwind-integration-20261017/evidence/visual-qa/vite/virtualization/execution/inventory.txt",
+      "role": "original-log-renamed-byte-exact",
+      "sha256": "75297f3a5a0ed00cff9dc1b2dfbd051a4caccb1ac8703119775a5b704abecde5",
+      "bytes": 1173
+    },
+    {
+      "originalPath": "reports/tailwind-integration/ui-full-20261017/vite/virtualization/playwright.log",
+      "archivedPath": "docs/qa/tailwind-integration-20261017/evidence/visual-qa/vite/virtualization/execution/playwright.txt",
+      "role": "original-log-renamed-byte-exact",
+      "sha256": "d303cbead25d185c79c2ba4db3f1316a0328abafc673dd10d32806cba4a0cd4c",
+      "bytes": 2102
+    },
+    {
+      "originalPath": "reports/tailwind-integration/ui-full-20261017/vite/virtualization/fixture-assets.json",
+      "archivedPath": "docs/qa/tailwind-integration-20261017/evidence/visual-qa/vite/virtualization/fixture-assets.json",
+      "role": "original-built-asset-inventory-no-bundles",
+      "sha256": "67700f5cf94c12683d14564ca108b8c7ba17c9f9ad2f239579668da51a8acb43",
+      "bytes": 498
+    },
+    {
+      "originalPath": "reports/tailwind-integration/ui-full-20261017/vite/virtualization/inventory.json",
+      "archivedPath": "docs/qa/tailwind-integration-20261017/evidence/visual-qa/vite/virtualization/inventory.json",
+      "role": "full-original-project-inventory",
+      "sha256": "01c26b91ea79f4bd457c45904999c7abbbc0f26340ebade94d8d632d487bc29d",
+      "bytes": 12826
+    },
+    {
+      "originalPath": "reports/tailwind-integration/ui-full-20261017/vite/virtualization/playwright.config.mjs",
+      "archivedPath": "docs/qa/tailwind-integration-20261017/evidence/visual-qa/vite/virtualization/playwright.config.mjs",
+      "role": "original-generated-config-wrapper",
+      "sha256": "17e6b92496c302add10e97509af7431c278116144385d34a449b78fe0175f381",
+      "bytes": 2019
+    },
+    {
+      "originalPath": "reports/tailwind-integration/ui-full-20261017/vite/virtualization/playwright.inventory.config.mjs",
+      "archivedPath": "docs/qa/tailwind-integration-20261017/evidence/visual-qa/vite/virtualization/playwright.inventory.config.mjs",
+      "role": "original-generated-inventory-wrapper",
+      "sha256": "008d18e330133f6d9bf8e7201bd1e91d7592b5251983a0ca58da21df3de5dcb4",
+      "bytes": 2031
+    },
+    {
+      "originalPath": "reports/tailwind-integration/ui-full-20261017/vite/virtualization/results.json",
+      "archivedPath": "docs/qa/tailwind-integration-20261017/evidence/visual-qa/vite/virtualization/results.json",
+      "role": "original-playwright-results",
+      "sha256": "d0e32f1265a1cf2a9d55773f7fbf113864b011d503df1a55fd3d2aa1c5a1d59c",
+      "bytes": 123463
+    },
+    {
+      "originalPath": "reports/tailwind-integration/ui-full-20261017/vite/virtualization/server-profile.json",
+      "archivedPath": "docs/qa/tailwind-integration-20261017/evidence/visual-qa/vite/virtualization/server-profile.json",
+      "role": "original-server-profile",
+      "sha256": "8f9dc47c4f7385d8551aa1271781d62bf5a2264107ccaea4c8e61a230392d3e6",
+      "bytes": 969
+    }
+  ]
+}

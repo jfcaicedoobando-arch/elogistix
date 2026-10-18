@@ -1,0 +1,56 @@
+warning: in the working copy of 'bun.lock', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'package.json', LF will be replaced by CRLF the next time Git touches it
+[build-series] initial-01-postcss; fresh process, build timer starts
+[build-series] initial-01-postcss: 25.464 s; raw hashes saved, compression deferred
+[build-series] initial-01-vite; fresh process, build timer starts
+[build-series] initial-01-vite: 22.759 s; raw hashes saved, compression deferred
+[build-series] initial-02-vite; fresh process, build timer starts
+[build-series] initial-02-vite: 21.737 s; raw hashes saved, compression deferred
+[build-series] initial-02-postcss; fresh process, build timer starts
+[build-series] initial-02-postcss: 22.803 s; raw hashes saved, compression deferred
+[build-series] initial-03-postcss; fresh process, build timer starts
+[build-series] initial-03-postcss: 20.261 s; raw hashes saved, compression deferred
+[build-series] initial-03-vite; fresh process, build timer starts
+[build-series] initial-03-vite: 21.892 s; raw hashes saved, compression deferred
+[build-series] repeated-04-vite; fresh process, build timer starts
+[build-series] repeated-04-vite: 19.140 s; raw hashes saved, compression deferred
+[build-series] repeated-04-postcss; fresh process, build timer starts
+[build-series] repeated-04-postcss: 20.807 s; raw hashes saved, compression deferred
+[build-series] repeated-05-postcss; fresh process, build timer starts
+[build-series] repeated-05-postcss: 21.830 s; raw hashes saved, compression deferred
+[build-series] repeated-05-vite; fresh process, build timer starts
+[build-series] repeated-05-vite: 21.546 s; raw hashes saved, compression deferred
+[build-series] repeated-06-vite; fresh process, build timer starts
+[build-series] repeated-06-vite: 21.897 s; raw hashes saved, compression deferred
+[build-series] repeated-06-postcss; fresh process, build timer starts
+[build-series] repeated-06-postcss: 21.606 s; raw hashes saved, compression deferred
+[build-series] repeated-07-postcss; fresh process, build timer starts
+[build-series] repeated-07-postcss: 23.526 s; raw hashes saved, compression deferred
+[build-series] repeated-07-vite; fresh process, build timer starts
+[build-series] repeated-07-vite: 22.641 s; raw hashes saved, compression deferred
+[build-series] repeated-08-vite; fresh process, build timer starts
+[build-series] repeated-08-vite: 20.689 s; raw hashes saved, compression deferred
+[build-series] repeated-08-postcss; fresh process, build timer starts
+[build-series] repeated-08-postcss: 19.859 s; raw hashes saved, compression deferred
+[build-series] repeated-09-postcss; fresh process, build timer starts
+[build-series] repeated-09-postcss: 20.786 s; raw hashes saved, compression deferred
+[build-series] repeated-09-vite; fresh process, build timer starts
+[build-series] repeated-09-vite: 20.454 s; raw hashes saved, compression deferred
+[build-series] repeated-10-vite; fresh process, build timer starts
+[build-series] repeated-10-vite: 19.610 s; raw hashes saved, compression deferred
+[build-series] repeated-10-postcss; fresh process, build timer starts
+[build-series] repeated-10-postcss: 19.190 s; raw hashes saved, compression deferred
+[build-series] repeated-11-postcss; fresh process, build timer starts
+[build-series] repeated-11-postcss: 20.055 s; raw hashes saved, compression deferred
+[build-series] repeated-11-vite; fresh process, build timer starts
+[build-series] repeated-11-vite: 19.797 s; raw hashes saved, compression deferred
+[build-series] repeated-12-vite; fresh process, build timer starts
+[build-series] repeated-12-vite: 20.776 s; raw hashes saved, compression deferred
+[build-series] repeated-12-postcss; fresh process, build timer starts
+[build-series] repeated-12-postcss: 19.420 s; raw hashes saved, compression deferred
+[build-series] repeated-13-postcss; fresh process, build timer starts
+[build-series] repeated-13-postcss: 18.445 s; raw hashes saved, compression deferred
+[build-series] repeated-13-vite; fresh process, build timer starts
+[build-series] repeated-13-vite: 19.171 s; raw hashes saved, compression deferred
+[build-series] All build timers ended; deduplicated compression/CSS rule analysis starts
+{"status":"complete","summary":"reports/tailwind-integration/build-series/summary.json","error":null}

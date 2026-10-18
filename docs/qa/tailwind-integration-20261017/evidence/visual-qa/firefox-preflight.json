@@ -1,0 +1,8 @@
+{
+  "started": "2026-10-17T23:30:11.768Z",
+  "executablePath": "C:\\Users\\torta\\AppData\\Local\\ms-playwright\\firefox-1555\\firefox\\firefox.exe",
+  "attempts": 1,
+  "available": false,
+  "error": "browserType.launch: spawn UNKNOWN\nCall log:\n\u001b[2m  - <launching> C:\\Users\\torta\\AppData\\Local\\ms-playwright\\firefox-1555\\firefox\\firefox.exe -no-remote -headless -profile C:\\Users\\torta\\Documents\\Codex\\2026-10-17\\task-6\\.tools\\temp\\playwright_firefoxdev_profile-QnTDjA -juggler-pipe -silent\u001b[22m\n\n    at C:\\Users\\torta\\Documents\\Codex\\2026-10-17\\task-6\\elogistix-tailwind4\\docs\\qa\\tailwind-integration-20261017\\probe-firefox.mjs:12:27\n    at async node:internal/modules/esm/loader:647:26",
+  "finished": "2026-10-17T23:30:13.124Z"
+}

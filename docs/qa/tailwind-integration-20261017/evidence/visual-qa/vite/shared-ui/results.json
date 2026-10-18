@@ -1,0 +1,832 @@
+{
+  "config": {
+    "argv": [
+      "C:\\Users\\torta\\Documents\\Codex\\2026-10-17\\task-6\\.tools\\node.exe",
+      "C:\\Users\\torta\\Documents\\Codex\\2026-10-17\\task-6\\elogistix-tailwind4\\node_modules\\@playwright\\test\\cli.js",
+      "test",
+      "--config",
+      "C:\\Users\\torta\\Documents\\Codex\\2026-10-17\\task-6\\elogistix-tailwind4\\reports\\tailwind-integration\\ui-full-20261017\\vite\\shared-ui\\playwright.config.mjs"
+    ],
+    "configFile": "C:\\Users\\torta\\Documents\\Codex\\2026-10-17\\task-6\\elogistix-tailwind4\\reports\\tailwind-integration\\ui-full-20261017\\vite\\shared-ui\\playwright.config.mjs",
+    "rootDir": "C:/Users/torta/Documents/Codex/2026-10-17/task-6/elogistix-tailwind4/e2e/visual/specs",
+    "failOnFlakyTests": false,
+    "forbidOnly": false,
+    "fullyParallel": false,
+    "globalSetup": null,
+    "globalTeardown": null,
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {
+      "actualWorkers": 1
+    },
+    "preserveOutput": "always",
+    "projects": [
+      {
+        "outputDir": "C:/Users/torta/Documents/Codex/2026-10-17/task-6/elogistix-tailwind4/reports/tailwind-integration/ui-full-20261017/vite/shared-ui/test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "hd-light",
+        "name": "hd-light",
+        "testDir": "C:/Users/torta/Documents/Codex/2026-10-17/task-6/elogistix-tailwind4/e2e/visual/specs",
+        "testIgnore": [],
+        "testMatch": [
+          "**/*.@(spec|test).?(c|m)[jt]s?(x)"
+        ],
+        "timeout": 30000
+      },
+      {
+        "outputDir": "C:/Users/torta/Documents/Codex/2026-10-17/task-6/elogistix-tailwind4/reports/tailwind-integration/ui-full-20261017/vite/shared-ui/test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "hd-dark",
+        "name": "hd-dark",
+        "testDir": "C:/Users/torta/Documents/Codex/2026-10-17/task-6/elogistix-tailwind4/e2e/visual/specs",
+        "testIgnore": [],
+        "testMatch": [
+          "**/*.@(spec|test).?(c|m)[jt]s?(x)"
+        ],
+        "timeout": 30000
+      },
+      {
+        "outputDir": "C:/Users/torta/Documents/Codex/2026-10-17/task-6/elogistix-tailwind4/reports/tailwind-integration/ui-full-20261017/vite/shared-ui/test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "compact-light",
+        "name": "compact-light",
+        "testDir": "C:/Users/torta/Documents/Codex/2026-10-17/task-6/elogistix-tailwind4/e2e/visual/specs",
+        "testIgnore": [],
+        "testMatch": [
+          "**/*.@(spec|test).?(c|m)[jt]s?(x)"
+        ],
+        "timeout": 30000
+      },
+      {
+        "outputDir": "C:/Users/torta/Documents/Codex/2026-10-17/task-6/elogistix-tailwind4/reports/tailwind-integration/ui-full-20261017/vite/shared-ui/test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "compact-dark",
+        "name": "compact-dark",
+        "testDir": "C:/Users/torta/Documents/Codex/2026-10-17/task-6/elogistix-tailwind4/e2e/visual/specs",
+        "testIgnore": [],
+        "testMatch": [
+          "**/*.@(spec|test).?(c|m)[jt]s?(x)"
+        ],
+        "timeout": 30000
+      }
+    ],
+    "filteredProjects": [
+      {
+        "grep": {},
+        "grepInvert": null,
+        "outputDir": "C:\\Users\\torta\\Documents\\Codex\\2026-10-17\\task-6\\elogistix-tailwind4\\reports\\tailwind-integration\\ui-full-20261017\\vite\\shared-ui\\test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "name": "hd-light",
+        "testDir": "C:\\Users\\torta\\Documents\\Codex\\2026-10-17\\task-6\\elogistix-tailwind4\\e2e\\visual\\specs",
+        "snapshotDir": "C:\\Users\\torta\\Documents\\Codex\\2026-10-17\\task-6\\elogistix-tailwind4\\e2e\\visual\\specs",
+        "testIgnore": [],
+        "testMatch": "**/*.@(spec|test).?(c|m)[jt]s?(x)",
+        "timeout": 30000,
+        "use": {
+          "baseURL": "http://127.0.0.1:50053",
+          "browserName": "chromium",
+          "locale": "es-MX",
+          "timezoneId": "America/Mexico_City",
+          "reducedMotion": "reduce",
+          "trace": "retain-on-failure",
+          "serviceWorkers": "block",
+          "acceptDownloads": false,
+          "viewport": {
+            "width": 1280,
+            "height": 720
+          },
+          "colorScheme": "light"
+        },
+        "dependencies": [],
+        "ignoreSnapshots": false,
+        "__projectId": "hd-light"
+      },
+      {
+        "grep": {},
+        "grepInvert": null,
+        "outputDir": "C:\\Users\\torta\\Documents\\Codex\\2026-10-17\\task-6\\elogistix-tailwind4\\reports\\tailwind-integration\\ui-full-20261017\\vite\\shared-ui\\test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "name": "hd-dark",
+        "testDir": "C:\\Users\\torta\\Documents\\Codex\\2026-10-17\\task-6\\elogistix-tailwind4\\e2e\\visual\\specs",
+        "snapshotDir": "C:\\Users\\torta\\Documents\\Codex\\2026-10-17\\task-6\\elogistix-tailwind4\\e2e\\visual\\specs",
+        "testIgnore": [],
+        "testMatch": "**/*.@(spec|test).?(c|m)[jt]s?(x)",
+        "timeout": 30000,
+        "use": {
+          "baseURL": "http://127.0.0.1:50053",
+          "browserName": "chromium",
+          "locale": "es-MX",
+          "timezoneId": "America/Mexico_City",
+          "reducedMotion": "reduce",
+          "trace": "retain-on-failure",
+          "serviceWorkers": "block",
+          "acceptDownloads": false,
+          "viewport": {
+            "width": 1280,
+            "height": 720
+          },
+          "colorScheme": "dark"
+        },
+        "dependencies": [],
+        "ignoreSnapshots": false,
+        "__projectId": "hd-dark"
+      },
+      {
+        "grep": {},
+        "grepInvert": null,
+        "outputDir": "C:\\Users\\torta\\Documents\\Codex\\2026-10-17\\task-6\\elogistix-tailwind4\\reports\\tailwind-integration\\ui-full-20261017\\vite\\shared-ui\\test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "name": "compact-light",
+        "testDir": "C:\\Users\\torta\\Documents\\Codex\\2026-10-17\\task-6\\elogistix-tailwind4\\e2e\\visual\\specs",
+        "snapshotDir": "C:\\Users\\torta\\Documents\\Codex\\2026-10-17\\task-6\\elogistix-tailwind4\\e2e\\visual\\specs",
+        "testIgnore": [],
+        "testMatch": "**/*.@(spec|test).?(c|m)[jt]s?(x)",
+        "timeout": 30000,
+        "use": {
+          "baseURL": "http://127.0.0.1:50053",
+          "browserName": "chromium",
+          "locale": "es-MX",
+          "timezoneId": "America/Mexico_City",
+          "reducedMotion": "reduce",
+          "trace": "retain-on-failure",
+          "serviceWorkers": "block",
+          "acceptDownloads": false,
+          "viewport": {
+            "width": 691,
+            "height": 763
+          },
+          "colorScheme": "light"
+        },
+        "dependencies": [],
+        "ignoreSnapshots": false,
+        "__projectId": "compact-light"
+      },
+      {
+        "grep": {},
+        "grepInvert": null,
+        "outputDir": "C:\\Users\\torta\\Documents\\Codex\\2026-10-17\\task-6\\elogistix-tailwind4\\reports\\tailwind-integration\\ui-full-20261017\\vite\\shared-ui\\test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "name": "compact-dark",
+        "testDir": "C:\\Users\\torta\\Documents\\Codex\\2026-10-17\\task-6\\elogistix-tailwind4\\e2e\\visual\\specs",
+        "snapshotDir": "C:\\Users\\torta\\Documents\\Codex\\2026-10-17\\task-6\\elogistix-tailwind4\\e2e\\visual\\specs",
+        "testIgnore": [],
+        "testMatch": "**/*.@(spec|test).?(c|m)[jt]s?(x)",
+        "timeout": 30000,
+        "use": {
+          "baseURL": "http://127.0.0.1:50053",
+          "browserName": "chromium",
+          "locale": "es-MX",
+          "timezoneId": "America/Mexico_City",
+          "reducedMotion": "reduce",
+          "trace": "retain-on-failure",
+          "serviceWorkers": "block",
+          "acceptDownloads": false,
+          "viewport": {
+            "width": 691,
+            "height": 763
+          },
+          "colorScheme": "dark"
+        },
+        "dependencies": [],
+        "ignoreSnapshots": false,
+        "__projectId": "compact-dark"
+      }
+    ],
+    "quiet": false,
+    "reporter": [
+      [
+        "list",
+        null
+      ],
+      [
+        "json",
+        {
+          "outputFile": "C:\\Users\\torta\\Documents\\Codex\\2026-10-17\\task-6\\elogistix-tailwind4\\reports\\tailwind-integration\\ui-full-20261017\\vite\\shared-ui\\results.json"
+        }
+      ],
+      [
+        "html",
+        {
+          "outputFolder": "C:\\Users\\torta\\Documents\\Codex\\2026-10-17\\task-6\\elogistix-tailwind4\\reports\\tailwind-integration\\ui-full-20261017\\vite\\shared-ui\\html",
+          "open": "never"
+        }
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 300000
+    },
+    "shard": null,
+    "tags": [],
+    "updateSnapshots": "default",
+    "updateSourceMethod": "patch",
+    "version": "1.64.0",
+    "workers": 1,
+    "webServer": {
+      "command": "\"C:\\Users\\torta\\Documents\\Codex\\2026-10-17\\task-6\\.tools\\node.exe\" \"C:\\Users\\torta\\Documents\\Codex\\2026-10-17\\task-6\\elogistix-tailwind4\\docs\\qa\\tailwind-integration-20261017\\ui-server.mjs\" \"--variant\" \"vite\" \"--suite\" \"shared-ui\" \"--port\" \"50053\" \"--output\" \"C:\\Users\\torta\\Documents\\Codex\\2026-10-17\\task-6\\elogistix-tailwind4\\reports\\tailwind-integration\\ui-full-20261017\\vite\\shared-ui\"",
+      "url": "http://127.0.0.1:50053/e2e/visual/index.html",
+      "reuseExistingServer": false,
+      "cwd": "C:\\Users\\torta\\Documents\\Codex\\2026-10-17\\task-6\\elogistix-tailwind4\\",
+      "timeout": 180000,
+      "stdout": "pipe",
+      "stderr": "pipe"
+    }
+  },
+  "suites": [
+    {
+      "title": "shared-ui.spec.ts",
+      "file": "shared-ui.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "shared shell and table",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "hd-light",
+              "projectName": "hd-light",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 15142,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-17T23:36:57.731Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "95c21dddef3b0b30719a-c709cbae6024a6f01efe",
+          "file": "shared-ui.spec.ts",
+          "line": 15,
+          "column": 1
+        },
+        {
+          "title": "shared form dialog",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "hd-light",
+              "projectName": "hd-light",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 1756,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-17T23:37:13.046Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "95c21dddef3b0b30719a-898d4863f7dab0ae6dd5",
+          "file": "shared-ui.spec.ts",
+          "line": 20,
+          "column": 1
+        },
+        {
+          "title": "empty, error and loading remain distinct",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "hd-light",
+              "projectName": "hd-light",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 4923,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-17T23:37:14.817Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "95c21dddef3b0b30719a-834222809903c86d93eb",
+          "file": "shared-ui.spec.ts",
+          "line": 26,
+          "column": 1
+        },
+        {
+          "title": "height breakpoint and CSS variable sidebar widths retain their v3 behavior",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "hd-light",
+              "projectName": "hd-light",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 1849,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-17T23:37:19.753Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "95c21dddef3b0b30719a-110af492a3626c006be5",
+          "file": "shared-ui.spec.ts",
+          "line": 38,
+          "column": 1
+        },
+        {
+          "title": "shared shell and table",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "hd-dark",
+              "projectName": "hd-dark",
+              "results": [
+                {
+                  "workerIndex": 1,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 1431,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-17T23:37:22.190Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "95c21dddef3b0b30719a-d849e03387624a25ace5",
+          "file": "shared-ui.spec.ts",
+          "line": 15,
+          "column": 1
+        },
+        {
+          "title": "shared form dialog",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "hd-dark",
+              "projectName": "hd-dark",
+              "results": [
+                {
+                  "workerIndex": 1,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 1401,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-17T23:37:23.764Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "95c21dddef3b0b30719a-92e3f42d7a1f72d2cbd3",
+          "file": "shared-ui.spec.ts",
+          "line": 20,
+          "column": 1
+        },
+        {
+          "title": "empty, error and loading remain distinct",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "hd-dark",
+              "projectName": "hd-dark",
+              "results": [
+                {
+                  "workerIndex": 1,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 5075,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-17T23:37:25.175Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "95c21dddef3b0b30719a-d142bd64a8873df0f623",
+          "file": "shared-ui.spec.ts",
+          "line": 26,
+          "column": 1
+        },
+        {
+          "title": "height breakpoint and CSS variable sidebar widths retain their v3 behavior",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "hd-dark",
+              "projectName": "hd-dark",
+              "results": [
+                {
+                  "workerIndex": 1,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 1676,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-17T23:37:30.261Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "95c21dddef3b0b30719a-f8ef1e2dc436b089aadc",
+          "file": "shared-ui.spec.ts",
+          "line": 38,
+          "column": 1
+        },
+        {
+          "title": "shared shell and table",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "compact-light",
+              "projectName": "compact-light",
+              "results": [
+                {
+                  "workerIndex": 2,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 1299,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-17T23:37:32.459Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "95c21dddef3b0b30719a-23c23b8798316f7d5db2",
+          "file": "shared-ui.spec.ts",
+          "line": 15,
+          "column": 1
+        },
+        {
+          "title": "shared form dialog",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "compact-light",
+              "projectName": "compact-light",
+              "results": [
+                {
+                  "workerIndex": 2,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 1399,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-17T23:37:33.891Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "95c21dddef3b0b30719a-3f0033c3e6e7e94eec94",
+          "file": "shared-ui.spec.ts",
+          "line": 20,
+          "column": 1
+        },
+        {
+          "title": "empty, error and loading remain distinct",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "compact-light",
+              "projectName": "compact-light",
+              "results": [
+                {
+                  "workerIndex": 2,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 4855,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-17T23:37:35.299Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "95c21dddef3b0b30719a-e7162c3699fd5181a9c0",
+          "file": "shared-ui.spec.ts",
+          "line": 26,
+          "column": 1
+        },
+        {
+          "title": "height breakpoint and CSS variable sidebar widths retain their v3 behavior",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "compact-light",
+              "projectName": "compact-light",
+              "results": [
+                {
+                  "workerIndex": 2,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 1653,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-17T23:37:40.163Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "95c21dddef3b0b30719a-223daae91ca58afea9f9",
+          "file": "shared-ui.spec.ts",
+          "line": 38,
+          "column": 1
+        },
+        {
+          "title": "shared shell and table",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "compact-dark",
+              "projectName": "compact-dark",
+              "results": [
+                {
+                  "workerIndex": 3,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 1412,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-17T23:37:42.310Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "95c21dddef3b0b30719a-cc0747afbfe482f6a8ef",
+          "file": "shared-ui.spec.ts",
+          "line": 15,
+          "column": 1
+        },
+        {
+          "title": "shared form dialog",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "compact-dark",
+              "projectName": "compact-dark",
+              "results": [
+                {
+                  "workerIndex": 3,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 1430,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-17T23:37:43.855Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "95c21dddef3b0b30719a-65edde419399a4059223",
+          "file": "shared-ui.spec.ts",
+          "line": 20,
+          "column": 1
+        },
+        {
+          "title": "empty, error and loading remain distinct",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "compact-dark",
+              "projectName": "compact-dark",
+              "results": [
+                {
+                  "workerIndex": 3,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 4660,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-17T23:37:45.295Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "95c21dddef3b0b30719a-44a3afa0f78bdcf6001b",
+          "file": "shared-ui.spec.ts",
+          "line": 26,
+          "column": 1
+        },
+        {
+          "title": "height breakpoint and CSS variable sidebar widths retain their v3 behavior",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "compact-dark",
+              "projectName": "compact-dark",
+              "results": [
+                {
+                  "workerIndex": 3,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 1671,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-17T23:37:49.966Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "95c21dddef3b0b30719a-ad7e09012c98c713275e",
+          "file": "shared-ui.spec.ts",
+          "line": 38,
+          "column": 1
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2026-10-17T23:36:54.105Z",
+    "duration": 58019.45,
+    "expected": 16,
+    "skipped": 0,
+    "unexpected": 0,
+    "flaky": 0
+  }
+}

@@ -6,6 +6,7 @@
         "index.html",
         "scripts/**/*.ts",
         "scripts/db/test-proforma-fixture-lock-order.mjs",
+        "docs/qa/tailwind-integration-20261017/integration.mjs",
         "src/**/*.test.{ts,tsx}",
         "src/**/__tests__/**/*.{ts,tsx}",
         "src/features/*/index.ts"

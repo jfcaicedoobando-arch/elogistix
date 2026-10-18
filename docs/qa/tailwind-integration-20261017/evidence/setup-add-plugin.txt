@@ -1,0 +1,11 @@
+[0.14ms] ".env"
+bun add v1.4.0 (34cbb9a40)
+Resolving dependencies
+Resolved, downloaded and extracted [10]
+Saved lockfile
+
++ xlsx@https://cdn.sheetjs.com/xlsx-0.20.3/xlsx-0.20.3.tgz
+
+installed @tailwindcss/vite@4.3.3
+
+2 packages installed [1301.00ms]

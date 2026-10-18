@@ -1,0 +1,76 @@
+{
+  "variant": "vite",
+  "started": "2026-10-17T23:37:53.038Z",
+  "origin": "http://127.0.0.1:53040",
+  "captures": [
+    {
+      "project": "hd-light",
+      "name": "shell-table.png",
+      "sha256": "d51842f94fec42f48d9e91fe90bfd09f59ed40dbf79e152f550b2ec5e9240028",
+      "bytes": 56327,
+      "width": 1280,
+      "height": 720
+    },
+    {
+      "project": "hd-light",
+      "name": "form-dialog.png",
+      "sha256": "94e3ead3e57bf88649aac10d3af2597ae2af4bac0501a87f9967f9098549cbc1",
+      "bytes": 110445,
+      "width": 1280,
+      "height": 720
+    },
+    {
+      "project": "hd-dark",
+      "name": "shell-table.png",
+      "sha256": "91ab4d7fb5eb240f72ad8cbc668edfa7cafed652754c72bc349d42fa887b541d",
+      "bytes": 56110,
+      "width": 1280,
+      "height": 720
+    },
+    {
+      "project": "hd-dark",
+      "name": "form-dialog.png",
+      "sha256": "af0a955a7b61d6ec4ecf572ad1924038c0bfabac66fc74f4fb1a8aac227ad211",
+      "bytes": 119385,
+      "width": 1280,
+      "height": 720
+    },
+    {
+      "project": "compact-light",
+      "name": "shell-table.png",
+      "sha256": "e93937293c4ebbde8cb05b5337751f1c4f92df2babc11488d5b67be6c94fb9a7",
+      "bytes": 44845,
+      "width": 691,
+      "height": 763
+    },
+    {
+      "project": "compact-light",
+      "name": "form-dialog.png",
+      "sha256": "7b9a59e9a1879b8aafb641456a9de732279ab095173d56c2067bb0c6fb8103c6",
+      "bytes": 71038,
+      "width": 691,
+      "height": 763
+    },
+    {
+      "project": "compact-dark",
+      "name": "shell-table.png",
+      "sha256": "8acb6c685e9270e0b3a29d96a85902e3753b3ca72678ad8f719f47956eebc3fb",
+      "bytes": 43809,
+      "width": 691,
+      "height": 763
+    },
+    {
+      "project": "compact-dark",
+      "name": "form-dialog.png",
+      "sha256": "f20a9765539e986e139b7f0499d28c94345f32a36bc3117f3be025209c8ad975",
+      "bytes": 77143,
+      "width": 691,
+      "height": 763
+    }
+  ],
+  "blocked": [],
+  "errors": [],
+  "browserVersion": "156.0.8078.4",
+  "passed": true,
+  "finished": "2026-10-17T23:38:14.903Z"
+}

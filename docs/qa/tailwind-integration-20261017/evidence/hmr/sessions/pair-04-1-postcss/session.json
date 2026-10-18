@@ -1,0 +1,3529 @@
+{
+  "id": "pair-04-1-postcss",
+  "pair": 4,
+  "position": 1,
+  "variant": "postcss",
+  "startedAt": "2026-10-17T23:44:07.016Z",
+  "passed": true,
+  "fixture": {
+    "directory": "reports/tailwind-integration/hmr-series-local-permission/pair-04-1-postcss/fixture",
+    "htmlSha256": "f49570b7699330a407f087d48dda974c0056356e53aab8f8296a4967568159f4",
+    "moduleSha256": "eff6e560d46ad3fa31ac69d91d1ee8c81b3ab066d51dc4807d9af282075689c0",
+    "initialProbeSha256": "881bf53fa0ee6581687f739bdc3db6bb013ebaeeb6127f5d24cb0b4c636c7122",
+    "sourceImport": "src/index.css",
+    "probeAfterEditsSha256": "b742459236d823b674025391a745b162f3c7e8acf3bf4171d29190b42a590bd6",
+    "restoredProbeSha256": "881bf53fa0ee6581687f739bdc3db6bb013ebaeeb6127f5d24cb0b4c636c7122",
+    "restored": true
+  },
+  "updates": [
+    {
+      "step": 1,
+      "stage": "warmup-discarded",
+      "expected": {
+        "step": 1,
+        "width": 127,
+        "height": 32,
+        "color": "rgb(21, 41, 61)",
+        "id": "pair-04-1-postcss:step-1"
+      },
+      "probeSha256": "4ae925eb0f7620997e1e90421ed893532fb70e2bfe3a7595fd39043e21b86971",
+      "probeBytes": 336,
+      "passed": true,
+      "arm": {
+        "armed": true,
+        "eventIndex": 2,
+        "before": {
+          "width": "120px",
+          "height": "32px",
+          "color": "rgb(20, 40, 60)",
+          "step": "0",
+          "rectangle": {
+            "x": 0,
+            "y": 0,
+            "width": 120,
+            "height": 32
+          }
+        }
+      },
+      "writeStartedAt": "2026-10-17T23:44:23.407Z",
+      "primaryLatencyMs": 1480.9736999999732,
+      "writeDurationMs": 0.8500999999814667,
+      "parentClock": {
+        "beforeWrite": 189226.6314,
+        "afterWrite": 189227.4815,
+        "acknowledgementReceived": 190707.6051
+      },
+      "verification": {
+        "expected": {
+          "step": 1,
+          "width": 127,
+          "height": 32,
+          "color": "rgb(21, 41, 61)",
+          "id": "pair-04-1-postcss:step-1"
+        },
+        "actual": {
+          "width": "127px",
+          "height": "32px",
+          "color": "rgb(21, 41, 61)",
+          "step": "1",
+          "rectangle": {
+            "x": 0,
+            "y": 0,
+            "width": 127,
+            "height": 32
+          }
+        },
+        "browserVerifiedPerformanceMs": 11775,
+        "events": [
+          {
+            "name": "vite:beforeUpdate",
+            "browserPerformanceMs": 10310.900000000373,
+            "payload": {
+              "type": "update",
+              "updates": [
+                {
+                  "type": "css-update",
+                  "timestamp": 1792280663413,
+                  "path": "/reports/tailwind-integration/hmr-series-local-permission/pair-04-1-postcss/fixture/probe.css?direct",
+                  "acceptedPath": "/reports/tailwind-integration/hmr-series-local-permission/pair-04-1-postcss/fixture/probe.css?direct",
+                  "explicitImportRequired": false,
+                  "isWithinCircularImport": false
+                }
+              ]
+            }
+          },
+          {
+            "name": "vite:afterUpdate",
+            "browserPerformanceMs": 11746,
+            "payload": {
+              "type": "update",
+              "updates": [
+                {
+                  "type": "css-update",
+                  "timestamp": 1792280663413,
+                  "path": "/reports/tailwind-integration/hmr-series-local-permission/pair-04-1-postcss/fixture/probe.css?direct",
+                  "acceptedPath": "/reports/tailwind-integration/hmr-series-local-permission/pair-04-1-postcss/fixture/probe.css?direct",
+                  "explicitImportRequired": false,
+                  "isWithinCircularImport": false
+                }
+              ]
+            }
+          }
+        ]
+      },
+      "watcherChanges": [
+        {
+          "file": "reports/tailwind-integration/hmr-series-local-permission/pair-04-1-postcss/fixture/probe.css",
+          "childPerformanceMs": 14469.1001
+        }
+      ]
+    },
+    {
+      "step": 2,
+      "stage": "warmup-discarded",
+      "expected": {
+        "step": 2,
+        "width": 134,
+        "height": 32,
+        "color": "rgb(22, 42, 62)",
+        "id": "pair-04-1-postcss:step-2"
+      },
+      "probeSha256": "f444567f9bee67f468b56293814359f0fec2c3354a68bdfb77939b681630733c",
+      "probeBytes": 336,
+      "passed": true,
+      "arm": {
+        "armed": true,
+        "eventIndex": 4,
+        "before": {
+          "width": "127px",
+          "height": "32px",
+          "color": "rgb(21, 41, 61)",
+          "step": "1",
+          "rectangle": {
+            "x": 0,
+            "y": 0,
+            "width": 127,
+            "height": 32
+          }
+        }
+      },
+      "writeStartedAt": "2026-10-17T23:44:24.892Z",
+      "primaryLatencyMs": 1343.967399999994,
+      "writeDurationMs": 0.9805000000051223,
+      "parentClock": {
+        "beforeWrite": 190711.6249,
+        "afterWrite": 190712.6054,
+        "acknowledgementReceived": 192055.5923
+      },
+      "verification": {
+        "expected": {
+          "step": 2,
+          "width": 134,
+          "height": 32,
+          "color": "rgb(22, 42, 62)",
+          "id": "pair-04-1-postcss:step-2"
+        },
+        "actual": {
+          "width": "134px",
+          "height": "32px",
+          "color": "rgb(22, 42, 62)",
+          "step": "2",
+          "rectangle": {
+            "x": 0,
+            "y": 0,
+            "width": 134,
+            "height": 32
+          }
+        },
+        "browserVerifiedPerformanceMs": 13124.699999999255,
+        "events": [
+          {
+            "name": "vite:beforeUpdate",
+            "browserPerformanceMs": 11789.099999999627,
+            "payload": {
+              "type": "update",
+              "updates": [
+                {
+                  "type": "css-update",
+                  "timestamp": 1792280664898,
+                  "path": "/reports/tailwind-integration/hmr-series-local-permission/pair-04-1-postcss/fixture/probe.css?direct",
+                  "acceptedPath": "/reports/tailwind-integration/hmr-series-local-permission/pair-04-1-postcss/fixture/probe.css?direct",
+                  "explicitImportRequired": false,
+                  "isWithinCircularImport": false
+                }
+              ]
+            }
+          },
+          {
+            "name": "vite:afterUpdate",
+            "browserPerformanceMs": 13122.400000000373,
+            "payload": {
+              "type": "update",
+              "updates": [
+                {
+                  "type": "css-update",
+                  "timestamp": 1792280664898,
+                  "path": "/reports/tailwind-integration/hmr-series-local-permission/pair-04-1-postcss/fixture/probe.css?direct",
+                  "acceptedPath": "/reports/tailwind-integration/hmr-series-local-permission/pair-04-1-postcss/fixture/probe.css?direct",
+                  "explicitImportRequired": false,
+                  "isWithinCircularImport": false
+                }
+              ]
+            }
+          }
+        ]
+      },
+      "watcherChanges": [
+        {
+          "file": "reports/tailwind-integration/hmr-series-local-permission/pair-04-1-postcss/fixture/probe.css",
+          "childPerformanceMs": 15953.3816
+        }
+      ]
+    },
+    {
+      "step": 3,
+      "stage": "measured",
+      "expected": {
+        "step": 3,
+        "width": 141,
+        "height": 32,
+        "color": "rgb(23, 43, 63)",
+        "id": "pair-04-1-postcss:step-3"
+      },
+      "probeSha256": "16bd91e3c49e73d5abdca2fbcc903303edcf9e25162bf960f42cd5cb764a0f60",
+      "probeBytes": 336,
+      "passed": true,
+      "arm": {
+        "armed": true,
+        "eventIndex": 6,
+        "before": {
+          "width": "134px",
+          "height": "32px",
+          "color": "rgb(22, 42, 62)",
+          "step": "2",
+          "rectangle": {
+            "x": 0,
+            "y": 0,
+            "width": 134,
+            "height": 32
+          }
+        }
+      },
+      "writeStartedAt": "2026-10-17T23:44:26.241Z",
+      "primaryLatencyMs": 1465.790800000017,
+      "writeDurationMs": 1.0684000000183005,
+      "parentClock": {
+        "beforeWrite": 192060.5273,
+        "afterWrite": 192061.5957,
+        "acknowledgementReceived": 193526.3181
+      },
+      "verification": {
+        "expected": {
+          "step": 3,
+          "width": 141,
+          "height": 32,
+          "color": "rgb(23, 43, 63)",
+          "id": "pair-04-1-postcss:step-3"
+        },
+        "actual": {
+          "width": "141px",
+          "height": "32px",
+          "color": "rgb(23, 43, 63)",
+          "step": "3",
+          "rectangle": {
+            "x": 0,
+            "y": 0,
+            "width": 141,
+            "height": 32
+          }
+        },
+        "browserVerifiedPerformanceMs": 14592.599999999627,
+        "events": [
+          {
+            "name": "vite:beforeUpdate",
+            "browserPerformanceMs": 13138.299999998882,
+            "payload": {
+              "type": "update",
+              "updates": [
+                {
+                  "type": "css-update",
+                  "timestamp": 1792280666247,
+                  "path": "/reports/tailwind-integration/hmr-series-local-permission/pair-04-1-postcss/fixture/probe.css?direct",
+                  "acceptedPath": "/reports/tailwind-integration/hmr-series-local-permission/pair-04-1-postcss/fixture/probe.css?direct",
+                  "explicitImportRequired": false,
+                  "isWithinCircularImport": false
+                }
+              ]
+            }
+          },
+          {
+            "name": "vite:afterUpdate",
+            "browserPerformanceMs": 14587.699999999255,
+            "payload": {
+              "type": "update",
+              "updates": [
+                {
+                  "type": "css-update",
+                  "timestamp": 1792280666247,
+                  "path": "/reports/tailwind-integration/hmr-series-local-permission/pair-04-1-postcss/fixture/probe.css?direct",
+                  "acceptedPath": "/reports/tailwind-integration/hmr-series-local-permission/pair-04-1-postcss/fixture/probe.css?direct",
+                  "explicitImportRequired": false,
+                  "isWithinCircularImport": false
+                }
+              ]
+            }
+          }
+        ]
+      },
+      "watcherChanges": [
+        {
+          "file": "reports/tailwind-integration/hmr-series-local-permission/pair-04-1-postcss/fixture/probe.css",
+          "childPerformanceMs": 17302.4688
+        }
+      ]
+    },
+    {
+      "step": 4,
+      "stage": "measured",
+      "expected": {
+        "step": 4,
+        "width": 148,
+        "height": 32,
+        "color": "rgb(24, 44, 64)",
+        "id": "pair-04-1-postcss:step-4"
+      },
+      "probeSha256": "eb643410ec228b9f66b04afa4658705e2e24b9797ac2ce02149f6300b3cff295",
+      "probeBytes": 336,
+      "passed": true,
+      "arm": {
+        "armed": true,
+        "eventIndex": 8,
+        "before": {
+          "width": "141px",
+          "height": "32px",
+          "color": "rgb(23, 43, 63)",
+          "step": "3",
+          "rectangle": {
+            "x": 0,
+            "y": 0,
+            "width": 141,
+            "height": 32
+          }
+        }
+      },
+      "writeStartedAt": "2026-10-17T23:44:27.710Z",
+      "primaryLatencyMs": 1576.150800000003,
+      "writeDurationMs": 0.9706000000005588,
+      "parentClock": {
+        "beforeWrite": 193529.2995,
+        "afterWrite": 193530.2701,
+        "acknowledgementReceived": 195105.4503
+      },
+      "verification": {
+        "expected": {
+          "step": 4,
+          "width": 148,
+          "height": 32,
+          "color": "rgb(24, 44, 64)",
+          "id": "pair-04-1-postcss:step-4"
+        },
+        "actual": {
+          "width": "148px",
+          "height": "32px",
+          "color": "rgb(24, 44, 64)",
+          "step": "4",
+          "rectangle": {
+            "x": 0,
+            "y": 0,
+            "width": 148,
+            "height": 32
+          }
+        },
+        "browserVerifiedPerformanceMs": 16174.599999999627,
+        "events": [
+          {
+            "name": "vite:beforeUpdate",
+            "browserPerformanceMs": 14605.699999999255,
+            "payload": {
+              "type": "update",
+              "updates": [
+                {
+                  "type": "css-update",
+                  "timestamp": 1792280667714,
+                  "path": "/reports/tailwind-integration/hmr-series-local-permission/pair-04-1-postcss/fixture/probe.css?direct",
+                  "acceptedPath": "/reports/tailwind-integration/hmr-series-local-permission/pair-04-1-postcss/fixture/probe.css?direct",
+                  "explicitImportRequired": false,
+                  "isWithinCircularImport": false
+                }
+              ]
+            }
+          },
+          {
+            "name": "vite:afterUpdate",
+            "browserPerformanceMs": 16157.900000000373,
+            "payload": {
+              "type": "update",
+              "updates": [
+                {
+                  "type": "css-update",
+                  "timestamp": 1792280667714,
+                  "path": "/reports/tailwind-integration/hmr-series-local-permission/pair-04-1-postcss/fixture/probe.css?direct",
+                  "acceptedPath": "/reports/tailwind-integration/hmr-series-local-permission/pair-04-1-postcss/fixture/probe.css?direct",
+                  "explicitImportRequired": false,
+                  "isWithinCircularImport": false
+                }
+              ]
+            }
+          }
+        ]
+      },
+      "watcherChanges": [
+        {
+          "file": "reports/tailwind-integration/hmr-series-local-permission/pair-04-1-postcss/fixture/probe.css",
+          "childPerformanceMs": 18771.2202
+        }
+      ]
+    },
+    {
+      "step": 5,
+      "stage": "measured",
+      "expected": {
+        "step": 5,
+        "width": 155,
+        "height": 32,
+        "color": "rgb(25, 45, 65)",
+        "id": "pair-04-1-postcss:step-5"
+      },
+      "probeSha256": "1f86aad386de022b63f84da7c59832592be77237581deb8ce0b6eeafac8268f1",
+      "probeBytes": 336,
+      "passed": true,
+      "arm": {
+        "armed": true,
+        "eventIndex": 10,
+        "before": {
+          "width": "148px",
+          "height": "32px",
+          "color": "rgb(24, 44, 64)",
+          "step": "4",
+          "rectangle": {
+            "x": 0,
+            "y": 0,
+            "width": 148,
+            "height": 32
+          }
+        }
+      },
+      "writeStartedAt": "2026-10-17T23:44:29.289Z",
+      "primaryLatencyMs": 1513.434899999993,
+      "writeDurationMs": 0.7221000000135973,
+      "parentClock": {
+        "beforeWrite": 195108.4398,
+        "afterWrite": 195109.1619,
+        "acknowledgementReceived": 196621.8747
+      },
+      "verification": {
+        "expected": {
+          "step": 5,
+          "width": 155,
+          "height": 32,
+          "color": "rgb(25, 45, 65)",
+          "id": "pair-04-1-postcss:step-5"
+        },
+        "actual": {
+          "width": "155px",
+          "height": "32px",
+          "color": "rgb(25, 45, 65)",
+          "step": "5",
+          "rectangle": {
+            "x": 0,
+            "y": 0,
+            "width": 155,
+            "height": 32
+          }
+        },
+        "browserVerifiedPerformanceMs": 17691,
+        "events": [
+          {
+            "name": "vite:beforeUpdate",
+            "browserPerformanceMs": 16185.099999999627,
+            "payload": {
+              "type": "update",
+              "updates": [
+                {
+                  "type": "css-update",
+                  "timestamp": 1792280669294,
+                  "path": "/reports/tailwind-integration/hmr-series-local-permission/pair-04-1-postcss/fixture/probe.css?direct",
+                  "acceptedPath": "/reports/tailwind-integration/hmr-series-local-permission/pair-04-1-postcss/fixture/probe.css?direct",
+                  "explicitImportRequired": false,
+                  "isWithinCircularImport": false
+                }
+              ]
+            }
+          },
+          {
+            "name": "vite:afterUpdate",
+            "browserPerformanceMs": 17678.400000000373,
+            "payload": {
+              "type": "update",
+              "updates": [
+                {
+                  "type": "css-update",
+                  "timestamp": 1792280669294,
+                  "path": "/reports/tailwind-integration/hmr-series-local-permission/pair-04-1-postcss/fixture/probe.css?direct",
+                  "acceptedPath": "/reports/tailwind-integration/hmr-series-local-permission/pair-04-1-postcss/fixture/probe.css?direct",
+                  "explicitImportRequired": false,
+                  "isWithinCircularImport": false
+                }
+              ]
+            }
+          }
+        ]
+      },
+      "watcherChanges": [
+        {
+          "file": "reports/tailwind-integration/hmr-series-local-permission/pair-04-1-postcss/fixture/probe.css",
+          "childPerformanceMs": 20350.444
+        }
+      ]
+    },
+    {
+      "step": 6,
+      "stage": "measured",
+      "expected": {
+        "step": 6,
+        "width": 162,
+        "height": 32,
+        "color": "rgb(26, 46, 66)",
+        "id": "pair-04-1-postcss:step-6"
+      },
+      "probeSha256": "d02536f61d7c725f182dde9c07a7435f8e6d63a4db354cb05dad3e63a2777263",
+      "probeBytes": 336,
+      "passed": true,
+      "arm": {
+        "armed": true,
+        "eventIndex": 12,
+        "before": {
+          "width": "155px",
+          "height": "32px",
+          "color": "rgb(25, 45, 65)",
+          "step": "5",
+          "rectangle": {
+            "x": 0,
+            "y": 0,
+            "width": 155,
+            "height": 32
+          }
+        }
+      },
+      "writeStartedAt": "2026-10-17T23:44:30.806Z",
+      "primaryLatencyMs": 1413.7286000000022,
+      "writeDurationMs": 1.1230999999970663,
+      "parentClock": {
+        "beforeWrite": 196626.0538,
+        "afterWrite": 196627.1769,
+        "acknowledgementReceived": 198039.7824
+      },
+      "verification": {
+        "expected": {
+          "step": 6,
+          "width": 162,
+          "height": 32,
+          "color": "rgb(26, 46, 66)",
+          "id": "pair-04-1-postcss:step-6"
+        },
+        "actual": {
+          "width": "162px",
+          "height": "32px",
+          "color": "rgb(26, 46, 66)",
+          "step": "6",
+          "rectangle": {
+            "x": 0,
+            "y": 0,
+            "width": 162,
+            "height": 32
+          }
+        },
+        "browserVerifiedPerformanceMs": 19108.799999998882,
+        "events": [
+          {
+            "name": "vite:beforeUpdate",
+            "browserPerformanceMs": 17702.900000000373,
+            "payload": {
+              "type": "update",
+              "updates": [
+                {
+                  "type": "css-update",
+                  "timestamp": 1792280670812,
+                  "path": "/reports/tailwind-integration/hmr-series-local-permission/pair-04-1-postcss/fixture/probe.css?direct",
+                  "acceptedPath": "/reports/tailwind-integration/hmr-series-local-permission/pair-04-1-postcss/fixture/probe.css?direct",
+                  "explicitImportRequired": false,
+                  "isWithinCircularImport": false
+                }
+              ]
+            }
+          },
+          {
+            "name": "vite:afterUpdate",
+            "browserPerformanceMs": 19097.599999999627,
+            "payload": {
+              "type": "update",
+              "updates": [
+                {
+                  "type": "css-update",
+                  "timestamp": 1792280670812,
+                  "path": "/reports/tailwind-integration/hmr-series-local-permission/pair-04-1-postcss/fixture/probe.css?direct",
+                  "acceptedPath": "/reports/tailwind-integration/hmr-series-local-permission/pair-04-1-postcss/fixture/probe.css?direct",
+                  "explicitImportRequired": false,
+                  "isWithinCircularImport": false
+                }
+              ]
+            }
+          }
+        ]
+      },
+      "watcherChanges": [
+        {
+          "file": "reports/tailwind-integration/hmr-series-local-permission/pair-04-1-postcss/fixture/probe.css",
+          "childPerformanceMs": 21868.842
+        }
+      ]
+    },
+    {
+      "step": 7,
+      "stage": "measured",
+      "expected": {
+        "step": 7,
+        "width": 169,
+        "height": 32,
+        "color": "rgb(27, 47, 67)",
+        "id": "pair-04-1-postcss:step-7"
+      },
+      "probeSha256": "b742459236d823b674025391a745b162f3c7e8acf3bf4171d29190b42a590bd6",
+      "probeBytes": 336,
+      "passed": true,
+      "arm": {
+        "armed": true,
+        "eventIndex": 14,
+        "before": {
+          "width": "162px",
+          "height": "32px",
+          "color": "rgb(26, 46, 66)",
+          "step": "6",
+          "rectangle": {
+            "x": 0,
+            "y": 0,
+            "width": 162,
+            "height": 32
+          }
+        }
+      },
+      "writeStartedAt": "2026-10-17T23:44:32.224Z",
+      "primaryLatencyMs": 1346.9976000000024,
+      "writeDurationMs": 0.9395999999833293,
+      "parentClock": {
+        "beforeWrite": 198042.616,
+        "afterWrite": 198043.5556,
+        "acknowledgementReceived": 199389.6136
+      },
+      "verification": {
+        "expected": {
+          "step": 7,
+          "width": 169,
+          "height": 32,
+          "color": "rgb(27, 47, 67)",
+          "id": "pair-04-1-postcss:step-7"
+        },
+        "actual": {
+          "width": "169px",
+          "height": "32px",
+          "color": "rgb(27, 47, 67)",
+          "step": "7",
+          "rectangle": {
+            "x": 0,
+            "y": 0,
+            "width": 169,
+            "height": 32
+          }
+        },
+        "browserVerifiedPerformanceMs": 20458.799999998882,
+        "events": [
+          {
+            "name": "vite:beforeUpdate",
+            "browserPerformanceMs": 19118.799999998882,
+            "payload": {
+              "type": "update",
+              "updates": [
+                {
+                  "type": "css-update",
+                  "timestamp": 1792280672228,
+                  "path": "/reports/tailwind-integration/hmr-series-local-permission/pair-04-1-postcss/fixture/probe.css?direct",
+                  "acceptedPath": "/reports/tailwind-integration/hmr-series-local-permission/pair-04-1-postcss/fixture/probe.css?direct",
+                  "explicitImportRequired": false,
+                  "isWithinCircularImport": false
+                }
+              ]
+            }
+          },
+          {
+            "name": "vite:afterUpdate",
+            "browserPerformanceMs": 20445.199999999255,
+            "payload": {
+              "type": "update",
+              "updates": [
+                {
+                  "type": "css-update",
+                  "timestamp": 1792280672228,
+                  "path": "/reports/tailwind-integration/hmr-series-local-permission/pair-04-1-postcss/fixture/probe.css?direct",
+                  "acceptedPath": "/reports/tailwind-integration/hmr-series-local-permission/pair-04-1-postcss/fixture/probe.css?direct",
+                  "explicitImportRequired": false,
+                  "isWithinCircularImport": false
+                }
+              ]
+            }
+          }
+        ]
+      },
+      "watcherChanges": [
+        {
+          "file": "reports/tailwind-integration/hmr-series-local-permission/pair-04-1-postcss/fixture/probe.css",
+          "childPerformanceMs": 23284.6377
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "sourceBefore": {
+    "sha256": "d9c24a37c1b6d1a9971d35574062c1217586f270bcb9742265f37180f22834dd",
+    "fileCount": 6278,
+    "bytes": 22459201,
+    "core": [
+      {
+        "path": "bun.lock",
+        "bytes": 326446,
+        "sha256": "5d561ebf702e13a9a34670f267a870d0acb6ec21d7c6c67af3665607a983a682"
+      },
+      {
+        "path": "package.json",
+        "bytes": 8099,
+        "sha256": "227be9436f2a0be543938ffd9852aa060effef7bc0979980e48a2d20341968d3"
+      },
+      {
+        "path": "postcss.config.js",
+        "bytes": 75,
+        "sha256": "9dd791ad9c0238477d84d4e06c0ccfceebe8dcb37dcdb581f5682c5ad42fc77e"
+      },
+      {
+        "path": "src/index.css",
+        "bytes": 130,
+        "sha256": "2145da531b9725faad9b0e5123c789a37c0397a88317295ab713cd1273778423"
+      },
+      {
+        "path": "src/styles.css",
+        "bytes": 13263,
+        "sha256": "40a70d2a6ea3b4b119987151d1dd415fdfb591c028a327ca59f1fccf820f3a32"
+      },
+      {
+        "path": "src/tailwind-compat.css",
+        "bytes": 2981,
+        "sha256": "fa8d0a3a2b2fefe00782d3e06ec48d6ab03d90170c7c77eccd7962c4adbd5397"
+      },
+      {
+        "path": "tailwind.config.ts",
+        "bytes": 10116,
+        "sha256": "b603ef20c62b6e42e284c52bd9dd7fe1679986c63345f8d4bfe3918e02e5fbb4"
+      },
+      {
+        "path": "vite.config.ts",
+        "bytes": 6674,
+        "sha256": "3fcf047dd7b4328dd1fc3137857f19fd3ab8621d3769d9152275823aa25a95fa"
+      }
+    ]
+  },
+  "process": {
+    "node": "v24.22.0",
+    "newProcess": true,
+    "freshVite": true,
+    "freshBrowser": true,
+    "freshContext": true,
+    "cacheDir": "reports/tailwind-integration/hmr-series-local-permission/pair-04-1-postcss/cache/vite",
+    "environment": "isolatedEnvironment(development); no .env files",
+    "optimizerDisabledBothArms": true,
+    "pid": 28732,
+    "exit": {
+      "code": 0,
+      "signal": null
+    },
+    "close": {
+      "code": 0,
+      "signal": null
+    }
+  },
+  "ready": {
+    "initial": {
+      "width": "120px",
+      "height": "32px",
+      "color": "rgb(20, 40, 60)",
+      "step": "0",
+      "rectangle": {
+        "width": 120,
+        "height": 32
+      }
+    },
+    "config": {
+      "configFile": false,
+      "envDir": false,
+      "root": ".",
+      "mode": "development",
+      "css": {
+        "devSourcemap": false,
+        "postcss": "implicit root postcss.config.js discovery"
+      },
+      "integrationPlugins": [],
+      "resolvedPlugins": [
+        "vite:optimized-deps",
+        "vite:watch-package-data",
+        "vite:pre-alias",
+        "alias",
+        "vite:modulepreload-polyfill",
+        "vite:bundled-dev-client-imports",
+        "vite:resolve-dev",
+        "vite:resolve-builtin:get-environment",
+        "vite:resolve-builtin",
+        "vite:html-inline-proxy",
+        "vite:css",
+        "builtin:oxc-runtime",
+        "vite:oxc",
+        "builtin:vite-json",
+        "vite:wasm-helper",
+        "vite:worker",
+        "vite:asset",
+        "vite:define",
+        "vite:css-post",
+        "vite:build-html",
+        "vite:worker-import-meta-url",
+        "vite:asset-import-meta-url",
+        "vite:dynamic-import-vars",
+        "vite:import-glob",
+        "vite:client-inject",
+        "vite:css-analysis",
+        "vite:import-analysis"
+      ],
+      "cacheDir": "reports/tailwind-integration/hmr-series-local-permission/pair-04-1-postcss/cache/vite",
+      "cacheExistedBeforeStartup": false,
+      "optimizeDeps": {
+        "entries": [],
+        "noDiscovery": true,
+        "include": []
+      },
+      "server": {
+        "host": "127.0.0.1",
+        "port": 61889,
+        "requestedPort": 0,
+        "strictPort": true,
+        "hmrOverlay": false,
+        "watcher": "Vite defaults, root config not loaded; fixture outside cacheDir"
+      },
+      "fixture": "reports/tailwind-integration/hmr-series-local-permission/pair-04-1-postcss/fixture/index.html",
+      "probe": "reports/tailwind-integration/hmr-series-local-permission/pair-04-1-postcss/fixture/probe.css",
+      "networkInstrumentation": "HTTP GET/HEAD exact origin via route.fetch(maxRedirects:0)+fulfill; every other HTTP/WS blocked before connection; browser HTTP cache disabled by routing",
+      "permissions": {
+        "granted": [
+          "local-network-access"
+        ],
+        "origin": "http://127.0.0.1:61889",
+        "scope": "this ephemeral isolated fixture origin only"
+      }
+    },
+    "chromium": "156.0.8078.4"
+  },
+  "child": {
+    "id": "pair-04-1-postcss",
+    "variant": "postcss",
+    "node": "v24.22.0",
+    "startedAt": "2026-10-17T23:44:09.362Z",
+    "passed": true,
+    "failures": [],
+    "hmrEvents": [
+      {
+        "name": "vite:ws:connect",
+        "browserPerformanceMs": 10033,
+        "payload": {
+          "connectionEvent": true
+        }
+      },
+      {
+        "name": "hmr-bench:ready",
+        "browserPerformanceMs": 10254.799999998882,
+        "payload": {
+          "fixture": "/reports/tailwind-integration/hmr-series-local-permission/pair-04-1-postcss/fixture/index.html",
+          "acknowledged": true
+        }
+      },
+      {
+        "name": "vite:beforeUpdate",
+        "browserPerformanceMs": 10310.900000000373,
+        "payload": {
+          "type": "update",
+          "updates": [
+            {
+              "type": "css-update",
+              "timestamp": 1792280663413,
+              "path": "/reports/tailwind-integration/hmr-series-local-permission/pair-04-1-postcss/fixture/probe.css?direct",
+              "acceptedPath": "/reports/tailwind-integration/hmr-series-local-permission/pair-04-1-postcss/fixture/probe.css?direct",
+              "explicitImportRequired": false,
+              "isWithinCircularImport": false
+            }
+          ]
+        }
+      },
+      {
+        "name": "vite:afterUpdate",
+        "browserPerformanceMs": 11746,
+        "payload": {
+          "type": "update",
+          "updates": [
+            {
+              "type": "css-update",
+              "timestamp": 1792280663413,
+              "path": "/reports/tailwind-integration/hmr-series-local-permission/pair-04-1-postcss/fixture/probe.css?direct",
+              "acceptedPath": "/reports/tailwind-integration/hmr-series-local-permission/pair-04-1-postcss/fixture/probe.css?direct",
+              "explicitImportRequired": false,
+              "isWithinCircularImport": false
+            }
+          ]
+        }
+      },
+      {
+        "name": "vite:beforeUpdate",
+        "browserPerformanceMs": 11789.099999999627,
+        "payload": {
+          "type": "update",
+          "updates": [
+            {
+              "type": "css-update",
+              "timestamp": 1792280664898,
+              "path": "/reports/tailwind-integration/hmr-series-local-permission/pair-04-1-postcss/fixture/probe.css?direct",
+              "acceptedPath": "/reports/tailwind-integration/hmr-series-local-permission/pair-04-1-postcss/fixture/probe.css?direct",
+              "explicitImportRequired": false,
+              "isWithinCircularImport": false
+            }
+          ]
+        }
+      },
+      {
+        "name": "vite:afterUpdate",
+        "browserPerformanceMs": 13122.400000000373,
+        "payload": {
+          "type": "update",
+          "updates": [
+            {
+              "type": "css-update",
+              "timestamp": 1792280664898,
+              "path": "/reports/tailwind-integration/hmr-series-local-permission/pair-04-1-postcss/fixture/probe.css?direct",
+              "acceptedPath": "/reports/tailwind-integration/hmr-series-local-permission/pair-04-1-postcss/fixture/probe.css?direct",
+              "explicitImportRequired": false,
+              "isWithinCircularImport": false
+            }
+          ]
+        }
+      },
+      {
+        "name": "vite:beforeUpdate",
+        "browserPerformanceMs": 13138.299999998882,
+        "payload": {
+          "type": "update",
+          "updates": [
+            {
+              "type": "css-update",
+              "timestamp": 1792280666247,
+              "path": "/reports/tailwind-integration/hmr-series-local-permission/pair-04-1-postcss/fixture/probe.css?direct",
+              "acceptedPath": "/reports/tailwind-integration/hmr-series-local-permission/pair-04-1-postcss/fixture/probe.css?direct",
+              "explicitImportRequired": false,
+              "isWithinCircularImport": false
+            }
+          ]
+        }
+      },
+      {
+        "name": "vite:afterUpdate",
+        "browserPerformanceMs": 14587.699999999255,
+        "payload": {
+          "type": "update",
+          "updates": [
+            {
+              "type": "css-update",
+              "timestamp": 1792280666247,
+              "path": "/reports/tailwind-integration/hmr-series-local-permission/pair-04-1-postcss/fixture/probe.css?direct",
+              "acceptedPath": "/reports/tailwind-integration/hmr-series-local-permission/pair-04-1-postcss/fixture/probe.css?direct",
+              "explicitImportRequired": false,
+              "isWithinCircularImport": false
+            }
+          ]
+        }
+      },
+      {
+        "name": "vite:beforeUpdate",
+        "browserPerformanceMs": 14605.699999999255,
+        "payload": {
+          "type": "update",
+          "updates": [
+            {
+              "type": "css-update",
+              "timestamp": 1792280667714,
+              "path": "/reports/tailwind-integration/hmr-series-local-permission/pair-04-1-postcss/fixture/probe.css?direct",
+              "acceptedPath": "/reports/tailwind-integration/hmr-series-local-permission/pair-04-1-postcss/fixture/probe.css?direct",
+              "explicitImportRequired": false,
+              "isWithinCircularImport": false
+            }
+          ]
+        }
+      },
+      {
+        "name": "vite:afterUpdate",
+        "browserPerformanceMs": 16157.900000000373,
+        "payload": {
+          "type": "update",
+          "updates": [
+            {
+              "type": "css-update",
+              "timestamp": 1792280667714,
+              "path": "/reports/tailwind-integration/hmr-series-local-permission/pair-04-1-postcss/fixture/probe.css?direct",
+              "acceptedPath": "/reports/tailwind-integration/hmr-series-local-permission/pair-04-1-postcss/fixture/probe.css?direct",
+              "explicitImportRequired": false,
+              "isWithinCircularImport": false
+            }
+          ]
+        }
+      },
+      {
+        "name": "vite:beforeUpdate",
+        "browserPerformanceMs": 16185.099999999627,
+        "payload": {
+          "type": "update",
+          "updates": [
+            {
+              "type": "css-update",
+              "timestamp": 1792280669294,
+              "path": "/reports/tailwind-integration/hmr-series-local-permission/pair-04-1-postcss/fixture/probe.css?direct",
+              "acceptedPath": "/reports/tailwind-integration/hmr-series-local-permission/pair-04-1-postcss/fixture/probe.css?direct",
+              "explicitImportRequired": false,
+              "isWithinCircularImport": false
+            }
+          ]
+        }
+      },
+      {
+        "name": "vite:afterUpdate",
+        "browserPerformanceMs": 17678.400000000373,
+        "payload": {
+          "type": "update",
+          "updates": [
+            {
+              "type": "css-update",
+              "timestamp": 1792280669294,
+              "path": "/reports/tailwind-integration/hmr-series-local-permission/pair-04-1-postcss/fixture/probe.css?direct",
+              "acceptedPath": "/reports/tailwind-integration/hmr-series-local-permission/pair-04-1-postcss/fixture/probe.css?direct",
+              "explicitImportRequired": false,
+              "isWithinCircularImport": false
+            }
+          ]
+        }
+      },
+      {
+        "name": "vite:beforeUpdate",
+        "browserPerformanceMs": 17702.900000000373,
+        "payload": {
+          "type": "update",
+          "updates": [
+            {
+              "type": "css-update",
+              "timestamp": 1792280670812,
+              "path": "/reports/tailwind-integration/hmr-series-local-permission/pair-04-1-postcss/fixture/probe.css?direct",
+              "acceptedPath": "/reports/tailwind-integration/hmr-series-local-permission/pair-04-1-postcss/fixture/probe.css?direct",
+              "explicitImportRequired": false,
+              "isWithinCircularImport": false
+            }
+          ]
+        }
+      },
+      {
+        "name": "vite:afterUpdate",
+        "browserPerformanceMs": 19097.599999999627,
+        "payload": {
+          "type": "update",
+          "updates": [
+            {
+              "type": "css-update",
+              "timestamp": 1792280670812,
+              "path": "/reports/tailwind-integration/hmr-series-local-permission/pair-04-1-postcss/fixture/probe.css?direct",
+              "acceptedPath": "/reports/tailwind-integration/hmr-series-local-permission/pair-04-1-postcss/fixture/probe.css?direct",
+              "explicitImportRequired": false,
+              "isWithinCircularImport": false
+            }
+          ]
+        }
+      },
+      {
+        "name": "vite:beforeUpdate",
+        "browserPerformanceMs": 19118.799999998882,
+        "payload": {
+          "type": "update",
+          "updates": [
+            {
+              "type": "css-update",
+              "timestamp": 1792280672228,
+              "path": "/reports/tailwind-integration/hmr-series-local-permission/pair-04-1-postcss/fixture/probe.css?direct",
+              "acceptedPath": "/reports/tailwind-integration/hmr-series-local-permission/pair-04-1-postcss/fixture/probe.css?direct",
+              "explicitImportRequired": false,
+              "isWithinCircularImport": false
+            }
+          ]
+        }
+      },
+      {
+        "name": "vite:afterUpdate",
+        "browserPerformanceMs": 20445.199999999255,
+        "payload": {
+          "type": "update",
+          "updates": [
+            {
+              "type": "css-update",
+              "timestamp": 1792280672228,
+              "path": "/reports/tailwind-integration/hmr-series-local-permission/pair-04-1-postcss/fixture/probe.css?direct",
+              "acceptedPath": "/reports/tailwind-integration/hmr-series-local-permission/pair-04-1-postcss/fixture/probe.css?direct",
+              "explicitImportRequired": false,
+              "isWithinCircularImport": false
+            }
+          ]
+        }
+      }
+    ],
+    "watcherEvents": [
+      {
+        "file": "reports/tailwind-integration/hmr-series-local-permission/pair-04-1-postcss/fixture/probe.css",
+        "childPerformanceMs": 14469.1001
+      },
+      {
+        "file": "reports/tailwind-integration/hmr-series-local-permission/pair-04-1-postcss/fixture/probe.css",
+        "childPerformanceMs": 15953.3816
+      },
+      {
+        "file": "reports/tailwind-integration/hmr-series-local-permission/pair-04-1-postcss/fixture/probe.css",
+        "childPerformanceMs": 17302.4688
+      },
+      {
+        "file": "reports/tailwind-integration/hmr-series-local-permission/pair-04-1-postcss/fixture/probe.css",
+        "childPerformanceMs": 18771.2202
+      },
+      {
+        "file": "reports/tailwind-integration/hmr-series-local-permission/pair-04-1-postcss/fixture/probe.css",
+        "childPerformanceMs": 20350.444
+      },
+      {
+        "file": "reports/tailwind-integration/hmr-series-local-permission/pair-04-1-postcss/fixture/probe.css",
+        "childPerformanceMs": 21868.842
+      },
+      {
+        "file": "reports/tailwind-integration/hmr-series-local-permission/pair-04-1-postcss/fixture/probe.css",
+        "childPerformanceMs": 23284.6377
+      }
+    ],
+    "cssResponses": [
+      {
+        "path": "/reports/tailwind-integration/hmr-series-local-permission/pair-04-1-postcss/fixture/probe.css",
+        "status": 200,
+        "childPerformanceMs": 13282.4177,
+        "bytes": 235917,
+        "sha256": "a81eb7cbdadb3e882c4274d61ed919a30fcda14e3255e3df393bdd485a99616f",
+        "step": 0
+      },
+      {
+        "path": "/reports/tailwind-integration/hmr-series-local-permission/pair-04-1-postcss/fixture/probe.css",
+        "status": 200,
+        "childPerformanceMs": 15912.8282,
+        "bytes": 235917,
+        "sha256": "000a6022595c367a665992eb04cbdb2049f26ea96fec6bd31104ddc28fba7c76",
+        "step": 1
+      },
+      {
+        "path": "/reports/tailwind-integration/hmr-series-local-permission/pair-04-1-postcss/fixture/probe.css",
+        "status": 200,
+        "childPerformanceMs": 17292.024,
+        "bytes": 235917,
+        "sha256": "742ae17db2b3f74b46db6834bc8767bb0bb6ccbfb280c0ae7fcb64640ee8633f",
+        "step": 2
+      },
+      {
+        "path": "/reports/tailwind-integration/hmr-series-local-permission/pair-04-1-postcss/fixture/probe.css",
+        "status": 200,
+        "childPerformanceMs": 18757.452,
+        "bytes": 235917,
+        "sha256": "43a4d556c5c056747cbee8210d3131544d2e31fdbbc468441ca4175cb88b05e3",
+        "step": 3
+      },
+      {
+        "path": "/reports/tailwind-integration/hmr-series-local-permission/pair-04-1-postcss/fixture/probe.css",
+        "status": 200,
+        "childPerformanceMs": 20327.8344,
+        "bytes": 235917,
+        "sha256": "dfd60e514ea1667ffca2f1e827b380e657da0139fbc40b72eed5ac33eb962575",
+        "step": 4
+      },
+      {
+        "path": "/reports/tailwind-integration/hmr-series-local-permission/pair-04-1-postcss/fixture/probe.css",
+        "status": 200,
+        "childPerformanceMs": 21847.9635,
+        "bytes": 235917,
+        "sha256": "301a35f341322e8638777d6c2d7b0770d44e997017a4f0aed7cbf9aa8bb169a5",
+        "step": 5
+      },
+      {
+        "path": "/reports/tailwind-integration/hmr-series-local-permission/pair-04-1-postcss/fixture/probe.css",
+        "status": 200,
+        "childPerformanceMs": 23267.1645,
+        "bytes": 235917,
+        "sha256": "5e45449db5080c299499ebcd5deab70a33461de299b7abccfcbe2aef8c802dc1",
+        "step": 6
+      },
+      {
+        "path": "/reports/tailwind-integration/hmr-series-local-permission/pair-04-1-postcss/fixture/probe.css",
+        "status": 200,
+        "childPerformanceMs": 24614.5335,
+        "bytes": 235917,
+        "sha256": "69abd7d9e441916c3e25fa1ae832d8c3151809a7b9b640e14343d946e7bfd6b9",
+        "step": 7
+      }
+    ],
+    "requests": [
+      {
+        "path": "/reports/tailwind-integration/hmr-series-local-permission/pair-04-1-postcss/fixture/index.html",
+        "method": "GET",
+        "status": 200,
+        "childPerformanceMs": 4266.887
+      },
+      {
+        "path": "/reports/tailwind-integration/hmr-series-local-permission/pair-04-1-postcss/fixture/probe.mjs",
+        "method": "GET",
+        "status": 200,
+        "childPerformanceMs": 6936.086
+      },
+      {
+        "path": "/@vite/client",
+        "method": "GET",
+        "status": 200,
+        "childPerformanceMs": 7017.6078
+      },
+      {
+        "path": "/node_modules/vite/dist/client/env.mjs",
+        "method": "GET",
+        "status": 200,
+        "childPerformanceMs": 9610.3871
+      },
+      {
+        "path": "/reports/tailwind-integration/hmr-series-local-permission/pair-04-1-postcss/fixture/probe.css",
+        "method": "GET",
+        "status": 200,
+        "childPerformanceMs": 13224.1489
+      },
+      {
+        "path": "/reports/tailwind-integration/hmr-series-local-permission/pair-04-1-postcss/fixture/probe.css",
+        "method": "GET",
+        "status": 200,
+        "childPerformanceMs": 15902.824
+      },
+      {
+        "path": "/reports/tailwind-integration/hmr-series-local-permission/pair-04-1-postcss/fixture/probe.css",
+        "method": "GET",
+        "status": 200,
+        "childPerformanceMs": 17282.4611
+      },
+      {
+        "path": "/reports/tailwind-integration/hmr-series-local-permission/pair-04-1-postcss/fixture/probe.css",
+        "method": "GET",
+        "status": 200,
+        "childPerformanceMs": 18746.3948
+      },
+      {
+        "path": "/reports/tailwind-integration/hmr-series-local-permission/pair-04-1-postcss/fixture/probe.css",
+        "method": "GET",
+        "status": 200,
+        "childPerformanceMs": 20317.7185
+      },
+      {
+        "path": "/reports/tailwind-integration/hmr-series-local-permission/pair-04-1-postcss/fixture/probe.css",
+        "method": "GET",
+        "status": 200,
+        "childPerformanceMs": 21838.9852
+      },
+      {
+        "path": "/reports/tailwind-integration/hmr-series-local-permission/pair-04-1-postcss/fixture/probe.css",
+        "method": "GET",
+        "status": 200,
+        "childPerformanceMs": 23256.9105
+      },
+      {
+        "path": "/reports/tailwind-integration/hmr-series-local-permission/pair-04-1-postcss/fixture/probe.css",
+        "method": "GET",
+        "status": 200,
+        "childPerformanceMs": 24606.0549
+      }
+    ],
+    "blockedRequests": [],
+    "sockets": [
+      {
+        "origin": "ws://127.0.0.1:61889",
+        "pathname": "/",
+        "protocol": "vite-hmr",
+        "connectedMessage": true,
+        "childPerformanceMs": 13948.5674
+      }
+    ],
+    "blockedSockets": [],
+    "pageerrors": [],
+    "consoleErrors": [],
+    "navigationsAfterReady": [],
+    "viteErrors": [],
+    "viteWarnings": [],
+    "verifications": [
+      {
+        "expected": {
+          "step": 1,
+          "width": 127,
+          "height": 32,
+          "color": "rgb(21, 41, 61)",
+          "id": "pair-04-1-postcss:step-1"
+        },
+        "actual": {
+          "width": "127px",
+          "height": "32px",
+          "color": "rgb(21, 41, 61)",
+          "step": "1",
+          "rectangle": {
+            "x": 0,
+            "y": 0,
+            "width": 127,
+            "height": 32
+          }
+        },
+        "browserVerifiedPerformanceMs": 11775,
+        "events": [
+          {
+            "name": "vite:beforeUpdate",
+            "browserPerformanceMs": 10310.900000000373,
+            "payload": {
+              "type": "update",
+              "updates": [
+                {
+                  "type": "css-update",
+                  "timestamp": 1792280663413,
+                  "path": "/reports/tailwind-integration/hmr-series-local-permission/pair-04-1-postcss/fixture/probe.css?direct",
+                  "acceptedPath": "/reports/tailwind-integration/hmr-series-local-permission/pair-04-1-postcss/fixture/probe.css?direct",
+                  "explicitImportRequired": false,
+                  "isWithinCircularImport": false
+                }
+              ]
+            }
+          },
+          {
+            "name": "vite:afterUpdate",
+            "browserPerformanceMs": 11746,
+            "payload": {
+              "type": "update",
+              "updates": [
+                {
+                  "type": "css-update",
+                  "timestamp": 1792280663413,
+                  "path": "/reports/tailwind-integration/hmr-series-local-permission/pair-04-1-postcss/fixture/probe.css?direct",
+                  "acceptedPath": "/reports/tailwind-integration/hmr-series-local-permission/pair-04-1-postcss/fixture/probe.css?direct",
+                  "explicitImportRequired": false,
+                  "isWithinCircularImport": false
+                }
+              ]
+            }
+          }
+        ]
+      },
+      {
+        "expected": {
+          "step": 2,
+          "width": 134,
+          "height": 32,
+          "color": "rgb(22, 42, 62)",
+          "id": "pair-04-1-postcss:step-2"
+        },
+        "actual": {
+          "width": "134px",
+          "height": "32px",
+          "color": "rgb(22, 42, 62)",
+          "step": "2",
+          "rectangle": {
+            "x": 0,
+            "y": 0,
+            "width": 134,
+            "height": 32
+          }
+        },
+        "browserVerifiedPerformanceMs": 13124.699999999255,
+        "events": [
+          {
+            "name": "vite:beforeUpdate",
+            "browserPerformanceMs": 11789.099999999627,
+            "payload": {
+              "type": "update",
+              "updates": [
+                {
+                  "type": "css-update",
+                  "timestamp": 1792280664898,
+                  "path": "/reports/tailwind-integration/hmr-series-local-permission/pair-04-1-postcss/fixture/probe.css?direct",
+                  "acceptedPath": "/reports/tailwind-integration/hmr-series-local-permission/pair-04-1-postcss/fixture/probe.css?direct",
+                  "explicitImportRequired": false,
+                  "isWithinCircularImport": false
+                }
+              ]
+            }
+          },
+          {
+            "name": "vite:afterUpdate",
+            "browserPerformanceMs": 13122.400000000373,
+            "payload": {
+              "type": "update",
+              "updates": [
+                {
+                  "type": "css-update",
+                  "timestamp": 1792280664898,
+                  "path": "/reports/tailwind-integration/hmr-series-local-permission/pair-04-1-postcss/fixture/probe.css?direct",
+                  "acceptedPath": "/reports/tailwind-integration/hmr-series-local-permission/pair-04-1-postcss/fixture/probe.css?direct",
+                  "explicitImportRequired": false,
+                  "isWithinCircularImport": false
+                }
+              ]
+            }
+          }
+        ]
+      },
+      {
+        "expected": {
+          "step": 3,
+          "width": 141,
+          "height": 32,
+          "color": "rgb(23, 43, 63)",
+          "id": "pair-04-1-postcss:step-3"
+        },
+        "actual": {
+          "width": "141px",
+          "height": "32px",
+          "color": "rgb(23, 43, 63)",
+          "step": "3",
+          "rectangle": {
+            "x": 0,
+            "y": 0,
+            "width": 141,
+            "height": 32
+          }
+        },
+        "browserVerifiedPerformanceMs": 14592.599999999627,
+        "events": [
+          {
+            "name": "vite:beforeUpdate",
+            "browserPerformanceMs": 13138.299999998882,
+            "payload": {
+              "type": "update",
+              "updates": [
+                {
+                  "type": "css-update",
+                  "timestamp": 1792280666247,
+                  "path": "/reports/tailwind-integration/hmr-series-local-permission/pair-04-1-postcss/fixture/probe.css?direct",
+                  "acceptedPath": "/reports/tailwind-integration/hmr-series-local-permission/pair-04-1-postcss/fixture/probe.css?direct",
+                  "explicitImportRequired": false,
+                  "isWithinCircularImport": false
+                }
+              ]
+            }
+          },
+          {
+            "name": "vite:afterUpdate",
+            "browserPerformanceMs": 14587.699999999255,
+            "payload": {
+              "type": "update",
+              "updates": [
+                {
+                  "type": "css-update",
+                  "timestamp": 1792280666247,
+                  "path": "/reports/tailwind-integration/hmr-series-local-permission/pair-04-1-postcss/fixture/probe.css?direct",
+                  "acceptedPath": "/reports/tailwind-integration/hmr-series-local-permission/pair-04-1-postcss/fixture/probe.css?direct",
+                  "explicitImportRequired": false,
+                  "isWithinCircularImport": false
+                }
+              ]
+            }
+          }
+        ]
+      },
+      {
+        "expected": {
+          "step": 4,
+          "width": 148,
+          "height": 32,
+          "color": "rgb(24, 44, 64)",
+          "id": "pair-04-1-postcss:step-4"
+        },
+        "actual": {
+          "width": "148px",
+          "height": "32px",
+          "color": "rgb(24, 44, 64)",
+          "step": "4",
+          "rectangle": {
+            "x": 0,
+            "y": 0,
+            "width": 148,
+            "height": 32
+          }
+        },
+        "browserVerifiedPerformanceMs": 16174.599999999627,
+        "events": [
+          {
+            "name": "vite:beforeUpdate",
+            "browserPerformanceMs": 14605.699999999255,
+            "payload": {
+              "type": "update",
+              "updates": [
+                {
+                  "type": "css-update",
+                  "timestamp": 1792280667714,
+                  "path": "/reports/tailwind-integration/hmr-series-local-permission/pair-04-1-postcss/fixture/probe.css?direct",
+                  "acceptedPath": "/reports/tailwind-integration/hmr-series-local-permission/pair-04-1-postcss/fixture/probe.css?direct",
+                  "explicitImportRequired": false,
+                  "isWithinCircularImport": false
+                }
+              ]
+            }
+          },
+          {
+            "name": "vite:afterUpdate",
+            "browserPerformanceMs": 16157.900000000373,
+            "payload": {
+              "type": "update",
+              "updates": [
+                {
+                  "type": "css-update",
+                  "timestamp": 1792280667714,
+                  "path": "/reports/tailwind-integration/hmr-series-local-permission/pair-04-1-postcss/fixture/probe.css?direct",
+                  "acceptedPath": "/reports/tailwind-integration/hmr-series-local-permission/pair-04-1-postcss/fixture/probe.css?direct",
+                  "explicitImportRequired": false,
+                  "isWithinCircularImport": false
+                }
+              ]
+            }
+          }
+        ]
+      },
+      {
+        "expected": {
+          "step": 5,
+          "width": 155,
+          "height": 32,
+          "color": "rgb(25, 45, 65)",
+          "id": "pair-04-1-postcss:step-5"
+        },
+        "actual": {
+          "width": "155px",
+          "height": "32px",
+          "color": "rgb(25, 45, 65)",
+          "step": "5",
+          "rectangle": {
+            "x": 0,
+            "y": 0,
+            "width": 155,
+            "height": 32
+          }
+        },
+        "browserVerifiedPerformanceMs": 17691,
+        "events": [
+          {
+            "name": "vite:beforeUpdate",
+            "browserPerformanceMs": 16185.099999999627,
+            "payload": {
+              "type": "update",
+              "updates": [
+                {
+                  "type": "css-update",
+                  "timestamp": 1792280669294,
+                  "path": "/reports/tailwind-integration/hmr-series-local-permission/pair-04-1-postcss/fixture/probe.css?direct",
+                  "acceptedPath": "/reports/tailwind-integration/hmr-series-local-permission/pair-04-1-postcss/fixture/probe.css?direct",
+                  "explicitImportRequired": false,
+                  "isWithinCircularImport": false
+                }
+              ]
+            }
+          },
+          {
+            "name": "vite:afterUpdate",
+            "browserPerformanceMs": 17678.400000000373,
+            "payload": {
+              "type": "update",
+              "updates": [
+                {
+                  "type": "css-update",
+                  "timestamp": 1792280669294,
+                  "path": "/reports/tailwind-integration/hmr-series-local-permission/pair-04-1-postcss/fixture/probe.css?direct",
+                  "acceptedPath": "/reports/tailwind-integration/hmr-series-local-permission/pair-04-1-postcss/fixture/probe.css?direct",
+                  "explicitImportRequired": false,
+                  "isWithinCircularImport": false
+                }
+              ]
+            }
+          }
+        ]
+      },
+      {
+        "expected": {
+          "step": 6,
+          "width": 162,
+          "height": 32,
+          "color": "rgb(26, 46, 66)",
+          "id": "pair-04-1-postcss:step-6"
+        },
+        "actual": {
+          "width": "162px",
+          "height": "32px",
+          "color": "rgb(26, 46, 66)",
+          "step": "6",
+          "rectangle": {
+            "x": 0,
+            "y": 0,
+            "width": 162,
+            "height": 32
+          }
+        },
+        "browserVerifiedPerformanceMs": 19108.799999998882,
+        "events": [
+          {
+            "name": "vite:beforeUpdate",
+            "browserPerformanceMs": 17702.900000000373,
+            "payload": {
+              "type": "update",
+              "updates": [
+                {
+                  "type": "css-update",
+                  "timestamp": 1792280670812,
+                  "path": "/reports/tailwind-integration/hmr-series-local-permission/pair-04-1-postcss/fixture/probe.css?direct",
+                  "acceptedPath": "/reports/tailwind-integration/hmr-series-local-permission/pair-04-1-postcss/fixture/probe.css?direct",
+                  "explicitImportRequired": false,
+                  "isWithinCircularImport": false
+                }
+              ]
+            }
+          },
+          {
+            "name": "vite:afterUpdate",
+            "browserPerformanceMs": 19097.599999999627,
+            "payload": {
+              "type": "update",
+              "updates": [
+                {
+                  "type": "css-update",
+                  "timestamp": 1792280670812,
+                  "path": "/reports/tailwind-integration/hmr-series-local-permission/pair-04-1-postcss/fixture/probe.css?direct",
+                  "acceptedPath": "/reports/tailwind-integration/hmr-series-local-permission/pair-04-1-postcss/fixture/probe.css?direct",
+                  "explicitImportRequired": false,
+                  "isWithinCircularImport": false
+                }
+              ]
+            }
+          }
+        ]
+      },
+      {
+        "expected": {
+          "step": 7,
+          "width": 169,
+          "height": 32,
+          "color": "rgb(27, 47, 67)",
+          "id": "pair-04-1-postcss:step-7"
+        },
+        "actual": {
+          "width": "169px",
+          "height": "32px",
+          "color": "rgb(27, 47, 67)",
+          "step": "7",
+          "rectangle": {
+            "x": 0,
+            "y": 0,
+            "width": 169,
+            "height": 32
+          }
+        },
+        "browserVerifiedPerformanceMs": 20458.799999998882,
+        "events": [
+          {
+            "name": "vite:beforeUpdate",
+            "browserPerformanceMs": 19118.799999998882,
+            "payload": {
+              "type": "update",
+              "updates": [
+                {
+                  "type": "css-update",
+                  "timestamp": 1792280672228,
+                  "path": "/reports/tailwind-integration/hmr-series-local-permission/pair-04-1-postcss/fixture/probe.css?direct",
+                  "acceptedPath": "/reports/tailwind-integration/hmr-series-local-permission/pair-04-1-postcss/fixture/probe.css?direct",
+                  "explicitImportRequired": false,
+                  "isWithinCircularImport": false
+                }
+              ]
+            }
+          },
+          {
+            "name": "vite:afterUpdate",
+            "browserPerformanceMs": 20445.199999999255,
+            "payload": {
+              "type": "update",
+              "updates": [
+                {
+                  "type": "css-update",
+                  "timestamp": 1792280672228,
+                  "path": "/reports/tailwind-integration/hmr-series-local-permission/pair-04-1-postcss/fixture/probe.css?direct",
+                  "acceptedPath": "/reports/tailwind-integration/hmr-series-local-permission/pair-04-1-postcss/fixture/probe.css?direct",
+                  "explicitImportRequired": false,
+                  "isWithinCircularImport": false
+                }
+              ]
+            }
+          }
+        ]
+      }
+    ],
+    "config": {
+      "configFile": false,
+      "envDir": false,
+      "root": ".",
+      "mode": "development",
+      "css": {
+        "devSourcemap": false,
+        "postcss": "implicit root postcss.config.js discovery"
+      },
+      "integrationPlugins": [],
+      "resolvedPlugins": [
+        "vite:optimized-deps",
+        "vite:watch-package-data",
+        "vite:pre-alias",
+        "alias",
+        "vite:modulepreload-polyfill",
+        "vite:bundled-dev-client-imports",
+        "vite:resolve-dev",
+        "vite:resolve-builtin:get-environment",
+        "vite:resolve-builtin",
+        "vite:html-inline-proxy",
+        "vite:css",
+        "builtin:oxc-runtime",
+        "vite:oxc",
+        "builtin:vite-json",
+        "vite:wasm-helper",
+        "vite:worker",
+        "vite:asset",
+        "vite:define",
+        "vite:css-post",
+        "vite:build-html",
+        "vite:worker-import-meta-url",
+        "vite:asset-import-meta-url",
+        "vite:dynamic-import-vars",
+        "vite:import-glob",
+        "vite:client-inject",
+        "vite:css-analysis",
+        "vite:import-analysis"
+      ],
+      "cacheDir": "reports/tailwind-integration/hmr-series-local-permission/pair-04-1-postcss/cache/vite",
+      "cacheExistedBeforeStartup": false,
+      "optimizeDeps": {
+        "entries": [],
+        "noDiscovery": true,
+        "include": []
+      },
+      "server": {
+        "host": "127.0.0.1",
+        "port": 61889,
+        "requestedPort": 0,
+        "strictPort": true,
+        "hmrOverlay": false,
+        "watcher": "Vite defaults, root config not loaded; fixture outside cacheDir"
+      },
+      "fixture": "reports/tailwind-integration/hmr-series-local-permission/pair-04-1-postcss/fixture/index.html",
+      "probe": "reports/tailwind-integration/hmr-series-local-permission/pair-04-1-postcss/fixture/probe.css",
+      "networkInstrumentation": "HTTP GET/HEAD exact origin via route.fetch(maxRedirects:0)+fulfill; every other HTTP/WS blocked before connection; browser HTTP cache disabled by routing",
+      "permissions": {
+        "granted": [
+          "local-network-access"
+        ],
+        "origin": "http://127.0.0.1:61889",
+        "scope": "this ephemeral isolated fixture origin only"
+      }
+    },
+    "playwrightBrowserRevision": "1248",
+    "chromium": "156.0.8078.4",
+    "initial": {
+      "width": "120px",
+      "height": "32px",
+      "color": "rgb(20, 40, 60)",
+      "step": "0",
+      "rectangle": {
+        "width": 120,
+        "height": 32
+      }
+    },
+    "stopRequestedAtChildPerformanceMs": 24629.8827,
+    "finishedAt": "2026-10-17T23:44:33.836Z"
+  },
+  "messages": [
+    {
+      "type": "ready",
+      "initial": {
+        "width": "120px",
+        "height": "32px",
+        "color": "rgb(20, 40, 60)",
+        "step": "0",
+        "rectangle": {
+          "width": 120,
+          "height": 32
+        }
+      },
+      "config": {
+        "configFile": false,
+        "envDir": false,
+        "root": ".",
+        "mode": "development",
+        "css": {
+          "devSourcemap": false,
+          "postcss": "implicit root postcss.config.js discovery"
+        },
+        "integrationPlugins": [],
+        "resolvedPlugins": [
+          "vite:optimized-deps",
+          "vite:watch-package-data",
+          "vite:pre-alias",
+          "alias",
+          "vite:modulepreload-polyfill",
+          "vite:bundled-dev-client-imports",
+          "vite:resolve-dev",
+          "vite:resolve-builtin:get-environment",
+          "vite:resolve-builtin",
+          "vite:html-inline-proxy",
+          "vite:css",
+          "builtin:oxc-runtime",
+          "vite:oxc",
+          "builtin:vite-json",
+          "vite:wasm-helper",
+          "vite:worker",
+          "vite:asset",
+          "vite:define",
+          "vite:css-post",
+          "vite:build-html",
+          "vite:worker-import-meta-url",
+          "vite:asset-import-meta-url",
+          "vite:dynamic-import-vars",
+          "vite:import-glob",
+          "vite:client-inject",
+          "vite:css-analysis",
+          "vite:import-analysis"
+        ],
+        "cacheDir": "reports/tailwind-integration/hmr-series-local-permission/pair-04-1-postcss/cache/vite",
+        "cacheExistedBeforeStartup": false,
+        "optimizeDeps": {
+          "entries": [],
+          "noDiscovery": true,
+          "include": []
+        },
+        "server": {
+          "host": "127.0.0.1",
+          "port": 61889,
+          "requestedPort": 0,
+          "strictPort": true,
+          "hmrOverlay": false,
+          "watcher": "Vite defaults, root config not loaded; fixture outside cacheDir"
+        },
+        "fixture": "reports/tailwind-integration/hmr-series-local-permission/pair-04-1-postcss/fixture/index.html",
+        "probe": "reports/tailwind-integration/hmr-series-local-permission/pair-04-1-postcss/fixture/probe.css",
+        "networkInstrumentation": "HTTP GET/HEAD exact origin via route.fetch(maxRedirects:0)+fulfill; every other HTTP/WS blocked before connection; browser HTTP cache disabled by routing",
+        "permissions": {
+          "granted": [
+            "local-network-access"
+          ],
+          "origin": "http://127.0.0.1:61889",
+          "scope": "this ephemeral isolated fixture origin only"
+        }
+      },
+      "chromium": "156.0.8078.4",
+      "parentReceiptPerformanceMs": 189223.0221
+    },
+    {
+      "type": "armed",
+      "id": "pair-04-1-postcss:step-1",
+      "state": {
+        "armed": true,
+        "eventIndex": 2,
+        "before": {
+          "width": "120px",
+          "height": "32px",
+          "color": "rgb(20, 40, 60)",
+          "step": "0",
+          "rectangle": {
+            "x": 0,
+            "y": 0,
+            "width": 120,
+            "height": 32
+          }
+        }
+      },
+      "parentReceiptPerformanceMs": 189226.5662
+    },
+    {
+      "type": "verified",
+      "id": "pair-04-1-postcss:step-1",
+      "verification": {
+        "expected": {
+          "step": 1,
+          "width": 127,
+          "height": 32,
+          "color": "rgb(21, 41, 61)",
+          "id": "pair-04-1-postcss:step-1"
+        },
+        "actual": {
+          "width": "127px",
+          "height": "32px",
+          "color": "rgb(21, 41, 61)",
+          "step": "1",
+          "rectangle": {
+            "x": 0,
+            "y": 0,
+            "width": 127,
+            "height": 32
+          }
+        },
+        "browserVerifiedPerformanceMs": 11775,
+        "events": [
+          {
+            "name": "vite:beforeUpdate",
+            "browserPerformanceMs": 10310.900000000373,
+            "payload": {
+              "type": "update",
+              "updates": [
+                {
+                  "type": "css-update",
+                  "timestamp": 1792280663413,
+                  "path": "/reports/tailwind-integration/hmr-series-local-permission/pair-04-1-postcss/fixture/probe.css?direct",
+                  "acceptedPath": "/reports/tailwind-integration/hmr-series-local-permission/pair-04-1-postcss/fixture/probe.css?direct",
+                  "explicitImportRequired": false,
+                  "isWithinCircularImport": false
+                }
+              ]
+            }
+          },
+          {
+            "name": "vite:afterUpdate",
+            "browserPerformanceMs": 11746,
+            "payload": {
+              "type": "update",
+              "updates": [
+                {
+                  "type": "css-update",
+                  "timestamp": 1792280663413,
+                  "path": "/reports/tailwind-integration/hmr-series-local-permission/pair-04-1-postcss/fixture/probe.css?direct",
+                  "acceptedPath": "/reports/tailwind-integration/hmr-series-local-permission/pair-04-1-postcss/fixture/probe.css?direct",
+                  "explicitImportRequired": false,
+                  "isWithinCircularImport": false
+                }
+              ]
+            }
+          }
+        ]
+      },
+      "watcherChanges": [
+        {
+          "file": "reports/tailwind-integration/hmr-series-local-permission/pair-04-1-postcss/fixture/probe.css",
+          "childPerformanceMs": 14469.1001
+        }
+      ],
+      "parentReceiptPerformanceMs": 190707.6051
+    },
+    {
+      "type": "armed",
+      "id": "pair-04-1-postcss:step-2",
+      "state": {
+        "armed": true,
+        "eventIndex": 4,
+        "before": {
+          "width": "127px",
+          "height": "32px",
+          "color": "rgb(21, 41, 61)",
+          "step": "1",
+          "rectangle": {
+            "x": 0,
+            "y": 0,
+            "width": 127,
+            "height": 32
+          }
+        }
+      },
+      "parentReceiptPerformanceMs": 190711.549
+    },
+    {
+      "type": "verified",
+      "id": "pair-04-1-postcss:step-2",
+      "verification": {
+        "expected": {
+          "step": 2,
+          "width": 134,
+          "height": 32,
+          "color": "rgb(22, 42, 62)",
+          "id": "pair-04-1-postcss:step-2"
+        },
+        "actual": {
+          "width": "134px",
+          "height": "32px",
+          "color": "rgb(22, 42, 62)",
+          "step": "2",
+          "rectangle": {
+            "x": 0,
+            "y": 0,
+            "width": 134,
+            "height": 32
+          }
+        },
+        "browserVerifiedPerformanceMs": 13124.699999999255,
+        "events": [
+          {
+            "name": "vite:beforeUpdate",
+            "browserPerformanceMs": 11789.099999999627,
+            "payload": {
+              "type": "update",
+              "updates": [
+                {
+                  "type": "css-update",
+                  "timestamp": 1792280664898,
+                  "path": "/reports/tailwind-integration/hmr-series-local-permission/pair-04-1-postcss/fixture/probe.css?direct",
+                  "acceptedPath": "/reports/tailwind-integration/hmr-series-local-permission/pair-04-1-postcss/fixture/probe.css?direct",
+                  "explicitImportRequired": false,
+                  "isWithinCircularImport": false
+                }
+              ]
+            }
+          },
+          {
+            "name": "vite:afterUpdate",
+            "browserPerformanceMs": 13122.400000000373,
+            "payload": {
+              "type": "update",
+              "updates": [
+                {
+                  "type": "css-update",
+                  "timestamp": 1792280664898,
+                  "path": "/reports/tailwind-integration/hmr-series-local-permission/pair-04-1-postcss/fixture/probe.css?direct",
+                  "acceptedPath": "/reports/tailwind-integration/hmr-series-local-permission/pair-04-1-postcss/fixture/probe.css?direct",
+                  "explicitImportRequired": false,
+                  "isWithinCircularImport": false
+                }
+              ]
+            }
+          }
+        ]
+      },
+      "watcherChanges": [
+        {
+          "file": "reports/tailwind-integration/hmr-series-local-permission/pair-04-1-postcss/fixture/probe.css",
+          "childPerformanceMs": 15953.3816
+        }
+      ],
+      "parentReceiptPerformanceMs": 192055.5923
+    },
+    {
+      "type": "armed",
+      "id": "pair-04-1-postcss:step-3",
+      "state": {
+        "armed": true,
+        "eventIndex": 6,
+        "before": {
+          "width": "134px",
+          "height": "32px",
+          "color": "rgb(22, 42, 62)",
+          "step": "2",
+          "rectangle": {
+            "x": 0,
+            "y": 0,
+            "width": 134,
+            "height": 32
+          }
+        }
+      },
+      "parentReceiptPerformanceMs": 192060.4473
+    },
+    {
+      "type": "verified",
+      "id": "pair-04-1-postcss:step-3",
+      "verification": {
+        "expected": {
+          "step": 3,
+          "width": 141,
+          "height": 32,
+          "color": "rgb(23, 43, 63)",
+          "id": "pair-04-1-postcss:step-3"
+        },
+        "actual": {
+          "width": "141px",
+          "height": "32px",
+          "color": "rgb(23, 43, 63)",
+          "step": "3",
+          "rectangle": {
+            "x": 0,
+            "y": 0,
+            "width": 141,
+            "height": 32
+          }
+        },
+        "browserVerifiedPerformanceMs": 14592.599999999627,
+        "events": [
+          {
+            "name": "vite:beforeUpdate",
+            "browserPerformanceMs": 13138.299999998882,
+            "payload": {
+              "type": "update",
+              "updates": [
+                {
+                  "type": "css-update",
+                  "timestamp": 1792280666247,
+                  "path": "/reports/tailwind-integration/hmr-series-local-permission/pair-04-1-postcss/fixture/probe.css?direct",
+                  "acceptedPath": "/reports/tailwind-integration/hmr-series-local-permission/pair-04-1-postcss/fixture/probe.css?direct",
+                  "explicitImportRequired": false,
+                  "isWithinCircularImport": false
+                }
+              ]
+            }
+          },
+          {
+            "name": "vite:afterUpdate",
+            "browserPerformanceMs": 14587.699999999255,
+            "payload": {
+              "type": "update",
+              "updates": [
+                {
+                  "type": "css-update",
+                  "timestamp": 1792280666247,
+                  "path": "/reports/tailwind-integration/hmr-series-local-permission/pair-04-1-postcss/fixture/probe.css?direct",
+                  "acceptedPath": "/reports/tailwind-integration/hmr-series-local-permission/pair-04-1-postcss/fixture/probe.css?direct",
+                  "explicitImportRequired": false,
+                  "isWithinCircularImport": false
+                }
+              ]
+            }
+          }
+        ]
+      },
+      "watcherChanges": [
+        {
+          "file": "reports/tailwind-integration/hmr-series-local-permission/pair-04-1-postcss/fixture/probe.css",
+          "childPerformanceMs": 17302.4688
+        }
+      ],
+      "parentReceiptPerformanceMs": 193526.3181
+    },
+    {
+      "type": "armed",
+      "id": "pair-04-1-postcss:step-4",
+      "state": {
+        "armed": true,
+        "eventIndex": 8,
+        "before": {
+          "width": "141px",
+          "height": "32px",
+          "color": "rgb(23, 43, 63)",
+          "step": "3",
+          "rectangle": {
+            "x": 0,
+            "y": 0,
+            "width": 141,
+            "height": 32
+          }
+        }
+      },
+      "parentReceiptPerformanceMs": 193529.223
+    },
+    {
+      "type": "verified",
+      "id": "pair-04-1-postcss:step-4",
+      "verification": {
+        "expected": {
+          "step": 4,
+          "width": 148,
+          "height": 32,
+          "color": "rgb(24, 44, 64)",
+          "id": "pair-04-1-postcss:step-4"
+        },
+        "actual": {
+          "width": "148px",
+          "height": "32px",
+          "color": "rgb(24, 44, 64)",
+          "step": "4",
+          "rectangle": {
+            "x": 0,
+            "y": 0,
+            "width": 148,
+            "height": 32
+          }
+        },
+        "browserVerifiedPerformanceMs": 16174.599999999627,
+        "events": [
+          {
+            "name": "vite:beforeUpdate",
+            "browserPerformanceMs": 14605.699999999255,
+            "payload": {
+              "type": "update",
+              "updates": [
+                {
+                  "type": "css-update",
+                  "timestamp": 1792280667714,
+                  "path": "/reports/tailwind-integration/hmr-series-local-permission/pair-04-1-postcss/fixture/probe.css?direct",
+                  "acceptedPath": "/reports/tailwind-integration/hmr-series-local-permission/pair-04-1-postcss/fixture/probe.css?direct",
+                  "explicitImportRequired": false,
+                  "isWithinCircularImport": false
+                }
+              ]
+            }
+          },
+          {
+            "name": "vite:afterUpdate",
+            "browserPerformanceMs": 16157.900000000373,
+            "payload": {
+              "type": "update",
+              "updates": [
+                {
+                  "type": "css-update",
+                  "timestamp": 1792280667714,
+                  "path": "/reports/tailwind-integration/hmr-series-local-permission/pair-04-1-postcss/fixture/probe.css?direct",
+                  "acceptedPath": "/reports/tailwind-integration/hmr-series-local-permission/pair-04-1-postcss/fixture/probe.css?direct",
+                  "explicitImportRequired": false,
+                  "isWithinCircularImport": false
+                }
+              ]
+            }
+          }
+        ]
+      },
+      "watcherChanges": [
+        {
+          "file": "reports/tailwind-integration/hmr-series-local-permission/pair-04-1-postcss/fixture/probe.css",
+          "childPerformanceMs": 18771.2202
+        }
+      ],
+      "parentReceiptPerformanceMs": 195105.4503
+    },
+    {
+      "type": "armed",
+      "id": "pair-04-1-postcss:step-5",
+      "state": {
+        "armed": true,
+        "eventIndex": 10,
+        "before": {
+          "width": "148px",
+          "height": "32px",
+          "color": "rgb(24, 44, 64)",
+          "step": "4",
+          "rectangle": {
+            "x": 0,
+            "y": 0,
+            "width": 148,
+            "height": 32
+          }
+        }
+      },
+      "parentReceiptPerformanceMs": 195108.3455
+    },
+    {
+      "type": "verified",
+      "id": "pair-04-1-postcss:step-5",
+      "verification": {
+        "expected": {
+          "step": 5,
+          "width": 155,
+          "height": 32,
+          "color": "rgb(25, 45, 65)",
+          "id": "pair-04-1-postcss:step-5"
+        },
+        "actual": {
+          "width": "155px",
+          "height": "32px",
+          "color": "rgb(25, 45, 65)",
+          "step": "5",
+          "rectangle": {
+            "x": 0,
+            "y": 0,
+            "width": 155,
+            "height": 32
+          }
+        },
+        "browserVerifiedPerformanceMs": 17691,
+        "events": [
+          {
+            "name": "vite:beforeUpdate",
+            "browserPerformanceMs": 16185.099999999627,
+            "payload": {
+              "type": "update",
+              "updates": [
+                {
+                  "type": "css-update",
+                  "timestamp": 1792280669294,
+                  "path": "/reports/tailwind-integration/hmr-series-local-permission/pair-04-1-postcss/fixture/probe.css?direct",
+                  "acceptedPath": "/reports/tailwind-integration/hmr-series-local-permission/pair-04-1-postcss/fixture/probe.css?direct",
+                  "explicitImportRequired": false,
+                  "isWithinCircularImport": false
+                }
+              ]
+            }
+          },
+          {
+            "name": "vite:afterUpdate",
+            "browserPerformanceMs": 17678.400000000373,
+            "payload": {
+              "type": "update",
+              "updates": [
+                {
+                  "type": "css-update",
+                  "timestamp": 1792280669294,
+                  "path": "/reports/tailwind-integration/hmr-series-local-permission/pair-04-1-postcss/fixture/probe.css?direct",
+                  "acceptedPath": "/reports/tailwind-integration/hmr-series-local-permission/pair-04-1-postcss/fixture/probe.css?direct",
+                  "explicitImportRequired": false,
+                  "isWithinCircularImport": false
+                }
+              ]
+            }
+          }
+        ]
+      },
+      "watcherChanges": [
+        {
+          "file": "reports/tailwind-integration/hmr-series-local-permission/pair-04-1-postcss/fixture/probe.css",
+          "childPerformanceMs": 20350.444
+        }
+      ],
+      "parentReceiptPerformanceMs": 196621.8747
+    },
+    {
+      "type": "armed",
+      "id": "pair-04-1-postcss:step-6",
+      "state": {
+        "armed": true,
+        "eventIndex": 12,
+        "before": {
+          "width": "155px",
+          "height": "32px",
+          "color": "rgb(25, 45, 65)",
+          "step": "5",
+          "rectangle": {
+            "x": 0,
+            "y": 0,
+            "width": 155,
+            "height": 32
+          }
+        }
+      },
+      "parentReceiptPerformanceMs": 196625.9702
+    },
+    {
+      "type": "verified",
+      "id": "pair-04-1-postcss:step-6",
+      "verification": {
+        "expected": {
+          "step": 6,
+          "width": 162,
+          "height": 32,
+          "color": "rgb(26, 46, 66)",
+          "id": "pair-04-1-postcss:step-6"
+        },
+        "actual": {
+          "width": "162px",
+          "height": "32px",
+          "color": "rgb(26, 46, 66)",
+          "step": "6",
+          "rectangle": {
+            "x": 0,
+            "y": 0,
+            "width": 162,
+            "height": 32
+          }
+        },
+        "browserVerifiedPerformanceMs": 19108.799999998882,
+        "events": [
+          {
+            "name": "vite:beforeUpdate",
+            "browserPerformanceMs": 17702.900000000373,
+            "payload": {
+              "type": "update",
+              "updates": [
+                {
+                  "type": "css-update",
+                  "timestamp": 1792280670812,
+                  "path": "/reports/tailwind-integration/hmr-series-local-permission/pair-04-1-postcss/fixture/probe.css?direct",
+                  "acceptedPath": "/reports/tailwind-integration/hmr-series-local-permission/pair-04-1-postcss/fixture/probe.css?direct",
+                  "explicitImportRequired": false,
+                  "isWithinCircularImport": false
+                }
+              ]
+            }
+          },
+          {
+            "name": "vite:afterUpdate",
+            "browserPerformanceMs": 19097.599999999627,
+            "payload": {
+              "type": "update",
+              "updates": [
+                {
+                  "type": "css-update",
+                  "timestamp": 1792280670812,
+                  "path": "/reports/tailwind-integration/hmr-series-local-permission/pair-04-1-postcss/fixture/probe.css?direct",
+                  "acceptedPath": "/reports/tailwind-integration/hmr-series-local-permission/pair-04-1-postcss/fixture/probe.css?direct",
+                  "explicitImportRequired": false,
+                  "isWithinCircularImport": false
+                }
+              ]
+            }
+          }
+        ]
+      },
+      "watcherChanges": [
+        {
+          "file": "reports/tailwind-integration/hmr-series-local-permission/pair-04-1-postcss/fixture/probe.css",
+          "childPerformanceMs": 21868.842
+        }
+      ],
+      "parentReceiptPerformanceMs": 198039.7824
+    },
+    {
+      "type": "armed",
+      "id": "pair-04-1-postcss:step-7",
+      "state": {
+        "armed": true,
+        "eventIndex": 14,
+        "before": {
+          "width": "162px",
+          "height": "32px",
+          "color": "rgb(26, 46, 66)",
+          "step": "6",
+          "rectangle": {
+            "x": 0,
+            "y": 0,
+            "width": 162,
+            "height": 32
+          }
+        }
+      },
+      "parentReceiptPerformanceMs": 198042.5354
+    },
+    {
+      "type": "verified",
+      "id": "pair-04-1-postcss:step-7",
+      "verification": {
+        "expected": {
+          "step": 7,
+          "width": 169,
+          "height": 32,
+          "color": "rgb(27, 47, 67)",
+          "id": "pair-04-1-postcss:step-7"
+        },
+        "actual": {
+          "width": "169px",
+          "height": "32px",
+          "color": "rgb(27, 47, 67)",
+          "step": "7",
+          "rectangle": {
+            "x": 0,
+            "y": 0,
+            "width": 169,
+            "height": 32
+          }
+        },
+        "browserVerifiedPerformanceMs": 20458.799999998882,
+        "events": [
+          {
+            "name": "vite:beforeUpdate",
+            "browserPerformanceMs": 19118.799999998882,
+            "payload": {
+              "type": "update",
+              "updates": [
+                {
+                  "type": "css-update",
+                  "timestamp": 1792280672228,
+                  "path": "/reports/tailwind-integration/hmr-series-local-permission/pair-04-1-postcss/fixture/probe.css?direct",
+                  "acceptedPath": "/reports/tailwind-integration/hmr-series-local-permission/pair-04-1-postcss/fixture/probe.css?direct",
+                  "explicitImportRequired": false,
+                  "isWithinCircularImport": false
+                }
+              ]
+            }
+          },
+          {
+            "name": "vite:afterUpdate",
+            "browserPerformanceMs": 20445.199999999255,
+            "payload": {
+              "type": "update",
+              "updates": [
+                {
+                  "type": "css-update",
+                  "timestamp": 1792280672228,
+                  "path": "/reports/tailwind-integration/hmr-series-local-permission/pair-04-1-postcss/fixture/probe.css?direct",
+                  "acceptedPath": "/reports/tailwind-integration/hmr-series-local-permission/pair-04-1-postcss/fixture/probe.css?direct",
+                  "explicitImportRequired": false,
+                  "isWithinCircularImport": false
+                }
+              ]
+            }
+          }
+        ]
+      },
+      "watcherChanges": [
+        {
+          "file": "reports/tailwind-integration/hmr-series-local-permission/pair-04-1-postcss/fixture/probe.css",
+          "childPerformanceMs": 23284.6377
+        }
+      ],
+      "parentReceiptPerformanceMs": 199389.6136
+    },
+    {
+      "type": "finished",
+      "report": {
+        "id": "pair-04-1-postcss",
+        "variant": "postcss",
+        "node": "v24.22.0",
+        "startedAt": "2026-10-17T23:44:09.362Z",
+        "passed": true,
+        "failures": [],
+        "hmrEvents": [
+          {
+            "name": "vite:ws:connect",
+            "browserPerformanceMs": 10033,
+            "payload": {
+              "connectionEvent": true
+            }
+          },
+          {
+            "name": "hmr-bench:ready",
+            "browserPerformanceMs": 10254.799999998882,
+            "payload": {
+              "fixture": "/reports/tailwind-integration/hmr-series-local-permission/pair-04-1-postcss/fixture/index.html",
+              "acknowledged": true
+            }
+          },
+          {
+            "name": "vite:beforeUpdate",
+            "browserPerformanceMs": 10310.900000000373,
+            "payload": {
+              "type": "update",
+              "updates": [
+                {
+                  "type": "css-update",
+                  "timestamp": 1792280663413,
+                  "path": "/reports/tailwind-integration/hmr-series-local-permission/pair-04-1-postcss/fixture/probe.css?direct",
+                  "acceptedPath": "/reports/tailwind-integration/hmr-series-local-permission/pair-04-1-postcss/fixture/probe.css?direct",
+                  "explicitImportRequired": false,
+                  "isWithinCircularImport": false
+                }
+              ]
+            }
+          },
+          {
+            "name": "vite:afterUpdate",
+            "browserPerformanceMs": 11746,
+            "payload": {
+              "type": "update",
+              "updates": [
+                {
+                  "type": "css-update",
+                  "timestamp": 1792280663413,
+                  "path": "/reports/tailwind-integration/hmr-series-local-permission/pair-04-1-postcss/fixture/probe.css?direct",
+                  "acceptedPath": "/reports/tailwind-integration/hmr-series-local-permission/pair-04-1-postcss/fixture/probe.css?direct",
+                  "explicitImportRequired": false,
+                  "isWithinCircularImport": false
+                }
+              ]
+            }
+          },
+          {
+            "name": "vite:beforeUpdate",
+            "browserPerformanceMs": 11789.099999999627,
+            "payload": {
+              "type": "update",
+              "updates": [
+                {
+                  "type": "css-update",
+                  "timestamp": 1792280664898,
+                  "path": "/reports/tailwind-integration/hmr-series-local-permission/pair-04-1-postcss/fixture/probe.css?direct",
+                  "acceptedPath": "/reports/tailwind-integration/hmr-series-local-permission/pair-04-1-postcss/fixture/probe.css?direct",
+                  "explicitImportRequired": false,
+                  "isWithinCircularImport": false
+                }
+              ]
+            }
+          },
+          {
+            "name": "vite:afterUpdate",
+            "browserPerformanceMs": 13122.400000000373,
+            "payload": {
+              "type": "update",
+              "updates": [
+                {
+                  "type": "css-update",
+                  "timestamp": 1792280664898,
+                  "path": "/reports/tailwind-integration/hmr-series-local-permission/pair-04-1-postcss/fixture/probe.css?direct",
+                  "acceptedPath": "/reports/tailwind-integration/hmr-series-local-permission/pair-04-1-postcss/fixture/probe.css?direct",
+                  "explicitImportRequired": false,
+                  "isWithinCircularImport": false
+                }
+              ]
+            }
+          },
+          {
+            "name": "vite:beforeUpdate",
+            "browserPerformanceMs": 13138.299999998882,
+            "payload": {
+              "type": "update",
+              "updates": [
+                {
+                  "type": "css-update",
+                  "timestamp": 1792280666247,
+                  "path": "/reports/tailwind-integration/hmr-series-local-permission/pair-04-1-postcss/fixture/probe.css?direct",
+                  "acceptedPath": "/reports/tailwind-integration/hmr-series-local-permission/pair-04-1-postcss/fixture/probe.css?direct",
+                  "explicitImportRequired": false,
+                  "isWithinCircularImport": false
+                }
+              ]
+            }
+          },
+          {
+            "name": "vite:afterUpdate",
+            "browserPerformanceMs": 14587.699999999255,
+            "payload": {
+              "type": "update",
+              "updates": [
+                {
+                  "type": "css-update",
+                  "timestamp": 1792280666247,
+                  "path": "/reports/tailwind-integration/hmr-series-local-permission/pair-04-1-postcss/fixture/probe.css?direct",
+                  "acceptedPath": "/reports/tailwind-integration/hmr-series-local-permission/pair-04-1-postcss/fixture/probe.css?direct",
+                  "explicitImportRequired": false,
+                  "isWithinCircularImport": false
+                }
+              ]
+            }
+          },
+          {
+            "name": "vite:beforeUpdate",
+            "browserPerformanceMs": 14605.699999999255,
+            "payload": {
+              "type": "update",
+              "updates": [
+                {
+                  "type": "css-update",
+                  "timestamp": 1792280667714,
+                  "path": "/reports/tailwind-integration/hmr-series-local-permission/pair-04-1-postcss/fixture/probe.css?direct",
+                  "acceptedPath": "/reports/tailwind-integration/hmr-series-local-permission/pair-04-1-postcss/fixture/probe.css?direct",
+                  "explicitImportRequired": false,
+                  "isWithinCircularImport": false
+                }
+              ]
+            }
+          },
+          {
+            "name": "vite:afterUpdate",
+            "browserPerformanceMs": 16157.900000000373,
+            "payload": {
+              "type": "update",
+              "updates": [
+                {
+                  "type": "css-update",
+                  "timestamp": 1792280667714,
+                  "path": "/reports/tailwind-integration/hmr-series-local-permission/pair-04-1-postcss/fixture/probe.css?direct",
+                  "acceptedPath": "/reports/tailwind-integration/hmr-series-local-permission/pair-04-1-postcss/fixture/probe.css?direct",
+                  "explicitImportRequired": false,
+                  "isWithinCircularImport": false
+                }
+              ]
+            }
+          },
+          {
+            "name": "vite:beforeUpdate",
+            "browserPerformanceMs": 16185.099999999627,
+            "payload": {
+              "type": "update",
+              "updates": [
+                {
+                  "type": "css-update",
+                  "timestamp": 1792280669294,
+                  "path": "/reports/tailwind-integration/hmr-series-local-permission/pair-04-1-postcss/fixture/probe.css?direct",
+                  "acceptedPath": "/reports/tailwind-integration/hmr-series-local-permission/pair-04-1-postcss/fixture/probe.css?direct",
+                  "explicitImportRequired": false,
+                  "isWithinCircularImport": false
+                }
+              ]
+            }
+          },
+          {
+            "name": "vite:afterUpdate",
+            "browserPerformanceMs": 17678.400000000373,
+            "payload": {
+              "type": "update",
+              "updates": [
+                {
+                  "type": "css-update",
+                  "timestamp": 1792280669294,
+                  "path": "/reports/tailwind-integration/hmr-series-local-permission/pair-04-1-postcss/fixture/probe.css?direct",
+                  "acceptedPath": "/reports/tailwind-integration/hmr-series-local-permission/pair-04-1-postcss/fixture/probe.css?direct",
+                  "explicitImportRequired": false,
+                  "isWithinCircularImport": false
+                }
+              ]
+            }
+          },
+          {
+            "name": "vite:beforeUpdate",
+            "browserPerformanceMs": 17702.900000000373,
+            "payload": {
+              "type": "update",
+              "updates": [
+                {
+                  "type": "css-update",
+                  "timestamp": 1792280670812,
+                  "path": "/reports/tailwind-integration/hmr-series-local-permission/pair-04-1-postcss/fixture/probe.css?direct",
+                  "acceptedPath": "/reports/tailwind-integration/hmr-series-local-permission/pair-04-1-postcss/fixture/probe.css?direct",
+                  "explicitImportRequired": false,
+                  "isWithinCircularImport": false
+                }
+              ]
+            }
+          },
+          {
+            "name": "vite:afterUpdate",
+            "browserPerformanceMs": 19097.599999999627,
+            "payload": {
+              "type": "update",
+              "updates": [
+                {
+                  "type": "css-update",
+                  "timestamp": 1792280670812,
+                  "path": "/reports/tailwind-integration/hmr-series-local-permission/pair-04-1-postcss/fixture/probe.css?direct",
+                  "acceptedPath": "/reports/tailwind-integration/hmr-series-local-permission/pair-04-1-postcss/fixture/probe.css?direct",
+                  "explicitImportRequired": false,
+                  "isWithinCircularImport": false
+                }
+              ]
+            }
+          },
+          {
+            "name": "vite:beforeUpdate",
+            "browserPerformanceMs": 19118.799999998882,
+            "payload": {
+              "type": "update",
+              "updates": [
+                {
+                  "type": "css-update",
+                  "timestamp": 1792280672228,
+                  "path": "/reports/tailwind-integration/hmr-series-local-permission/pair-04-1-postcss/fixture/probe.css?direct",
+                  "acceptedPath": "/reports/tailwind-integration/hmr-series-local-permission/pair-04-1-postcss/fixture/probe.css?direct",
+                  "explicitImportRequired": false,
+                  "isWithinCircularImport": false
+                }
+              ]
+            }
+          },
+          {
+            "name": "vite:afterUpdate",
+            "browserPerformanceMs": 20445.199999999255,
+            "payload": {
+              "type": "update",
+              "updates": [
+                {
+                  "type": "css-update",
+                  "timestamp": 1792280672228,
+                  "path": "/reports/tailwind-integration/hmr-series-local-permission/pair-04-1-postcss/fixture/probe.css?direct",
+                  "acceptedPath": "/reports/tailwind-integration/hmr-series-local-permission/pair-04-1-postcss/fixture/probe.css?direct",
+                  "explicitImportRequired": false,
+                  "isWithinCircularImport": false
+                }
+              ]
+            }
+          }
+        ],
+        "watcherEvents": [
+          {
+            "file": "reports/tailwind-integration/hmr-series-local-permission/pair-04-1-postcss/fixture/probe.css",
+            "childPerformanceMs": 14469.1001
+          },
+          {
+            "file": "reports/tailwind-integration/hmr-series-local-permission/pair-04-1-postcss/fixture/probe.css",
+            "childPerformanceMs": 15953.3816
+          },
+          {
+            "file": "reports/tailwind-integration/hmr-series-local-permission/pair-04-1-postcss/fixture/probe.css",
+            "childPerformanceMs": 17302.4688
+          },
+          {
+            "file": "reports/tailwind-integration/hmr-series-local-permission/pair-04-1-postcss/fixture/probe.css",
+            "childPerformanceMs": 18771.2202
+          },
+          {
+            "file": "reports/tailwind-integration/hmr-series-local-permission/pair-04-1-postcss/fixture/probe.css",
+            "childPerformanceMs": 20350.444
+          },
+          {
+            "file": "reports/tailwind-integration/hmr-series-local-permission/pair-04-1-postcss/fixture/probe.css",
+            "childPerformanceMs": 21868.842
+          },
+          {
+            "file": "reports/tailwind-integration/hmr-series-local-permission/pair-04-1-postcss/fixture/probe.css",
+            "childPerformanceMs": 23284.6377
+          }
+        ],
+        "cssResponses": [
+          {
+            "path": "/reports/tailwind-integration/hmr-series-local-permission/pair-04-1-postcss/fixture/probe.css",
+            "status": 200,
+            "childPerformanceMs": 13282.4177,
+            "bytes": 235917,
+            "sha256": "a81eb7cbdadb3e882c4274d61ed919a30fcda14e3255e3df393bdd485a99616f",
+            "step": 0
+          },
+          {
+            "path": "/reports/tailwind-integration/hmr-series-local-permission/pair-04-1-postcss/fixture/probe.css",
+            "status": 200,
+            "childPerformanceMs": 15912.8282,
+            "bytes": 235917,
+            "sha256": "000a6022595c367a665992eb04cbdb2049f26ea96fec6bd31104ddc28fba7c76",
+            "step": 1
+          },
+          {
+            "path": "/reports/tailwind-integration/hmr-series-local-permission/pair-04-1-postcss/fixture/probe.css",
+            "status": 200,
+            "childPerformanceMs": 17292.024,
+            "bytes": 235917,
+            "sha256": "742ae17db2b3f74b46db6834bc8767bb0bb6ccbfb280c0ae7fcb64640ee8633f",
+            "step": 2
+          },
+          {
+            "path": "/reports/tailwind-integration/hmr-series-local-permission/pair-04-1-postcss/fixture/probe.css",
+            "status": 200,
+            "childPerformanceMs": 18757.452,
+            "bytes": 235917,
+            "sha256": "43a4d556c5c056747cbee8210d3131544d2e31fdbbc468441ca4175cb88b05e3",
+            "step": 3
+          },
+          {
+            "path": "/reports/tailwind-integration/hmr-series-local-permission/pair-04-1-postcss/fixture/probe.css",
+            "status": 200,
+            "childPerformanceMs": 20327.8344,
+            "bytes": 235917,
+            "sha256": "dfd60e514ea1667ffca2f1e827b380e657da0139fbc40b72eed5ac33eb962575",
+            "step": 4
+          },
+          {
+            "path": "/reports/tailwind-integration/hmr-series-local-permission/pair-04-1-postcss/fixture/probe.css",
+            "status": 200,
+            "childPerformanceMs": 21847.9635,
+            "bytes": 235917,
+            "sha256": "301a35f341322e8638777d6c2d7b0770d44e997017a4f0aed7cbf9aa8bb169a5",
+            "step": 5
+          },
+          {
+            "path": "/reports/tailwind-integration/hmr-series-local-permission/pair-04-1-postcss/fixture/probe.css",
+            "status": 200,
+            "childPerformanceMs": 23267.1645,
+            "bytes": 235917,
+            "sha256": "5e45449db5080c299499ebcd5deab70a33461de299b7abccfcbe2aef8c802dc1",
+            "step": 6
+          },
+          {
+            "path": "/reports/tailwind-integration/hmr-series-local-permission/pair-04-1-postcss/fixture/probe.css",
+            "status": 200,
+            "childPerformanceMs": 24614.5335,
+            "bytes": 235917,
+            "sha256": "69abd7d9e441916c3e25fa1ae832d8c3151809a7b9b640e14343d946e7bfd6b9",
+            "step": 7
+          }
+        ],
+        "requests": [
+          {
+            "path": "/reports/tailwind-integration/hmr-series-local-permission/pair-04-1-postcss/fixture/index.html",
+            "method": "GET",
+            "status": 200,
+            "childPerformanceMs": 4266.887
+          },
+          {
+            "path": "/reports/tailwind-integration/hmr-series-local-permission/pair-04-1-postcss/fixture/probe.mjs",
+            "method": "GET",
+            "status": 200,
+            "childPerformanceMs": 6936.086
+          },
+          {
+            "path": "/@vite/client",
+            "method": "GET",
+            "status": 200,
+            "childPerformanceMs": 7017.6078
+          },
+          {
+            "path": "/node_modules/vite/dist/client/env.mjs",
+            "method": "GET",
+            "status": 200,
+            "childPerformanceMs": 9610.3871
+          },
+          {
+            "path": "/reports/tailwind-integration/hmr-series-local-permission/pair-04-1-postcss/fixture/probe.css",
+            "method": "GET",
+            "status": 200,
+            "childPerformanceMs": 13224.1489
+          },
+          {
+            "path": "/reports/tailwind-integration/hmr-series-local-permission/pair-04-1-postcss/fixture/probe.css",
+            "method": "GET",
+            "status": 200,
+            "childPerformanceMs": 15902.824
+          },
+          {
+            "path": "/reports/tailwind-integration/hmr-series-local-permission/pair-04-1-postcss/fixture/probe.css",
+            "method": "GET",
+            "status": 200,
+            "childPerformanceMs": 17282.4611
+          },
+          {
+            "path": "/reports/tailwind-integration/hmr-series-local-permission/pair-04-1-postcss/fixture/probe.css",
+            "method": "GET",
+            "status": 200,
+            "childPerformanceMs": 18746.3948
+          },
+          {
+            "path": "/reports/tailwind-integration/hmr-series-local-permission/pair-04-1-postcss/fixture/probe.css",
+            "method": "GET",
+            "status": 200,
+            "childPerformanceMs": 20317.7185
+          },
+          {
+            "path": "/reports/tailwind-integration/hmr-series-local-permission/pair-04-1-postcss/fixture/probe.css",
+            "method": "GET",
+            "status": 200,
+            "childPerformanceMs": 21838.9852
+          },
+          {
+            "path": "/reports/tailwind-integration/hmr-series-local-permission/pair-04-1-postcss/fixture/probe.css",
+            "method": "GET",
+            "status": 200,
+            "childPerformanceMs": 23256.9105
+          },
+          {
+            "path": "/reports/tailwind-integration/hmr-series-local-permission/pair-04-1-postcss/fixture/probe.css",
+            "method": "GET",
+            "status": 200,
+            "childPerformanceMs": 24606.0549
+          }
+        ],
+        "blockedRequests": [],
+        "sockets": [
+          {
+            "origin": "ws://127.0.0.1:61889",
+            "pathname": "/",
+            "protocol": "vite-hmr",
+            "connectedMessage": true,
+            "childPerformanceMs": 13948.5674
+          }
+        ],
+        "blockedSockets": [],
+        "pageerrors": [],
+        "consoleErrors": [],
+        "navigationsAfterReady": [],
+        "viteErrors": [],
+        "viteWarnings": [],
+        "verifications": [
+          {
+            "expected": {
+              "step": 1,
+              "width": 127,
+              "height": 32,
+              "color": "rgb(21, 41, 61)",
+              "id": "pair-04-1-postcss:step-1"
+            },
+            "actual": {
+              "width": "127px",
+              "height": "32px",
+              "color": "rgb(21, 41, 61)",
+              "step": "1",
+              "rectangle": {
+                "x": 0,
+                "y": 0,
+                "width": 127,
+                "height": 32
+              }
+            },
+            "browserVerifiedPerformanceMs": 11775,
+            "events": [
+              {
+                "name": "vite:beforeUpdate",
+                "browserPerformanceMs": 10310.900000000373,
+                "payload": {
+                  "type": "update",
+                  "updates": [
+                    {
+                      "type": "css-update",
+                      "timestamp": 1792280663413,
+                      "path": "/reports/tailwind-integration/hmr-series-local-permission/pair-04-1-postcss/fixture/probe.css?direct",
+                      "acceptedPath": "/reports/tailwind-integration/hmr-series-local-permission/pair-04-1-postcss/fixture/probe.css?direct",
+                      "explicitImportRequired": false,
+                      "isWithinCircularImport": false
+                    }
+                  ]
+                }
+              },
+              {
+                "name": "vite:afterUpdate",
+                "browserPerformanceMs": 11746,
+                "payload": {
+                  "type": "update",
+                  "updates": [
+                    {
+                      "type": "css-update",
+                      "timestamp": 1792280663413,
+                      "path": "/reports/tailwind-integration/hmr-series-local-permission/pair-04-1-postcss/fixture/probe.css?direct",
+                      "acceptedPath": "/reports/tailwind-integration/hmr-series-local-permission/pair-04-1-postcss/fixture/probe.css?direct",
+                      "explicitImportRequired": false,
+                      "isWithinCircularImport": false
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          {
+            "expected": {
+              "step": 2,
+              "width": 134,
+              "height": 32,
+              "color": "rgb(22, 42, 62)",
+              "id": "pair-04-1-postcss:step-2"
+            },
+            "actual": {
+              "width": "134px",
+              "height": "32px",
+              "color": "rgb(22, 42, 62)",
+              "step": "2",
+              "rectangle": {
+                "x": 0,
+                "y": 0,
+                "width": 134,
+                "height": 32
+              }
+            },
+            "browserVerifiedPerformanceMs": 13124.699999999255,
+            "events": [
+              {
+                "name": "vite:beforeUpdate",
+                "browserPerformanceMs": 11789.099999999627,
+                "payload": {
+                  "type": "update",
+                  "updates": [
+                    {
+                      "type": "css-update",
+                      "timestamp": 1792280664898,
+                      "path": "/reports/tailwind-integration/hmr-series-local-permission/pair-04-1-postcss/fixture/probe.css?direct",
+                      "acceptedPath": "/reports/tailwind-integration/hmr-series-local-permission/pair-04-1-postcss/fixture/probe.css?direct",
+                      "explicitImportRequired": false,
+                      "isWithinCircularImport": false
+                    }
+                  ]
+                }
+              },
+              {
+                "name": "vite:afterUpdate",
+                "browserPerformanceMs": 13122.400000000373,
+                "payload": {
+                  "type": "update",
+                  "updates": [
+                    {
+                      "type": "css-update",
+                      "timestamp": 1792280664898,
+                      "path": "/reports/tailwind-integration/hmr-series-local-permission/pair-04-1-postcss/fixture/probe.css?direct",
+                      "acceptedPath": "/reports/tailwind-integration/hmr-series-local-permission/pair-04-1-postcss/fixture/probe.css?direct",
+                      "explicitImportRequired": false,
+                      "isWithinCircularImport": false
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          {
+            "expected": {
+              "step": 3,
+              "width": 141,
+              "height": 32,
+              "color": "rgb(23, 43, 63)",
+              "id": "pair-04-1-postcss:step-3"
+            },
+            "actual": {
+              "width": "141px",
+              "height": "32px",
+              "color": "rgb(23, 43, 63)",
+              "step": "3",
+              "rectangle": {
+                "x": 0,
+                "y": 0,
+                "width": 141,
+                "height": 32
+              }
+            },
+            "browserVerifiedPerformanceMs": 14592.599999999627,
+            "events": [
+              {
+                "name": "vite:beforeUpdate",
+                "browserPerformanceMs": 13138.299999998882,
+                "payload": {
+                  "type": "update",
+                  "updates": [
+                    {
+                      "type": "css-update",
+                      "timestamp": 1792280666247,
+                      "path": "/reports/tailwind-integration/hmr-series-local-permission/pair-04-1-postcss/fixture/probe.css?direct",
+                      "acceptedPath": "/reports/tailwind-integration/hmr-series-local-permission/pair-04-1-postcss/fixture/probe.css?direct",
+                      "explicitImportRequired": false,
+                      "isWithinCircularImport": false
+                    }
+                  ]
+                }
+              },
+              {
+                "name": "vite:afterUpdate",
+                "browserPerformanceMs": 14587.699999999255,
+                "payload": {
+                  "type": "update",
+                  "updates": [
+                    {
+                      "type": "css-update",
+                      "timestamp": 1792280666247,
+                      "path": "/reports/tailwind-integration/hmr-series-local-permission/pair-04-1-postcss/fixture/probe.css?direct",
+                      "acceptedPath": "/reports/tailwind-integration/hmr-series-local-permission/pair-04-1-postcss/fixture/probe.css?direct",
+                      "explicitImportRequired": false,
+                      "isWithinCircularImport": false
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          {
+            "expected": {
+              "step": 4,
+              "width": 148,
+              "height": 32,
+              "color": "rgb(24, 44, 64)",
+              "id": "pair-04-1-postcss:step-4"
+            },
+            "actual": {
+              "width": "148px",
+              "height": "32px",
+              "color": "rgb(24, 44, 64)",
+              "step": "4",
+              "rectangle": {
+                "x": 0,
+                "y": 0,
+                "width": 148,
+                "height": 32
+              }
+            },
+            "browserVerifiedPerformanceMs": 16174.599999999627,
+            "events": [
+              {
+                "name": "vite:beforeUpdate",
+                "browserPerformanceMs": 14605.699999999255,
+                "payload": {
+                  "type": "update",
+                  "updates": [
+                    {
+                      "type": "css-update",
+                      "timestamp": 1792280667714,
+                      "path": "/reports/tailwind-integration/hmr-series-local-permission/pair-04-1-postcss/fixture/probe.css?direct",
+                      "acceptedPath": "/reports/tailwind-integration/hmr-series-local-permission/pair-04-1-postcss/fixture/probe.css?direct",
+                      "explicitImportRequired": false,
+                      "isWithinCircularImport": false
+                    }
+                  ]
+                }
+              },
+              {
+                "name": "vite:afterUpdate",
+                "browserPerformanceMs": 16157.900000000373,
+                "payload": {
+                  "type": "update",
+                  "updates": [
+                    {
+                      "type": "css-update",
+                      "timestamp": 1792280667714,
+                      "path": "/reports/tailwind-integration/hmr-series-local-permission/pair-04-1-postcss/fixture/probe.css?direct",
+                      "acceptedPath": "/reports/tailwind-integration/hmr-series-local-permission/pair-04-1-postcss/fixture/probe.css?direct",
+                      "explicitImportRequired": false,
+                      "isWithinCircularImport": false
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          {
+            "expected": {
+              "step": 5,
+              "width": 155,
+              "height": 32,
+              "color": "rgb(25, 45, 65)",
+              "id": "pair-04-1-postcss:step-5"
+            },
+            "actual": {
+              "width": "155px",
+              "height": "32px",
+              "color": "rgb(25, 45, 65)",
+              "step": "5",
+              "rectangle": {
+                "x": 0,
+                "y": 0,
+                "width": 155,
+                "height": 32
+              }
+            },
+            "browserVerifiedPerformanceMs": 17691,
+            "events": [
+              {
+                "name": "vite:beforeUpdate",
+                "browserPerformanceMs": 16185.099999999627,
+                "payload": {
+                  "type": "update",
+                  "updates": [
+                    {
+                      "type": "css-update",
+                      "timestamp": 1792280669294,
+                      "path": "/reports/tailwind-integration/hmr-series-local-permission/pair-04-1-postcss/fixture/probe.css?direct",
+                      "acceptedPath": "/reports/tailwind-integration/hmr-series-local-permission/pair-04-1-postcss/fixture/probe.css?direct",
+                      "explicitImportRequired": false,
+                      "isWithinCircularImport": false
+                    }
+                  ]
+                }
+              },
+              {
+                "name": "vite:afterUpdate",
+                "browserPerformanceMs": 17678.400000000373,
+                "payload": {
+                  "type": "update",
+                  "updates": [
+                    {
+                      "type": "css-update",
+                      "timestamp": 1792280669294,
+                      "path": "/reports/tailwind-integration/hmr-series-local-permission/pair-04-1-postcss/fixture/probe.css?direct",
+                      "acceptedPath": "/reports/tailwind-integration/hmr-series-local-permission/pair-04-1-postcss/fixture/probe.css?direct",
+                      "explicitImportRequired": false,
+                      "isWithinCircularImport": false
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          {
+            "expected": {
+              "step": 6,
+              "width": 162,
+              "height": 32,
+              "color": "rgb(26, 46, 66)",
+              "id": "pair-04-1-postcss:step-6"
+            },
+            "actual": {
+              "width": "162px",
+              "height": "32px",
+              "color": "rgb(26, 46, 66)",
+              "step": "6",
+              "rectangle": {
+                "x": 0,
+                "y": 0,
+                "width": 162,
+                "height": 32
+              }
+            },
+            "browserVerifiedPerformanceMs": 19108.799999998882,
+            "events": [
+              {
+                "name": "vite:beforeUpdate",
+                "browserPerformanceMs": 17702.900000000373,
+                "payload": {
+                  "type": "update",
+                  "updates": [
+                    {
+                      "type": "css-update",
+                      "timestamp": 1792280670812,
+                      "path": "/reports/tailwind-integration/hmr-series-local-permission/pair-04-1-postcss/fixture/probe.css?direct",
+                      "acceptedPath": "/reports/tailwind-integration/hmr-series-local-permission/pair-04-1-postcss/fixture/probe.css?direct",
+                      "explicitImportRequired": false,
+                      "isWithinCircularImport": false
+                    }
+                  ]
+                }
+              },
+              {
+                "name": "vite:afterUpdate",
+                "browserPerformanceMs": 19097.599999999627,
+                "payload": {
+                  "type": "update",
+                  "updates": [
+                    {
+                      "type": "css-update",
+                      "timestamp": 1792280670812,
+                      "path": "/reports/tailwind-integration/hmr-series-local-permission/pair-04-1-postcss/fixture/probe.css?direct",
+                      "acceptedPath": "/reports/tailwind-integration/hmr-series-local-permission/pair-04-1-postcss/fixture/probe.css?direct",
+                      "explicitImportRequired": false,
+                      "isWithinCircularImport": false
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          {
+            "expected": {
+              "step": 7,
+              "width": 169,
+              "height": 32,
+              "color": "rgb(27, 47, 67)",
+              "id": "pair-04-1-postcss:step-7"
+            },
+            "actual": {
+              "width": "169px",
+              "height": "32px",
+              "color": "rgb(27, 47, 67)",
+              "step": "7",
+              "rectangle": {
+                "x": 0,
+                "y": 0,
+                "width": 169,
+                "height": 32
+              }
+            },
+            "browserVerifiedPerformanceMs": 20458.799999998882,
+            "events": [
+              {
+                "name": "vite:beforeUpdate",
+                "browserPerformanceMs": 19118.799999998882,
+                "payload": {
+                  "type": "update",
+                  "updates": [
+                    {
+                      "type": "css-update",
+                      "timestamp": 1792280672228,
+                      "path": "/reports/tailwind-integration/hmr-series-local-permission/pair-04-1-postcss/fixture/probe.css?direct",
+                      "acceptedPath": "/reports/tailwind-integration/hmr-series-local-permission/pair-04-1-postcss/fixture/probe.css?direct",
+                      "explicitImportRequired": false,
+                      "isWithinCircularImport": false
+                    }
+                  ]
+                }
+              },
+              {
+                "name": "vite:afterUpdate",
+                "browserPerformanceMs": 20445.199999999255,
+                "payload": {
+                  "type": "update",
+                  "updates": [
+                    {
+                      "type": "css-update",
+                      "timestamp": 1792280672228,
+                      "path": "/reports/tailwind-integration/hmr-series-local-permission/pair-04-1-postcss/fixture/probe.css?direct",
+                      "acceptedPath": "/reports/tailwind-integration/hmr-series-local-permission/pair-04-1-postcss/fixture/probe.css?direct",
+                      "explicitImportRequired": false,
+                      "isWithinCircularImport": false
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        ],
+        "config": {
+          "configFile": false,
+          "envDir": false,
+          "root": ".",
+          "mode": "development",
+          "css": {
+            "devSourcemap": false,
+            "postcss": "implicit root postcss.config.js discovery"
+          },
+          "integrationPlugins": [],
+          "resolvedPlugins": [
+            "vite:optimized-deps",
+            "vite:watch-package-data",
+            "vite:pre-alias",
+            "alias",
+            "vite:modulepreload-polyfill",
+            "vite:bundled-dev-client-imports",
+            "vite:resolve-dev",
+            "vite:resolve-builtin:get-environment",
+            "vite:resolve-builtin",
+            "vite:html-inline-proxy",
+            "vite:css",
+            "builtin:oxc-runtime",
+            "vite:oxc",
+            "builtin:vite-json",
+            "vite:wasm-helper",
+            "vite:worker",
+            "vite:asset",
+            "vite:define",
+            "vite:css-post",
+            "vite:build-html",
+            "vite:worker-import-meta-url",
+            "vite:asset-import-meta-url",
+            "vite:dynamic-import-vars",
+            "vite:import-glob",
+            "vite:client-inject",
+            "vite:css-analysis",
+            "vite:import-analysis"
+          ],
+          "cacheDir": "reports/tailwind-integration/hmr-series-local-permission/pair-04-1-postcss/cache/vite",
+          "cacheExistedBeforeStartup": false,
+          "optimizeDeps": {
+            "entries": [],
+            "noDiscovery": true,
+            "include": []
+          },
+          "server": {
+            "host": "127.0.0.1",
+            "port": 61889,
+            "requestedPort": 0,
+            "strictPort": true,
+            "hmrOverlay": false,
+            "watcher": "Vite defaults, root config not loaded; fixture outside cacheDir"
+          },
+          "fixture": "reports/tailwind-integration/hmr-series-local-permission/pair-04-1-postcss/fixture/index.html",
+          "probe": "reports/tailwind-integration/hmr-series-local-permission/pair-04-1-postcss/fixture/probe.css",
+          "networkInstrumentation": "HTTP GET/HEAD exact origin via route.fetch(maxRedirects:0)+fulfill; every other HTTP/WS blocked before connection; browser HTTP cache disabled by routing",
+          "permissions": {
+            "granted": [
+              "local-network-access"
+            ],
+            "origin": "http://127.0.0.1:61889",
+            "scope": "this ephemeral isolated fixture origin only"
+          }
+        },
+        "playwrightBrowserRevision": "1248",
+        "chromium": "156.0.8078.4",
+        "initial": {
+          "width": "120px",
+          "height": "32px",
+          "color": "rgb(20, 40, 60)",
+          "step": "0",
+          "rectangle": {
+            "width": 120,
+            "height": 32
+          }
+        },
+        "stopRequestedAtChildPerformanceMs": 24629.8827,
+        "finishedAt": "2026-10-17T23:44:33.836Z"
+      },
+      "parentReceiptPerformanceMs": 199655.6286
+    }
+  ],
+  "sourceAfter": {
+    "sha256": "d9c24a37c1b6d1a9971d35574062c1217586f270bcb9742265f37180f22834dd",
+    "fileCount": 6278,
+    "bytes": 22459201,
+    "core": [
+      {
+        "path": "bun.lock",
+        "bytes": 326446,
+        "sha256": "5d561ebf702e13a9a34670f267a870d0acb6ec21d7c6c67af3665607a983a682"
+      },
+      {
+        "path": "package.json",
+        "bytes": 8099,
+        "sha256": "227be9436f2a0be543938ffd9852aa060effef7bc0979980e48a2d20341968d3"
+      },
+      {
+        "path": "postcss.config.js",
+        "bytes": 75,
+        "sha256": "9dd791ad9c0238477d84d4e06c0ccfceebe8dcb37dcdb581f5682c5ad42fc77e"
+      },
+      {
+        "path": "src/index.css",
+        "bytes": 130,
+        "sha256": "2145da531b9725faad9b0e5123c789a37c0397a88317295ab713cd1273778423"
+      },
+      {
+        "path": "src/styles.css",
+        "bytes": 13263,
+        "sha256": "40a70d2a6ea3b4b119987151d1dd415fdfb591c028a327ca59f1fccf820f3a32"
+      },
+      {
+        "path": "src/tailwind-compat.css",
+        "bytes": 2981,
+        "sha256": "fa8d0a3a2b2fefe00782d3e06ec48d6ab03d90170c7c77eccd7962c4adbd5397"
+      },
+      {
+        "path": "tailwind.config.ts",
+        "bytes": 10116,
+        "sha256": "b603ef20c62b6e42e284c52bd9dd7fe1679986c63345f8d4bfe3918e02e5fbb4"
+      },
+      {
+        "path": "vite.config.ts",
+        "bytes": 6674,
+        "sha256": "3fcf047dd7b4328dd1fc3137857f19fd3ab8621d3769d9152275823aa25a95fa"
+      }
+    ]
+  },
+  "sourceUnchanged": true,
+  "productFilesWritten": [],
+  "statisticsMs": {
+    "count": 5,
+    "min": 1346.9976000000024,
+    "max": 1576.150800000003,
+    "mean": 1463.2205400000034,
+    "median": 1465.790800000017,
+    "q1": 1413.7286000000022,
+    "q3": 1513.434899999993,
+    "iqr": 99.70629999999073,
+    "sampleStandardDeviation": 88.37216150682194,
+    "coefficientOfVariationPercent": 6.039565403231814
+  },
+  "finishedAt": "2026-10-17T23:44:35.968Z"
+}

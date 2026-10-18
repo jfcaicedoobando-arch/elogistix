@@ -1,0 +1,22 @@
+{
+  "checkedAt": "2026-10-18T00:14:52.279Z",
+  "reason": "Relocate the exact manual Tailwind registration to an independent classifier location; main added PR391 registration at the former insertion point. No merge/rebase or performance-source change.",
+  "mainInspected": "446036fb04cfd56fac4c35b75f0da9c9d94361d9",
+  "command": "node scripts/ci/test-catalog.mjs --output reports/tailwind-integration/test-catalog-relocated.json",
+  "exitCode": 0,
+  "eslintCommand": "node node_modules/eslint/bin/eslint.js scripts/ci/test-catalog.mjs --max-warnings 0",
+  "eslintExitCode": 0,
+  "originalTreeDigest": "afdfc9a68ec76b1916d153410ef5482934bcfcb3569981f9f5c95de5d1cf1ac6",
+  "currentTreeDigest": "afdfc9a68ec76b1916d153410ef5482934bcfcb3569981f9f5c95de5d1cf1ac6",
+  "allLaneCountsUnchanged": true,
+  "entry": {
+    "path": "docs/qa/tailwind-integration-20261017/compare-css.test.mjs",
+    "lane": "node-tailwind-integration",
+    "mode": "manual",
+    "reason": "Local Tailwind experiment checker: node --test docs/qa/tailwind-integration-20261017/compare-css.test.mjs; not executed by ordinary CI.",
+    "sha256": "96596010c2e376457ff1efdaf654cccc58712a5130ab8a9de330f6bc38e5cbbf"
+  },
+  "sourceSha256": "5a1dc599cea3f671dec10149ee9e5c3c1cf807a27d725209c98c0b2b57a774be",
+  "localOriginalOutputSha256": "365f89a69235527b876d1b0714a71070d50acf1fb9e0c70da74ad4474ba08d65",
+  "performanceMeasurementsRepeated": 0
+}

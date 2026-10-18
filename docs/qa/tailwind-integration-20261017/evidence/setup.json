@@ -1,0 +1,34 @@
+{
+  "baseSha": "0552b3648c041dd19e027bb1370a5277501b59dc",
+  "node": "v24.22.0",
+  "bun": "1.4.0",
+  "commands": [
+    {
+      "command": "bun install --frozen-lockfile --ignore-scripts --cache-dir <workspace>/.tools/bun-cache",
+      "exitCode": 0,
+      "phase": "base"
+    },
+    {
+      "command": "bun add --dev --exact --ignore-scripts @tailwindcss/vite@4.3.3",
+      "exitCode": 0
+    },
+    {
+      "command": "bun install --frozen-lockfile --ignore-scripts --cache-dir <workspace>/.tools/bun-cache",
+      "exitCode": 0,
+      "phase": "experimental-lock"
+    }
+  ],
+  "lockSha256": "5d561ebf702e13a9a34670f267a870d0acb6ec21d7c6c67af3665607a983a682",
+  "packageSha256": "227be9436f2a0be543938ffd9852aa060effef7bc0979980e48a2d20341968d3",
+  "originalLockSha256": "be059f24a5e00112b4ff49a74fac064c5b53a43c7449774b2dc6a336fc42e150",
+  "originalPackageSha256": "ed0b99d12e1fea69b8aa47522e53979fbcb828806114d3fdddb72584b2c67662",
+  "changedExistingLockedPackages": [],
+  "addedLockedPackages": [
+    "@tailwindcss/vite"
+  ],
+  "newDevDependency": {
+    "name": "@tailwindcss/vite",
+    "version": "4.3.3"
+  },
+  "conditions": "Separate checkout/node_modules. Workspace tarball cache used only for installation outside all timers. No lifecycle scripts. No product Vite/PostCSS/CSS config edited."
+}

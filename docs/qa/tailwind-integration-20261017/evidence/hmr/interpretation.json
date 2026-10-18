@@ -1,0 +1,25 @@
+{
+  "schemaVersion": 1,
+  "originalSeries": {
+    "originalPath": "reports/tailwind-integration/hmr-series-local-permission/series.json",
+    "copiedPath": "docs/qa/tailwind-integration-20261017/evidence/hmr/series.json",
+    "sha256": "7f3ddf3d1b6e822845f2b851111079b8a256ae335bf13251b3649aca4d21d182",
+    "bytes": 1109851
+  },
+  "baseSha": "0552b3648c041dd19e027bb1370a5277501b59dc",
+  "originalPassed": true,
+  "pairedReplicationUnits": 4,
+  "measuredUpdatesPerArm": 20,
+  "pairedMedianRatio": 0.9153599228921755,
+  "pairedMedianRatioDisplayed": 0.9153599,
+  "pairedMedianDifferenceMs": -118.96050000000105,
+  "pairedMedianDifferenceMsDisplayed": -118.9605,
+  "signedDifferenceVariability": {
+    "sampleStandardDeviationMs": 68.05772244341864,
+    "coefficientOfVariationPercent": null,
+    "reason": "N/A: paired differences are signed and lack the positive ratio-scale mean required for a meaningful CV. The negative CV in the raw original is preserved there, not interpreted as variability.",
+    "rawOriginalCoefficientOfVariationPercent": -57.88880184493165
+  },
+  "limitation": "Descriptive pilot of an instrumented synthetic CSS edit; updates are clustered in four paired sessions. Does not establish statistical significance, stable tail latency, application HMR, new utility generation performance or universal development CSS equivalence.",
+  "developmentCssEvidence": "../development-css/audit.json"
+}

@@ -1,0 +1,10 @@
+Listing tests:
+  [chromium] › keyboard-sorting.spec.ts:126:1 › client sorting uses native Tab/Enter/Space with a visible focus ring and exact row order
+  [chromium] › keyboard-sorting.spec.ts:129:1 › server sorting emits one callback per native Enter/Space and skips the nonsortable header
+  [chromium] › virtualization.spec.ts:137:1 › real useVirtualTableState retains measured rows and IDs through scroll/filter/reorder/remount
+  [chromium] › virtualization.spec.ts:140:1 › real VirtualTimeline retains variable-height entries through scroll/filter/reorder/remount
+  [firefox] › keyboard-sorting.spec.ts:126:1 › client sorting uses native Tab/Enter/Space with a visible focus ring and exact row order
+  [firefox] › keyboard-sorting.spec.ts:129:1 › server sorting emits one callback per native Enter/Space and skips the nonsortable header
+  [firefox] › virtualization.spec.ts:137:1 › real useVirtualTableState retains measured rows and IDs through scroll/filter/reorder/remount
+  [firefox] › virtualization.spec.ts:140:1 › real VirtualTimeline retains variable-height entries through scroll/filter/reorder/remount
+Total: 8 tests in 2 files

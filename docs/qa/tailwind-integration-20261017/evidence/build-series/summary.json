@@ -1,0 +1,2970 @@
+{
+  "schemaVersion": 1,
+  "status": "complete",
+  "startedAt": "2026-10-17T23:50:07.909Z",
+  "output": "reports/tailwind-integration/build-series",
+  "command": [
+    "C:\\Users\\torta\\Documents\\Codex\\2026-10-17\\task-6\\.tools\\node.exe",
+    "C:\\Users\\torta\\Documents\\Codex\\2026-10-17\\task-6\\elogistix-tailwind4\\docs\\qa\\tailwind-integration-20261017\\run-builds.mjs",
+    "--pairs",
+    "13",
+    "--initial-pairs",
+    "3",
+    "--output",
+    "reports/tailwind-integration/build-series",
+    "--idle-window",
+    "Reserved local window after QA/HMR/development CSS diagnostics ended; no concurrent local builds, tests, browsers or compression; integral CI is remote; OS and thermal state uncontrolled.",
+    "--bun",
+    "..\\.tools\\bun.exe"
+  ],
+  "measurements": [
+    {
+      "id": "initial-01-postcss",
+      "pair": 1,
+      "phase": "initial",
+      "variant": "postcss",
+      "discarded": false,
+      "outDir": "reports/tailwind-integration/build-series/outputs/initial-01-postcss",
+      "cacheDir": "reports/tailwind-integration/build-series/cache/initial-01-postcss",
+      "tempDir": "reports/tailwind-integration/build-series/temp/initial-01-postcss",
+      "configReport": "reports/tailwind-integration/build-series/config/initial-01-postcss.json",
+      "configLoaderCacheBefore": {
+        "path": "node_modules/.vite-temp",
+        "removedFiles": [],
+        "policy": "Clear only the verified checkout-local Vite config-loader cache before each build"
+      },
+      "freeMemoryBytesBefore": 1782546432,
+      "command": [
+        "C:\\Users\\torta\\Documents\\Codex\\2026-10-17\\task-6\\.tools\\node.exe",
+        "C:\\Users\\torta\\Documents\\Codex\\2026-10-17\\task-6\\elogistix-tailwind4\\docs\\qa\\tailwind-integration-20261017\\build-worker.mjs",
+        "--variant",
+        "postcss",
+        "--out-dir",
+        "C:\\Users\\torta\\Documents\\Codex\\2026-10-17\\task-6\\elogistix-tailwind4\\reports\\tailwind-integration\\build-series\\outputs\\initial-01-postcss",
+        "--cache-dir",
+        "C:\\Users\\torta\\Documents\\Codex\\2026-10-17\\task-6\\elogistix-tailwind4\\reports\\tailwind-integration\\build-series\\cache\\initial-01-postcss",
+        "--config-report",
+        "C:\\Users\\torta\\Documents\\Codex\\2026-10-17\\task-6\\elogistix-tailwind4\\reports\\tailwind-integration\\build-series\\config\\initial-01-postcss.json"
+      ],
+      "startedAt": "2026-10-17T23:50:13.514Z",
+      "exitCode": 0,
+      "signal": null,
+      "elapsedMs": 25463.825100000002,
+      "endedAt": "2026-10-17T23:50:38.978Z",
+      "spawnError": null,
+      "logs": {
+        "stdout": {
+          "path": "reports/tailwind-integration/build-series/logs/initial-01-postcss.stdout.txt",
+          "sha256": "88ca4e094832984246421055c97773e91fe410f10dd6a3fab6af59b19282143d"
+        },
+        "stderr": {
+          "path": "reports/tailwind-integration/build-series/logs/initial-01-postcss.stderr.txt",
+          "sha256": "78016d9c6d9de6a4a97c69037c0284667f97ecf58840486cfc63eb892d7f7b56"
+        }
+      },
+      "configSha256": "060fb8fcc746f7f2fd1b6bbd2a6b223f945185efdfa9b8c58fa51f5c04c5739e",
+      "bundleReport": "reports/tailwind-integration/build-series/outputs/initial-01-postcss/.qa-build-metadata.json",
+      "bundleSha256": "3e84096ce4d1575ec3d3758f5855f6a7b72ceb277eb5aed56e30a00bc91605f2",
+      "inventory": {
+        "path": "reports/tailwind-integration/build-series/inventories/initial-01-postcss.json",
+        "sha256": "e2161506340cd132f902106cec744fbaec7565e207745e770b32a251258ac308"
+      },
+      "totals": {
+        "js": {
+          "files": 741,
+          "rawBytes": 9386347,
+          "gzipBytes": 3082508,
+          "brotliBytes": 2630347,
+          "rules": 0
+        },
+        "css": {
+          "files": 1,
+          "rawBytes": 196588,
+          "gzipBytes": 27568,
+          "brotliBytes": 21163,
+          "rules": 2272
+        },
+        "combined": {
+          "files": 742,
+          "rawBytes": 9582935,
+          "gzipBytes": 3110076,
+          "brotliBytes": 2651510,
+          "rules": 2272
+        }
+      }
+    },
+    {
+      "id": "initial-01-vite",
+      "pair": 1,
+      "phase": "initial",
+      "variant": "vite",
+      "discarded": false,
+      "outDir": "reports/tailwind-integration/build-series/outputs/initial-01-vite",
+      "cacheDir": "reports/tailwind-integration/build-series/cache/initial-01-vite",
+      "tempDir": "reports/tailwind-integration/build-series/temp/initial-01-vite",
+      "configReport": "reports/tailwind-integration/build-series/config/initial-01-vite.json",
+      "configLoaderCacheBefore": {
+        "path": "node_modules/.vite-temp",
+        "removedFiles": [],
+        "policy": "Clear only the verified checkout-local Vite config-loader cache before each build"
+      },
+      "freeMemoryBytesBefore": 4144496640,
+      "command": [
+        "C:\\Users\\torta\\Documents\\Codex\\2026-10-17\\task-6\\.tools\\node.exe",
+        "C:\\Users\\torta\\Documents\\Codex\\2026-10-17\\task-6\\elogistix-tailwind4\\docs\\qa\\tailwind-integration-20261017\\build-worker.mjs",
+        "--variant",
+        "vite",
+        "--out-dir",
+        "C:\\Users\\torta\\Documents\\Codex\\2026-10-17\\task-6\\elogistix-tailwind4\\reports\\tailwind-integration\\build-series\\outputs\\initial-01-vite",
+        "--cache-dir",
+        "C:\\Users\\torta\\Documents\\Codex\\2026-10-17\\task-6\\elogistix-tailwind4\\reports\\tailwind-integration\\build-series\\cache\\initial-01-vite",
+        "--config-report",
+        "C:\\Users\\torta\\Documents\\Codex\\2026-10-17\\task-6\\elogistix-tailwind4\\reports\\tailwind-integration\\build-series\\config\\initial-01-vite.json"
+      ],
+      "startedAt": "2026-10-17T23:50:39.272Z",
+      "exitCode": 0,
+      "signal": null,
+      "elapsedMs": 22759.329900000004,
+      "endedAt": "2026-10-17T23:51:02.031Z",
+      "spawnError": null,
+      "logs": {
+        "stdout": {
+          "path": "reports/tailwind-integration/build-series/logs/initial-01-vite.stdout.txt",
+          "sha256": "78b1573d73d61e466058d2532f1c786ac5c155ae240001d5b203acc3d8addb80"
+        },
+        "stderr": {
+          "path": "reports/tailwind-integration/build-series/logs/initial-01-vite.stderr.txt",
+          "sha256": "610e57032462682c61828dfece432e40f0054ae9bc726bdb429349b12232247c"
+        }
+      },
+      "configSha256": "ef877144a4a34ef532c295bb72c384234d259d8f690f710a333128ac37c7010c",
+      "bundleReport": "reports/tailwind-integration/build-series/outputs/initial-01-vite/.qa-build-metadata.json",
+      "bundleSha256": "71f00955f622b4e332da9b5efca1473e52990994b49ef0649eb0239d02644871",
+      "inventory": {
+        "path": "reports/tailwind-integration/build-series/inventories/initial-01-vite.json",
+        "sha256": "e2161506340cd132f902106cec744fbaec7565e207745e770b32a251258ac308"
+      },
+      "totals": {
+        "js": {
+          "files": 741,
+          "rawBytes": 9386347,
+          "gzipBytes": 3082508,
+          "brotliBytes": 2630347,
+          "rules": 0
+        },
+        "css": {
+          "files": 1,
+          "rawBytes": 196588,
+          "gzipBytes": 27568,
+          "brotliBytes": 21163,
+          "rules": 2272
+        },
+        "combined": {
+          "files": 742,
+          "rawBytes": 9582935,
+          "gzipBytes": 3110076,
+          "brotliBytes": 2651510,
+          "rules": 2272
+        }
+      }
+    },
+    {
+      "id": "initial-02-vite",
+      "pair": 2,
+      "phase": "initial",
+      "variant": "vite",
+      "discarded": false,
+      "outDir": "reports/tailwind-integration/build-series/outputs/initial-02-vite",
+      "cacheDir": "reports/tailwind-integration/build-series/cache/initial-02-vite",
+      "tempDir": "reports/tailwind-integration/build-series/temp/initial-02-vite",
+      "configReport": "reports/tailwind-integration/build-series/config/initial-02-vite.json",
+      "configLoaderCacheBefore": {
+        "path": "node_modules/.vite-temp",
+        "removedFiles": [],
+        "policy": "Clear only the verified checkout-local Vite config-loader cache before each build"
+      },
+      "freeMemoryBytesBefore": 4321701888,
+      "command": [
+        "C:\\Users\\torta\\Documents\\Codex\\2026-10-17\\task-6\\.tools\\node.exe",
+        "C:\\Users\\torta\\Documents\\Codex\\2026-10-17\\task-6\\elogistix-tailwind4\\docs\\qa\\tailwind-integration-20261017\\build-worker.mjs",
+        "--variant",
+        "vite",
+        "--out-dir",
+        "C:\\Users\\torta\\Documents\\Codex\\2026-10-17\\task-6\\elogistix-tailwind4\\reports\\tailwind-integration\\build-series\\outputs\\initial-02-vite",
+        "--cache-dir",
+        "C:\\Users\\torta\\Documents\\Codex\\2026-10-17\\task-6\\elogistix-tailwind4\\reports\\tailwind-integration\\build-series\\cache\\initial-02-vite",
+        "--config-report",
+        "C:\\Users\\torta\\Documents\\Codex\\2026-10-17\\task-6\\elogistix-tailwind4\\reports\\tailwind-integration\\build-series\\config\\initial-02-vite.json"
+      ],
+      "startedAt": "2026-10-17T23:51:02.308Z",
+      "exitCode": 0,
+      "signal": null,
+      "elapsedMs": 21737.078400000006,
+      "endedAt": "2026-10-17T23:51:24.045Z",
+      "spawnError": null,
+      "logs": {
+        "stdout": {
+          "path": "reports/tailwind-integration/build-series/logs/initial-02-vite.stdout.txt",
+          "sha256": "00d0eca44d6e38bc336c65d632295c3a71af9f72f5c8dda1c68f98f371665afa"
+        },
+        "stderr": {
+          "path": "reports/tailwind-integration/build-series/logs/initial-02-vite.stderr.txt",
+          "sha256": "688db9a68c79cd303673511ab6dbf4cb1b6a079aaf747bbffbc6634644026237"
+        }
+      },
+      "configSha256": "8297c5a13ea3a4f39044e73e65278e473ad775a8bcf55d5716e128c3139787c0",
+      "bundleReport": "reports/tailwind-integration/build-series/outputs/initial-02-vite/.qa-build-metadata.json",
+      "bundleSha256": "71f00955f622b4e332da9b5efca1473e52990994b49ef0649eb0239d02644871",
+      "inventory": {
+        "path": "reports/tailwind-integration/build-series/inventories/initial-02-vite.json",
+        "sha256": "e2161506340cd132f902106cec744fbaec7565e207745e770b32a251258ac308"
+      },
+      "totals": {
+        "js": {
+          "files": 741,
+          "rawBytes": 9386347,
+          "gzipBytes": 3082508,
+          "brotliBytes": 2630347,
+          "rules": 0
+        },
+        "css": {
+          "files": 1,
+          "rawBytes": 196588,
+          "gzipBytes": 27568,
+          "brotliBytes": 21163,
+          "rules": 2272
+        },
+        "combined": {
+          "files": 742,
+          "rawBytes": 9582935,
+          "gzipBytes": 3110076,
+          "brotliBytes": 2651510,
+          "rules": 2272
+        }
+      }
+    },
+    {
+      "id": "initial-02-postcss",
+      "pair": 2,
+      "phase": "initial",
+      "variant": "postcss",
+      "discarded": false,
+      "outDir": "reports/tailwind-integration/build-series/outputs/initial-02-postcss",
+      "cacheDir": "reports/tailwind-integration/build-series/cache/initial-02-postcss",
+      "tempDir": "reports/tailwind-integration/build-series/temp/initial-02-postcss",
+      "configReport": "reports/tailwind-integration/build-series/config/initial-02-postcss.json",
+      "configLoaderCacheBefore": {
+        "path": "node_modules/.vite-temp",
+        "removedFiles": [],
+        "policy": "Clear only the verified checkout-local Vite config-loader cache before each build"
+      },
+      "freeMemoryBytesBefore": 5096185856,
+      "command": [
+        "C:\\Users\\torta\\Documents\\Codex\\2026-10-17\\task-6\\.tools\\node.exe",
+        "C:\\Users\\torta\\Documents\\Codex\\2026-10-17\\task-6\\elogistix-tailwind4\\docs\\qa\\tailwind-integration-20261017\\build-worker.mjs",
+        "--variant",
+        "postcss",
+        "--out-dir",
+        "C:\\Users\\torta\\Documents\\Codex\\2026-10-17\\task-6\\elogistix-tailwind4\\reports\\tailwind-integration\\build-series\\outputs\\initial-02-postcss",
+        "--cache-dir",
+        "C:\\Users\\torta\\Documents\\Codex\\2026-10-17\\task-6\\elogistix-tailwind4\\reports\\tailwind-integration\\build-series\\cache\\initial-02-postcss",
+        "--config-report",
+        "C:\\Users\\torta\\Documents\\Codex\\2026-10-17\\task-6\\elogistix-tailwind4\\reports\\tailwind-integration\\build-series\\config\\initial-02-postcss.json"
+      ],
+      "startedAt": "2026-10-17T23:51:24.314Z",
+      "exitCode": 0,
+      "signal": null,
+      "elapsedMs": 22802.898,
+      "endedAt": "2026-10-17T23:51:47.117Z",
+      "spawnError": null,
+      "logs": {
+        "stdout": {
+          "path": "reports/tailwind-integration/build-series/logs/initial-02-postcss.stdout.txt",
+          "sha256": "ccdfbfdf7a1930f71b93a397d69d754ec0b0f25373baeac173ce54f9bbed060c"
+        },
+        "stderr": {
+          "path": "reports/tailwind-integration/build-series/logs/initial-02-postcss.stderr.txt",
+          "sha256": "688db9a68c79cd303673511ab6dbf4cb1b6a079aaf747bbffbc6634644026237"
+        }
+      },
+      "configSha256": "1615bc12cd4cad619fc8938693f37fed1b133d25912f2466cfc1185e5dd595f7",
+      "bundleReport": "reports/tailwind-integration/build-series/outputs/initial-02-postcss/.qa-build-metadata.json",
+      "bundleSha256": "3e84096ce4d1575ec3d3758f5855f6a7b72ceb277eb5aed56e30a00bc91605f2",
+      "inventory": {
+        "path": "reports/tailwind-integration/build-series/inventories/initial-02-postcss.json",
+        "sha256": "e2161506340cd132f902106cec744fbaec7565e207745e770b32a251258ac308"
+      },
+      "totals": {
+        "js": {
+          "files": 741,
+          "rawBytes": 9386347,
+          "gzipBytes": 3082508,
+          "brotliBytes": 2630347,
+          "rules": 0
+        },
+        "css": {
+          "files": 1,
+          "rawBytes": 196588,
+          "gzipBytes": 27568,
+          "brotliBytes": 21163,
+          "rules": 2272
+        },
+        "combined": {
+          "files": 742,
+          "rawBytes": 9582935,
+          "gzipBytes": 3110076,
+          "brotliBytes": 2651510,
+          "rules": 2272
+        }
+      }
+    },
+    {
+      "id": "initial-03-postcss",
+      "pair": 3,
+      "phase": "initial",
+      "variant": "postcss",
+      "discarded": false,
+      "outDir": "reports/tailwind-integration/build-series/outputs/initial-03-postcss",
+      "cacheDir": "reports/tailwind-integration/build-series/cache/initial-03-postcss",
+      "tempDir": "reports/tailwind-integration/build-series/temp/initial-03-postcss",
+      "configReport": "reports/tailwind-integration/build-series/config/initial-03-postcss.json",
+      "configLoaderCacheBefore": {
+        "path": "node_modules/.vite-temp",
+        "removedFiles": [],
+        "policy": "Clear only the verified checkout-local Vite config-loader cache before each build"
+      },
+      "freeMemoryBytesBefore": 4766535680,
+      "command": [
+        "C:\\Users\\torta\\Documents\\Codex\\2026-10-17\\task-6\\.tools\\node.exe",
+        "C:\\Users\\torta\\Documents\\Codex\\2026-10-17\\task-6\\elogistix-tailwind4\\docs\\qa\\tailwind-integration-20261017\\build-worker.mjs",
+        "--variant",
+        "postcss",
+        "--out-dir",
+        "C:\\Users\\torta\\Documents\\Codex\\2026-10-17\\task-6\\elogistix-tailwind4\\reports\\tailwind-integration\\build-series\\outputs\\initial-03-postcss",
+        "--cache-dir",
+        "C:\\Users\\torta\\Documents\\Codex\\2026-10-17\\task-6\\elogistix-tailwind4\\reports\\tailwind-integration\\build-series\\cache\\initial-03-postcss",
+        "--config-report",
+        "C:\\Users\\torta\\Documents\\Codex\\2026-10-17\\task-6\\elogistix-tailwind4\\reports\\tailwind-integration\\build-series\\config\\initial-03-postcss.json"
+      ],
+      "startedAt": "2026-10-17T23:51:47.388Z",
+      "exitCode": 0,
+      "signal": null,
+      "elapsedMs": 20260.641000000003,
+      "endedAt": "2026-10-17T23:52:07.648Z",
+      "spawnError": null,
+      "logs": {
+        "stdout": {
+          "path": "reports/tailwind-integration/build-series/logs/initial-03-postcss.stdout.txt",
+          "sha256": "e0b3336af8a36db95b02c45bb53c5434cfb529818064d946dc02667b2463552a"
+        },
+        "stderr": {
+          "path": "reports/tailwind-integration/build-series/logs/initial-03-postcss.stderr.txt",
+          "sha256": "688db9a68c79cd303673511ab6dbf4cb1b6a079aaf747bbffbc6634644026237"
+        }
+      },
+      "configSha256": "7236a4829b1ed36c815e793755b4a4b108a1503a53c361ecf197848969eab9d7",
+      "bundleReport": "reports/tailwind-integration/build-series/outputs/initial-03-postcss/.qa-build-metadata.json",
+      "bundleSha256": "3e84096ce4d1575ec3d3758f5855f6a7b72ceb277eb5aed56e30a00bc91605f2",
+      "inventory": {
+        "path": "reports/tailwind-integration/build-series/inventories/initial-03-postcss.json",
+        "sha256": "e2161506340cd132f902106cec744fbaec7565e207745e770b32a251258ac308"
+      },
+      "totals": {
+        "js": {
+          "files": 741,
+          "rawBytes": 9386347,
+          "gzipBytes": 3082508,
+          "brotliBytes": 2630347,
+          "rules": 0
+        },
+        "css": {
+          "files": 1,
+          "rawBytes": 196588,
+          "gzipBytes": 27568,
+          "brotliBytes": 21163,
+          "rules": 2272
+        },
+        "combined": {
+          "files": 742,
+          "rawBytes": 9582935,
+          "gzipBytes": 3110076,
+          "brotliBytes": 2651510,
+          "rules": 2272
+        }
+      }
+    },
+    {
+      "id": "initial-03-vite",
+      "pair": 3,
+      "phase": "initial",
+      "variant": "vite",
+      "discarded": false,
+      "outDir": "reports/tailwind-integration/build-series/outputs/initial-03-vite",
+      "cacheDir": "reports/tailwind-integration/build-series/cache/initial-03-vite",
+      "tempDir": "reports/tailwind-integration/build-series/temp/initial-03-vite",
+      "configReport": "reports/tailwind-integration/build-series/config/initial-03-vite.json",
+      "configLoaderCacheBefore": {
+        "path": "node_modules/.vite-temp",
+        "removedFiles": [],
+        "policy": "Clear only the verified checkout-local Vite config-loader cache before each build"
+      },
+      "freeMemoryBytesBefore": 4143702016,
+      "command": [
+        "C:\\Users\\torta\\Documents\\Codex\\2026-10-17\\task-6\\.tools\\node.exe",
+        "C:\\Users\\torta\\Documents\\Codex\\2026-10-17\\task-6\\elogistix-tailwind4\\docs\\qa\\tailwind-integration-20261017\\build-worker.mjs",
+        "--variant",
+        "vite",
+        "--out-dir",
+        "C:\\Users\\torta\\Documents\\Codex\\2026-10-17\\task-6\\elogistix-tailwind4\\reports\\tailwind-integration\\build-series\\outputs\\initial-03-vite",
+        "--cache-dir",
+        "C:\\Users\\torta\\Documents\\Codex\\2026-10-17\\task-6\\elogistix-tailwind4\\reports\\tailwind-integration\\build-series\\cache\\initial-03-vite",
+        "--config-report",
+        "C:\\Users\\torta\\Documents\\Codex\\2026-10-17\\task-6\\elogistix-tailwind4\\reports\\tailwind-integration\\build-series\\config\\initial-03-vite.json"
+      ],
+      "startedAt": "2026-10-17T23:52:07.998Z",
+      "exitCode": 0,
+      "signal": null,
+      "elapsedMs": 21891.96639999999,
+      "endedAt": "2026-10-17T23:52:29.890Z",
+      "spawnError": null,
+      "logs": {
+        "stdout": {
+          "path": "reports/tailwind-integration/build-series/logs/initial-03-vite.stdout.txt",
+          "sha256": "6a1370540a3252ba893a58d3bae474afa9e48fc17c9b74e1544d2a4717f73dce"
+        },
+        "stderr": {
+          "path": "reports/tailwind-integration/build-series/logs/initial-03-vite.stderr.txt",
+          "sha256": "688db9a68c79cd303673511ab6dbf4cb1b6a079aaf747bbffbc6634644026237"
+        }
+      },
+      "configSha256": "dc51d776fd7e582ad4105f344d42c3c3c17c26bb714a05dac1a8963b7c324507",
+      "bundleReport": "reports/tailwind-integration/build-series/outputs/initial-03-vite/.qa-build-metadata.json",
+      "bundleSha256": "71f00955f622b4e332da9b5efca1473e52990994b49ef0649eb0239d02644871",
+      "inventory": {
+        "path": "reports/tailwind-integration/build-series/inventories/initial-03-vite.json",
+        "sha256": "e2161506340cd132f902106cec744fbaec7565e207745e770b32a251258ac308"
+      },
+      "totals": {
+        "js": {
+          "files": 741,
+          "rawBytes": 9386347,
+          "gzipBytes": 3082508,
+          "brotliBytes": 2630347,
+          "rules": 0
+        },
+        "css": {
+          "files": 1,
+          "rawBytes": 196588,
+          "gzipBytes": 27568,
+          "brotliBytes": 21163,
+          "rules": 2272
+        },
+        "combined": {
+          "files": 742,
+          "rawBytes": 9582935,
+          "gzipBytes": 3110076,
+          "brotliBytes": 2651510,
+          "rules": 2272
+        }
+      }
+    },
+    {
+      "id": "repeated-04-vite",
+      "pair": 4,
+      "phase": "repeated",
+      "variant": "vite",
+      "discarded": false,
+      "outDir": "reports/tailwind-integration/build-series/outputs/repeated-04-vite",
+      "cacheDir": "reports/tailwind-integration/build-series/cache/repeated-04-vite",
+      "tempDir": "reports/tailwind-integration/build-series/temp/repeated-04-vite",
+      "configReport": "reports/tailwind-integration/build-series/config/repeated-04-vite.json",
+      "configLoaderCacheBefore": {
+        "path": "node_modules/.vite-temp",
+        "removedFiles": [],
+        "policy": "Clear only the verified checkout-local Vite config-loader cache before each build"
+      },
+      "freeMemoryBytesBefore": 4707516416,
+      "command": [
+        "C:\\Users\\torta\\Documents\\Codex\\2026-10-17\\task-6\\.tools\\node.exe",
+        "C:\\Users\\torta\\Documents\\Codex\\2026-10-17\\task-6\\elogistix-tailwind4\\docs\\qa\\tailwind-integration-20261017\\build-worker.mjs",
+        "--variant",
+        "vite",
+        "--out-dir",
+        "C:\\Users\\torta\\Documents\\Codex\\2026-10-17\\task-6\\elogistix-tailwind4\\reports\\tailwind-integration\\build-series\\outputs\\repeated-04-vite",
+        "--cache-dir",
+        "C:\\Users\\torta\\Documents\\Codex\\2026-10-17\\task-6\\elogistix-tailwind4\\reports\\tailwind-integration\\build-series\\cache\\repeated-04-vite",
+        "--config-report",
+        "C:\\Users\\torta\\Documents\\Codex\\2026-10-17\\task-6\\elogistix-tailwind4\\reports\\tailwind-integration\\build-series\\config\\repeated-04-vite.json"
+      ],
+      "startedAt": "2026-10-17T23:52:30.208Z",
+      "exitCode": 0,
+      "signal": null,
+      "elapsedMs": 19140.33189999999,
+      "endedAt": "2026-10-17T23:52:49.348Z",
+      "spawnError": null,
+      "logs": {
+        "stdout": {
+          "path": "reports/tailwind-integration/build-series/logs/repeated-04-vite.stdout.txt",
+          "sha256": "e5d4766cba88fe6575f97a62af4a7f6c64863cccb63179c092f0dad6c0f91bfa"
+        },
+        "stderr": {
+          "path": "reports/tailwind-integration/build-series/logs/repeated-04-vite.stderr.txt",
+          "sha256": "688db9a68c79cd303673511ab6dbf4cb1b6a079aaf747bbffbc6634644026237"
+        }
+      },
+      "configSha256": "28d23d09c6af5faef4bada22245f17877fa95e44a7ba32f3d8c9365ea191e445",
+      "bundleReport": "reports/tailwind-integration/build-series/outputs/repeated-04-vite/.qa-build-metadata.json",
+      "bundleSha256": "71f00955f622b4e332da9b5efca1473e52990994b49ef0649eb0239d02644871",
+      "inventory": {
+        "path": "reports/tailwind-integration/build-series/inventories/repeated-04-vite.json",
+        "sha256": "e2161506340cd132f902106cec744fbaec7565e207745e770b32a251258ac308"
+      },
+      "totals": {
+        "js": {
+          "files": 741,
+          "rawBytes": 9386347,
+          "gzipBytes": 3082508,
+          "brotliBytes": 2630347,
+          "rules": 0
+        },
+        "css": {
+          "files": 1,
+          "rawBytes": 196588,
+          "gzipBytes": 27568,
+          "brotliBytes": 21163,
+          "rules": 2272
+        },
+        "combined": {
+          "files": 742,
+          "rawBytes": 9582935,
+          "gzipBytes": 3110076,
+          "brotliBytes": 2651510,
+          "rules": 2272
+        }
+      }
+    },
+    {
+      "id": "repeated-04-postcss",
+      "pair": 4,
+      "phase": "repeated",
+      "variant": "postcss",
+      "discarded": false,
+      "outDir": "reports/tailwind-integration/build-series/outputs/repeated-04-postcss",
+      "cacheDir": "reports/tailwind-integration/build-series/cache/repeated-04-postcss",
+      "tempDir": "reports/tailwind-integration/build-series/temp/repeated-04-postcss",
+      "configReport": "reports/tailwind-integration/build-series/config/repeated-04-postcss.json",
+      "configLoaderCacheBefore": {
+        "path": "node_modules/.vite-temp",
+        "removedFiles": [],
+        "policy": "Clear only the verified checkout-local Vite config-loader cache before each build"
+      },
+      "freeMemoryBytesBefore": 4827041792,
+      "command": [
+        "C:\\Users\\torta\\Documents\\Codex\\2026-10-17\\task-6\\.tools\\node.exe",
+        "C:\\Users\\torta\\Documents\\Codex\\2026-10-17\\task-6\\elogistix-tailwind4\\docs\\qa\\tailwind-integration-20261017\\build-worker.mjs",
+        "--variant",
+        "postcss",
+        "--out-dir",
+        "C:\\Users\\torta\\Documents\\Codex\\2026-10-17\\task-6\\elogistix-tailwind4\\reports\\tailwind-integration\\build-series\\outputs\\repeated-04-postcss",
+        "--cache-dir",
+        "C:\\Users\\torta\\Documents\\Codex\\2026-10-17\\task-6\\elogistix-tailwind4\\reports\\tailwind-integration\\build-series\\cache\\repeated-04-postcss",
+        "--config-report",
+        "C:\\Users\\torta\\Documents\\Codex\\2026-10-17\\task-6\\elogistix-tailwind4\\reports\\tailwind-integration\\build-series\\config\\repeated-04-postcss.json"
+      ],
+      "startedAt": "2026-10-17T23:52:49.615Z",
+      "exitCode": 0,
+      "signal": null,
+      "elapsedMs": 20806.680699999997,
+      "endedAt": "2026-10-17T23:53:10.422Z",
+      "spawnError": null,
+      "logs": {
+        "stdout": {
+          "path": "reports/tailwind-integration/build-series/logs/repeated-04-postcss.stdout.txt",
+          "sha256": "62ed75e648247c7e1a3cddae57b70a85abde69441dd5c216e409379c9cf361d1"
+        },
+        "stderr": {
+          "path": "reports/tailwind-integration/build-series/logs/repeated-04-postcss.stderr.txt",
+          "sha256": "a946cd35c82e2f7fa7744f91cbafb0ae3cd9888f6f212f9ee967408a71b051a0"
+        }
+      },
+      "configSha256": "1c32797131d533e1677dd6f5fbb6ec1ef662836eefef996d6ee7dac68960153f",
+      "bundleReport": "reports/tailwind-integration/build-series/outputs/repeated-04-postcss/.qa-build-metadata.json",
+      "bundleSha256": "3e84096ce4d1575ec3d3758f5855f6a7b72ceb277eb5aed56e30a00bc91605f2",
+      "inventory": {
+        "path": "reports/tailwind-integration/build-series/inventories/repeated-04-postcss.json",
+        "sha256": "e2161506340cd132f902106cec744fbaec7565e207745e770b32a251258ac308"
+      },
+      "totals": {
+        "js": {
+          "files": 741,
+          "rawBytes": 9386347,
+          "gzipBytes": 3082508,
+          "brotliBytes": 2630347,
+          "rules": 0
+        },
+        "css": {
+          "files": 1,
+          "rawBytes": 196588,
+          "gzipBytes": 27568,
+          "brotliBytes": 21163,
+          "rules": 2272
+        },
+        "combined": {
+          "files": 742,
+          "rawBytes": 9582935,
+          "gzipBytes": 3110076,
+          "brotliBytes": 2651510,
+          "rules": 2272
+        }
+      }
+    },
+    {
+      "id": "repeated-05-postcss",
+      "pair": 5,
+      "phase": "repeated",
+      "variant": "postcss",
+      "discarded": false,
+      "outDir": "reports/tailwind-integration/build-series/outputs/repeated-05-postcss",
+      "cacheDir": "reports/tailwind-integration/build-series/cache/repeated-05-postcss",
+      "tempDir": "reports/tailwind-integration/build-series/temp/repeated-05-postcss",
+      "configReport": "reports/tailwind-integration/build-series/config/repeated-05-postcss.json",
+      "configLoaderCacheBefore": {
+        "path": "node_modules/.vite-temp",
+        "removedFiles": [],
+        "policy": "Clear only the verified checkout-local Vite config-loader cache before each build"
+      },
+      "freeMemoryBytesBefore": 5209853952,
+      "command": [
+        "C:\\Users\\torta\\Documents\\Codex\\2026-10-17\\task-6\\.tools\\node.exe",
+        "C:\\Users\\torta\\Documents\\Codex\\2026-10-17\\task-6\\elogistix-tailwind4\\docs\\qa\\tailwind-integration-20261017\\build-worker.mjs",
+        "--variant",
+        "postcss",
+        "--out-dir",
+        "C:\\Users\\torta\\Documents\\Codex\\2026-10-17\\task-6\\elogistix-tailwind4\\reports\\tailwind-integration\\build-series\\outputs\\repeated-05-postcss",
+        "--cache-dir",
+        "C:\\Users\\torta\\Documents\\Codex\\2026-10-17\\task-6\\elogistix-tailwind4\\reports\\tailwind-integration\\build-series\\cache\\repeated-05-postcss",
+        "--config-report",
+        "C:\\Users\\torta\\Documents\\Codex\\2026-10-17\\task-6\\elogistix-tailwind4\\reports\\tailwind-integration\\build-series\\config\\repeated-05-postcss.json"
+      ],
+      "startedAt": "2026-10-17T23:53:10.693Z",
+      "exitCode": 0,
+      "signal": null,
+      "elapsedMs": 21829.51250000001,
+      "endedAt": "2026-10-17T23:53:32.522Z",
+      "spawnError": null,
+      "logs": {
+        "stdout": {
+          "path": "reports/tailwind-integration/build-series/logs/repeated-05-postcss.stdout.txt",
+          "sha256": "fe9811737447f4d4a32a3022d6cf88e594b6794f16a196e06f480b787a15cde9"
+        },
+        "stderr": {
+          "path": "reports/tailwind-integration/build-series/logs/repeated-05-postcss.stderr.txt",
+          "sha256": "688db9a68c79cd303673511ab6dbf4cb1b6a079aaf747bbffbc6634644026237"
+        }
+      },
+      "configSha256": "914c850d4cd81aa1e73995746b8b81b784467166aa2d414aeeed559fc2d1abd4",
+      "bundleReport": "reports/tailwind-integration/build-series/outputs/repeated-05-postcss/.qa-build-metadata.json",
+      "bundleSha256": "3e84096ce4d1575ec3d3758f5855f6a7b72ceb277eb5aed56e30a00bc91605f2",
+      "inventory": {
+        "path": "reports/tailwind-integration/build-series/inventories/repeated-05-postcss.json",
+        "sha256": "e2161506340cd132f902106cec744fbaec7565e207745e770b32a251258ac308"
+      },
+      "totals": {
+        "js": {
+          "files": 741,
+          "rawBytes": 9386347,
+          "gzipBytes": 3082508,
+          "brotliBytes": 2630347,
+          "rules": 0
+        },
+        "css": {
+          "files": 1,
+          "rawBytes": 196588,
+          "gzipBytes": 27568,
+          "brotliBytes": 21163,
+          "rules": 2272
+        },
+        "combined": {
+          "files": 742,
+          "rawBytes": 9582935,
+          "gzipBytes": 3110076,
+          "brotliBytes": 2651510,
+          "rules": 2272
+        }
+      }
+    },
+    {
+      "id": "repeated-05-vite",
+      "pair": 5,
+      "phase": "repeated",
+      "variant": "vite",
+      "discarded": false,
+      "outDir": "reports/tailwind-integration/build-series/outputs/repeated-05-vite",
+      "cacheDir": "reports/tailwind-integration/build-series/cache/repeated-05-vite",
+      "tempDir": "reports/tailwind-integration/build-series/temp/repeated-05-vite",
+      "configReport": "reports/tailwind-integration/build-series/config/repeated-05-vite.json",
+      "configLoaderCacheBefore": {
+        "path": "node_modules/.vite-temp",
+        "removedFiles": [],
+        "policy": "Clear only the verified checkout-local Vite config-loader cache before each build"
+      },
+      "freeMemoryBytesBefore": 4830924800,
+      "command": [
+        "C:\\Users\\torta\\Documents\\Codex\\2026-10-17\\task-6\\.tools\\node.exe",
+        "C:\\Users\\torta\\Documents\\Codex\\2026-10-17\\task-6\\elogistix-tailwind4\\docs\\qa\\tailwind-integration-20261017\\build-worker.mjs",
+        "--variant",
+        "vite",
+        "--out-dir",
+        "C:\\Users\\torta\\Documents\\Codex\\2026-10-17\\task-6\\elogistix-tailwind4\\reports\\tailwind-integration\\build-series\\outputs\\repeated-05-vite",
+        "--cache-dir",
+        "C:\\Users\\torta\\Documents\\Codex\\2026-10-17\\task-6\\elogistix-tailwind4\\reports\\tailwind-integration\\build-series\\cache\\repeated-05-vite",
+        "--config-report",
+        "C:\\Users\\torta\\Documents\\Codex\\2026-10-17\\task-6\\elogistix-tailwind4\\reports\\tailwind-integration\\build-series\\config\\repeated-05-vite.json"
+      ],
+      "startedAt": "2026-10-17T23:53:32.786Z",
+      "exitCode": 0,
+      "signal": null,
+      "elapsedMs": 21546.14970000001,
+      "endedAt": "2026-10-17T23:53:54.333Z",
+      "spawnError": null,
+      "logs": {
+        "stdout": {
+          "path": "reports/tailwind-integration/build-series/logs/repeated-05-vite.stdout.txt",
+          "sha256": "5be42dbcbe3347afe4e3e9312a97bbb52fc35317bce55488ed60cd052e39279a"
+        },
+        "stderr": {
+          "path": "reports/tailwind-integration/build-series/logs/repeated-05-vite.stderr.txt",
+          "sha256": "16ec9d5c9c2db039f60b607345641204d79fd592c947a50555080add86154d96"
+        }
+      },
+      "configSha256": "4783357255cf968144e607bfd3b2e8bcc8af0cd6a7f051d06e8770e200200978",
+      "bundleReport": "reports/tailwind-integration/build-series/outputs/repeated-05-vite/.qa-build-metadata.json",
+      "bundleSha256": "71f00955f622b4e332da9b5efca1473e52990994b49ef0649eb0239d02644871",
+      "inventory": {
+        "path": "reports/tailwind-integration/build-series/inventories/repeated-05-vite.json",
+        "sha256": "e2161506340cd132f902106cec744fbaec7565e207745e770b32a251258ac308"
+      },
+      "totals": {
+        "js": {
+          "files": 741,
+          "rawBytes": 9386347,
+          "gzipBytes": 3082508,
+          "brotliBytes": 2630347,
+          "rules": 0
+        },
+        "css": {
+          "files": 1,
+          "rawBytes": 196588,
+          "gzipBytes": 27568,
+          "brotliBytes": 21163,
+          "rules": 2272
+        },
+        "combined": {
+          "files": 742,
+          "rawBytes": 9582935,
+          "gzipBytes": 3110076,
+          "brotliBytes": 2651510,
+          "rules": 2272
+        }
+      }
+    },
+    {
+      "id": "repeated-06-vite",
+      "pair": 6,
+      "phase": "repeated",
+      "variant": "vite",
+      "discarded": false,
+      "outDir": "reports/tailwind-integration/build-series/outputs/repeated-06-vite",
+      "cacheDir": "reports/tailwind-integration/build-series/cache/repeated-06-vite",
+      "tempDir": "reports/tailwind-integration/build-series/temp/repeated-06-vite",
+      "configReport": "reports/tailwind-integration/build-series/config/repeated-06-vite.json",
+      "configLoaderCacheBefore": {
+        "path": "node_modules/.vite-temp",
+        "removedFiles": [],
+        "policy": "Clear only the verified checkout-local Vite config-loader cache before each build"
+      },
+      "freeMemoryBytesBefore": 5248532480,
+      "command": [
+        "C:\\Users\\torta\\Documents\\Codex\\2026-10-17\\task-6\\.tools\\node.exe",
+        "C:\\Users\\torta\\Documents\\Codex\\2026-10-17\\task-6\\elogistix-tailwind4\\docs\\qa\\tailwind-integration-20261017\\build-worker.mjs",
+        "--variant",
+        "vite",
+        "--out-dir",
+        "C:\\Users\\torta\\Documents\\Codex\\2026-10-17\\task-6\\elogistix-tailwind4\\reports\\tailwind-integration\\build-series\\outputs\\repeated-06-vite",
+        "--cache-dir",
+        "C:\\Users\\torta\\Documents\\Codex\\2026-10-17\\task-6\\elogistix-tailwind4\\reports\\tailwind-integration\\build-series\\cache\\repeated-06-vite",
+        "--config-report",
+        "C:\\Users\\torta\\Documents\\Codex\\2026-10-17\\task-6\\elogistix-tailwind4\\reports\\tailwind-integration\\build-series\\config\\repeated-06-vite.json"
+      ],
+      "startedAt": "2026-10-17T23:53:54.624Z",
+      "exitCode": 0,
+      "signal": null,
+      "elapsedMs": 21897.0386,
+      "endedAt": "2026-10-17T23:54:16.521Z",
+      "spawnError": null,
+      "logs": {
+        "stdout": {
+          "path": "reports/tailwind-integration/build-series/logs/repeated-06-vite.stdout.txt",
+          "sha256": "7a3cb3d71104473377655fc0796adda9dccbefc0d31addc5d10bfd2208253610"
+        },
+        "stderr": {
+          "path": "reports/tailwind-integration/build-series/logs/repeated-06-vite.stderr.txt",
+          "sha256": "688db9a68c79cd303673511ab6dbf4cb1b6a079aaf747bbffbc6634644026237"
+        }
+      },
+      "configSha256": "131bfb1efb7a4733768af9e31df9f177c20a319e1ec4036657993f81da5ca0e5",
+      "bundleReport": "reports/tailwind-integration/build-series/outputs/repeated-06-vite/.qa-build-metadata.json",
+      "bundleSha256": "71f00955f622b4e332da9b5efca1473e52990994b49ef0649eb0239d02644871",
+      "inventory": {
+        "path": "reports/tailwind-integration/build-series/inventories/repeated-06-vite.json",
+        "sha256": "e2161506340cd132f902106cec744fbaec7565e207745e770b32a251258ac308"
+      },
+      "totals": {
+        "js": {
+          "files": 741,
+          "rawBytes": 9386347,
+          "gzipBytes": 3082508,
+          "brotliBytes": 2630347,
+          "rules": 0
+        },
+        "css": {
+          "files": 1,
+          "rawBytes": 196588,
+          "gzipBytes": 27568,
+          "brotliBytes": 21163,
+          "rules": 2272
+        },
+        "combined": {
+          "files": 742,
+          "rawBytes": 9582935,
+          "gzipBytes": 3110076,
+          "brotliBytes": 2651510,
+          "rules": 2272
+        }
+      }
+    },
+    {
+      "id": "repeated-06-postcss",
+      "pair": 6,
+      "phase": "repeated",
+      "variant": "postcss",
+      "discarded": false,
+      "outDir": "reports/tailwind-integration/build-series/outputs/repeated-06-postcss",
+      "cacheDir": "reports/tailwind-integration/build-series/cache/repeated-06-postcss",
+      "tempDir": "reports/tailwind-integration/build-series/temp/repeated-06-postcss",
+      "configReport": "reports/tailwind-integration/build-series/config/repeated-06-postcss.json",
+      "configLoaderCacheBefore": {
+        "path": "node_modules/.vite-temp",
+        "removedFiles": [],
+        "policy": "Clear only the verified checkout-local Vite config-loader cache before each build"
+      },
+      "freeMemoryBytesBefore": 5028732928,
+      "command": [
+        "C:\\Users\\torta\\Documents\\Codex\\2026-10-17\\task-6\\.tools\\node.exe",
+        "C:\\Users\\torta\\Documents\\Codex\\2026-10-17\\task-6\\elogistix-tailwind4\\docs\\qa\\tailwind-integration-20261017\\build-worker.mjs",
+        "--variant",
+        "postcss",
+        "--out-dir",
+        "C:\\Users\\torta\\Documents\\Codex\\2026-10-17\\task-6\\elogistix-tailwind4\\reports\\tailwind-integration\\build-series\\outputs\\repeated-06-postcss",
+        "--cache-dir",
+        "C:\\Users\\torta\\Documents\\Codex\\2026-10-17\\task-6\\elogistix-tailwind4\\reports\\tailwind-integration\\build-series\\cache\\repeated-06-postcss",
+        "--config-report",
+        "C:\\Users\\torta\\Documents\\Codex\\2026-10-17\\task-6\\elogistix-tailwind4\\reports\\tailwind-integration\\build-series\\config\\repeated-06-postcss.json"
+      ],
+      "startedAt": "2026-10-17T23:54:16.778Z",
+      "exitCode": 0,
+      "signal": null,
+      "elapsedMs": 21606.11619999999,
+      "endedAt": "2026-10-17T23:54:38.385Z",
+      "spawnError": null,
+      "logs": {
+        "stdout": {
+          "path": "reports/tailwind-integration/build-series/logs/repeated-06-postcss.stdout.txt",
+          "sha256": "2bbe0e2282bdecfe6716637b99909e547697134d8567606d3c61ab25c7e4f362"
+        },
+        "stderr": {
+          "path": "reports/tailwind-integration/build-series/logs/repeated-06-postcss.stderr.txt",
+          "sha256": "688db9a68c79cd303673511ab6dbf4cb1b6a079aaf747bbffbc6634644026237"
+        }
+      },
+      "configSha256": "ef79e3a9d8c49ad21ac63e0be1c92a7ed6c227c9e4e7243d8e442268315eff14",
+      "bundleReport": "reports/tailwind-integration/build-series/outputs/repeated-06-postcss/.qa-build-metadata.json",
+      "bundleSha256": "3e84096ce4d1575ec3d3758f5855f6a7b72ceb277eb5aed56e30a00bc91605f2",
+      "inventory": {
+        "path": "reports/tailwind-integration/build-series/inventories/repeated-06-postcss.json",
+        "sha256": "e2161506340cd132f902106cec744fbaec7565e207745e770b32a251258ac308"
+      },
+      "totals": {
+        "js": {
+          "files": 741,
+          "rawBytes": 9386347,
+          "gzipBytes": 3082508,
+          "brotliBytes": 2630347,
+          "rules": 0
+        },
+        "css": {
+          "files": 1,
+          "rawBytes": 196588,
+          "gzipBytes": 27568,
+          "brotliBytes": 21163,
+          "rules": 2272
+        },
+        "combined": {
+          "files": 742,
+          "rawBytes": 9582935,
+          "gzipBytes": 3110076,
+          "brotliBytes": 2651510,
+          "rules": 2272
+        }
+      }
+    },
+    {
+      "id": "repeated-07-postcss",
+      "pair": 7,
+      "phase": "repeated",
+      "variant": "postcss",
+      "discarded": false,
+      "outDir": "reports/tailwind-integration/build-series/outputs/repeated-07-postcss",
+      "cacheDir": "reports/tailwind-integration/build-series/cache/repeated-07-postcss",
+      "tempDir": "reports/tailwind-integration/build-series/temp/repeated-07-postcss",
+      "configReport": "reports/tailwind-integration/build-series/config/repeated-07-postcss.json",
+      "configLoaderCacheBefore": {
+        "path": "node_modules/.vite-temp",
+        "removedFiles": [],
+        "policy": "Clear only the verified checkout-local Vite config-loader cache before each build"
+      },
+      "freeMemoryBytesBefore": 4994080768,
+      "command": [
+        "C:\\Users\\torta\\Documents\\Codex\\2026-10-17\\task-6\\.tools\\node.exe",
+        "C:\\Users\\torta\\Documents\\Codex\\2026-10-17\\task-6\\elogistix-tailwind4\\docs\\qa\\tailwind-integration-20261017\\build-worker.mjs",
+        "--variant",
+        "postcss",
+        "--out-dir",
+        "C:\\Users\\torta\\Documents\\Codex\\2026-10-17\\task-6\\elogistix-tailwind4\\reports\\tailwind-integration\\build-series\\outputs\\repeated-07-postcss",
+        "--cache-dir",
+        "C:\\Users\\torta\\Documents\\Codex\\2026-10-17\\task-6\\elogistix-tailwind4\\reports\\tailwind-integration\\build-series\\cache\\repeated-07-postcss",
+        "--config-report",
+        "C:\\Users\\torta\\Documents\\Codex\\2026-10-17\\task-6\\elogistix-tailwind4\\reports\\tailwind-integration\\build-series\\config\\repeated-07-postcss.json"
+      ],
+      "startedAt": "2026-10-17T23:54:38.704Z",
+      "exitCode": 0,
+      "signal": null,
+      "elapsedMs": 23526.03899999999,
+      "endedAt": "2026-10-17T23:55:02.230Z",
+      "spawnError": null,
+      "logs": {
+        "stdout": {
+          "path": "reports/tailwind-integration/build-series/logs/repeated-07-postcss.stdout.txt",
+          "sha256": "c465f87e6f379c5eee9bee65300ee81712d58dc4b167f2d5577c7092b2015a81"
+        },
+        "stderr": {
+          "path": "reports/tailwind-integration/build-series/logs/repeated-07-postcss.stderr.txt",
+          "sha256": "688db9a68c79cd303673511ab6dbf4cb1b6a079aaf747bbffbc6634644026237"
+        }
+      },
+      "configSha256": "a822923eb4290253367f3376ca99c32315f72c8f2384416fbe4847df35bdc823",
+      "bundleReport": "reports/tailwind-integration/build-series/outputs/repeated-07-postcss/.qa-build-metadata.json",
+      "bundleSha256": "3e84096ce4d1575ec3d3758f5855f6a7b72ceb277eb5aed56e30a00bc91605f2",
+      "inventory": {
+        "path": "reports/tailwind-integration/build-series/inventories/repeated-07-postcss.json",
+        "sha256": "e2161506340cd132f902106cec744fbaec7565e207745e770b32a251258ac308"
+      },
+      "totals": {
+        "js": {
+          "files": 741,
+          "rawBytes": 9386347,
+          "gzipBytes": 3082508,
+          "brotliBytes": 2630347,
+          "rules": 0
+        },
+        "css": {
+          "files": 1,
+          "rawBytes": 196588,
+          "gzipBytes": 27568,
+          "brotliBytes": 21163,
+          "rules": 2272
+        },
+        "combined": {
+          "files": 742,
+          "rawBytes": 9582935,
+          "gzipBytes": 3110076,
+          "brotliBytes": 2651510,
+          "rules": 2272
+        }
+      }
+    },
+    {
+      "id": "repeated-07-vite",
+      "pair": 7,
+      "phase": "repeated",
+      "variant": "vite",
+      "discarded": false,
+      "outDir": "reports/tailwind-integration/build-series/outputs/repeated-07-vite",
+      "cacheDir": "reports/tailwind-integration/build-series/cache/repeated-07-vite",
+      "tempDir": "reports/tailwind-integration/build-series/temp/repeated-07-vite",
+      "configReport": "reports/tailwind-integration/build-series/config/repeated-07-vite.json",
+      "configLoaderCacheBefore": {
+        "path": "node_modules/.vite-temp",
+        "removedFiles": [],
+        "policy": "Clear only the verified checkout-local Vite config-loader cache before each build"
+      },
+      "freeMemoryBytesBefore": 4627767296,
+      "command": [
+        "C:\\Users\\torta\\Documents\\Codex\\2026-10-17\\task-6\\.tools\\node.exe",
+        "C:\\Users\\torta\\Documents\\Codex\\2026-10-17\\task-6\\elogistix-tailwind4\\docs\\qa\\tailwind-integration-20261017\\build-worker.mjs",
+        "--variant",
+        "vite",
+        "--out-dir",
+        "C:\\Users\\torta\\Documents\\Codex\\2026-10-17\\task-6\\elogistix-tailwind4\\reports\\tailwind-integration\\build-series\\outputs\\repeated-07-vite",
+        "--cache-dir",
+        "C:\\Users\\torta\\Documents\\Codex\\2026-10-17\\task-6\\elogistix-tailwind4\\reports\\tailwind-integration\\build-series\\cache\\repeated-07-vite",
+        "--config-report",
+        "C:\\Users\\torta\\Documents\\Codex\\2026-10-17\\task-6\\elogistix-tailwind4\\reports\\tailwind-integration\\build-series\\config\\repeated-07-vite.json"
+      ],
+      "startedAt": "2026-10-17T23:55:02.486Z",
+      "exitCode": 0,
+      "signal": null,
+      "elapsedMs": 22640.75429999997,
+      "endedAt": "2026-10-17T23:55:25.127Z",
+      "spawnError": null,
+      "logs": {
+        "stdout": {
+          "path": "reports/tailwind-integration/build-series/logs/repeated-07-vite.stdout.txt",
+          "sha256": "61cd60ba725d075bcfcc36e508ff5aa0e1f67935c15782d8f5769abe7a87c263"
+        },
+        "stderr": {
+          "path": "reports/tailwind-integration/build-series/logs/repeated-07-vite.stderr.txt",
+          "sha256": "688db9a68c79cd303673511ab6dbf4cb1b6a079aaf747bbffbc6634644026237"
+        }
+      },
+      "configSha256": "a634614db3d1f566e6928a9b47cb9913468f7a95c805520b1cea20f46d1b37b8",
+      "bundleReport": "reports/tailwind-integration/build-series/outputs/repeated-07-vite/.qa-build-metadata.json",
+      "bundleSha256": "71f00955f622b4e332da9b5efca1473e52990994b49ef0649eb0239d02644871",
+      "inventory": {
+        "path": "reports/tailwind-integration/build-series/inventories/repeated-07-vite.json",
+        "sha256": "e2161506340cd132f902106cec744fbaec7565e207745e770b32a251258ac308"
+      },
+      "totals": {
+        "js": {
+          "files": 741,
+          "rawBytes": 9386347,
+          "gzipBytes": 3082508,
+          "brotliBytes": 2630347,
+          "rules": 0
+        },
+        "css": {
+          "files": 1,
+          "rawBytes": 196588,
+          "gzipBytes": 27568,
+          "brotliBytes": 21163,
+          "rules": 2272
+        },
+        "combined": {
+          "files": 742,
+          "rawBytes": 9582935,
+          "gzipBytes": 3110076,
+          "brotliBytes": 2651510,
+          "rules": 2272
+        }
+      }
+    },
+    {
+      "id": "repeated-08-vite",
+      "pair": 8,
+      "phase": "repeated",
+      "variant": "vite",
+      "discarded": false,
+      "outDir": "reports/tailwind-integration/build-series/outputs/repeated-08-vite",
+      "cacheDir": "reports/tailwind-integration/build-series/cache/repeated-08-vite",
+      "tempDir": "reports/tailwind-integration/build-series/temp/repeated-08-vite",
+      "configReport": "reports/tailwind-integration/build-series/config/repeated-08-vite.json",
+      "configLoaderCacheBefore": {
+        "path": "node_modules/.vite-temp",
+        "removedFiles": [],
+        "policy": "Clear only the verified checkout-local Vite config-loader cache before each build"
+      },
+      "freeMemoryBytesBefore": 4986441728,
+      "command": [
+        "C:\\Users\\torta\\Documents\\Codex\\2026-10-17\\task-6\\.tools\\node.exe",
+        "C:\\Users\\torta\\Documents\\Codex\\2026-10-17\\task-6\\elogistix-tailwind4\\docs\\qa\\tailwind-integration-20261017\\build-worker.mjs",
+        "--variant",
+        "vite",
+        "--out-dir",
+        "C:\\Users\\torta\\Documents\\Codex\\2026-10-17\\task-6\\elogistix-tailwind4\\reports\\tailwind-integration\\build-series\\outputs\\repeated-08-vite",
+        "--cache-dir",
+        "C:\\Users\\torta\\Documents\\Codex\\2026-10-17\\task-6\\elogistix-tailwind4\\reports\\tailwind-integration\\build-series\\cache\\repeated-08-vite",
+        "--config-report",
+        "C:\\Users\\torta\\Documents\\Codex\\2026-10-17\\task-6\\elogistix-tailwind4\\reports\\tailwind-integration\\build-series\\config\\repeated-08-vite.json"
+      ],
+      "startedAt": "2026-10-17T23:55:25.407Z",
+      "exitCode": 0,
+      "signal": null,
+      "elapsedMs": 20688.666199999978,
+      "endedAt": "2026-10-17T23:55:46.095Z",
+      "spawnError": null,
+      "logs": {
+        "stdout": {
+          "path": "reports/tailwind-integration/build-series/logs/repeated-08-vite.stdout.txt",
+          "sha256": "8893a60e7a9d8ef68f75072588ee1f5bb571893a3dc423530a254c77bf0d38a2"
+        },
+        "stderr": {
+          "path": "reports/tailwind-integration/build-series/logs/repeated-08-vite.stderr.txt",
+          "sha256": "688db9a68c79cd303673511ab6dbf4cb1b6a079aaf747bbffbc6634644026237"
+        }
+      },
+      "configSha256": "433f2508b5628724a8e7214d3d2807c57fd7fc8df08ecc39bf25699888d4b493",
+      "bundleReport": "reports/tailwind-integration/build-series/outputs/repeated-08-vite/.qa-build-metadata.json",
+      "bundleSha256": "71f00955f622b4e332da9b5efca1473e52990994b49ef0649eb0239d02644871",
+      "inventory": {
+        "path": "reports/tailwind-integration/build-series/inventories/repeated-08-vite.json",
+        "sha256": "e2161506340cd132f902106cec744fbaec7565e207745e770b32a251258ac308"
+      },
+      "totals": {
+        "js": {
+          "files": 741,
+          "rawBytes": 9386347,
+          "gzipBytes": 3082508,
+          "brotliBytes": 2630347,
+          "rules": 0
+        },
+        "css": {
+          "files": 1,
+          "rawBytes": 196588,
+          "gzipBytes": 27568,
+          "brotliBytes": 21163,
+          "rules": 2272
+        },
+        "combined": {
+          "files": 742,
+          "rawBytes": 9582935,
+          "gzipBytes": 3110076,
+          "brotliBytes": 2651510,
+          "rules": 2272
+        }
+      }
+    },
+    {
+      "id": "repeated-08-postcss",
+      "pair": 8,
+      "phase": "repeated",
+      "variant": "postcss",
+      "discarded": false,
+      "outDir": "reports/tailwind-integration/build-series/outputs/repeated-08-postcss",
+      "cacheDir": "reports/tailwind-integration/build-series/cache/repeated-08-postcss",
+      "tempDir": "reports/tailwind-integration/build-series/temp/repeated-08-postcss",
+      "configReport": "reports/tailwind-integration/build-series/config/repeated-08-postcss.json",
+      "configLoaderCacheBefore": {
+        "path": "node_modules/.vite-temp",
+        "removedFiles": [],
+        "policy": "Clear only the verified checkout-local Vite config-loader cache before each build"
+      },
+      "freeMemoryBytesBefore": 5333594112,
+      "command": [
+        "C:\\Users\\torta\\Documents\\Codex\\2026-10-17\\task-6\\.tools\\node.exe",
+        "C:\\Users\\torta\\Documents\\Codex\\2026-10-17\\task-6\\elogistix-tailwind4\\docs\\qa\\tailwind-integration-20261017\\build-worker.mjs",
+        "--variant",
+        "postcss",
+        "--out-dir",
+        "C:\\Users\\torta\\Documents\\Codex\\2026-10-17\\task-6\\elogistix-tailwind4\\reports\\tailwind-integration\\build-series\\outputs\\repeated-08-postcss",
+        "--cache-dir",
+        "C:\\Users\\torta\\Documents\\Codex\\2026-10-17\\task-6\\elogistix-tailwind4\\reports\\tailwind-integration\\build-series\\cache\\repeated-08-postcss",
+        "--config-report",
+        "C:\\Users\\torta\\Documents\\Codex\\2026-10-17\\task-6\\elogistix-tailwind4\\reports\\tailwind-integration\\build-series\\config\\repeated-08-postcss.json"
+      ],
+      "startedAt": "2026-10-17T23:55:46.328Z",
+      "exitCode": 0,
+      "signal": null,
+      "elapsedMs": 19859.100199999986,
+      "endedAt": "2026-10-17T23:56:06.187Z",
+      "spawnError": null,
+      "logs": {
+        "stdout": {
+          "path": "reports/tailwind-integration/build-series/logs/repeated-08-postcss.stdout.txt",
+          "sha256": "b32af9ce7174f8699231be1d22ed00f4e8cc9c3f289c1ce1b0af975dfc3109c6"
+        },
+        "stderr": {
+          "path": "reports/tailwind-integration/build-series/logs/repeated-08-postcss.stderr.txt",
+          "sha256": "1f25b6e55f5c792a7441ab19f04ea113deeea9c8e56b6b3ffcbf5fbfa3af24ef"
+        }
+      },
+      "configSha256": "72e9a8fefe9967747abc835d1ad320918d6c91b2ccd5cdedfd5cc62e19404675",
+      "bundleReport": "reports/tailwind-integration/build-series/outputs/repeated-08-postcss/.qa-build-metadata.json",
+      "bundleSha256": "3e84096ce4d1575ec3d3758f5855f6a7b72ceb277eb5aed56e30a00bc91605f2",
+      "inventory": {
+        "path": "reports/tailwind-integration/build-series/inventories/repeated-08-postcss.json",
+        "sha256": "e2161506340cd132f902106cec744fbaec7565e207745e770b32a251258ac308"
+      },
+      "totals": {
+        "js": {
+          "files": 741,
+          "rawBytes": 9386347,
+          "gzipBytes": 3082508,
+          "brotliBytes": 2630347,
+          "rules": 0
+        },
+        "css": {
+          "files": 1,
+          "rawBytes": 196588,
+          "gzipBytes": 27568,
+          "brotliBytes": 21163,
+          "rules": 2272
+        },
+        "combined": {
+          "files": 742,
+          "rawBytes": 9582935,
+          "gzipBytes": 3110076,
+          "brotliBytes": 2651510,
+          "rules": 2272
+        }
+      }
+    },
+    {
+      "id": "repeated-09-postcss",
+      "pair": 9,
+      "phase": "repeated",
+      "variant": "postcss",
+      "discarded": false,
+      "outDir": "reports/tailwind-integration/build-series/outputs/repeated-09-postcss",
+      "cacheDir": "reports/tailwind-integration/build-series/cache/repeated-09-postcss",
+      "tempDir": "reports/tailwind-integration/build-series/temp/repeated-09-postcss",
+      "configReport": "reports/tailwind-integration/build-series/config/repeated-09-postcss.json",
+      "configLoaderCacheBefore": {
+        "path": "node_modules/.vite-temp",
+        "removedFiles": [],
+        "policy": "Clear only the verified checkout-local Vite config-loader cache before each build"
+      },
+      "freeMemoryBytesBefore": 5457506304,
+      "command": [
+        "C:\\Users\\torta\\Documents\\Codex\\2026-10-17\\task-6\\.tools\\node.exe",
+        "C:\\Users\\torta\\Documents\\Codex\\2026-10-17\\task-6\\elogistix-tailwind4\\docs\\qa\\tailwind-integration-20261017\\build-worker.mjs",
+        "--variant",
+        "postcss",
+        "--out-dir",
+        "C:\\Users\\torta\\Documents\\Codex\\2026-10-17\\task-6\\elogistix-tailwind4\\reports\\tailwind-integration\\build-series\\outputs\\repeated-09-postcss",
+        "--cache-dir",
+        "C:\\Users\\torta\\Documents\\Codex\\2026-10-17\\task-6\\elogistix-tailwind4\\reports\\tailwind-integration\\build-series\\cache\\repeated-09-postcss",
+        "--config-report",
+        "C:\\Users\\torta\\Documents\\Codex\\2026-10-17\\task-6\\elogistix-tailwind4\\reports\\tailwind-integration\\build-series\\config\\repeated-09-postcss.json"
+      ],
+      "startedAt": "2026-10-17T23:56:06.451Z",
+      "exitCode": 0,
+      "signal": null,
+      "elapsedMs": 20785.825100000016,
+      "endedAt": "2026-10-17T23:56:27.237Z",
+      "spawnError": null,
+      "logs": {
+        "stdout": {
+          "path": "reports/tailwind-integration/build-series/logs/repeated-09-postcss.stdout.txt",
+          "sha256": "ea9e2e18c7330442a3b43047981a2a368f88b33fdeda66df3a8771fada0288de"
+        },
+        "stderr": {
+          "path": "reports/tailwind-integration/build-series/logs/repeated-09-postcss.stderr.txt",
+          "sha256": "f3831b2d61a50085138a5baeec500977ac749f1ec49d2c3f50de36dbd4a2eb8c"
+        }
+      },
+      "configSha256": "73e181e1cc88d1c01fa387b6dbc6141f0c3fbd3c2adae93623ef9e2552d6c0b9",
+      "bundleReport": "reports/tailwind-integration/build-series/outputs/repeated-09-postcss/.qa-build-metadata.json",
+      "bundleSha256": "3e84096ce4d1575ec3d3758f5855f6a7b72ceb277eb5aed56e30a00bc91605f2",
+      "inventory": {
+        "path": "reports/tailwind-integration/build-series/inventories/repeated-09-postcss.json",
+        "sha256": "e2161506340cd132f902106cec744fbaec7565e207745e770b32a251258ac308"
+      },
+      "totals": {
+        "js": {
+          "files": 741,
+          "rawBytes": 9386347,
+          "gzipBytes": 3082508,
+          "brotliBytes": 2630347,
+          "rules": 0
+        },
+        "css": {
+          "files": 1,
+          "rawBytes": 196588,
+          "gzipBytes": 27568,
+          "brotliBytes": 21163,
+          "rules": 2272
+        },
+        "combined": {
+          "files": 742,
+          "rawBytes": 9582935,
+          "gzipBytes": 3110076,
+          "brotliBytes": 2651510,
+          "rules": 2272
+        }
+      }
+    },
+    {
+      "id": "repeated-09-vite",
+      "pair": 9,
+      "phase": "repeated",
+      "variant": "vite",
+      "discarded": false,
+      "outDir": "reports/tailwind-integration/build-series/outputs/repeated-09-vite",
+      "cacheDir": "reports/tailwind-integration/build-series/cache/repeated-09-vite",
+      "tempDir": "reports/tailwind-integration/build-series/temp/repeated-09-vite",
+      "configReport": "reports/tailwind-integration/build-series/config/repeated-09-vite.json",
+      "configLoaderCacheBefore": {
+        "path": "node_modules/.vite-temp",
+        "removedFiles": [],
+        "policy": "Clear only the verified checkout-local Vite config-loader cache before each build"
+      },
+      "freeMemoryBytesBefore": 5657997312,
+      "command": [
+        "C:\\Users\\torta\\Documents\\Codex\\2026-10-17\\task-6\\.tools\\node.exe",
+        "C:\\Users\\torta\\Documents\\Codex\\2026-10-17\\task-6\\elogistix-tailwind4\\docs\\qa\\tailwind-integration-20261017\\build-worker.mjs",
+        "--variant",
+        "vite",
+        "--out-dir",
+        "C:\\Users\\torta\\Documents\\Codex\\2026-10-17\\task-6\\elogistix-tailwind4\\reports\\tailwind-integration\\build-series\\outputs\\repeated-09-vite",
+        "--cache-dir",
+        "C:\\Users\\torta\\Documents\\Codex\\2026-10-17\\task-6\\elogistix-tailwind4\\reports\\tailwind-integration\\build-series\\cache\\repeated-09-vite",
+        "--config-report",
+        "C:\\Users\\torta\\Documents\\Codex\\2026-10-17\\task-6\\elogistix-tailwind4\\reports\\tailwind-integration\\build-series\\config\\repeated-09-vite.json"
+      ],
+      "startedAt": "2026-10-17T23:56:27.494Z",
+      "exitCode": 0,
+      "signal": null,
+      "elapsedMs": 20453.618499999982,
+      "endedAt": "2026-10-17T23:56:47.948Z",
+      "spawnError": null,
+      "logs": {
+        "stdout": {
+          "path": "reports/tailwind-integration/build-series/logs/repeated-09-vite.stdout.txt",
+          "sha256": "eca3fb0fd4f2de0ffe65168455cdc7ac70d4ebc25ee0fdf5f0bfbe44ca94c12e"
+        },
+        "stderr": {
+          "path": "reports/tailwind-integration/build-series/logs/repeated-09-vite.stderr.txt",
+          "sha256": "688db9a68c79cd303673511ab6dbf4cb1b6a079aaf747bbffbc6634644026237"
+        }
+      },
+      "configSha256": "a52300bf55df68d56bb2c216ff2d6b27f040ce4799e8f7464f4f5c6b0eac0df3",
+      "bundleReport": "reports/tailwind-integration/build-series/outputs/repeated-09-vite/.qa-build-metadata.json",
+      "bundleSha256": "71f00955f622b4e332da9b5efca1473e52990994b49ef0649eb0239d02644871",
+      "inventory": {
+        "path": "reports/tailwind-integration/build-series/inventories/repeated-09-vite.json",
+        "sha256": "e2161506340cd132f902106cec744fbaec7565e207745e770b32a251258ac308"
+      },
+      "totals": {
+        "js": {
+          "files": 741,
+          "rawBytes": 9386347,
+          "gzipBytes": 3082508,
+          "brotliBytes": 2630347,
+          "rules": 0
+        },
+        "css": {
+          "files": 1,
+          "rawBytes": 196588,
+          "gzipBytes": 27568,
+          "brotliBytes": 21163,
+          "rules": 2272
+        },
+        "combined": {
+          "files": 742,
+          "rawBytes": 9582935,
+          "gzipBytes": 3110076,
+          "brotliBytes": 2651510,
+          "rules": 2272
+        }
+      }
+    },
+    {
+      "id": "repeated-10-vite",
+      "pair": 10,
+      "phase": "repeated",
+      "variant": "vite",
+      "discarded": false,
+      "outDir": "reports/tailwind-integration/build-series/outputs/repeated-10-vite",
+      "cacheDir": "reports/tailwind-integration/build-series/cache/repeated-10-vite",
+      "tempDir": "reports/tailwind-integration/build-series/temp/repeated-10-vite",
+      "configReport": "reports/tailwind-integration/build-series/config/repeated-10-vite.json",
+      "configLoaderCacheBefore": {
+        "path": "node_modules/.vite-temp",
+        "removedFiles": [],
+        "policy": "Clear only the verified checkout-local Vite config-loader cache before each build"
+      },
+      "freeMemoryBytesBefore": 5254385664,
+      "command": [
+        "C:\\Users\\torta\\Documents\\Codex\\2026-10-17\\task-6\\.tools\\node.exe",
+        "C:\\Users\\torta\\Documents\\Codex\\2026-10-17\\task-6\\elogistix-tailwind4\\docs\\qa\\tailwind-integration-20261017\\build-worker.mjs",
+        "--variant",
+        "vite",
+        "--out-dir",
+        "C:\\Users\\torta\\Documents\\Codex\\2026-10-17\\task-6\\elogistix-tailwind4\\reports\\tailwind-integration\\build-series\\outputs\\repeated-10-vite",
+        "--cache-dir",
+        "C:\\Users\\torta\\Documents\\Codex\\2026-10-17\\task-6\\elogistix-tailwind4\\reports\\tailwind-integration\\build-series\\cache\\repeated-10-vite",
+        "--config-report",
+        "C:\\Users\\torta\\Documents\\Codex\\2026-10-17\\task-6\\elogistix-tailwind4\\reports\\tailwind-integration\\build-series\\config\\repeated-10-vite.json"
+      ],
+      "startedAt": "2026-10-17T23:56:48.195Z",
+      "exitCode": 0,
+      "signal": null,
+      "elapsedMs": 19609.887199999997,
+      "endedAt": "2026-10-17T23:57:07.805Z",
+      "spawnError": null,
+      "logs": {
+        "stdout": {
+          "path": "reports/tailwind-integration/build-series/logs/repeated-10-vite.stdout.txt",
+          "sha256": "b5041d88c4360aa11eead7cc9e53bf437d53c60daff3b818aa81ff01c4ec2fb6"
+        },
+        "stderr": {
+          "path": "reports/tailwind-integration/build-series/logs/repeated-10-vite.stderr.txt",
+          "sha256": "e72a9e0f01b8365c3d0426757b665feaa22219099678ad584ede8136dd9770c8"
+        }
+      },
+      "configSha256": "58a27a7bffe5cf4dd4dc4c8d9d5f207a01e3c76c0ab444cb435bfa803156e056",
+      "bundleReport": "reports/tailwind-integration/build-series/outputs/repeated-10-vite/.qa-build-metadata.json",
+      "bundleSha256": "71f00955f622b4e332da9b5efca1473e52990994b49ef0649eb0239d02644871",
+      "inventory": {
+        "path": "reports/tailwind-integration/build-series/inventories/repeated-10-vite.json",
+        "sha256": "e2161506340cd132f902106cec744fbaec7565e207745e770b32a251258ac308"
+      },
+      "totals": {
+        "js": {
+          "files": 741,
+          "rawBytes": 9386347,
+          "gzipBytes": 3082508,
+          "brotliBytes": 2630347,
+          "rules": 0
+        },
+        "css": {
+          "files": 1,
+          "rawBytes": 196588,
+          "gzipBytes": 27568,
+          "brotliBytes": 21163,
+          "rules": 2272
+        },
+        "combined": {
+          "files": 742,
+          "rawBytes": 9582935,
+          "gzipBytes": 3110076,
+          "brotliBytes": 2651510,
+          "rules": 2272
+        }
+      }
+    },
+    {
+      "id": "repeated-10-postcss",
+      "pair": 10,
+      "phase": "repeated",
+      "variant": "postcss",
+      "discarded": false,
+      "outDir": "reports/tailwind-integration/build-series/outputs/repeated-10-postcss",
+      "cacheDir": "reports/tailwind-integration/build-series/cache/repeated-10-postcss",
+      "tempDir": "reports/tailwind-integration/build-series/temp/repeated-10-postcss",
+      "configReport": "reports/tailwind-integration/build-series/config/repeated-10-postcss.json",
+      "configLoaderCacheBefore": {
+        "path": "node_modules/.vite-temp",
+        "removedFiles": [],
+        "policy": "Clear only the verified checkout-local Vite config-loader cache before each build"
+      },
+      "freeMemoryBytesBefore": 5253578752,
+      "command": [
+        "C:\\Users\\torta\\Documents\\Codex\\2026-10-17\\task-6\\.tools\\node.exe",
+        "C:\\Users\\torta\\Documents\\Codex\\2026-10-17\\task-6\\elogistix-tailwind4\\docs\\qa\\tailwind-integration-20261017\\build-worker.mjs",
+        "--variant",
+        "postcss",
+        "--out-dir",
+        "C:\\Users\\torta\\Documents\\Codex\\2026-10-17\\task-6\\elogistix-tailwind4\\reports\\tailwind-integration\\build-series\\outputs\\repeated-10-postcss",
+        "--cache-dir",
+        "C:\\Users\\torta\\Documents\\Codex\\2026-10-17\\task-6\\elogistix-tailwind4\\reports\\tailwind-integration\\build-series\\cache\\repeated-10-postcss",
+        "--config-report",
+        "C:\\Users\\torta\\Documents\\Codex\\2026-10-17\\task-6\\elogistix-tailwind4\\reports\\tailwind-integration\\build-series\\config\\repeated-10-postcss.json"
+      ],
+      "startedAt": "2026-10-17T23:57:08.075Z",
+      "exitCode": 0,
+      "signal": null,
+      "elapsedMs": 19189.75,
+      "endedAt": "2026-10-17T23:57:27.265Z",
+      "spawnError": null,
+      "logs": {
+        "stdout": {
+          "path": "reports/tailwind-integration/build-series/logs/repeated-10-postcss.stdout.txt",
+          "sha256": "ccffd67b266164b6ffb6e46654e30efcedae9505d12f01393ef245245ed38c63"
+        },
+        "stderr": {
+          "path": "reports/tailwind-integration/build-series/logs/repeated-10-postcss.stderr.txt",
+          "sha256": "1e1bcef23f820d25b378a1b9c3dfb24bf868a090015ab61b1a35fa0b23339faa"
+        }
+      },
+      "configSha256": "0202a171f4cc0a1d63e9b1b12f5ebb51f0f6ad4f789331d966b0a919638eec8e",
+      "bundleReport": "reports/tailwind-integration/build-series/outputs/repeated-10-postcss/.qa-build-metadata.json",
+      "bundleSha256": "3e84096ce4d1575ec3d3758f5855f6a7b72ceb277eb5aed56e30a00bc91605f2",
+      "inventory": {
+        "path": "reports/tailwind-integration/build-series/inventories/repeated-10-postcss.json",
+        "sha256": "e2161506340cd132f902106cec744fbaec7565e207745e770b32a251258ac308"
+      },
+      "totals": {
+        "js": {
+          "files": 741,
+          "rawBytes": 9386347,
+          "gzipBytes": 3082508,
+          "brotliBytes": 2630347,
+          "rules": 0
+        },
+        "css": {
+          "files": 1,
+          "rawBytes": 196588,
+          "gzipBytes": 27568,
+          "brotliBytes": 21163,
+          "rules": 2272
+        },
+        "combined": {
+          "files": 742,
+          "rawBytes": 9582935,
+          "gzipBytes": 3110076,
+          "brotliBytes": 2651510,
+          "rules": 2272
+        }
+      }
+    },
+    {
+      "id": "repeated-11-postcss",
+      "pair": 11,
+      "phase": "repeated",
+      "variant": "postcss",
+      "discarded": false,
+      "outDir": "reports/tailwind-integration/build-series/outputs/repeated-11-postcss",
+      "cacheDir": "reports/tailwind-integration/build-series/cache/repeated-11-postcss",
+      "tempDir": "reports/tailwind-integration/build-series/temp/repeated-11-postcss",
+      "configReport": "reports/tailwind-integration/build-series/config/repeated-11-postcss.json",
+      "configLoaderCacheBefore": {
+        "path": "node_modules/.vite-temp",
+        "removedFiles": [],
+        "policy": "Clear only the verified checkout-local Vite config-loader cache before each build"
+      },
+      "freeMemoryBytesBefore": 5514330112,
+      "command": [
+        "C:\\Users\\torta\\Documents\\Codex\\2026-10-17\\task-6\\.tools\\node.exe",
+        "C:\\Users\\torta\\Documents\\Codex\\2026-10-17\\task-6\\elogistix-tailwind4\\docs\\qa\\tailwind-integration-20261017\\build-worker.mjs",
+        "--variant",
+        "postcss",
+        "--out-dir",
+        "C:\\Users\\torta\\Documents\\Codex\\2026-10-17\\task-6\\elogistix-tailwind4\\reports\\tailwind-integration\\build-series\\outputs\\repeated-11-postcss",
+        "--cache-dir",
+        "C:\\Users\\torta\\Documents\\Codex\\2026-10-17\\task-6\\elogistix-tailwind4\\reports\\tailwind-integration\\build-series\\cache\\repeated-11-postcss",
+        "--config-report",
+        "C:\\Users\\torta\\Documents\\Codex\\2026-10-17\\task-6\\elogistix-tailwind4\\reports\\tailwind-integration\\build-series\\config\\repeated-11-postcss.json"
+      ],
+      "startedAt": "2026-10-17T23:57:27.538Z",
+      "exitCode": 0,
+      "signal": null,
+      "elapsedMs": 20055.453299999994,
+      "endedAt": "2026-10-17T23:57:47.594Z",
+      "spawnError": null,
+      "logs": {
+        "stdout": {
+          "path": "reports/tailwind-integration/build-series/logs/repeated-11-postcss.stdout.txt",
+          "sha256": "512a26a5104f9c8fbac4198a2b8ffa65e23c0de1774f01127bd5c74252e21f52"
+        },
+        "stderr": {
+          "path": "reports/tailwind-integration/build-series/logs/repeated-11-postcss.stderr.txt",
+          "sha256": "688db9a68c79cd303673511ab6dbf4cb1b6a079aaf747bbffbc6634644026237"
+        }
+      },
+      "configSha256": "71e37e2faacd77fec871454b84f5f4e5dc68d226129bec951af899757de6dee4",
+      "bundleReport": "reports/tailwind-integration/build-series/outputs/repeated-11-postcss/.qa-build-metadata.json",
+      "bundleSha256": "3e84096ce4d1575ec3d3758f5855f6a7b72ceb277eb5aed56e30a00bc91605f2",
+      "inventory": {
+        "path": "reports/tailwind-integration/build-series/inventories/repeated-11-postcss.json",
+        "sha256": "e2161506340cd132f902106cec744fbaec7565e207745e770b32a251258ac308"
+      },
+      "totals": {
+        "js": {
+          "files": 741,
+          "rawBytes": 9386347,
+          "gzipBytes": 3082508,
+          "brotliBytes": 2630347,
+          "rules": 0
+        },
+        "css": {
+          "files": 1,
+          "rawBytes": 196588,
+          "gzipBytes": 27568,
+          "brotliBytes": 21163,
+          "rules": 2272
+        },
+        "combined": {
+          "files": 742,
+          "rawBytes": 9582935,
+          "gzipBytes": 3110076,
+          "brotliBytes": 2651510,
+          "rules": 2272
+        }
+      }
+    },
+    {
+      "id": "repeated-11-vite",
+      "pair": 11,
+      "phase": "repeated",
+      "variant": "vite",
+      "discarded": false,
+      "outDir": "reports/tailwind-integration/build-series/outputs/repeated-11-vite",
+      "cacheDir": "reports/tailwind-integration/build-series/cache/repeated-11-vite",
+      "tempDir": "reports/tailwind-integration/build-series/temp/repeated-11-vite",
+      "configReport": "reports/tailwind-integration/build-series/config/repeated-11-vite.json",
+      "configLoaderCacheBefore": {
+        "path": "node_modules/.vite-temp",
+        "removedFiles": [],
+        "policy": "Clear only the verified checkout-local Vite config-loader cache before each build"
+      },
+      "freeMemoryBytesBefore": 5424979968,
+      "command": [
+        "C:\\Users\\torta\\Documents\\Codex\\2026-10-17\\task-6\\.tools\\node.exe",
+        "C:\\Users\\torta\\Documents\\Codex\\2026-10-17\\task-6\\elogistix-tailwind4\\docs\\qa\\tailwind-integration-20261017\\build-worker.mjs",
+        "--variant",
+        "vite",
+        "--out-dir",
+        "C:\\Users\\torta\\Documents\\Codex\\2026-10-17\\task-6\\elogistix-tailwind4\\reports\\tailwind-integration\\build-series\\outputs\\repeated-11-vite",
+        "--cache-dir",
+        "C:\\Users\\torta\\Documents\\Codex\\2026-10-17\\task-6\\elogistix-tailwind4\\reports\\tailwind-integration\\build-series\\cache\\repeated-11-vite",
+        "--config-report",
+        "C:\\Users\\torta\\Documents\\Codex\\2026-10-17\\task-6\\elogistix-tailwind4\\reports\\tailwind-integration\\build-series\\config\\repeated-11-vite.json"
+      ],
+      "startedAt": "2026-10-17T23:57:47.844Z",
+      "exitCode": 0,
+      "signal": null,
+      "elapsedMs": 19797.329299999983,
+      "endedAt": "2026-10-17T23:58:07.641Z",
+      "spawnError": null,
+      "logs": {
+        "stdout": {
+          "path": "reports/tailwind-integration/build-series/logs/repeated-11-vite.stdout.txt",
+          "sha256": "ad2cfeb3b6e292f6c16b2fa41c8a24691ebb0dc4810848c30d3dd563d788c617"
+        },
+        "stderr": {
+          "path": "reports/tailwind-integration/build-series/logs/repeated-11-vite.stderr.txt",
+          "sha256": "688db9a68c79cd303673511ab6dbf4cb1b6a079aaf747bbffbc6634644026237"
+        }
+      },
+      "configSha256": "12581d0ecc467614bb0da7530f6a5ec1111a31fd4d38b550af5872d1da918944",
+      "bundleReport": "reports/tailwind-integration/build-series/outputs/repeated-11-vite/.qa-build-metadata.json",
+      "bundleSha256": "71f00955f622b4e332da9b5efca1473e52990994b49ef0649eb0239d02644871",
+      "inventory": {
+        "path": "reports/tailwind-integration/build-series/inventories/repeated-11-vite.json",
+        "sha256": "e2161506340cd132f902106cec744fbaec7565e207745e770b32a251258ac308"
+      },
+      "totals": {
+        "js": {
+          "files": 741,
+          "rawBytes": 9386347,
+          "gzipBytes": 3082508,
+          "brotliBytes": 2630347,
+          "rules": 0
+        },
+        "css": {
+          "files": 1,
+          "rawBytes": 196588,
+          "gzipBytes": 27568,
+          "brotliBytes": 21163,
+          "rules": 2272
+        },
+        "combined": {
+          "files": 742,
+          "rawBytes": 9582935,
+          "gzipBytes": 3110076,
+          "brotliBytes": 2651510,
+          "rules": 2272
+        }
+      }
+    },
+    {
+      "id": "repeated-12-vite",
+      "pair": 12,
+      "phase": "repeated",
+      "variant": "vite",
+      "discarded": false,
+      "outDir": "reports/tailwind-integration/build-series/outputs/repeated-12-vite",
+      "cacheDir": "reports/tailwind-integration/build-series/cache/repeated-12-vite",
+      "tempDir": "reports/tailwind-integration/build-series/temp/repeated-12-vite",
+      "configReport": "reports/tailwind-integration/build-series/config/repeated-12-vite.json",
+      "configLoaderCacheBefore": {
+        "path": "node_modules/.vite-temp",
+        "removedFiles": [],
+        "policy": "Clear only the verified checkout-local Vite config-loader cache before each build"
+      },
+      "freeMemoryBytesBefore": 5480091648,
+      "command": [
+        "C:\\Users\\torta\\Documents\\Codex\\2026-10-17\\task-6\\.tools\\node.exe",
+        "C:\\Users\\torta\\Documents\\Codex\\2026-10-17\\task-6\\elogistix-tailwind4\\docs\\qa\\tailwind-integration-20261017\\build-worker.mjs",
+        "--variant",
+        "vite",
+        "--out-dir",
+        "C:\\Users\\torta\\Documents\\Codex\\2026-10-17\\task-6\\elogistix-tailwind4\\reports\\tailwind-integration\\build-series\\outputs\\repeated-12-vite",
+        "--cache-dir",
+        "C:\\Users\\torta\\Documents\\Codex\\2026-10-17\\task-6\\elogistix-tailwind4\\reports\\tailwind-integration\\build-series\\cache\\repeated-12-vite",
+        "--config-report",
+        "C:\\Users\\torta\\Documents\\Codex\\2026-10-17\\task-6\\elogistix-tailwind4\\reports\\tailwind-integration\\build-series\\config\\repeated-12-vite.json"
+      ],
+      "startedAt": "2026-10-17T23:58:07.893Z",
+      "exitCode": 0,
+      "signal": null,
+      "elapsedMs": 20776.454000000027,
+      "endedAt": "2026-10-17T23:58:28.669Z",
+      "spawnError": null,
+      "logs": {
+        "stdout": {
+          "path": "reports/tailwind-integration/build-series/logs/repeated-12-vite.stdout.txt",
+          "sha256": "bc60ab57c3a1ec6cf3f6fcb07f2c16bb74daeaf7fcc283c903e32234b57ebe2c"
+        },
+        "stderr": {
+          "path": "reports/tailwind-integration/build-series/logs/repeated-12-vite.stderr.txt",
+          "sha256": "688db9a68c79cd303673511ab6dbf4cb1b6a079aaf747bbffbc6634644026237"
+        }
+      },
+      "configSha256": "95ca03650ed99f3a998165dd88bb6ead3640a457c52ab4182bfdb3cb6379f469",
+      "bundleReport": "reports/tailwind-integration/build-series/outputs/repeated-12-vite/.qa-build-metadata.json",
+      "bundleSha256": "71f00955f622b4e332da9b5efca1473e52990994b49ef0649eb0239d02644871",
+      "inventory": {
+        "path": "reports/tailwind-integration/build-series/inventories/repeated-12-vite.json",
+        "sha256": "e2161506340cd132f902106cec744fbaec7565e207745e770b32a251258ac308"
+      },
+      "totals": {
+        "js": {
+          "files": 741,
+          "rawBytes": 9386347,
+          "gzipBytes": 3082508,
+          "brotliBytes": 2630347,
+          "rules": 0
+        },
+        "css": {
+          "files": 1,
+          "rawBytes": 196588,
+          "gzipBytes": 27568,
+          "brotliBytes": 21163,
+          "rules": 2272
+        },
+        "combined": {
+          "files": 742,
+          "rawBytes": 9582935,
+          "gzipBytes": 3110076,
+          "brotliBytes": 2651510,
+          "rules": 2272
+        }
+      }
+    },
+    {
+      "id": "repeated-12-postcss",
+      "pair": 12,
+      "phase": "repeated",
+      "variant": "postcss",
+      "discarded": false,
+      "outDir": "reports/tailwind-integration/build-series/outputs/repeated-12-postcss",
+      "cacheDir": "reports/tailwind-integration/build-series/cache/repeated-12-postcss",
+      "tempDir": "reports/tailwind-integration/build-series/temp/repeated-12-postcss",
+      "configReport": "reports/tailwind-integration/build-series/config/repeated-12-postcss.json",
+      "configLoaderCacheBefore": {
+        "path": "node_modules/.vite-temp",
+        "removedFiles": [],
+        "policy": "Clear only the verified checkout-local Vite config-loader cache before each build"
+      },
+      "freeMemoryBytesBefore": 5200449536,
+      "command": [
+        "C:\\Users\\torta\\Documents\\Codex\\2026-10-17\\task-6\\.tools\\node.exe",
+        "C:\\Users\\torta\\Documents\\Codex\\2026-10-17\\task-6\\elogistix-tailwind4\\docs\\qa\\tailwind-integration-20261017\\build-worker.mjs",
+        "--variant",
+        "postcss",
+        "--out-dir",
+        "C:\\Users\\torta\\Documents\\Codex\\2026-10-17\\task-6\\elogistix-tailwind4\\reports\\tailwind-integration\\build-series\\outputs\\repeated-12-postcss",
+        "--cache-dir",
+        "C:\\Users\\torta\\Documents\\Codex\\2026-10-17\\task-6\\elogistix-tailwind4\\reports\\tailwind-integration\\build-series\\cache\\repeated-12-postcss",
+        "--config-report",
+        "C:\\Users\\torta\\Documents\\Codex\\2026-10-17\\task-6\\elogistix-tailwind4\\reports\\tailwind-integration\\build-series\\config\\repeated-12-postcss.json"
+      ],
+      "startedAt": "2026-10-17T23:58:28.945Z",
+      "exitCode": 0,
+      "signal": null,
+      "elapsedMs": 19419.97470000002,
+      "endedAt": "2026-10-17T23:58:48.365Z",
+      "spawnError": null,
+      "logs": {
+        "stdout": {
+          "path": "reports/tailwind-integration/build-series/logs/repeated-12-postcss.stdout.txt",
+          "sha256": "5724eda87d5c885dccf6a27c8fe0eee1f173a5b083e08b1a92536eeb347b8fa7"
+        },
+        "stderr": {
+          "path": "reports/tailwind-integration/build-series/logs/repeated-12-postcss.stderr.txt",
+          "sha256": "688db9a68c79cd303673511ab6dbf4cb1b6a079aaf747bbffbc6634644026237"
+        }
+      },
+      "configSha256": "85160bca0cd8c8f0eed7ef836ca3e4343c99b4f7b3dd1a093ad6372a39f979d4",
+      "bundleReport": "reports/tailwind-integration/build-series/outputs/repeated-12-postcss/.qa-build-metadata.json",
+      "bundleSha256": "3e84096ce4d1575ec3d3758f5855f6a7b72ceb277eb5aed56e30a00bc91605f2",
+      "inventory": {
+        "path": "reports/tailwind-integration/build-series/inventories/repeated-12-postcss.json",
+        "sha256": "e2161506340cd132f902106cec744fbaec7565e207745e770b32a251258ac308"
+      },
+      "totals": {
+        "js": {
+          "files": 741,
+          "rawBytes": 9386347,
+          "gzipBytes": 3082508,
+          "brotliBytes": 2630347,
+          "rules": 0
+        },
+        "css": {
+          "files": 1,
+          "rawBytes": 196588,
+          "gzipBytes": 27568,
+          "brotliBytes": 21163,
+          "rules": 2272
+        },
+        "combined": {
+          "files": 742,
+          "rawBytes": 9582935,
+          "gzipBytes": 3110076,
+          "brotliBytes": 2651510,
+          "rules": 2272
+        }
+      }
+    },
+    {
+      "id": "repeated-13-postcss",
+      "pair": 13,
+      "phase": "repeated",
+      "variant": "postcss",
+      "discarded": false,
+      "outDir": "reports/tailwind-integration/build-series/outputs/repeated-13-postcss",
+      "cacheDir": "reports/tailwind-integration/build-series/cache/repeated-13-postcss",
+      "tempDir": "reports/tailwind-integration/build-series/temp/repeated-13-postcss",
+      "configReport": "reports/tailwind-integration/build-series/config/repeated-13-postcss.json",
+      "configLoaderCacheBefore": {
+        "path": "node_modules/.vite-temp",
+        "removedFiles": [],
+        "policy": "Clear only the verified checkout-local Vite config-loader cache before each build"
+      },
+      "freeMemoryBytesBefore": 5489815552,
+      "command": [
+        "C:\\Users\\torta\\Documents\\Codex\\2026-10-17\\task-6\\.tools\\node.exe",
+        "C:\\Users\\torta\\Documents\\Codex\\2026-10-17\\task-6\\elogistix-tailwind4\\docs\\qa\\tailwind-integration-20261017\\build-worker.mjs",
+        "--variant",
+        "postcss",
+        "--out-dir",
+        "C:\\Users\\torta\\Documents\\Codex\\2026-10-17\\task-6\\elogistix-tailwind4\\reports\\tailwind-integration\\build-series\\outputs\\repeated-13-postcss",
+        "--cache-dir",
+        "C:\\Users\\torta\\Documents\\Codex\\2026-10-17\\task-6\\elogistix-tailwind4\\reports\\tailwind-integration\\build-series\\cache\\repeated-13-postcss",
+        "--config-report",
+        "C:\\Users\\torta\\Documents\\Codex\\2026-10-17\\task-6\\elogistix-tailwind4\\reports\\tailwind-integration\\build-series\\config\\repeated-13-postcss.json"
+      ],
+      "startedAt": "2026-10-17T23:58:48.608Z",
+      "exitCode": 0,
+      "signal": null,
+      "elapsedMs": 18445.38010000001,
+      "endedAt": "2026-10-17T23:59:07.054Z",
+      "spawnError": null,
+      "logs": {
+        "stdout": {
+          "path": "reports/tailwind-integration/build-series/logs/repeated-13-postcss.stdout.txt",
+          "sha256": "6f415e5e7817a78183b8aef1235f58832ced7e4a2b9ea99b2bbc2c065080cbd3"
+        },
+        "stderr": {
+          "path": "reports/tailwind-integration/build-series/logs/repeated-13-postcss.stderr.txt",
+          "sha256": "688db9a68c79cd303673511ab6dbf4cb1b6a079aaf747bbffbc6634644026237"
+        }
+      },
+      "configSha256": "2fbd62e97ae64e346124d8f714722aa2a3410bb1929d57d9e86d41f29b8e31fa",
+      "bundleReport": "reports/tailwind-integration/build-series/outputs/repeated-13-postcss/.qa-build-metadata.json",
+      "bundleSha256": "3e84096ce4d1575ec3d3758f5855f6a7b72ceb277eb5aed56e30a00bc91605f2",
+      "inventory": {
+        "path": "reports/tailwind-integration/build-series/inventories/repeated-13-postcss.json",
+        "sha256": "e2161506340cd132f902106cec744fbaec7565e207745e770b32a251258ac308"
+      },
+      "totals": {
+        "js": {
+          "files": 741,
+          "rawBytes": 9386347,
+          "gzipBytes": 3082508,
+          "brotliBytes": 2630347,
+          "rules": 0
+        },
+        "css": {
+          "files": 1,
+          "rawBytes": 196588,
+          "gzipBytes": 27568,
+          "brotliBytes": 21163,
+          "rules": 2272
+        },
+        "combined": {
+          "files": 742,
+          "rawBytes": 9582935,
+          "gzipBytes": 3110076,
+          "brotliBytes": 2651510,
+          "rules": 2272
+        }
+      }
+    },
+    {
+      "id": "repeated-13-vite",
+      "pair": 13,
+      "phase": "repeated",
+      "variant": "vite",
+      "discarded": false,
+      "outDir": "reports/tailwind-integration/build-series/outputs/repeated-13-vite",
+      "cacheDir": "reports/tailwind-integration/build-series/cache/repeated-13-vite",
+      "tempDir": "reports/tailwind-integration/build-series/temp/repeated-13-vite",
+      "configReport": "reports/tailwind-integration/build-series/config/repeated-13-vite.json",
+      "configLoaderCacheBefore": {
+        "path": "node_modules/.vite-temp",
+        "removedFiles": [],
+        "policy": "Clear only the verified checkout-local Vite config-loader cache before each build"
+      },
+      "freeMemoryBytesBefore": 5353590784,
+      "command": [
+        "C:\\Users\\torta\\Documents\\Codex\\2026-10-17\\task-6\\.tools\\node.exe",
+        "C:\\Users\\torta\\Documents\\Codex\\2026-10-17\\task-6\\elogistix-tailwind4\\docs\\qa\\tailwind-integration-20261017\\build-worker.mjs",
+        "--variant",
+        "vite",
+        "--out-dir",
+        "C:\\Users\\torta\\Documents\\Codex\\2026-10-17\\task-6\\elogistix-tailwind4\\reports\\tailwind-integration\\build-series\\outputs\\repeated-13-vite",
+        "--cache-dir",
+        "C:\\Users\\torta\\Documents\\Codex\\2026-10-17\\task-6\\elogistix-tailwind4\\reports\\tailwind-integration\\build-series\\cache\\repeated-13-vite",
+        "--config-report",
+        "C:\\Users\\torta\\Documents\\Codex\\2026-10-17\\task-6\\elogistix-tailwind4\\reports\\tailwind-integration\\build-series\\config\\repeated-13-vite.json"
+      ],
+      "startedAt": "2026-10-17T23:59:07.285Z",
+      "exitCode": 0,
+      "signal": null,
+      "elapsedMs": 19170.994899999932,
+      "endedAt": "2026-10-17T23:59:26.456Z",
+      "spawnError": null,
+      "logs": {
+        "stdout": {
+          "path": "reports/tailwind-integration/build-series/logs/repeated-13-vite.stdout.txt",
+          "sha256": "fae3183f5a58a898eec1b04e0269e77ccb38f59b777250988a4483d44d8128c8"
+        },
+        "stderr": {
+          "path": "reports/tailwind-integration/build-series/logs/repeated-13-vite.stderr.txt",
+          "sha256": "ce19739da2a2b5d0a458d9553ef08a7c8505b7f7d53e952abbd4c9ce29e01e02"
+        }
+      },
+      "configSha256": "48698f5b81d360ae2d5da092ba5147214365b7cbe8b53e2c1ad331131ee2f22e",
+      "bundleReport": "reports/tailwind-integration/build-series/outputs/repeated-13-vite/.qa-build-metadata.json",
+      "bundleSha256": "71f00955f622b4e332da9b5efca1473e52990994b49ef0649eb0239d02644871",
+      "inventory": {
+        "path": "reports/tailwind-integration/build-series/inventories/repeated-13-vite.json",
+        "sha256": "e2161506340cd132f902106cec744fbaec7565e207745e770b32a251258ac308"
+      },
+      "totals": {
+        "js": {
+          "files": 741,
+          "rawBytes": 9386347,
+          "gzipBytes": 3082508,
+          "brotliBytes": 2630347,
+          "rules": 0
+        },
+        "css": {
+          "files": 1,
+          "rawBytes": 196588,
+          "gzipBytes": 27568,
+          "brotliBytes": 21163,
+          "rules": 2272
+        },
+        "combined": {
+          "files": 742,
+          "rawBytes": 9582935,
+          "gzipBytes": 3110076,
+          "brotliBytes": 2651510,
+          "rules": 2272
+        }
+      }
+    }
+  ],
+  "idleWindowStatement": "Reserved local window after QA/HMR/development CSS diagnostics ended; no concurrent local builds, tests, browsers or compression; integral CI is remote; OS and thermal state uncontrolled.",
+  "plan": [
+    {
+      "id": "initial-01-postcss",
+      "pair": 1,
+      "phase": "initial",
+      "variant": "postcss",
+      "discarded": false
+    },
+    {
+      "id": "initial-01-vite",
+      "pair": 1,
+      "phase": "initial",
+      "variant": "vite",
+      "discarded": false
+    },
+    {
+      "id": "initial-02-vite",
+      "pair": 2,
+      "phase": "initial",
+      "variant": "vite",
+      "discarded": false
+    },
+    {
+      "id": "initial-02-postcss",
+      "pair": 2,
+      "phase": "initial",
+      "variant": "postcss",
+      "discarded": false
+    },
+    {
+      "id": "initial-03-postcss",
+      "pair": 3,
+      "phase": "initial",
+      "variant": "postcss",
+      "discarded": false
+    },
+    {
+      "id": "initial-03-vite",
+      "pair": 3,
+      "phase": "initial",
+      "variant": "vite",
+      "discarded": false
+    },
+    {
+      "id": "repeated-04-vite",
+      "pair": 4,
+      "phase": "repeated",
+      "variant": "vite",
+      "discarded": false
+    },
+    {
+      "id": "repeated-04-postcss",
+      "pair": 4,
+      "phase": "repeated",
+      "variant": "postcss",
+      "discarded": false
+    },
+    {
+      "id": "repeated-05-postcss",
+      "pair": 5,
+      "phase": "repeated",
+      "variant": "postcss",
+      "discarded": false
+    },
+    {
+      "id": "repeated-05-vite",
+      "pair": 5,
+      "phase": "repeated",
+      "variant": "vite",
+      "discarded": false
+    },
+    {
+      "id": "repeated-06-vite",
+      "pair": 6,
+      "phase": "repeated",
+      "variant": "vite",
+      "discarded": false
+    },
+    {
+      "id": "repeated-06-postcss",
+      "pair": 6,
+      "phase": "repeated",
+      "variant": "postcss",
+      "discarded": false
+    },
+    {
+      "id": "repeated-07-postcss",
+      "pair": 7,
+      "phase": "repeated",
+      "variant": "postcss",
+      "discarded": false
+    },
+    {
+      "id": "repeated-07-vite",
+      "pair": 7,
+      "phase": "repeated",
+      "variant": "vite",
+      "discarded": false
+    },
+    {
+      "id": "repeated-08-vite",
+      "pair": 8,
+      "phase": "repeated",
+      "variant": "vite",
+      "discarded": false
+    },
+    {
+      "id": "repeated-08-postcss",
+      "pair": 8,
+      "phase": "repeated",
+      "variant": "postcss",
+      "discarded": false
+    },
+    {
+      "id": "repeated-09-postcss",
+      "pair": 9,
+      "phase": "repeated",
+      "variant": "postcss",
+      "discarded": false
+    },
+    {
+      "id": "repeated-09-vite",
+      "pair": 9,
+      "phase": "repeated",
+      "variant": "vite",
+      "discarded": false
+    },
+    {
+      "id": "repeated-10-vite",
+      "pair": 10,
+      "phase": "repeated",
+      "variant": "vite",
+      "discarded": false
+    },
+    {
+      "id": "repeated-10-postcss",
+      "pair": 10,
+      "phase": "repeated",
+      "variant": "postcss",
+      "discarded": false
+    },
+    {
+      "id": "repeated-11-postcss",
+      "pair": 11,
+      "phase": "repeated",
+      "variant": "postcss",
+      "discarded": false
+    },
+    {
+      "id": "repeated-11-vite",
+      "pair": 11,
+      "phase": "repeated",
+      "variant": "vite",
+      "discarded": false
+    },
+    {
+      "id": "repeated-12-vite",
+      "pair": 12,
+      "phase": "repeated",
+      "variant": "vite",
+      "discarded": false
+    },
+    {
+      "id": "repeated-12-postcss",
+      "pair": 12,
+      "phase": "repeated",
+      "variant": "postcss",
+      "discarded": false
+    },
+    {
+      "id": "repeated-13-postcss",
+      "pair": 13,
+      "phase": "repeated",
+      "variant": "postcss",
+      "discarded": false
+    },
+    {
+      "id": "repeated-13-vite",
+      "pair": 13,
+      "phase": "repeated",
+      "variant": "vite",
+      "discarded": false
+    }
+  ],
+  "conditions": {
+    "timer": "Fresh Node process for every build; elapsed wall time from spawn to close.",
+    "caches": "Fresh output/cacheDir and verified checkout-local .vite-temp cleared per build. OS filesystem cache is warm/uncontrolled, not cold. No persistent production compiler cache is assumed.",
+    "temporaryFiles": "Each child receives fresh checkout-local TEMP/TMP/TMPDIR below its report directory.",
+    "phases": "Initial pairs are retained and reported separately from repeated pairs. No discarded warmup builds. Repeated means repetition in new processes, not a warm compiler.",
+    "compression": "Deferred until all timed builds finish; each unique raw SHA256 compressed once with common parameters; totals sum separately compressed resources.",
+    "inference": "Descriptive local samples only; no population confidence claim or automatic adoption threshold.",
+    "installation": {
+      "requiredCommand": "bun install --frozen-lockfile --ignore-scripts",
+      "performedByHarness": false,
+      "excludedFromTiming": true,
+      "evidence": "See accompanying frozen-install and dependency-diff records."
+    },
+    "backend": "No browser/backend is invoked. envDir=false and synthetic Supabase public values point to loopback port 9."
+  },
+  "environment": {
+    "inheritedKeys": [
+      "ComSpec",
+      "LANG",
+      "LC_ALL",
+      "LC_CTYPE",
+      "NUMBER_OF_PROCESSORS",
+      "PATHEXT",
+      "PROCESSOR_ARCHITECTURE",
+      "PROCESSOR_IDENTIFIER",
+      "PROCESSOR_LEVEL",
+      "PROCESSOR_REVISION",
+      "Path",
+      "ProgramFiles",
+      "ProgramFiles(x86)",
+      "ProgramW6432",
+      "SystemDrive",
+      "SystemRoot",
+      "TEMP",
+      "TMP",
+      "windir"
+    ],
+    "explicit": {
+      "NODE_ENV": "production",
+      "NODE_OPTIONS": "--max-old-space-size=8192",
+      "ANALYZE": "false",
+      "CI_REPORT_COMPRESSED_SIZE": "false",
+      "VITE_SUPABASE_URL": "http://127.0.0.1:9",
+      "VITE_SUPABASE_PUBLISHABLE_KEY": "benchmark-public-placeholder"
+    },
+    "envDir": false,
+    "buildSourcemapsOverride": false,
+    "sentryCredentialsInherited": false
+  },
+  "runtime": {
+    "node": "v24.22.0",
+    "nodeExecutable": "C:\\Users\\torta\\Documents\\Codex\\2026-10-17\\task-6\\.tools\\node.exe",
+    "versions": {
+      "node": "24.22.0",
+      "acorn": "8.18.0",
+      "ada": "4.0.0",
+      "amaro": "1.1.11",
+      "ares": "1.34.8",
+      "brotli": "1.2.0",
+      "cldr": "48.0",
+      "icu": "78.3",
+      "llhttp": "9.4.3",
+      "merve": "1.2.2",
+      "modules": "137",
+      "napi": "10",
+      "nbytes": "0.1.4",
+      "ncrypto": "0.0.1",
+      "nghttp2": "1.70.0",
+      "nghttp3": "",
+      "ngtcp2": "",
+      "openssl": "3.5.8",
+      "simdjson": "4.6.11",
+      "simdutf": "6.4.0",
+      "sqlite": "3.53.4",
+      "tz": "2026c",
+      "undici": "7.29.1",
+      "unicode": "17.0",
+      "uv": "1.52.1",
+      "uvwasi": "0.0.23",
+      "v8": "13.6.233.17-node.57",
+      "zlib": "1.3.2.1-motley-285e94b",
+      "zstd": "1.5.7"
+    },
+    "bun": "1.4.0",
+    "bunCommand": "C:\\Users\\torta\\Documents\\Codex\\2026-10-17\\task-6\\.tools\\bun.exe",
+    "bunResolution": "explicit path",
+    "os": {
+      "platform": "win32",
+      "release": "10.0.26300",
+      "version": "Windows 11 Home",
+      "arch": "x64"
+    },
+    "cpu": {
+      "model": "AMD Ryzen 9 270 w/ Radeon 780M Graphics        ",
+      "logicalCount": 16,
+      "availableParallelism": 16
+    },
+    "totalMemoryBytes": 16422010880
+  },
+  "packages": {
+    "vite": {
+      "version": "8.3.4",
+      "packageJson": "node_modules/vite/package.json"
+    },
+    "rolldown": {
+      "version": "1.2.13",
+      "packageJson": "node_modules/rolldown/package.json"
+    },
+    "terser": {
+      "version": "5.51.2",
+      "packageJson": "node_modules/terser/package.json"
+    },
+    "lightningcss": {
+      "version": "1.33.0",
+      "packageJson": "node_modules/lightningcss/package.json"
+    },
+    "postcss": {
+      "version": "8.5.29",
+      "packageJson": "node_modules/postcss/package.json"
+    },
+    "tailwindcss": {
+      "version": "4.3.3",
+      "packageJson": "node_modules/tailwindcss/package.json"
+    },
+    "@tailwindcss/postcss": {
+      "version": "4.3.3",
+      "packageJson": "node_modules/@tailwindcss/postcss/package.json"
+    },
+    "@tailwindcss/vite": {
+      "version": "4.3.3",
+      "packageJson": "node_modules/@tailwindcss/vite/package.json"
+    }
+  },
+  "base": {
+    "head": "0552b3648c041dd19e027bb1370a5277501b59dc",
+    "sourceSha256": "d1fe625519b22616d9d8a3345849345798674f257c413be688bd3fb3991f0bd0",
+    "trackedInputFiles": 10158,
+    "harnessSha256": "6d1f8992ce197a8380bbe6994814707eca66f97d6ecd959a1a8f0f14b6078db3",
+    "harnessFiles": 18,
+    "trackedDirtyPaths": [
+      "bun.lock",
+      "knip.json",
+      "package.json",
+      "scripts/ci/test-catalog.mjs"
+    ],
+    "excludedTrackedPrefixes": [
+      "docs/qa/tailwind-integration-20261017/",
+      "reports/"
+    ],
+    "hashes": {
+      "package.json": "227be9436f2a0be543938ffd9852aa060effef7bc0979980e48a2d20341968d3",
+      "bun.lock": "5d561ebf702e13a9a34670f267a870d0acb6ec21d7c6c67af3665607a983a682",
+      "vite.config.ts": "3fcf047dd7b4328dd1fc3137857f19fd3ab8621d3769d9152275823aa25a95fa",
+      "postcss.config.js": "9dd791ad9c0238477d84d4e06c0ccfceebe8dcb37dcdb581f5682c5ad42fc77e",
+      "tailwind.config.ts": "b603ef20c62b6e42e284c52bd9dd7fe1679986c63345f8d4bfe3918e02e5fbb4",
+      "src/index.css": "2145da531b9725faad9b0e5123c789a37c0397a88317295ab713cd1273778423",
+      "src/styles.css": "40a70d2a6ea3b4b119987151d1dd415fdfb591c028a327ca59f1fccf820f3a32",
+      "src/tailwind-compat.css": "fa8d0a3a2b2fefe00782d3e06ec48d6ab03d90170c7c77eccd7962c4adbd5397"
+    }
+  },
+  "statistics": {
+    "initial": {
+      "byVariant": {
+        "postcss": {
+          "elapsedMs": {
+            "n": 3,
+            "min": 20260.641000000003,
+            "max": 25463.825100000002,
+            "mean": 22842.454700000002,
+            "median": 22802.898,
+            "sampleSD": 2601.8175846913955,
+            "cv": 0.11390271399734439
+          },
+          "sizes": {
+            "js": {
+              "rawBytes": {
+                "n": 3,
+                "min": 9386347,
+                "max": 9386347,
+                "mean": 9386347,
+                "median": 9386347,
+                "sampleSD": 0,
+                "cv": 0
+              },
+              "gzipBytes": {
+                "n": 3,
+                "min": 3082508,
+                "max": 3082508,
+                "mean": 3082508,
+                "median": 3082508,
+                "sampleSD": 0,
+                "cv": 0
+              },
+              "brotliBytes": {
+                "n": 3,
+                "min": 2630347,
+                "max": 2630347,
+                "mean": 2630347,
+                "median": 2630347,
+                "sampleSD": 0,
+                "cv": 0
+              }
+            },
+            "css": {
+              "rawBytes": {
+                "n": 3,
+                "min": 196588,
+                "max": 196588,
+                "mean": 196588,
+                "median": 196588,
+                "sampleSD": 0,
+                "cv": 0
+              },
+              "gzipBytes": {
+                "n": 3,
+                "min": 27568,
+                "max": 27568,
+                "mean": 27568,
+                "median": 27568,
+                "sampleSD": 0,
+                "cv": 0
+              },
+              "brotliBytes": {
+                "n": 3,
+                "min": 21163,
+                "max": 21163,
+                "mean": 21163,
+                "median": 21163,
+                "sampleSD": 0,
+                "cv": 0
+              }
+            },
+            "combined": {
+              "rawBytes": {
+                "n": 3,
+                "min": 9582935,
+                "max": 9582935,
+                "mean": 9582935,
+                "median": 9582935,
+                "sampleSD": 0,
+                "cv": 0
+              },
+              "gzipBytes": {
+                "n": 3,
+                "min": 3110076,
+                "max": 3110076,
+                "mean": 3110076,
+                "median": 3110076,
+                "sampleSD": 0,
+                "cv": 0
+              },
+              "brotliBytes": {
+                "n": 3,
+                "min": 2651510,
+                "max": 2651510,
+                "mean": 2651510,
+                "median": 2651510,
+                "sampleSD": 0,
+                "cv": 0
+              }
+            }
+          },
+          "cssRules": {
+            "n": 3,
+            "min": 2272,
+            "max": 2272,
+            "mean": 2272,
+            "median": 2272,
+            "sampleSD": 0,
+            "cv": 0
+          }
+        },
+        "vite": {
+          "elapsedMs": {
+            "n": 3,
+            "min": 21737.078400000006,
+            "max": 22759.329900000004,
+            "mean": 22129.458233333335,
+            "median": 21891.96639999999,
+            "sampleSD": 550.9549078537063,
+            "cv": 0.02489689996223268
+          },
+          "sizes": {
+            "js": {
+              "rawBytes": {
+                "n": 3,
+                "min": 9386347,
+                "max": 9386347,
+                "mean": 9386347,
+                "median": 9386347,
+                "sampleSD": 0,
+                "cv": 0
+              },
+              "gzipBytes": {
+                "n": 3,
+                "min": 3082508,
+                "max": 3082508,
+                "mean": 3082508,
+                "median": 3082508,
+                "sampleSD": 0,
+                "cv": 0
+              },
+              "brotliBytes": {
+                "n": 3,
+                "min": 2630347,
+                "max": 2630347,
+                "mean": 2630347,
+                "median": 2630347,
+                "sampleSD": 0,
+                "cv": 0
+              }
+            },
+            "css": {
+              "rawBytes": {
+                "n": 3,
+                "min": 196588,
+                "max": 196588,
+                "mean": 196588,
+                "median": 196588,
+                "sampleSD": 0,
+                "cv": 0
+              },
+              "gzipBytes": {
+                "n": 3,
+                "min": 27568,
+                "max": 27568,
+                "mean": 27568,
+                "median": 27568,
+                "sampleSD": 0,
+                "cv": 0
+              },
+              "brotliBytes": {
+                "n": 3,
+                "min": 21163,
+                "max": 21163,
+                "mean": 21163,
+                "median": 21163,
+                "sampleSD": 0,
+                "cv": 0
+              }
+            },
+            "combined": {
+              "rawBytes": {
+                "n": 3,
+                "min": 9582935,
+                "max": 9582935,
+                "mean": 9582935,
+                "median": 9582935,
+                "sampleSD": 0,
+                "cv": 0
+              },
+              "gzipBytes": {
+                "n": 3,
+                "min": 3110076,
+                "max": 3110076,
+                "mean": 3110076,
+                "median": 3110076,
+                "sampleSD": 0,
+                "cv": 0
+              },
+              "brotliBytes": {
+                "n": 3,
+                "min": 2651510,
+                "max": 2651510,
+                "mean": 2651510,
+                "median": 2651510,
+                "sampleSD": 0,
+                "cv": 0
+              }
+            }
+          },
+          "cssRules": {
+            "n": 3,
+            "min": 2272,
+            "max": 2272,
+            "mean": 2272,
+            "median": 2272,
+            "sampleSD": 0,
+            "cv": 0
+          }
+        }
+      },
+      "pairs": [
+        {
+          "pair": 1,
+          "postcssMs": 25463.825100000002,
+          "viteMs": 22759.329900000004,
+          "deltaMs": 2704.4951999999976,
+          "percentLessTime": 10.620930631509866,
+          "speedup": 1.1188301769816165
+        },
+        {
+          "pair": 2,
+          "postcssMs": 22802.898,
+          "viteMs": 21737.078400000006,
+          "deltaMs": 1065.8195999999953,
+          "percentLessTime": 4.674053271649925,
+          "speedup": 1.049032329938139
+        },
+        {
+          "pair": 3,
+          "postcssMs": 20260.641000000003,
+          "viteMs": 21891.96639999999,
+          "deltaMs": -1631.325399999987,
+          "percentLessTime": -8.051696883627654,
+          "speedup": 0.9254829205292409
+        }
+      ],
+      "pairedStatistics": {
+        "deltaMs": {
+          "n": 3,
+          "min": -1631.325399999987,
+          "max": 2704.4951999999976,
+          "mean": 712.9964666666687,
+          "median": 1065.8195999999953,
+          "sampleSD": 2189.3373863814177,
+          "cv": 3.070614636586902
+        },
+        "percentLessTime": {
+          "n": 3,
+          "min": -8.051696883627654,
+          "max": 10.620930631509866,
+          "mean": 2.414429006510712,
+          "median": 4.674053271649925,
+          "sampleSD": 9.539191839169193,
+          "cv": 3.9509100551086633
+        },
+        "speedup": {
+          "n": 3,
+          "min": 0.9254829205292409,
+          "max": 1.1188301769816165,
+          "mean": 1.0311151424829987,
+          "median": 1.049032329938139,
+          "sampleSD": 0.09791097792965889,
+          "cv": 0.09495639613426904
+        }
+      }
+    },
+    "repeated": {
+      "byVariant": {
+        "postcss": {
+          "elapsedMs": {
+            "n": 10,
+            "min": 18445.38010000001,
+            "max": 23526.03899999999,
+            "mean": 20552.38318,
+            "median": 20420.639200000005,
+            "sampleSD": 1491.0609420398164,
+            "cv": 0.0725492965453662
+          },
+          "sizes": {
+            "js": {
+              "rawBytes": {
+                "n": 10,
+                "min": 9386347,
+                "max": 9386347,
+                "mean": 9386347,
+                "median": 9386347,
+                "sampleSD": 0,
+                "cv": 0
+              },
+              "gzipBytes": {
+                "n": 10,
+                "min": 3082508,
+                "max": 3082508,
+                "mean": 3082508,
+                "median": 3082508,
+                "sampleSD": 0,
+                "cv": 0
+              },
+              "brotliBytes": {
+                "n": 10,
+                "min": 2630347,
+                "max": 2630347,
+                "mean": 2630347,
+                "median": 2630347,
+                "sampleSD": 0,
+                "cv": 0
+              }
+            },
+            "css": {
+              "rawBytes": {
+                "n": 10,
+                "min": 196588,
+                "max": 196588,
+                "mean": 196588,
+                "median": 196588,
+                "sampleSD": 0,
+                "cv": 0
+              },
+              "gzipBytes": {
+                "n": 10,
+                "min": 27568,
+                "max": 27568,
+                "mean": 27568,
+                "median": 27568,
+                "sampleSD": 0,
+                "cv": 0
+              },
+              "brotliBytes": {
+                "n": 10,
+                "min": 21163,
+                "max": 21163,
+                "mean": 21163,
+                "median": 21163,
+                "sampleSD": 0,
+                "cv": 0
+              }
+            },
+            "combined": {
+              "rawBytes": {
+                "n": 10,
+                "min": 9582935,
+                "max": 9582935,
+                "mean": 9582935,
+                "median": 9582935,
+                "sampleSD": 0,
+                "cv": 0
+              },
+              "gzipBytes": {
+                "n": 10,
+                "min": 3110076,
+                "max": 3110076,
+                "mean": 3110076,
+                "median": 3110076,
+                "sampleSD": 0,
+                "cv": 0
+              },
+              "brotliBytes": {
+                "n": 10,
+                "min": 2651510,
+                "max": 2651510,
+                "mean": 2651510,
+                "median": 2651510,
+                "sampleSD": 0,
+                "cv": 0
+              }
+            }
+          },
+          "cssRules": {
+            "n": 10,
+            "min": 2272,
+            "max": 2272,
+            "mean": 2272,
+            "median": 2272,
+            "sampleSD": 0,
+            "cv": 0
+          }
+        },
+        "vite": {
+          "elapsedMs": {
+            "n": 10,
+            "min": 19140.33189999999,
+            "max": 22640.75429999997,
+            "mean": 20572.122459999988,
+            "median": 20571.14234999998,
+            "sampleSD": 1182.8463939596827,
+            "cv": 0.05749753805226393
+          },
+          "sizes": {
+            "js": {
+              "rawBytes": {
+                "n": 10,
+                "min": 9386347,
+                "max": 9386347,
+                "mean": 9386347,
+                "median": 9386347,
+                "sampleSD": 0,
+                "cv": 0
+              },
+              "gzipBytes": {
+                "n": 10,
+                "min": 3082508,
+                "max": 3082508,
+                "mean": 3082508,
+                "median": 3082508,
+                "sampleSD": 0,
+                "cv": 0
+              },
+              "brotliBytes": {
+                "n": 10,
+                "min": 2630347,
+                "max": 2630347,
+                "mean": 2630347,
+                "median": 2630347,
+                "sampleSD": 0,
+                "cv": 0
+              }
+            },
+            "css": {
+              "rawBytes": {
+                "n": 10,
+                "min": 196588,
+                "max": 196588,
+                "mean": 196588,
+                "median": 196588,
+                "sampleSD": 0,
+                "cv": 0
+              },
+              "gzipBytes": {
+                "n": 10,
+                "min": 27568,
+                "max": 27568,
+                "mean": 27568,
+                "median": 27568,
+                "sampleSD": 0,
+                "cv": 0
+              },
+              "brotliBytes": {
+                "n": 10,
+                "min": 21163,
+                "max": 21163,
+                "mean": 21163,
+                "median": 21163,
+                "sampleSD": 0,
+                "cv": 0
+              }
+            },
+            "combined": {
+              "rawBytes": {
+                "n": 10,
+                "min": 9582935,
+                "max": 9582935,
+                "mean": 9582935,
+                "median": 9582935,
+                "sampleSD": 0,
+                "cv": 0
+              },
+              "gzipBytes": {
+                "n": 10,
+                "min": 3110076,
+                "max": 3110076,
+                "mean": 3110076,
+                "median": 3110076,
+                "sampleSD": 0,
+                "cv": 0
+              },
+              "brotliBytes": {
+                "n": 10,
+                "min": 2651510,
+                "max": 2651510,
+                "mean": 2651510,
+                "median": 2651510,
+                "sampleSD": 0,
+                "cv": 0
+              }
+            }
+          },
+          "cssRules": {
+            "n": 10,
+            "min": 2272,
+            "max": 2272,
+            "mean": 2272,
+            "median": 2272,
+            "sampleSD": 0,
+            "cv": 0
+          }
+        }
+      },
+      "pairs": [
+        {
+          "pair": 4,
+          "postcssMs": 20806.680699999997,
+          "viteMs": 19140.33189999999,
+          "deltaMs": 1666.348800000007,
+          "percentLessTime": 8.008720006935116,
+          "speedup": 1.0870595561616154
+        },
+        {
+          "pair": 5,
+          "postcssMs": 21829.51250000001,
+          "viteMs": 21546.14970000001,
+          "deltaMs": 283.3628000000026,
+          "percentLessTime": 1.2980720481046129,
+          "speedup": 1.0131514355903692
+        },
+        {
+          "pair": 6,
+          "postcssMs": 21606.11619999999,
+          "viteMs": 21897.0386,
+          "deltaMs": -290.9224000000104,
+          "percentLessTime": -1.3464816966966535,
+          "speedup": 0.986714075573671
+        },
+        {
+          "pair": 7,
+          "postcssMs": 23526.03899999999,
+          "viteMs": 22640.75429999997,
+          "deltaMs": 885.2847000000183,
+          "percentLessTime": 3.7629993727376663,
+          "speedup": 1.0391013783493963
+        },
+        {
+          "pair": 8,
+          "postcssMs": 19859.100199999986,
+          "viteMs": 20688.666199999978,
+          "deltaMs": -829.5659999999916,
+          "percentLessTime": -4.177258746093603,
+          "speedup": 0.9599023933210352
+        },
+        {
+          "pair": 9,
+          "postcssMs": 20785.825100000016,
+          "viteMs": 20453.618499999982,
+          "deltaMs": 332.2066000000341,
+          "percentLessTime": 1.598236290365177,
+          "speedup": 1.0162419476045295
+        },
+        {
+          "pair": 10,
+          "postcssMs": 19189.75,
+          "viteMs": 19609.887199999997,
+          "deltaMs": -420.1371999999974,
+          "percentLessTime": -2.1893833947810544,
+          "speedup": 0.9785752362716295
+        },
+        {
+          "pair": 11,
+          "postcssMs": 20055.453299999994,
+          "viteMs": 19797.329299999983,
+          "deltaMs": 258.1240000000107,
+          "percentLessTime": 1.2870514375260258,
+          "speedup": 1.013038324315796
+        },
+        {
+          "pair": 12,
+          "postcssMs": 19419.97470000002,
+          "viteMs": 20776.454000000027,
+          "deltaMs": -1356.4793000000063,
+          "percentLessTime": -6.9849694500374655,
+          "speedup": 0.9347107403409646
+        },
+        {
+          "pair": 13,
+          "postcssMs": 18445.38010000001,
+          "viteMs": 19170.994899999932,
+          "deltaMs": -725.614799999923,
+          "percentLessTime": -3.9338565866686728,
+          "speedup": 0.9621503837549962
+        }
+      ],
+      "pairedStatistics": {
+        "deltaMs": {
+          "n": 10,
+          "min": -1356.4793000000063,
+          "max": 1666.348800000007,
+          "mean": -19.73927999998559,
+          "median": -16.399199999999837,
+          "sampleSD": 890.0510859095463,
+          "cv": 45.090352125822015
+        },
+        "percentLessTime": {
+          "n": 10,
+          "min": -6.9849694500374655,
+          "max": 8.008720006935116,
+          "mean": -0.26768707186088503,
+          "median": -0.02971512958531386,
+          "sampleSD": 4.369083015057453,
+          "cv": 16.32160636180455
+        },
+        "speedup": {
+          "n": 10,
+          "min": 0.9347107403409646,
+          "max": 1.0870595561616154,
+          "mean": 0.9990645471284003,
+          "median": 0.9998761999447335,
+          "sampleSD": 0.044278070362136324,
+          "cv": 0.04431952919298785
+        }
+      }
+    }
+  },
+  "timedBuildsEndedAt": "2026-10-17T23:59:26.745Z",
+  "compression": {
+    "path": "reports/tailwind-integration/build-series/compression-cache.json",
+    "sha256": "824e773f3cef4931c0c1ee0eb09dc6bdd9b3736dbff2250a648d3db743295f25",
+    "references": 19292,
+    "uniqueContents": 741,
+    "reusedReferences": 18551,
+    "parameters": {
+      "gzip": {
+        "level": 9
+      },
+      "brotli": {
+        "quality": 11,
+        "mode": "TEXT",
+        "sizeHint": "rawBytes"
+      },
+      "node": "v24.22.0",
+      "zlib": "1.3.2.1-motley-285e94b",
+      "brotliVersion": "1.2.0",
+      "cssRules": "PostCSS walkRules node count, including nested and keyframe rules; not unique selectors or utility classes"
+    }
+  },
+  "inputIntegrity": {
+    "tracked": {
+      "beforeSha256": "d1fe625519b22616d9d8a3345849345798674f257c413be688bd3fb3991f0bd0",
+      "afterSha256": "d1fe625519b22616d9d8a3345849345798674f257c413be688bd3fb3991f0bd0",
+      "beforeHead": "0552b3648c041dd19e027bb1370a5277501b59dc",
+      "afterHead": "0552b3648c041dd19e027bb1370a5277501b59dc",
+      "changedPaths": [],
+      "unchanged": true
+    },
+    "harness": {
+      "beforeSha256": "6d1f8992ce197a8380bbe6994814707eca66f97d6ecd959a1a8f0f14b6078db3",
+      "afterSha256": "6d1f8992ce197a8380bbe6994814707eca66f97d6ecd959a1a8f0f14b6078db3",
+      "beforeHead": "0552b3648c041dd19e027bb1370a5277501b59dc",
+      "afterHead": "0552b3648c041dd19e027bb1370a5277501b59dc",
+      "changedPaths": [],
+      "unchanged": true
+    }
+  },
+  "endedAt": "2026-10-17T23:59:57.865Z"
+}

@@ -1,0 +1,8 @@
+{
+  "id": "pair-01-1-postcss",
+  "variant": "postcss",
+  "html": "C:\\Users\\torta\\Documents\\Codex\\2026-10-17\\task-6\\elogistix-tailwind4\\reports\\tailwind-integration\\hmr-series\\pair-01-1-postcss\\fixture\\index.html",
+  "probe": "C:\\Users\\torta\\Documents\\Codex\\2026-10-17\\task-6\\elogistix-tailwind4\\reports\\tailwind-integration\\hmr-series\\pair-01-1-postcss\\fixture\\probe.css",
+  "cache": "C:\\Users\\torta\\Documents\\Codex\\2026-10-17\\task-6\\elogistix-tailwind4\\reports\\tailwind-integration\\hmr-series\\pair-01-1-postcss\\cache\\vite",
+  "expectedEdits": 7
+}

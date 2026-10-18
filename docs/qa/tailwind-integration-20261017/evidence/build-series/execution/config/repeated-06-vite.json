@@ -1,0 +1,100 @@
+{
+  "variant": "vite",
+  "configFile": "C:/Users/torta/Documents/Codex/2026-10-17/task-6/elogistix-tailwind4/vite.config.ts",
+  "configFileDependencies": [
+    "C:/Users/torta/Documents/Codex/2026-10-17/task-6/elogistix-tailwind4/scripts/lib/readAppVersion.ts",
+    "C:/Users/torta/Documents/Codex/2026-10-17/task-6/elogistix-tailwind4/scripts/lib/verifyHtmlBundle.ts",
+    "C:/Users/torta/Documents/Codex/2026-10-17/task-6/elogistix-tailwind4/vite.config.ts"
+  ],
+  "root": "C:/Users/torta/Documents/Codex/2026-10-17/task-6/elogistix-tailwind4",
+  "command": "build",
+  "mode": "production",
+  "envDir": false,
+  "syntheticPublicEnvironment": {
+    "VITE_SUPABASE_URL": "http://127.0.0.1:9",
+    "VITE_SUPABASE_PUBLISHABLE_KEY": "benchmark-public-placeholder"
+  },
+  "plugins": [
+    "vite:optimized-deps",
+    "vite:watch-package-data",
+    "vite:pre-alias",
+    "alias",
+    "@tailwindcss/vite:scan",
+    "@tailwindcss/vite:generate:build",
+    "vite:modulepreload-polyfill",
+    "vite:bundled-dev-client-imports",
+    "vite:resolve-builtin:get-environment",
+    "vite:resolve-builtin",
+    "vite:html-inline-proxy",
+    "vite:css",
+    "builtin:oxc-runtime",
+    "vite:oxc",
+    "builtin:vite-json",
+    "vite:wasm-helper",
+    "vite:worker",
+    "vite:asset",
+    "vite:react-swc",
+    "vite:react-virtual-preamble",
+    "verify-html-bundle",
+    "vite:define",
+    "vite:css-post",
+    "vite:build-html",
+    "vite:worker-import-meta-url",
+    "vite:asset-import-meta-url",
+    "vite:prepare-out-dir",
+    "vite:rollup-options-plugins",
+    "vite:dynamic-import-vars",
+    "vite:import-glob",
+    "benchmark-tailwind-build-evidence",
+    "vite:build-import-analysis",
+    "native:import-analysis-build",
+    "vite:terser",
+    "vite:license",
+    "native:manifest",
+    "vite:ssr-manifest",
+    "native:reporter",
+    "builtin:vite-load-fallback",
+    "vite:client-inject",
+    "vite:css-analysis",
+    "vite:import-analysis"
+  ],
+  "cacheDir": "C:/Users/torta/Documents/Codex/2026-10-17/task-6/elogistix-tailwind4/reports/tailwind-integration/build-series/cache/repeated-06-vite",
+  "css": {
+    "transformer": "postcss",
+    "devSourcemap": false,
+    "postcss": {
+      "plugins": []
+    }
+  },
+  "build": {
+    "target": [
+      "chrome111",
+      "edge111",
+      "firefox114",
+      "safari16.4",
+      "ios16.4"
+    ],
+    "cssTarget": [
+      "chrome111",
+      "edge111",
+      "firefox114",
+      "safari16.4",
+      "ios16.4"
+    ],
+    "cssMinify": true,
+    "cssCodeSplit": true,
+    "sourcemap": false,
+    "minify": "terser",
+    "terserOptions": {
+      "compress": {
+        "drop_console": true,
+        "drop_debugger": true
+      }
+    },
+    "reportCompressedSize": false,
+    "rolldownTransformTarget": null,
+    "oxcTransformTarget": null,
+    "outDir": "C:\\Users\\torta\\Documents\\Codex\\2026-10-17\\task-6\\elogistix-tailwind4\\reports\\tailwind-integration\\build-series\\outputs\\repeated-06-vite",
+    "emptyOutDir": false
+  }
+}

@@ -1,0 +1,55 @@
+{
+  "scope": "Two-build functional preflight only. Other non-build preparation may run concurrently; these times are excluded from performance comparison.",
+  "startedAt": "2026-10-17T23:26:49.490Z",
+  "baseSha": "0552b3648c041dd19e027bb1370a5277501b59dc",
+  "inputsBefore": "5264fe5d4ef769b99e6aa841abe80808ecaffc5f6759df478f5f82af61060b98",
+  "chainBefore": {
+    "build-worker.mjs": "ad5fc625ebf5623c2ac41b58fe84acde6a8190fcd40276efd7c95ec331f0ac81",
+    "integration.mjs": "ace560d07d521b7840fe75fc90b7daecd80dac7bfbb895b0e2b895e56c483a05"
+  },
+  "runs": [
+    {
+      "variant": "postcss",
+      "command": [
+        "C:\\Users\\torta\\Documents\\Codex\\2026-10-17\\task-6\\.tools\\node.exe",
+        "C:\\Users\\torta\\Documents\\Codex\\2026-10-17\\task-6\\elogistix-tailwind4\\docs\\qa\\tailwind-integration-20261017\\build-worker.mjs",
+        "--variant",
+        "postcss",
+        "--out-dir",
+        "C:\\Users\\torta\\Documents\\Codex\\2026-10-17\\task-6\\elogistix-tailwind4\\reports\\tailwind-integration\\preflight\\postcss\\output",
+        "--cache-dir",
+        "C:\\Users\\torta\\Documents\\Codex\\2026-10-17\\task-6\\elogistix-tailwind4\\reports\\tailwind-integration\\preflight\\postcss\\cache",
+        "--config-report",
+        "C:\\Users\\torta\\Documents\\Codex\\2026-10-17\\task-6\\elogistix-tailwind4\\reports\\tailwind-integration\\preflight\\postcss\\config.json"
+      ],
+      "exitCode": 0,
+      "signal": null,
+      "spawnError": null
+    },
+    {
+      "variant": "vite",
+      "command": [
+        "C:\\Users\\torta\\Documents\\Codex\\2026-10-17\\task-6\\.tools\\node.exe",
+        "C:\\Users\\torta\\Documents\\Codex\\2026-10-17\\task-6\\elogistix-tailwind4\\docs\\qa\\tailwind-integration-20261017\\build-worker.mjs",
+        "--variant",
+        "vite",
+        "--out-dir",
+        "C:\\Users\\torta\\Documents\\Codex\\2026-10-17\\task-6\\elogistix-tailwind4\\reports\\tailwind-integration\\preflight\\vite\\output",
+        "--cache-dir",
+        "C:\\Users\\torta\\Documents\\Codex\\2026-10-17\\task-6\\elogistix-tailwind4\\reports\\tailwind-integration\\preflight\\vite\\cache",
+        "--config-report",
+        "C:\\Users\\torta\\Documents\\Codex\\2026-10-17\\task-6\\elogistix-tailwind4\\reports\\tailwind-integration\\preflight\\vite\\config.json"
+      ],
+      "exitCode": 0,
+      "signal": null,
+      "spawnError": null
+    }
+  ],
+  "inputsAfter": "5264fe5d4ef769b99e6aa841abe80808ecaffc5f6759df478f5f82af61060b98",
+  "chainAfter": {
+    "build-worker.mjs": "ad5fc625ebf5623c2ac41b58fe84acde6a8190fcd40276efd7c95ec331f0ac81",
+    "integration.mjs": "ace560d07d521b7840fe75fc90b7daecd80dac7bfbb895b0e2b895e56c483a05"
+  },
+  "status": "complete",
+  "endedAt": "2026-10-17T23:28:08.494Z"
+}

@@ -1,0 +1,97 @@
+{
+  "baseSha": "0552b3648c041dd19e027bb1370a5277501b59dc",
+  "branch": "perf/tailwind-vite-experiment-20261017",
+  "createdAt": "2026-10-18T00:10:07.478Z",
+  "adoptionRecommended": false,
+  "productIntegration": "PostCSS",
+  "minifier": "Terser",
+  "protectedProductDiffEmpty": true,
+  "checks": {
+    "lint": {
+      "exitCode": 0,
+      "command": "node node_modules/eslint/bin/eslint.js . --cache --cache-location .cache/eslint/ --cache-strategy content --max-warnings 0",
+      "log": "lint-final.txt"
+    },
+    "typecheck": {
+      "exitCode": 0,
+      "command": "node node_modules/typescript/bin/tsc -b --pretty false",
+      "log": "typecheck-final.txt"
+    },
+    "knip": {
+      "exitCode": 0,
+      "command": "node node_modules/knip/bin/knip.js --no-progress",
+      "log": "knip-final.txt"
+    },
+    "checkerTests": {
+      "exitCode": 0,
+      "passed": 13,
+      "log": "css-checker-tests-final.txt"
+    },
+    "catalog": {
+      "exitCode": 0,
+      "log": "test-catalog-final.txt",
+      "placementRevalidated": {
+        "exitCode": 0,
+        "report": "catalog-placement.json",
+        "treeDigestUnchanged": true
+      }
+    },
+    "builds": {
+      "status": "complete",
+      "processes": 26,
+      "integrity": {
+        "tracked": {
+          "beforeSha256": "d1fe625519b22616d9d8a3345849345798674f257c413be688bd3fb3991f0bd0",
+          "afterSha256": "d1fe625519b22616d9d8a3345849345798674f257c413be688bd3fb3991f0bd0",
+          "beforeHead": "0552b3648c041dd19e027bb1370a5277501b59dc",
+          "afterHead": "0552b3648c041dd19e027bb1370a5277501b59dc",
+          "changedPaths": [],
+          "unchanged": true
+        },
+        "harness": {
+          "beforeSha256": "6d1f8992ce197a8380bbe6994814707eca66f97d6ecd959a1a8f0f14b6078db3",
+          "afterSha256": "6d1f8992ce197a8380bbe6994814707eca66f97d6ecd959a1a8f0f14b6078db3",
+          "beforeHead": "0552b3648c041dd19e027bb1370a5277501b59dc",
+          "afterHead": "0552b3648c041dd19e027bb1370a5277501b59dc",
+          "changedPaths": [],
+          "unchanged": true
+        }
+      }
+    },
+    "productionCss": {
+      "pairs": 13,
+      "passed": true,
+      "report": "../build-verification/summary.json"
+    },
+    "productionStyleContract": {
+      "passed": true,
+      "scenarios": 28,
+      "cssom": true
+    },
+    "visualQa": {
+      "passed": false,
+      "expected": 104,
+      "passedCases": 96,
+      "blockedFirefox": 8,
+      "unexpected": 0,
+      "skipped": 0,
+      "flaky": 0,
+      "reason": "Single managed Firefox launch failed with spawn UNKNOWN; 4 cases per arm BLOCKED/NOT_RUN"
+    },
+    "hmr": {
+      "passed": true,
+      "sessions": 8,
+      "pairedReplicationUnits": 4,
+      "measuredUpdatesPerArm": 20,
+      "report": "../hmr/series.json"
+    },
+    "developmentCss": {
+      "strictAstPassed": false,
+      "strictCssomPassed": false,
+      "scenariosPassed": 28,
+      "scenarios": 28,
+      "report": "../development-css/style-contract.json"
+    }
+  },
+  "scope": "Local documentation/harness validation only. No global QA pass, default adoption, backend use, merge or deployment. Ordinary CI does not execute the manual experiment lane."
+}

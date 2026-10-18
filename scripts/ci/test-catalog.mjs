@@ -109,6 +109,10 @@ export function classifyFiles(files, guards, sqlSupport) {
         'e2e/visual/deferred-erp/specs/xml.spec.ts',
       ].includes(file)) { lane = 'playwright-isolated'; mode = 'manual'; }
       else if (file === 'e2e/visual/specs/shared-ui.spec.ts') { lane = 'playwright-visual'; mode = 'manual'; }
+      else if (file === 'docs/qa/tailwind-integration-20261017/compare-css.test.mjs') {
+        lane = 'node-tailwind-integration'; mode = 'manual';
+        reason = 'Local Tailwind experiment checker: node --test docs/qa/tailwind-integration-20261017/compare-css.test.mjs; not executed by ordinary CI.';
+      }
       else throw new Error(`Test has no execution lane: ${file}`);
     }
     if (lane) entries.push({ path: file, lane, mode, ...(reason ? { reason } : {}),

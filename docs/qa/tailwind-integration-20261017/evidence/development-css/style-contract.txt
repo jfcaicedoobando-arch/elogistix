@@ -1,0 +1,1 @@
+{"ok":false,"scenarios":28,"cssomEquivalent":false,"output":"C:\\Users\\torta\\Documents\\Codex\\2026-10-17\\task-6\\elogistix-tailwind4\\reports\\tailwind-integration\\dev-css-audit\\style-contract.json"}

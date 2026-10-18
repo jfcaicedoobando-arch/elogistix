@@ -1,0 +1,26 @@
+[WebServer] [vite:react-swc] We recommend switching to `@vitejs/plugin-react` for improved performance as no swc plugins are used. More information at https://vite.dev/rolldown
+
+Running 16 tests using 1 worker
+
+[WebServer] 5:32:57 PM [vite] (client) [optimizer] scanning dependencies...
+[WebServer] 
+[WebServer] A PostCSS plugin did not pass the `from` option to `postcss.parse`. This may cause imported assets to be incorrectly transformed. If you've recently added a PostCSS plugin that raised this warning, please contact the package author to fix the issue.
+[WebServer] 5:33:07 PM [vite] (client) [optimizer] bundling dependencies...
+  ok  1 [hd-light] › e2e\visual\specs\shared-ui.spec.ts:15:1 › shared shell and table (16.7s)
+  ok  2 [hd-light] › e2e\visual\specs\shared-ui.spec.ts:20:1 › shared form dialog (1.7s)
+  ok  3 [hd-light] › e2e\visual\specs\shared-ui.spec.ts:26:1 › empty, error and loading remain distinct (4.7s)
+  ok  4 [hd-light] › e2e\visual\specs\shared-ui.spec.ts:38:1 › height breakpoint and CSS variable sidebar widths retain their v3 behavior (1.7s)
+  ok  5 [hd-dark] › e2e\visual\specs\shared-ui.spec.ts:15:1 › shared shell and table (1.5s)
+  ok  6 [hd-dark] › e2e\visual\specs\shared-ui.spec.ts:20:1 › shared form dialog (1.4s)
+  ok  7 [hd-dark] › e2e\visual\specs\shared-ui.spec.ts:26:1 › empty, error and loading remain distinct (4.9s)
+  ok  8 [hd-dark] › e2e\visual\specs\shared-ui.spec.ts:38:1 › height breakpoint and CSS variable sidebar widths retain their v3 behavior (1.7s)
+  ok  9 [compact-light] › e2e\visual\specs\shared-ui.spec.ts:15:1 › shared shell and table (1.5s)
+  ok 10 [compact-light] › e2e\visual\specs\shared-ui.spec.ts:20:1 › shared form dialog (1.5s)
+  ok 11 [compact-light] › e2e\visual\specs\shared-ui.spec.ts:26:1 › empty, error and loading remain distinct (4.6s)
+  ok 12 [compact-light] › e2e\visual\specs\shared-ui.spec.ts:38:1 › height breakpoint and CSS variable sidebar widths retain their v3 behavior (1.7s)
+  ok 13 [compact-dark] › e2e\visual\specs\shared-ui.spec.ts:15:1 › shared shell and table (1.4s)
+  ok 14 [compact-dark] › e2e\visual\specs\shared-ui.spec.ts:20:1 › shared form dialog (1.4s)
+  ok 15 [compact-dark] › e2e\visual\specs\shared-ui.spec.ts:26:1 › empty, error and loading remain distinct (4.6s)
+  ok 16 [compact-dark] › e2e\visual\specs\shared-ui.spec.ts:38:1 › height breakpoint and CSS variable sidebar widths retain their v3 behavior (1.7s)
+
+  16 passed (56.6s)

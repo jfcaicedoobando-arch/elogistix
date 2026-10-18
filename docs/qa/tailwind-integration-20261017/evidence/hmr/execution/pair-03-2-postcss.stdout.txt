@@ -1,0 +1,7 @@
+[2m5:43:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/reports/tailwind-integration/hmr-series-local-permission/pair-03-2-postcss/fixture/probe.css?direct[22m
+[2m5:43:56 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/reports/tailwind-integration/hmr-series-local-permission/pair-03-2-postcss/fixture/probe.css?direct[22m
+[2m5:43:57 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/reports/tailwind-integration/hmr-series-local-permission/pair-03-2-postcss/fixture/probe.css?direct[22m
+[2m5:43:59 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/reports/tailwind-integration/hmr-series-local-permission/pair-03-2-postcss/fixture/probe.css?direct[22m
+[2m5:44:00 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/reports/tailwind-integration/hmr-series-local-permission/pair-03-2-postcss/fixture/probe.css?direct[22m
+[2m5:44:01 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/reports/tailwind-integration/hmr-series-local-permission/pair-03-2-postcss/fixture/probe.css?direct[22m
+[2m5:44:03 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/reports/tailwind-integration/hmr-series-local-permission/pair-03-2-postcss/fixture/probe.css?direct[22m

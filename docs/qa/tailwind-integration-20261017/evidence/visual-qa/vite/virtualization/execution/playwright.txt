@@ -1,0 +1,25 @@
+[WebServer] vite v8.3.4 building client environment for production...
+[WebServer] transforming...
+[WebServer] ✓ 3134 modules transformed.
+[WebServer] rendering chunks...
+[WebServer] computing gzip size...
+[WebServer] reports/tailwind-integration/ui-full-20261017/vite/virtualization/compiled-fixture/index.html                   0.70 kB │ gzip:   0.40 kB
+[WebServer] reports/tailwind-integration/ui-full-20261017/vite/virtualization/compiled-fixture/assets/index-D6WsstTW.css  193.82 kB │ gzip:  27.55 kB
+[WebServer] reports/tailwind-integration/ui-full-20261017/vite/virtualization/compiled-fixture/assets/index-Dt_Uxsdq.js   535.20 kB │ gzip: 168.58 kB
+[WebServer] 
+[WebServer] [plugin builtin:vite-reporter] 
+[WebServer] (!) Some chunks are larger than 500 kB after minification. Consider:
+[WebServer] - Using dynamic import() to code-split the application
+[WebServer] - Use build.rolldownOptions.output.codeSplitting to improve chunking: https://rolldown.rs/reference/OutputOptions.codeSplitting
+[WebServer] - Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.
+[WebServer] ✓ built in 1.47s
+[WebServer] [vite:react-swc] We recommend switching to `@vitejs/plugin-react` for improved performance as no swc plugins are used. More information at https://vite.dev/rolldown
+
+Running 4 tests using 1 worker
+
+  ok 1 [chromium] › e2e\visual\virtualization\specs\keyboard-sorting.spec.ts:126:1 › client sorting uses native Tab/Enter/Space with a visible focus ring and exact row order (1.0s)
+  ok 2 [chromium] › e2e\visual\virtualization\specs\keyboard-sorting.spec.ts:129:1 › server sorting emits one callback per native Enter/Space and skips the nonsortable header (907ms)
+  ok 3 [chromium] › e2e\visual\virtualization\specs\virtualization.spec.ts:137:1 › real useVirtualTableState retains measured rows and IDs through scroll/filter/reorder/remount (1.4s)
+  ok 4 [chromium] › e2e\visual\virtualization\specs\virtualization.spec.ts:140:1 › real VirtualTimeline retains variable-height entries through scroll/filter/reorder/remount (1.9s)
+
+  4 passed (10.3s)

@@ -1,0 +1,17 @@
+{
+  "suite": "shared-ui",
+  "variant": "vite",
+  "mode": "development",
+  "cwd": "C:\\Users\\torta\\Documents\\Codex\\2026-10-17\\task-6\\elogistix-tailwind4",
+  "originalConfig": "vite.visual.config.ts",
+  "originalRoot": "C:\\Users\\torta\\Documents\\Codex\\2026-10-17\\task-6\\elogistix-tailwind4\\",
+  "originalPostcss": "C:\\Users\\torta\\Documents\\Codex\\2026-10-17\\task-6\\elogistix-tailwind4\\e2e\\visual",
+  "experimentalPostcss": {
+    "plugins": []
+  },
+  "envDir": false,
+  "cacheDir": "C:\\Users\\torta\\Documents\\Codex\\2026-10-17\\task-6\\elogistix-tailwind4\\reports\\tailwind-integration\\ui-full-20261017\\vite\\shared-ui\\vite-cache",
+  "outDir": "C:\\Users\\torta\\Documents\\Codex\\2026-10-17\\task-6\\elogistix-tailwind4\\reports\\tailwind-integration\\ui-full-20261017\\vite\\shared-ui\\compiled-fixture",
+  "origin": "http://127.0.0.1:50053",
+  "freshBuildBeforePreview": false
+}

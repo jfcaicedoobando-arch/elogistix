@@ -1,0 +1,81 @@
+{
+  "capturedAt": "2026-10-17T23:59:57.795Z",
+  "kind": "harness",
+  "head": "0552b3648c041dd19e027bb1370a5277501b59dc",
+  "sha256": "6d1f8992ce197a8380bbe6994814707eca66f97d6ecd959a1a8f0f14b6078db3",
+  "count": 18,
+  "manifest": [
+    {
+      "path": "docs/qa/tailwind-integration-20261017/archive-builds.mjs",
+      "sha256": "897151bdf2ea150527ee06b3fbc159e4fcb29aa4d451354be487d11286da252e"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/archive-visual-qa.mjs",
+      "sha256": "2b8a359222c5514b950678566a3203fe61eb614441a896d1601363877279a42d"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/build-worker.mjs",
+      "sha256": "ad5fc625ebf5623c2ac41b58fe84acde6a8190fcd40276efd7c95ec331f0ac81"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/capture-shared-ui.mjs",
+      "sha256": "e183051aa0f739cd3b8dafb36318eda6adab3d87eb8bfda0836cfefdafa1aab5"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/compare-css.mjs",
+      "sha256": "d470286e60c224442b9f21f52a7a67f1549ce108942004261f684429c8f8caf3"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/compare-css.test.mjs",
+      "sha256": "96596010c2e376457ff1efdaf654cccc58712a5130ab8a9de330f6bc38e5cbbf"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/contract-styles.mjs",
+      "sha256": "264c19c93c0611a4c6d42e00cc879dbbd21ad8c165710bd46bec0526641fdc3e"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/dev-css-audit.mjs",
+      "sha256": "f5e4d9cd11e949f22aad0abe9bce6ae9c8e24b26693633dd975f09f032b89622"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/hmr-client.mjs",
+      "sha256": "eff6e560d46ad3fa31ac69d91d1ee8c81b3ab066d51dc4807d9af282075689c0"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/hmr-common.mjs",
+      "sha256": "d517d8b211a9954ae9e0acc4a4970138e0d815de162f1452701f68837a74f8ac"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/hmr-session.mjs",
+      "sha256": "da6c8b479ef6b2968fa354d08b186f8d1883348bac5c5d43ffb5a3a94ee620c6"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/integration.mjs",
+      "sha256": "ace560d07d521b7840fe75fc90b7daecd80dac7bfbb895b0e2b895e56c483a05"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/probe-firefox.mjs",
+      "sha256": "49ee406801c1412dc31c052864dd66275ba3249a4cde4f35297888e02cc17fde"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/run-builds.mjs",
+      "sha256": "39ad983714ffd6eca336f8c73d5ef5183ae70e22555213325230e0f8b9fefb98"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/run-hmr.mjs",
+      "sha256": "d6c10ad4528fc195a12af1efca0bf5de0c1653de0a7a1f1ea5354666af39a6f2"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/run-visual-qa.mjs",
+      "sha256": "d3441cc7a28190b478052dd5f3928e8baa19ffe9af4d485895c617bff1b6f985"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/ui-server.mjs",
+      "sha256": "44c0903fe6bbafa0cb9f51ecc9c0848128db807788170893ce0763ff2d5321c0"
+    },
+    {
+      "path": "docs/qa/tailwind-integration-20261017/ui-suites.mjs",
+      "sha256": "7d1bfddf528db6ffed6705af0c84c153659dc009d386cb0b5b6a080e50fce809"
+    }
+  ]
+}

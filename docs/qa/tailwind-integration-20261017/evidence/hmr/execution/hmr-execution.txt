@@ -1,0 +1,3 @@
+[hmr] starting pair-01-1-postcss
+[hmr] pair-01-1-postcss: FAIL
+{"passed":false,"sessions":1,"output":"reports/tailwind-integration/hmr-series/series.json"}

@@ -1,0 +1,28 @@
+[consolidate] Verifying initial-01-postcss; no builds or compression
+[consolidate] Verifying initial-01-vite; no builds or compression
+[consolidate] Verifying initial-02-vite; no builds or compression
+[consolidate] Verifying initial-02-postcss; no builds or compression
+[consolidate] Verifying initial-03-postcss; no builds or compression
+[consolidate] Verifying initial-03-vite; no builds or compression
+[consolidate] Verifying repeated-04-vite; no builds or compression
+[consolidate] Verifying repeated-04-postcss; no builds or compression
+[consolidate] Verifying repeated-05-postcss; no builds or compression
+[consolidate] Verifying repeated-05-vite; no builds or compression
+[consolidate] Verifying repeated-06-vite; no builds or compression
+[consolidate] Verifying repeated-06-postcss; no builds or compression
+[consolidate] Verifying repeated-07-postcss; no builds or compression
+[consolidate] Verifying repeated-07-vite; no builds or compression
+[consolidate] Verifying repeated-08-vite; no builds or compression
+[consolidate] Verifying repeated-08-postcss; no builds or compression
+[consolidate] Verifying repeated-09-postcss; no builds or compression
+[consolidate] Verifying repeated-09-vite; no builds or compression
+[consolidate] Verifying repeated-10-vite; no builds or compression
+[consolidate] Verifying repeated-10-postcss; no builds or compression
+[consolidate] Verifying repeated-11-postcss; no builds or compression
+[consolidate] Verifying repeated-11-vite; no builds or compression
+[consolidate] Verifying repeated-12-vite; no builds or compression
+[consolidate] Verifying repeated-12-postcss; no builds or compression
+[consolidate] Verifying repeated-13-postcss; no builds or compression
+[consolidate] Verifying repeated-13-vite; no builds or compression
+{"status":"verified","archive":"C:\\Users\\torta\\Documents\\Codex\\2026-10-17\\task-6\\elogistix-tailwind4\\docs\\qa\\tailwind-integration-20261017\\evidence\\build-series","files":89,"manifestSha256":"771cebb3ed133bed2df81b562bed2852132ae50a1df77fa1a84e7df9d7dd3af4","fullProductBundlesArchived":false}
+{"status":"complete","output":"C:\\Users\\torta\\Documents\\Codex\\2026-10-17\\task-6\\elogistix-tailwind4\\docs\\qa\\tailwind-integration-20261017\\evidence\\build-series","runs":26,"storedObjects":3,"logicalObjectReferences":52,"fullProductBundlesArchived":false}

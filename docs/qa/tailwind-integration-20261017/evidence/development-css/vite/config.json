@@ -1,0 +1,7 @@
+{
+  "variant": "vite",
+  "html": "C:\\Users\\torta\\Documents\\Codex\\2026-10-17\\task-6\\elogistix-tailwind4\\reports\\tailwind-integration\\dev-css-audit\\vite\\fixture\\index.html",
+  "probe": "C:\\Users\\torta\\Documents\\Codex\\2026-10-17\\task-6\\elogistix-tailwind4\\reports\\tailwind-integration\\dev-css-audit\\vite\\fixture\\probe.css",
+  "cache": "C:\\Users\\torta\\Documents\\Codex\\2026-10-17\\task-6\\elogistix-tailwind4\\reports\\tailwind-integration\\dev-css-audit\\vite\\cache\\vite",
+  "probeSha256": "881bf53fa0ee6581687f739bdc3db6bb013ebaeeb6127f5d24cb0b4c636c7122"
+}

@@ -1,0 +1,7 @@
+# Preserve captured bytes across checkout line-ending conversion.
+** -text whitespace=cr-at-eol
+# Vite reporter labels intentionally contain a trailing space in raw stderr.
+evidence/**/*.stderr.txt whitespace=cr-at-eol,-blank-at-eol
+evidence/**/stderr.txt whitespace=cr-at-eol,-blank-at-eol
+# Playwright prefixes otherwise empty Vite server lines with "[WebServer] ".
+evidence/visual-qa/**/execution/playwright.txt whitespace=cr-at-eol,-blank-at-eol
