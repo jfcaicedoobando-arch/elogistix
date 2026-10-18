@@ -1,45 +1,26 @@
-import { bundle } from "@remotion/bundler";
-import { renderMedia, selectComposition, openBrowser } from "@remotion/renderer";
-import path from "path";
-import { fileURLToPath } from "url";
+import { mkdir } from "node:fs/promises";
+import path from "node:path";
+import { renderMedia } from "@remotion/renderer";
+import { projectDir, withComposition } from "./composition.mjs";
 
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const out = path.resolve(process.env.OUT || path.join(projectDir, "out/demo-libre-carga.mp4"));
+await mkdir(path.dirname(out), { recursive: true });
 
-const bundled = await bundle({
-  entryPoint: path.resolve(__dirname, "../src/index.ts"),
-  webpackOverride: (c) => c,
+await withComposition(async (options) => {
+  let lastPercent = -1;
+  await renderMedia({
+    ...options,
+    codec: "h264",
+    outputLocation: out,
+    muted: true,
+    concurrency: 1,
+    onProgress: ({ progress }) => {
+      const percent = Math.floor(progress * 10) * 10;
+      if (percent !== lastPercent) {
+        console.log(`${percent}%`);
+        lastPercent = percent;
+      }
+    },
+  });
 });
-
-const browser = await openBrowser("chrome", {
-  browserExecutable: process.env.PUPPETEER_EXECUTABLE_PATH ?? "/bin/chromium",
-  chromiumOptions: {
-    args: ["--no-sandbox", "--disable-gpu", "--disable-dev-shm-usage"],
-  },
-  chromeMode: "chrome-for-testing",
-});
-
-const composition = await selectComposition({
-  serveUrl: bundled,
-  id: "main",
-  puppeteerInstance: browser,
-});
-
-const out = process.env.OUT || "/mnt/documents/libre-carga-demo-60s.mp4";
-
-await renderMedia({
-  composition,
-  serveUrl: bundled,
-  codec: "h264",
-  outputLocation: out,
-  puppeteerInstance: browser,
-  muted: true,
-  concurrency: 1,
-  onProgress: ({ progress }) => {
-    if (Math.round(progress * 100) % 10 === 0) {
-      process.stdout.write(`\r${Math.round(progress * 100)}%`);
-    }
-  },
-});
-
-await browser.close({ silent: false });
-console.log("\nDone:", out);
+console.log("Done:", out);
