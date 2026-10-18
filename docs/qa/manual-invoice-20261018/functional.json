@@ -1,0 +1,571 @@
+{
+  "sha": "446036fb04cfd56fac4c35b75f0da9c9d94361d9",
+  "results": [
+    {
+      "variant": "base",
+      "assertions": 8,
+      "labels": [
+        "20 deterministic rows: per-line rounded subtotal, mixed IVA and total",
+        "Notes and concept typing retain focus; description and SAT edits persist",
+        "Quantity keeps six decimals and rejects seventh; price keeps four and rejects fifth",
+        "All five per-row IVA treatments recalculate canonical totals",
+        "MXN/USD/EUR update display without altering documentary amounts",
+        "Add, middle removal, shifted NumericInput state and final-row deletion guard",
+        "Cancel preserves capture; Escape offers discard; reopen resets notes, rows and totals",
+        "Border-disabled blocks new 8 percent while retaining a seeded legacy 8 percent row"
+      ],
+      "totals": [
+        {
+          "stage": "initial mixed IVA",
+          "currency": "MXN",
+          "expected": {
+            "subtotal": "5517.11",
+            "iva": "246.69",
+            "total": "5763.80"
+          },
+          "actual": {
+            "subtotal": "5517.11",
+            "iva": "246.69",
+            "total": "5763.80"
+          }
+        },
+        {
+          "stage": "notes preserve totals",
+          "currency": "MXN",
+          "expected": {
+            "subtotal": "5517.11",
+            "iva": "246.69",
+            "total": "5763.80"
+          },
+          "actual": {
+            "subtotal": "5517.11",
+            "iva": "246.69",
+            "total": "5763.80"
+          }
+        },
+        {
+          "stage": "six-decimal quantity and four-decimal price",
+          "currency": "MXN",
+          "expected": {
+            "subtotal": "5393.65",
+            "iva": "226.94",
+            "total": "5620.59"
+          },
+          "actual": {
+            "subtotal": "5393.65",
+            "iva": "226.94",
+            "total": "5620.59"
+          }
+        },
+        {
+          "stage": "row 1 IVA gravado_16",
+          "currency": "MXN",
+          "expected": {
+            "subtotal": "5393.65",
+            "iva": "226.94",
+            "total": "5620.59"
+          },
+          "actual": {
+            "subtotal": "5393.65",
+            "iva": "226.94",
+            "total": "5620.59"
+          }
+        },
+        {
+          "stage": "row 1 IVA gravado_8",
+          "currency": "MXN",
+          "expected": {
+            "subtotal": "5393.65",
+            "iva": "225.72",
+            "total": "5619.37"
+          },
+          "actual": {
+            "subtotal": "5393.65",
+            "iva": "225.72",
+            "total": "5619.37"
+          }
+        },
+        {
+          "stage": "row 1 IVA tasa_0",
+          "currency": "MXN",
+          "expected": {
+            "subtotal": "5393.65",
+            "iva": "224.50",
+            "total": "5618.15"
+          },
+          "actual": {
+            "subtotal": "5393.65",
+            "iva": "224.50",
+            "total": "5618.15"
+          }
+        },
+        {
+          "stage": "row 1 IVA exento",
+          "currency": "MXN",
+          "expected": {
+            "subtotal": "5393.65",
+            "iva": "224.50",
+            "total": "5618.15"
+          },
+          "actual": {
+            "subtotal": "5393.65",
+            "iva": "224.50",
+            "total": "5618.15"
+          }
+        },
+        {
+          "stage": "row 1 IVA no_objeto",
+          "currency": "MXN",
+          "expected": {
+            "subtotal": "5393.65",
+            "iva": "224.50",
+            "total": "5618.15"
+          },
+          "actual": {
+            "subtotal": "5393.65",
+            "iva": "224.50",
+            "total": "5618.15"
+          }
+        },
+        {
+          "stage": "currency USD",
+          "currency": "USD",
+          "expected": {
+            "subtotal": "5393.65",
+            "iva": "224.50",
+            "total": "5618.15"
+          },
+          "actual": {
+            "subtotal": "5393.65",
+            "iva": "224.50",
+            "total": "5618.15"
+          }
+        },
+        {
+          "stage": "currency EUR",
+          "currency": "EUR",
+          "expected": {
+            "subtotal": "5393.65",
+            "iva": "224.50",
+            "total": "5618.15"
+          },
+          "actual": {
+            "subtotal": "5393.65",
+            "iva": "224.50",
+            "total": "5618.15"
+          }
+        },
+        {
+          "stage": "currency MXN",
+          "currency": "MXN",
+          "expected": {
+            "subtotal": "5393.65",
+            "iva": "224.50",
+            "total": "5618.15"
+          },
+          "actual": {
+            "subtotal": "5393.65",
+            "iva": "224.50",
+            "total": "5618.15"
+          }
+        },
+        {
+          "stage": "add default concept",
+          "currency": "MXN",
+          "expected": {
+            "subtotal": "5393.65",
+            "iva": "224.50",
+            "total": "5618.15"
+          },
+          "actual": {
+            "subtotal": "5393.65",
+            "iva": "224.50",
+            "total": "5618.15"
+          }
+        },
+        {
+          "stage": "remove middle concept",
+          "currency": "MXN",
+          "expected": {
+            "subtotal": "5129.37",
+            "iva": "203.36",
+            "total": "5332.73"
+          },
+          "actual": {
+            "subtotal": "5129.37",
+            "iva": "203.36",
+            "total": "5332.73"
+          }
+        },
+        {
+          "stage": "last concept cannot be removed",
+          "currency": "MXN",
+          "expected": {
+            "subtotal": "15.24",
+            "iva": "0.00",
+            "total": "15.24"
+          },
+          "actual": {
+            "subtotal": "15.24",
+            "iva": "0.00",
+            "total": "15.24"
+          }
+        },
+        {
+          "stage": "fiscal currency before cancellation",
+          "currency": "EUR",
+          "expected": {
+            "subtotal": "15.24",
+            "iva": "0.00",
+            "total": "15.24"
+          },
+          "actual": {
+            "subtotal": "15.24",
+            "iva": "0.00",
+            "total": "15.24"
+          }
+        },
+        {
+          "stage": "discard and reopen resets to empty capture",
+          "currency": "MXN",
+          "expected": {
+            "subtotal": "0.00",
+            "iva": "0.00",
+            "total": "0.00"
+          },
+          "actual": {
+            "subtotal": "0.00",
+            "iva": "0.00",
+            "total": "0.00"
+          }
+        },
+        {
+          "stage": "border disabled preserves legacy 8 percent",
+          "currency": "MXN",
+          "expected": {
+            "subtotal": "5517.11",
+            "iva": "246.69",
+            "total": "5763.80"
+          },
+          "actual": {
+            "subtotal": "5517.11",
+            "iva": "246.69",
+            "total": "5763.80"
+          }
+        },
+        {
+          "stage": "legacy 8 percent remains selectable",
+          "currency": "MXN",
+          "expected": {
+            "subtotal": "5517.11",
+            "iva": "246.69",
+            "total": "5763.80"
+          },
+          "actual": {
+            "subtotal": "5517.11",
+            "iva": "246.69",
+            "total": "5763.80"
+          }
+        },
+        {
+          "stage": "legacy row changed to 16 percent",
+          "currency": "MXN",
+          "expected": {
+            "subtotal": "5517.11",
+            "iva": "267.83",
+            "total": "5784.94"
+          },
+          "actual": {
+            "subtotal": "5517.11",
+            "iva": "267.83",
+            "total": "5784.94"
+          }
+        }
+      ]
+    },
+    {
+      "variant": "candidate",
+      "assertions": 8,
+      "labels": [
+        "20 deterministic rows: per-line rounded subtotal, mixed IVA and total",
+        "Notes and concept typing retain focus; description and SAT edits persist",
+        "Quantity keeps six decimals and rejects seventh; price keeps four and rejects fifth",
+        "All five per-row IVA treatments recalculate canonical totals",
+        "MXN/USD/EUR update display without altering documentary amounts",
+        "Add, middle removal, shifted NumericInput state and final-row deletion guard",
+        "Cancel preserves capture; Escape offers discard; reopen resets notes, rows and totals",
+        "Border-disabled blocks new 8 percent while retaining a seeded legacy 8 percent row"
+      ],
+      "totals": [
+        {
+          "stage": "initial mixed IVA",
+          "currency": "MXN",
+          "expected": {
+            "subtotal": "5517.11",
+            "iva": "246.69",
+            "total": "5763.80"
+          },
+          "actual": {
+            "subtotal": "5517.11",
+            "iva": "246.69",
+            "total": "5763.80"
+          }
+        },
+        {
+          "stage": "notes preserve totals",
+          "currency": "MXN",
+          "expected": {
+            "subtotal": "5517.11",
+            "iva": "246.69",
+            "total": "5763.80"
+          },
+          "actual": {
+            "subtotal": "5517.11",
+            "iva": "246.69",
+            "total": "5763.80"
+          }
+        },
+        {
+          "stage": "six-decimal quantity and four-decimal price",
+          "currency": "MXN",
+          "expected": {
+            "subtotal": "5393.65",
+            "iva": "226.94",
+            "total": "5620.59"
+          },
+          "actual": {
+            "subtotal": "5393.65",
+            "iva": "226.94",
+            "total": "5620.59"
+          }
+        },
+        {
+          "stage": "row 1 IVA gravado_16",
+          "currency": "MXN",
+          "expected": {
+            "subtotal": "5393.65",
+            "iva": "226.94",
+            "total": "5620.59"
+          },
+          "actual": {
+            "subtotal": "5393.65",
+            "iva": "226.94",
+            "total": "5620.59"
+          }
+        },
+        {
+          "stage": "row 1 IVA gravado_8",
+          "currency": "MXN",
+          "expected": {
+            "subtotal": "5393.65",
+            "iva": "225.72",
+            "total": "5619.37"
+          },
+          "actual": {
+            "subtotal": "5393.65",
+            "iva": "225.72",
+            "total": "5619.37"
+          }
+        },
+        {
+          "stage": "row 1 IVA tasa_0",
+          "currency": "MXN",
+          "expected": {
+            "subtotal": "5393.65",
+            "iva": "224.50",
+            "total": "5618.15"
+          },
+          "actual": {
+            "subtotal": "5393.65",
+            "iva": "224.50",
+            "total": "5618.15"
+          }
+        },
+        {
+          "stage": "row 1 IVA exento",
+          "currency": "MXN",
+          "expected": {
+            "subtotal": "5393.65",
+            "iva": "224.50",
+            "total": "5618.15"
+          },
+          "actual": {
+            "subtotal": "5393.65",
+            "iva": "224.50",
+            "total": "5618.15"
+          }
+        },
+        {
+          "stage": "row 1 IVA no_objeto",
+          "currency": "MXN",
+          "expected": {
+            "subtotal": "5393.65",
+            "iva": "224.50",
+            "total": "5618.15"
+          },
+          "actual": {
+            "subtotal": "5393.65",
+            "iva": "224.50",
+            "total": "5618.15"
+          }
+        },
+        {
+          "stage": "currency USD",
+          "currency": "USD",
+          "expected": {
+            "subtotal": "5393.65",
+            "iva": "224.50",
+            "total": "5618.15"
+          },
+          "actual": {
+            "subtotal": "5393.65",
+            "iva": "224.50",
+            "total": "5618.15"
+          }
+        },
+        {
+          "stage": "currency EUR",
+          "currency": "EUR",
+          "expected": {
+            "subtotal": "5393.65",
+            "iva": "224.50",
+            "total": "5618.15"
+          },
+          "actual": {
+            "subtotal": "5393.65",
+            "iva": "224.50",
+            "total": "5618.15"
+          }
+        },
+        {
+          "stage": "currency MXN",
+          "currency": "MXN",
+          "expected": {
+            "subtotal": "5393.65",
+            "iva": "224.50",
+            "total": "5618.15"
+          },
+          "actual": {
+            "subtotal": "5393.65",
+            "iva": "224.50",
+            "total": "5618.15"
+          }
+        },
+        {
+          "stage": "add default concept",
+          "currency": "MXN",
+          "expected": {
+            "subtotal": "5393.65",
+            "iva": "224.50",
+            "total": "5618.15"
+          },
+          "actual": {
+            "subtotal": "5393.65",
+            "iva": "224.50",
+            "total": "5618.15"
+          }
+        },
+        {
+          "stage": "remove middle concept",
+          "currency": "MXN",
+          "expected": {
+            "subtotal": "5129.37",
+            "iva": "203.36",
+            "total": "5332.73"
+          },
+          "actual": {
+            "subtotal": "5129.37",
+            "iva": "203.36",
+            "total": "5332.73"
+          }
+        },
+        {
+          "stage": "last concept cannot be removed",
+          "currency": "MXN",
+          "expected": {
+            "subtotal": "15.24",
+            "iva": "0.00",
+            "total": "15.24"
+          },
+          "actual": {
+            "subtotal": "15.24",
+            "iva": "0.00",
+            "total": "15.24"
+          }
+        },
+        {
+          "stage": "fiscal currency before cancellation",
+          "currency": "EUR",
+          "expected": {
+            "subtotal": "15.24",
+            "iva": "0.00",
+            "total": "15.24"
+          },
+          "actual": {
+            "subtotal": "15.24",
+            "iva": "0.00",
+            "total": "15.24"
+          }
+        },
+        {
+          "stage": "discard and reopen resets to empty capture",
+          "currency": "MXN",
+          "expected": {
+            "subtotal": "0.00",
+            "iva": "0.00",
+            "total": "0.00"
+          },
+          "actual": {
+            "subtotal": "0.00",
+            "iva": "0.00",
+            "total": "0.00"
+          }
+        },
+        {
+          "stage": "border disabled preserves legacy 8 percent",
+          "currency": "MXN",
+          "expected": {
+            "subtotal": "5517.11",
+            "iva": "246.69",
+            "total": "5763.80"
+          },
+          "actual": {
+            "subtotal": "5517.11",
+            "iva": "246.69",
+            "total": "5763.80"
+          }
+        },
+        {
+          "stage": "legacy 8 percent remains selectable",
+          "currency": "MXN",
+          "expected": {
+            "subtotal": "5517.11",
+            "iva": "246.69",
+            "total": "5763.80"
+          },
+          "actual": {
+            "subtotal": "5517.11",
+            "iva": "246.69",
+            "total": "5763.80"
+          }
+        },
+        {
+          "stage": "legacy row changed to 16 percent",
+          "currency": "MXN",
+          "expected": {
+            "subtotal": "5517.11",
+            "iva": "267.83",
+            "total": "5784.94"
+          },
+          "actual": {
+            "subtotal": "5517.11",
+            "iva": "267.83",
+            "total": "5784.94"
+          }
+        }
+      ]
+    }
+  ],
+  "blocked": [],
+  "errors": []
+}

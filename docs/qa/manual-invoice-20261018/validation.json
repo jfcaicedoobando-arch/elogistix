@@ -1,0 +1,140 @@
+{
+  "checkedAtUtc": "2026-10-18T00:33:00.798Z",
+  "kind": "post-series verification, not a pre-series harness attestation",
+  "sourcesUnchanged": true,
+  "bundles": [
+    {
+      "mode": "base",
+      "measuredSha256": "aeae47d89c7035670438f7fc888acc0dbb8bdf0341e8c024d1f9bc557d76d72b",
+      "finalSha256": "aeae47d89c7035670438f7fc888acc0dbb8bdf0341e8c024d1f9bc557d76d72b",
+      "identical": true
+    },
+    {
+      "mode": "candidate",
+      "measuredSha256": "32bade762a502c977696e59482566a43e671c92d7af205ddf01e5576f0545602",
+      "finalSha256": "32bade762a502c977696e59482566a43e671c92d7af205ddf01e5576f0545602",
+      "identical": true
+    },
+    {
+      "mode": "base-profile",
+      "measuredSha256": "7cc207d3faac5c4f633bcc3d2c221b872a28d96c3bb440531a88f0c786f6a83e",
+      "finalSha256": "7cc207d3faac5c4f633bcc3d2c221b872a28d96c3bb440531a88f0c786f6a83e",
+      "identical": true
+    },
+    {
+      "mode": "candidate-profile",
+      "measuredSha256": "533d18b228047a74d005aa416aaaf35e87b95ed1aa54faa9c1377d70b656538a",
+      "finalSha256": "533d18b228047a74d005aa416aaaf35e87b95ed1aa54faa9c1377d70b656538a",
+      "identical": true
+    }
+  ],
+  "harnessAfterSeries": {
+    "candidate.mjs": "f3b962bf697bbcbbebfa0dd6e61f5b05025a53599403d99387b354d3648d9f0d",
+    "fixture.ts": "7c7007814e3f45c56bdf80cd353d98261309b11346558bfd93e3e2952e9b2f57",
+    "functional.mjs": "33d607e70bd20910c38518f898892af66df12df920ac6ecc1f8e6a249e8d17c8",
+    "index.html": "169b6bfd9d25d9fc09c66287ba8e55fadb7785b916a21f5a79faaa0750e30034",
+    "main.tsx": "4f45c9f422be2d1e8e26f6784bb6b398bb99329228501aa3686ba6dd64ab3859",
+    "run.mjs": "45c45d0d9b66ddcebe42bc89a7ae7b5a6a6d101b6af28c54236dab60aa8aa6c8",
+    "stubs.ts": "adfc3f791b26ee96ad1012aff7d55d65833bc987f4985d8cacc7a2ab1e00e975",
+    "vite.config.mjs": "2e0c3ab4183396e5858b26a93da4a4e12d5af9e42d3ec90a71d264615a96b794"
+  },
+  "unitTests": {
+    "success": true,
+    "passed": 13,
+    "failed": 0,
+    "suites": [
+      {
+        "name": "features/facturacion/components/__tests__/FacturaManualConceptosTable.cantidad.test.tsx",
+        "status": "passed",
+        "assertions": [
+          {
+            "name": "FacturaManualConceptosTable — cantidad fiscal captura 2.5 por teclado y conserva subtotal e IVA de la línea fiscal",
+            "status": "passed"
+          },
+          {
+            "name": "FacturaManualConceptosTable — cantidad fiscal acepta 0.5 insertado como cantidad fiscal",
+            "status": "passed"
+          },
+          {
+            "name": "FacturaManualConceptosTable — cantidad fiscal acepta 1.5 insertado como cantidad fiscal",
+            "status": "passed"
+          },
+          {
+            "name": "FacturaManualConceptosTable — cantidad fiscal acepta 0.000001 insertado como cantidad fiscal",
+            "status": "passed"
+          },
+          {
+            "name": "FacturaManualConceptosTable — cantidad fiscal permite vacío/punto y no sustituye una cantidad inválida por uno",
+            "status": "passed"
+          }
+        ]
+      },
+      {
+        "name": "lib/domain/__tests__/facturaConceptos.cantidadDecimal.test.ts",
+        "status": "passed",
+        "assertions": [
+          {
+            "name": "R170-08 · cantidad decimal conserva 1.5 sin redondear ni truncar",
+            "status": "passed"
+          },
+          {
+            "name": "R170-08 · cantidad decimal conserva fracciones menores a 1 y rechaza cero/negativos vía fallback",
+            "status": "passed"
+          },
+          {
+            "name": "R170-08 · cantidad decimal la migración preparada convierte la columna a numeric y conserva positividad",
+            "status": "passed"
+          }
+        ]
+      },
+      {
+        "name": "features/facturacion/hooks/__tests__/facturaManualFormDefaults.dirty.test.ts",
+        "status": "passed",
+        "assertions": [
+          {
+            "name": "factura manual · cambios pendientes el formulario recién abierto no pide descartar el concepto vacío inicial",
+            "status": "passed"
+          },
+          {
+            "name": "factura manual · cambios pendientes detecta cambios en cliente, fiscal, concepto y notas",
+            "status": "passed"
+          }
+        ]
+      },
+      {
+        "name": "features/facturacion/utils/__tests__/totalesConceptos.test.ts",
+        "status": "passed",
+        "assertions": [
+          {
+            "name": "calcularTotalesConceptos (factura manual) suma IVA 16% correctamente",
+            "status": "passed"
+          },
+          {
+            "name": "calcularTotalesConceptos (factura manual) tasa 0% no aporta IVA",
+            "status": "passed"
+          },
+          {
+            "name": "calcularTotalesConceptos (factura manual) exento y gravado conviven en el mismo total",
+            "status": "passed"
+          }
+        ]
+      }
+    ]
+  },
+  "eslint": {
+    "command": "node node_modules/eslint/bin/eslint.js e2e/manual-invoice/{candidate.mjs,functional.mjs,run.mjs,vite.config.mjs,main.tsx,stubs.ts,fixture.ts} --max-warnings=0",
+    "exitCode": 0
+  },
+  "adoption": {
+    "productChanged": false,
+    "notesThresholdPassed": true,
+    "decision": "not adopted",
+    "reason": "Concept-edit performance non-regression is not established; description median is higher in 7/8 measured 20-row rounds."
+  },
+  "limits": [
+    "TaskDuration measures renderer CPU work, not input-to-paint latency.",
+    "20 rows is a synthetic proxy; no real usage distribution was measured.",
+    "Harness before-start hashes were not captured. Changes after timing started were output/demo/typing/integrity-only; unchanged rebuilt JS hashes are checked here.",
+    "Final unit tests run existing product sources; candidate behavior is validated by the independent browser suite in both built variants."
+  ]
+}
