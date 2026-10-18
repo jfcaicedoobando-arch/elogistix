@@ -105,10 +105,15 @@ export default function OportunidadFormFields({
       {!isEdit && <div className="sm:col-span-2">
         <OportunidadEmpresaField
           empresa={form.empresa_id ? { id: form.empresa_id, nombre: form.empresa_nombre } : null}
-          onChange={(e) => setForm((f) => f.empresa_id === e.id ? f : ({
-            ...f, empresa_id: e.id, empresa_nombre: e.nombre, origen_tipo: "prospecto",
-            lead_id: null, lead_nombre: "", cliente_id: null, cliente_nombre: "",
-          }))}
+          onChange={(e) => setForm((f) => {
+            if (f.empresa_id === e.id) return f;
+            // Primera selección: conserva el origen precargado (p. ej. desde el prospecto).
+            if (!f.empresa_id) return { ...f, empresa_id: e.id, empresa_nombre: e.nombre };
+            return {
+              ...f, empresa_id: e.id, empresa_nombre: e.nombre, origen_tipo: "prospecto",
+              lead_id: null, lead_nombre: "", cliente_id: null, cliente_nombre: "",
+            };
+          })}
         />
       </div>}
       {!isEdit && origenEmpresa && <OrigenEmpresaEstado consulta={origenEmpresa} />}
