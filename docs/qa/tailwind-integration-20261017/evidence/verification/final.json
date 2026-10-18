@@ -29,7 +29,12 @@
     },
     "catalog": {
       "exitCode": 0,
-      "log": "test-catalog-final.txt"
+      "log": "test-catalog-final.txt",
+      "placementRevalidated": {
+        "exitCode": 0,
+        "report": "catalog-placement.json",
+        "treeDigestUnchanged": true
+      }
     },
     "builds": {
       "status": "complete",

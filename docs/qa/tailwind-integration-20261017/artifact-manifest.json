@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "baseSha": "0552b3648c041dd19e027bb1370a5277501b59dc",
-  "createdAt": "2026-10-18T00:10:07.683Z",
+  "createdAt": "2026-10-18T00:14:52.301Z",
   "scope": "Published experiment deliverables; excludes this self-referential manifest and full generated product bundles",
   "files": [
     {
@@ -1550,6 +1550,11 @@
       "sha256": "b7cc2ac881884359055100db9bb6767a48f324b0ac73e3fdb64527b1dead5373"
     },
     {
+      "path": "docs/qa/tailwind-integration-20261017/evidence/verification/catalog-placement.json",
+      "bytes": 1410,
+      "sha256": "23743513270cf9115c05b29b0f38fa1faad1c47aead29abfe6241592a0a655b9"
+    },
+    {
       "path": "docs/qa/tailwind-integration-20261017/evidence/verification/css-checker-tests-final.txt",
       "bytes": 1109,
       "sha256": "337101bd454a4b07c040fdce86c233d2b9cce684f2627c71472ffe682738fc04"
@@ -1561,8 +1566,8 @@
     },
     {
       "path": "docs/qa/tailwind-integration-20261017/evidence/verification/final.json",
-      "bytes": 3021,
-      "sha256": "f4f263cae5d2134affe04963a70d833a3b23a19416a8fdea82c57a410ee13b1e"
+      "bytes": 3165,
+      "sha256": "cc9abd65623c78e51c6333af93a3c5bcd8befbd6b083f6cae8024ed188c02ea9"
     },
     {
       "path": "docs/qa/tailwind-integration-20261017/evidence/verification/harness-lint.txt",
