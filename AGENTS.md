@@ -1,33 +1,9 @@
 # Decisiones técnicas
 
-- Proformas canceladas son terminales para envío, respuesta, consolidación y facturación; las consultas del histórico siguen disponibles. Los guards de RPC y triggers conservan tenant/roles/ACL y permiten refacturar mediante una nueva proforma. Why: liberar conceptos no permite reactivar el documento histórico.
-
-- Pricing requests persist the optional weight unit in `unidad_medida`, using one shared unit catalog for form and detail. Why: units survive draft editing without changing historical weights or dimensions.
-
-- Manual CRM opportunity creation uses `crm_crear_oportunidad_con_empresa` with SECURITY INVOKER; the selected company is carried through quick/full forms but never sent as an opportunity column. Why: opportunity and same-organization company link must commit atomically without changing historical records or bypassing RLS.
-
-- CRM opportunity margin keeps an empty editing value in form state and normalizes it when building the payload. Why: clearing the field must not restore a sticky zero or change the persistence contract.
+Subdirectories have their own `AGENTS.md` (`src/features/crm`, `src/features/cxp`, `src/features/proformas`); read it before changing files there or their SQL.
 
 - Notas de crédito por embarque: cada renglón de NC copiado de la factura guarda `concepto_factura_id`; `_venta_facturada_por_embarque` resta esa base al embarque del concepto y sólo prorratea renglones sin linaje (manuales o históricos), y el trigger `_nc_validar_linaje_conceptos` rechaza ids ajenos o créditos mayores al subtotal del concepto. Why: atribución exacta sin inventar linaje histórico ni tocar XML/PDF.
-- Proformas: `eliminar_proforma_rpc` ya no borra; marca `estado_proforma='cancelada'`, libera `conceptos_venta` a pendiente y `recompute_embarque_tiene_proforma` ignora canceladas/borradas. Why: conservar el histórico al refacturar tras cancelar el CFDI.
-- Tarifario: reusa `costeo_tarifas` (vista agrupa 20"/40") + `costeo_cargos_fob_agente`/`costeo_cargos_locales_naviera`; tarifas de solicitud entran sólo si su vigencia dura >1 día; elegir una opción usa el RPC `crm_aplicar_tarifa_tarifario` (guarda `tarifa_tarifario_id` y marca respondida). Why: un solo catálogo de tarifas y respuesta inmediata sin copiar datos.
-- CxP Por capturar: `cxp_por_capturar` compara subtotal fiscal capturado sin IVA, NC ni pagos con presupuesto por moneda. Las asignaciones positivas efectivas fijan pertenencia, con parcial sin expansión, exceso limitado y cabecera sólo como fallback; monto, conteo y fecha usan el mismo conjunto. Why: la captura documental no es deuda ni P&L y no debe duplicar fiscal/vínculos.
-- Cierre CxP: `validar_cierre_embarque` atribuye deuda por asignaciones positivas efectivas, conserva el residuo no asignado y limita sobreasignación; cabecera sólo sin asignaciones. Why: no duplicar facturas multiembarque ni fabricar linaje de pagos.
-- Aging CxP: `cxp_aging_proveedores` agrega `v_proveedor_facturas_saldo` sin redondear por factura; p_fecha reclasifica saldos actuales, no reconstruye un corte histórico. Why: reporte y detalle conservan el mismo saldo neto canónico por moneda.
 - Seguros de embarque: una póliza puede ligarse opcionalmente a la factura de proveedor que documenta su prima (`seguros_embarque.proveedor_factura_id`); el trigger `_seguro_validar_factura_proveedor` exige misma org, factura vigente del embarque (también al restaurar), un índice único impide dos pólizas activas con la misma factura, y `pnl_financiero_embarque` omite la prima ligada porque ya cuenta la factura. Why: no contar dos veces el mismo gasto sin inferir vínculos ni tocar históricos.
-
-- CxP Por pagar: `cxp_por_pagar` consume saldo y pagado de `v_proveedor_facturas_saldo` en moneda documental. Why: NC Aplicadas reducen saldo sin convertirse en pagos ni duplicar conversión.
-- Proveedores provisionales (`estado_alta`): alta vía `crear_agente_provisional`, aprobación sólo contador/admin vía `aprobar_proveedor_provisional`; triggers bloquean facturas/pagos. Why: tarifas sin esperar a Contabilidad, sin pagar a no verificados.
-
-- Replay de provisionales: Drizzle0013/190000 son historia literal;190100 cierra ejecución directa de los dos triggers y190200 corrige sólo los cuatro appends de faltantes, reafirmando la ACL original del RPC sin ampliar roles. La release13.824.46 conserva UI199 e historial35–44 sin crear45; su regresión funcional se registra como guard. Why: separar reconstrucción histórica, corrección forward, pruebas de catálogo y autorización de aplicación remota, sin ocultar drift ni reescribir historia.
-
-- Ajustes CxP: `es_ajuste` persistido determina la clasificación no monetaria; historial, libro, CSV/PDF y conciliación conservan el importe documental y muestran «No aplica» sin crear dinero. Los guards bloquean vínculos bancarios y reclasificación sin reescribir históricos. Why: una sola clasificación explícita, sin inferirla del texto libre.
-
-
-- CxP: la tolerancia inclusiva de 0.01 requiere cobertura financiera neta positiva; el cierre detecta deuda íntegra por factura antes del reparto. Why: no confundir deuda pequeña sin aplicaciones con redondeo, sin alterar históricos por barrido.
-
 - Catálogos globales: anon no tiene privilegios sobre planes/navieras/puertos/tipos_contenedor/tipos_cambio_dof; authenticated conserva CRUD RLS sólo en los primeros cuatro y SELECT en DOF. Planes comunes filtran activo IS TRUE; super_admin conserva inactivos y RPC manual DOF. Why: quitar privilegios fuera de RLS sin romper la administración existente ni la lectura global operativa. Aplicación remota exige envelope revisado y aprobación específica.
-
 - Análisis financiero: DSO/DPO usan cartera promedio y actividad propia a crédito neta documentada del mismo mes/moneda; runway exige tres meses calendario completos cerrados de consumo operativo y caja conciliada con restricciones al corte explícito aplicable, no anterior al fin observado ni futuro respecto de la fecha de negocio. Why: los cinco criterios aprobados el 2026-10-13 fijan políticas, no certifican datos; lectores actuales y flags/IDs del cliente mantienen N/D sin fallback de EERR o próximos 30 días.
-
 - Demo deshabilitada (13.824.84): UI sin formulario/leads/login, Edge sin proveedor y 503 previo a Auth/SQL, y cuatro rutas SQL bloqueadas antes de DML. No revoca sesiones ni cambia identidades; no habilitar mediante flags/request ni restaurar el seed destructivo. Why: cerrar la release mientras se revisan procedencia y regeneración segura.

@@ -1,6 +1,7 @@
 /**
  * Aviso + acción «Refacturar desde esta proforma» cuando su factura fue
- * cancelada. Crea una proforma nueva en borrador y cancela la anterior.
+ * cancelada. Cancela la anterior y abre la proforma nueva en el embarque,
+ * con los mismos conceptos y la nota de linaje, lista para editarse.
  */
 import { useState } from "react";
 import { useNavigate } from "react-router";
@@ -12,7 +13,7 @@ import {
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import {
-  facturaCanceladaDeProforma, refacturarProforma,
+  facturaCanceladaDeProforma, refacturarProforma, type RefacturacionNavState,
 } from "@/features/proformas/services/refacturar";
 import { queryKeys } from "@/lib/query";
 import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
@@ -44,12 +45,19 @@ function AvisoRefacturar({ proformaId, numero, facturaNum }: {
     mutationFn: () => refacturarProforma(proformaId),
     onSuccess: async (r) => {
       await qc.invalidateQueries({ queryKey: queryKeys.proformas.all });
+      await qc.invalidateQueries({ queryKey: queryKeys.embarques.conceptosVenta() });
+      await qc.invalidateQueries({ queryKey: queryKeys.embarques.all });
       notifySuccess(undefined, {
-        title: `Se creó la proforma ${r.nuevo_numero}`,
-        description: `${r.anterior_numero} quedó cancelada como historial.`,
+        title: `${r.anterior_numero} quedó cancelada`,
+        description: "Revisa los conceptos y genera la proforma nueva.",
       });
       setOpen(false);
-      navigate(`/proformas/${r.nueva_proforma_id}`);
+      const state: RefacturacionNavState = {
+        refacturacion: {
+          conceptoIds: r.conceptos, notas: r.notas_sugeridas, anteriorNumero: r.anterior_numero,
+        },
+      };
+      navigate(`/embarques/${r.embarque_id}?tab=facturacion`, { state });
     },
     onError: (err: unknown) => {
       notifyError(undefined, {
@@ -75,9 +83,9 @@ function AvisoRefacturar({ proformaId, numero, facturaNum }: {
           <AlertDialogHeader>
             <AlertDialogTitle>Refacturar {numero}</AlertDialogTitle>
             <AlertDialogDescription>
-              Se creará una proforma nueva en borrador con los mismos conceptos y montos, que
-              podrás corregir y deberá aprobarse como cualquier proforma. {numero} pasará a
-              Cancelada y se conservará como historial de la factura {facturaNum}.
+              {numero} pasará a Cancelada y se conservará como historial de la factura {facturaNum}.
+              Enseguida se abrirá la proforma nueva con los mismos conceptos para que la revises
+              y corrijas antes de crearla; después deberá aprobarse como cualquier proforma.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -86,7 +94,7 @@ function AvisoRefacturar({ proformaId, numero, facturaNum }: {
               disabled={mutation.isPending}
               onClick={(e) => { e.preventDefault(); mutation.mutate(); }}
             >
-              {mutation.isPending ? "Creando…" : "Crear proforma nueva"}
+              {mutation.isPending ? "Preparando…" : "Continuar a la proforma nueva"}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

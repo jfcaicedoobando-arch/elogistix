@@ -1,15 +1,22 @@
 /**
- * Refacturación por copia controlada: cancela la proforma histórica cuya
- * factura fue cancelada y crea una nueva proforma en borrador con los mismos
- * conceptos (RPC atómica `refacturar_proforma_rpc`).
+ * Refacturación por copia controlada: la RPC atómica `refacturar_proforma_rpc`
+ * cancela la proforma histórica cuya factura fue cancelada y libera sus
+ * conceptos. La nueva proforma se arma de inmediato en el formulario normal
+ * del embarque, con esos conceptos y la nota de linaje precargados.
  */
 import { supabase } from "@/integrations/supabase/client";
 
 export interface RefacturarResultado {
-  nueva_proforma_id: string;
-  nuevo_numero: string;
+  embarque_id: string;
   anterior_numero: string;
   factura_cancelada: string;
+  conceptos: string[];
+  notas_sugeridas: string;
+}
+
+/** Estado de navegación que abre «Generar proforma» precargado en el embarque. */
+export interface RefacturacionNavState {
+  refacturacion: { conceptoIds: string[]; notas: string; anteriorNumero: string };
 }
 
 export async function refacturarProforma(proformaId: string): Promise<RefacturarResultado> {
@@ -19,6 +26,13 @@ export async function refacturarProforma(proformaId: string): Promise<Refacturar
   if (error) throw error;
   // SAFE-CAST: la RPC devuelve jsonb con forma fija.
   return data as unknown as RefacturarResultado;
+}
+
+export function leerRefacturacionNavState(state: unknown): RefacturacionNavState["refacturacion"] | null {
+  if (!state || typeof state !== "object" || !("refacturacion" in state)) return null;
+  // SAFE-CAST: sólo `RefacturarProformaAccion` escribe esta forma.
+  const r = (state as RefacturacionNavState).refacturacion;
+  return r && Array.isArray(r.conceptoIds) && r.conceptoIds.length > 0 ? r : null;
 }
 
 /** Número de la factura cancelada ligada a la proforma, o null. */
