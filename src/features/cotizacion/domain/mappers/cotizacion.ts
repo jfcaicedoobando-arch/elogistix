@@ -108,6 +108,8 @@ export function buildPaso1Data(
     vigencia_dias: vigenciaDias(values.validezPropuesta),
     notas: values.notas,
     operador: userEmail,
+    // El correo del comercial lo resuelve la base desde este id.
+    vendedor_id: values.vendedorId ?? null,
     tarifa_id: values.tarifaId ?? null,
     tarifa_override: values.tarifaOverride ?? {},
     sin_desglose_costos: values.sinDesgloseCostos ?? false,

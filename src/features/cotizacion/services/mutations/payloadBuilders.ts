@@ -67,6 +67,7 @@ function partesComercialBase(input: CreateCotizacionInput) {
     vigencia_dias: input.vigencia_dias,
     notas: input.notas || null,
     operador: input.operador,
+    vendedor_id: input.vendedor_id ?? null,
     dias_libres_destino: input.dias_libres_destino ?? 0,
     dias_almacenaje: input.dias_almacenaje ?? 0,
     tiempo_transito_dias: input.tiempo_transito_dias ?? null,

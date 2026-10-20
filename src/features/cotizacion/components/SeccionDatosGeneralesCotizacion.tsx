@@ -9,6 +9,7 @@ import {
   TIPOS_OPERACION_TERRESTRE,
 } from "@/constants/cotizacionTerrestre";
 import type { CotizacionFormValues } from "@/features/cotizacion/hooks";
+import VendedorSelect from "@/features/crm/components/VendedorSelect";
 
 export default function SeccionDatosGeneralesCotizacion({ complete }: { complete?: boolean } = {}) {
   const { watch, setValue, formState: { errors }, clearErrors } = useFormContext<CotizacionFormValues>();
@@ -87,6 +88,12 @@ export default function SeccionDatosGeneralesCotizacion({ complete }: { complete
           </Select>
         </FormField>
       )}
+      {/* Mismo selector y lista de vendedores que en Oportunidades. */}
+      <VendedorSelect
+        label="Comercial"
+        value={watch("vendedorId") ?? null}
+        onChange={(id) => setValue("vendedorId", id, { shouldValidate: true, shouldDirty: true })}
+      />
     </WizardSection>
   );
 }
