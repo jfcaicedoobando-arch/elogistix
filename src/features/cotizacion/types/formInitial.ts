@@ -9,6 +9,8 @@ export interface CotizacionInitialData {
   cliente_id: string | null;
   /** P0: vínculo CRM real; se restaura al editar para no dejarla huérfana. */
   oportunidad_id?: string | null;
+  /** Comercial asignado; null en cotizaciones históricas. */
+  vendedor_id?: string | null;
   pricing_solicitud_id?: string | null;
   organization_id?: string | null;
   /** A1/A7: moneda persistida; se conserva como moneda del vínculo al editar. */

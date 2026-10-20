@@ -61,6 +61,8 @@ export interface CreateCotizacionInput {
   vigencia_dias: number;
   notas: string;
   operador: string;
+  /** Comercial asignado (miembro de la organización). */
+  vendedor_id?: string | null;
   tipo_carga?: string;
   msds_archivo?: string | null;
   tipo_embarque?: string;

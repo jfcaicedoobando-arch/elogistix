@@ -13,6 +13,7 @@ export const COTIZACION_FORM_DEFAULTS: CotizacionFormValues = {
   clienteId: "",
   prospectoModo: "vincular",
   oportunidadId: "",
+  vendedorId: null,
   pricingSolicitudId: null,
   pricingOrigen: null,
   pricingVinculoPendienteId: null,

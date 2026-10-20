@@ -12,6 +12,7 @@ interface Cotizacion {
   vigencia_dias: number;
   fecha_vigencia?: string | null;
   operador?: string | null;
+  vendedor_email?: string | null;
   tiempo_transito_dias?: number | null;
   tipo_embarque?: string | null;
   dias_libres_destino: number;
@@ -52,6 +53,7 @@ function baseRows(c: Cotizacion): Row[] {
     },
 
     { label: "Operador", value: c.operador ? nombreDesdeEmail(c.operador) : "-", title: c.operador || "" },
+    { label: "Comercial", value: c.vendedor_email ? nombreDesdeEmail(c.vendedor_email) : "-", title: c.vendedor_email || "" },
   ];
 }
 

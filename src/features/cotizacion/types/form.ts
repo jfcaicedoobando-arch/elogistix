@@ -27,6 +27,8 @@ export interface CotizacionFormValues {
   clienteId: string;
   prospectoModo: ProspectoVinculacionModo;
   oportunidadId: string;
+  /** Comercial asignado (usuario de la organización); null = sin asignar. */
+  vendedorId: string | null;
   /** Identidad explícita de la respuesta; nunca inferida de oportunidad/tarifa. */
   pricingSolicitudId?: string | null;
   pricingOrigen?: { solicitudId: string; organizationId: string; clienteId: string; oportunidadId: string; tarifaId: string } | null;
