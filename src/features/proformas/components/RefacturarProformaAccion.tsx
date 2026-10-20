@@ -44,6 +44,7 @@ function AvisoRefacturar({ proformaId, numero, facturaNum }: {
     mutationFn: () => refacturarProforma(proformaId),
     onSuccess: async (r) => {
       await qc.invalidateQueries({ queryKey: queryKeys.proformas.all });
+      await qc.invalidateQueries({ queryKey: queryKeys.embarques.conceptosVenta() });
       await qc.invalidateQueries({ queryKey: queryKeys.embarques.all });
       notifySuccess(undefined, {
         title: `${r.anterior_numero} quedó cancelada`,
