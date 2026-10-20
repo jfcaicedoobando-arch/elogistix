@@ -22,6 +22,8 @@ import { ejecutarGuardarEmbarque } from "./useEditarEmbarqueWizard.save";
 import { validateStepRuta, type StepRutaInput, type StepValidationErrors } from "@/features/embarques/domain/embarqueWizardSchemas";
 import { notifyError } from "@/lib/ui/appFeedback";
 import { ERROR_CODES } from "@/lib/domain/errorCatalog";
+import { useMargenMinimo } from "@/features/configuracion/hooks/useMargenMinimo";
+import { puedeAutorizarMargenBajo } from "@/lib/domain/margenMinimo";
 
 /**
  * Controller hook para la página EditarEmbarque.
@@ -29,7 +31,8 @@ import { ERROR_CODES } from "@/lib/domain/errorCatalog";
  */
 export function useEditarEmbarqueWizard(id: string | undefined) {
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, effectiveRole } = useAuth();
+  const margenMinimoPct = useMargenMinimo();
 
   const { data: embarque, isLoading, isError, refetch } = useEmbarque(id);
   const { data: conceptosVentaDb = [], isLoading: cargandoVenta } = useEmbarqueConceptosVenta(id);
@@ -139,6 +142,10 @@ export function useEditarEmbarqueWizard(id: string | undefined) {
     registrarActividad,
     setCurrentStep,
     navigate,
+    subtotalVenta: conceptosForm.subtotalVenta,
+    totalCosto: conceptosForm.totalCosto,
+    margenMinimoPct,
+    puedeAutorizarMargen: puedeAutorizarMargenBajo(effectiveRole),
   });
 
   return {

@@ -16,6 +16,7 @@ import type { useUpdateEmbarque, useEmbarque } from "@/features/embarques/hooks/
 import type { useRegistrarActividad } from "@/hooks/shared";
 import type { Tables } from "@/integrations/supabase/types";
 import type { ConceptoLike } from "@/lib/domain/auditDiffConceptos";
+import { evaluarMargenMinimo } from "@/lib/domain/margenMinimo";
 
 type ContactoRow = Pick<Tables<"contactos_cliente">, "id" | "nombre" | "tipo" | "pais">;
 
@@ -38,7 +39,31 @@ interface Deps {
   registrarActividad: ReturnType<typeof useRegistrarActividad>;
   setCurrentStep: (step: number) => void;
   navigate: NavigateFunction;
+  /** Totales que muestra el paso de costos y regla de margen mínimo. */
+  subtotalVenta: number;
+  totalCosto: number;
+  margenMinimoPct: number;
+  puedeAutorizarMargen: boolean;
+  confirmar?: (mensaje: string) => boolean;
 }
+
+/** Sólo valida si el margen queda POR DEBAJO del mínimo; por encima no pide nada. */
+function validarMargenMinimo(deps: Deps): boolean {
+  const ev = evaluarMargenMinimo(deps.subtotalVenta, deps.totalCosto, deps.margenMinimoPct);
+  if (!ev.debajoDelMinimo) return true;
+  const resumen = `El margen estimado (${ev.margenPct.toFixed(2)}%) queda por debajo del mínimo (${ev.minimoPct}%).`;
+  if (!deps.puedeAutorizarMargen) {
+    notifyError(undefined, {
+      title: "Requiere autorización comercial",
+      description: `${resumen} Pide a administración o a la gerencia comercial que guarde este cambio.`,
+      method: "HANDLE_SAVE",
+    });
+    return false;
+  }
+  const confirmar = deps.confirmar ?? ((m: string) => window.confirm(m));
+  return confirmar(`${resumen} ¿Autorizas y guardas este cambio?`);
+}
+
 
 export async function ejecutarGuardarEmbarque(deps: Deps): Promise<void> {
   const {
@@ -89,6 +114,9 @@ export async function ejecutarGuardarEmbarque(deps: Deps): Promise<void> {
     const cambiosEmbarque = diffFields(embarque, nuevoEmbarquePayload, SENSITIVE_FIELDS.embarque);
     const cambiosVenta = diffConceptos(conceptosVentaDb, nuevosVenta);
     const cambiosCosto = diffConceptos(conceptosCostoDb, nuevosCosto);
+    const tocoMontos = cambiosVenta.agregados + cambiosVenta.eliminados + cambiosVenta.modificados
+      + cambiosCosto.agregados + cambiosCosto.eliminados + cambiosCosto.modificados > 0;
+    if (tocoMontos && !validarMargenMinimo(deps)) return;
 
     // v13.823.64: sólo Marítimo/Multimodal sincronizan contenedores hijos. En
     // Aéreo/Terrestre el peso, volumen y piezas se capturan en el embarque; al
