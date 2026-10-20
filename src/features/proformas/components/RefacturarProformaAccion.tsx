@@ -1,6 +1,7 @@
 /**
  * Aviso + acción «Refacturar desde esta proforma» cuando su factura fue
- * cancelada. Crea una proforma nueva en borrador y cancela la anterior.
+ * cancelada. Cancela la anterior y abre la proforma nueva en el embarque,
+ * con los mismos conceptos y la nota de linaje, lista para editarse.
  */
 import { useState } from "react";
 import { useNavigate } from "react-router";
