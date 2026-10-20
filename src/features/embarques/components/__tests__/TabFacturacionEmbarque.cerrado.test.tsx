@@ -22,6 +22,7 @@ vi.mock("@/features/embarques/hooks", () => ({
   useEliminarProforma: () => ({ isPending: false, mutateAsync: vi.fn() }),
   useDescargarProformaPdf: () => ({ descargar: vi.fn() }),
 }));
+vi.mock("@/features/embarques/hooks/useAbrirRefacturacion", () => ({ useAbrirRefacturacion: () => undefined }));
 vi.mock("@/features/embarques/hooks/useFocusSection", () => ({
   useFocusSection: () => ({ registerRef: () => undefined }),
 }));
