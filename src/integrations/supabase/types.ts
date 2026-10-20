@@ -12715,6 +12715,10 @@ export type Database = {
         Args: { p_caso_id: string }
         Returns: Json
       }
+      refacturar_proforma_rpc: {
+        Args: { p_proforma_id: string }
+        Returns: Json
+      }
       refrescar_garantia_desde_tarifa: {
         Args: { p_embarque_id: string }
         Returns: number
