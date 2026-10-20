@@ -44,7 +44,7 @@ export default function VendedorSelect({ value, onChange, label = "Vendedor asig
         }}
         disabled={disabled}
       >
-        <SelectTrigger><SelectValue placeholder="Sin asignar…" /></SelectTrigger>
+        <SelectTrigger aria-label={label}><SelectValue placeholder="Sin asignar…" /></SelectTrigger>
         <SelectContent>
           <SelectItem value="ninguno">Sin asignar</SelectItem>
           {candidatos.map((u) => (
