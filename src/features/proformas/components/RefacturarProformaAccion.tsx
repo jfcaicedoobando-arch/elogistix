@@ -25,14 +25,21 @@ interface Props {
 }
 
 export function RefacturarProformaAccion({ proformaId, numero, habilitada }: Props) {
-  const [open, setOpen] = useState(false);
-  const navigate = useNavigate();
-  const qc = useQueryClient();
   const { data: facturaNum } = useQuery({
     queryKey: ["proforma-factura-cancelada", proformaId],
     queryFn: () => facturaCanceladaDeProforma(proformaId),
     enabled: habilitada,
   });
+  if (!habilitada || !facturaNum) return null;
+  return <AvisoRefacturar proformaId={proformaId} numero={numero} facturaNum={facturaNum} />;
+}
+
+function AvisoRefacturar({ proformaId, numero, facturaNum }: {
+  proformaId: string; numero: string; facturaNum: string;
+}) {
+  const [open, setOpen] = useState(false);
+  const navigate = useNavigate();
+  const qc = useQueryClient();
   const mutation = useMutation({
     mutationFn: () => refacturarProforma(proformaId),
     onSuccess: async (r) => {
@@ -53,8 +60,6 @@ export function RefacturarProformaAccion({ proformaId, numero, habilitada }: Pro
       });
     },
   });
-
-  if (!habilitada || !facturaNum) return null;
 
   return (
     <div className="flex flex-wrap items-center justify-between gap-3 rounded-md border border-warning/40 bg-warning/10 p-3">
