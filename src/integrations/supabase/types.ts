@@ -13073,6 +13073,7 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      set_margen_minimo_utilidad: { Args: { p_pct: number }; Returns: number }
       set_super_admin_org: { Args: { p_org: string }; Returns: undefined }
       sidebar_alert_counts: {
         Args: never

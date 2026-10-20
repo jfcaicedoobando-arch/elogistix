@@ -162,6 +162,13 @@
       "when": 1792524914440,
       "tag": "0022_cotizacion_comercial",
       "breakpoints": true
+    },
+    {
+      "idx": 23,
+      "version": "7",
+      "when": 1792536220603,
+      "tag": "0023_margen_minimo_utilidad_rpc",
+      "breakpoints": true
     }
   ]
 }
