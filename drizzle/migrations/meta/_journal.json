@@ -155,6 +155,13 @@
       "when": 1792517112359,
       "tag": "0021_refacturar_proforma_rpc",
       "breakpoints": true
+    },
+    {
+      "idx": 22,
+      "version": "7",
+      "when": 1792524914440,
+      "tag": "0022_cotizacion_comercial",
+      "breakpoints": true
     }
   ]
 }

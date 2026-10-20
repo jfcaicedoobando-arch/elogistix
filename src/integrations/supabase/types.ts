@@ -2904,6 +2904,8 @@ export type Database = {
           updated_at: string
           validez_propuesta: string | null
           valor_seguro_usd: number
+          vendedor_email: string | null
+          vendedor_id: string | null
           version: number
           version_aceptada: number | null
           vigencia_desde: string | null
@@ -2998,6 +3000,8 @@ export type Database = {
           updated_at?: string
           validez_propuesta?: string | null
           valor_seguro_usd?: number
+          vendedor_email?: string | null
+          vendedor_id?: string | null
           version?: number
           version_aceptada?: number | null
           vigencia_desde?: string | null
@@ -3092,6 +3096,8 @@ export type Database = {
           updated_at?: string
           validez_propuesta?: string | null
           valor_seguro_usd?: number
+          vendedor_email?: string | null
+          vendedor_id?: string | null
           version?: number
           version_aceptada?: number | null
           vigencia_desde?: string | null
