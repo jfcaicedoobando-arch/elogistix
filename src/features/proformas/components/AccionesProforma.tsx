@@ -32,6 +32,7 @@ import { useClienteAutorizacion } from "@/features/cliente/hooks/useClienteAutor
 import { useAprobarProformaInterna } from "@/features/proformas/hooks/useAprobarProformaInterna";
 import { BadgeClienteDeCasa } from "@/components/shared/BadgeClienteDeCasa";
 import { computarFlags } from "@/features/proformas/components/accionesProformaFlags";
+import { RefacturarProformaAccion } from "@/features/proformas/components/RefacturarProformaAccion";
 
 interface Props {
   proforma: ProformaDetalleFull;
@@ -150,6 +151,11 @@ export function AccionesProforma({ proforma, downloadingId, onDescargar }: Props
   return (
     <div className="space-y-2">
       <DetalleActionBar primary={primary} secondary={secondary} more={more} />
+      <RefacturarProformaAccion
+        proformaId={proforma.id}
+        numero={proforma.numero ?? ""}
+        habilitada={!cancelada && canEmitirFactura}
+      />
       {!autorizacion.requiereAutorizacionProforma && <BadgeClienteDeCasa tipo="proforma" />}
       {mostrarHint && (
         <p className="text-body-sm text-muted-foreground">
