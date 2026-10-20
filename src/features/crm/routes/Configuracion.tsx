@@ -15,6 +15,7 @@ import MotivosPerdidaEditor from "@/features/crm/components/MotivosPerdidaEditor
 import PlantillasMensajeEditor from "@/features/crm/components/PlantillasMensajeEditor";
 import PresupuestoCrmEditor from "@/features/crm/components/PresupuestoCrmEditor";
 import MetasActividadEditor from "@/features/crm/components/MetasActividadEditor";
+import MargenMinimoCard from "@/features/configuracion/components/MargenMinimoCard";
 import { usePermissions, useDocumentTitle } from "@/hooks/shared";
 
 export default function CrmConfiguracion() {
@@ -60,6 +61,12 @@ export default function CrmConfiguracion() {
           <AccordionTrigger className="text-body font-semibold">Metas de actividad</AccordionTrigger>
           <AccordionContent className="pt-2 pb-4">
             <MetasActividadEditor />
+          </AccordionContent>
+        </AccordionItem>
+        <AccordionItem value="margen" className="border rounded-md bg-card px-4">
+          <AccordionTrigger className="text-body font-semibold">Margen comercial mínimo</AccordionTrigger>
+          <AccordionContent className="pt-2 pb-4">
+            <MargenMinimoCard />
           </AccordionContent>
         </AccordionItem>
         <AccordionItem value="plantillas" className="border rounded-md bg-card px-4">

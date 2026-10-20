@@ -5,6 +5,7 @@ import { Save, Building2, Receipt, Anchor, Wrench, Scale, ShoppingCart } from "l
 import { useConfiguracionState, TabEmpresa, OrgInfoCard, TabFacturacion, TabCatalogos, TabOperaciones, TabCompras } from "@/features/configuracion";
 import { useAuth } from "@/lib/contexts/AuthContext";
 import TabExportar from "@/features/admin/components/TabExportar";
+import MargenMinimoCard from "@/features/configuracion/components/MargenMinimoCard";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { PageContainer } from "@/components/shared/PageContainer";
 import { ListSkeleton } from "@/components/shared/states/ListSkeleton";
@@ -96,7 +97,7 @@ export default function Configuracion() {
         {!esContador && (
           <>
             <TabsContent value="catalogos"><TabCatalogos /></TabsContent>
-            <TabsContent value="operaciones"><TabOperaciones /></TabsContent>
+            <TabsContent value="operaciones" className="space-y-4"><MargenMinimoCard /><TabOperaciones /></TabsContent>
             <TabsContent value="compras"><TabCompras /></TabsContent>
             <TabsContent value="herramientas"><TabExportar /></TabsContent>
           </>
