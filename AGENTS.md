@@ -14,3 +14,5 @@
 - Demo deshabilitada (13.824.84): UI sin formulario/leads/login, Edge sin proveedor y 503 previo a Auth/SQL, y cuatro rutas SQL bloqueadas antes de DML. No revoca sesiones ni cambia identidades; no habilitar mediante flags/request ni restaurar el seed destructivo. Why: cerrar la release mientras se revisan procedencia y regeneración segura.
 
 - Subdirectorios (`src/features/crm`, `cotizacion`, `proformas`, `cxp`) tienen su propio `AGENTS.md`: léelo antes de cambiar archivos ahí.
+
+- Margen mínimo comercial: se lee con `useMargenMinimo` (config `comercial/margen_minimo_utilidad_pct`, default en `lib/domain/margenMinimo.ts`) y sólo se escribe por el RPC `set_margen_minimo_utilidad` (admin/gerente_comercial); la edición de embarques exige autorización sólo si cambió montos y el margen queda por debajo. Why: un solo umbral configurable reutilizable en cotizaciones.
