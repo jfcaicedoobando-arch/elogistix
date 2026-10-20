@@ -151,11 +151,9 @@ export function AccionesProforma({ proforma, downloadingId, onDescargar }: Props
   return (
     <div className="space-y-2">
       <DetalleActionBar primary={primary} secondary={secondary} more={more} />
-      <RefacturarProformaAccion
-        proformaId={proforma.id}
-        numero={proforma.numero ?? ""}
-        habilitada={!cancelada && canEmitirFactura}
-      />
+      {!cancelada && canEmitirFactura && (
+        <RefacturarProformaAccion proformaId={proforma.id} numero={proforma.numero ?? ""} habilitada />
+      )}
       {!autorizacion.requiereAutorizacionProforma && <BadgeClienteDeCasa tipo="proforma" />}
       {mostrarHint && (
         <p className="text-body-sm text-muted-foreground">
