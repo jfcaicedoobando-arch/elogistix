@@ -106,8 +106,6 @@ export async function ejecutarGuardarEmbarque(deps: Deps): Promise<void> {
       return;
     }
 
-    if (!validarMargenMinimo(deps)) return;
-
     const nuevoEmbarquePayload = buildEmbarquePayload(contactos, selectedClienteNombre || '', userEmail || '');
     const nuevosVenta = buildConceptosVentaPayload(conceptosVenta);
     const nuevosCosto = buildConceptosCostoPayload(conceptosCosto, proveedoresDb);
@@ -116,6 +114,9 @@ export async function ejecutarGuardarEmbarque(deps: Deps): Promise<void> {
     const cambiosEmbarque = diffFields(embarque, nuevoEmbarquePayload, SENSITIVE_FIELDS.embarque);
     const cambiosVenta = diffConceptos(conceptosVentaDb, nuevosVenta);
     const cambiosCosto = diffConceptos(conceptosCostoDb, nuevosCosto);
+    const tocoMontos = cambiosVenta.agregados + cambiosVenta.eliminados + cambiosVenta.modificados
+      + cambiosCosto.agregados + cambiosCosto.eliminados + cambiosCosto.modificados > 0;
+    if (tocoMontos && !validarMargenMinimo(deps)) return;
 
     // v13.823.64: sólo Marítimo/Multimodal sincronizan contenedores hijos. En
     // Aéreo/Terrestre el peso, volumen y piezas se capturan en el embarque; al
