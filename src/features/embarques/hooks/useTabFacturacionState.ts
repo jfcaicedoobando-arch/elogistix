@@ -74,12 +74,12 @@ export function useTabFacturacionState(embarque: EmbarqueRow, canEditProp: boole
     await descargarProformaPdf(proforma, { embarqueOverride: embarque });
   };
 
-  const abrirGenerarProforma = (filtro: FiltroContenedor = "todos", notas = "") => {
+  const abrirGenerarProforma = (filtro: FiltroContenedor = "todos") => {
     // Con 0 elegibles no abrimos un modal que sólo podría preseleccionar
     // conceptos ya ocupados (R179-02).
     if (conceptosElegibles.length === 0) return;
     setDialogInitialFiltro(filtro);
-    setDialogInitialNotas(notas);
+    setDialogInitialNotas("");
     setDialogOpen(true);
   };
   const abrirRefacturacion = useCallback((notas: string) => {
