@@ -41,7 +41,6 @@ export function useDialogGenerarProformaController(
   conceptosPendientes: ConceptoVenta[],
   onClose: () => void,
   initialFiltroContenedor: FiltroContenedor = "todos",
-  initialNotas = "",
 ) {
   const tasaIva = useTasaIVA();
   const crearProforma = useCrearProforma();
@@ -81,12 +80,12 @@ export function useDialogGenerarProformaController(
       setFiltroContenedor(initialFiltroContenedor);
       const init = buildInitialProformaState(conceptosPendientes, initialFiltroContenedor);
       setSeleccionados(init.seleccionados);
-      setNotas(initialNotas);
+      setNotas("");
       reiniciar();
     } else if (!open && wasOpenRef.current) {
       wasOpenRef.current = false;
     }
-  }, [open, conceptosPendientes, initialFiltroContenedor, initialNotas, reiniciar]);
+  }, [open, conceptosPendientes, initialFiltroContenedor, reiniciar]);
 
   // Cuando cambia el filtro, ajustar selección al conjunto visible
   useEffect(() => {

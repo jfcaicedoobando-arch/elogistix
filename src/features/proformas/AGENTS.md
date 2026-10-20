@@ -1,4 +1,0 @@
-# Decisiones técnicas Proformas
-- Proformas canceladas son terminales para envío, respuesta, consolidación y facturación; las consultas del histórico siguen disponibles. Los guards de RPC y triggers conservan tenant/roles/ACL y permiten refacturar mediante una nueva proforma. Why: liberar conceptos no permite reactivar el documento histórico.
-- Refacturar proforma: `refacturar_proforma_rpc` sólo cancela la proforma cuya factura está cancelada y libera sus conceptos; la nueva se arma en «Generar proforma» del embarque, abierto con los conceptos y la nota de linaje precargados. Why: la proforma nueva debe poder editarse antes de crearse, sin un editor paralelo ni totales desfasados.
-- Proformas: `eliminar_proforma_rpc` ya no borra; marca `estado_proforma='cancelada'`, libera `conceptos_venta` a pendiente y `recompute_embarque_tiene_proforma` ignora canceladas/borradas. Why: conservar el histórico al refacturar tras cancelar el CFDI.

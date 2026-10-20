@@ -155,13 +155,6 @@
       "when": 1792517112359,
       "tag": "0021_refacturar_proforma_rpc",
       "breakpoints": true
-    },
-    {
-      "idx": 22,
-      "version": "7",
-      "when": 1792518064767,
-      "tag": "0022_refacturar_proforma_abre_edicion",
-      "breakpoints": true
     }
   ]
 }

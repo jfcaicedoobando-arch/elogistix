@@ -4,7 +4,7 @@
  * Extraído de `TabFacturacion.tsx` en v13.336.3 para respetar el límite
  * Power-of-10 de 200 líneas por archivo.
  */
-import { useCallback, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { useTasaIVA } from "@/features/catalogos/hooks";
 import {
   useEmbarqueConceptosVenta,
@@ -14,7 +14,6 @@ import {
   useContenedoresEmbarque,
 } from "@/features/embarques/hooks";
 import { useFocusSection } from "@/features/embarques/hooks/useFocusSection";
-import { useAbrirRefacturacion } from "@/features/embarques/hooks/useAbrirRefacturacion";
 import { esBorradorVacio, esBorradorSinConceptos } from "@/features/embarques/components/facturacion/esBorradorVacio";
 import { calcularEstadosConceptos } from "@/features/embarques/components/facturacion/estadoConceptoBadge";
 import type { FiltroContenedor } from "@/features/embarques/domain/conceptosPorContenedor";
@@ -33,7 +32,6 @@ export function useTabFacturacionState(embarque: EmbarqueRow, canEditProp: boole
   const tasaIva = useTasaIVA();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [dialogInitialFiltro, setDialogInitialFiltro] = useState<FiltroContenedor>("todos");
-  const [dialogInitialNotas, setDialogInitialNotas] = useState("");
   const { data: conceptos = [] } = useEmbarqueConceptosVenta(embarque.id);
   const { data: contenedores = [] } = useContenedoresEmbarque(embarque.id);
   const { data: proformas = [] } = useProformasEmbarque(embarque.id);
@@ -79,15 +77,8 @@ export function useTabFacturacionState(embarque: EmbarqueRow, canEditProp: boole
     // conceptos ya ocupados (R179-02).
     if (conceptosElegibles.length === 0) return;
     setDialogInitialFiltro(filtro);
-    setDialogInitialNotas("");
     setDialogOpen(true);
   };
-  const abrirRefacturacion = useCallback((notas: string) => {
-    setDialogInitialFiltro("todos");
-    setDialogInitialNotas(notas);
-    setDialogOpen(true);
-  }, []);
-  useAbrirRefacturacion({ canEdit, conceptosElegibles, abrir: abrirRefacturacion });
 
   return {
     embarqueCerrado,
@@ -108,7 +99,6 @@ export function useTabFacturacionState(embarque: EmbarqueRow, canEditProp: boole
     dialogOpen,
     setDialogOpen,
     dialogInitialFiltro,
-    dialogInitialNotas,
     abrirGenerarProforma,
     handleDescargarProforma,
     registerRef,
