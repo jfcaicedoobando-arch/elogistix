@@ -43,10 +43,21 @@ export interface CrearAjustesInput {
    * declaran `monedaBase`. La RPC valida lo mismo en el servidor.
    */
   totalFactura?: number;
+  /** Confirmación manual de las notas con grapa contable; `false` = no se agregan. */
+  confirmarAjustes?: (ajustes: AjustePropuesto[], moneda: Moneda) => Promise<boolean> | boolean;
+}
+
+export interface AjustePropuesto {
+  descripcion: string;
+  monto: number;
+  original: number;
+  facturado: number;
 }
 
 export interface CrearAjustesResult {
   ajustesCreados: number;
+  /** El usuario rechazó agregar las notas de ajuste. */
+  rechazados?: boolean;
 }
 
 export async function crearAjustesFacturaProveedor(
@@ -80,7 +91,19 @@ export async function crearAjustesFacturaProveedor(
     embarque_id: d.vinculo.embarqueId,
     descripcion: d.vinculo.descripcion,
     monto: d.delta,
+    original: d.vinculo.montoOriginal,
+    facturado: d.vinculo.monto,
   }));
+
+  // Validación manual: todo ajuste nace engrapado a la factura
+  // (proveedor_facturas_conceptos), así que el usuario decide si se agrega.
+  if (input.confirmarAjustes) {
+    const ok = await input.confirmarAjustes(
+      ajustes.map(({ descripcion, monto, original, facturado }) => ({ descripcion, monto, original, facturado })),
+      input.moneda,
+    );
+    if (!ok) return { ajustesCreados: 0, rechazados: true };
+  }
 
   // SAFE-CAST: `ajustes` es un arreglo de objetos planos serializables a jsonb.
   const payload = ajustes as unknown as Json;
