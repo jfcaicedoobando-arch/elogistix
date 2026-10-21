@@ -19,6 +19,7 @@ import type { EmbarqueSeleccionado } from "@/features/cxp/types";
 import type { PendingCfdi, VinculoLinea } from "./useNuevaFacturaProveedorForm.helpers";
 import { registrarAliasProveedor } from "@/features/proveedor/services/matchProveedorPorNombre";
 import { reportCaughtError } from "@/lib/observability/reportCaughtError";
+import { confirmarAjustesGrapa } from "@/features/cxp/utils/confirmarAjustesGrapa";
 
 /**
  * Persiste los conceptos del XML CFDI como líneas informativas de la factura.
@@ -114,6 +115,7 @@ export async function vincularSafe(params: {
             proveedorNombre: values.provNombre,
             vinculos,
             totalFactura: total,
+            confirmarAjustes: confirmarAjustesGrapa,
           });
           ajustesCreados = r.ajustesCreados;
         } catch (ajErr) {
