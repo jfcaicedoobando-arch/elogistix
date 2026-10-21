@@ -1,5 +1,7 @@
 import { describe, it, expect, vi, afterEach } from "vitest";
-import { confirmarAjustesGrapa, textoConfirmacionAjustes } from "../confirmarAjustesGrapa";
+import { confirmarAjustesGrapa, textoConfirmacionAjustes } from "@/features/cxp/utils/confirmarAjustesGrapa";
+(globalThis as unknown as { window: unknown }).window ??= globalThis;
+(globalThis as unknown as { confirm: unknown }).confirm ??= () => true;
 
 const ajuste = { descripcion: "Flete Marítimo", monto: 6540, original: 6485, facturado: 13025 };
 
@@ -13,12 +15,12 @@ describe("confirmarAjustesGrapa", () => {
   });
 
   it("si el usuario rechaza, no se agrega", () => {
-    vi.spyOn(window, "confirm").mockReturnValue(false);
+    vi.spyOn(globalThis as unknown as { confirm: (m?: string) => boolean }, "confirm").mockReturnValue(false);
     expect(confirmarAjustesGrapa([ajuste], "USD")).toBe(false);
   });
 
   it("sin notas no pregunta", () => {
-    const spy = vi.spyOn(window, "confirm");
+    const spy = vi.spyOn(globalThis as unknown as { confirm: (m?: string) => boolean }, "confirm");
     expect(confirmarAjustesGrapa([], "USD")).toBe(true);
     expect(spy).not.toHaveBeenCalled();
   });
