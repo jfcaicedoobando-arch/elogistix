@@ -17,6 +17,7 @@ import type { useRegistrarActividad } from "@/hooks/shared";
 import type { Tables } from "@/integrations/supabase/types";
 import type { ConceptoLike } from "@/lib/domain/auditDiffConceptos";
 import { evaluarMargenMinimo } from "@/lib/domain/margenMinimo";
+import { totalesMargenUSD } from "@/features/embarques/domain/totalesMargenUSD";
 
 type ContactoRow = Pick<Tables<"contactos_cliente">, "id" | "nombre" | "tipo" | "pais">;
 
@@ -39,19 +40,28 @@ interface Deps {
   registrarActividad: ReturnType<typeof useRegistrarActividad>;
   setCurrentStep: (step: number) => void;
   navigate: NavigateFunction;
-  /** Totales que muestra el paso de costos y regla de margen mínimo. */
-  subtotalVenta: number;
-  totalCosto: number;
+  /** Regla de margen mínimo (los totales se convierten a USD al guardar). */
   margenMinimoPct: number;
   puedeAutorizarMargen: boolean;
   confirmar?: (mensaje: string) => boolean;
 }
 
+/** Margen en USD (misma conversión que el paso de costos) o mensaje si falta T/C. */
+function resumenMargenBajo(deps: Deps): string | null {
+  const t = totalesMargenUSD(
+    deps.conceptosVenta, deps.conceptosCosto,
+    deps.methods.getValues("tipoCambioUSD"), deps.methods.getValues("tipoCambioEUR"),
+  );
+  if (!t) return "No se puede calcular el margen estimado: hay montos en otra moneda y falta el tipo de cambio.";
+  const ev = evaluarMargenMinimo(t.ventaUSD, t.costoUSD, deps.margenMinimoPct);
+  if (!ev.debajoDelMinimo) return null;
+  return `El margen estimado (${ev.margenPct.toFixed(2)}%) queda por debajo del mínimo (${ev.minimoPct}%).`;
+}
+
 /** Sólo valida si el margen queda POR DEBAJO del mínimo; por encima no pide nada. */
 function validarMargenMinimo(deps: Deps): boolean {
-  const ev = evaluarMargenMinimo(deps.subtotalVenta, deps.totalCosto, deps.margenMinimoPct);
-  if (!ev.debajoDelMinimo) return true;
-  const resumen = `El margen estimado (${ev.margenPct.toFixed(2)}%) queda por debajo del mínimo (${ev.minimoPct}%).`;
+  const resumen = resumenMargenBajo(deps);
+  if (!resumen) return true;
   if (!deps.puedeAutorizarMargen) {
     notifyError(undefined, {
       title: "Requiere autorización comercial",
