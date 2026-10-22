@@ -3,7 +3,8 @@ const DOMAIN_NAMES = new Set([
   "AprobacionFacturaError", "CreditLimitError", "ValidationError", "ZodError",
   "ReglaNegocioError", "BuzonDuplicadoError",
 ]);
-const DOMAIN_CODES = /\bLC_(?:COT_TRANSICION_INVALIDA|TRANSICION_INVALIDA|CONFLICTO_CONCURRENCIA|(?:CRM_)?MONEDA_INCOMPATIBLE|CREDITO_TC_INVALIDO)\b/;
+// LC_COSTO_VINCULADO_CXP (Sentry 7T): candado de costo ligado a factura de proveedor.
+const DOMAIN_CODES = /\bLC_(?:COT_TRANSICION_INVALIDA|TRANSICION_INVALIDA|CONFLICTO_CONCURRENCIA|(?:CRM_)?MONEDA_INCOMPATIBLE|CREDITO_TC_INVALIDO|COSTO_VINCULADO_CXP)\b/;
 // Guards de datos (Sentry 7Q/77): el usuario ve el mensaje; no es falla de código.
 const KNOWN_MESSAGES = [
   "ya está registrado en este embarque", "verifica el uuid en el sat",

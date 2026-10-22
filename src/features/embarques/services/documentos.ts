@@ -88,6 +88,8 @@ export async function deleteDocumentoEmbarque(docId: string, archivoPath?: strin
   }
 }
 
+const DOC_NOMBRE_DUPLICADO = /documentos_embarque_unico_por_nombre/i;
+
 export async function createDocumentoEmbarqueRow(params: {
   embarqueId: string;
   nombre: string;
@@ -101,6 +103,12 @@ export async function createDocumentoEmbarqueRow(params: {
       estado: "Pendiente",
       notas: params.notas ?? null,
     });
+  // Sentry JAVASCRIPT-REACT-86: nombre repetido es dato del usuario, no falla.
+  if (error && error.code === "23505" && DOC_NOMBRE_DUPLICADO.test(error.message ?? "")) {
+    throw new ReglaNegocioError(
+      `Este embarque ya tiene un documento llamado «${params.nombre}». Usa otro nombre o sube el archivo en el documento que ya existe.`,
+    );
+  }
   if (error) throw error;
   await registrarActividad({
     modulo: 'documentos',

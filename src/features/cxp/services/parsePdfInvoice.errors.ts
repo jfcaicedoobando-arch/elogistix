@@ -57,6 +57,9 @@ function mensajeAmigable(last: Attempt | null, fallaDeRed: boolean, serviceUnava
   if (last?.status === 401) {
     return "Tu sesión expiró. Vuelve a iniciar sesión y sube el PDF de nuevo.";
   }
+  if (last?.status === 429) {
+    return "El servicio de IA está recibiendo demasiadas solicitudes. Espera un minuto e intenta de nuevo, o usa Captura manual.";
+  }
   if (last?.status === 200) return "No se pudieron extraer los datos de este PDF. Revisa que sea legible o usa Captura manual.";
   return "No se pudo leer la factura PDF. Intenta de nuevo o usa Captura manual.";
 }
@@ -88,7 +91,9 @@ export function buildFailure(file: File, last: Attempt | null, latencyMs: number
     phase: err.context.phase,
     functionName: "parse-invoice-pdf",
     error_kind: fallaDeRed ? "network" : undefined,
-  }, { pdf_size: file.size, latency_ms: latencyMs, service_unavailable: serviceUnavailable, network_failure: fallaDeRed, ...err.context });
+  }, { pdf_size: file.size, latency_ms: latencyMs, service_unavailable: serviceUnavailable, network_failure: fallaDeRed, ...err.context },
+  // Sentry JAVASCRIPT-REACT-82: saturación pasajera del servicio de IA, no falla del ERP.
+  last?.status === 429 ? "warning" : undefined);
 
   return err;
 }
