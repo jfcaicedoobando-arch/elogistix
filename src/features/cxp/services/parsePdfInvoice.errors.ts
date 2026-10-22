@@ -91,7 +91,9 @@ export function buildFailure(file: File, last: Attempt | null, latencyMs: number
     phase: err.context.phase,
     functionName: "parse-invoice-pdf",
     error_kind: fallaDeRed ? "network" : undefined,
-  }, { pdf_size: file.size, latency_ms: latencyMs, service_unavailable: serviceUnavailable, network_failure: fallaDeRed, ...err.context });
+  }, { pdf_size: file.size, latency_ms: latencyMs, service_unavailable: serviceUnavailable, network_failure: fallaDeRed, ...err.context },
+  // Sentry JAVASCRIPT-REACT-82: saturación pasajera del servicio de IA, no falla del ERP.
+  last?.status === 429 ? "warning" : undefined);
 
   return err;
 }
