@@ -93,6 +93,7 @@ export function reportCaughtError(
   err: unknown,
   tags: ReportTags,
   extra?: ReportExtra,
+  level?: "warning",
 ): void {
   const ctx = getErrorContext();
   const rawCause = err instanceof Error ? err.cause : undefined;
@@ -112,5 +113,9 @@ export function reportCaughtError(
   const { error, original } = toError(err);
   if (original !== undefined) enrichedExtra.original = original;
 
-  void captureExceptionOnce(error, { tags: enrichedTags, extra: scrubTelemetryData(enrichedExtra) as typeof enrichedExtra });
+  void captureExceptionOnce(error, {
+    tags: enrichedTags,
+    extra: scrubTelemetryData(enrichedExtra) as typeof enrichedExtra,
+    ...(level ? { level } : {}),
+  });
 }
