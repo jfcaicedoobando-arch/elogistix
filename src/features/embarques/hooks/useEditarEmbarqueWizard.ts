@@ -142,8 +142,6 @@ export function useEditarEmbarqueWizard(id: string | undefined) {
     registrarActividad,
     setCurrentStep,
     navigate,
-    subtotalVenta: conceptosForm.subtotalVenta,
-    totalCosto: conceptosForm.totalCosto,
     margenMinimoPct,
     puedeAutorizarMargen: puedeAutorizarMargenBajo(effectiveRole),
   });
