@@ -41,9 +41,14 @@ import { useFocusSection } from "@/features/embarques/hooks/useFocusSection";
 interface Props {
   embarqueId: string;
   canEdit: boolean;
+  /** Embarque Cerrado: la base rechaza altas/bajas del buzón (LC_EMBARQUE_CERRADO). */
+  cerrado?: boolean;
 }
 
-export function TabFacturasEntrantes({ embarqueId, canEdit }: Props) {
+export function TabFacturasEntrantes({ embarqueId, canEdit: canEditRol, cerrado = false }: Props) {
+  // Espejo UI de tg_bloquear_financiero_embarque_cerrado: no ofrecer acciones
+  // que la base rechaza mientras el embarque siga cerrado.
+  const canEdit = canEditRol && !cerrado;
   const { organizationId } = useOrgFilter();
   const { user } = useAuth();
   const { isAdmin, canSubirFacturaEntranteEmbarque, canAdjuntarXmlFacturaEntrante } = usePermissions();
@@ -100,6 +105,7 @@ export function TabFacturasEntrantes({ embarqueId, canEdit }: Props) {
           sinXml={sinXml}
           puedeSubir={puedeSubir}
           canEdit={canEdit}
+          cerrado={cerrado && canEditRol}
           onSubir={() => setSubirOpen(true)}
         />
         <CardContent className="space-y-2">

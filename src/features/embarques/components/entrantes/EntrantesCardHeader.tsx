@@ -14,10 +14,12 @@ interface Props {
   sinXml: number;
   puedeSubir: boolean;
   canEdit: boolean;
+  /** Embarque cerrado y el usuario podría editarlo si estuviera abierto. */
+  cerrado?: boolean;
   onSubir: () => void;
 }
 
-export function EntrantesCardHeader({ resumen, sinXml, puedeSubir, canEdit, onSubir }: Props) {
+export function EntrantesCardHeader({ resumen, sinXml, puedeSubir, canEdit, cerrado = false, onSubir }: Props) {
   return (
     <CardHeader className="flex flex-row items-start justify-between gap-3 pb-3">
       <div className="space-y-1">
@@ -45,6 +47,11 @@ export function EntrantesCardHeader({ resumen, sinXml, puedeSubir, canEdit, onSu
       {!puedeSubir && canEdit && (
         <p className="max-w-[14rem] text-right text-body-sm text-muted-foreground">
           La entrega de archivos la hace operaciones; tú capturas la factura en Cuentas por pagar.
+        </p>
+      )}
+      {cerrado && (
+        <p className="max-w-[16rem] text-right text-body-sm text-muted-foreground">
+          Embarque cerrado. Pide a un administrador que lo reabra para subir facturas.
         </p>
       )}
     </CardHeader>

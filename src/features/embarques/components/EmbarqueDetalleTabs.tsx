@@ -118,7 +118,8 @@ export function EmbarqueDetalleTabs({
           canEditCostos={canEditCostosEmbarque}
         />
         <Separator />
-        <TabFacturasEntrantes embarqueId={embarqueId} canEdit={canEdit} />
+        <TabFacturasEntrantes embarqueId={embarqueId} canEdit={canEdit}
+          cerrado={embarque.estado === "Cerrado"} />
       </TabsContent>
 
       {/* Garantías y Demoras fusionadas (v13.66.15): mismo dominio (free time / depósito por contenedor). */}
