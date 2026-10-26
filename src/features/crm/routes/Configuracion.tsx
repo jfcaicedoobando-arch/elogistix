@@ -15,7 +15,7 @@ import MotivosPerdidaEditor from "@/features/crm/components/MotivosPerdidaEditor
 import PlantillasMensajeEditor from "@/features/crm/components/PlantillasMensajeEditor";
 import PresupuestoCrmEditor from "@/features/crm/components/PresupuestoCrmEditor";
 import MetasActividadEditor from "@/features/crm/components/MetasActividadEditor";
-import MargenMinimoCard from "@/features/configuracion/components/MargenMinimoCard";
+import { MargenMinimoCard } from "@/features/configuracion";
 import { usePermissions, useDocumentTitle } from "@/hooks/shared";
 
 export default function CrmConfiguracion() {

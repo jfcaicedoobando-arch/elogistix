@@ -51,7 +51,7 @@ export function TabFacturacionEmbarque({ facturas, canEdit: canEditProp, embarqu
     embarqueCerrado, embarqueBorrador, canEdit, tasaIva, conceptos, contenedores, proformas,
     estadosConceptos, conceptosElegibles, conceptosHuerfanos, borradorVacio,
     eliminarProforma, proformaAEliminar, setProformaAEliminar,
-    dialogOpen, setDialogOpen, dialogInitialFiltro, abrirGenerarProforma,
+    dialogOpen, setDialogOpen, dialogInitialFiltro, dialogRefacturacion, abrirGenerarProforma,
     handleDescargarProforma, registerRef,
   } = s;
 
@@ -164,6 +164,8 @@ export function TabFacturacionEmbarque({ facturas, canEdit: canEditProp, embarqu
         embarque={embarque}
         conceptosPendientes={conceptosElegibles}
         initialFiltroContenedor={dialogInitialFiltro}
+        initialNotas={dialogRefacturacion?.notas_sugeridas}
+        initialConceptoIds={dialogRefacturacion?.conceptos}
       />
 
       <DialogEliminarProforma

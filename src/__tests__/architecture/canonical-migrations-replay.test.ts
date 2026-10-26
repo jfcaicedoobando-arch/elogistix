@@ -1,3 +1,4 @@
+import { readIsolatedDrizzleReplay } from "../../../scripts/ci/drizzle-history/control.mjs";
 import { describe, it, expect } from "vitest";
 import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { execFileSync } from "node:child_process";
@@ -9,7 +10,7 @@ describe("canonical migration reconstruction", () => {
       .filter((file) => file.endsWith(".sql"))
       .map((file) => [file, readFileSync(`${dir}/${file}`, "utf8")]));
     const mapping = JSON.parse(readFileSync("drizzle/replay.json", "utf8")) as DrizzleReplayEntry[];
-    expect(scanDrizzleReplay(sources("drizzle/migrations"), sources("supabase/migrations"), mapping)).toEqual([]);
+    expect(scanDrizzleReplay(sources("drizzle/migrations"), sources("supabase/migrations"), mapping, readIsolatedDrizzleReplay())).toEqual([]);
     expect(existsSync("supabase/releases/external-migrations.tsv")).toBe(false);
     expect(existsSync("scripts/db/replay-files.sh")).toBe(false);
   });
@@ -45,10 +46,11 @@ describe("canonical migration reconstruction", () => {
     expect(readFileSync("scripts/ci/rls-prepare-db.sh", "utf8")).toContain('[[ "$existing_relations" != 0 ]]');
   });
 
-  it.each(["scripts/ci/rls-prepare-db.sh", "scripts/db/local-verify.sh"])("%s replays only the canonical ordered history", (file) => {
+  it.each(["scripts/ci/rls-prepare-db.sh", "scripts/db/local-verify.sh"])("%s replays canonical ordered history plus verified isolated history", (file) => {
     const source = readFileSync(file, "utf8");
     expect(source).toContain("for f in $(printf '%s\\n' supabase/migrations/*.sql | LC_ALL=C sort); do");
     expect(source).not.toContain("external-migrations");
     expect(source).not.toContain("drizzle/migrations");
+    expect(source).toContain("isolated_history=\"$(node scripts/ci/drizzle-history/control.mjs list)\" || exit 1");
   });
 });

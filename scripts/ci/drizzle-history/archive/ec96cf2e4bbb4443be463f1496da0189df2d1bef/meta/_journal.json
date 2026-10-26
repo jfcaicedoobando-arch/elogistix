@@ -1,0 +1,167 @@
+{
+  "version": "7",
+  "dialect": "postgresql",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "7",
+      "when": 1790966446858,
+      "tag": "0000_pricing_gerente_operaciones",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1791221842951,
+      "tag": "0001_crm_empresa_estado_fusion_leads",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1791222840376,
+      "tag": "0002_cerrar_sin_pago_tc_nulo",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1791237737995,
+      "tag": "0003_pricing_respuesta_tarifas_folio_mensual",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1791237765806,
+      "tag": "0004_pricing_adjuntos_storage",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1791246856454,
+      "tag": "0005_crm_crear_oportunidad_con_empresa",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1791248833205,
+      "tag": "0006_pricing_unidad_medida",
+      "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1791321530739,
+      "tag": "0007_audit144_nc_linaje_concepto",
+      "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1791322938543,
+      "tag": "0008_proforma_estado_cancelada",
+      "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1791323024098,
+      "tag": "0009_proforma_siempre_cancelar",
+      "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1791393171886,
+      "tag": "0010_tarifario_pricing",
+      "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1791470138350,
+      "tag": "0011_audit144_nc_identidad_normalizada",
+      "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "7",
+      "when": 1791470851213,
+      "tag": "0012_audit148_seguro_factura_proveedor",
+      "breakpoints": true
+    },
+    {
+      "idx": 13,
+      "version": "7",
+      "when": 1791483611085,
+      "tag": "0013_proveedor_alta_provisional",
+      "breakpoints": true
+    },
+    {
+      "idx": 14,
+      "version": "7",
+      "when": 1791920332681,
+      "tag": "0014_demo_seed_limpia_agentes",
+      "breakpoints": true
+    },
+    {
+      "idx": 15,
+      "version": "7",
+      "when": 1791994106303,
+      "tag": "0015_catalogos_alta_gerente_admin",
+      "breakpoints": true
+    },
+    {
+      "idx": 16,
+      "version": "7",
+      "when": 1792001438191,
+      "tag": "0016_crm_empresa_desde_cliente",
+      "breakpoints": true
+    },
+    {
+      "idx": 17,
+      "version": "7",
+      "when": 1792001672033,
+      "tag": "0017_crm_empresa_no_borrar_cliente",
+      "breakpoints": true
+    },
+    {
+      "idx": 18,
+      "version": "7",
+      "when": 1792006262617,
+      "tag": "0018_cargos_tarifario_aplica_iva",
+      "breakpoints": true
+    },
+    {
+      "idx": 19,
+      "version": "7",
+      "when": 1792058404766,
+      "tag": "0019_cxp_contador_autoaprobacion",
+      "breakpoints": true
+    },
+    {
+      "idx": 20,
+      "version": "7",
+      "when": 1792084137000,
+      "tag": "0020_seed_r3_stopped_admission",
+      "breakpoints": true
+    },
+    {
+      "idx": 21,
+      "version": "7",
+      "when": 1792517112359,
+      "tag": "0021_refacturar_proforma_rpc",
+      "breakpoints": true
+    },
+    {
+      "idx": 22,
+      "version": "7",
+      "when": 1792518064767,
+      "tag": "0022_refacturar_proforma_abre_edicion",
+      "breakpoints": true
+    }
+  ]
+}

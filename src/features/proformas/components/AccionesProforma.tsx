@@ -156,13 +156,7 @@ export function AccionesProforma({ proforma, downloadingId, onDescargar }: Props
       )}
       {!autorizacion.requiereAutorizacionProforma && <BadgeClienteDeCasa tipo="proforma" />}
       {mostrarHint && (
-        <p className="text-body-sm text-muted-foreground">
-          {autorizacion.requiereAutorizacionProforma
-            ? "Para facturar, el cliente debe aceptar la proforma."
-            : canResponderProformaManual
-              ? "No hace falta esperar respuesta del cliente. Aprueba internamente para continuar; enviarla por correo es opcional."
-              : "No hace falta esperar respuesta del cliente. Pide a un administrador o gerente que la apruebe internamente para continuar."}
-        </p>
+        <HintRespuestaCliente requiereAutorizacion={autorizacion.requiereAutorizacionProforma} puedeResponder={canResponderProformaManual} />
       )}
       {!cancelada && (
         <>
@@ -187,4 +181,15 @@ export function AccionesProforma({ proforma, downloadingId, onDescargar }: Props
       )}
     </div>
   );
+}
+
+function HintRespuestaCliente({ requiereAutorizacion, puedeResponder }: {
+  requiereAutorizacion: boolean; puedeResponder: boolean;
+}) {
+  const texto = requiereAutorizacion
+    ? "Para facturar, el cliente debe aceptar la proforma."
+    : puedeResponder
+      ? "No hace falta esperar respuesta del cliente. Aprueba internamente para continuar; enviarla por correo es opcional."
+      : "No hace falta esperar respuesta del cliente. Pide a un administrador o gerente que la apruebe internamente para continuar.";
+  return <p className="text-body-sm text-muted-foreground">{texto}</p>;
 }

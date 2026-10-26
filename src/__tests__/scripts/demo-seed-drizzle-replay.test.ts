@@ -1,3 +1,4 @@
+import { readIsolatedDrizzleReplay } from "../../../scripts/ci/drizzle-history/control.mjs";
 import { createHash } from "node:crypto";
 import { readFileSync, readdirSync } from "node:fs";
 import { resolve } from "node:path";
@@ -36,7 +37,7 @@ describe("immutable demo 0014 has a real, ACL-closed Supabase replay", () => {
     const allDrizzle = new Map(readdirSync(resolve(process.cwd(), "drizzle/migrations"))
       .filter((file) => file.endsWith(".sql"))
       .map((file) => [file, read(`drizzle/migrations/${file}`)]));
-    expect(scanDrizzleReplay(allDrizzle, migrations, entries)).toEqual([]);
+    expect(scanDrizzleReplay(allDrizzle, migrations, entries, readIsolatedDrizzleReplay())).toEqual([]);
   });
   it("reports missing mapping and missing declared replay", () => {
     expect(checks(scanDrizzleReplay(drizzle, supabase, []))).toEqual(["DR1", "DR4"]);

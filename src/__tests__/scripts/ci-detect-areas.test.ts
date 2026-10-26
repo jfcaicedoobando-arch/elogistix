@@ -95,6 +95,13 @@ afterAll(() => {
 });
 
 describe.skipIf(!BASH_DISPONIBLE)("scripts/ci/detect-areas.sh", () => {
+  it.each(["scripts/ci/drizzle-history/control.mjs", "scripts/ci/drizzle-history/0021_refacturar_proforma_rpc.sql"])("%s activa guards DB", (file) => {
+    const head = commit([file], base);
+    expect(detectar({ EVENT_NAME: "pull_request", BASE_SHA: base, HEAD_SHA: head }).database).toBe("true");
+    const workflow = readFileSync(".github/workflows/rls-tests.yml", "utf8");
+    expect(workflow.match(/"scripts\/ci\/drizzle-history\/\*\*"/g)).toHaveLength(2);
+  });
+
   it("Markdown con acentos/ñ no activa frontend", () => {
     const head = commit(
       [".lovable/plan/factura-que-no-timbra-por-la-fecha-del-día-anterior-ñ.md"],

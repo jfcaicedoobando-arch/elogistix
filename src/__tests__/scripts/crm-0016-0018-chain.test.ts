@@ -1,3 +1,4 @@
+import { readIsolatedDrizzleReplay } from "../../../scripts/ci/drizzle-history/control.mjs";
 import { createHash } from "node:crypto";
 import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { describe, expect, it } from "vitest";
@@ -63,7 +64,7 @@ describe("immutable CRM 0016 -> 0017 -> cargo 0018 replay chain", () => {
 
   it("passes the actual all-source replay scanner", () => {
     const files = (directory: string) => new Map(readdirSync(directory).filter((file) => file.endsWith(".sql")).map((file) => [file, read(`${directory}/${file}`)]));
-    expect(scanDrizzleReplay(files("drizzle/migrations"), files("supabase/migrations"), JSON.parse(read("drizzle/replay.json")))).toEqual([]);
+    expect(scanDrizzleReplay(files("drizzle/migrations"), files("supabase/migrations"), JSON.parse(read("drizzle/replay.json")), readIsolatedDrizzleReplay())).toEqual([]);
   });
 
   it("preserves the historical journal prefix and connects every current snapshot", () => {

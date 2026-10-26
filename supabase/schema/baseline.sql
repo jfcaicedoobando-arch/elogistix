@@ -2185,6 +2185,29 @@ BEGIN
   RETURN NEW;
 END;
 $$;
+CREATE FUNCTION public._cotizacion_vendedor_misma_org() RETURNS trigger
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 'public'
+    AS $$
+DECLARE
+  v_email text;
+BEGIN
+  IF NEW.vendedor_id IS NULL THEN
+    NEW.vendedor_email := NULL;
+    RETURN NEW;
+  END IF;
+  IF NOT EXISTS (
+    SELECT 1 FROM public.organization_members m
+     WHERE m.user_id = NEW.vendedor_id
+       AND m.organization_id = NEW.organization_id
+  ) THEN
+    RAISE EXCEPTION 'LC_COMERCIAL_AJENO: el comercial no pertenece a esta organización';
+  END IF;
+  SELECT u.email INTO v_email FROM auth.users u WHERE u.id = NEW.vendedor_id;
+  NEW.vendedor_email := v_email;
+  RETURN NEW;
+END;
+$$;
 CREATE FUNCTION public._cotizaciones_bloquear_auto_aceptacion() RETURNS trigger
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
@@ -29936,6 +29959,76 @@ BEGIN
   );
 END;
 $$;
+CREATE FUNCTION public.refacturar_proforma_rpc(p_proforma_id uuid) RETURNS jsonb
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 'public'
+    AS $$
+DECLARE
+  v_old public.proformas;
+  v_conceptos uuid[];
+  v_factura_num text;
+  v_viva boolean;
+BEGIN
+  SELECT * INTO v_old FROM public.proformas WHERE id = p_proforma_id FOR UPDATE;
+  IF v_old.id IS NULL THEN
+    RAISE EXCEPTION 'LC_PROFORMA_NO_ENCONTRADA';
+  END IF;
+  IF NOT public.is_org_member(v_old.organization_id) THEN
+    RAISE EXCEPTION 'LC_ORG_AJENA';
+  END IF;
+  IF NOT public.has_any_role_efectivo(auth.uid(),
+       ARRAY['admin'::public.app_role,'admin_org'::public.app_role,
+             'operador'::public.app_role,'contador'::public.app_role,
+             'super_admin'::public.app_role]) THEN
+    RAISE EXCEPTION 'LC_PROFORMA_SIN_PERMISO: tu rol no puede refacturar proformas'
+      USING ERRCODE = '42501';
+  END IF;
+  IF v_old.deleted_at IS NOT NULL OR v_old.estado_proforma = 'cancelada' THEN
+    RAISE EXCEPTION 'LC_REFACTURAR_PROFORMA_CANCELADA: esta proforma ya está cancelada';
+  END IF;
+  IF v_old.es_consolidada OR v_old.embarque_id IS NULL THEN
+    RAISE EXCEPTION 'LC_REFACTURAR_CONSOLIDADA: las proformas consolidadas no se pueden refacturar desde aquí';
+  END IF;
+  -- Ninguna factura ligada puede seguir viva.
+  SELECT EXISTS (
+    SELECT 1 FROM public.facturas fa
+     WHERE fa.deleted_at IS NULL
+       AND (fa.proforma_id = p_proforma_id OR fa.id IN (v_old.factura_id, v_old.factura_secundaria_id))
+       AND fa.estado::text NOT IN ('Cancelada','Sustituida')
+  ) INTO v_viva;
+  IF v_viva THEN
+    RAISE EXCEPTION 'LC_PROFORMA_FACTURADA';
+  END IF;
+  SELECT fa.numero INTO v_factura_num FROM public.facturas fa
+   WHERE fa.deleted_at IS NULL
+     AND (fa.proforma_id = p_proforma_id OR fa.id IN (v_old.factura_id, v_old.factura_secundaria_id))
+     AND fa.estado::text = 'Cancelada'
+   ORDER BY fa.created_at DESC LIMIT 1;
+  IF v_factura_num IS NULL THEN
+    RAISE EXCEPTION 'LC_REFACTURAR_SIN_FACTURA_CANCELADA: sólo se refactura una proforma cuya factura fue cancelada';
+  END IF;
+  SELECT array_agg(id ORDER BY id) INTO v_conceptos
+    FROM public.conceptos_venta
+   WHERE proforma_id = p_proforma_id AND deleted_at IS NULL;
+  IF v_conceptos IS NULL THEN
+    RAISE EXCEPTION 'LC_REFACTURAR_SIN_CONCEPTOS: la proforma no tiene conceptos para copiar';
+  END IF;
+  -- Cierra la proforma histórica y libera sus conceptos. La nueva proforma se
+  -- arma en el formulario normal del embarque (editable y con sus validaciones).
+  UPDATE public.conceptos_venta
+     SET estado_facturacion = 'pendiente', proforma_id = NULL
+   WHERE proforma_id = p_proforma_id;
+  UPDATE public.proformas SET estado_proforma = 'cancelada' WHERE id = p_proforma_id;
+  RETURN jsonb_build_object(
+    'embarque_id', v_old.embarque_id,
+    'anterior_numero', v_old.numero,
+    'factura_cancelada', v_factura_num,
+    'conceptos', to_jsonb(v_conceptos),
+    'notas_sugeridas', trim(both from concat_ws(E'\n',
+      '[Refacturación de proforma ' || v_old.numero || ' / Factura ' || v_factura_num || ' cancelada]',
+      v_old.notas)));
+END;
+$$;
 CREATE FUNCTION public.refrescar_garantia_desde_tarifa(p_embarque_id uuid) RETURNS integer
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
@@ -33327,6 +33420,30 @@ BEGIN
   RETURN v_row;
 END;
 $$;
+CREATE FUNCTION public.set_margen_minimo_utilidad(p_pct numeric) RETURNS numeric
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 'public'
+    AS $$
+DECLARE
+  v_org uuid := public.org_scope();
+BEGIN
+  IF v_org IS NULL THEN
+    RAISE EXCEPTION 'Sin organización activa' USING ERRCODE = '42501';
+  END IF;
+  IF NOT (public.has_role(auth.uid(), 'admin'::app_role)
+          OR public.has_role(auth.uid(), 'gerente_comercial'::app_role)) THEN
+    RAISE EXCEPTION 'Sólo administración o gerencia comercial puede cambiar el margen mínimo' USING ERRCODE = '42501';
+  END IF;
+  IF p_pct IS NULL OR p_pct < 0 OR p_pct > 100 THEN
+    RAISE EXCEPTION 'El margen mínimo debe estar entre 0 y 100' USING ERRCODE = '22023';
+  END IF;
+  INSERT INTO public.configuracion (organization_id, categoria, clave, valor, descripcion)
+  VALUES (v_org, 'comercial', 'margen_minimo_utilidad_pct', to_jsonb(p_pct),
+          'Margen mínimo de utilidad estimada (%) antes de requerir autorización')
+  ON CONFLICT (organization_id, categoria, clave) DO UPDATE SET valor = EXCLUDED.valor;
+  RETURN p_pct;
+END;
+$$;
 CREATE FUNCTION public.set_super_admin_org(p_org uuid) RETURNS void
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
@@ -36528,6 +36645,8 @@ CREATE TABLE public.cotizaciones (
     puerto_destino_id uuid,
     peso_fisico_kg numeric,
     pricing_solicitud_id uuid,
+    vendedor_id uuid,
+    vendedor_email text,
     CONSTRAINT cotizaciones_estado_revalidacion_chk CHECK ((estado_revalidacion = ANY (ARRAY['ninguna'::text, 'pendiente_reaprobacion'::text, 'reaprobada'::text, 'rechazada'::text]))),
     CONSTRAINT cotizaciones_peso_fisico_kg_valido CHECK (((peso_fisico_kg IS NULL) OR ((peso_fisico_kg >= (0)::numeric) AND (peso_fisico_kg < 'Infinity'::numeric) AND (peso_fisico_kg <> 'NaN'::numeric)))),
     CONSTRAINT cotizaciones_peso_nonneg CHECK ((peso_kg >= (0)::numeric)),
@@ -38843,6 +38962,7 @@ CREATE TRIGGER trg_costeo_tarifas_marcar_reemplazadas AFTER INSERT OR UPDATE OF 
 CREATE TRIGGER trg_costeo_tarifas_updated BEFORE UPDATE ON public.costeo_tarifas FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
 CREATE TRIGGER trg_cotizacion_oportunidad_misma_org BEFORE INSERT OR UPDATE OF oportunidad_id, organization_id ON public.cotizaciones FOR EACH ROW EXECUTE FUNCTION public._cotizacion_oportunidad_misma_org();
 CREATE TRIGGER trg_cotizacion_plantillas_updated_at BEFORE UPDATE ON public.cotizacion_plantillas FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
+CREATE TRIGGER trg_cotizacion_vendedor_misma_org BEFORE INSERT OR UPDATE OF vendedor_id, vendedor_email, organization_id ON public.cotizaciones FOR EACH ROW EXECUTE FUNCTION public._cotizacion_vendedor_misma_org();
 CREATE TRIGGER trg_cotizaciones_bloquear_envio_sin_importes BEFORE UPDATE ON public.cotizaciones FOR EACH ROW EXECUTE FUNCTION public._cotizaciones_bloquear_envio_sin_importes();
 CREATE TRIGGER trg_cotizaciones_calcular_pricing_tc BEFORE UPDATE OF tipo_cambio_usd ON public.cotizaciones FOR EACH ROW WHEN (((new.pricing_solicitud_id IS NOT NULL) AND (new.tipo_cambio_usd IS DISTINCT FROM old.tipo_cambio_usd))) EXECUTE FUNCTION public.trg_cotizacion_subtotal_server();
 CREATE TRIGGER trg_cotizaciones_envio_sin_oportunidad BEFORE UPDATE ON public.cotizaciones FOR EACH ROW EXECUTE FUNCTION public._cotizaciones_bloquear_envio_sin_oportunidad();
@@ -40486,6 +40606,7 @@ REVOKE ALL ON FUNCTION public._costeo_tarifa_solicitud_guard() FROM PUBLIC;
 GRANT ALL ON FUNCTION public._costeo_tarifa_solicitud_guard() TO service_role;
 REVOKE ALL ON FUNCTION public._cotizacion_oportunidad_misma_org() FROM PUBLIC;
 GRANT ALL ON FUNCTION public._cotizacion_oportunidad_misma_org() TO service_role;
+REVOKE ALL ON FUNCTION public._cotizacion_vendedor_misma_org() FROM PUBLIC;
 REVOKE ALL ON FUNCTION public._cotizaciones_bloquear_auto_aceptacion() FROM PUBLIC;
 GRANT ALL ON FUNCTION public._cotizaciones_bloquear_auto_aceptacion() TO service_role;
 REVOKE ALL ON FUNCTION public._cotizaciones_bloquear_envio_sin_importes() FROM PUBLIC;
@@ -41823,6 +41944,9 @@ GRANT ALL ON FUNCTION public.refacturacion_simular_paso(p_caso_id uuid, p_paso i
 REVOKE ALL ON FUNCTION public.refacturacion_validar_consistencia(p_caso_id uuid) FROM PUBLIC;
 GRANT ALL ON FUNCTION public.refacturacion_validar_consistencia(p_caso_id uuid) TO authenticated;
 GRANT ALL ON FUNCTION public.refacturacion_validar_consistencia(p_caso_id uuid) TO service_role;
+REVOKE ALL ON FUNCTION public.refacturar_proforma_rpc(p_proforma_id uuid) FROM PUBLIC;
+GRANT ALL ON FUNCTION public.refacturar_proforma_rpc(p_proforma_id uuid) TO authenticated;
+GRANT ALL ON FUNCTION public.refacturar_proforma_rpc(p_proforma_id uuid) TO service_role;
 REVOKE ALL ON FUNCTION public.refrescar_garantia_desde_tarifa(p_embarque_id uuid) FROM PUBLIC;
 GRANT ALL ON FUNCTION public.refrescar_garantia_desde_tarifa(p_embarque_id uuid) TO authenticated;
 GRANT ALL ON FUNCTION public.refrescar_garantia_desde_tarifa(p_embarque_id uuid) TO service_role;
@@ -41974,6 +42098,9 @@ GRANT ALL ON TABLE public.embarque_garantias_contenedor TO service_role;
 REVOKE ALL ON FUNCTION public.set_garantia_estado(p_id uuid, p_estado text, p_fecha_deposito date, p_fecha_liberacion date, p_monto numeric, p_referencia text, p_notas text) FROM PUBLIC;
 GRANT ALL ON FUNCTION public.set_garantia_estado(p_id uuid, p_estado text, p_fecha_deposito date, p_fecha_liberacion date, p_monto numeric, p_referencia text, p_notas text) TO authenticated;
 GRANT ALL ON FUNCTION public.set_garantia_estado(p_id uuid, p_estado text, p_fecha_deposito date, p_fecha_liberacion date, p_monto numeric, p_referencia text, p_notas text) TO service_role;
+REVOKE ALL ON FUNCTION public.set_margen_minimo_utilidad(p_pct numeric) FROM PUBLIC;
+GRANT ALL ON FUNCTION public.set_margen_minimo_utilidad(p_pct numeric) TO authenticated;
+GRANT ALL ON FUNCTION public.set_margen_minimo_utilidad(p_pct numeric) TO service_role;
 REVOKE ALL ON FUNCTION public.set_super_admin_org(p_org uuid) FROM PUBLIC;
 GRANT ALL ON FUNCTION public.set_super_admin_org(p_org uuid) TO authenticated;
 GRANT ALL ON FUNCTION public.set_super_admin_org(p_org uuid) TO service_role;

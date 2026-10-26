@@ -1,3 +1,4 @@
+vi.mock("@/features/embarques/hooks/useAbrirRefacturacion", () => ({ useAbrirRefacturacion: () => undefined }));
 /** Regresión GUI ELNAC00029: convertir PRO0029 reserva el flete, sin emitirlo. */
 import type { ComponentProps, ReactNode } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
