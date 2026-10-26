@@ -20,12 +20,16 @@ export function useRefacturarProforma(proformaId: string, onSuccess: () => void)
     mutationFn: () => refacturarProforma(proformaId),
     onSuccess: async (r) => {
       await qc.invalidateQueries({ queryKey: queryKeys.proformas.all });
+      await qc.invalidateQueries({ queryKey: queryKeys.embarques.conceptosVenta() });
+      await qc.invalidateQueries({ queryKey: queryKeys.embarques.all });
       notifySuccess(undefined, {
-        title: `Se creó la proforma ${r.nuevo_numero}`,
-        description: `${r.anterior_numero} quedó cancelada como historial.`,
+        title: `${r.anterior_numero} quedó cancelada`,
+        description: "Revisa los conceptos y genera la proforma nueva.",
       });
       onSuccess();
-      navigate(`/proformas/${r.nueva_proforma_id}`);
+      navigate(`/embarques/${r.embarque_id}?tab=facturacion`, {
+        state: { refacturacion: r },
+      });
     },
     onError: (err: unknown) => {
       notifyError(undefined, {

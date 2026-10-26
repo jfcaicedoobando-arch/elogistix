@@ -1,3 +1,4 @@
+vi.mock("@/features/embarques/hooks/useAbrirRefacturacion", () => ({ useAbrirRefacturacion: () => undefined }));
 /**
  * v13.334.8 — Un embarque Cerrado bloquea la edición de conceptos a nivel BD.
  * La UI no debe ofrecer acciones de facturación que fallarían con error 23514.

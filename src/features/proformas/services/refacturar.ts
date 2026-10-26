@@ -1,24 +1,18 @@
 /**
  * Refacturación por copia controlada: cancela la proforma histórica cuya
- * factura fue cancelada y crea una nueva proforma en borrador con los mismos
- * conceptos (RPC atómica `refacturar_proforma_rpc`).
+ * factura fue cancelada y libera conceptos para el formulario normal.
+ * Contrato recuperado de ec96cf2; no crea la nueva proforma todavía.
  */
 import { supabase } from "@/integrations/supabase/client";
 
-export interface RefacturarResultado {
-  nueva_proforma_id: string;
-  nuevo_numero: string;
-  anterior_numero: string;
-  factura_cancelada: string;
-}
+import { leerResultadoRefacturacion, type RefacturarResultado } from "../domain/refacturacion";
 
 export async function refacturarProforma(proformaId: string): Promise<RefacturarResultado> {
   const { data, error } = await supabase.rpc("refacturar_proforma_rpc", {
     p_proforma_id: proformaId,
   });
   if (error) throw error;
-  // SAFE-CAST: la RPC devuelve jsonb con forma fija.
-  return data as unknown as RefacturarResultado;
+  return leerResultadoRefacturacion(data);
 }
 
 /** Número de la factura cancelada ligada a la proforma, o null. */

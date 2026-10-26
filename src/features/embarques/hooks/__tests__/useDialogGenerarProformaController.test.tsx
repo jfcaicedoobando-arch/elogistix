@@ -66,6 +66,22 @@ describe("useDialogGenerarProformaController", () => {
     hoisted.warningMock.mockReset();
     hoisted.captureMock.mockReset();
   });
+  it("precarga sólo conceptos de la copia y notas; refetch no pisa edición y reapertura normal limpia", () => {
+    const { result, rerender } = renderHook(({ open, initial }) =>
+      useDialogGenerarProformaController(open, mockEmbarque, mockConceptos, vi.fn(), initial), {
+      wrapper, initialProps: { open: true, initial: { initialNotas: "Linaje", initialConceptoIds: ["c1"] } },
+    });
+    expect([...result.current.seleccionados]).toEqual(["c1"]);
+    expect(result.current.notas).toBe("Linaje");
+    act(() => result.current.setNotas("Editado"));
+    rerender({ open: true, initial: { initialNotas: "Refetch", initialConceptoIds: ["c1"] } });
+    expect(result.current.notas).toBe("Editado");
+    rerender({ open: false, initial: { initialNotas: "", initialConceptoIds: ["c1", "c2"] } });
+    rerender({ open: true, initial: { initialNotas: "", initialConceptoIds: ["c1", "c2"] } });
+    expect(result.current.notas).toBe("");
+    expect(result.current.totalSeleccionados).toBe(2);
+    expect(hoisted.submitMock).not.toHaveBeenCalled();
+  });
   it("inicializa correctamente al abrir", () => {
     const { result } = renderHook(
       () => useDialogGenerarProformaController(true, mockEmbarque, mockConceptos, vi.fn()),

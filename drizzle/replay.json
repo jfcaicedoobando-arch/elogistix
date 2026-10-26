@@ -159,21 +159,24 @@
     "file": "0021_refacturar_proforma_rpc.sql",
     "sha256": "8f5c299f5c593fe398e620056d8a2971a9f9ed4e90940310df173023fa9572e5",
     "replays": [
-      "20261026184800_replay_refacturar_proforma_rpc.sql"
-    ]
+      "0021_refacturar_proforma_rpc.sql"
+    ],
+    "scope": "isolated-ci"
   },
   {
     "file": "0022_cotizacion_comercial.sql",
     "sha256": "5cc034df0035d1f9b1722aa9bfad12ff68965bde22273500f55903bf9b60ed38",
     "replays": [
-      "20261026184900_replay_cotizacion_comercial.sql"
-    ]
+      "0022_cotizacion_comercial.sql"
+    ],
+    "scope": "isolated-ci"
   },
   {
     "file": "0023_margen_minimo_utilidad_rpc.sql",
     "sha256": "b106eb27b920f2d34825e9141a46d2ed51943c4ccad69cca8c2f970d2348c86a",
     "replays": [
-      "20261026185000_replay_margen_minimo_utilidad_rpc.sql"
-    ]
+      "0023_margen_minimo_utilidad_rpc.sql"
+    ],
+    "scope": "isolated-ci"
   }
 ]

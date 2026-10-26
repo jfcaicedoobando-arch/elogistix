@@ -29965,7 +29965,6 @@ CREATE FUNCTION public.refacturar_proforma_rpc(p_proforma_id uuid) RETURNS jsonb
     AS $$
 DECLARE
   v_old public.proformas;
-  v_new public.proformas;
   v_conceptos uuid[];
   v_factura_num text;
   v_viva boolean;
@@ -30014,23 +30013,20 @@ BEGIN
   IF v_conceptos IS NULL THEN
     RAISE EXCEPTION 'LC_REFACTURAR_SIN_CONCEPTOS: la proforma no tiene conceptos para copiar';
   END IF;
-  -- Cierra la proforma histórica y libera sus conceptos.
+  -- Cierra la proforma histórica y libera sus conceptos. La nueva proforma se
+  -- arma en el formulario normal del embarque (editable y con sus validaciones).
   UPDATE public.conceptos_venta
      SET estado_facturacion = 'pendiente', proforma_id = NULL
    WHERE proforma_id = p_proforma_id;
   UPDATE public.proformas SET estado_proforma = 'cancelada' WHERE id = p_proforma_id;
-  -- La nueva proforma reutiliza todas las validaciones de alta y nace en borrador.
-  SELECT * INTO v_new FROM public.crear_proforma_atomica(
-    v_old.organization_id, v_old.embarque_id, v_old.cliente_id, v_old.cliente_nombre,
-    v_old.expediente, v_old.bl_master, v_conceptos,
-    v_old.subtotal_usd, v_old.iva_usd, v_old.total_usd,
-    v_old.subtotal_mxn, v_old.iva_mxn, v_old.total_mxn,
-    trim(both from concat_ws(E'\n',
+  RETURN jsonb_build_object(
+    'embarque_id', v_old.embarque_id,
+    'anterior_numero', v_old.numero,
+    'factura_cancelada', v_factura_num,
+    'conceptos', to_jsonb(v_conceptos),
+    'notas_sugeridas', trim(both from concat_ws(E'\n',
       '[Refacturación de proforma ' || v_old.numero || ' / Factura ' || v_factura_num || ' cancelada]',
-      v_old.notas)),
-    v_old.operador, v_old.dias_credito, v_old.tasa_iva_aplicada, '{}'::jsonb);
-  RETURN jsonb_build_object('nueva_proforma_id', v_new.id, 'nuevo_numero', v_new.numero,
-                            'anterior_numero', v_old.numero, 'factura_cancelada', v_factura_num);
+      v_old.notas)));
 END;
 $$;
 CREATE FUNCTION public.refrescar_garantia_desde_tarifa(p_embarque_id uuid) RETURNS integer

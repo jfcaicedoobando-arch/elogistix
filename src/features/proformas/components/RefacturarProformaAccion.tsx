@@ -1,6 +1,6 @@
 /**
  * Aviso + acción «Refacturar desde esta proforma» cuando su factura fue
- * cancelada. Crea una proforma nueva en borrador y cancela la anterior.
+ * cancelada. Cancela la anterior y abre el formulario de la nueva.
  */
 import { useState } from "react";
 import { RefreshCw } from "lucide-react";
@@ -43,9 +43,10 @@ function AvisoRefacturar({ proformaId, numero, facturaNum }: {
           <AlertDialogHeader>
             <AlertDialogTitle>Refacturar {numero}</AlertDialogTitle>
             <AlertDialogDescription>
-              Se creará una proforma nueva en borrador con los mismos conceptos y montos, que
-              podrás corregir y deberá aprobarse como cualquier proforma. {numero} pasará a
-              Cancelada y se conservará como historial de la factura {facturaNum}.
+              {numero} pasará a Cancelada y se conservará como historial de la factura {facturaNum}.
+              Se abrirá el formulario con sus conceptos para revisarlos antes de crear la nueva
+              proforma, que deberá aprobarse normalmente. Si cierras el formulario, la anterior
+              seguirá cancelada y sus conceptos quedarán disponibles en el embarque.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -54,7 +55,7 @@ function AvisoRefacturar({ proformaId, numero, facturaNum }: {
               disabled={mutation.isPending}
               onClick={(e) => { e.preventDefault(); mutation.mutate(); }}
             >
-              {mutation.isPending ? "Creando…" : "Crear proforma nueva"}
+              {mutation.isPending ? "Preparando…" : "Continuar a la proforma nueva"}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

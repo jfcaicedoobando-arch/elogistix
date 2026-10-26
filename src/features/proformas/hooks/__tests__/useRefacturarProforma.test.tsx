@@ -23,9 +23,9 @@ describe("refacturar proforma hooks", () => {
     expect(mocks.consultar).toHaveBeenCalledWith("p-1");
     expect(queryKeys.proformas.facturaCancelada("p-1").slice(0, 1)).toEqual(queryKeys.proformas.all);
   });
-  it("invalida caché antes de cerrar y navegar a la copia", async () => {
+  it("invalida caché antes de cerrar y navegar al formulario editable", async () => {
     const invalidar = vi.spyOn(QueryClient.prototype, "invalidateQueries").mockResolvedValue();
-    mocks.refacturar.mockResolvedValue({ nueva_proforma_id: "p-2", nuevo_numero: "P-2", anterior_numero: "P-1" });
+    mocks.refacturar.mockResolvedValue({ embarque_id: "e1", conceptos: ["c1"], notas_sugeridas: "Linaje", anterior_numero: "P-1", factura_cancelada: "F1" });
     const cerrar = vi.fn();
     const { result } = renderHook(() => useRefacturarProforma("p-1", cerrar), { wrapper: createWrapper() });
     await act(async () => { await result.current.mutateAsync(); });
@@ -34,7 +34,11 @@ describe("refacturar proforma hooks", () => {
     expect(cerrar).toHaveBeenCalledOnce();
     expect(invalidar.mock.invocationCallOrder[0]).toBeLessThan(cerrar.mock.invocationCallOrder[0]);
     expect(cerrar.mock.invocationCallOrder[0]).toBeLessThan(mocks.navigate.mock.invocationCallOrder[0]);
-    expect(mocks.navigate).toHaveBeenCalledWith("/proformas/p-2");
+    expect(invalidar).toHaveBeenCalledWith({ queryKey: queryKeys.embarques.conceptosVenta() });
+    expect(invalidar).toHaveBeenCalledWith({ queryKey: queryKeys.embarques.all });
+    expect(mocks.navigate).toHaveBeenCalledWith("/embarques/e1?tab=facturacion", {
+      state: { refacturacion: { embarque_id: "e1", conceptos: ["c1"], notas_sugeridas: "Linaje", anterior_numero: "P-1", factura_cancelada: "F1" } },
+    });
   });
   it("un error conserva el diálogo y no navega", async () => {
     const error = new Error("No autorizado");

@@ -277,6 +277,16 @@ if [ "$REUSE" != "1" ]; then
   done
   ok "$total migraciones nuevas aplicadas · $omitidas_datos de datos omitidas"
 
+  # Same verified test-only history as CI; connection is constructed above for
+  # this process's ephemeral loopback Postgres, never DATABASE_URL.
+  isolated_history="$(node scripts/ci/drizzle-history/control.mjs list)" || exit 1
+  while IFS= read -r f; do
+    "${PSQL[@]}" --single-transaction -f "$f" >> "$migr_log" 2>&1 || {
+      fail "historia aislada no aplica: $f"; tail -n 30 "$migr_log" >&2; exit 1;
+    }
+  done <<< "$isolated_history"
+
+
 
   # Snapshot ANTES de _ci_post_migrate.sql: es el estado que producen sólo las
   # migraciones del repo (sin los GRANT masivos de CI). Es la fuente correcta

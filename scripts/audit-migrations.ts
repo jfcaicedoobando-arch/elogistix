@@ -1,3 +1,4 @@
+import { readIsolatedDrizzleReplay } from "./ci/drizzle-history/control.mjs";
 /**
  * Auditoría de higiene de migraciones SQL.
  * Uso: `bun run audit:migrations`
@@ -392,7 +393,7 @@ function main() {
   const drizzle = new Map(fs.readdirSync(drizzleDir).filter((f) => f.endsWith(".sql"))
     .map((file) => [file, fs.readFileSync(path.join(drizzleDir, file), "utf8")]));
   const replayEntries = JSON.parse(fs.readFileSync(path.resolve(process.cwd(), "drizzle/replay.json"), "utf8")) as DrizzleReplayEntry[];
-  violations.push(...scanDrizzleReplay(drizzle, bodies, replayEntries));
+  violations.push(...scanDrizzleReplay(drizzle, bodies, replayEntries, readIsolatedDrizzleReplay()));
 
   for (const f of all) {
     const match = FNAME_RE.exec(f);

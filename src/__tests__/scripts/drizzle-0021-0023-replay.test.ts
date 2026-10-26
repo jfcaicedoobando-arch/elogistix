@@ -1,3 +1,4 @@
+import { readIsolatedDrizzleReplay } from "../../../scripts/ci/drizzle-history/control.mjs";
 import { createHash } from "node:crypto";
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
@@ -14,13 +15,13 @@ const cases = [
 describe("Drizzle 0021–0023 immutable historical replay", () => {
   it.each(cases)("preserves every byte and original ACL of %s", (sourceFile, replayFile, sha256) => {
     const source = readFileSync(`drizzle/migrations/${sourceFile}`, "utf8");
-    const replay = readFileSync(`supabase/migrations/${replayFile}`, "utf8");
+    const replay = readFileSync(`scripts/ci/drizzle-history/${sourceFile}`, "utf8");
     expect(createHash("sha256").update(source).digest("hex")).toBe(sha256);
     // Unlike function-body comparison, exact bytes cover DDL, trigger and ACL too.
     expect(replay).toBe(source);
     const mapping = entries.filter((entry) => entry.file === sourceFile);
-    expect(mapping).toEqual([{ file: sourceFile, sha256, replays: [replayFile] }]);
-    expect(scanDrizzleReplay(new Map([[sourceFile, source]]), new Map([[replayFile, replay]]), mapping)).toEqual([]);
+    expect(mapping).toEqual([{ file: sourceFile, sha256, replays: [sourceFile], scope: "isolated-ci" }]);
+    expect(scanDrizzleReplay(new Map([[sourceFile, source]]), new Map(), mapping, readIsolatedDrizzleReplay())).toEqual([]);
     expect(scanFile(replayFile, replay)).toEqual([]);
   });
 });
