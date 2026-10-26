@@ -9,6 +9,7 @@ import { fallóDirectorioUsuarios, fetchUsuariosOrganizacion } from "./listado";
 import { registrarActividad } from "@/services/bitacora/registrar";
 import { resetRedirectUrl } from "./mutaciones.auth";
 import { errorDeEdgeFunction, traducirMensajeEdge } from "./mutaciones.errores";
+import { ReglaNegocioError } from "@/lib/errors/reglaNegocio";
 
 export interface CreateUserParams {
   email: string;
@@ -40,7 +41,8 @@ async function validarAltaUsuario(orgId: string | undefined, emailNormalizado: s
     throw new Error("No se pudo verificar el directorio de usuarios; reintenta en unos segundos.");
   }
   if (existentes.some((u) => u.email.toLowerCase() === emailNormalizado)) {
-    throw new Error(`Ya existe un usuario con el correo ${emailNormalizado} en esta organización.`);
+    // Sentry 8G: validación del usuario, no falla del ERP; no se reporta.
+    throw new ReglaNegocioError(`Ya existe un usuario con el correo ${emailNormalizado} en esta organización.`);
   }
 }
 

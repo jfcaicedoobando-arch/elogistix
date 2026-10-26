@@ -86,7 +86,8 @@ describe("useCancelarRepController", () => {
     });
 
     await waitFor(() => expect(result.current.resultado).toBe("accepted"));
-    expect(cancelarMutateAsync).toHaveBeenCalledWith({ pagoId: "pago-1", motivo: "01" });
+    // Sentry 8D: motivo 01 exige UUID que la ventana no pide; el default es 02.
+    expect(cancelarMutateAsync).toHaveBeenCalledWith({ pagoId: "pago-1", motivo: "02" });
     expect(eliminarMutateAsync).toHaveBeenCalledWith({ id: "pago-1", facturaId: "fac-1" });
     expect(registrarActividadMutate).toHaveBeenCalledTimes(2);
     expect(spy).toHaveBeenCalled();

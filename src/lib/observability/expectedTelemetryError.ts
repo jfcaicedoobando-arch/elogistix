@@ -12,6 +12,8 @@ const KNOWN_MESSAGES = [
   "factura duplicada", "no puedes aprobar o rechazar esta factura",
   "embarque cerrado: usa reabrir_embarque", "debe seleccionar al menos",
   "no coinciden con el resumen del proveedor de timbrado",
+  // Sentry 8C: contenedor repetido; la UI muestra el aviso de pgConstraintMessages.
+  "unique constraint \"contenedores_numero_unico\"",
 ];
 
 export function isExpectedTelemetryError(error: unknown): boolean {

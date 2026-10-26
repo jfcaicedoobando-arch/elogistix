@@ -56,6 +56,9 @@ const EXPECTED_FACTURAPI_PATTERNS: RegExp[] = [
   // la UI pide reintentar más tarde y no se reporta a Sentry.
   /servicio de cancelaci[oó]n del sat no est[aá] disponible/i,
   /servicio de cancelacionsat no esta disponible/i,
+  // JAVASCRIPT-REACT-77: el pre-flight del REP detuvo un saldo que no cuadra con
+  // pagos/NC capturados; Contabilidad lo corrige y no se timbra nada.
+  /no coinciden con el resumen del proveedor de timbrado/i,
 ];
 
 function isExpectedFacturapiMessage(message: string): boolean {

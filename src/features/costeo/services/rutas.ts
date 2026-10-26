@@ -5,6 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import type { CosteoRuta } from "@/features/costeo/types";
 import { todayLocalISO } from "@/lib/date/today";
 import { registrarActividad } from "@/services/bitacora/registrar";
+import { ReglaNegocioError } from "@/lib/errors/reglaNegocio";
 import {
   agregarTarifasRuta,
   type TarifaRutaAgregable,
@@ -110,8 +111,15 @@ export async function insertCosteoRuta(
   return ruta;
 }
 
+/** Sentry 8E: la base impide borrar una ruta con tarifas; se explica sin reportarlo. */
+export const MENSAJE_RUTA_CON_TARIFAS =
+  "Esta ruta tiene tarifas registradas. Elimina o mueve sus tarifas antes de borrar la ruta.";
+
 export async function deleteCosteoRuta(id: string): Promise<void> {
   const { error } = await supabase.from("costeo_rutas").delete().eq("id", id);
+  if (error?.code === "23503" && /costeo_tarifas/i.test(`${error.message} ${error.details ?? ""}`)) {
+    throw new ReglaNegocioError(MENSAJE_RUTA_CON_TARIFAS);
+  }
   if (error) throw error;
   await registrarActividad({
     modulo: "costeo",

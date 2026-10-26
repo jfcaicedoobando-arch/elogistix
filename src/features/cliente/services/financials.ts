@@ -14,7 +14,8 @@ import { sumarMontos } from "@/lib/financial/financialUtils";
 export interface ClienteFinancials {
   facturadoMXN: number;
   pendienteMXN: number;
-  profitMXN: number;
+  /** `null` cuando el rol no puede consultar Rentabilidad. */
+  profitMXN: number | null;
   /** Facturas excluidas de los totales por no tener tipo de cambio confiable. */
   facturasSinTc: number;
   /** Embarques del cliente cuya utilidad no pudo convertirse (reporta la RPC). */
@@ -64,6 +65,11 @@ export async function fetchClienteFinancials(clienteId: string): Promise<Cliente
     _modo: undefined,
     _cliente_id: clienteId,
   });
+  // Sentry 8F: un rol sin acceso a Rentabilidad ve facturado/pendiente y la
+  // utilidad queda en "—" en lugar de fallar toda la tarjeta.
+  if (errP && /LC_PROFIT_ROLE_REQUIRED/.test(errP.message ?? "")) {
+    return { facturadoMXN, pendienteMXN, profitMXN: null, facturasSinTc, embarquesSinTc: 0 };
+  }
   if (errP) throw errP;
 
   const filas = (profitData as ProfitRow[] | null) ?? [];
