@@ -30,11 +30,11 @@ vi.mock("@/features/cxp/hooks/useFacturasEntrantes", () => ({
 }));
 
 // El diálogo de subida consulta costos del proveedor vía react-query.
-const renderTab = () => {
+const renderTab = (cerrado = false) => {
   const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } });
   return render(
     <QueryClientProvider client={qc}>
-      <MemoryRouter><TabFacturasEntrantes embarqueId="e1" canEdit /></MemoryRouter>
+      <MemoryRouter><TabFacturasEntrantes embarqueId="e1" canEdit cerrado={cerrado} /></MemoryRouter>
     </QueryClientProvider>,
   );
 };
@@ -55,5 +55,12 @@ describe("<TabFacturasEntrantes /> permisos de subida", () => {
     renderTab();
     expect(screen.queryByRole("button", { name: /subir factura/i })).not.toBeInTheDocument();
     expect(screen.getByText(/la entrega de archivos la hace operaciones/i)).toBeInTheDocument();
+  });
+
+  it("embarque cerrado: operaciones no ve el botón y se le pide reabrir", () => {
+    permisos.canSubirFacturaEntranteEmbarque = true;
+    renderTab(true);
+    expect(screen.queryByRole("button", { name: /subir factura/i })).not.toBeInTheDocument();
+    expect(screen.getByText(/embarque cerrado\. pide a un administrador/i)).toBeInTheDocument();
   });
 });
