@@ -1,5 +1,14 @@
 # Changelog
 
+## [13.824.86] - 2026-10-26
+
+### Reconciliación de refacturación y controles de CI
+
+- Alinea la pantalla de refacturación con la función ya existente: abre el formulario de edición con los conceptos y notas de la proforma anterior, sin crear una copia automáticamente. Conserva las restricciones de embarques cerrados, roles y borradores, y evita reabrir el diálogo al volver atrás.
+- Corrige imports, capas, complejidad y el detector de colores que impedían completar CI, conservando los cambios recientes de interfaz y Sentry.
+- Recupera el historial literal de migraciones exclusivamente como fixtures de replay aislado en CI. No añade ni modifica SQL elegible, journals, permisos ni registros productivos.
+- Prepara una publicación únicamente web. La nueva entrada del manifest copia el inventario de 13.824.85 y conserva íntegro el historial; no autoriza ni ejecuta migraciones o funciones Edge.
+
 ## [13.824.85] - Unreleased
 
 ### CRM: empresas propias del KAM a Prospecto
