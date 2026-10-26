@@ -3,20 +3,13 @@
  * cancelada. Crea una proforma nueva en borrador y cancela la anterior.
  */
 import { useState } from "react";
-import { useNavigate } from "react-router";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import {
-  facturaCanceladaDeProforma, refacturarProforma,
-} from "@/features/proformas/services/refacturar";
-import { queryKeys } from "@/lib/query";
-import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
-import { getErrorMessage } from "@/lib/errors";
+import { useFacturaCanceladaDeProforma, useRefacturarProforma } from "../hooks/useRefacturarProforma";
 
 interface Props {
   proformaId: string;
@@ -25,11 +18,7 @@ interface Props {
 }
 
 export function RefacturarProformaAccion({ proformaId, numero, habilitada }: Props) {
-  const { data: facturaNum } = useQuery({
-    queryKey: ["proforma-factura-cancelada", proformaId],
-    queryFn: () => facturaCanceladaDeProforma(proformaId),
-    enabled: habilitada,
-  });
+  const { data: facturaNum } = useFacturaCanceladaDeProforma(proformaId, habilitada);
   if (!habilitada || !facturaNum) return null;
   return <AvisoRefacturar proformaId={proformaId} numero={numero} facturaNum={facturaNum} />;
 }
@@ -38,28 +27,7 @@ function AvisoRefacturar({ proformaId, numero, facturaNum }: {
   proformaId: string; numero: string; facturaNum: string;
 }) {
   const [open, setOpen] = useState(false);
-  const navigate = useNavigate();
-  const qc = useQueryClient();
-  const mutation = useMutation({
-    mutationFn: () => refacturarProforma(proformaId),
-    onSuccess: async (r) => {
-      await qc.invalidateQueries({ queryKey: queryKeys.proformas.all });
-      notifySuccess(undefined, {
-        title: `Se creó la proforma ${r.nuevo_numero}`,
-        description: `${r.anterior_numero} quedó cancelada como historial.`,
-      });
-      setOpen(false);
-      navigate(`/proformas/${r.nueva_proforma_id}`);
-    },
-    onError: (err: unknown) => {
-      notifyError(undefined, {
-        title: "No se pudo refacturar la proforma",
-        description: getErrorMessage(err),
-        error: err,
-        method: "REFACTURAR_PROFORMA",
-      });
-    },
-  });
+  const mutation = useRefacturarProforma(proformaId, () => setOpen(false));
 
   return (
     <div className="flex flex-wrap items-center justify-between gap-3 rounded-md border border-warning/40 bg-warning/10 p-3">

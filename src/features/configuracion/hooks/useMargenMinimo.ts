@@ -3,7 +3,7 @@
  * Reutilizable en embarques y, más adelante, en cotizaciones.
  */
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
+import { guardarMargenMinimo } from "../services/margenMinimo";
 import { queryKeys } from "@/lib/query";
 import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
 import { getErrorMessage } from "@/lib/errors";
@@ -20,10 +20,7 @@ export function useMargenMinimo(): number {
 export function useGuardarMargenMinimo() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async (pct: number) => {
-      const { error } = await supabase.rpc("set_margen_minimo_utilidad", { p_pct: pct });
-      if (error) throw error;
-    },
+    mutationFn: guardarMargenMinimo,
     onSettled: () => queryClient.invalidateQueries({ queryKey: queryKeys.configuracion.all }),
     onSuccess: () => notifySuccess(undefined, { title: "Margen mínimo guardado" }),
     onError: (error: Error) =>

@@ -5,12 +5,11 @@
  */
 import type { AjustePropuesto } from "@/features/cxp/services/crearAjustesFacturaProveedor";
 
-const fmt = (n: number, moneda: string) =>
-  new Intl.NumberFormat("es-MX", { style: "currency", currency: moneda }).format(n);
+import { formatCurrency } from "@/lib/formatters";
 
 export function textoConfirmacionAjustes(ajustes: AjustePropuesto[], moneda: string): string {
   const lineas = ajustes.map(
-    (a) => `• ${a.descripcion}: ${fmt(a.facturado, moneda)} − ${fmt(a.original, moneda)} = ${fmt(a.monto, moneda)}`,
+    (a) => `• ${a.descripcion}: ${formatCurrency(a.facturado, moneda)} − ${formatCurrency(a.original, moneda)} = ${formatCurrency(a.monto, moneda)}`,
   );
   return [
     "El sistema quiere agregar al embarque estas notas de ajuste, ligadas a la factura (grapa contable):",
