@@ -5,7 +5,7 @@
  */
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { MOTIVOS_CANCELACION_SAT } from "@/constants/catalogosSAT";
+import { MOTIVOS_CANCELACION_REP } from "@/constants/catalogosSAT";
 import { formatCurrency, formatDate } from "@/lib/formatters";
 import type { MotivoCancelacionSat } from "@/features/facturacion/services/facturapi";
 import type { PagoRepInfo } from "@/features/facturacion/hooks/useCancelarRepController";
@@ -51,7 +51,7 @@ export function CancelarRepMotivoSelector({
           <SelectValue />
         </SelectTrigger>
         <SelectContent>
-          {MOTIVOS_CANCELACION_SAT.map((m) => (
+          {MOTIVOS_CANCELACION_REP.map((m) => (
             <SelectItem key={m.value} value={m.value}>
               {m.label}
             </SelectItem>

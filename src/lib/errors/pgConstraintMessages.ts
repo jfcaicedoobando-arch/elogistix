@@ -77,6 +77,12 @@ export const UNIQUE_CONSTRAINT_MESSAGES: readonly ConstraintMessage[] = [
       "Ya existe un embarque con ese número de expediente. Verifica el consecutivo.",
   },
   {
+    // Sentry 8C: el número de contenedor ya está en otro embarque activo.
+    match: /contenedores_numero_unico/i,
+    message:
+      "Ese número de contenedor ya está registrado en otro embarque activo. Verifica el número capturado.",
+  },
+  {
     match: /user_roles?_user_id_role/i,
     message: "Este usuario ya tiene asignado ese rol.",
   },

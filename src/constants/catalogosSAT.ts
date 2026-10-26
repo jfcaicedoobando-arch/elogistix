@@ -87,3 +87,9 @@ export const MOTIVOS_CANCELACION_SAT: Array<{ value: "01" | "02" | "03" | "04"; 
   { value: "03", label: "03 - No se llevó a cabo la operación" },
   { value: "04", label: "04 - Operación nominativa relacionada en factura global" },
 ];
+
+/**
+ * Sentry 8D: el REP no se cancela con motivo 01 (el linaje queda en el REP
+ * nuevo, no en una cancelación relacionada) y la ventana no pide UUID.
+ */
+export const MOTIVOS_CANCELACION_REP = MOTIVOS_CANCELACION_SAT.filter((m) => m.value !== "01");
