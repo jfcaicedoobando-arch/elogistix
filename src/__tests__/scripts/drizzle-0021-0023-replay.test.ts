@@ -24,3 +24,27 @@ describe("Drizzle 0021–0023 immutable historical replay", () => {
     expect(scanFile(replayFile, replay)).toEqual([]);
   });
 });
+
+describe("0022 CI harness preserves the replay ACL", () => {
+  it("checks original and final ACL without granting new roles to the trigger", () => {
+    const read = (file: string) => readFileSync(file, "utf8");
+    const harness = read("supabase/tests/rls/_ci_post_migrate.sql");
+    const check = "\\ir _ci_check_cotizacion_vendedor_acl.sql";
+    const blanket = "GRANT EXECUTE ON ALL FUNCTIONS IN SCHEMA public TO authenticated, service_role;";
+    const restore = "REVOKE EXECUTE ON FUNCTION public._cotizacion_vendedor_misma_org() FROM authenticated, service_role;";
+    expect(harness.split(check)).toHaveLength(3);
+    expect(harness.indexOf(check)).toBeLessThan(harness.indexOf(blanket));
+    expect(harness.indexOf(restore)).toBeGreaterThan(harness.indexOf(blanket));
+    expect(harness.lastIndexOf(check)).toBeGreaterThan(harness.indexOf(restore));
+    const assertion = read("supabase/tests/rls/_ci_check_cotizacion_vendedor_acl.sql");
+    expect(assertion).toContain("v_oid IS NULL");
+    expect(assertion).toContain("pg_catalog.aclexplode(v_proc.proacl)) <> 1");
+    expect(assertion).toContain("a.grantee <> v_owner");
+    expect(assertion).toContain("OR NOT v_proc.prosecdef");
+    expect(assertion).toContain("ARRAY['anon', 'authenticated', 'service_role']");
+    expect(assertion).toContain("pg_catalog.has_function_privilege(v_role, v_oid, 'EXECUTE')");
+    expect(assertion).not.toMatch(/\b(?:GRANT|REVOKE)\b/);
+    expect(read("supabase/schema/baseline.sql")).not.toMatch(/GRANT .*ON FUNCTION public\._cotizacion_vendedor_misma_org\(\)/);
+    expect(read("supabase/tests/rls/_ci_service_role_only.sql")).not.toContain("public._cotizacion_vendedor_misma_org()");
+  });
+});
