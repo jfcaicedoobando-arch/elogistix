@@ -3,7 +3,7 @@
  * Extraído de `index.ts` (Power of 10: líneas por función); sin cambios de
  * comportamiento.
  */
-import type { SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
+import type { SupabaseClient } from "npm:@supabase/supabase-js@2.118.0";
 import { authorizeOrgRole, ROLES_COBRANZA_FISCAL } from "../_shared/auth.ts";
 import { esReTimbradoPermitido } from "./claimRep.ts";
 import type { PagoRep } from "./etapaDatos.ts";

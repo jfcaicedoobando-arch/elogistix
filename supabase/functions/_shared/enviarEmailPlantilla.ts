@@ -12,7 +12,7 @@
  * aplica Lovable del lado servidor: aquí nunca se consulta ni se escribe una
  * tabla de supresión.
  */
-import type { SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
+import type { SupabaseClient } from "npm:@supabase/supabase-js@2.118.0";
 import { sendTemplateEmail } from "./transactional-email-templates/send-email.ts";
 import { registrarEstadoEmail } from "./emailSendLog.ts";
 

@@ -16,7 +16,7 @@
  * `LC_CUENTA_NO_REINVITABLE`.
  */
 // Import de tipo remoto: Deno lo resuelve sin necesidad de suprimir el chequeo.
-import type { SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
+import type { SupabaseClient } from "npm:@supabase/supabase-js@2.118.0";
 
 
 /** Roles que sí corresponden a cuentas de portal re-invitables. */

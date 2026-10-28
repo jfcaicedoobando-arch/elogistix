@@ -9,7 +9,7 @@
 // verificación vive en `./provisioning.ts` para mantener este archivo enfocado
 // en el transporte HTTP.
 
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
+import { createClient } from "npm:@supabase/supabase-js@2.118.0";
 import { corsHeaders } from "../_shared/cors.ts";
 import { primerEmailNoPermitido } from "./emailAllowlist.ts";
 import {
