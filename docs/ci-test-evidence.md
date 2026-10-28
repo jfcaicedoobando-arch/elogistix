@@ -43,4 +43,12 @@ Las pruebas del gate incluyen omisión, sustitución con mismo conteo, duplicado
 
 Para herramientas de benchmark se exportan `validateEvidence(catalog, reports, total)` (puro, válido para artifacts históricos) y `verifyEvidence(directory, total)` (compara además el checkout actual). `cacheHit=null` expresa entorno local desconocido y no debe admitirse como muestra comparable de cache caliente/fría.
 
+## Entradas Node y Deno en Knip
+
+`test:dependencies` ejecuta `scripts/tests/dependency-security.test.mjs` después de instalar Bun en el job de checks y tiene su carril automático exacto en el catálogo. Además de las regresiones de dependencias, comprueba el límite de runtimes del inventario.
+
+El primer comando `node --test` activa en Knip 6.41 los patrones globales del plugin Node, que también coinciden con `supabase/functions/**/*_test.ts`. Esas pruebas pertenecen al carril Deno. `workspaces["."].node.entry` conserva `server.js` y niega únicamente sus entradas automáticas bajo `supabase/functions/**`. No cambia `ignore`, las reglas de dependencias ni el análisis de imports alcanzados: si una entrada Node importa un archivo Deno, Knip sigue recorriéndolo y rechaza sus dependencias desconocidas. La regresión usa fixtures aisladas para comprobar ese recorrido, el caso Node declarado válido y los imports Node desconocidos, incluido el paquete literal `npm`.
+
+Referencias: [plugin Node](https://knip.dev/reference/plugins/node), [resolución de plugins](https://knip.dev/explanations/plugins) y [entradas, negaciones y archivos del proyecto](https://knip.dev/guides/configuring-project-files).
+
 El reporter de evidencia exige la suite completa (no filtros de archivos ni `-t`). Para ejecutar focales locales, omitir `CI_EVIDENCE_DIR`. Para comprobar el contrato real de eventos de Vitest5 con fixtures pequeñas: `node scripts/ci/test-evidence-smoke.mjs`.

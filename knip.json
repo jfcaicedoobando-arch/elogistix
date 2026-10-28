@@ -15,6 +15,12 @@
         "src/**/*.{ts,tsx,css}",
         "scripts/**/*.ts"
       ],
+      "node": {
+        "entry": [
+          "server.js",
+          "!supabase/functions/**"
+        ]
+      },
       "ignoreDependencies": [
         "drizzle-orm"
       ]

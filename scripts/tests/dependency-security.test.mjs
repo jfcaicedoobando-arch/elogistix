@@ -1,7 +1,8 @@
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
-import { existsSync, readFileSync } from "node:fs";
+import { existsSync, mkdtempSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { createRequire } from "node:module";
+import { tmpdir } from "node:os";
 import path from "node:path";
 import test from "node:test";
 import vm from "node:vm";
@@ -16,7 +17,7 @@ function dependency(consumer, name) {
     const file = path.join(directory, "package.json");
     if (existsSync(file)) {
       const manifest = JSON.parse(readFileSync(file, "utf8"));
-      if (manifest.name === name) return { manifest, entry, require: createRequire(entry) };
+      if (manifest.name === name) return { manifest, directory, entry, require: createRequire(entry) };
     }
     assert.notEqual(path.dirname(directory), directory, `Missing manifest for ${name}`);
   }
@@ -206,4 +207,85 @@ test("jsdom's Undici rejects excessive encodings without a later process crash",
   assert.equal(result.error, undefined, result.error?.message);
   assert.equal(result.status, 0, result.stderr);
   assert.match(result.stdout, /survived-malformed-response/);
+});
+
+test("Knip scopes Node test entrypoints while retaining reachable import errors", { timeout: 60000 }, () => {
+  // Adding the first `node --test` script makes Knip's Node plugin discover
+  // *_test.ts globally. Deno has its own runtime and CI lane. This entry-only
+  // boundary must never ignore a Deno file actually imported by Node.
+  const config = JSON.parse(readFileSync(new URL("../../knip.json", import.meta.url), "utf8"));
+  const node = config.workspaces["."].node;
+  assert.deepEqual(node.entry, ["server.js", "!supabase/functions/**"]);
+  const knip = dependency(require, "knip");
+  const binary = path.join(knip.directory, knip.manifest.bin.knip);
+  const temporary = path.resolve(tmpdir());
+  const fixtureRoot = mkdtempSync(path.join(temporary, "elog-knip-runtime-"));
+  assert.ok(fixtureRoot.startsWith(`${temporary}${path.sep}`));
+  const scenarios = [
+    { name: "unscoped-discovery", scoped: false, unknownNode: false, linked: false },
+    { name: "scoped-declared-node", scoped: true, unknownNode: false, linked: false },
+    { name: "scoped-unknown-node", scoped: true, unknownNode: true, linked: false },
+    { name: "scoped-node-imports-deno", scoped: true, unknownNode: false, linked: true },
+  ];
+  try {
+    for (const scenario of scenarios) {
+      const directory = path.join(fixtureRoot, scenario.name);
+      const write = (file, text) => {
+        const target = path.join(directory, file);
+        mkdirSync(path.dirname(target), { recursive: true });
+        writeFileSync(target, text);
+      };
+      write("package.json", JSON.stringify({
+        name: scenario.name, private: true, type: "module",
+        scripts: { test: "node --test scripts/tests/node.test.mjs" },
+        dependencies: { "declared-node-control": "1.0.0" },
+      }));
+      write("knip.json", JSON.stringify({
+        entry: ["scripts/tests/node.test.mjs"], project: ["**/*.mjs", "**/*.ts"],
+        ...(scenario.scoped ? { node } : {}),
+      }));
+      write("scripts/tests/node.test.mjs", [
+        'import { value } from "declared-node-control"; console.log(value);',
+        ...(scenario.unknownNode ? [
+          'import { unknown } from "node-unlisted-control"; console.log(unknown);',
+          'import { cli } from "npm"; console.log(cli);',
+        ] : []),
+        ...(scenario.linked ? [
+          'import { deno } from "../../supabase/functions/fixture/handler.ts"; console.log(deno);',
+        ] : []),
+      ].join("\n"));
+      write("supabase/functions/fixture/handler_test.ts", 'import { deno } from "./handler.ts"; console.log(deno);');
+      write("supabase/functions/fixture/handler.ts", [
+        'import { z } from "npm:zod@3.23.8";',
+        'import { unknown } from "deno-unlisted-control";',
+        'export const deno = [z, unknown];',
+      ].join("\n"));
+      const result = spawnSync(process.execPath, [binary, "--directory", directory,
+        "--include", "unlisted", "--no-progress", "--reporter", "json"], {
+        cwd: directory, encoding: "utf8", windowsHide: true, timeout: 10000,
+        env: { PATH: process.env.PATH, SystemRoot: process.env.SystemRoot, TEMP: process.env.TEMP, TMP: process.env.TMP, NO_COLOR: "1" },
+      });
+      assert.equal(result.error, undefined, `${scenario.name}: ${result.error?.message}`);
+      assert.ok(result.status === 0 || result.status === 1, `${scenario.name}: ${result.stderr}`);
+      const issues = JSON.parse(result.stdout).issues.flatMap(file =>
+        (file.unlisted ?? []).map(issue => ({ ...issue, file: file.file.replaceAll("\\", "/") })));
+      const denoIssues = issues.filter(issue => issue.file.startsWith("supabase/"));
+      if (!scenario.scoped || scenario.linked) {
+        assert.equal(result.status, 1, scenario.name);
+        assert.ok(denoIssues.some(issue => issue.name === "npm"), scenario.name);
+        assert.ok(denoIssues.some(issue => issue.name === "deno-unlisted-control"), scenario.name);
+      } else assert.deepEqual(denoIssues, [], scenario.name);
+      if (scenario.unknownNode) {
+        assert.equal(result.status, 1);
+        assert.ok(issues.some(issue => issue.name === "node-unlisted-control"));
+        assert.ok(issues.some(issue => issue.name === "npm" && issue.file.startsWith("scripts/")), "bare npm remains an error");
+      } else if (scenario.scoped && !scenario.linked) {
+        assert.equal(result.status, 0, result.stdout + result.stderr);
+        assert.deepEqual(issues, []);
+      }
+    }
+  } finally {
+    // This is the fresh directory created above, verified to stay inside Temp.
+    rmSync(fixtureRoot, { recursive: true, force: true });
+  }
 });
