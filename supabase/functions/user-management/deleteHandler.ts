@@ -30,7 +30,7 @@ export async function handleDelete(ctx: HandlerCtx, admin: AdminAccess): Promise
   const destino = validarDestinoBaja(ctx);
   if ("error" in destino) return destino.error;
   const { user_id } = destino;
-  if (user_id === callerId) {
+  if (user_id.toLowerCase() === callerId.toLowerCase()) {
     log.finish(400, "self_delete_blocked", { user_id: callerId });
     return errorResponse("No puedes eliminar tu propia cuenta", 400, cors);
   }

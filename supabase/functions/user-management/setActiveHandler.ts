@@ -62,7 +62,7 @@ export async function handleSetActive(ctx: HandlerCtx, admin: AdminAccess): Prom
     return errorResponse("user_id debe ser un UUID válido", 400, cors);
   }
   const activo = body.activo;
-  if (user_id === callerId) {
+  if (user_id.toLowerCase() === callerId.toLowerCase()) {
     log.finish(400, "self_deactivate_blocked", { user_id: callerId });
     return errorResponse("No puedes desactivar tu propia cuenta", 400, cors);
   }
