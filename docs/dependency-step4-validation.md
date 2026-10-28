@@ -61,3 +61,21 @@ No se transmitió el inventario raíz/Edge para auditoría completa: no se decla
 cero avisos. Continúan los residuos conocidos de Zod 3/Compiler,
 Solid/Seroval 1.6.12 y esbuild dev bajo Drizzle. No se forzaron overrides.
 Fuente de la familia: [release 2.118.0](https://github.com/supabase/supabase-js/releases/tag/v2.118.0).
+
+## Ajuste de evidencia en Linux
+
+El primer [CI Linux](https://github.com/jfcaicedoobando-arch/elogistix/actions/runs/40769162397)
+detectó que dos contratos históricos de autoridad fijaban los bytes anteriores
+de `demo-access/index.ts`. Su único cambio de fuente es el import del SDK.
+Los dos `source-pins.json` y sus bases históricas permanecen intactos: un helper
+exige primero los 1103 bytes y SHA-256 exactos del adapter migrado y revierte
+exclusivamente esa línea para verificar longitud, SHA-256 y blob originales.
+No admite el import antiguo, otra versión, cambios de cuerpo ni wiring nuevo.
+
+Con Node 24.22.1 en Linux pasan completos los carriles
+`node-demo-authority-contract` (44 pruebas, incluidas las mutaciones negativas)
+y `node-demo-authority-bridge` (71 pruebas). La revisión independiente del
+ajuste no encontró bloqueantes. El catálogo conserva sus rutas exactas y su
+rechazo de entradas desconocidas; los gates de endpoint cerrado, wire UNBOUND
+y aceptación operativa NOT_RUN continúan vigentes. El CI completo debe volver
+a ejecutarse sobre el nuevo head; este resultado focal no lo sustituye.
