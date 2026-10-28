@@ -7,6 +7,7 @@
 import { jsonResponse, errorResponse } from "../_shared/response.ts";
 import type { HandlerCtx, AdminAccess } from "./types.ts";
 import { mensajeSeguro } from "./errores.ts";
+import { esUuid } from "../_shared/uuid.ts";
 
 /** ~100 años: equivalente a "sin fecha de fin". */
 const BAN_INDEFINIDO = "876000h";
@@ -55,6 +56,10 @@ export async function handleSetActive(ctx: HandlerCtx, admin: AdminAccess): Prom
   if (!user_id || typeof body.activo !== "boolean") {
     log.finish(400, "invalid_payload", { user_id: callerId });
     return errorResponse("user_id y activo son requeridos", 400, cors);
+  }
+  if (!esUuid(user_id)) {
+    log.finish(400, "validation_failed", { user_id: callerId });
+    return errorResponse("user_id debe ser un UUID válido", 400, cors);
   }
   const activo = body.activo;
   if (user_id === callerId) {
