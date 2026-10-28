@@ -29,6 +29,8 @@ const queryTools = dependency(require, "@tanstack/react-query-devtools");
 const devtools = dependency(queryTools.require, "@tanstack/query-devtools");
 const solid = dependency(devtools.require, "solid-js");
 const seroval = dependency(solid.require, "seroval");
+const eslint = dependency(require, "eslint");
+const minimatch = dependency(eslint.require, "minimatch");
 const jsdom = dependency(require, "jsdom");
 const legacyTailwind = dependency(dependency(require, "lovable-tagger").require, "tailwindcss");
 const nested = dependency(legacyTailwind.require, "postcss-nested");
@@ -41,7 +43,7 @@ test("security patches resolve through consumers within their declared families"
     [solid.require, "seroval", "1.6.11", "1"],
     [solid.require, "seroval-plugins", "1.6.8", "1"],
     [jsdom.require, "undici", "8.12.2", "8"],
-    [dependency(require, "minimatch").require, "brace-expansion", "5.0.12", "5"],
+    [minimatch.require, "brace-expansion", "5.0.12", "5"],
     [nested.require, "postcss-selector-parser", "6.1.5", "6"],
     [dependency(jsdom.require, "css-tree").require, "source-map-js", "1.2.2", "1"],
     [dependency(require, "magicast").require, "source-map-js", "1.2.2", "1"],
@@ -132,16 +134,15 @@ test("the compiler's Babel preserves private methods and source-map provenance",
 });
 
 test("minimatch keeps nested alternatives, numeric sequences and escaped literals", () => {
-  const minimatchRequire = dependency(require, "minimatch").require;
-  const { expand } = minimatchRequire("brace-expansion");
+  const { expand } = minimatch.require("brace-expansion");
   assert.deepEqual(expand("invoice-{01..03}.{pdf,csv}"), [
     "invoice-01.pdf", "invoice-01.csv", "invoice-02.pdf", "invoice-02.csv", "invoice-03.pdf", "invoice-03.csv",
   ]);
   assert.deepEqual(expand("{invoice,{credit,receipt}}-42"), ["invoice-42", "credit-42", "receipt-42"]);
   assert.deepEqual(expand("invoice-\\{draft\\}"), ["invoice-{draft}"]);
-  const { minimatch } = require("minimatch");
-  assert.equal(minimatch("src/invoice.test.tsx", "src/**/*.{ts,tsx}"), true);
-  assert.equal(minimatch("src/invoice.sql", "src/**/*.{ts,tsx}"), false);
+  const { minimatch: match } = eslint.require("minimatch");
+  assert.equal(match("src/invoice.test.tsx", "src/**/*.{ts,tsx}"), true);
+  assert.equal(match("src/invoice.sql", "src/**/*.{ts,tsx}"), false);
 });
 
 test("legacy Tailwind's PostCSS consumer preserves nested selectors and escapes", async () => {
