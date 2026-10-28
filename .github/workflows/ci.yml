@@ -186,6 +186,10 @@ jobs:
         id: setup
         uses: ./.github/actions/setup-bun
 
+      - name: Dependency security consumer regressions
+        if: needs.detector.outputs.frontend == 'true'
+        run: bun run test:dependencies
+
       - name: Installed TypeScript version
         id: typescript
         if: needs.detector.outputs.frontend == 'true'
