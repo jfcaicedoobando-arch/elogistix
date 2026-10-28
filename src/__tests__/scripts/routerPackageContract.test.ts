@@ -34,7 +34,9 @@ describe("React Router · contrato con el paquete", () => {
   });
 
   it("declara y ejecuta un Node compatible con el mínimo de Router 8", () => {
-    expect(proyecto.engines.node).toBe(instalado.engines.node);
+    expect(instalado.engines.node).toBe(">=22.22.0");
+    expect(proyecto.engines.node).toBe("24.22.1");
+    expect(process.versions.node).toBe(proyecto.engines.node);
     const [major, minor] = process.versions.node.split(".").map(Number);
     expect(major > 22 || (major === 22 && minor >= 22), `Node ${process.versions.node}; se requiere >=22.22.0`).toBe(true);
   });

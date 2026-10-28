@@ -43,7 +43,9 @@ UI change, or permission expansion.
 - The only JavaScript dependency is an independently locked `pg` alias matching
   the reviewed local proof's `@supabase/pg` 8.21.1. `npm ci` runs in this directory,
   skips lifecycle scripts and optional dependencies, and does not install the
-  frontend. Node 20+ and npm are provided by the ubuntu-24.04 runner.
+  frontend. CI selects Node 24.22.1 and its bundled npm 11.19.1 before this
+  install; the manifest pins both versions. The package-lock remains independent
+  of the Bun frontend lock.
 - Enabled variants are derived from the registered disabled body, changing only
   its literal and the authenticated grant. Enable-only variants retain the exact
   all-six structural precondition. Disabled state is restored and checked before

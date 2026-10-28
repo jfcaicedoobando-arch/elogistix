@@ -164,7 +164,7 @@ test('CI runs the exact bridge lane automatically after inventory with pinned No
   const start = ci.indexOf('      - name: Demo authority bridge offline');
   const end = ci.indexOf('      - name: Post-deploy smoke contract', start);
   assert.ok(start > ci.indexOf('test-catalog.mjs --output reports/test-inventory.json'));
-  const nodeSetup = ci.indexOf("node-version: '24.22.0'");
+  const nodeSetup = ci.indexOf("node-version: '24.22.1'");
   assert.ok(nodeSetup >= 0 && nodeSetup < start);
   assert.ok(end > start);
   const step = ci.slice(start, end);

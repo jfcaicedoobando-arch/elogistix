@@ -14,7 +14,7 @@ runs:
       id: setup-node
       uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
       with:
-        node-version: "24.22.0"
+        node-version: "24.22.1"
         package-manager-cache: false
     - name: Show Node runtime
       shell: bash
@@ -24,7 +24,25 @@ runs:
       with:
         # v13.322.1 (GHA-audit D) — Pin explícito: el runtime también es
         # supply chain. Bumpear deliberadamente tras verificar la suite.
-        bun-version: "1.4.0"
+        bun-version: "1.4.4"
+
+    - name: Verify runtime pins
+      shell: bash
+      run: |
+        node --input-type=module <<'NODE'
+        import assert from 'node:assert/strict';
+        import { readFileSync } from 'node:fs';
+        import { execFileSync } from 'node:child_process';
+        const pkg = JSON.parse(readFileSync('package.json', 'utf8'));
+        const bun = execFileSync('bun', ['--version'], { encoding: 'utf8' }).trim();
+        assert.equal(process.versions.node, pkg.engines.node);
+        assert.equal(bun, pkg.engines.bun);
+        assert.equal(pkg.packageManager, `bun@${bun}`);
+        for (const file of ['.nvmrc', '.node-version'])
+          assert.equal(readFileSync(file, 'utf8').trim(), process.versions.node);
+        assert.equal(readFileSync('.bun-version', 'utf8').trim(), bun);
+        console.log(`Node ${process.versions.node}; Bun ${bun}`);
+        NODE
 
     # v13.514.0 (auditoría CI · Fase 2) — Cache de `node_modules` completo,
     # no sólo del tarball cache de Bun. Con hit exacto de `bun.lock` +
@@ -36,7 +54,7 @@ runs:
       uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
       with:
         path: node_modules
-        key: ${{ runner.os }}-${{ runner.arch }}-node${{ steps.setup-node.outputs.node-version }}-node-modules-bun1.4.0-${{ hashFiles('bun.lock', 'package.json') }}
+        key: ${{ runner.os }}-${{ runner.arch }}-node${{ steps.setup-node.outputs.node-version }}-node-modules-bun1.4.4-${{ hashFiles('bun.lock', 'package.json') }}
 
     - name: Cache Bun deps
       if: steps.cache-node-modules.outputs.cache-hit != 'true'
@@ -55,7 +73,10 @@ runs:
       # @react-pdf/renderer) descargan/resuelven binarios en runtime o vía optional
       # deps, por eso esto no rompe el build. Si agregas una dep con postinstall
       # imprescindible, considera quitar el flag o whitelistear con trustedDependencies.
-      run: bun install --frozen-lockfile --ignore-scripts
+      run: |
+        lock_before=$(sha256sum bun.lock)
+        bun install --frozen-lockfile --ignore-scripts
+        test "$lock_before" = "$(sha256sum bun.lock)"
 
     - name: Verify node_modules (cache hit)
       id: verify-cache
@@ -68,6 +89,8 @@ runs:
           echo "::warning::node_modules restaurado del cache no es válido; reinstalando."
           echo "reinstalled=true" >> "$GITHUB_OUTPUT"
           rm -rf node_modules
+          lock_before=$(sha256sum bun.lock)
           bun install --frozen-lockfile --ignore-scripts
+          test "$lock_before" = "$(sha256sum bun.lock)"
         fi
 

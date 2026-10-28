@@ -6,8 +6,10 @@ El entry es `src/index.ts`; `index.ts` de esta carpeta sólo imprime un saludo.
 
 ## Instalación y comprobación
 
-Usar Bun **1.4.0** (declarado en `packageManager`) y Node.js existente.
-Validado en Windows x64 con Node **24.22.0**; no se instala ningún runtime del sistema.
+Usar Node **24.22.1** y Bun **1.4.4**, fijados en `engines` y `packageManager`.
+Comprobar `node --version` y `bun --version`; la instalación conserva el `bun.lock`
+propio de esta carpeta. La validación histórica de 2026-10-16 usó Node 24.22.0
+y Bun 1.4.0; no acredita por sí sola las nuevas versiones.
 
 ```sh
 cd remotion

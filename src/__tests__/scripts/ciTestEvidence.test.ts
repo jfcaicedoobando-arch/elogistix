@@ -80,14 +80,14 @@ describe("CI catalog: effective discovery", () => {
     const step = detector.split("      - name: Package script contracts")[1].split("      - name:")[0];
     expect(step).toContain(command);
     expect(step).not.toMatch(/\bif:|continue-on-error/);
-    const nodeSetup = detector.indexOf("node-version: '24.22.0'");
+    const nodeSetup = detector.indexOf("node-version: '24.22.1'");
     expect(nodeSetup).toBeGreaterThanOrEqual(0);
     expect(nodeSetup).toBeLessThan(detector.indexOf(command));
     const bunStep = detector.split("      - name: Setup Bun for package script contracts")[1].split("      - name:")[0];
     expect(bunStep).toContain("uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0");
-    expect(bunStep).toContain("bun-version: '1.4.0'");
+    expect(bunStep).toContain("bun-version: '1.4.4'");
     expect(bunStep).not.toMatch(/\bif:|bun install|actions\/cache/);
-    expect(detector.indexOf("bun-version: '1.4.0'")).toBeLessThan(detector.indexOf(command));
+    expect(detector.indexOf("bun-version: '1.4.4'")).toBeLessThan(detector.indexOf(command));
     const guards = catalog.entries.filter(entry => entry.lane === "sql-guards").map(entry => entry.path);
     const support = Object.fromEntries(catalog.entries.filter(entry => entry.lane === "sql-support").map(entry => [entry.path, entry.reason]));
     expect(() => classifyFiles([...catalog.entries.map(entry => entry.path), "scripts/ci/unregistered-package.test.mjs"], guards, support))

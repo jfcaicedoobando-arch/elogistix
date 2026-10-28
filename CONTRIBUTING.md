@@ -5,8 +5,10 @@ Revisado el **2026-10-16**. Leer [arquitectura](ARCHITECTURE.md),
 
 ## Preparación y cambios
 
-Node.js ≥22.22.0 es el mínimo de compatibilidad por Router 8. Para paridad
-con CI, usar Node 24.22.0 y Bun 1.4.0 (`packageManager: bun@1.4.0`).
+Para paridad con CI, usar Node 24.22.1 y Bun 1.4.4
+(`engines` exactos y `packageManager: bun@1.4.4`). Los archivos `.nvmrc`,
+`.node-version` y `.bun-version` fijan las mismas versiones. Ver
+[alcance por subproyecto](docs/ci/runtime-reproducibility-20261028.md).
 Instalar con `bun install --frozen-lockfile --ignore-scripts`. Trabajar en rama/PR de alcance
 explícito y conservar cambios ajenos.
 
