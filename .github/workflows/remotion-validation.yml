@@ -1,0 +1,153 @@
+name: Remotion Linux validation
+
+on:
+  pull_request:
+    paths:
+      - "remotion/**"
+      - ".github/workflows/remotion-validation.yml"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: remotion-validation-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  validate:
+    name: Remotion frozen · scenes · render
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    env:
+      NODE_OPTIONS: --max-old-space-size=1536
+    steps:
+      - name: Checkout candidate
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          path: candidate
+          persist-credentials: false
+
+      - name: Checkout exact PR base
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.event.pull_request.base.sha }}
+          path: base
+          persist-credentials: false
+
+      - name: Setup Node
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: '24.22.1'
+          package-manager-cache: false
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
+        with:
+          bun-version: '1.4.4'
+
+      - name: Frozen installs and unchanged lock hashes
+        shell: bash
+        run: |
+          set -euo pipefail
+          node --version
+          bun --version
+          for project in candidate base; do
+            (
+              cd "$project/remotion"
+              git rev-parse HEAD
+              sha256sum bun.lock > "$RUNNER_TEMP/remotion-$project.lock.sha256"
+              bun install --frozen-lockfile
+              sha256sum --check "$RUNNER_TEMP/remotion-$project.lock.sha256"
+              bun run typecheck
+              bun run versions
+            )
+          done
+
+      - name: Prepare dedicated Chromium Headless Shell
+        working-directory: candidate/remotion
+        run: |
+          node --input-type=module <<'JS'
+          import assert from 'node:assert/strict';
+          import { appendFileSync } from 'node:fs';
+          import { ensureBrowser } from '@remotion/renderer';
+          const browser = await ensureBrowser({ chromeMode: 'headless-shell' });
+          assert.ok('path' in browser && browser.path);
+          appendFileSync(process.env.GITHUB_ENV, `PUPPETEER_EXECUTABLE_PATH=${browser.path}\n`);
+          JS
+
+      - name: Verify six scenes on base and candidate
+        shell: bash
+        run: |
+          set -euo pipefail
+          "$PUPPETEER_EXECUTABLE_PATH" --version
+          for project in base candidate; do
+            (cd "$project/remotion" && bun run verify)
+          done
+
+      - name: Compare actual RGBA pixels at the six frames
+        working-directory: candidate/remotion
+        run: |
+          if ! command -v ffmpeg >/dev/null; then
+            sudo apt-get update -qq
+            sudo apt-get install -y --no-install-recommends ffmpeg
+          fi
+          ffmpeg -version
+          node --input-type=module <<'JS'
+          import assert from 'node:assert/strict';
+          import { execFileSync } from 'node:child_process';
+          import { createHash } from 'node:crypto';
+          import { readFileSync } from 'node:fs';
+          import path from 'node:path';
+          const read = (file) => JSON.parse(readFileSync(file, 'utf8'));
+          const baseDir = path.resolve('../../base/remotion/out/verification');
+          const candidateDir = path.resolve('out/verification');
+          const base = read(path.join(baseDir, 'verification.json'));
+          const candidate = read(path.join(candidateDir, 'verification.json'));
+          assert.deepEqual(candidate.composition, base.composition);
+          assert.deepEqual(candidate.scenes, base.scenes);
+          assert.equal(candidate.scenes.length, 6);
+          const rgba = (file) => execFileSync('ffmpeg', [
+            '-v', 'error', '-i', file, '-f', 'rawvideo', '-pix_fmt', 'rgba', 'pipe:1',
+          ], { maxBuffer: 16 * 1024 * 1024 });
+          for (const { scene, frame, image } of candidate.scenes) {
+            const a = rgba(path.join(baseDir, image));
+            const b = rgba(path.join(candidateDir, image));
+            assert.equal(a.length, 1920 * 1080 * 4);
+            assert.equal(b.length, a.length);
+            const equal = a.equals(b);
+            console.log(JSON.stringify({ scene, frame, equal,
+              baseRgbaSha256: createHash('sha256').update(a).digest('hex'),
+              candidateRgbaSha256: createHash('sha256').update(b).digest('hex') }));
+            assert.ok(equal, `${scene}: review the changed pixels before accepting the update`);
+          }
+          JS
+
+      - name: Full H264 render with concurrency one
+        working-directory: candidate/remotion
+        run: bun run render
+
+      - name: Inspect rendered media and unchanged tracked sources
+        working-directory: candidate/remotion
+        run: |
+          node --input-type=module <<'JS'
+          import assert from 'node:assert/strict';
+          import { execFileSync } from 'node:child_process';
+          import { createHash } from 'node:crypto';
+          import { readFileSync, statSync } from 'node:fs';
+          const file = 'out/demo-libre-carga.mp4';
+          const probe = JSON.parse(execFileSync('node_modules/@remotion/compositor-linux-x64-gnu/ffprobe', [
+            '-v', 'error', '-show_streams', '-show_format', '-of', 'json', file,
+          ], { encoding: 'utf8' }));
+          assert.equal(probe.streams.length, 1);
+          const [video] = probe.streams;
+          for (const [key, value] of Object.entries({ codec_type: 'video', codec_name: 'h264',
+            width: 1920, height: 1080, r_frame_rate: '30/1', nb_frames: '1800' })) {
+            assert.equal(video[key], value, key);
+          }
+          assert.equal(Number(probe.format.duration), 60);
+          console.log(JSON.stringify({ probe, bytes: statSync(file).size,
+            sha256: createHash('sha256').update(readFileSync(file)).digest('hex') }, null, 2));
+          JS
+          git diff --exit-code
+          git diff --cached --exit-code

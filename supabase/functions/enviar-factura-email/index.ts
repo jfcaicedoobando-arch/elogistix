@@ -10,7 +10,7 @@
  */
 import { wrapEdgeHandler, captureEdgeException } from "../_shared/sentry.ts";
 import { buildCors, handlePreflightStrict } from '../_shared/cors.ts';
-import { resolveFacturapiKey, resolveFacturapiKeyOtherAmbiente, type SupabaseLike } from '../_shared/facturapiAuth.ts';
+import { resolveFacturapiKey, resolveFacturapiKeyOtherAmbiente, facturapiResolverClient } from '../_shared/facturapiAuth.ts';
 import {
   authenticateRequest,
   json,
@@ -45,14 +45,15 @@ Deno.serve(wrapEdgeHandler("enviar-factura-email", async (req) => {
     return json(cors, { error: 'Al menos un destinatario válido es requerido' }, 400);
   }
 
-  const keyRes = await resolveFacturapiKey(authed.admin, factura.organization_id);
+  const resolverClient = facturapiResolverClient(authed.admin);
+  const keyRes = await resolveFacturapiKey(resolverClient, factura.organization_id);
   if (!keyRes.ok) return json(cors, { error: keyRes.data.error, message: keyRes.data.message }, keyRes.data.status);
 
   // Fallback: si la factura fue timbrada en el ambiente opuesto (típico
   // cuando la org migró de sandbox → live), intenta descargar con la key
   // del otro ambiente si el primario responde 404 invoice_not_found.
   const fallback = await resolveFacturapiKeyOtherAmbiente(
-    authed.admin as unknown as SupabaseLike,
+    resolverClient,
     factura.organization_id,
   );
 

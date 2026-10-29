@@ -5,6 +5,7 @@
  * Se usa en `facturapi-descargar`, `facturapi-cancelar`, `enviar-factura-email`
  * y `enviar-cotizacion-email`.
  */
+import type { SupabaseClient } from "npm:@supabase/supabase-js@2.118.0";
 
 /**
  * Normaliza el nombre de la organización para usarlo como prefijo del nombre de
@@ -20,24 +21,13 @@ export function slugifyOrg(nombre: string | null | undefined): string {
   return s || "org";
 }
 
-type OrgRow = { nombre?: string | null };
-
-type QueryBuilder = {
-  select: (columns: string) => FilterBuilder;
-};
-
-type FilterBuilder = {
-  eq: (column: string, value: string) => FilterBuilder;
-  // El builder de PostgREST es *thenable*, no una `Promise`: con `Promise` el
-  // `SupabaseClient` real no satisfacía este tipo y `deno check` fallaba.
-  maybeSingle: () => PromiseLike<{ data: OrgRow | null }>;
-};
-
-type AnySupabaseClient = { from: (t: string) => QueryBuilder };
+// Reuse the public SDK method instead of recursively comparing its generic
+// query/filter overloads against a separately defined thenable interface.
+type OrgNameClient = Pick<SupabaseClient, "from">;
 
 /** Devuelve el slug del nombre de la organización, o "org" si no se encuentra. */
 export async function fetchOrgSlug(
-  admin: AnySupabaseClient,
+  admin: OrgNameClient,
   organizationId: string,
 ): Promise<string> {
   try {
@@ -45,8 +35,10 @@ export async function fetchOrgSlug(
       .from("organizations")
       .select("nombre")
       .eq("id", organizationId)
-      .maybeSingle();
-    return slugifyOrg(data?.nombre ?? null);
+      .maybeSingle<unknown>();
+    const nombre = data !== null && typeof data === "object" && "nombre" in data
+      && typeof data.nombre === "string" ? data.nombre : null;
+    return slugifyOrg(nombre);
   } catch {
     return "org";
   }

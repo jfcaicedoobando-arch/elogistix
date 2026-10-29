@@ -1,5 +1,5 @@
 /** Promoción CAS de una factura recuperada y sincronización del uso CFDI efectivo. */
-import type { SupabaseClient } from 'https://esm.sh/@supabase/supabase-js@2.45.0';
+import type { SupabaseClient } from 'npm:@supabase/supabase-js@2.118.0';
 import type { FacturaRow } from './recuperar.ts';
 import type { FapiInvoice, UserIdentity } from './recuperar.tipos.ts';
 import { FACTURAPI_BASE } from '../_shared/facturapiAuth.ts';

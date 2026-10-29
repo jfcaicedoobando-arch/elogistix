@@ -6,7 +6,7 @@
  * iniciados intactos (cursor sin tocar) y los cuenta como `diferidos` — no como
  * errores. La corrida termina limpia, responde y suelta el lock de cron.
  */
-import type { SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
+import type { SupabaseClient } from "npm:@supabase/supabase-js@2.118.0";
 import type { FacturaPendiente, NotaCreditoPendiente, RepPendiente, Resumen } from "./reconcile.ts";
 import { nuevoResumen } from "./reconcile.ts";
 import type { Tarea } from "./plan.ts";

@@ -1,6 +1,6 @@
 // Upserts de entidades trazadoras para `e2e-provision-multi-tenant`.
 // Extraído de provisioning.ts para respetar el límite de longitud del lint.
-import type { SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
+import type { SupabaseClient } from "npm:@supabase/supabase-js@2.118.0";
 
 type AdminClient = SupabaseClient;
 
