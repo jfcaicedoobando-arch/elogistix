@@ -6,7 +6,7 @@
  * emitía factura aunque el cliente ya estuviera sobregirado. Aquí se valida
  * SIEMPRE, con override explícito para los roles de dirección/finanzas.
  */
-import { createClient, type SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
+import { createClient, type SupabaseClient } from "npm:@supabase/supabase-js@2.118.0";
 import { jsonResponse } from "../_shared/response.ts";
 import { authorizeOrgRole } from "../_shared/auth.ts";
 import { validarTcFiscal, esMonedaNacional } from "../_shared/tcBanda.ts";

@@ -12,7 +12,7 @@
  *
  * Contrato de respuesta invariante: `{ usdMxn, eurMxn|null, eur_es_fallback? }`.
  */
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
+import { createClient } from "npm:@supabase/supabase-js@2.118.0";
 import { handlePreflight } from "../_shared/cors.ts";
 import { jsonResponse } from "../_shared/response.ts";
 import { createLogger } from "../_shared/logger.ts";

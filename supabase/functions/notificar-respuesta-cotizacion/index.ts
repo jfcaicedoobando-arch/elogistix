@@ -2,7 +2,7 @@
  * AUDIT-17.1 — Notifica por email a operadores/admins de la organización
  * cuando un cliente responde una cotización desde el portal.
  */
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
+import { createClient } from "npm:@supabase/supabase-js@2.118.0";
 import { corsHeaders } from "../_shared/cors.ts";
 import { authenticate, type AuthContext } from "../_shared/auth.ts";
 import { wrapEdgeHandler, captureEdgeException } from "../_shared/sentry.ts";

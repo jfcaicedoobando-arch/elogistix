@@ -3,7 +3,7 @@
  * con el límite de líneas y funciones. No contiene routing ni HTTP.
  * La carga del contexto fiscal vive en `contexto.ts`.
  */
-import { type SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
+import { type SupabaseClient } from "npm:@supabase/supabase-js@2.118.0";
 import { jsonResponse } from "../_shared/response.ts";
 import { validarTotalPositivo, validarLimiteCredito } from "./credito.ts";
 import { validarTcFiscal } from "../_shared/tcBanda.ts";

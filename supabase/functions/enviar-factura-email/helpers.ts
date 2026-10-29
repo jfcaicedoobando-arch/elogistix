@@ -2,7 +2,7 @@
  * Helpers para `enviar-factura-email`. Extraído del handler principal para
  * respetar el límite `max-lines` del linter y facilitar tests unitarios.
  */
-import { createClient, type SupabaseClient } from 'https://esm.sh/@supabase/supabase-js@2.45.0';
+import { createClient, type SupabaseClient } from 'npm:@supabase/supabase-js@2.118.0';
 import { captureEdgeException } from "../_shared/sentry.ts";
 import { enviarEmailPlantilla } from "../_shared/enviarEmailPlantilla.ts";
 import { jsonResponse as _jsonResponse } from "../_shared/response.ts";
@@ -225,7 +225,7 @@ export async function prepareAttachments(
   await uploadToBucket(admin, xmlPath, xmlBytes, 'application/xml');
   // Se mantiene la carga de orgSlug por compatibilidad con otros consumidores
   // aunque ya no se prefija al nombre descargable.
-  await fetchOrgSlug(admin as unknown as Parameters<typeof fetchOrgSlug>[0], factura.organization_id);
+  await fetchOrgSlug(admin, factura.organization_id);
   const folioSerie = factura.numero || `${factura.serie ?? ''}${factura.folio_fiscal ?? ''}`;
   const [pdfLink, xmlLink] = await Promise.all([
     signUrl(admin, pdfPath, buildFilename({

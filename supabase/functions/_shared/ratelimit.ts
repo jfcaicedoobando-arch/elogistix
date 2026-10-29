@@ -5,7 +5,7 @@
  * para que cualquier función pública lo consuma sin duplicar la lógica.
  * Si la RPC falla, se corta con 503 (nunca se "abre" el endpoint).
  */
-import type { SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
+import type { SupabaseClient } from "npm:@supabase/supabase-js@2.118.0";
 import { jsonResponse } from "./response.ts";
 import { captureEdgeException } from "./sentry.ts";
 

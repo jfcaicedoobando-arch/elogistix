@@ -3,7 +3,7 @@
  * rechazada / pendiente / aceptada. Extraídos para adelgazar el handler
  * y mantener `max-lines-per-function` bajo 200.
  */
-import { SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
+import { SupabaseClient } from "npm:@supabase/supabase-js@2.118.0";
 import { registrarBitacoraEdge } from "../_shared/bitacora.ts";
 import { jsonResponse } from "../_shared/response.ts";
 import { descargarAcuseCancelacion } from "./descargarAcuse.ts";

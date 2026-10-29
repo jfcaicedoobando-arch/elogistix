@@ -10,7 +10,7 @@
  *
  * Cada etapa devuelve su valor tipado o la `Response` con la que se corta.
  */
-import type { SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
+import type { SupabaseClient } from "npm:@supabase/supabase-js@2.118.0";
 import { precargarPagoRep } from "./precargaPago.ts";
 import { cargarDatosPago, cargarFacturaPpd } from "./etapaDatos.ts";
 import { resolverFiscalRep } from "./etapaFiscal.ts";

@@ -8,7 +8,7 @@
  *    misma llave, así un reintento técnico no crea un segundo REP).
  *  - P0-A: pendiente ⇒ 202, sin marcar Timbrado, sin XML y conservando el claim.
  */
-import type { SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
+import type { SupabaseClient } from "npm:@supabase/supabase-js@2.118.0";
 import { buildRepPayload, type PagoContext } from "./helpers.ts";
 import { reservarRep } from "./claimRep.ts";
 import { timbrarRep } from "./timbrar.ts";

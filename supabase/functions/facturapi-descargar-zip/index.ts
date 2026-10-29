@@ -19,7 +19,7 @@
  * `getFacturapiClient`; NUNCA fetch directo a facturapi.io (guardrail
  * SDK-only) ni `FACTURAPI_KEY` global.
  */
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
+import { createClient } from "npm:@supabase/supabase-js@2.118.0";
 import { buildCors, handlePreflightStrict } from "../_shared/cors.ts";
 import { wrapEdgeHandler } from "../_shared/sentry.ts";
 import { authorizeOrgRole, ROLES_CONSULTA_FISCAL } from "../_shared/auth.ts";

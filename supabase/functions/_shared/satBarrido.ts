@@ -7,7 +7,7 @@
  * `uuid_verificado_fecha`. Nunca cambia el estado ni los importes de la
  * factura.
  */
-import type { SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
+import type { SupabaseClient } from "npm:@supabase/supabase-js@2.118.0";
 import { consultarSat, normalizarRfc, type EstatusSat } from "./satConsulta.ts";
 
 export const PAUSA_MS = 350;

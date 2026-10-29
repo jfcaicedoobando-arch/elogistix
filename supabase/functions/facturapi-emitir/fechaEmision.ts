@@ -14,7 +14,7 @@
  * `LC_FACTURA_SIN_TC_DOF` / `LC_FACTURA_TC_DOF_OBSOLETO` y aquí se traduce a un
  * 422 accionable — antes del claim y antes de cualquier llamada al PAC.
  */
-import { type SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
+import { type SupabaseClient } from "npm:@supabase/supabase-js@2.118.0";
 import { jsonResponse } from "../_shared/response.ts";
 import { registrarBitacoraEdge } from "../_shared/bitacora.ts";
 import { FACTURA_COLUMNS, type FacturaRow, type UserIdentity } from "./types.ts";
