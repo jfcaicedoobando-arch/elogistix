@@ -3,7 +3,7 @@
   "module": "index.ts",
   "type": "module",
   "private": true,
-  "packageManager": "bun@1.4.0",
+  "packageManager": "bun@1.4.4",
   "scripts": {
     "typecheck": "tsc --noEmit -p tsconfig.json",
     "versions": "remotion versions",
@@ -11,6 +11,7 @@
     "render": "node scripts/render-remotion.mjs"
   },
   "devDependencies": {
+    "@types/node": "24.19.2",
     "@types/react": "18.3.31",
     "@types/react-dom": "18.3.7",
     "typescript": "5.8.3"
@@ -26,5 +27,9 @@
     "react": "18.3.1",
     "react-dom": "18.3.1",
     "remotion": "4.0.488"
+  },
+  "engines": {
+    "node": "24.22.1",
+    "bun": "1.4.4"
   }
 }
