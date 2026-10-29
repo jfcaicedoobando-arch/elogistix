@@ -12,6 +12,7 @@ import type { HandlerCtx, AdminAccess } from "./types.ts";
 import { VALID_ROLES, ASSIGNABLE_BY_ORG_ADMIN } from "./types.ts";
 import { esCorreoDuplicado, mensajeSeguro, MENSAJE_CORREO_NO_DISPONIBLE } from "./errores.ts";
 import { captureEdgeException } from "../_shared/sentry.ts";
+import { esUuid } from "../_shared/uuid.ts";
 
 declare const Deno: { env: { get(key: string): string | undefined } };
 
@@ -185,11 +186,17 @@ export async function handleResetPassword(ctx: HandlerCtx, admin: AdminAccess): 
     return errorResponse("Solo administradores pueden enviar restablecimientos", 403, cors);
   }
   const { user_id: userId, redirect_to: redirectTo } = body as {
-    user_id?: string; redirect_to?: string;
+    user_id?: unknown; redirect_to?: string;
   };
   if (!userId) {
     log.finish(400, "validation_failed", { user_id: callerId });
     return errorResponse("user_id es requerido", 400, cors);
+  }
+  // auth-js anterior a 2.70.0 permite segmentos de ruta en getUserById.
+  // Validar el valor original antes de cualquier consulta o envío de correo.
+  if (!esUuid(userId)) {
+    log.finish(400, "validation_failed", { user_id: callerId });
+    return errorResponse("user_id debe ser un UUID válido", 400, cors);
   }
 
   const { data: target, error: getErr } = await adminClient.auth.admin.getUserById(userId);
