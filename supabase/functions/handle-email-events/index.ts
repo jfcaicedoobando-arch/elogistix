@@ -1,5 +1,5 @@
 import { createEmailWebhookHandler } from 'npm:@lovable.dev/email-js@0.1.0'
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.45.0'
+import { createClient } from 'npm:@supabase/supabase-js@2.118.0'
 
 // Receptor de eventos terminales de entrega (rebote, queja, baja). Sólo
 // registra el resultado en las tablas de bitácora de la app: la supresión real

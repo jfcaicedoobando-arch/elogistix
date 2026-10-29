@@ -78,7 +78,8 @@ export function classifyFiles(files, guards, sqlSupport) {
       if (file === 'scripts/ci/selector148/tests/profile.test.cjs') lane = 'node-selector148';
       else if (file === 'scripts/ci/post-deploy-smoke.test.mjs') lane = 'node-post-deploy-smoke';
       else if (file === 'scripts/ci/package-scripts.test.mjs') lane = 'node-package-scripts';
-      else if (file === 'scripts/tests/dependency-security.test.mjs') lane = 'node-dependency-security';
+      else if (file === 'scripts/tests/dependency-security.test.mjs'
+        || file === 'scripts/tests/supabase-sdk-contracts.test.mjs') lane = 'node-dependency-security';
       else if (file === 'docs/qa/build-minifier-20261017/check-output.test.mjs') {
         lane = 'node-build-minifier'; mode = 'manual';
         reason = 'Local benchmark checker: node --test docs/qa/build-minifier-20261017/check-output.test.mjs; no ordinary CI workflow executes it.';

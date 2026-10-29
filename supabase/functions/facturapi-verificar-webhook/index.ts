@@ -11,7 +11,7 @@
  * SEGURIDAD: la respuesta NUNCA incluye la API key ni el secret del webhook;
  * sólo URL, id, eventos y estado. Requiere rol emisor fiscal en la org.
  */
-import { createClient, type SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
+import { createClient, type SupabaseClient } from "npm:@supabase/supabase-js@2.118.0";
 import { corsHeaders } from "../_shared/cors.ts";
 import { wrapEdgeHandler } from "../_shared/sentry.ts";
 import { jsonResponse } from "../_shared/response.ts";
@@ -20,6 +20,7 @@ import {
   basicAuthHeader,
   resolveFacturapiKey,
   resolveFacturapiKeyOtherAmbiente,
+  facturapiResolverClient,
   FACTURAPI_BASE,
 } from "../_shared/facturapiAuth.ts";
 import {
@@ -97,10 +98,11 @@ async function resolverKeyDelAmbiente(
   orgId: string,
   ambiente: FacturapiAmbiente,
 ): Promise<{ apiKey: string } | { respuesta: Response }> {
-  const resolved = await resolveFacturapiKey(admin, orgId);
+  const resolverClient = facturapiResolverClient(admin);
+  const resolved = await resolveFacturapiKey(resolverClient, orgId);
   if (!resolved.ok) return { respuesta: jsonResponse(resolved.data, resolved.data.status) };
   if (resolved.data.ambiente === ambiente) return { apiKey: resolved.data.apiKey };
-  const otra = await resolveFacturapiKeyOtherAmbiente(admin, orgId);
+  const otra = await resolveFacturapiKeyOtherAmbiente(resolverClient, orgId);
   if (otra && otra.ambiente === ambiente) return { apiKey: otra.apiKey };
   return {
     respuesta: jsonResponse({

@@ -2,7 +2,7 @@
  * Sub-helpers de `facturapi-cancelar` con I/O acotado a Supabase.
  * Extraídos para bajar `max-lines-per-function` del handler.
  */
-import { SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
+import { SupabaseClient } from "npm:@supabase/supabase-js@2.118.0";
 import { describeFacturapiError, type FacturapiErrorDetail } from "../_shared/facturapiClient.ts";
 import { registrarBitacoraEdge } from "../_shared/bitacora.ts";
 import { jsonResponse } from "../_shared/response.ts";
