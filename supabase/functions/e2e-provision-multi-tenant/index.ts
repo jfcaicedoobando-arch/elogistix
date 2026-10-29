@@ -18,7 +18,7 @@
 // NOTA: elude la RPC `provision_organization` (que exige super_admin del caller)
 // porque este pipeline corre con `service_role`. El acceso está limitado por el
 // secreto compartido; NO exponer esta función a usuarios finales.
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
+import { createClient } from "npm:@supabase/supabase-js@2.118.0";
 import { corsHeaders } from "../_shared/cors.ts";
 import { timingSafeEqual } from "../_shared/timingSafe.ts";
 import {

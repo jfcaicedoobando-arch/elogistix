@@ -3,7 +3,7 @@
  * Extraído de index.ts (Ola 4) para bajar la complejidad ciclomática del
  * handler principal por debajo del límite de ESLint.
  */
-import type { SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
+import type { SupabaseClient } from "npm:@supabase/supabase-js@2.118.0";
 import { authorizeOrgRole, ROLES_EMISOR_FISCAL } from "../_shared/auth.ts";
 import { jsonResponse } from "../_shared/response.ts";
 

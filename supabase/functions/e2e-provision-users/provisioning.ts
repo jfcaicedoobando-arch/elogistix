@@ -2,7 +2,7 @@
 // Extraídos del handler para mantener el archivo principal bajo el límite de
 // líneas del linter y su complejidad ciclomática dentro del umbral.
 
-import type { SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
+import type { SupabaseClient } from "npm:@supabase/supabase-js@2.118.0";
 
 export type ProvisionPayload = {
   admin?: { email: string; password: string };

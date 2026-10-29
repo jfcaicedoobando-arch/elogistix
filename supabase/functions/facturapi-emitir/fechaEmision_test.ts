@@ -5,7 +5,7 @@
  * publicación utilizable, el timbrado se detiene con un 422 reintentable.
  */
 import { assert, assertEquals } from "https://deno.land/std@0.224.0/assert/mod.ts";
-import { type SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
+import { type SupabaseClient } from "npm:@supabase/supabase-js@2.118.0";
 import { fechaDesfasada, hoyMx, realinearFechaEmision } from "./fechaEmision.ts";
 import { ESTADOS_FACTURA_TIMBRABLES } from "./emitir.ts";
 import type { FacturaRow } from "./types.ts";

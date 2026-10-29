@@ -112,10 +112,12 @@ describe("CI catalog: effective discovery", () => {
     const actual = pkg.scripts["test:dependencies"].slice("node --test ".length).split(/\s+/);
     expect(() => assertExactPaths(expected.map(entry => entry.path), actual, "dependency security command discovery"))
       .not.toThrow();
-    expect(expected).toEqual([expect.objectContaining({
-      path: "scripts/tests/dependency-security.test.mjs", mode: "automatic",
-      sha256: hash(fs.readFileSync(actual[0])),
-    })]);
+    expect(expected).toEqual([
+      "scripts/tests/dependency-security.test.mjs",
+      "scripts/tests/supabase-sdk-contracts.test.mjs",
+    ].map(path => expect.objectContaining({
+      path, mode: "automatic", sha256: hash(fs.readFileSync(path)),
+    })));
 
     const checks = source(".github/workflows/ci.yml").replace(/\r\n/g, "\n").split("  checks:\n")[1].split("  tests:\n")[0];
     const command = "run: bun run test:dependencies";
@@ -129,7 +131,8 @@ describe("CI catalog: effective discovery", () => {
 
     const guards = catalog.entries.filter(entry => entry.lane === "sql-guards").map(entry => entry.path);
     const support = Object.fromEntries(catalog.entries.filter(entry => entry.lane === "sql-support").map(entry => [entry.path, entry.reason]));
-    for (const extra of ["scripts/tests/extra-security.test.mjs", "scripts/tests/nested/dependency-security.test.mjs"]) {
+    for (const extra of ["scripts/tests/extra-security.test.mjs", "scripts/tests/nested/dependency-security.test.mjs",
+      "scripts/tests/nested/supabase-sdk-contracts.test.mjs"]) {
       expect(() => classifyFiles([...catalog.entries.map(entry => entry.path), extra], guards, support))
         .toThrow(/no execution lane/);
     }

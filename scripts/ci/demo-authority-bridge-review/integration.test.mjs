@@ -4,6 +4,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import {createHash} from 'node:crypto';
 import {fileURLToPath} from 'node:url';
+import {historicalDemoSourceBytes} from '../demo-sdk-source-adaptation.mjs';
 import {createIssuer} from '../../../docs/review/demo-durable-owner-adapter-20261015/issuer.mjs';
 import {createOwner} from '../../../docs/review/demo-durable-owner-adapter-20261015/owner.mjs';
 import {EMPTY_CONFIG} from '../../../docs/review/demo-durable-owner-adapter-20261015/driver.mjs';
@@ -31,14 +32,15 @@ function verifyPins(value) {
   for (const row of value.sources) {
     assert.ok(['CRLF_TO_LF_ALLOWED', 'EXACT'].includes(row.checkout_eol));
     const raw = fs.readFileSync(root + row.path);
-    const bytes = row.checkout_eol === 'CRLF_TO_LF_ALLOWED' ? Buffer.from(raw.toString('utf8').replaceAll('\r\n', '\n')) : raw;
+    const checkoutBytes = row.checkout_eol === 'CRLF_TO_LF_ALLOWED' ? Buffer.from(raw.toString('utf8').replaceAll('\r\n', '\n')) : raw;
+    const bytes = historicalDemoSourceBytes(row.path, checkoutBytes);
     assert.equal(bytes.length, row.bytes);
     assert.equal(hash(bytes), row.sha256, row.path);
     assert.equal(createHash('sha1').update(Buffer.concat([Buffer.from(`blob ${bytes.length}\0`), bytes])).digest('hex'), row.git_blob_sha1);
   }
 }
 
-test('source pins preserve unchanged issuer/owner/SQL/product inputs and reject evidence drift', () => {
+test('source pins preserve historical inputs with only the exact SDK import migration and reject drift', () => {
   verifyPins(pins);
   for (const mutate of [p => p.sources.pop(), p => p.sources.push(p.sources[0]),
     p => { p.sources[0].sha256 = '0'.repeat(64); }, p => { p.baseCommit = ''; }]) {

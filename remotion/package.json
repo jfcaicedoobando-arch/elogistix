@@ -17,16 +17,16 @@
     "typescript": "5.8.3"
   },
   "dependencies": {
-    "@remotion/bundler": "4.0.488",
-    "@remotion/cli": "4.0.488",
-    "@remotion/compositor-linux-x64-gnu": "4.0.488",
-    "@remotion/compositor-linux-x64-musl": "4.0.488",
-    "@remotion/google-fonts": "4.0.488",
-    "@remotion/renderer": "4.0.488",
-    "@remotion/transitions": "4.0.488",
+    "@remotion/bundler": "4.0.539",
+    "@remotion/cli": "4.0.539",
+    "@remotion/compositor-linux-x64-gnu": "4.0.539",
+    "@remotion/compositor-linux-x64-musl": "4.0.539",
+    "@remotion/google-fonts": "4.0.539",
+    "@remotion/renderer": "4.0.539",
+    "@remotion/transitions": "4.0.539",
     "react": "18.3.1",
     "react-dom": "18.3.1",
-    "remotion": "4.0.488"
+    "remotion": "4.0.539"
   },
   "engines": {
     "node": "24.22.1",

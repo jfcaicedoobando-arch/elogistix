@@ -6,7 +6,7 @@
  * inconsistencias, marca `estado_rep = "Error"` y responde 422 con los issues,
  * exactamente como antes.
  */
-import type { SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
+import type { SupabaseClient } from "npm:@supabase/supabase-js@2.118.0";
 import { validateRepContext, type PagoContext } from "./helpers.ts";
 import type { DatosPagoRep, FacturaRep, PagoRep } from "./etapaDatos.ts";
 import type { FiscalDr } from "./etapaFiscal.ts";

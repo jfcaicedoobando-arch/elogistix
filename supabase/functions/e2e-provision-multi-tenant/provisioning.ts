@@ -1,6 +1,6 @@
 // Helpers de provisioning para `e2e-provision-multi-tenant`.
 // Separado del handler para respetar los límites de longitud/complejidad del lint.
-import type { SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
+import type { SupabaseClient } from "npm:@supabase/supabase-js@2.118.0";
 import {
   BUCKET,
   upsertCliente,

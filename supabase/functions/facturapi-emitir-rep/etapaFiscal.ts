@@ -11,7 +11,7 @@
  * vivían en `index.ts`: error de lectura ≠ factura legacy sin renglones; se
  * falla cerrado ANTES del claim y antes de llamar al PAC.
  */
-import type { SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
+import type { SupabaseClient } from "npm:@supabase/supabase-js@2.118.0";
 import { leerConceptosDr, type ConceptoDrRow } from "./conceptosFacturaDr.ts";
 import { resolverNoObjetoDr } from "./objetoImpDr.ts";
 import { resolverGruposRetencionDr, MSG_RETENCIONES_SIN_IMPORTES, type GrupoRetencionDr } from "./retencionesDr.ts";
