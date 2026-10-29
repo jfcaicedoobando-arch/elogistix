@@ -158,7 +158,7 @@
     "dotenv": "^18.0.7",
     "drizzle-kit": "^0.31.11",
     "drizzle-orm": "^0.45.4",
-    "eslint": "^10.12.0",
+    "eslint": "^10.13.0",
     "eslint-plugin-react-compiler": "19.1.0-rc.2",
     "eslint-plugin-react-hooks": "^7.1.1",
     "eslint-plugin-react-refresh": "^0.5.6",
@@ -173,7 +173,7 @@
     "tailwindcss": "^4.3.3",
     "tsx": "^4.23.15",
     "typescript": "^6.0.3",
-    "typescript-eslint": "^8.71.1",
+    "typescript-eslint": "^8.72.1",
     "vite": "^8.3.4",
     "vitest": "5.0.5"
   }
