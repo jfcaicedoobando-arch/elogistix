@@ -104,6 +104,36 @@ describe("CI catalog: effective discovery", () => {
     expect(() => classifyFiles(files, [...guards, "supabase/tests/missing.sql"], support)).toThrow(/Stale/);
     expect(() => classifyFiles(files, [], support)).toThrow(/empty/);
   });
+
+  it("routes only the executed dependency security command to its automatic Node lane", () => {
+    const expected = catalog.entries.filter(entry => entry.lane === "node-dependency-security");
+    const pkg = JSON.parse(source("package.json"));
+    expect(pkg.scripts["test:dependencies"]).toMatch(/^node --test /);
+    const actual = pkg.scripts["test:dependencies"].slice("node --test ".length).split(/\s+/);
+    expect(() => assertExactPaths(expected.map(entry => entry.path), actual, "dependency security command discovery"))
+      .not.toThrow();
+    expect(expected).toEqual([expect.objectContaining({
+      path: "scripts/tests/dependency-security.test.mjs", mode: "automatic",
+      sha256: hash(fs.readFileSync(actual[0])),
+    })]);
+
+    const checks = source(".github/workflows/ci.yml").replace(/\r\n/g, "\n").split("  checks:\n")[1].split("  tests:\n")[0];
+    const command = "run: bun run test:dependencies";
+    const step = checks.split("      - name: Dependency security consumer regressions\n")[1].split("      - name:")[0];
+    expect(step).toContain(command);
+    expect(step).toContain("if: needs.detector.outputs.frontend == 'true'");
+    expect(step).not.toContain("continue-on-error");
+    const setup = checks.indexOf("uses: ./.github/actions/setup-bun");
+    expect(setup).toBeGreaterThanOrEqual(0);
+    expect(setup).toBeLessThan(checks.indexOf(command));
+
+    const guards = catalog.entries.filter(entry => entry.lane === "sql-guards").map(entry => entry.path);
+    const support = Object.fromEntries(catalog.entries.filter(entry => entry.lane === "sql-support").map(entry => [entry.path, entry.reason]));
+    for (const extra of ["scripts/tests/extra-security.test.mjs", "scripts/tests/nested/dependency-security.test.mjs"]) {
+      expect(() => classifyFiles([...catalog.entries.map(entry => entry.path), extra], guards, support))
+        .toThrow(/no execution lane/);
+    }
+  });
 });
 
 describe("CI execution gate: exact union, never count-only", () => {
