@@ -7,7 +7,7 @@
  * roles operativos que sólo necesitan resolver nombres usan `list-nombres`
  * (ver `listNombresHandler.ts`), que no expone email ni señales de sesión.
  */
-import { SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
+import { SupabaseClient } from "npm:@supabase/supabase-js@2.118.0";
 import { jsonResponse, errorResponse } from "../_shared/response.ts";
 import type { HandlerCtx, AdminAccess } from "./types.ts";
 

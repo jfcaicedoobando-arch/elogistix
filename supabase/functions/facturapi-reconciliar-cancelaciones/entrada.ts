@@ -17,7 +17,7 @@
  *   - lo que no entra en el presupuesto de esta corrida queda con su cursor
  *     intacto (más antiguo) y es lo primero que se toma en la siguiente.
  */
-import type { SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
+import type { SupabaseClient } from "npm:@supabase/supabase-js@2.118.0";
 import { corsHeaders } from "../_shared/cors.ts";
 import { captureEdgeMessage } from "../_shared/sentry.ts";
 import { jsonResponse } from "../_shared/response.ts";

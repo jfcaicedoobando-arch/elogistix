@@ -4,7 +4,7 @@
  * comportamiento es idéntico al previo.
  */
 import { jsonResponse } from "../_shared/response.ts";
-import type { SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
+import type { SupabaseClient } from "npm:@supabase/supabase-js@2.118.0";
 
 type SB = SupabaseClient;
 

@@ -24,7 +24,7 @@
  * timbrada fuera), no hay nada que cotejar: se deja constancia en bitácora y el
  * flujo continúa con el cálculo local.
  */
-import type { SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
+import type { SupabaseClient } from "npm:@supabase/supabase-js@2.118.0";
 import { registrarBitacoraEdge } from "../_shared/bitacora.ts";
 import { buildTaxesDr } from "./taxesDr.ts";
 import {

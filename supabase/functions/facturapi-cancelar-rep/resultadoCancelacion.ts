@@ -6,7 +6,7 @@
  * Nunca se marca `estado_rep='Cancelado'` si el SAT dejó la cancelación
  * pendiente o el receptor la rechazó en su Buzón Tributario.
  */
-import type { SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
+import type { SupabaseClient } from "npm:@supabase/supabase-js@2.118.0";
 import { registrarBitacoraEdge } from "../_shared/bitacora.ts";
 
 export interface FapiCancelResponse { status?: string; cancellation_status?: string }

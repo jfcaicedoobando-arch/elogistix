@@ -9,7 +9,7 @@
  * `ejecutar.ts`. Los documentos que no alcanzan a iniciarse quedan intactos
  * (`resumen.diferidos`) y son los primeros de la corrida siguiente.
  */
-import { createClient, SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
+import { createClient, SupabaseClient } from "npm:@supabase/supabase-js@2.118.0";
 import { wrapEdgeHandler, captureEdgeException } from "../_shared/sentry.ts";
 import { getFacturapiClient, withFacturapiTimeout } from "../_shared/facturapiClient.ts";
 import { registrarBitacoraEdge } from "../_shared/bitacora.ts";

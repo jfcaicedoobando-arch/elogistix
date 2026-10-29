@@ -1,6 +1,6 @@
 // Disabled release: no trusted availability provider or credentials are wired here.
 // OPTIONS and public CORS remain unchanged; no request can enable provisioning.
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
+import { createClient } from "npm:@supabase/supabase-js@2.118.0";
 import { initSentryEdge, captureEdgeException } from "../_shared/sentry.ts";
 import { createDemoAccessHandler } from "./handler.ts";
 

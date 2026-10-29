@@ -2,11 +2,11 @@
  * Helpers de consulta/reconciliación para `facturapi-consultar`.
  * Separado del handler para respetar el límite de líneas por archivo.
  */
-import type { SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
+import type { SupabaseClient } from "npm:@supabase/supabase-js@2.118.0";
 import { getFacturapiClient } from "../_shared/facturapiClient.ts";
 import { registrarBitacoraEdge } from "../_shared/bitacora.ts";
 import { jsonResponse } from "../_shared/response.ts";
-import { resolveFacturapiKey } from "../_shared/facturapiAuth.ts";
+import { resolveFacturapiKey, facturapiResolverClient } from "../_shared/facturapiAuth.ts";
 import {
   divergenciasDocumentales,
   verificarReps,
@@ -231,7 +231,7 @@ export async function verificarDocumentos(
   user: { id: string; email?: string },
 ): Promise<Documental> {
   const resolved = await resolveFacturapiKey(
-    supabase as unknown as Parameters<typeof resolveFacturapiKey>[0],
+    facturapiResolverClient(supabase),
     factura.organization_id,
   );
   if (!resolved.ok) return { xml: null, reps: [], divergencias: [] };
