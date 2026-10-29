@@ -24,7 +24,7 @@
  *   const { apiKey, baseUrl } = resolved.data;
  */
 
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
+import { createClient, type SupabaseClient } from "npm:@supabase/supabase-js@2.118.0";
 
 
 
@@ -48,10 +48,10 @@ interface FacturapiCredencialRow {
   api_key_live_vault_id: string | null;
   facturapi_org_id: string | null;
 }
-export interface SupabaseLike {
-  from: (table: string) => {
-    select: (cols: string) => {
-      eq: (col: string, val: string) => {
+interface ResolverQueryClient {
+  from: (table: "facturapi_credenciales") => {
+    select: (cols: "ambiente, api_key_sandbox_secret_name, api_key_live_secret_name, api_key_sandbox_vault_id, api_key_live_vault_id, facturapi_org_id") => {
+      eq: (col: "organization_id", val: string) => {
         // RTC-01: thenable de PostgREST (no `Promise` nominal).
         maybeSingle: () => PromiseLike<{ data: FacturapiCredencialRow | null; error: unknown }>;
       };
@@ -61,6 +61,26 @@ export interface SupabaseLike {
     fn: string,
     args: Record<string, unknown>,
   ) => PromiseLike<{ data: string | null; error: unknown }>;
+}
+
+export type SupabaseLike = ResolverQueryClient;
+
+/** Finite query port for callers whose inferred SDK builders exceed TS depth. */
+export function facturapiResolverClient(client: SupabaseClient): ResolverQueryClient {
+  return {
+    from: (table) => ({
+      select: (columns) => ({
+        eq: (column, value) => ({
+          maybeSingle: () => client.from(table).select(columns).eq(column, value)
+            .maybeSingle<FacturapiCredencialRow>(),
+        }),
+      }),
+    }),
+    rpc: async (fn, args) => {
+      const { data, error } = await client.rpc(fn, args);
+      return { data: typeof data === "string" ? data : null, error };
+    },
+  };
 }
 
 export type FacturapiAmbiente = "sandbox" | "live";
@@ -96,7 +116,7 @@ function credencialNoConfigurada(): FacturapiResolveResult {
   };
 }
 
-let adminSingleton: SupabaseLike | null = null;
+let adminSingleton: SupabaseClient | null = null;
 /**
  * Cliente admin (service_role) para llamar RPCs privilegiadas como
  * `get_facturapi_api_key_internal`, que están REVOKE FROM authenticated.
@@ -104,14 +124,15 @@ let adminSingleton: SupabaseLike | null = null;
  * En tests (Deno.test aislado) no están seteados → devolvemos null y
  * `tryVaultKey` usa el cliente mock inyectado por el caller.
  */
-function getAdminClient(): SupabaseLike | null {
+function getAdminClient(): SupabaseClient | null {
   if (adminSingleton) return adminSingleton;
   const url = Deno.env.get("SUPABASE_URL");
   const key = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
   if (!url || !key) return null;
-  adminSingleton = createClient(url, key, {
+  const client = createClient(url, key, {
     auth: { persistSession: false },
-  }) as unknown as SupabaseLike;
+  });
+  adminSingleton = client;
   return adminSingleton;
 }
 
@@ -148,7 +169,7 @@ export async function resolveFacturapiKey(
   supabase: SupabaseLike,
   organizationId: string,
 ): Promise<FacturapiResolveResult> {
-  const { data: cred } = await supabase
+  const { data: cred }: { data: FacturapiCredencialRow | null } = await supabase
     .from("facturapi_credenciales")
     .select(
       "ambiente, api_key_sandbox_secret_name, api_key_live_secret_name, api_key_sandbox_vault_id, api_key_live_vault_id, facturapi_org_id",
@@ -229,7 +250,7 @@ export async function resolveFacturapiKeyOtherAmbiente(
   supabase: SupabaseLike,
   organizationId: string,
 ): Promise<{ apiKey: string; ambiente: FacturapiAmbiente } | null> {
-  const { data: cred } = await supabase
+  const { data: cred }: { data: FacturapiCredencialRow | null } = await supabase
     .from("facturapi_credenciales")
     .select(
       "ambiente, api_key_sandbox_secret_name, api_key_live_secret_name, api_key_sandbox_vault_id, api_key_live_vault_id, facturapi_org_id",

@@ -1,7 +1,6 @@
 /**
  * Controller del <DialogGenerarProforma/>: estado del wizard de 2 pasos
  * (selección → confirmación), totales, IVA por concepto y submit.
- *
  * El submit completo (crear proforma + generar PDF) vive en
  * `submitProformaDialog.ts` para mantener este hook bajo Power-of-10 (≤200 líneas).
  */
@@ -40,7 +39,9 @@ export function useDialogGenerarProformaController(
   embarque: EmbarqueRow,
   conceptosPendientes: ConceptoVenta[],
   onClose: () => void,
-  initialFiltroContenedor: FiltroContenedor = "todos",
+  { initialFiltroContenedor = "todos", initialNotas = "", initialConceptoIds }: {
+    initialFiltroContenedor?: FiltroContenedor; initialNotas?: string; initialConceptoIds?: string[];
+  } = {},
 ) {
   const tasaIva = useTasaIVA();
   const crearProforma = useCrearProforma();
@@ -79,13 +80,13 @@ export function useDialogGenerarProformaController(
       setPaso("seleccion");
       setFiltroContenedor(initialFiltroContenedor);
       const init = buildInitialProformaState(conceptosPendientes, initialFiltroContenedor);
-      setSeleccionados(init.seleccionados);
-      setNotas("");
+      setSeleccionados(new Set([...init.seleccionados].filter((id) => !initialConceptoIds || initialConceptoIds.includes(id))));
+      setNotas(initialNotas);
       reiniciar();
     } else if (!open && wasOpenRef.current) {
       wasOpenRef.current = false;
     }
-  }, [open, conceptosPendientes, initialFiltroContenedor, reiniciar]);
+  }, [open, conceptosPendientes, initialFiltroContenedor, initialNotas, initialConceptoIds, reiniciar]);
 
   // Cuando cambia el filtro, ajustar selección al conjunto visible
   useEffect(() => {
@@ -196,4 +197,3 @@ export function useDialogGenerarProformaController(
     totalSeleccionados: seleccionados.size,
   };
 }
-

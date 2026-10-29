@@ -52,4 +52,11 @@ export const LC_CODE_MESSAGES_REFACTURACION: Record<string, string> = {
     "Captura el nombre de la empresa desde la que se recibió el depósito.",
   LC_REFACT_CIERRE_INCONSISTENTE:
     "No se puede cerrar el caso: revisa que la nueva factura esté timbrada, que el pago esté aplicado a ella y que el movimiento bancario quedó conciliado.",
+  // Refacturar proforma (copia en Borrador tras cancelar la factura).
+  LC_REFACTURAR_PROFORMA_CANCELADA: "Esta proforma ya está cancelada. Abre la proforma nueva que se generó.",
+  LC_REFACTURAR_CONSOLIDADA: "Las proformas consolidadas no se pueden refacturar desde aquí.",
+  LC_REFACTURAR_SIN_FACTURA_CANCELADA:
+    "Sólo se puede refacturar una proforma cuya factura ya fue cancelada o sustituida.",
+  LC_REFACTURAR_SIN_CONCEPTOS: "La proforma no tiene conceptos para copiar.",
+  LC_COMERCIAL_AJENO: "El comercial elegido no pertenece a esta organización. Elige otro de la lista.",
 };

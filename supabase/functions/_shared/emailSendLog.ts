@@ -17,7 +17,7 @@
  * el flujo de correo. Devuelve `false` si el registro falló (para que el
  * caller decida; p. ej. auth-email-hook lo trata como reintentable).
  */
-import type { SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
+import type { SupabaseClient } from "npm:@supabase/supabase-js@2.118.0";
 
 export type EstadoEmailLog =
   | "pending"

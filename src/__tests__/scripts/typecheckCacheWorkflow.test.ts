@@ -23,7 +23,7 @@ const fingerprint = (changes: Record<string, string> = {}) => {
 const context = {
   "runner.os": "Linux",
   "runner.arch": "X64",
-  "steps.setup.outputs.node-version": "v24.22.0",
+  "steps.setup.outputs.node-version": "v24.22.1",
   "steps.typescript.outputs.version": "6.0.3",
   "github.run_id": "100",
   "github.run_attempt": "1",
@@ -83,7 +83,7 @@ describe("TypeScript incremental cache workflow", () => {
 
   it("allows exactly one fallback retaining every compatibility component", () => {
     expect(patterns).toEqual(["tsconfig*.json", "package.json", "bun.lock", "scripts/ci/typecheck-incremental.mjs"]);
-    expect(key).toContain("${{ runner.os }}-${{ runner.arch }}-tsc-v1-node${{ steps.setup.outputs.node-version }}-bun1.4.0-ts${{ steps.typescript.outputs.version }}-");
+    expect(key).toContain("${{ runner.os }}-${{ runner.arch }}-tsc-v1-node${{ steps.setup.outputs.node-version }}-bun1.4.4-ts${{ steps.typescript.outputs.version }}-");
     const suffix = "${{ github.run_id }}-${{ github.run_attempt }}";
     expect(key.endsWith(suffix)).toBe(true);
     expect(restoreKeys).toEqual([key.slice(0, -suffix.length)]);

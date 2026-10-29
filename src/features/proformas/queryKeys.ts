@@ -4,6 +4,7 @@ export const proformas = {
   pendientes: (orgId?: string | null) => ['proformas', 'pendientes', orgId] as const,
   aprobadas: (orgId?: string | null) => ['proformas', 'all', orgId] as const,
   detalle: (id?: string) => ['proformas', 'detalle', id] as const,
+  facturaCancelada: (id: string) => ['proformas', 'factura-cancelada', id] as const,
   bitacora: (id?: string) => ['proformas', 'bitacora', id] as const,
   destinatariosSugeridos: (clienteId?: string | null) =>
     ['proformas', 'destinatarios-sugeridos', clienteId] as const,

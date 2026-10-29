@@ -36,19 +36,19 @@ const jobs = (source: string) => [...source.matchAll(/^ {2}([\w-]+):\s*\n([\s\S]
 
 describe("Node 24 workflow migration", () => {
   it("pins the installed LTS independently of the Actions runtime and Bun", () => {
-    expect(setup).toContain('node-version: "24.22.0"');
-    expect(setup).toContain('bun-version: "1.4.0"');
+    expect(setup).toContain('node-version: "24.22.1"');
+    expect(setup).toContain('bun-version: "1.4.4"');
     expect(setup).toContain('using: "composite"');
     expect(setup).toContain("package-manager-cache: false");
     expect(setup).toContain("id: setup-node");
     expect(setup).toContain("value: ${{ steps.setup-node.outputs.node-version }}");
     expect(setup).toContain("run: node --version");
-    expect(JSON.parse(read("package.json")).engines.node).toBe(">=22.22.0");
+    expect(JSON.parse(read("package.json")).engines.node).toBe("24.22.1");
   });
 
   it("keys complete dependency caches by actual Node, architecture, Bun and lock", () => {
     const step = setup.split("    - name: Cache node_modules")[1].split("    - name: Cache Bun deps")[0];
-    expect(step).toContain("${{ runner.os }}-${{ runner.arch }}-node${{ steps.setup-node.outputs.node-version }}-node-modules-bun1.4.0-${{ hashFiles('bun.lock', 'package.json') }}");
+    expect(step).toContain("${{ runner.os }}-${{ runner.arch }}-node${{ steps.setup-node.outputs.node-version }}-node-modules-bun1.4.4-${{ hashFiles('bun.lock', 'package.json') }}");
     expect(step).not.toContain("restore-keys:");
     expect(setup).not.toContain("node22.22.0");
     expect(setup).toContain("bun install --frozen-lockfile --ignore-scripts");
@@ -78,9 +78,9 @@ describe("Node 24 workflow migration", () => {
         expect(selected, `${file}:${name} must set up Node before its first command`).toBeGreaterThanOrEqual(0);
         expect(selected, `${file}:${name} must not inherit the runner's Node`).toBeLessThan(command.index!);
         if (composite < 0) {
-          const version = historicalNodeWorkflows.includes(file) ? "24.19.0" : "24.22.0";
+          const version = historicalNodeWorkflows.includes(file) ? "24.19.0" : "24.22.1";
           expect(body).toContain(`node-version: '${version}'`);
-          if (version === "24.22.0") expect(body).toContain("package-manager-cache: false");
+          if (version === "24.22.1") expect(body).toContain("package-manager-cache: false");
         }
       }
     }
@@ -94,7 +94,7 @@ describe("Node 24 workflow migration", () => {
   it("sets up detector Node unconditionally before shard planning and inventory", () => {
     const detector = jobs(ci).find(job => job.name === "detector")!.body;
     const setupStep = detector.split("      - name: Setup Node for detector")[1].split("      - name:")[0];
-    expect(setupStep).toContain("node-version: '24.22.0'");
+    expect(setupStep).toContain("node-version: '24.22.1'");
     expect(setupStep).not.toMatch(/\bif:/);
     const nodeSetup = detector.indexOf("uses: actions/setup-node@");
     for (const command of ["node scripts/ci/vitest-shard-plan.mjs", "node scripts/ci/test-catalog.mjs --output"])
@@ -105,7 +105,7 @@ describe("Node 24 workflow migration", () => {
     const aggregate = jobs(ci).find(job => job.name === "ci-success")!.body;
     const setupStep = aggregate.split("      - name: Setup Node for shard evidence verification")[1].split("      - name:")[0];
     expect(setupStep).toContain("if: needs.tests.result == 'success'");
-    expect(setupStep).toContain("node-version: '24.22.0'");
+    expect(setupStep).toContain("node-version: '24.22.1'");
     expect(aggregate).not.toContain("uses: ./.github/actions/setup-bun");
     expect(aggregate).toMatch(/name: Verificar unión exacta de archivos y casos\s+if: needs\.tests\.result == 'success'\s+run: node scripts\/ci\/verify-test-evidence\.mjs/);
   });

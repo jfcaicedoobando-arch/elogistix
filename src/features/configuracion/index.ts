@@ -19,3 +19,4 @@ export { default as TabTiposContenedor } from "./components/TabTiposContenedor";
 export { default as TabCatalogos } from "./components/TabCatalogos";
 export { default as TabTipoCambioDof } from "./components/TabTipoCambioDof";
 export { OrgInfoCard } from "./components/OrgInfoCard";
+export { default as MargenMinimoCard } from "./components/MargenMinimoCard";

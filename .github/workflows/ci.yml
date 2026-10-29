@@ -79,7 +79,7 @@ jobs:
       - name: Setup Node for detector and offline contracts
         uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
-          node-version: '24.22.0'
+          node-version: '24.22.1'
           package-manager-cache: false
 
       - name: Validate native shard plan
@@ -113,7 +113,7 @@ jobs:
       - name: Setup Bun for package script contracts
         uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
         with:
-          bun-version: '1.4.0'
+          bun-version: '1.4.4'
 
       - name: Package script contracts (offline, stubbed commands)
         run: node --test scripts/ci/package-scripts.test.mjs
@@ -157,10 +157,10 @@ jobs:
         uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: .cache/eslint
-          key: ${{ runner.os }}-${{ runner.arch }}-eslint-node${{ steps.setup.outputs.node-version }}-bun1.4.0-${{ hashFiles('eslint.config.js', 'package.json', 'bun.lock') }}-${{ github.run_id }}
+          key: ${{ runner.os }}-${{ runner.arch }}-eslint-node${{ steps.setup.outputs.node-version }}-bun1.4.4-${{ hashFiles('eslint.config.js', 'package.json', 'bun.lock') }}-${{ github.run_id }}
           restore-keys: |
-            ${{ runner.os }}-${{ runner.arch }}-eslint-node${{ steps.setup.outputs.node-version }}-bun1.4.0-${{ hashFiles('eslint.config.js', 'package.json', 'bun.lock') }}-
-            ${{ runner.os }}-${{ runner.arch }}-eslint-node${{ steps.setup.outputs.node-version }}-bun1.4.0-
+            ${{ runner.os }}-${{ runner.arch }}-eslint-node${{ steps.setup.outputs.node-version }}-bun1.4.4-${{ hashFiles('eslint.config.js', 'package.json', 'bun.lock') }}-
+            ${{ runner.os }}-${{ runner.arch }}-eslint-node${{ steps.setup.outputs.node-version }}-bun1.4.4-
 
       # `react-compiler` cuenta warnings como errores: fail-fast real.
       - name: ESLint (max-warnings 0)
@@ -186,6 +186,10 @@ jobs:
         id: setup
         uses: ./.github/actions/setup-bun
 
+      - name: Dependency security consumer regressions
+        if: needs.detector.outputs.frontend == 'true'
+        run: bun run test:dependencies
+
       - name: Installed TypeScript version
         id: typescript
         if: needs.detector.outputs.frontend == 'true'
@@ -200,9 +204,9 @@ jobs:
         uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: .cache/tsc
-          key: ${{ runner.os }}-${{ runner.arch }}-tsc-v1-node${{ steps.setup.outputs.node-version }}-bun1.4.0-ts${{ steps.typescript.outputs.version }}-${{ hashFiles('tsconfig*.json', 'package.json', 'bun.lock', 'scripts/ci/typecheck-incremental.mjs') }}-${{ github.run_id }}-${{ github.run_attempt }}
+          key: ${{ runner.os }}-${{ runner.arch }}-tsc-v1-node${{ steps.setup.outputs.node-version }}-bun1.4.4-ts${{ steps.typescript.outputs.version }}-${{ hashFiles('tsconfig*.json', 'package.json', 'bun.lock', 'scripts/ci/typecheck-incremental.mjs') }}-${{ github.run_id }}-${{ github.run_attempt }}
           restore-keys: |
-            ${{ runner.os }}-${{ runner.arch }}-tsc-v1-node${{ steps.setup.outputs.node-version }}-bun1.4.0-ts${{ steps.typescript.outputs.version }}-${{ hashFiles('tsconfig*.json', 'package.json', 'bun.lock', 'scripts/ci/typecheck-incremental.mjs') }}-
+            ${{ runner.os }}-${{ runner.arch }}-tsc-v1-node${{ steps.setup.outputs.node-version }}-bun1.4.4-ts${{ steps.typescript.outputs.version }}-${{ hashFiles('tsconfig*.json', 'package.json', 'bun.lock', 'scripts/ci/typecheck-incremental.mjs') }}-
 
       - name: TypeScript typecheck
         id: typecheck
@@ -436,7 +440,7 @@ jobs:
         if: needs.tests.result == 'success'
         uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
-          node-version: '24.22.0'
+          node-version: '24.22.1'
           package-manager-cache: false
 
       - name: Verificar unión exacta de archivos y casos

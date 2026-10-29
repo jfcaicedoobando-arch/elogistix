@@ -5,6 +5,8 @@ export interface DrizzleReplayEntry {
   file: string;
   sha256: string;
   replays: string[];
+  /** Test-only history, never a deployment-eligible Supabase migration. */
+  scope?: "isolated-ci";
   /** Only the first source owns a byte-exact, ordered historical composition. */
   composition?: {
     sources: string[];
@@ -126,23 +128,40 @@ function scanMapping(file: string, hash: string, mapping: DrizzleReplayEntry[], 
     return [{ file: `drizzle/migrations/${file}`, check: "DR1", detail: "falta un replay revisado único o cambió el hash del SQL inmutable" }];
   }
   if (mapping[0].replays.length === 0 || mapping[0].replays.some((name) => !supabase.has(name))) {
-    return [{ file: `drizzle/migrations/${file}`, check: "DR2", detail: "el replay declarado no existe en supabase/migrations" }];
+    return [{ file: `drizzle/migrations/${file}`, check: "DR2", detail: "el replay declarado no existe en el destino de su scope" }];
   }
   return [];
 }
 
-/** Every immutable Drizzle SQL must have an explicitly reviewed Supabase replay. */
+function invalidIsolatedScope(mapping: DrizzleReplayEntry[], file: string, sql: string, isolated: Map<string, string>): boolean {
+  if (mapping.some((entry) => entry.scope !== undefined && entry.scope !== "isolated-ci")) return true;
+  const entry = mapping[0];
+  if (entry?.scope !== "isolated-ci") return false;
+  return !!entry.composition || entry.replays.length !== 1
+    || entry.replays[0] !== file || isolated.get(file) !== sql;
+}
+
+function replayTargets(mapping: DrizzleReplayEntry[], supabase: Map<string, string>, isolated: Map<string, string>) {
+  return mapping[0]?.scope === "isolated-ci" ? isolated : supabase;
+}
+
+/** Every immutable Drizzle SQL needs a reviewed replay; isolated sources require a separate verified map. */
 export function scanDrizzleReplay(
   drizzle: Map<string, string>,
   supabase: Map<string, string>,
   entries: DrizzleReplayEntry[],
+  isolated: Map<string, string> = new Map(),
 ): Violation[] {
   const out: Violation[] = [];
   const composed = verifiedCompositions(drizzle, supabase, entries, out);
   for (const [file, sql] of [...drizzle].sort(([a], [b]) => a.localeCompare(b))) {
     const mapping = entries.filter((entry) => entry.file === file);
     const hash = sha256(sql);
-    out.push(...scanMapping(file, hash, mapping, supabase));
+    const targets = replayTargets(mapping, supabase, isolated);
+    if (invalidIsolatedScope(mapping, file, sql, isolated)) {
+      out.push({ file: `drizzle/migrations/${file}`, check: "DR7", detail: "scope aislado inválido o replay no idéntico byte a byte" });
+    }
+    out.push(...scanMapping(file, hash, mapping, targets));
     const parsed = functions(sql);
     const count = [...stripSqlComments(sql).matchAll(/CREATE\s+OR\s+REPLACE\s+FUNCTION\s+public\./gi)].length;
     if (count !== parsed.size) {
@@ -152,7 +171,7 @@ export function scanDrizzleReplay(
     // a later corrective migration must not require editing immutable Drizzle SQL.
     const declared = new Map<string, string>();
     for (const target of [...(mapping[0]?.replays ?? [])].sort()) {
-      for (const [key, body] of functions(supabase.get(target) ?? "")) declared.set(key, body);
+      for (const [key, body] of functions(targets.get(target) ?? "")) declared.set(key, body);
     }
     // Ordinary mappings retain DR4 unchanged; exact compositions compare final bodies.
     for (const [key, body] of composed.get(file) ?? parsed) {

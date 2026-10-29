@@ -4,7 +4,7 @@
  *
  * Auth: requiere header X-Cron-Secret == CRON_SECRET (cron-only).
  */
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
+import { createClient } from "npm:@supabase/supabase-js@2.118.0";
 import { buildCors, handlePreflightStrict } from "../_shared/cors.ts";
 import { createLogger } from "../_shared/logger.ts";
 import { initSentryEdge, captureEdgeException } from "../_shared/sentry.ts";

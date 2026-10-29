@@ -5,7 +5,7 @@
  * Contiene el saneado del body, la resolución server-side del PDF (W-02) y del
  * ejecutivo desde la sesión (W-04).
  */
-import { createClient, type SupabaseClient } from 'https://esm.sh/@supabase/supabase-js@2.45.0';
+import { createClient, type SupabaseClient } from 'npm:@supabase/supabase-js@2.118.0';
 import { isEmail } from './emailValidation.ts';
 
 export const BUCKET_PDF = 'cotizaciones-pdf';

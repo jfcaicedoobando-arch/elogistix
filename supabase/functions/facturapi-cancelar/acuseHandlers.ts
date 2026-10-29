@@ -2,7 +2,7 @@
  * Handlers de "solo descargar acuse" (XML y PDF). Extraídos de `index.ts` para
  * respetar el límite Power-of-10 (<200 líneas por función).
  */
-import type { SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
+import type { SupabaseClient } from "npm:@supabase/supabase-js@2.118.0";
 import { corsHeaders } from "../_shared/cors.ts";
 import { authorizeOrgRole, ROLES_EMISOR_FISCAL } from "../_shared/auth.ts";
 import { getFacturapiClient } from "../_shared/facturapiClient.ts";

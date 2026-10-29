@@ -5,19 +5,32 @@
 import { jsonResponse, errorResponse } from "../_shared/response.ts";
 import type { HandlerCtx, AdminAccess } from "./types.ts";
 import { mensajeSeguro } from "./errores.ts";
+import { esUuid } from "../_shared/uuid.ts";
+
+function validarDestinoBaja(ctx: HandlerCtx): { user_id: string } | { error: Response } {
+  const { cors, log, callerId, body } = ctx;
+  const user_id = typeof body.user_id === "string" ? body.user_id : "";
+  if (!user_id) {
+    log.finish(400, "missing_user_id", { user_id: callerId });
+    return { error: errorResponse("user_id es requerido", 400, cors) };
+  }
+  if (!esUuid(user_id)) {
+    log.finish(400, "validation_failed", { user_id: callerId });
+    return { error: errorResponse("user_id debe ser un UUID válido", 400, cors) };
+  }
+  return { user_id };
+}
 
 export async function handleDelete(ctx: HandlerCtx, admin: AdminAccess): Promise<Response> {
-  const { cors, log, callerId, adminClient, body } = ctx;
+  const { cors, log, callerId, adminClient } = ctx;
   if (!admin.isGlobalAdmin && !admin.orgId) {
     log.finish(403, "not_admin", { user_id: callerId });
     return errorResponse("Solo administradores pueden eliminar usuarios", 403, cors);
   }
-  const user_id = typeof body.user_id === "string" ? body.user_id : "";
-  if (!user_id) {
-    log.finish(400, "missing_user_id", { user_id: callerId });
-    return errorResponse("user_id es requerido", 400, cors);
-  }
-  if (user_id === callerId) {
+  const destino = validarDestinoBaja(ctx);
+  if ("error" in destino) return destino.error;
+  const { user_id } = destino;
+  if (user_id.toLowerCase() === callerId.toLowerCase()) {
     log.finish(400, "self_delete_blocked", { user_id: callerId });
     return errorResponse("No puedes eliminar tu propia cuenta", 400, cors);
   }

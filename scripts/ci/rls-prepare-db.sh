@@ -197,6 +197,13 @@ for f in $(printf '%s\n' supabase/migrations/*.sql | LC_ALL=C sort); do
   echo "::error file=$f::la migración no aplica sobre el baseline squash"
   exit 1
 done
+# Recovered Drizzle history is test-only: this entrypoint already requires
+# loopback + an empty public schema. No production migration directory changes.
+isolated_history="$(node scripts/ci/drizzle-history/control.mjs list)" || exit 1
+while IFS= read -r f; do
+  echo "▶ Isolated Drizzle history: $f"
+  "${PSQL[@]}" --single-transaction -f "$f" || exit 1
+done <<< "$isolated_history"
 replay_profile_begin replay_final_check
 
 if [[ "${AUD54_CI:-}" == 1 && "$audit54_runtime_checked" != 1 ]]; then

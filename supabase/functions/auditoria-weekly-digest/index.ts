@@ -5,7 +5,7 @@
  * Si RESEND_API_KEY no está configurado todavía, hace dry-run y registra
  * en logs sin fallar.
  */
-import { createClient, type SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
+import { createClient, type SupabaseClient } from "npm:@supabase/supabase-js@2.118.0";
 import { wrapEdgeHandler, captureEdgeException } from "../_shared/sentry.ts"
 import { timingSafeEqual } from "../_shared/timingSafe.ts";
 import { buildCors, handlePreflightStrict } from "../_shared/cors.ts";

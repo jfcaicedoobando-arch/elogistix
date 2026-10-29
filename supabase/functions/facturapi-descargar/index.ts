@@ -14,10 +14,10 @@
  * Salida: archivo binario (Content-Type application/pdf | application/xml)
  *         con Content-Disposition de descarga.
  */
-import { createClient, type SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
+import { createClient, type SupabaseClient } from "npm:@supabase/supabase-js@2.118.0";
 import { buildCors, handlePreflightStrict } from "../_shared/cors.ts";
 import { wrapEdgeHandler } from "../_shared/sentry.ts";
-import { resolveFacturapiKey, FACTURAPI_BASE, basicAuthHeader } from "../_shared/facturapiAuth.ts";
+import { resolveFacturapiKey, facturapiResolverClient, FACTURAPI_BASE, basicAuthHeader } from "../_shared/facturapiAuth.ts";
 import { authorizeOrgRole, authorizePortalCliente, ROLES_DESCARGA_CFDI } from "../_shared/auth.ts";
 import { extractFacturapiMessage } from "../_shared/facturapiClient.ts";
 import { jsonResponse, makeJson } from "../_shared/response.ts";
@@ -233,9 +233,9 @@ Deno.serve(wrapEdgeHandler("facturapi-descargar", async (req) => {
   // org, así que el cliente user-scoped devolvía "org sin FacturApi" (412)
   // para clientes del portal y roles operativos. La autorización del
   // documento ya se validó arriba.
-  const adminClient = createClient(SUPABASE_URL, SERVICE_KEY, { auth: { persistSession: false } });
+  const adminClient: SupabaseClient = createClient(SUPABASE_URL, SERVICE_KEY, { auth: { persistSession: false } });
   const resolved = await resolveFacturapiKey(
-    adminClient as unknown as Parameters<typeof resolveFacturapiKey>[0],
+    facturapiResolverClient(adminClient),
     target.data.organizationId,
   );
   if (!resolved.ok) {

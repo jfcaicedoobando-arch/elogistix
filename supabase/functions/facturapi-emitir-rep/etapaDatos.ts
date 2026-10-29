@@ -5,7 +5,7 @@
  * textos: mismas validaciones (factura existente, timbrada y PPD) y mismo orden
  * de lecturas (cliente, contacto, pagos previos, notas de crédito, embarque).
  */
-import type { SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
+import type { SupabaseClient } from "npm:@supabase/supabase-js@2.118.0";
 import { calcularParcialidad, resolverReferenciasEmbarque, type ParcialidadInfo, type RefsEmbarque } from "./context.ts";
 import { ncAplicadasEnMonedaFactura } from "./ncDr.ts";
 import { etapaCorte, etapaOk, type Etapa, type JsonFn } from "./etapaResultado.ts";

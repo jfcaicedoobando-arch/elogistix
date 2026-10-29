@@ -6,8 +6,10 @@ El entry es `src/index.ts`; `index.ts` de esta carpeta sólo imprime un saludo.
 
 ## Instalación y comprobación
 
-Usar Bun **1.4.0** (declarado en `packageManager`) y Node.js existente.
-Validado en Windows x64 con Node **24.22.0**; no se instala ningún runtime del sistema.
+Usar Node **24.22.1** y Bun **1.4.4**, fijados en `engines` y `packageManager`.
+Comprobar `node --version` y `bun --version`; la instalación conserva el `bun.lock`
+propio de esta carpeta. La validación histórica de 2026-10-16 usó Node 24.22.0
+y Bun 1.4.0; no acredita por sí sola las nuevas versiones.
 
 ```sh
 cd remotion
@@ -19,16 +21,80 @@ bun run versions
 TypeScript **5.8.3** es una dependencia de desarrollo local, en lugar de un peer
 que el lock anterior resolvía a **7.0.2**. React/DOM permanecen en **18.3.1**,
 con tipos **18.3.31 / 18.3.7**. Se quitaron los tipos Bun no usados por las fuentes
-o los scripts Node. Todos los paquetes Remotion directos permanecen en **4.0.488**
-exacto y el lock conserva las demás resoluciones.
+o los scripts Node. Todos los paquetes Remotion directos están alineados en
+**4.0.539** exacto. El lock de este subproyecto se actualiza por separado del ERP.
 
 Referencias oficiales:
 [versiones iguales de Remotion](https://www.remotion.dev/docs/version-mismatch),
 [comprobador de versiones](https://www.remotion.dev/docs/cli/versions),
 [versionado de tipos DefinitelyTyped](https://github.com/DefinitelyTyped/DefinitelyTyped#how-do-definitely-typed-package-versions-relate-to-versions-of-the-corresponding-library)
 y [lock de Bun](https://bun.sh/docs/pm/lockfile).
-Los peers del [tag Remotion 4.0.488](https://github.com/remotion-dev/remotion/blob/v4.0.488/packages/core/package.json)
+Los peers del [tag Remotion 4.0.539](https://github.com/remotion-dev/remotion/blob/v4.0.539/packages/core/package.json)
 admiten React 18. La compatibilidad de TypeScript 5.8.3 se comprueba con el typecheck real.
+
+## Familia actualizada - 2026-10-28
+
+La versión estable [4.0.539](https://github.com/remotion-dev/remotion/releases/tag/v4.0.539)
+actualiza conjuntamente `remotion` y los siete paquetes `@remotion/*` directos,
+incluidos los compositores Linux GNU y MUSL. El comprobador oficial `versions`
+debe confirmar también los paquetes transitivos instalados; en Windows los
+compositores Linux no se ejecutan y su validación nativa queda pendiente.
+
+Este lote conserva React/DOM 18.3.1 y TypeScript 5.8.3 para aislar la familia
+Remotion. TypeScript estable es ya 7.0.2 según el
+[registro oficial](https://registry.npmjs.org/typescript/latest), con API y
+distribución nuevas; la migración del compilador requiere su propio lote.
+
+El lock renueva también siete transitivas dentro de los rangos de sus padres,
+mediante [actualización por nombres de Bun](https://bun.com/docs/pm/cli/update),
+sin `--latest`, overrides ni nuevas dependencias directas:
+
+```sh
+bun update baseline-browser-mapping browserslist fast-uri nanoid postcss postcss-selector-parser source-map-js
+```
+
+| Transitiva | Resolución anterior | Resolución actual |
+| --- | --- | --- |
+| baseline-browser-mapping | 2.10.43 | 2.11.34 |
+| browserslist | 4.28.6 | 4.29.5 |
+| fast-uri | 3.1.3 | 3.1.9 |
+| nanoid | 3.3.15 | 3.3.20 |
+| postcss | 8.5.17 | 8.5.32 |
+| postcss-selector-parser | 7.1.4 | 7.1.7 |
+| source-map-js | 1.2.1 | 1.2.2 |
+
+También se renuevan los datos auxiliares de Browserslist: `caniuse-lite`,
+`electron-to-chromium`, `node-releases` y `update-browserslist-db`. Los once
+cambios conservan los contratos: por ejemplo, `ajv` pide `fast-uri@^3.0.1`,
+PostCSS pide `nanoid@^3.3.20` y `source-map-js@^1.2.2`, y ambos módulos CSS
+piden `postcss-selector-parser@^7.0.0`. Fast-uri 4.2.3 y Nanoid 6.0.2 son
+latest globales fuera de esos contratos; requieren actualizar sus padres.
+
+La auditoría npm del lock final confirma **22 GHSA únicos antes y uno después**,
+Zod 4.5.4, de severidad high. La consulta final incluyó todas las versiones de
+las 313 entradas del lock, resumidas en 287 nombres y 298 pares nombre/versión;
+no se limita al contraste local con la respuesta anterior. Se deduplica por
+GHSA: Zod se cuenta una vez al contrastarlo también con la fuente oficial.
+El aviso restante pertenece al subproyecto Remotion, que declara CLI y bundler
+como dependencias regulares; no al ERP desplegado. No hay avisos exclusivamente
+de desarrollo devueltos para este lock. El resultado corresponde al registro
+en la fecha de la consulta y no acredita ejecución Linux o Cloud ni sustituye
+las pruebas funcionales. El lock resultante tiene SHA-256
+`9dfca612e09d2a93d4b3aa0f7ecebf0bccd85c7ccadf1ea06ac2ec481f46bb5c`.
+
+Actualizar Remotion no elimina todos los avisos de su grafo. El
+[manifest publicado de Studio 4.0.539](https://registry.npmjs.org/@remotion%2fstudio/4.0.539)
+todavía fija Zod **4.5.4** exacto, afectado por
+[GHSA-mrhx-c7xc-m3w5](https://github.com/advisories/GHSA-mrhx-c7xc-m3w5)
+(versiones menores que 4.6.6). No se fuerza Zod fuera de ese contrato. Queda
+pendiente una versión estable del padre que admita el parche o una adaptación
+aislada con pruebas de esquemas y controles de Studio. Este grafo y sus avisos
+se informan separados de las dependencias del ERP desplegado.
+
+La comprobación funcional del lote debe repetir `typecheck`, `versions`, las
+seis escenas y el render completo con concurrencia 1. El cambio incluye
+correcciones de `spring()`; comparar las capturas con la base 4.0.488 antes de
+afirmar continuidad visual. Ninguna comprobación Windows acredita Linux o Cloud.
 
 ## Navegador, seis escenas y render
 
@@ -105,3 +171,21 @@ Render completo y ffprobe: H.264, 1920×1080, 30/1 fps, 1800 frames,
 60.000000 s, una pista de vídeo y ninguna de audio, 5 639 747 bytes.
 SHA-256 del MP4 local: `7eb4d2c8a083943eafb724633d50ad8ec5d2e47c6727c7024b6586d6616bcf69`.
 Las capturas y el MP4 se conservan localmente, sin añadir binarios al PR.
+
+## Validación local del lote — 2026-10-28
+
+Con Node 24.22.1, Bun 1.4.4 y Chromium Headless Shell 156.0.8078.4, el lock
+final pasó instalación congelada sin cambios de SHA-256:
+`9dfca612e09d2a93d4b3aa0f7ecebf0bccd85c7ccadf1ea06ac2ec481f46bb5c`.
+Tipos 5.8.3, alineación oficial de versiones, bundle y selección de composición:
+PASS. Las seis escenas se compararon contra la base 4.0.488 y conservaron
+exactamente los mismos píxeles RGBA. Esto cubre esos frames, no todos los frames
+ni la identidad editorial con el artifact histórico.
+
+El render completo del lock final y `ffprobe` pasaron: H.264, 1920×1080,
+30/1 fps, 1800 frames, 60.000000 segundos, una pista de vídeo y cero de audio.
+El archivo local tiene 5 639 747 bytes y SHA-256
+`ed8783b57b66c62d495584c80789a38b583a06f12d3cd843749a66ce23b44319`.
+Permanece ignorado en `out/`; no se publica ni se copia a la landing.
+El render usa concurrencia 1 y heap Node de 1536 MiB. La ejecución acredita
+Windows; los compositores Linux no se ejecutaron y Cloud permanece fuera de alcance.

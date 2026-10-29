@@ -9,7 +9,7 @@ import {
   TIPOS_OPERACION_TERRESTRE,
 } from "@/constants/cotizacionTerrestre";
 import type { CotizacionFormValues } from "@/features/cotizacion/hooks";
-import VendedorSelect from "@/features/crm/components/VendedorSelect";
+import { VendedorSelect } from "@/features/crm";
 
 export default function SeccionDatosGeneralesCotizacion({ complete }: { complete?: boolean } = {}) {
   const { watch, setValue, formState: { errors }, clearErrors } = useFormContext<CotizacionFormValues>();

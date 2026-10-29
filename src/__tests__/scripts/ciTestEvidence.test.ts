@@ -80,14 +80,14 @@ describe("CI catalog: effective discovery", () => {
     const step = detector.split("      - name: Package script contracts")[1].split("      - name:")[0];
     expect(step).toContain(command);
     expect(step).not.toMatch(/\bif:|continue-on-error/);
-    const nodeSetup = detector.indexOf("node-version: '24.22.0'");
+    const nodeSetup = detector.indexOf("node-version: '24.22.1'");
     expect(nodeSetup).toBeGreaterThanOrEqual(0);
     expect(nodeSetup).toBeLessThan(detector.indexOf(command));
     const bunStep = detector.split("      - name: Setup Bun for package script contracts")[1].split("      - name:")[0];
     expect(bunStep).toContain("uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0");
-    expect(bunStep).toContain("bun-version: '1.4.0'");
+    expect(bunStep).toContain("bun-version: '1.4.4'");
     expect(bunStep).not.toMatch(/\bif:|bun install|actions\/cache/);
-    expect(detector.indexOf("bun-version: '1.4.0'")).toBeLessThan(detector.indexOf(command));
+    expect(detector.indexOf("bun-version: '1.4.4'")).toBeLessThan(detector.indexOf(command));
     const guards = catalog.entries.filter(entry => entry.lane === "sql-guards").map(entry => entry.path);
     const support = Object.fromEntries(catalog.entries.filter(entry => entry.lane === "sql-support").map(entry => [entry.path, entry.reason]));
     expect(() => classifyFiles([...catalog.entries.map(entry => entry.path), "scripts/ci/unregistered-package.test.mjs"], guards, support))
@@ -103,6 +103,39 @@ describe("CI catalog: effective discovery", () => {
     expect(() => classifyFiles(files, [...guards, guards[0]], support)).toThrow(/duplicated/);
     expect(() => classifyFiles(files, [...guards, "supabase/tests/missing.sql"], support)).toThrow(/Stale/);
     expect(() => classifyFiles(files, [], support)).toThrow(/empty/);
+  });
+
+  it("routes only the executed dependency security command to its automatic Node lane", () => {
+    const expected = catalog.entries.filter(entry => entry.lane === "node-dependency-security");
+    const pkg = JSON.parse(source("package.json"));
+    expect(pkg.scripts["test:dependencies"]).toMatch(/^node --test /);
+    const actual = pkg.scripts["test:dependencies"].slice("node --test ".length).split(/\s+/);
+    expect(() => assertExactPaths(expected.map(entry => entry.path), actual, "dependency security command discovery"))
+      .not.toThrow();
+    expect(expected).toEqual([
+      "scripts/tests/dependency-security.test.mjs",
+      "scripts/tests/supabase-sdk-contracts.test.mjs",
+    ].map(path => expect.objectContaining({
+      path, mode: "automatic", sha256: hash(fs.readFileSync(path)),
+    })));
+
+    const checks = source(".github/workflows/ci.yml").replace(/\r\n/g, "\n").split("  checks:\n")[1].split("  tests:\n")[0];
+    const command = "run: bun run test:dependencies";
+    const step = checks.split("      - name: Dependency security consumer regressions\n")[1].split("      - name:")[0];
+    expect(step).toContain(command);
+    expect(step).toContain("if: needs.detector.outputs.frontend == 'true'");
+    expect(step).not.toContain("continue-on-error");
+    const setup = checks.indexOf("uses: ./.github/actions/setup-bun");
+    expect(setup).toBeGreaterThanOrEqual(0);
+    expect(setup).toBeLessThan(checks.indexOf(command));
+
+    const guards = catalog.entries.filter(entry => entry.lane === "sql-guards").map(entry => entry.path);
+    const support = Object.fromEntries(catalog.entries.filter(entry => entry.lane === "sql-support").map(entry => [entry.path, entry.reason]));
+    for (const extra of ["scripts/tests/extra-security.test.mjs", "scripts/tests/nested/dependency-security.test.mjs",
+      "scripts/tests/nested/supabase-sdk-contracts.test.mjs"]) {
+      expect(() => classifyFiles([...catalog.entries.map(entry => entry.path), extra], guards, support))
+        .toThrow(/no execution lane/);
+    }
   });
 });
 

@@ -72,7 +72,7 @@ while IFS= read -r -d '' path; do
   if [[ "$path" =~ ^supabase/functions/|^tests/contracts/|^scripts/check-edge-entrypoints\.sh$|^deno\.(json|jsonc|lock)$|^\.github/workflows/ci\.yml$|^\.github/actions/setup-bun/|^scripts/ci/detect-areas\.sh$ ]]; then
     edge=true
   fi
-  if [[ "$path" =~ ^scripts/db/|^supabase/(migrations|schema|tests|releases)/|^drizzle/|^drizzle\.config\.ts$|^scripts/audit-|^scripts/lib/|^scripts/ci/detect-areas\.sh$|^src/constants/appVersion\.ts$|^package\.json$|^bun\.lock$|^\.github/workflows/ci\.yml$|^\.github/actions/setup-bun/ ]]; then
+  if [[ "$path" =~ ^scripts/ci/drizzle-history/|^scripts/db/|^supabase/(migrations|schema|tests|releases)/|^drizzle/|^drizzle\.config\.ts$|^scripts/audit-|^scripts/lib/|^scripts/ci/detect-areas\.sh$|^src/constants/appVersion\.ts$|^package\.json$|^bun\.lock$|^\.github/workflows/ci\.yml$|^\.github/actions/setup-bun/ ]]; then
     database=true
   fi
 done < "$diff_file"

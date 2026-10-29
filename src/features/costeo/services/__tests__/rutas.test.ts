@@ -12,6 +12,7 @@ import {
   fetchCosteoRutas,
   insertCosteoRuta,
   deleteCosteoRuta,
+  MENSAJE_RUTA_CON_TARIFAS,
 } from "../rutas";
 
 
@@ -120,6 +121,17 @@ describe("costeo/services/rutas", () => {
     await deleteCosteoRuta("r1");
     const call = mock.tableCalls.find((c) => c.table === "costeo_rutas");
     expect(call?.ops).toContain("delete");
+  });
+
+  it("Sentry 8E: ruta con tarifas → mensaje en español y error esperado", async () => {
+    mock.setTableResult("costeo_rutas", { data: null, error: {
+      code: "23503",
+      message: 'update or delete on table "costeo_rutas" violates foreign key constraint "costeo_tarifas_ruta_id_fkey" on table "costeo_tarifas"',
+      details: 'Key is still referenced from table "costeo_tarifas".',
+    } });
+    const err = await deleteCosteoRuta("r1").catch((e: unknown) => e) as { message: string; expected: boolean };
+    expect(err.message).toBe(MENSAJE_RUTA_CON_TARIFAS);
+    expect(err.expected).toBe(true);
   });
 });
 

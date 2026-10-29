@@ -4,6 +4,7 @@ import assert from 'node:assert/strict';
 import { createHash } from 'node:crypto';
 import fs from 'node:fs';
 import { fileURLToPath } from 'node:url';
+import { historicalDemoSourceBytes } from '../demo-sdk-source-adaptation.mjs';
 import {
   AUTHORITY_CONTRACT_TESTS, buildCatalog, classifyFiles, validateAuthorityContractLane,
 } from '../test-catalog.mjs';
@@ -36,8 +37,9 @@ function verifyPins(pins) {
     assert.ok(['EXACT', 'CRLF_TO_LF_ALLOWED'].includes(row.checkout_eol));
     // Git's Windows checkout may expand LF. Pin Git bytes; permit only this named
     // checkout transformation, never trim, reformat or regenerate an input.
-    const bytes = row.checkout_eol === 'CRLF_TO_LF_ALLOWED'
+    const checkoutBytes = row.checkout_eol === 'CRLF_TO_LF_ALLOWED'
       ? Buffer.from(checkedOut.toString('utf8').replaceAll('\r\n', '\n'), 'utf8') : checkedOut;
+    const bytes = historicalDemoSourceBytes(row.path, checkoutBytes);
     assert.equal(bytes.length, row.bytes, row.path);
     assert.equal(digest('sha256', bytes), row.sha256, row.path);
     assert.equal(digest('sha1', Buffer.concat([Buffer.from(`blob ${bytes.length}\0`), bytes])), row.git_blob_sha1, row.path);
@@ -54,8 +56,29 @@ function functionBody(source, name) {
   return source.slice(bodyStart + 5, end);
 }
 
-test('source integrity: authority inputs equal the explicitly reviewed main bytes', () => {
+test('source integrity: reviewed authority bytes allow only the exact SDK import migration', () => {
   verifyPins(sourcePins);
+});
+
+test('SDK migration rejects changed wiring, body, import, version, missing and duplicate imports', () => {
+  const path = 'supabase/functions/demo-access/index.ts';
+  const current = read(path).replaceAll('\r\n', '\n');
+  const sdkImport = 'import { createClient } from "npm:@supabase/supabase-js@2.118.0";';
+  const historical = historicalDemoSourceBytes(path, Buffer.from(current));
+  const pin = sourcePins.sources.find(row => row.path === path);
+  assert.equal(historical.length, pin.bytes);
+  assert.equal(digest('sha256', historical), pin.sha256);
+  for (const changed of [
+    current.replace('createProbeClient:', 'availabilityProvider:'),
+    current.replace('initSentryEdge("demo-access")', 'initSentryEdge("changed")'),
+    current.replace('npm:@supabase/', 'https://example.invalid/@supabase/'),
+    current.replace('2.118.0', '2.118.1'),
+    current.replace(sdkImport, ''),
+    current.replace(sdkImport, sdkImport + '\n' + sdkImport),
+    historical.toString('utf8'),
+  ]) assert.throws(() => historicalDemoSourceBytes(path, Buffer.from(changed)));
+  const unchanged = Buffer.from('unchanged synthetic input');
+  assert.strictEqual(historicalDemoSourceBytes('docs/review/synthetic.sql', unchanged), unchanged);
 });
 
 test('source integrity rejects changed hash, missing source, duplicate and omitted base identity', () => {
@@ -167,7 +190,7 @@ test('CI: authority contracts run unconditionally after the complete inventory a
   const start = ci.indexOf('      - name: Demo authority composition contracts offline');
   const end = ci.indexOf('      - name: Post-deploy smoke contract', start);
   assert.ok(start > ci.indexOf('test-catalog.mjs --output reports/test-inventory.json'));
-  const nodeSetup = ci.indexOf("node-version: '24.22.0'");
+  const nodeSetup = ci.indexOf("node-version: '24.22.1'");
   assert.ok(nodeSetup >= 0 && nodeSetup < start);
   assert.ok(end > start);
   const step = ci.slice(start, end);

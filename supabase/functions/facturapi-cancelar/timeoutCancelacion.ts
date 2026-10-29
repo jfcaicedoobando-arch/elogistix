@@ -14,7 +14,7 @@
  * fallo. Si NO se pudo persistir, el caller debe responder error 5xx observable
  * porque nadie reconciliará la factura.
  */
-import { SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
+import { SupabaseClient } from "npm:@supabase/supabase-js@2.118.0";
 import { registrarBitacoraEdge } from "../_shared/bitacora.ts";
 
 /** Estados que garantizan que el cron de reconciliación adoptará la factura. */

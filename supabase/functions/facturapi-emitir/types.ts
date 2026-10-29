@@ -42,7 +42,7 @@ export interface Claim { claimTag: string; claimAt: string; release: () => Promi
 export interface UserIdentity { id: string; email?: string | null }
 
 export interface EmitirInput {
-  supabase: import('https://esm.sh/@supabase/supabase-js@2.45.0').SupabaseClient;
+  supabase: import('npm:@supabase/supabase-js@2.118.0').SupabaseClient;
   facturapi: import('../_shared/facturapiClient.ts').FacturapiClient;
   apiKey: string; ambiente: string; ctx: import('./helpers.ts').FacturaContext;
   factura: FacturaRow; facturaId: string; user: UserIdentity; claim: Claim;

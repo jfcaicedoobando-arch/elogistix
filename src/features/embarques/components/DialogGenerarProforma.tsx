@@ -19,13 +19,15 @@ interface Props {
   conceptosPendientes: ConceptoVenta[];
   /** v12.14.0: filtro inicial al abrir (atajo "Por contenedor"). Default 'todos'. */
   initialFiltroContenedor?: FiltroContenedor;
+  initialNotas?: string;
+  initialConceptoIds?: string[];
 }
 
-export function DialogGenerarProforma({ open, onOpenChange, embarque, conceptosPendientes, initialFiltroContenedor = 'todos' }: Props) {
+export function DialogGenerarProforma({ open, onOpenChange, embarque, conceptosPendientes, initialFiltroContenedor = 'todos', initialNotas = '', initialConceptoIds }: Props) {
   const navigate = useNavigate();
   const c = useDialogGenerarProformaController(
     open, embarque, conceptosPendientes, () => onOpenChange(false),
-    initialFiltroContenedor,
+    { initialFiltroContenedor, initialNotas, initialConceptoIds },
   );
 
   const isSeleccion = c.paso === 'seleccion';

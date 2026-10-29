@@ -10,7 +10,7 @@
 import { assertEquals, assert } from "https://deno.land/std@0.224.0/assert/mod.ts";
 import { handleList } from "./listHandler.ts";
 import { handleListNombres } from "./listNombresHandler.ts";
-import type { SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
+import type { SupabaseClient } from "npm:@supabase/supabase-js@2.118.0";
 import type { HandlerCtx, AdminAccess } from "./types.ts";
 
 const CALLER_ID = "11111111-1111-1111-1111-111111111111";

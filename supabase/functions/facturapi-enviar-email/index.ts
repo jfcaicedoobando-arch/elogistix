@@ -7,10 +7,10 @@
  *
  * Salida: { ok: true, enviado_a: string } o error normalizado.
  */
-import { createClient, type SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
+import { createClient, type SupabaseClient } from "npm:@supabase/supabase-js@2.118.0";
 import { buildCors, handlePreflightStrict } from "../_shared/cors.ts";
 import { wrapEdgeHandler } from "../_shared/sentry.ts";
-import { resolveFacturapiKey, FACTURAPI_BASE, basicAuthHeader } from "../_shared/facturapiAuth.ts";
+import { resolveFacturapiKey, facturapiResolverClient, FACTURAPI_BASE, basicAuthHeader } from "../_shared/facturapiAuth.ts";
 import { authorizeOrgRole, ROLES_CONSULTA_FISCAL } from "../_shared/auth.ts";
 import { resolverDestinatarioAutorizado } from "./destinatarioAutorizado.ts";
 import { registrarBitacoraEdge } from "../_shared/bitacora.ts";
@@ -138,7 +138,7 @@ Deno.serve(wrapEdgeHandler("facturapi-enviar-email", async (req) => {
   // para clientes del portal y roles operativos. La autorización del
   // documento ya se validó arriba.
   const adminClient = createClient(SUPABASE_URL, SERVICE_KEY, { auth: { persistSession: false } });
-  const resolved = await resolveFacturapiKey(adminClient, target.data.organizationId);
+  const resolved = await resolveFacturapiKey(facturapiResolverClient(adminClient), target.data.organizationId);
   if (!resolved.ok) return json({ error: resolved.data.error, message: resolved.data.message }, resolved.data.status);
 
   // FacturApi: tanto facturas como REP usan /invoices/<id>/email

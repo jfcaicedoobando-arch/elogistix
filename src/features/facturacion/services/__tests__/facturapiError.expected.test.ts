@@ -19,6 +19,7 @@ describe("FacturapiError.expected — validaciones SAT esperadas", () => {
     "El código postal no coincide con el domicilio fiscal del RFC.",
     "El uso de CFDI no es válido para el régimen fiscal del receptor.",
     "La factura tiene una solicitud de cancelación pendiente.",
+    "El saldo o los impuestos que calculamos para el complemento de pago no coinciden con el resumen del proveedor de timbrado.",
   ];
 
   const UNEXPECTED_MESSAGES = [

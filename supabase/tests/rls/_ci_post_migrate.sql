@@ -4,6 +4,8 @@
 -- Fail before blanket grants if either disabled Pricing lineage function leaked.
 \ir _ci_check_pricing_lineage_acl.sql
 
+\ir _ci_check_cotizacion_vendedor_acl.sql
+
 -- Drizzle 0017 trigger helpers are owner-only, including for service_role.
 -- Check the replay BEFORE any CI grant/revoke can hide an existing leak.
 -- Keep the assertion session-local and reuse it on the final harness state.
@@ -101,6 +103,8 @@ GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA public TO authentic
 GRANT ALL ON ALL TABLES IN SCHEMA public TO service_role;
 GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA public TO authenticated, service_role;
 GRANT EXECUTE ON ALL FUNCTIONS IN SCHEMA public TO authenticated, service_role;
+-- Remove only the two CI-added grants; 0022 and replay ACL stay immutable.
+REVOKE EXECUTE ON FUNCTION public._cotizacion_vendedor_misma_org() FROM authenticated, service_role;
 -- Undo only the CI-added EXECUTE grants on the already-verified 0017 helpers.
 -- Do not put them in _ci_service_role_only: that would grant a new privilege.
 DO $crm_empresa_owner_restore$
@@ -292,3 +296,5 @@ REVOKE ALL ON FUNCTION public.guard_cotizacion_origen_pricing() FROM PUBLIC, ano
 \ir _ci_check_pricing_lineage_acl.sql
 SELECT pg_temp._ci_check_crm_empresa_owner_acl();
 DROP FUNCTION pg_temp._ci_check_crm_empresa_owner_acl();
+
+\ir _ci_check_cotizacion_vendedor_acl.sql

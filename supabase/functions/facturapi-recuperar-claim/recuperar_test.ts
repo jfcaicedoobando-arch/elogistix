@@ -5,7 +5,7 @@
  * `PENDING:<uuid>` puede recuperarse o hay que esperar la ventana de gracia.
  */
 import { assert, assertEquals, assertStringIncludes } from "https://deno.land/std@0.224.0/assert/mod.ts";
-import type { SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
+import type { SupabaseClient } from "npm:@supabase/supabase-js@2.118.0";
 import {
   MIN_EDAD_MINUTOS, validarClaim, promoverNc, liberarClaimNc,
   type FacturaRow, type NotaCreditoRow as NcRow,

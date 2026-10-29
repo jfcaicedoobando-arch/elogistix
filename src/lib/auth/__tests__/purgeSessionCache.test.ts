@@ -1,5 +1,6 @@
 /** EC-01 — Purga de caché al cambiar de sesión. */
 import { describe, it, expect, vi } from "vitest";
+import { QueryClient } from "@tanstack/react-query";
 import { purgeSessionCache, debePurgarPorCambioDeUsuario } from "@/lib/auth/purgeSessionCache";
 
 describe("purgeSessionCache", () => {
@@ -7,6 +8,33 @@ describe("purgeSessionCache", () => {
     const clear = vi.fn();
     purgeSessionCache({ clear } as unknown as Parameters<typeof purgeSessionCache>[0]);
     expect(clear).toHaveBeenCalledTimes(1);
+  });
+
+  it("los listeners de removed observan el caché de mutaciones ya vacío durante la purga", async () => {
+    const client = new QueryClient({
+      defaultOptions: { mutations: { gcTime: Infinity, retry: false } },
+    });
+    const cache = client.getMutationCache();
+    const mutation = cache.build(client, {
+      mutationKey: ["session-write"],
+      mutationFn: async () => ({ organizationId: "org-outgoing", total: 42 }),
+    });
+    await mutation.execute(undefined);
+
+    const snapshots: unknown[][] = [];
+    const unsubscribe = cache.subscribe((event) => {
+      if (event.type === "removed") {
+        snapshots.push(cache.getAll().map((entry) => entry.state.data));
+      }
+    });
+    try {
+      purgeSessionCache(client);
+      expect(snapshots).toEqual([[]]);
+      expect(cache.getAll()).toEqual([]);
+    } finally {
+      unsubscribe();
+      client.clear();
+    }
   });
 });
 
