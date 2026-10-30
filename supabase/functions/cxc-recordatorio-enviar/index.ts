@@ -1,5 +1,6 @@
 import { createClient, SupabaseClient } from 'npm:@supabase/supabase-js@2.118.0';
-import { z } from 'npm:zod@3.23.8';
+import { BodySchema } from './bodySchema.ts';
+import { cxcValidationError } from '../_shared/cxcInputValidation.ts';
 import { buildCors, handlePreflightStrict } from '../_shared/cors.ts';
 import { wrapEdgeHandler } from '../_shared/sentry.ts';
 import { authenticate, authorizeOrgRole, ROLES_COBRANZA_FISCAL } from '../_shared/auth.ts';
@@ -11,12 +12,7 @@ import { DESTINATARIO_NO_PERMITIDO, emailPerteneceACliente } from '../_shared/de
 const SITE_NAME = 'elogistix';
 const FROM_DOMAIN = 'librecarga.com';
 
-const BodySchema = z.object({
-  factura_id: z.string().uuid(),
-  nota: z.string().max(2000).optional(),
-  canal: z.enum(['email']).default('email'),
-  contacto_email: z.string().email().optional().nullable(),
-});
+
 
 function corsJson(body: unknown, status: number, req: Request) {
   return new Response(JSON.stringify(body), {
@@ -211,7 +207,7 @@ Deno.serve(wrapEdgeHandler('cxc-recordatorio-enviar', async (req) => {
     const { userId, adminClient } = await authenticate(req);
 
     const body = await req.json().catch(() => ({}));
-    const parsed = BodySchema.safeParse(body);
+    const parsed = BodySchema.safeParse(body, { error: cxcValidationError });
     if (!parsed.success) {
       return corsJson({ error: 'Datos inválidos', details: parsed.error.flatten().fieldErrors }, 400, req);
     }

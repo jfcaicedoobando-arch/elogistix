@@ -1,5 +1,6 @@
 import { createClient, SupabaseClient } from 'npm:@supabase/supabase-js@2.118.0';
-import { z } from 'npm:zod@3.23.8';
+import { BodySchema, type EstadoCuentaInput } from './bodySchema.ts';
+import { cxcValidationError } from '../_shared/cxcInputValidation.ts';
 import { buildCors, handlePreflightStrict } from '../_shared/cors.ts';
 import { wrapEdgeHandler } from '../_shared/sentry.ts';
 import { authenticate, authorizeOrgRole, ROLES_COBRANZA_FISCAL } from '../_shared/auth.ts';
@@ -13,14 +14,7 @@ import {
 } from './totales.ts';
 
 
-const BodySchema = z.object({
-  cliente_id: z.string().uuid(),
-  periodo: z.string().max(100).optional().nullable(),
-  contacto_email: z.string().email().optional().nullable(),
-  mensaje: z.string().max(2000).optional().nullable(),
-  fecha_desde: z.string().optional().nullable(),
-  fecha_hasta: z.string().optional().nullable(),
-});
+
 
 interface FacturaCliente {
   total: number | null;
@@ -175,7 +169,7 @@ async function buildTemplateData(
   facturas: FacturaCliente[],
   userId: string,
   supabaseAdmin: SupabaseClient,
-  input: z.infer<typeof BodySchema>,
+  input: EstadoCuentaInput,
 ): Promise<Record<string, unknown>> {
   const { periodo, mensaje } = input;
   const totales = calcularTotalesPorMoneda(facturas);
@@ -207,7 +201,7 @@ async function runEnvio(
   req: Request,
   userId: string,
   adminClient: SupabaseClient,
-  input: z.infer<typeof BodySchema>,
+  input: EstadoCuentaInput,
 ): Promise<Response> {
   const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
   const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
@@ -250,7 +244,7 @@ Deno.serve(wrapEdgeHandler('cxc-estado-cuenta-enviar', async (req) => {
   try {
     const { userId, adminClient } = await authenticate(req);
     const body = await req.json().catch(() => ({}));
-    const parsed = BodySchema.safeParse(body);
+    const parsed = BodySchema.safeParse(body, { error: cxcValidationError });
     if (!parsed.success) {
       return corsJson({ error: 'Datos inválidos', details: parsed.error.flatten().fieldErrors }, 400, req);
     }

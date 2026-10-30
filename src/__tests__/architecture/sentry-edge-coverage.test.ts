@@ -116,7 +116,13 @@ describe("Edge functions con manejo manual de Sentry", () => {
   it.each(MANUAL_COVERAGE)("%s importa y llama captureEdgeException", (rel) => {
     const full = path.join(ROOT, rel);
     expect(fs.existsSync(full), `Falta archivo ${rel}`).toBe(true);
-    const src = fs.readFileSync(full, "utf-8");
+    let src = fs.readFileSync(full, "utf-8");
+    if (rel === "supabase/functions/parse-csf/index.ts" ||
+        rel === "supabase/functions/auditoria-explicar-hallazgo/index.ts") {
+      expect(src).toContain('import { handler } from "./handler.ts"');
+      expect(src).toContain("serve(handler)");
+      src = fs.readFileSync(path.join(path.dirname(full), "handler.ts"), "utf-8");
+    }
 
     // 1) Importa wrapper compartido.
     expect(src).toMatch(/from\s+["']\.\.\/_shared\/sentry\.ts["']/);
