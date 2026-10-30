@@ -10,6 +10,9 @@ import {
   deleteCosteoAgente,
   type CosteoAgenteInput,
 } from "@/features/costeo/services/agentes";
+import { mensajeConstraintUnico } from "@/lib/errors/pgConstraintMessages";
+
+const MSG_REINTENTAR = "Intenta de nuevo. Si el problema sigue, avisa a soporte.";
 
 export function useCosteoAgentes() {
   const { organizationId } = useOrganization();
@@ -34,7 +37,7 @@ export function useCosteoAgenteMutations() {
       toast({ title: "Agente agregado" });
     },
     onError: (e: Error) =>
-      notifyError(undefined, { title: "Error al agregar", description: e.message, error: e, method: "FEATURES_COSTEO_HOOKS_USECOSTEOAGENTES_1" }),
+      notifyError(undefined, { title: "Error al agregar", description: mensajeConstraintUnico(e.message) ?? MSG_REINTENTAR, error: e, method: "FEATURES_COSTEO_HOOKS_USECOSTEOAGENTES_1" }),
   });
 
   const actualizar = useMutation({
@@ -45,7 +48,7 @@ export function useCosteoAgenteMutations() {
       toast({ title: "Agente actualizado" });
     },
     onError: (e: Error) =>
-      notifyError(undefined, { title: "Error al actualizar", description: e.message, error: e, method: "FEATURES_COSTEO_HOOKS_USECOSTEOAGENTES_2" }),
+      notifyError(undefined, { title: "Error al actualizar", description: mensajeConstraintUnico(e.message) ?? MSG_REINTENTAR, error: e, method: "FEATURES_COSTEO_HOOKS_USECOSTEOAGENTES_2" }),
   });
 
   const eliminar = useMutation({
@@ -55,7 +58,7 @@ export function useCosteoAgenteMutations() {
       toast({ title: "Agente eliminado" });
     },
     onError: (e: Error) =>
-      notifyError(undefined, { title: "Error al eliminar", description: e.message, error: e, method: "FEATURES_COSTEO_HOOKS_USECOSTEOAGENTES_3" }),
+      notifyError(undefined, { title: "Error al eliminar", description: mensajeConstraintUnico(e.message) ?? MSG_REINTENTAR, error: e, method: "FEATURES_COSTEO_HOOKS_USECOSTEOAGENTES_3" }),
   });
 
   return { crear, actualizar, eliminar };
