@@ -3,7 +3,7 @@ import { z } from 'npm:zod@4.6.7';
 // Preserve the JSON request language accepted by the former Zod 3.23.8 schemas.
 // In particular, persisted GUIDs need not carry RFC UUID version/variant bits.
 const UUID3 = /^[0-9a-fA-F]{8}\b-[0-9a-fA-F]{4}\b-[0-9a-fA-F]{4}\b-[0-9a-fA-F]{4}\b-[0-9a-fA-F]{12}$/i;
-const EMAIL3 = /^(?!\.)(?!.*\.\.)([A-Z0-9_'+\-\.]*)[A-Z0-9_+-]@([A-Z0-9][A-Z0-9\-]*\.)+[A-Z]{2,}$/i;
+const EMAIL3 = /^(?!\.)(?!.*\.\.)([A-Z0-9_'+\-.]*)[A-Z0-9_+-]@([A-Z0-9][A-Z0-9-]*\.)+[A-Z]{2,}$/i;
 
 export const cxcGuid = () => z.string().regex(UUID3, 'Invalid uuid');
 export const cxcEmail = () => z.string().regex(EMAIL3, 'Invalid email');
