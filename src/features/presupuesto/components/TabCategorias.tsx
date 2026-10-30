@@ -85,11 +85,11 @@ export function TabCategorias() {
         const c = row.original;
         return (
           <div className="flex justify-end gap-1">
-            <Button variant="ghost" size="sm" onClick={() => { setEditar(c); setOpen(true); }}>
-              <Pencil className="h-3.5 w-3.5" />
+            <Button variant="ghost" size="sm" onClick={() => { setEditar(c); setOpen(true); }} aria-label={`Editar categoría ${c.nombre}`} title="Editar">
+              <Pencil className="h-3.5 w-3.5" aria-hidden />
             </Button>
-            <Button variant="ghost" size="sm" onClick={() => setBorrarId(c.id)}>
-              <Trash2 className="h-3.5 w-3.5 text-destructive" />
+            <Button variant="ghost" size="sm" onClick={() => setBorrarId(c.id)} aria-label={`Eliminar categoría ${c.nombre}`} title="Eliminar">
+              <Trash2 className="h-3.5 w-3.5 text-destructive" aria-hidden />
             </Button>
           </div>
         );
