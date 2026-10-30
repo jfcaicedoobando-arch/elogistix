@@ -18,11 +18,13 @@ bun run typecheck
 bun run versions
 ```
 
-TypeScript **5.8.3** es una dependencia de desarrollo local, en lugar de un peer
-que el lock anterior resolvía a **7.0.2**. React/DOM permanecen en **18.3.1**,
-con tipos **18.3.31 / 18.3.7**. Se quitaron los tipos Bun no usados por las fuentes
-o los scripts Node. Todos los paquetes Remotion directos están alineados en
+TypeScript **6.0.3** es una dependencia de desarrollo local. React/DOM usan
+**19.3.1**, con tipos **19.3.0 / 19.3.0**. Node y sus tipos permanecen en
+**24.22.1 / 24.19.2**. Todos los paquetes Remotion directos están alineados en
 **4.0.539** exacto. El lock de este subproyecto se actualiza por separado del ERP.
+El lote de React 19 conserva escenas, composición, fuentes y scripts de render;
+Scheduler pasa a **0.28.0** dentro del rango de React DOM. TypeScript 7 queda
+fuera de este lote.
 
 Referencias oficiales:
 [versiones iguales de Remotion](https://www.remotion.dev/docs/version-mismatch),
@@ -30,7 +32,9 @@ Referencias oficiales:
 [versionado de tipos DefinitelyTyped](https://github.com/DefinitelyTyped/DefinitelyTyped#how-do-definitely-typed-package-versions-relate-to-versions-of-the-corresponding-library)
 y [lock de Bun](https://bun.sh/docs/pm/lockfile).
 Los peers del [tag Remotion 4.0.539](https://github.com/remotion-dev/remotion/blob/v4.0.539/packages/core/package.json)
-admiten React 18. La compatibilidad de TypeScript 5.8.3 se comprueba con el typecheck real.
+admiten React >=16.8. La compatibilidad de React 19 y TypeScript 6.0.3 requiere
+el typecheck y el render del candidato; las validaciones históricas siguientes
+corresponden a sus versiones indicadas y no acreditan este lote.
 
 ## Familia actualizada - 2026-10-28
 
