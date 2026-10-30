@@ -3,7 +3,7 @@
  * una tasa que contradice su tratamiento) devuelve "indeterminado" y el
  * encabezado sólo sirve de respaldo cuando el cociente cae exacto en el catálogo.
  */
-import { assertEquals } from "https://deno.land/std@0.208.0/assert/mod.ts";
+import { assertEquals } from "https://deno.land/std@0.224.0/assert/mod.ts";
 import { resolverGruposTrasladoDr, trasladoDesdeEncabezado } from "./trasladoDr.ts";
 
 Deno.test("un renglón sin tipo_iva ya no cae al 16%", () => {

@@ -1,5 +1,5 @@
 // Tests Deno para helpers de enviar-factura-email
-import { assertEquals } from 'https://deno.land/std@0.208.0/assert/mod.ts';
+import { assertEquals } from 'https://deno.land/std@0.224.0/assert/mod.ts';
 import { sanitizeDownloadFilename, signUrl } from './helpers.ts';
 
 type FakeAdmin = Parameters<typeof signUrl>[0];

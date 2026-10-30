@@ -91,7 +91,7 @@ export class FacturapiSdkContratoError extends Error {
   constructor(operacion: string) {
     super(
       `El SDK de FacturAPI no expone \`${operacion}\`. Revisa la versión instalada ` +
-        "(`npm:facturapi@5.1.0`) antes de usar esta operación.",
+        "(`npm:facturapi@5.2.0`) antes de usar esta operación.",
     );
     this.name = "FacturapiSdkContratoError";
     this.operacion = operacion;
