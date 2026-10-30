@@ -23,16 +23,17 @@ import { assertConcurrentReports, createSentryContractHarness, deferred, payload
 
 // No --allow-net is needed. Use Sentry's actual envelope/buffer transport with
 // an in-memory request executor; never replace fetch, Deno.serve, or OTEL APIs.
-Deno.test("SDK 11.4.0: offline real SDK contracts", async (t) => {
+Deno.test("SDK 11.10.0: offline real SDK contracts", async (t) => {
   const harness = await createSentryContractHarness();
   const { sdk, delivered } = harness;
   try {
     await t.step("init/version/singleton, restrictive collection, no runtime or OTEL patching", () => {
-      assertEquals(sdk.SDK_VERSION, "11.4.0");
+      assertEquals(sdk.SDK_VERSION, "11.10.0");
       assertEquals(harness.transportCount, 1);
       assertStrictEquals(sdk.getClient(), sdk.getCurrentScope().getClient());
       const options = sdk.getClient<InstanceType<typeof sdk.DenoClient>>()!.getOptions();
       assertEquals(options.enableOpenTelemetrySetup, false);
+      assertEquals(options.enableRuntimeChannelInjection, false);
       assertEquals(options.attachStacktrace, false);
       assertEquals(options.integrations, []);
       assertEquals(options.traceLifecycle, "static");
@@ -142,7 +143,7 @@ Deno.test("SDK 11.4.0: offline real SDK contracts", async (t) => {
       const json = delivered.join("\n");
       assert(!/mock@example.invalid|XAXX010101000|MOCK_(?:TOKEN|ACCESS|ROOT|CHILD)/.test(json), "sensitive synthetic data reached transport");
       assert(json.includes("libre-carga-edge@mock-contract"));
-      assert(payloads(delivered).some((event) => event.sdk?.version === "11.4.0"));
+      assert(payloads(delivered).some((event) => event.sdk?.version === "11.10.0"));
     });
 
     await t.step("flush waits for actual buffered delivery and honors its timeout", async () => {
@@ -164,7 +165,7 @@ Deno.test("SDK 11.4.0: offline real SDK contracts", async (t) => {
       }
       assertEquals(await flushing, true);
       assert(delivered.some((text) => text.includes("bounded-flush")));
-      // SDK 11.4.0's PromiseBuffer races an unrefed timer without cancelling it
+      // SDK 11.10.0's PromiseBuffer races an unrefed timer without cancelling it
       // when delivery wins. Let that specific 50ms timer finish; keep sanitizers on.
       await new Promise((resolve) => setTimeout(resolve, 60));
     });
