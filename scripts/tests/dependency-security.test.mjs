@@ -23,6 +23,16 @@ function dependency(consumer, name) {
   }
 }
 
+function runKnip(directory, include) {
+  const knip = dependency(require, "knip");
+  const binary = path.join(knip.directory, knip.manifest.bin.knip);
+  return spawnSync(process.execPath, [binary, "--directory", directory,
+    "--include", include, "--no-progress", "--reporter", "json"], {
+    cwd: directory, encoding: "utf8", windowsHide: true, timeout: 10000,
+    env: { PATH: process.env.PATH, SystemRoot: process.env.SystemRoot, TEMP: process.env.TEMP, TMP: process.env.TMP, NO_COLOR: "1" },
+  });
+}
+
 const compiler = dependency(require, "eslint-plugin-react-compiler");
 const babel = dependency(compiler.require, "@babel/core");
 const semver = babel.require("semver");
@@ -216,8 +226,6 @@ test("Knip scopes Node test entrypoints while retaining reachable import errors"
   const config = JSON.parse(readFileSync(new URL("../../knip.json", import.meta.url), "utf8"));
   const node = config.workspaces["."].node;
   assert.deepEqual(node.entry, ["server.js", "!supabase/functions/**"]);
-  const knip = dependency(require, "knip");
-  const binary = path.join(knip.directory, knip.manifest.bin.knip);
   const temporary = path.resolve(tmpdir());
   const fixtureRoot = mkdtempSync(path.join(temporary, "elog-knip-runtime-"));
   assert.ok(fixtureRoot.startsWith(`${temporary}${path.sep}`));
@@ -260,11 +268,7 @@ test("Knip scopes Node test entrypoints while retaining reachable import errors"
         'import { unknown } from "deno-unlisted-control";',
         'export const deno = [z, unknown];',
       ].join("\n"));
-      const result = spawnSync(process.execPath, [binary, "--directory", directory,
-        "--include", "unlisted", "--no-progress", "--reporter", "json"], {
-        cwd: directory, encoding: "utf8", windowsHide: true, timeout: 10000,
-        env: { PATH: process.env.PATH, SystemRoot: process.env.SystemRoot, TEMP: process.env.TEMP, TMP: process.env.TMP, NO_COLOR: "1" },
-      });
+      const result = runKnip(directory, "unlisted");
       assert.equal(result.error, undefined, `${scenario.name}: ${result.error?.message}`);
       assert.ok(result.status === 0 || result.status === 1, `${scenario.name}: ${result.stderr}`);
       const issues = JSON.parse(result.stdout).issues.flatMap(file =>
@@ -287,5 +291,60 @@ test("Knip scopes Node test entrypoints while retaining reachable import errors"
   } finally {
     // This is the fresh directory created above, verified to stay inside Temp.
     rmSync(fixtureRoot, { recursive: true, force: true });
+  }
+});
+
+test("the Edge Sentry checker dependency matches its real import and keeps Knip's unused-dependency gate", { timeout: 30000 }, () => {
+  // Lovable's checker resolves this versioned npm: import through root
+  // node_modules. Knip analyzes Node/frontend entrypoints and cannot account
+  // for Deno's npm: specifiers; keep its exception limited to this package.
+  const manifest = JSON.parse(readFileSync(new URL("../../package.json", import.meta.url), "utf8"));
+  const config = JSON.parse(readFileSync(new URL("../../knip.json", import.meta.url), "utf8"));
+  // Inspect Deno source as data without adding it to Node's import graph.
+  const edgeRuntime = path.join(import.meta.dirname, "..", "..", "supabase", "functions", "_shared", "sentryRuntime.ts");
+  const source = readFileSync(edgeRuntime, "utf8");
+  const ts = require("typescript");
+  const file = ts.createSourceFile("sentryRuntime.ts", source, ts.ScriptTarget.Latest, true);
+  const imports = [];
+  function visit(node) {
+    if (ts.isCallExpression(node) && node.expression.kind === ts.SyntaxKind.ImportKeyword &&
+        ts.isStringLiteral(node.arguments[0])) imports.push(node.arguments[0].text);
+    ts.forEachChild(node, visit);
+  }
+  visit(file);
+  const edgePackage = "@sentry/deno";
+  const edgeImports = imports.filter(specifier => specifier.startsWith(`npm:${edgePackage}@`));
+  assert.equal(edgeImports.length, 1, "A live dynamic import must retain the Edge SDK");
+  const version = edgeImports[0].slice(`npm:${edgePackage}@`.length);
+  assert.match(version, /^\d+\.\d+\.\d+$/, "The Edge SDK uses an exact version");
+  assert.equal(manifest.devDependencies[edgePackage], version, "The checker must resolve the same version as Edge");
+  // The Deno SDK is ESM-only, but exposes its manifest to Node's checker.
+  const installed = JSON.parse(readFileSync(require.resolve(`${edgePackage}/package.json`), "utf8"));
+  assert.equal(installed.version, version);
+  const ignored = config.workspaces["."].ignoreDependencies;
+  assert.ok(ignored.includes(edgePackage), "The exact checker dependency is accounted for outside Node analysis");
+
+  const directory = mkdtempSync(path.join(tmpdir(), "elog-knip-sentry-"));
+  const controls = ["@sentry/unused-negative-control", "unused-negative-control"];
+  try {
+    writeFileSync(path.join(directory, "package.json"), JSON.stringify({
+      name: "edge-checker-dependency", private: true, type: "module",
+      devDependencies: Object.fromEntries([[edgePackage, version], ...controls.map(name => [name, "1.0.0"])]),
+    }));
+    writeFileSync(path.join(directory, "index.js"), "export const live = 1;\n");
+    for (const exceptEdge of [false, true]) {
+      writeFileSync(path.join(directory, "knip.json"), JSON.stringify({
+        entry: ["index.js"], project: ["index.js"],
+        ignoreDependencies: ignored.filter(name => exceptEdge || name !== edgePackage),
+      }));
+      const result = runKnip(directory, "dependencies");
+      assert.equal(result.error, undefined, result.error?.message);
+      assert.equal(result.status, 1, "Unused controls must keep failing Knip");
+      const unused = JSON.parse(result.stdout).issues.flatMap(file =>
+        [...(file.dependencies ?? []), ...(file.devDependencies ?? [])].map(issue => issue.name));
+      assert.deepEqual(unused.sort(), (exceptEdge ? controls : [edgePackage, ...controls]).toSorted());
+    }
+  } finally {
+    rmSync(directory, { recursive: true, force: true });
   }
 });

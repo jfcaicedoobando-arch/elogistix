@@ -22,6 +22,7 @@ import { seedCategoriasDefault } from "@/features/presupuesto/services";
 import type { CategoriaPresupuesto } from "@/features/presupuesto/services";
 import { DialogCategoria } from "./DialogCategoria";
 import { SectionHeading } from "@/components/shared/SectionHeading";
+import { Hint } from "@/components/shared/Hint";
 
 import { notifyError } from "@/lib/ui/appFeedback";
 import { getErrorMessage } from "@/lib/errors";
@@ -85,12 +86,16 @@ export function TabCategorias() {
         const c = row.original;
         return (
           <div className="flex justify-end gap-1">
-            <Button variant="ghost" size="sm" onClick={() => { setEditar(c); setOpen(true); }} aria-label={`Editar categoría ${c.nombre}`} title="Editar">
-              <Pencil className="h-3.5 w-3.5" aria-hidden />
-            </Button>
-            <Button variant="ghost" size="sm" onClick={() => setBorrarId(c.id)} aria-label={`Eliminar categoría ${c.nombre}`} title="Eliminar">
-              <Trash2 className="h-3.5 w-3.5 text-destructive" aria-hidden />
-            </Button>
+            <Hint label="Editar">
+              <Button variant="ghost" size="sm" onClick={() => { setEditar(c); setOpen(true); }} aria-label={`Editar categoría ${c.nombre}`}>
+                <Pencil className="h-3.5 w-3.5" aria-hidden />
+              </Button>
+            </Hint>
+            <Hint label="Eliminar">
+              <Button variant="ghost" size="sm" onClick={() => setBorrarId(c.id)} aria-label={`Eliminar categoría ${c.nombre}`}>
+                <Trash2 className="h-3.5 w-3.5 text-destructive" aria-hidden />
+              </Button>
+            </Hint>
           </div>
         );
       },
