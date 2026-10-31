@@ -166,10 +166,17 @@ siguen presentes; una omisión válida no es evidencia de ejecución de suites.
 ### Deno: CLI de pruebas vs. runtime desplegado
 
 `ci.yml` y `post-deploy-smoke.yml` fijan el CLI en **2.9.7**. En Git, Edge
-importa `npm:@sentry/deno@11.4.0` desde `_shared/sentryRuntime.ts`, migrado en
-[PR240](https://github.com/jfcaicedoobando-arch/elogistix/pull/240).
-SDK 11 requiere Deno ≥2.8.3. [PR382](https://github.com/jfcaicedoobando-arch/elogistix/pull/382)
-retiró el paquete raíz `@sentry/deno`; ese cambio no modifica el import Edge.
+importa `npm:@sentry/deno@11.10.0` desde `_shared/sentryRuntime.ts`; la migración
+a SDK 11 comenzó en [PR240](https://github.com/jfcaicedoobando-arch/elogistix/pull/240).
+SDK 11 requiere Deno ≥2.8.3. Aunque [PR382](https://github.com/jfcaicedoobando-arch/elogistix/pull/382)
+retiró el paquete raíz, [c65c469](https://github.com/jfcaicedoobando-arch/elogistix/commit/c65c46904b60f21b981e687341d56aff628fa622)
+restauró `@sentry/deno` como devDependency exacta para que el checker Edge de
+Lovable resuelva ese import contra `node_modules`, conforme a `AGENTS.md`.
+Knip analiza las entradas Node/frontend y no interpreta los imports `npm:` de
+Deno: `workspaces["."].ignoreDependencies` exceptúa sólo `@sentry/deno` por ese
+uso externo al grafo. El contrato de dependencias comprueba la versión del
+import dinámico y la instalada; sus controles negativos mantienen el fallo de
+Knip ante otros paquetes sin uso, incluidos otros `@sentry/*`.
 Ambos comandos mantienen
 `--sanitize-ops` y `--sanitize-resources`: desde Deno 2.8 cambiaron sus
 defaults y la actualización no debe relajar la detección de fugas.

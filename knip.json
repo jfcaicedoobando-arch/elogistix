@@ -22,7 +22,8 @@
         ]
       },
       "ignoreDependencies": [
-        "drizzle-orm"
+        "drizzle-orm",
+        "@sentry/deno"
       ]
     },
     "scripts/ci/selector148": {
