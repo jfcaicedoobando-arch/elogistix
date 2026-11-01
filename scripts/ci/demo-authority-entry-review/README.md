@@ -5,6 +5,17 @@ unchanged source dependencies are pinned to `ecc53750c5d920d898ca2b00a2f717371dc
 publication also preserves the subsequent unrelated main commit
 `3a7c71fba35c9e7af509a8217a193929da21db9c`.
 
+## Source layout
+
+The two proposal modules are in
+`docs/review/demo-authority-provider-entry-20261016/`. They were added by PR361
+after the historical 12-file owner package and now have their own namespace.
+`authority-provider.mjs` retains its exact bytes; `issuer-entry.mjs` changes only
+the three relative imports that reference the original driver, issuer and store.
+The source test normalizes precisely those imports and checks the original
+module hashes. All 12 historical files, their manifest and the dependency pins
+remain unchanged. Historical QA snapshots retain their original paths and hashes.
+
 ## Dependency and boundary
 
 Draft A supplies `demo_flow_writer.read_authority(uuid)` in SQL17/18. Its contract
@@ -70,8 +81,10 @@ node scripts/ci/demo-authority-entry-review/run_review.mjs --output /tmp/demo-au
 
 The isolated draft-only Actions workflow runs the exact three `test_*.mjs` files,
 pins unchanged imported sources and uploads TAP plus a scope-labelled result.
-The naming and runner are deliberately separate from the shared CI catalogue;
-no catalogue or shared workflow is changed. Tests cover fixed query parameters,
+The naming and runner remain separate from the shared JavaScript CI catalogue.
+Main CI checks the independent offline Python persistence contracts; it preserves
+the isolated authority-entry workflow and the SQL/physical laboratory gates.
+The tests cover fixed query parameters,
 malformed references/evidence, stale/revoked/fence mismatches, timestamp precision,
 canonical derivation, conflicts, identical history, uncertain ACK, physical
 session mutation, close failure and concurrent entry calls. They are protocol

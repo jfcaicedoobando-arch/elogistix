@@ -3,17 +3,39 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import {createHash} from 'node:crypto';
 import {fileURLToPath} from 'node:url';
-import {READ_AUTHORITY_SQL} from '../../../docs/review/demo-durable-owner-adapter-20261015/authority-provider.mjs';
-import {READ_ISSUANCE_SQL} from '../../../docs/review/demo-durable-owner-adapter-20261015/issuer-entry.mjs';
+import {READ_AUTHORITY_SQL} from '../../../docs/review/demo-authority-provider-entry-20261016/authority-provider.mjs';
+import {READ_ISSUANCE_SQL} from '../../../docs/review/demo-authority-provider-entry-20261016/issuer-entry.mjs';
 import {EMPTY_CONFIG} from '../../../docs/review/demo-durable-owner-adapter-20261015/driver.mjs';
 
 const root = fileURLToPath(new URL('../../../', import.meta.url));
 const read = path => fs.readFileSync(root + path, 'utf8');
 const directory = 'docs/review/demo-durable-owner-adapter-20261015/';
+const extensionDirectory = 'docs/review/demo-authority-provider-entry-20261016/';
 const pins = JSON.parse(read('scripts/ci/demo-authority-entry-review/source-pins.json'));
 const expectedSources = [...['driver.mjs', 'issuer.mjs', 'owner.mjs', 'store.mjs', 'store.sql'].map(p => directory + p),
   'scripts/ci/demo-authority-bridge-review/contract.mjs',
   'scripts/ci/demo-authority-bridge-review/synthetic-fixtures.mjs'];
+
+// Original helper bytes from main 22db8becd. Relocation permits only the three
+// issuer imports below; neither helper belongs to the historical twelve-file archive.
+const helperPins = {
+  provider: {bytes: 2346, sha256: 'a13923e6d668794e7ef2b3f898e827c9976cdb4638bee8b7eb1470446b77d897'},
+  entry: {bytes: 6284, sha256: '2a3e36f55240c984471a6f35a12cc8cc4d976e03228b36086afeae70aa147973'},
+};
+
+function verifyRelocatedHelpers(provider, entry) {
+  for (const dependency of ['driver', 'issuer', 'store']) {
+    const relocated = `from '../demo-durable-owner-adapter-20261015/${dependency}.mjs';`;
+    const original = `from './${dependency}.mjs';`;
+    assert.equal(entry.split(relocated).length, 2, `Exactly one relocated ${dependency} import`);
+    assert.equal(entry.includes(original), false, `No obsolete sibling ${dependency} import`);
+    entry = entry.replace(relocated, original);
+  }
+  for (const [name, text] of Object.entries({provider, entry})) {
+    assert.equal(Buffer.byteLength(text), helperPins[name].bytes, name);
+    assert.equal(createHash('sha256').update(text).digest('hex'), helperPins[name].sha256, name);
+  }
+}
 
 function verifyPins(value) {
   assert.equal(value.baseCommit, 'ecc53750c5d920d898ca2b00a2f717371dc19cf5');
@@ -35,8 +57,22 @@ test('authentic issuer, driver, store, owner and PR358 mapper remain exact pinne
   }
 });
 
+test('relocated helpers preserve original bytes except the three historical dependency imports', () => {
+  const provider = read(extensionDirectory + 'authority-provider.mjs');
+  const entry = read(extensionDirectory + 'issuer-entry.mjs');
+  verifyRelocatedHelpers(provider, entry);
+  assert.equal(fs.existsSync(root + directory + 'authority-provider.mjs'), false);
+  assert.equal(fs.existsSync(root + directory + 'issuer-entry.mjs'), false);
+  for (const [changedProvider, changedEntry] of [
+    [provider + '// altered helper', entry],
+    [provider, entry + '// altered integration'],
+    [provider, entry.replace("from '../demo-durable-owner-adapter-20261015/driver.mjs';", "from './driver.mjs';")],
+    [provider, entry + "\nimport {SQL} from '../demo-durable-owner-adapter-20261015/store.mjs';"],
+  ]) assert.throws(() => verifyRelocatedHelpers(changedProvider, changedEntry));
+});
+
 test('new integration has fixed queries, no hash fork, business call, network, or caller evidence resolver', () => {
-  const provider = read(directory + 'authority-provider.mjs'), entry = read(directory + 'issuer-entry.mjs');
+  const provider = read(extensionDirectory + 'authority-provider.mjs'), entry = read(extensionDirectory + 'issuer-entry.mjs');
   assert.equal(READ_AUTHORITY_SQL, 'SELECT demo_flow_writer.read_authority($1::uuid) AS authority');
   assert.match(READ_ISSUANCE_SQL, /FOR SHARE$/);
   assert.doesNotMatch(provider + entry, /createHash|node:crypto|crypto\.subtle|fetch\(|https?:\/\/|process\.env|Deno\.env/);
@@ -54,6 +90,7 @@ test('isolated draft workflow runs the exact offline census with no secrets or b
   assert.match(workflow, /github\.event\.pull_request\.head\.ref == 'review\/demo-authority-provider-entry-20261016'/);
   assert.match(workflow, /contents: read/); assert.match(workflow, /persist-credentials: false/);
   assert.match(workflow, /node-version: '26\.13\.0'/);
+  assert.ok(workflow.includes("      - 'docs/review/demo-authority-provider-entry-20261016/**'"));
   assert.match(workflow, /node scripts\/ci\/demo-authority-entry-review\/run_review\.mjs --output/);
   assert.doesNotMatch(workflow, /secrets\.|continue-on-error|npm install|npm ci|psql|createdb|docker|supabase|workflow_dispatch|pull_request_target/);
   const actual = fs.readdirSync(root + 'scripts/ci/demo-authority-entry-review').filter(p => /^test_.*\.mjs$/.test(p)).sort();

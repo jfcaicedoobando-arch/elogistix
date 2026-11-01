@@ -4,7 +4,7 @@ import shutil
 import tempfile
 import unittest
 
-from sources import SOURCE, SOURCE_COMMIT, STORE_SHA256, verify_sources
+from sources import NAMES, SOURCE, SOURCE_COMMIT, STORE_SHA256, verify_sources
 
 
 class GitInputTests(unittest.TestCase):
@@ -36,6 +36,42 @@ class GitInputTests(unittest.TestCase):
             manifest = root / 'SHA256SUMS.txt'
             manifest.write_bytes(manifest.read_bytes() + b'\n')
             with self.assertRaisesRegex(ValueError, 'MANIFEST_HASH'):
+                verify_sources(root)
+
+    def test_missing_source_members_reject_before_hash_checks(self):
+        for name in sorted(NAMES):
+            with self.subTest(name=name), tempfile.TemporaryDirectory() as directory:
+                root = Path(directory) / 'input'
+                shutil.copytree(SOURCE, root)
+                (root / name).unlink()
+                with self.assertRaisesRegex(ValueError, '^PERSISTENCE_SOURCE_EXACT_FILE_SET$'):
+                    verify_sources(root)
+
+    def test_symlink_source_members_reject_before_hash_checks(self):
+        for name in sorted(NAMES):
+            with self.subTest(name=name), tempfile.TemporaryDirectory() as directory:
+                root = Path(directory) / 'input'
+                shutil.copytree(SOURCE, root)
+                (root / name).unlink()
+                (root / name).symlink_to(SOURCE / name)
+                with self.assertRaisesRegex(ValueError, '^PERSISTENCE_SOURCE_REGULAR_FILES$'):
+                    verify_sources(root)
+
+    def test_source_member_directories_reject_before_hash_checks(self):
+        for name in sorted(NAMES):
+            with self.subTest(name=name), tempfile.TemporaryDirectory() as directory:
+                root = Path(directory) / 'input'
+                shutil.copytree(SOURCE, root)
+                (root / name).unlink()
+                (root / name).mkdir()
+                with self.assertRaisesRegex(ValueError, '^PERSISTENCE_SOURCE_REGULAR_FILES$'):
+                    verify_sources(root)
+
+    def test_symlink_source_directory_rejects_before_inventory_checks(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory) / 'input'
+            root.symlink_to(SOURCE, target_is_directory=True)
+            with self.assertRaisesRegex(ValueError, '^PERSISTENCE_SOURCE_DIRECTORY$'):
                 verify_sources(root)
 
 

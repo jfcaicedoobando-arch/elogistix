@@ -3,9 +3,9 @@
  * endpoint, credentials, grants, dispatch, ingress or business integration.
  * A successful result records issuance only and NEVER grants execution rights.
  */
-import {dedicatedDriver, EMPTY_CONFIG} from './driver.mjs';
-import {createIssuer, ISSUE_SQL} from './issuer.mjs';
-import {SQL} from './store.mjs';
+import {dedicatedDriver, EMPTY_CONFIG} from '../demo-durable-owner-adapter-20261015/driver.mjs';
+import {createIssuer, ISSUE_SQL} from '../demo-durable-owner-adapter-20261015/issuer.mjs';
+import {SQL} from '../demo-durable-owner-adapter-20261015/store.mjs';
 import {createAuthorityProvider} from './authority-provider.mjs';
 import {classifyDeclaredIssuance} from '../../../scripts/ci/demo-authority-bridge-review/contract.mjs';
 

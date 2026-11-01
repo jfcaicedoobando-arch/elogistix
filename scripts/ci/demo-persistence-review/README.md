@@ -8,6 +8,12 @@ bytes. Store SHA256 is `fb7fa69c17eca7230606ecb6217086c6eb5317d75551df9efc268959
 The original package's README, plan and validation files retain their authored
 source-time status; subsequent runtime results are recorded separately below.
 
+The historical directory contains exactly those 12 files. The later
+`authority-provider.mjs` and `issuer-entry.mjs` proposal lives separately in
+`docs/review/demo-authority-provider-entry-20261016/`; its consumers reference the
+original driver/issuer/store without changing their bytes. The historical
+manifest, file census and rejection controls remain fixed.
+
 This input is independent of the historical Library ZIP transfer failure.
 No ZIP materialization/hash or TRANSFER-SHA256SUMS verification is claimed.
 `intake.py` retains its separate fixed ZIP contract. Missing ZIP bytes do not
@@ -26,6 +32,11 @@ The catalog explicitly registers and executes the original `owner.test.mjs`
 rejection, metadata hygiene, event gates, binary stdin and harness parsing;
 they never start SQL or Docker. Public-file guards reject private source
 identifiers and local profile paths in tracked review files.
+
+The main CI detector runs this Python suite unconditionally after selecting
+Node 26.13.0. Missing files, extra files, links and altered payload/manifest bytes
+must fail at their specific integrity checks. This offline step does not invoke
+the gated SQL runner or change its reviewed branch/base requirements.
 
 ## PostgreSQL lane
 

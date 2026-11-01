@@ -5,6 +5,7 @@ on:
     branches: [main]
     paths:
       - 'docs/review/demo-durable-owner-adapter-20261015/**'
+      - 'docs/review/demo-authority-provider-entry-20261016/**'
       - 'scripts/ci/demo-authority-bridge-review/**'
       - 'scripts/ci/demo-authority-entry-review/**'
       - '.github/workflows/demo-authority-entry-review.yml'

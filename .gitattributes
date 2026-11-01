@@ -1,4 +1,6 @@
 # Preserve the authored review input byte-for-byte on every checkout.
 docs/review/demo-durable-owner-adapter-20261015/** -text
+# Keep relocated authority-entry review modules and their import-only proof stable.
+docs/review/demo-authority-provider-entry-20261016/** -text
 # Keep the new retired-workflow evidence identical under core.autocrlf=true.
 docs/ci/workflow-archive/closed-labs-20261016/*.yml.txt -text

@@ -2,8 +2,8 @@
 import {syntheticSnapshots, id, syntheticIssuance} from '../demo-authority-bridge-review/synthetic-fixtures.mjs';
 import {SQL} from '../../../docs/review/demo-durable-owner-adapter-20261015/store.mjs';
 import {ISSUE_SQL} from '../../../docs/review/demo-durable-owner-adapter-20261015/issuer.mjs';
-import {READ_AUTHORITY_SQL} from '../../../docs/review/demo-durable-owner-adapter-20261015/authority-provider.mjs';
-import {READ_ISSUANCE_SQL, AUTHORITY_ISOLATION_SQL} from '../../../docs/review/demo-durable-owner-adapter-20261015/issuer-entry.mjs';
+import {READ_AUTHORITY_SQL} from '../../../docs/review/demo-authority-provider-entry-20261016/authority-provider.mjs';
+import {READ_ISSUANCE_SQL, AUTHORITY_ISOLATION_SQL} from '../../../docs/review/demo-authority-provider-entry-20261016/issuer-entry.mjs';
 
 export {syntheticSnapshots, id, syntheticIssuance};
 export const config = Object.freeze({deployment: 'SYNTHETIC_DEPLOYMENT', database: 'SYNTHETIC_DATABASE',
