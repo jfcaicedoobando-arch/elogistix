@@ -14,6 +14,8 @@ import sys
 import tarfile
 import uuid
 
+from stage import LIBATOMIC_FILES
+
 
 ROOT = Path(__file__).resolve().parents[3]
 REPOSITORY = 'jfcaicedoobando-arch/elogistix'
@@ -105,6 +107,11 @@ def validate_tar(data):
             names.add(name.casefold())
             require(member.isdir() or member.isreg(), 'Runtime archive links/devices refused')
             require(not member.mode & 0o7000, 'Runtime archive special mode refused')
+            if name.casefold() == 'lib':
+                require(name == 'lib' and member.isdir(), 'Native library directory required')
+            elif name.casefold().startswith('lib/'):
+                require(name in LIBATOMIC_FILES and member.isreg() and member.mode == 0o644,
+                        'Unexpected runtime native library file')
             if member.isdir():
                 continue
             size += member.size
@@ -114,10 +121,21 @@ def validate_tar(data):
             payload = archive.extractfile(member).read()
             require(len(payload) == member.size, 'Truncated runtime member')
             files[name] = hashlib.sha256(payload).hexdigest()
+            if name in LIBATOMIC_FILES:
+                require(files[name] == LIBATOMIC_FILES[name], 'Runtime native library hash mismatch')
     require({'node', 'lab_wire.mjs', 'runtime.mjs'} <= set(files), 'Incomplete runtime archive')
+    require(set(LIBATOMIC_FILES) <= set(files), 'Missing pinned Node native library or copyright')
     require(any(name.startswith('deps/node_modules/pg/') for name in files)
             and any(name.startswith('source/') for name in files), 'Missing pg or original source files')
     return {'tar_sha256': hashlib.sha256(data).hexdigest(), 'expanded_bytes': size, 'files': files}
+
+
+def node_command(*arguments):
+    # Only the owned Node process receives this path. Docker and PostgreSQL keep
+    # their existing environments and the container image remains unchanged.
+    return ['/usr/bin/env', '-i', 'PATH=/usr/bin:/bin', 'LANG=C', 'GITHUB_ACTIONS=true',
+            'HOME=' + CONTAINER_ROOT, 'LD_LIBRARY_PATH=' + CONTAINER_ROOT + '/lib',
+            CONTAINER_ROOT + '/node', *arguments]
 
 
 def runtime_report(stdout):
@@ -280,8 +298,7 @@ def runner_class(persistence):
                                runtime_extracted_file_hashes_verified=True)
             self.runtime_manifest = manifest
             self.verify_runtime_execution_surface()
-            probe = self.inside(['/usr/bin/env', '-i', 'PATH=/usr/bin:/bin', 'LANG=C', 'GITHUB_ACTIONS=true',
-                                 'HOME=' + CONTAINER_ROOT, CONTAINER_ROOT + '/node', '--version'],
+            probe = self.inside(node_command('--version'),
                                 'wire-node-version-probe', expected=None)
             if probe.returncode != 0 or probe.stdout.strip() != NODE_VERSION:
                 failure = node_execution_failure(probe)
@@ -293,9 +310,8 @@ def runner_class(persistence):
 
         def run_physical_cases(self):
             self.inspect_owned()
-            args = ['docker', 'exec', '-i', '--user', 'postgres', self.cid, '/usr/bin/env', '-i',
-                    'PATH=/usr/bin:/bin', 'LANG=C', 'GITHUB_ACTIONS=true', 'HOME=' + CONTAINER_ROOT,
-                    CONTAINER_ROOT + '/node', CONTAINER_ROOT + '/runtime.mjs']
+            args = ['docker', 'exec', '-i', '--user', 'postgres', self.cid,
+                    *node_command(CONTAINER_ROOT + '/runtime.mjs')]
             pending = []
             watched = (signal.SIGTERM, signal.SIGINT)
             previous = {sig: signal.getsignal(sig) for sig in watched}

@@ -48,6 +48,23 @@ y npm **11.20.0**. La evidencia histórica sigue identificando su runtime origin
 no se presenta como una ejecución nueva. Los carriles DB no se ejecutan localmente
 por esta actualización de instalación.
 
+Desde Node 25, el ejecutable Linux oficial necesita `libatomic.so.1`. La imagen
+PostgreSQL histórica del laboratorio físico no la contiene. Su preparación añade
+sólo la biblioteca Debian `libatomic1 12.2.0-14+deb12u1` y el aviso de copyright
+de `gcc-12-base` de la misma versión, desde paquetes oficiales con SHA256 fijo;
+no instala paquetes ni ejecuta scripts de mantenimiento. El archivo SONAME se
+copia como archivo regular en `lib/`, y el contrato del tar exige los dos hashes
+exactos y rechaza otras bibliotecas, enlaces o corrupción. `LD_LIBRARY_PATH`
+apunta exclusivamente a esa carpeta privada en las dos invocaciones Node con
+`env -i`; los comandos PostgreSQL, la imagen, los permisos y los gates se conservan.
+
+El detector de CI prueba esa preparación y confirma que Node carga la biblioteca
+fijada, sin Docker ni DB. Una comprobación ABI aparte usa el loader y las
+bibliotecas de las capas verificadas de la imagen exacta, sin recurrir a las del
+host: pasan `node --version` y Atomics sobre `BigInt64Array`. Eso acredita el
+prerrequisito nativo, no la ejecución física de SQL ni el laboratorio completo;
+su gate histórico sigue cerrado y su resultado permanece separado del CI normal.
+
 ## Alcance del runtime
 
 El pin del repositorio selecciona Node para desarrollo y CI. No cambia ni acredita

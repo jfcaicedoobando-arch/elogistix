@@ -12,6 +12,9 @@ from unittest.mock import Mock, patch
 
 import run_ci as lane
 
+NATIVE_TEST_FILES = {'lib/libatomic.so.1': b'SYNTHETIC native dependency bytes',
+                     'lib/libatomic1-copyright': b'SYNTHETIC copyright notice'}
+
 
 def event_fixture():
     repo = {'full_name': lane.REPOSITORY, 'owner': {'login': lane.OWNER}}
@@ -24,10 +27,12 @@ def event_fixture():
     return event, env, head
 
 
-def synthetic_tar(extra=(), omit=()):
+def synthetic_tar(extra=(), omit=(), native_overrides=None):
     files = {'node': b'SYNTHETIC non-executable test bytes', 'lab_wire.mjs': b'// SYNTHETIC',
              'runtime.mjs': b'// SYNTHETIC', 'deps/node_modules/pg/package.json': b'{"synthetic":true}',
              'source/driver.mjs': b'// SYNTHETIC original-source placeholder'}
+    files.update(NATIVE_TEST_FILES)
+    files.update(native_overrides or {})
     out = io.BytesIO()
     with tarfile.open(fileobj=out, mode='w') as archive:
         for name, payload in files.items():
@@ -56,6 +61,14 @@ def synthetic_failure_report():
 
 
 class RunnerSafety(unittest.TestCase):
+    def setUp(self):
+        # Synthetic archive fixtures use independent known bytes; the staging
+        # tests and real native-runtime smoke retain the official package pins.
+        pins = patch.object(lane, 'LIBATOMIC_FILES',
+                            {name: hashlib.sha256(data).hexdigest() for name, data in NATIVE_TEST_FILES.items()})
+        pins.start()
+        self.addCleanup(pins.stop)
+
     def test_gate_accepts_only_frozen_main_draft_checkout(self):
         self.assertEqual(lane.BASE_REF, 'main')
         self.assertEqual(lane.BASE, 'd1de16b7cafda5f739511cf7cfef645a7733651a')
@@ -106,6 +119,29 @@ class RunnerSafety(unittest.TestCase):
         data, _ = synthetic_tar(omit=('node',))
         with self.assertRaises(RuntimeError):
             lane.validate_tar(data)
+
+    def test_archive_requires_pinned_native_bytes_and_refuses_library_injection(self):
+        for name in NATIVE_TEST_FILES:
+            for data in (synthetic_tar(omit=(name,))[0],
+                         synthetic_tar(native_overrides={name: b'SYNTHETIC corruption'})[0]):
+                with self.subTest(name=name), self.assertRaises(RuntimeError):
+                    lane.validate_tar(data)
+        for name in ('lib/libc.so.6', 'lib/extra', 'LIB/libatomic.so.1'):
+            info = tarfile.TarInfo(name)
+            info.size = 1
+            data, _ = synthetic_tar(extra=((info, b'x'),))
+            with self.subTest(name=name), self.assertRaises(RuntimeError):
+                lane.validate_tar(data)
+        name = 'lib/libatomic.so.1'
+        for kind, mode in ((tarfile.SYMTYPE, 0o644), (tarfile.REGTYPE, 0o755)):
+            info = tarfile.TarInfo(name)
+            info.type, info.mode = kind, mode
+            info.linkname = 'libatomic.so.1.2.0' if kind == tarfile.SYMTYPE else ''
+            payload = NATIVE_TEST_FILES[name] if kind == tarfile.REGTYPE else None
+            info.size = len(payload) if payload else 0
+            data, _ = synthetic_tar(omit=(name,), extra=((info, payload),))
+            with self.subTest(kind=kind), self.assertRaises(RuntimeError):
+                lane.validate_tar(data)
 
     def test_runtime_requires_complete_ordered_unique_success_matrix(self):
         report = synthetic_report()
@@ -334,6 +370,7 @@ class RunnerSafety(unittest.TestCase):
                 args, label = runner.inside.call_args.args
                 self.assertEqual(args, ['/usr/bin/env', '-i', 'PATH=/usr/bin:/bin', 'LANG=C',
                                         'GITHUB_ACTIONS=true', 'HOME=' + lane.CONTAINER_ROOT,
+                                        'LD_LIBRARY_PATH=' + lane.CONTAINER_ROOT + '/lib',
                                         lane.CONTAINER_ROOT + '/node', '--version'])
                 self.assertEqual(label, 'wire-node-version-probe')
                 self.assertIsNone(runner.inside.call_args.kwargs['expected'])
@@ -363,6 +400,9 @@ class RunnerSafety(unittest.TestCase):
             self.assertIn('/usr/bin/env', args)
             self.assertIn('-i', args[args.index('/usr/bin/env'):])
             self.assertIn('GITHUB_ACTIONS=true', args)
+            self.assertEqual([arg for arg in args if arg.startswith('LD_')],
+                             ['LD_LIBRARY_PATH=' + lane.CONTAINER_ROOT + '/lib'])
+            self.assertEqual(args[-2:], [lane.CONTAINER_ROOT + '/node', lane.CONTAINER_ROOT + '/runtime.mjs'])
             self.assertFalse(any(value.startswith('PG') for value in args))
             self.assertEqual(runner.sessions, [process])
             self.assertEqual(process._crm_label, 'wire-lab-node')
