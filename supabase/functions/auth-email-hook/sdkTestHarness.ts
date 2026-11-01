@@ -99,6 +99,7 @@ export async function isolated(
   const originalServe = Deno.serve;
   const originalFetch = globalThis.fetch;
   const sends: Send[] = [];
+  const unexpectedDestinations: string[] = [];
   Reflect.set(Deno.env, "get", (name: string) => {
     if (name === "LOVABLE_API_KEY") return API_KEY;
     if (name === "LOVABLE_SEND_URL") return SEND_URL;
@@ -110,6 +111,7 @@ export async function isolated(
     init?: RequestInit,
   ) => {
     const url = input instanceof Request ? input.url : String(input);
+    if (url !== SEND_URL) unexpectedDestinations.push(url);
     assert.equal(
       url,
       SEND_URL,
@@ -134,6 +136,7 @@ export async function isolated(
     }
     assert.ok(adapter, "the real adapter must register a request handler");
     await run(adapter, sends);
+    assert.deepEqual(unexpectedDestinations, []);
   } finally {
     globalThis.fetch = originalFetch;
     Reflect.set(Deno, "serve", originalServe);
