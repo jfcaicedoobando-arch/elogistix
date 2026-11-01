@@ -1,6 +1,7 @@
 /**
- * Utilidades de conversión a CSV (RFC 4180 simplificado).
+ * Exportación de objetos a CSV mediante PapaParse.
  */
+import Papa from "papaparse";
 import { neutralizarFormulaCsv } from "../csv/serializeCsv";
 
 export function toCSV(rows: Record<string, unknown>[]): string {
@@ -11,16 +12,15 @@ export function toCSV(rows: Record<string, unknown>[]): string {
       return set;
     }, new Set()),
   );
-  const escape = (v: unknown): string => {
+  const cell = (v: unknown): string => {
     if (v === null || v === undefined) return "";
     // N35 (Ola 4): CSV injection.
-    const s = neutralizarFormulaCsv(typeof v === "object" ? JSON.stringify(v) : String(v));
-    if (/[",\n\r]/.test(s)) return `"${s.replace(/"/g, '""')}"`;
-    return s;
+    return neutralizarFormulaCsv(typeof v === "object" ? JSON.stringify(v) : String(v));
   };
-  const lines = [headers.map(neutralizarFormulaCsv).join(",")];
-  for (const row of rows) {
-    lines.push(headers.map((h) => escape(row[h])).join(","));
-  }
-  return lines.join("\n");
+  // Conservar también los registros vacíos finales del export histórico.
+  if (headers.length === 0) return "\n".repeat(rows.length);
+  return Papa.unparse({
+    fields: headers.map(neutralizarFormulaCsv),
+    data: rows.map((row) => headers.map((h) => cell(row[h]))),
+  }, { delimiter: ",", newline: "\n" });
 }

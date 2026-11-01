@@ -2,7 +2,7 @@
  * Tests puros para `parseCsv.helpers.ts` — sin I/O, sin mocks.
  * `normalizeHeader` ya está cubierto por `parseCsv.test.ts`; aquí cubrimos
  * el resto de helpers (detector de delimitador, builder de headers efectivos,
- * tokenizer RFC-4180, alias map y mapeo de filas).
+ * parsing RFC-4180, alias map y mapeo de filas).
  */
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import {
@@ -41,7 +41,7 @@ describe("buildEffectiveHeaders — alias, duplicados, vacíos", () => {
   });
 });
 
-describe("tokenize — state machine RFC 4180", () => {
+describe("tokenize — PapaParse RFC 4180", () => {
   it("parsea filas separadas por coma", () => {
     expect(tokenize("a,b,c\n1,2,3\n", ",")).toEqual([
       ["a", "b", "c"],

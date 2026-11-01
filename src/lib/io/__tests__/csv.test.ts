@@ -1,4 +1,5 @@
 import { describe, it, expect } from "vitest";
+import Papa from "papaparse";
 import { toCSV } from "@/lib/io/csv";
 
 describe("toCSV", () => {
@@ -30,5 +31,37 @@ describe("toCSV", () => {
     const csv = toCSV([{ "=raro": "=1+1" }]);
     expect(csv.split("\n")[0]).toBe("'=raro");
     expect(csv).toContain("'=1+1");
+  });
+
+  it("escapa también encabezados con comas, comillas y saltos de línea", () => {
+    const csv = toCSV([{ "nombre, legal": "Acme", 'nota "fiscal"': "a,b", "dos\nlíneas": "00123" }]);
+    expect(Papa.parse<string[]>(csv, { delimiter: ",", dynamicTyping: false }).data).toEqual([
+      ["nombre, legal", 'nota "fiscal"', "dos\nlíneas"],
+      ["Acme", "a,b", "00123"],
+    ]);
+  });
+
+  it("mantiene IDs, referencias históricas, relaciones y bajas como texto", () => {
+    const csv = toCSV([{
+      id: "00001234567890123456789", cliente_id: "0000456", referencia: "0000123",
+      telefono: "00525512345678", deleted_at: "2026-09-10T12:00:00.000Z",
+      detalle: { factura_id: "0000789" },
+    }]);
+    expect(Papa.parse<string[]>(csv, { delimiter: ",", dynamicTyping: false }).data[1]).toEqual([
+      "00001234567890123456789", "0000456", "0000123", "00525512345678",
+      "2026-09-10T12:00:00.000Z", '{"factura_id":"0000789"}',
+    ]);
+  });
+
+  it("conserva filas vacías finales y objetos sin columnas", () => {
+    expect(toCSV([{ a: "x" }, { a: "" }, { a: null }])).toBe("a\nx\n\n");
+    expect(toCSV([{}, {}])).toBe("\n\n");
+  });
+
+  it("neutraliza negativos, fórmulas y controles sin conceder excepciones numéricas", () => {
+    const csv = toCSV([{ a: -171.92, b: "-1+2", c: "@x", d: "+52", e: "\t=1", f: "\r=1" }]);
+    expect(Papa.parse<string[]>(csv, { delimiter: ",", dynamicTyping: false }).data[1]).toEqual([
+      "'-171.92", "'-1+2", "'@x", "'+52", "'\t=1", "'\r=1",
+    ]);
   });
 });
