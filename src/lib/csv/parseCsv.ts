@@ -1,8 +1,7 @@
 /**
- * Bloque 3.1 — Parser CSV ligero, RFC 4180 (campos entre comillas, comas
- * dentro de comillas, comillas dobles escapadas como ""). No agregamos
- * papaparse para no inflar el bundle: el caso de uso (importación de
- * clientes/proveedores) cabe sin streaming.
+ * Parser CSV mediante PapaParse (campos entre comillas, saltos de línea y
+ * comillas dobles escapadas). Conserva los valores como texto y aplica las
+ * convenciones propias de los importadores después del parsing.
  *
  * Convención:
  *  - El separador se autodetecta entre `,` y `;` mirando la primera línea.
@@ -13,8 +12,10 @@
  *  - Headers vacíos (por comas sobrantes) se descartan defensivamente.
  *  - Headers duplicados tras la normalización se sufijan `_2`, `_3`, …
  *  - Opcionalmente se aplica un mapa de alias para tolerar variaciones menores.
+ *  - Comillas mal cerradas o espacios antes de comillas de apertura se rechazan
+ *    para evitar que una importación reasigne valores silenciosamente.
  *
- * Las piezas internas (normalización, tokenizer, mapeo) viven en
+ * Las piezas internas (normalización, parsing, mapeo) viven en
  * `./parseCsv.helpers.ts` para mantener este archivo ≤200 LOC.
  */
 import {

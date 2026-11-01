@@ -2,8 +2,9 @@
  * Helpers extraídos de `parseCsv.ts` para mantener el archivo principal
  * por debajo del umbral Power-of-10 (≤200 LOC) y aislar las piezas
  * reutilizables (normalización de headers, detección de delimitador,
- * tokenizer RFC 4180, construcción de headers efectivos y mapeo de filas).
+ * parsing con PapaParse, construcción de headers efectivos y mapeo de filas).
  */
+import Papa from "papaparse";
 
 /**
  * Quita acentos, caracteres ocultos no imprimibles, baja a minúsculas y
@@ -84,39 +85,34 @@ export function buildEffectiveHeaders(
 }
 
 /**
- * Tokeniza un CSV ya normalizado (sin BOM, \n unificado) en filas.
- * State machine RFC 4180.
+ * Lee un CSV ya normalizado (sin BOM, \n unificado) como arrays para que
+ * aliases, columnas vacías/duplicadas y filas desiguales sigan bajo nuestras reglas.
  */
 export function tokenize(cleaned: string, delimiter: "," | ";"): string[][] {
-  const records: string[][] = [];
-  let field = "";
-  let row: string[] = [];
-  let inQuotes = false;
+  // Papa interpreta `, "a,b"` como celdas sin comillas y puede perder columnas.
+  // Rechazar ese formato no estándar; saltar campos citados completos protege
+  // espacios/comillas escapadas que sí pertenecen al contenido (también multilínea).
+  const paddedQuote = new RegExp(`(?:^|[${delimiter}\\n])"(?:[^"]|"")*"[^\\S\\n]*(?=[${delimiter}\\n]|$)|(^|[${delimiter}\\n])[^\\S\\n]+"`, "g");
+  for (const match of cleaned.matchAll(paddedQuote)) {
+    if (match[1] !== undefined) {
+      throw new Error("CSV inválido: elimina los espacios antes de las comillas de apertura.");
+    }
+  }
 
-  for (let i = 0; i < cleaned.length; i++) {
-    const c = cleaned[i];
-    if (inQuotes) {
-      if (c !== '"') { field += c; continue; }
-      if (cleaned[i + 1] === '"') { field += '"'; i++; continue; }
-      inQuotes = false;
-      continue;
-    }
-    if (c === '"') { inQuotes = true; continue; }
-    if (c === delimiter) { row.push(field); field = ""; continue; }
-    if (c === "\n") {
-      row.push(field);
-      records.push(row);
-      row = [];
-      field = "";
-      continue;
-    }
-    field += c;
+  const { data, errors } = Papa.parse<string[]>(cleaned, {
+    delimiter,
+    newline: "\n",
+    header: false,
+    dynamicTyping: false,
+  });
+  const error = errors[0];
+  if (error) {
+    const detail = error.code === "MissingQuotes" ? "hay comillas sin cerrar" : "las comillas del campo no son válidas";
+    throw new Error(`CSV inválido en la fila ${(error.row ?? 0) + 1}: ${detail}.`);
   }
-  if (field.length > 0 || row.length > 0) {
-    row.push(field);
-    records.push(row);
-  }
-  return records;
+  // Papa devuelve una fila vacía adicional tras el último salto de línea.
+  if (cleaned.endsWith("\n")) data.pop();
+  return data;
 }
 
 export function buildAliasMap(raw?: Record<string, string>): Record<string, string> {
