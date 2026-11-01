@@ -1,0 +1,49 @@
+{
+  "baseline": {
+    "sdk": "0.1.0",
+    "deno": "2.9.8",
+    "react": "18.3.1",
+    "reactDom": "18.3.1",
+    "components": "0.0.22",
+    "renderer": "0.0.17",
+    "note": "Hashes captured from the unchanged auth adapter before the SDK upgrade; only .test/.invalid fixtures and intercepted fetch were used."
+  },
+  "auth": {
+    "signup": {
+      "subject": "Confirma tu correo",
+      "htmlSha256": "001cfcb9923b3dafbfc905c45804da1694f2a49cfa6b61fdf3751f0a95d10c9a",
+      "textSha256": "b92ebaafcda83a9e24123c0e8e33848917dcb3a17576a43aab50b52cc04f2616",
+      "previewHtmlSha256": "d86452df1389e5027b73ec63b8a9a3ceba4d9e4cb254544dc9682326229ff0b9"
+    },
+    "invite": {
+      "subject": "Te invitaron a Libre Carga",
+      "htmlSha256": "cd675404e57ab826191e52ea7ed6ed75b8a9a3aec79e87361f47911c8c018dab",
+      "textSha256": "ac40343ddba636d9fd3e9e0d3e21550b4e97f5a3708f39e093ab75a797bf68d5",
+      "previewHtmlSha256": "6d74914a8a7ebe3db07bdfbebea60a94c1ce75b14f3ea861a744184852215fe1"
+    },
+    "magiclink": {
+      "subject": "Tu enlace de acceso",
+      "htmlSha256": "715ef2c2a35665c61ce555631fca045e98fbd8bb66907c5fa79f21078db76be2",
+      "textSha256": "1a5bc5f1080465a9a44fa101700c4d941fc0757e0c10df6d449a69b712f95b6a",
+      "previewHtmlSha256": "364d24481e9ef5dc71b426d2b4d5cde17eb41acda62e4ed088b36f0d4b71177f"
+    },
+    "recovery": {
+      "subject": "Restablece tu contraseña",
+      "htmlSha256": "73b7dd9c78b61b66a7daac7a5bd74fb8feebfe2b36d7cbf2658ee84533025a8a",
+      "textSha256": "41dab6c557347f36ec1e62fa6d81159838e66bf71ea17a4da66003ecad214f42",
+      "previewHtmlSha256": "32686992caa597ed69bbf9a33921395151e61a5b4875f1cfaf5b21ec9cfa10ac"
+    },
+    "email_change": {
+      "subject": "Confirma tu nuevo correo",
+      "htmlSha256": "475f40e89dc7d8c32c92cd0edc6b4bb900f33f9b24e042068fd83315d8140b65",
+      "textSha256": "dadd8e97db6ce6165e8c5bbc223f931066a70283c58152aedaacc53691894f32",
+      "previewHtmlSha256": "3831d75584d915cbaef984d3743f1ad3978b8e8e5c864153170e5e44f9d93270"
+    },
+    "reauthentication": {
+      "subject": "Tu código de verificación",
+      "htmlSha256": "8f29b308945bbc5d20ea814d4f8ac7e15293a2fac2f0890f13c1c62425ab2e2f",
+      "textSha256": "0c0a1e6dc626ba30f084b04ca1806772890329da28e0aa8c3a9cfc8998e5c9df",
+      "previewHtmlSha256": "cc12dc9bb4d3e6dc7fef6d41b5cb919ff4c0d245e875cf70e5049111e3d155cf"
+    }
+  }
+}

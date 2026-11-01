@@ -1,0 +1,50 @@
+{
+  "cotizacion-respuesta": {
+    "subject": "Cotización COT-2026-0042 aceptada",
+    "htmlSha256": "ca4a31a85ed7933164ef3560d9ab2deabe690db05231a6bcb8e39c46f53d68fc",
+    "textSha256": "26ede54994b0bfa9f3609ee66b804c3c5662a0ad8d7101d64bb77e23b7005664",
+    "previewHtmlSha256": "ca4a31a85ed7933164ef3560d9ab2deabe690db05231a6bcb8e39c46f53d68fc"
+  },
+  "cotizacion-enviada": {
+    "subject": "Cotización COT-2026-0042 — CNSHA → MXVER",
+    "htmlSha256": "870bf7e5bd5353982ad54638b88b21adccc6c863dc47bee05a455e7b34e27cf2",
+    "textSha256": "55dc1f38871373433a2e9999ca349a2f8c34e52c3b38159d426562a75fb34a97",
+    "previewHtmlSha256": "e293f876b78a9db0686ed6db9683ffe27b0436cce1f08e6999130011b74641d8"
+  },
+  "proforma-enviada": {
+    "subject": "Proforma PRO-2026-0949 — Requiere tu aprobación",
+    "htmlSha256": "c3180fcc6841ec934dccf0401e15aa1cf4b42f29fd391bfe8d24eb5b153b3878",
+    "textSha256": "805726de51183d17429f6640890ba39583bd9ee7ec452d5cb5006e7ae6008189",
+    "previewHtmlSha256": "bd14226b1e189e7ad083ba92ee87dd7d1dcaec3b69fe82d26d54476d91f64a2d"
+  },
+  "factura-enviada": {
+    "subject": "Factura A-1024",
+    "htmlSha256": "1ce72aa52cf9b7699868932b0d151a032b9503ac6c231154e9f86628ee9e3915",
+    "textSha256": "327a3a0325a58368cc08bc259edcb6eafd9c0f611194ef33dd1c3f29cb55f22c",
+    "previewHtmlSha256": "0472ec324796dcdf5c27ae746a56b05660cd9d831a5b7b4275a20f7aa8ce6834"
+  },
+  "nota-credito-enviada": {
+    "subject": "Nota de crédito A-25",
+    "htmlSha256": "e4ab74bde98fbf6ffd7b17b665295e1cfe09a10621f2c471614c0745eb6e9889",
+    "textSha256": "f7623ec4913394de218e24b9fca67356ca21f97f0f68a298f21ebaf3d60234d5",
+    "previewHtmlSha256": "6b72d707e0ada45cfe048b9a6cc695c7af7bc96013a7aaeebc49dd5e0f0d0883"
+  },
+  "rep-enviado": {
+    "subject": "Complemento de pago P-42",
+    "htmlSha256": "0aa4ddcfcc645a5857c76df4dc82b123aabe28a13b2c61b2dbbd3ea091dc8ae2",
+    "textSha256": "cad3cb34e755f87d5452abbec6122bbaf846f939d6e6118580607bd29f1c1d19",
+    "previewHtmlSha256": "017aab3ca96f0355d766b01e953a075eeec2f775c66cc3788e7da95c391d0efe"
+  },
+  "recordatorio-cobranza": {
+    "subject": "Factura vencida — A-1024",
+    "htmlSha256": "3848e005013d0cf011eaf9e29d207ef14d081268389dcd9ddf2cd58b39cd33cb",
+    "textSha256": "2df4d0175ab7b8ef058bd734bfad02c2cbf32d0e6c85c28dd6e8b93da26c9eb2",
+    "previewHtmlSha256": "4baf5584cb4ff02af443eeb81d1ebee75804dd7b649d9352440e1ee2e2eaf7e1"
+  },
+  "estado-cuenta-cliente": {
+    "subject": "Estado de cuenta — ACME, S.A. de C.V.",
+    "htmlSha256": "42917648b23a9ab1805b2bf340f50854f72b54388652986a0c2187964168abb6",
+    "textSha256": "29e5b34797f6977926cdd48edea3fcd645d46a9982454a7a7bfa25335e17a706",
+    "previewHtmlSha256": "b4115a799e296f7fa96aee824c062e138831795c6dd4ce9bfd2b7103aa789890"
+  }
+}
