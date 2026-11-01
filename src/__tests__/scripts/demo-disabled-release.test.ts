@@ -66,9 +66,9 @@ describe("disabled demo release: atomic four-route forward", () => {
   });
 });
 
-it("canonical adapter validation uses fresh Deno 2.9.7 and original imports without suppression", () => {
+it("canonical adapter validation uses fresh Deno 2.9.8 and original imports without suppression", () => {
   const workflow = read(".github/workflows/demo-disabled-validation.yml");
-  expect(workflow).toContain("deno-version: v2.9.7");
+  expect(workflow).toContain("deno-version: v2.9.8");
   expect(workflow).toContain("deno cache --node-modules-dir=none supabase/functions/demo-access/index.ts");
   expect(workflow).toContain("deno check --node-modules-dir=none supabase/functions/demo-access/index.ts");
   expect(workflow).not.toMatch(/--no-check|--unsafely-ignore-certificate|--import-map|ts-ignore|noCheck/);
