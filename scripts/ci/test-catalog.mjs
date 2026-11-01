@@ -79,7 +79,12 @@ export function classifyFiles(files, guards, sqlSupport) {
       else if (file === 'scripts/ci/post-deploy-smoke.test.mjs') lane = 'node-post-deploy-smoke';
       else if (file === 'scripts/ci/package-scripts.test.mjs') lane = 'node-package-scripts';
       else if (file === 'scripts/tests/dependency-security.test.mjs'
-        || file === 'scripts/tests/supabase-sdk-contracts.test.mjs') lane = 'node-dependency-security';
+        || file === 'scripts/tests/supabase-sdk-contracts.test.mjs'
+        || file === 'scripts/tests/postgres-loader-contracts.test.mjs') lane = 'node-dependency-security';
+      else if (file === 'scripts/tests/postgres-driver-local.test.mjs') {
+        lane = 'node-postgres-driver-local'; mode = 'manual';
+        reason = 'Opt-in real driver comparison: bun run test:postgres:local; requires a fresh network-none PostgreSQL 17.9 container, Unix socket and temporary postgres 3.4.9 baseline. Never runs migrations or connects remotely.';
+      }
       else if (file === 'docs/qa/build-minifier-20261017/check-output.test.mjs') {
         lane = 'node-build-minifier'; mode = 'manual';
         reason = 'Local benchmark checker: node --test docs/qa/build-minifier-20261017/check-output.test.mjs; no ordinary CI workflow executes it.';
