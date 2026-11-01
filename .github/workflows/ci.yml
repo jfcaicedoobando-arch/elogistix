@@ -98,6 +98,9 @@ jobs:
       - name: Demo durable owner offline lane (no SQL, backend or credentials)
         run: node scripts/ci/test-catalog.mjs --run node-demo-durable-owner reports/test-inventory.json
 
+      - name: Demo persistence integrity contracts (offline, no SQL or Docker)
+        run: python3 -B -m unittest discover -s scripts/ci/demo-persistence-review -p 'test_*.py' -v
+
       - name: Demo physical wire state machine offline lane (no database or external network)
         run: node scripts/ci/test-catalog.mjs --run node-demo-wire-lab reports/test-inventory.json
 

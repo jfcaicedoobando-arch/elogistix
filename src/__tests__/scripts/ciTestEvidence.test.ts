@@ -94,6 +94,19 @@ describe("CI catalog: effective discovery", () => {
       .toThrow(/no execution lane/);
   });
 
+  it("runs persistence integrity contracts unconditionally after Node setup without the SQL runner", () => {
+    const detector = source(".github/workflows/ci.yml").split("  detector:\n")[1].split("  lint:\n")[0];
+    const command = "python3 -B -m unittest discover -s scripts/ci/demo-persistence-review -p 'test_*.py' -v";
+    const step = detector.split("      - name: Demo persistence integrity contracts")[1].split("      - name:")[0];
+    expect(step).toContain(`run: ${command}`);
+    expect(step).not.toMatch(/\bif:|continue-on-error|run_ci\.py|\bdocker\b|\bpsql\b/);
+    const setup = detector.indexOf("node-version: '26.13.0'");
+    expect(setup).toBeGreaterThanOrEqual(0);
+    expect(setup).toBeLessThan(detector.indexOf(command));
+    expect(source("scripts/ci/demo-persistence-review/run_ci.py"))
+      .toContain("'GitHub Actions only; no local SQL/Docker execution'");
+  });
+
   it("fails closed for new unmatched SQL, script tests, missing and duplicate guards", () => {
     const files = catalog.entries.map(entry => entry.path);
     const guards = catalog.entries.filter(entry => entry.lane === "sql-guards").map(entry => entry.path);

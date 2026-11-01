@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {createAuthorityProvider, READ_AUTHORITY_SQL} from '../../../docs/review/demo-durable-owner-adapter-20261015/authority-provider.mjs';
-import {createIssuerEntry} from '../../../docs/review/demo-durable-owner-adapter-20261015/issuer-entry.mjs';
+import {createAuthorityProvider, READ_AUTHORITY_SQL} from '../../../docs/review/demo-authority-provider-entry-20261016/authority-provider.mjs';
+import {createIssuerEntry} from '../../../docs/review/demo-authority-provider-entry-20261016/issuer-entry.mjs';
 import {ISSUE_SQL} from '../../../docs/review/demo-durable-owner-adapter-20261015/issuer.mjs';
 import {config, request, syntheticSnapshots, id, syntheticWire} from './fixtures.mjs';
 
