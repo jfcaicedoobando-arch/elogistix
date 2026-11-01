@@ -215,7 +215,7 @@ class LabSocket extends Socket {
   connect(path, ...rest) {
     const state = this.#state();
     state.connect(path);
-    // Node 24.19.0 net.connect() resets this.write to Socket.prototype.write.
+    // Node 26.13.0 net.connect() resets this.write to Socket.prototype.write.
     // Install the own-property barrier after that reset, before its asynchronous
     // connect event can let pg send StartupMessage. Never rely on a prototype override.
     const connected = super.connect(path, ...rest);

@@ -79,7 +79,7 @@ jobs:
       - name: Setup Node for detector and offline contracts
         uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
-          node-version: '24.22.1'
+          node-version: '26.13.0'
           package-manager-cache: false
 
       - name: Validate native shard plan
@@ -100,6 +100,11 @@ jobs:
 
       - name: Demo physical wire state machine offline lane (no database or external network)
         run: node scripts/ci/test-catalog.mjs --run node-demo-wire-lab reports/test-inventory.json
+
+      - name: Node native runtime staging and archive contracts (no Docker or database)
+        run: |
+          python3 -B -m unittest discover -s scripts/ci/demo-wire-lab -p 'test_*.py' -v
+          python3 -B scripts/ci/demo-wire-lab/stage.py --verify-native-runtime --output "$RUNNER_TEMP/node26-native-runtime" --node "$(command -v node)"
 
       - name: Demo authority composition contracts offline (no database or external authentication)
         run: node scripts/ci/test-catalog.mjs --run node-demo-authority-contract reports/test-inventory.json
@@ -440,7 +445,7 @@ jobs:
         if: needs.tests.result == 'success'
         uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
-          node-version: '24.22.1'
+          node-version: '26.13.0'
           package-manager-cache: false
 
       - name: Verificar unión exacta de archivos y casos

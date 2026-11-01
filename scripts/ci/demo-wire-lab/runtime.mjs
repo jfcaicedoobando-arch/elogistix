@@ -70,7 +70,7 @@ function commitBoundary(label, ordinal) {
 }
 
 try {
-  assert.equal(process.version, 'v24.19.0');
+  assert.equal(process.version, 'v26.13.0');
   assert.equal(process.platform, 'linux');
   assert.equal(process.arch, 'x64');
   observer = await open('synthetic-observer');

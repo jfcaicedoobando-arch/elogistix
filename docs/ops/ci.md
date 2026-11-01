@@ -39,26 +39,26 @@ Ver [contrato de shards y paralelismo](../ci-shard-benchmark.md#contrato-de-conf
 Bun **1.4.4** vía `setup-bun`. Cada job tiene instalación/caché propia;
 `node_modules` no se comparte en memoria entre runners.
 Sin caché: lockfile congelado, `--ignore-scripts`.
-La acción compartida fija Node **24.22.1 LTS**, con caché de `node_modules`
+La acción compartida fija Node **26.13.0 LTS**, con caché de `node_modules`
 por SO/arquitectura/versión real instalada de Node/Bun/lockfile. ESLint usa
 la misma versión real de Node en todas sus claves, incluidas las de restauración.
-No se reutiliza una caché de `node_modules` ni de ESLint de Node 22.
+Las claves separan las cachés de `node_modules`, ESLint y TypeScript de las versiones anteriores de Node.
 El caché de tarballs de Bun y los binarios de Playwright no dependen del ABI de Node.
 
 Detector y agregador de CI principal, RLS, smoke y replay NC instalan Node
-**24.22.1 antes de su primer comando Node**. La acción compartida usa ese mismo
+**26.13.0 antes de su primer comando Node**. La acción compartida usa ese mismo
 pin para los jobs que instalan las dependencias del frontend.
-`engines` fija Node **24.22.1** y Bun **1.4.4**; `@types/node` **24.19.2**
+`engines` fija Node **26.13.0** y Bun **1.4.4**; `@types/node` **26.6.6**
 alinea las declaraciones de TypeScript con ese runtime. `packageManager: bun@1.4.4`
 y los archivos de versión declaran las mismas versiones; comprobar `node --version`
 y `bun --version` antes de instalar con el lock congelado.
 Ver [alcance por subproyecto y locks](../ci/runtime-reproducibility-20261028.md).
 
-Excepción deliberada: `demo-wire-lab.yml`, `demo-authority-entry-review.yml`
-y `demo-persistence-prerequisites.yml` conservan Node **24.19.0** y sus contratos
-históricos de ramas, bases y fuentes congeladas. Sus jobs tienen condiciones
-de revisión específicas; este cambio no habilita su ejecución para otros PRs.
-Ver [alcance y discrepancia de Remotion](../ci/dependency-runtime-reproducibility-20261016.md).
+`demo-wire-lab.yml`, `demo-authority-entry-review.yml` y
+`demo-persistence-prerequisites.yml` también seleccionan Node **26.13.0**.
+Se conservan sus condiciones de ramas, bases y fuentes congeladas; este cambio
+no habilita su ejecución para otros PRs ni revalida sus evidencias históricas.
+El laboratorio wire descarga el mismo Node con su SHA256 oficial fijado.
 
 ### Comandos locales y coverage
 
@@ -73,7 +73,7 @@ Ver [alcance y discrepancia de Remotion](../ci/dependency-runtime-reproducibilit
 | `bun run test:coverage:merge` | Consume blobs existentes en `.vitest-reports` y calcula coverage total; requiere generar o descargar todos los reports antes |
 
 `ci:local` incluye el diagnóstico Knip como comprobación local bloqueante,
-aunque el CI principal no lo exige. No ejecuta por sí solo guards DB, Deno,
+y en el job ESLint del CI principal. No ejecuta por sí solo guards DB, Deno,
 RLS, selección por áreas ni verificación de evidencia del agregador.
 Un merge de coverage tampoco sustituye la ejecución de tests. Ninguno de estos
 comandos activa coverage ni cambia los **14 shards** de PR/push del CI principal.
@@ -132,7 +132,7 @@ Verificado el **2026-10-16**: [checkout 7.0.1](https://github.com/actions/checko
 [upload-artifact 7.0.2](https://github.com/actions/upload-artifact/releases/tag/v7.0.2)
 están fijados por SHA en todos los workflows activos. Sus metadatos `runs.using`
 usan Node 24; ese runtime interno es distinto del `node-version` instalado para
-los comandos del job. [Node 24.22.1](https://nodejs.org/en/blog/release/v24.22.1)
+los comandos del job. [Node 26.13.0](https://nodejs.org/en/blog/release/v26.13.0)
 es la release LTS elegida deliberadamente, no un alias móvil.
 
 Checkout/setup-node requieren Actions Runner **>=2.327.1** para Node 24.

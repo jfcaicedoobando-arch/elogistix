@@ -23,7 +23,7 @@ const fingerprint = (changes: Record<string, string> = {}) => {
 const context = {
   "runner.os": "Linux",
   "runner.arch": "X64",
-  "steps.setup.outputs.node-version": "v24.22.1",
+  "steps.setup.outputs.node-version": "v26.13.0",
   "steps.typescript.outputs.version": "6.0.3",
   "github.run_id": "100",
   "github.run_attempt": "1",
