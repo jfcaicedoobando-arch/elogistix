@@ -104,7 +104,7 @@ Esta evidencia corresponde al runtime local aislado y a sus hashes, no a una
 ejecución remota de CI ni a una aprobación de despliegue. No demuestra regeneración
 segura habilitada, procedencia de identidad ni idempotencia de un futuro seed.
 
-El workflow `demo-disabled-validation.yml` fija Deno 2.9.7, caché nueva, resolución
+El workflow `demo-disabled-validation.yml` fija Deno 2.9.8, caché nueva, resolución
 del grafo original (incluido Sentry Deno 11.4.0), `deno info` y `deno check` sobre
 el adaptador desplegable completo. No usa noCheck, ts-ignore, imports sustitutos
 ni TLS relajado. Los tests puros del handler son evidencia distinta.

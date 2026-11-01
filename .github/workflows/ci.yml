@@ -281,7 +281,7 @@ jobs:
         with:
           # CLI estable fijado; compatible con Sentry 11 (Deno >=2.8.3).
           # Supabase/Lovable administra el runtime desplegado por separado.
-          deno-version: v2.9.7
+          deno-version: v2.9.8
 
       - name: Check all deployable Edge adapters
         if: needs.detector.outputs.edge == 'true'

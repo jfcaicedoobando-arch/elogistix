@@ -75,7 +75,7 @@ instala Node 26 para los comandos de cada job.
 
 ## Edge/Deno
 
-Se conserva el mecanismo existente: Deno **2.9.7**, `DENO_NO_PACKAGE_JSON=1`,
+Se conserva el mecanismo existente: Deno **2.9.8**, `DENO_NO_PACKAGE_JSON=1`,
 `--node-modules-dir=none`, typecheck y sanitizers. Este repositorio no tiene
 `deno.lock`; las pruebas Deno no ofrecen una garantía frozen equivalente a los
 cuatro locks anteriores. No se crea un lock ni se cambian imports Edge aquí.

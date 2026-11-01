@@ -194,7 +194,7 @@ test("manual trigger, read-only permission, concurrency, runner and checkout pro
 test("Deno executes only these offline regressions with sanitizers and no network permission", () => {
   const local = step("Run demo-disabled smoke contract regressions (local only)");
   assert.match(workflow, /denoland\/setup-deno@22d081ff2d3a40755e97629de92e3bcbfa7cf2ed/);
-  assert.match(workflow, /deno-version: v2\.9\.7/);
+  assert.match(workflow, /deno-version: v2\.9\.8/);
   assert.match(local, /DENO_NO_PACKAGE_JSON: "1"/);
   for (const flag of ["--sanitize-ops", "--sanitize-resources", "--node-modules-dir=none", "--allow-read"]) {
     assert.ok(local.includes(flag));
