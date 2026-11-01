@@ -11,7 +11,6 @@ import { Switch } from "@/components/ui/switch";
 import { NuevoUsuarioCredencialesSection } from "./NuevoUsuarioCredencialesSection";
 import { NuevoUsuarioAccesoSection } from "./NuevoUsuarioAccesoSection";
 import { PASSWORD_MIN } from "@/lib/passwords/policy";
-import { normalizarEmail, esEmailValido } from "./emailUsuario";
 import { useNuevoUsuarioForm } from "../../hooks/useNuevoUsuarioForm";
 
 interface Props {
@@ -33,26 +32,13 @@ export default function NuevoUsuarioDialog({
   const {
     email, setEmail, password, setPassword, showPassword, setShowPassword,
     role, setRole, orgId, setOrgId, porInvitacion, setPorInvitacion,
-    setTouched, emailError, passwordError, isDirty, reset,
+    setTouched, emailError, passwordError, isDirty, reset, submit,
   } = useNuevoUsuarioForm();
   const createUser = useCreateUser();
   const { data: orgs = [] } = useOrganizationsList(open && showOrgSelector);
 
-  const handleSubmit = async () => {
-    setTouched({ email: true, password: true });
-    const emailNormalizado = normalizarEmail(email);
-    if (!emailNormalizado) return;
-    if (!esEmailValido(emailNormalizado)) return;
-    if (!porInvitacion && password.length < PASSWORD_MIN) {
-      notifyError(undefined, {
-        title: "Error",
-        description: `La contraseña debe tener al menos ${PASSWORD_MIN} caracteres`,
-        method: "HANDLE_SUBMIT",
-        errorCode: ERROR_CODES.VALIDATION_FAILED,
-      });
-      return;
-    }
-    if (showOrgSelector && !orgId) {
+  const handleSubmit = submit((values) => {
+    if (showOrgSelector && !values.orgId) {
       notifyError(undefined, {
         title: "Error",
         description: "Selecciona una organización",
@@ -64,10 +50,10 @@ export default function NuevoUsuarioDialog({
 
     createUser.mutate(
       {
-        email: emailNormalizado,
-        password: porInvitacion ? undefined : password,
-        role,
-        orgId: showOrgSelector ? orgId : undefined,
+        email: values.email,
+        password: values.porInvitacion ? undefined : values.password,
+        role: values.role,
+        orgId: showOrgSelector ? values.orgId : undefined,
       },
       {
         onSuccess: () => {
@@ -77,7 +63,17 @@ export default function NuevoUsuarioDialog({
         },
       },
     );
-  };
+  }, (errors) => {
+    setTouched({ email: true, password: true });
+    if (!errors.email && errors.password) {
+      notifyError(undefined, {
+        title: "Error",
+        description: `La contraseña debe tener al menos ${PASSWORD_MIN} caracteres`,
+        method: "HANDLE_SUBMIT",
+        errorCode: ERROR_CODES.VALIDATION_FAILED,
+      });
+    }
+  });
 
   return (
     <FormDialogShell

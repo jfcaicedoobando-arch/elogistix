@@ -2,7 +2,10 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import { MemoryRouter } from "react-router";
 import { SolicitarCotizacionDialog } from "../SolicitarCotizacionDialog";
+import { guardarSolicitudPreferencias, leerSolicitudPreferencias, SOLICITUD_PREFS_DEFAULT } from "@/features/portal/domain/solicitudPreferencias";
 import type { ClienteSolicitante } from "@/features/portal/domain/clientesSolicitantes";
+
+beforeEach(() => guardarSolicitudPreferencias(SOLICITUD_PREFS_DEFAULT));
 
 const mocks = vi.hoisted(() => ({
   mutateAsync: vi.fn(),
@@ -93,6 +96,64 @@ describe("SolicitarCotizacionDialog (P-07)", () => {
     expect(mocks.mutateAsync.mock.calls[0][0]).toMatchObject({ clienteId: "cli-1" });
     expect(onOpenChange).toHaveBeenCalledWith(false);
     expect(mocks.notifySuccess).toHaveBeenCalled();
+  });
+
+  it("guardar y reabrir limpia la captura y adopta las preferencias guardadas", async () => {
+    mocks.mutateAsync.mockResolvedValue({ id: "cot-2", folio: "COT-2026-0008" });
+    const onOpenChange = vi.fn();
+    const vista = (open: boolean) => (
+      <MemoryRouter>
+        <SolicitarCotizacionDialog open={open} onOpenChange={onOpenChange} clientes={UNO} />
+      </MemoryRouter>
+    );
+    const { rerender } = render(vista(true));
+    fireEvent.click(screen.getByLabelText(/Tipo de operación/i));
+    fireEvent.click(screen.getByRole("option", { name: "Exportación" }));
+    capturarRuta();
+    fireEvent.change(screen.getByLabelText(/Notas para el equipo/i), { target: { value: "Carga frágil" } });
+    fireEvent.click(screen.getByRole("button", { name: /Enviar solicitud/i }));
+    await waitFor(() => expect(onOpenChange).toHaveBeenCalledWith(false));
+    expect(leerSolicitudPreferencias().tipo).toBe("Exportación");
+
+    rerender(vista(false));
+    rerender(vista(true));
+    expect(screen.getByLabelText(/^Origen/i)).toHaveValue("");
+    expect(screen.getByLabelText(/^Destino/i)).toHaveValue("");
+    expect(screen.getByLabelText(/Notas para el equipo/i)).toHaveValue("");
+    expect(screen.getByLabelText(/Tipo de operación/i)).toHaveTextContent("Exportación");
+    expect(screen.queryByText(/Captura el origen para continuar/i)).not.toBeInTheDocument();
+    fireEvent.keyDown(screen.getByRole("dialog"), { key: "Escape" });
+    expect(screen.queryByRole("alertdialog")).not.toBeInTheDocument();
+  });
+
+  it("cancelar una edición permite continuar o descartar y reabrir sin captura", () => {
+    const onOpenChange = vi.fn();
+    const vista = (open: boolean) => (
+      <MemoryRouter>
+        <SolicitarCotizacionDialog open={open} onOpenChange={onOpenChange} clientes={UNO} />
+      </MemoryRouter>
+    );
+    const { rerender } = render(vista(true));
+    capturarRuta();
+    fireEvent.change(screen.getByLabelText(/Notas para el equipo/i), { target: { value: "Conservar captura" } });
+    fireEvent.click(screen.getByRole("button", { name: /^Cancelar$/i }));
+    expect(screen.getByRole("alertdialog")).toBeInTheDocument();
+    expect(onOpenChange).not.toHaveBeenCalled();
+    fireEvent.click(screen.getByRole("button", { name: /Seguir capturando/i }));
+    expect(screen.getByLabelText(/^Origen/i)).toHaveValue("Shanghái");
+    expect(screen.getByLabelText(/Notas para el equipo/i)).toHaveValue("Conservar captura");
+
+    fireEvent.click(screen.getByRole("button", { name: /^Cancelar$/i }));
+    fireEvent.click(screen.getByRole("button", { name: /^Descartar$/i }));
+    expect(onOpenChange).toHaveBeenCalledWith(false);
+    rerender(vista(false));
+    rerender(vista(true));
+    expect(screen.getByLabelText(/^Origen/i)).toHaveValue("");
+    expect(screen.getByLabelText(/^Destino/i)).toHaveValue("");
+    expect(screen.getByLabelText(/Notas para el equipo/i)).toHaveValue("");
+    expect(mocks.mutateAsync).not.toHaveBeenCalled();
+    fireEvent.click(screen.getByRole("button", { name: /^Cancelar$/i }));
+    expect(screen.queryByRole("alertdialog")).not.toBeInTheDocument();
   });
 
   it("limpia el formulario al cerrar y reabrir", () => {
