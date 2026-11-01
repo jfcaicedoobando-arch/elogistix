@@ -104,6 +104,7 @@ export async function isolated(
     if (name === "LOVABLE_API_KEY") return API_KEY;
     if (name === "LOVABLE_SEND_URL") return SEND_URL;
     if (name === "NODE_ENV") return "test";
+    if (name === "NODE_OPTIONS") return undefined;
     throw new Error(`Unexpected environment lookup: ${name}`);
   });
   globalThis.fetch = async (

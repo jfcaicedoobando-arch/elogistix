@@ -170,6 +170,14 @@ Deno.test('email webhook SDK: real adapter verifies signatures and records termi
         method: 'POST', headers: request.headers, body: eventBody('email.complaint'),
       }), 401, { error: 'Invalid webhook signature' })
     })
+    await test.step('a correctly signed UTF-8 body larger than 1 MiB is rejected before database access', async () => {
+      const body = JSON.stringify({
+        ...JSON.parse(eventBody('email.bounced')), padding: 'ñ'.repeat((1 << 19) + 1),
+      })
+      assert.ok(body.length < 1 << 20, 'The fixture must distinguish characters from UTF-8 bytes')
+      assert.ok(new TextEncoder().encode(body).length > 1 << 20)
+      await checkNoWrites(await signedRequest(body), 400, { error: 'Webhook body exceeds size limit' })
+    })
     await test.step('missing timestamp is rejected', async () => {
       const request = await signedRequest(eventBody('email.bounced'))
       request.headers.delete('x-lovable-timestamp')

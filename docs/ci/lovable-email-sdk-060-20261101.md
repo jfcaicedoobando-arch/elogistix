@@ -22,6 +22,14 @@ con caché exclusiva y red denegada. La matriz del candidato conserva los
 hashes de HTML/texto de las seis plantillas auth y las ocho transaccionales
 capturados con 0.1.0. No se justifica cambiar el renderer dentro de este piloto.
 
+Se repitió auth por separado desde una caché vacía, cargando sólo su test y
+el adaptador original con su propio `deno.json`. El test no preimporta React,
+ReactDOM ni otros adaptadores. Pasaron sus 17 pruebas y 16 pasos con
+`--cached-only --deny-net`, typecheck y ambos sanitizers. El grafo aislado
+confirmó React/DOM/types 18.3.1 y render 0.0.17; no incluyó módulos
+transaccionales ni otro adaptador. El helper sólo devuelve valores ficticios
+de aplicación y `undefined` para `NODE_OPTIONS`, sin leer ese valor real.
+
 Esto acredita el grafo probado; el repositorio sigue sin `deno.lock` y no
 ofrece resolución frozen de Edge. Los snapshots alertan sobre cambios del
 render en futuras resoluciones. La deprecación de components y la migración
@@ -37,7 +45,8 @@ a otra API de renderizado quedan fuera de este lote.
   headers/body, `reply_to`, clave explícita estable y UUID por envío nuevo.
   HTTP 200, supresión esperada, 400/401/429/500 y fallo de red; se conservan
   códigos, metadatos de retry y ausencia de retries ocultos del SDK.
-- Webhooks: HMAC, timestamps, cuerpo alterado, JSON inválido, versiones y
+- Webhooks: HMAC, timestamps, cuerpo alterado, cuerpo UTF-8 firmado mayor de
+  1 MiB rechazado con HTTP 400 antes de DB, JSON inválido, versiones y
   eventos ignorados, bounce/complaint/unsubscribe, fallos DB y replay.
   El replay aceptado repite el upsert por email y RPC por `message_id`;
   el SDK no deduplica `event_id`. La DB simulada comprueba las llamadas y
@@ -70,7 +79,24 @@ deno test --no-lock --cached-only --node-modules-dir=none \
   supabase/functions/preview-transactional-email/sdk_test.ts
 ```
 
-Resultado local: **23 pruebas, 34 pasos y cero fallos** con typecheck y
+Para repetir auth sin que otros entrypoints anclen sus peers, usar una caché
+nueva y un proceso distinto por comando:
+
+```bash
+auth_cache="$(mktemp -d)"
+DENO_DIR="$auth_cache" deno cache --no-lock --node-modules-dir=none \
+  --config supabase/functions/auth-email-hook/deno.json \
+  supabase/functions/auth-email-hook/sdk_test.ts
+DENO_DIR="$auth_cache" deno test --no-lock --cached-only --node-modules-dir=none \
+  --config supabase/functions/auth-email-hook/deno.json \
+  --sanitize-ops --sanitize-resources --deny-net --allow-env=NODE_ENV \
+  supabase/functions/auth-email-hook/sdk_test.ts
+DENO_DIR="$auth_cache" deno info --no-lock --node-modules-dir=none --json \
+  --config supabase/functions/auth-email-hook/deno.json \
+  supabase/functions/auth-email-hook/index.ts > auth-graph.json
+```
+
+Resultado local: **23 pruebas, 35 pasos y cero fallos** con typecheck y
 ambos sanitizers. Cada transporte rechaza destinos inesperados; los valores
 de aplicación son ficticios. El test del webhook cierra el auto refresh del
 cliente Supabase mediante su API pública al terminar. Los tres archivos

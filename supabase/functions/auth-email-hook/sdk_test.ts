@@ -1,7 +1,4 @@
 import assert from "node:assert/strict";
-import * as React from "npm:react@18.3.1";
-// Preserve the renderer's existing React 18 peer, independently of the frontend.
-import * as ReactDOM from "npm:react-dom@18.3.1";
 import snapshots from "./sdk_snapshots.json" with { type: "json" };
 
 import {
@@ -19,8 +16,6 @@ import {
 for (const action of ACTIONS) {
   Deno.test(`auth SDK: signed ${action} preserves baseline HTML/text and send contract`, async () => {
     await isolated(async (handle, sends) => {
-      assert.equal(React.version, "18.3.1");
-      assert.equal(ReactDOM.version, "18.3.1");
       const response = await handle(await signedRequest(event(action)));
       assert.equal(response.status, 200);
       assert.deepEqual(await response.json(), { success: true, sent: true });
