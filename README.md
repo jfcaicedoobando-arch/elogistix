@@ -38,9 +38,9 @@ instalada. No significa que sean las últimas versiones de cada proveedor.
 
 ## Desarrollo
 
-Para reproducir instalaciones y CI, usar Node **24.22.1 LTS** y Bun **1.4.4**,
+Para reproducir instalaciones y CI, usar Node **26.13.0 LTS** y Bun **1.4.4**,
 fijados en `engines`, `packageManager`, `.nvmrc`, `.node-version` y `.bun-version`.
-`@types/node` queda fijado en **24.19.2**. Comprobar `node --version` y
+`@types/node` queda fijado en **26.6.6**. Comprobar `node --version` y
 `bun --version` antes de instalar; no generar `package-lock.json` en esta raíz.
 Ver [alcance de runtimes y locks](docs/ci/runtime-reproducibility-20261028.md).
 

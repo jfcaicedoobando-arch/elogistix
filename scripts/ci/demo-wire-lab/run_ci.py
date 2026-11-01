@@ -25,7 +25,7 @@ PERSISTENCE = ROOT / 'scripts/ci/demo-persistence-review/run_ci.py'
 PERSISTENCE_SHA256 = '09cf6d2035b14005006b656649cf2e3f5f99322eb6776f80927586c522c204fe'
 SYNTHETIC_FIXTURE = Path(__file__).resolve().parent / 'synthetic_fixture.sql'
 CONTAINER_ROOT = '/tmp/crm/wire-lab'
-NODE_VERSION = 'v24.19.0'
+NODE_VERSION = 'v26.13.0'
 BASE_TMPFS = '/tmp:rw,nosuid,nodev,size=768m,mode=1777'
 EXEC_TMPFS = '/tmp:rw,nosuid,nodev,exec,size=768m,mode=1777'
 EXPECTED_TMPFS = {'/tmp': EXEC_TMPFS.split(':', 1)[1],

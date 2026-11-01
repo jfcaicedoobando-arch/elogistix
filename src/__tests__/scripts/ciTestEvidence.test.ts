@@ -80,7 +80,7 @@ describe("CI catalog: effective discovery", () => {
     const step = detector.split("      - name: Package script contracts")[1].split("      - name:")[0];
     expect(step).toContain(command);
     expect(step).not.toMatch(/\bif:|continue-on-error/);
-    const nodeSetup = detector.indexOf("node-version: '24.22.1'");
+    const nodeSetup = detector.indexOf("node-version: '26.13.0'");
     expect(nodeSetup).toBeGreaterThanOrEqual(0);
     expect(nodeSetup).toBeLessThan(detector.indexOf(command));
     const bunStep = detector.split("      - name: Setup Bun for package script contracts")[1].split("      - name:")[0];

@@ -12,10 +12,10 @@ import urllib.request
 
 ROOT = Path(__file__).resolve().parents[3]
 HERE = Path(__file__).resolve().parent
-NODE_VERSION = '24.19.0'
-NODE_ARCHIVE = 'node-v24.19.0-linux-x64.tar.xz'
-NODE_URL = 'https://nodejs.org/dist/v24.19.0/' + NODE_ARCHIVE
-NODE_SHA256 = '14b342e71204f811bde6153be8e04b62aef63c236fef92b55f9c83154b409647'
+NODE_VERSION = '26.13.0'
+NODE_ARCHIVE = 'node-v26.13.0-linux-x64.tar.xz'
+NODE_URL = 'https://nodejs.org/dist/v26.13.0/' + NODE_ARCHIVE
+NODE_SHA256 = 'd28a96af6c38596f6d9d97c0ee531c13d238d757742387d1928de822d959e997'
 PG_VERSION = '8.23.1'
 PG_INTEGRITY = 'sha512-aL96AHANtWjPLDOLqnhx+ngp9+UK7ETEU8VJrDCGvsSSi/mGLcWYsS6Herg7lmaBJe4uwrfqsa7gTEFaSizDoQ=='
 PG_COMMIT = '0980cefebe0ae461da8883703be049fe13ca96cf'
@@ -97,7 +97,7 @@ def stage_runtime(output):
     archive_bytes = archive_path.read_bytes()
     require(sha(archive_bytes) == NODE_SHA256, 'NODE_ARCHIVE_SHA256')
     with tarfile.open(fileobj=io.BytesIO(archive_bytes), mode='r:xz') as archive:
-        binary = archive.getmember('node-v24.19.0-linux-x64/bin/node')
+        binary = archive.getmember('node-v26.13.0-linux-x64/bin/node')
         require(binary.isreg() and binary.size < 200 * 1024 * 1024, 'NODE_BINARY_MEMBER')
         (tree / 'node').write_bytes(archive.extractfile(binary).read())
     for name in ('lab_wire.mjs', 'runtime.mjs'):

@@ -53,7 +53,7 @@ test('isolated draft workflow runs the exact offline census with no secrets or b
   assert.match(workflow, /github\.event\.pull_request\.draft == true/);
   assert.match(workflow, /github\.event\.pull_request\.head\.ref == 'review\/demo-authority-provider-entry-20261016'/);
   assert.match(workflow, /contents: read/); assert.match(workflow, /persist-credentials: false/);
-  assert.match(workflow, /node-version: '24\.19\.0'/);
+  assert.match(workflow, /node-version: '26\.13\.0'/);
   assert.match(workflow, /node scripts\/ci\/demo-authority-entry-review\/run_review\.mjs --output/);
   assert.doesNotMatch(workflow, /secrets\.|continue-on-error|npm install|npm ci|psql|createdb|docker|supabase|workflow_dispatch|pull_request_target/);
   const actual = fs.readdirSync(root + 'scripts/ci/demo-authority-entry-review').filter(p => /^test_.*\.mjs$/.test(p)).sort();

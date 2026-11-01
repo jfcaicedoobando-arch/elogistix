@@ -5,7 +5,7 @@ Revisado el **2026-10-16**. Leer [arquitectura](ARCHITECTURE.md),
 
 ## Preparación y cambios
 
-Para paridad con CI, usar Node 24.22.1 y Bun 1.4.4
+Para paridad con CI, usar Node 26.13.0 y Bun 1.4.4
 (`engines` exactos y `packageManager: bun@1.4.4`). Los archivos `.nvmrc`,
 `.node-version` y `.bun-version` fijan las mismas versiones. Ver
 [alcance por subproyecto](docs/ci/runtime-reproducibility-20261028.md).

@@ -62,7 +62,7 @@ comparisons and representable timestamps is a draft A integration prerequisite.
 
 ## Offline checks
 
-Run with Node 24.19.0:
+Run with Node 26.13.0:
 
 ```sh
 node scripts/ci/demo-authority-entry-review/run_review.mjs --output /tmp/demo-authority-entry-evidence
