@@ -12,7 +12,7 @@ function readWorkflow(name: string): string {
 describe("Deno workflows · runtime compatible y sanitizers explícitos", () => {
   it.each(workflows)("%s fija la misma versión estable, sin rango flotante", (name) => {
     const workflow = readWorkflow(name);
-    expect(workflow).toMatch(/^\s+deno-version: v2\.9\.7$/m);
+    expect(workflow).toMatch(/^\s+deno-version: v2\.9\.8$/m);
   });
 
   it.each(workflows)("%s mantiene detección de fugas y typecheck", (name) => {

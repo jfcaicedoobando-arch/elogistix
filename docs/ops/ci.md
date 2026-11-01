@@ -31,7 +31,7 @@ Ver [contrato de shards y paralelismo](../ci-shard-benchmark.md#contrato-de-conf
   El wrapper de bundle conserva los checks JS y añade un
   [presupuesto CSS raw/gzip/Brotli](../ci/css-size-budget-20261016.md).
 - DB: manifiesto, schema, schema-functions, migraciones, replay-mirror y rpc-sync.
-- Edge: Deno **2.9.7 estable fijado**, `*_test.ts` salvo smoke; typecheck habilitado.
+- Edge: Deno **2.9.8 estable fijado**, `*_test.ts` salvo smoke; typecheck habilitado.
 - Vitest: `bun run test -- --shard=i/N` (i de 1 a N; N = 14 por defecto),
   **sin coverage, retry ni blobs**.
   Scripts de coverage optativos no describen el CI principal.
@@ -165,7 +165,7 @@ siguen presentes; una omisión válida no es evidencia de ejecución de suites.
 
 ### Deno: CLI de pruebas vs. runtime desplegado
 
-`ci.yml` y `post-deploy-smoke.yml` fijan el CLI en **2.9.7**. En Git, Edge
+`ci.yml`, `demo-disabled-validation.yml` y `post-deploy-smoke.yml` fijan el CLI en **2.9.8**. En Git, Edge
 importa `npm:@sentry/deno@11.10.0` desde `_shared/sentryRuntime.ts`; la migración
 a SDK 11 comenzó en [PR240](https://github.com/jfcaicedoobando-arch/elogistix/pull/240).
 SDK 11 requiere Deno ≥2.8.3. Aunque [PR382](https://github.com/jfcaicedoobando-arch/elogistix/pull/382)
