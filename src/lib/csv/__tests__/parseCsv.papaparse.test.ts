@@ -73,4 +73,43 @@ describe("CSV: compatibilidad de PapaParse con los importadores", () => {
       { nombre: "Acme", nota: 'primera,  "citada"\nsegunda' },
     ]);
   });
+
+  it.each([
+    ["nombre,nombre,nombre_2", ["nombre", "nombre_2", "nombre_2_2"]],
+    ["nombre,nombre_2,nombre", ["nombre", "nombre_2", "nombre_3"]],
+    ["nombre_2,nombre,nombre", ["nombre_2", "nombre", "nombre_3"]],
+  ])("conserva todos los valores cuando sufijos generados y originales colisionan: %s", (header, expected) => {
+    const parsed = parseCsv(`${header}\nA,B,C`);
+    expect(parsed.headers).toEqual(expected);
+    expect(new Set(parsed.headers).size).toBe(3);
+    expect(Object.entries(parsed.rows[0])).toEqual(expected.map((name, i) => [name, ["A", "B", "C"][i]]));
+  });
+
+  it("deduplica también las colisiones producidas por alias", () => {
+    const parsed = parseCsv("correo,email,email_2\nA,B,C", { headerAliases: { correo: "email" } });
+    expect(parsed.headers).toEqual(["email", "email_2", "email_2_2"]);
+    expect(parsed.rows).toEqual([{ email: "A", email_2: "B", email_2_2: "C" }]);
+  });
+
+  it("mantiene constructor y __proto__ como nombres y datos propios", () => {
+    const parsed = parseCsv("constructor,__proto__,nombre\nA,B,C");
+    expect(parsed.headers).toEqual(["constructor", "__proto__", "nombre"]);
+    expect(Object.entries(parsed.rows[0])).toEqual([["constructor", "A"], ["__proto__", "B"], ["nombre", "C"]]);
+    expect(Object.getPrototypeOf(parsed.rows[0])).toBe(Object.prototype);
+  });
+
+  it("respeta alias propios llamados constructor y __proto__", () => {
+    const parsed = parseCsv("constructor,__proto__\nA,B", {
+      headerAliases: Object.fromEntries([["constructor", "Email"], ["__proto__", "Nombre"]]),
+    });
+    expect(parsed.headers).toEqual(["email", "nombre"]);
+    expect(parsed.rows).toEqual([{ email: "A", nombre: "B" }]);
+  });
+
+  it("mantiene valores al usar constructor y __proto__ como destinos de alias", () => {
+    const parsed = parseCsv("correo,nombre\nA,B", { headerAliases: { correo: "constructor", nombre: "__proto__" } });
+    expect(parsed.headers).toEqual(["constructor", "__proto__"]);
+    expect(Object.entries(parsed.rows[0])).toEqual([["constructor", "A"], ["__proto__", "B"]]);
+    expect(Object.getPrototypeOf(parsed.rows[0])).toBe(Object.prototype);
+  });
 });

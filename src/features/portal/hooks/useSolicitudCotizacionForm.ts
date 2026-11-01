@@ -1,60 +1,89 @@
-/**
- * Estado del formulario de "Solicitar cotización" del portal.
- * v13.821.7 — extraído del diálogo para bajar complejidad y tamaño (Power of 10).
- */
-import { useMemo, useState } from "react";
-import type { ModoTransporte, TipoOperacion } from "@/constants/wizardConstants";
+/** Estado del formulario de "Solicitar cotización" del portal. */
+import { useMemo, useState, type SetStateAction } from "react";
+import { useForm, useWatch } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
+import { MODOS, TIPOS, type ModoTransporte, type TipoOperacion } from "@/constants/wizardConstants";
 import { leerSolicitudPreferencias } from "@/features/portal/domain/solicitudPreferencias";
 import { esModoMaritimoSolicitud } from "@/features/portal/domain/solicitudRuta";
 
+const solicitudSchema = z.object({
+  modo: z.enum(MODOS),
+  tipo: z.enum(TIPOS),
+  tipoEmbarque: z.string(),
+  origen: z.string().refine((texto) => texto.trim() !== "", "Origen"),
+  destino: z.string().refine((texto) => texto.trim() !== "", "Destino"),
+  puertoOrigenId: z.string().nullable(),
+  puertoDestinoId: z.string().nullable(),
+  mercancia: z.string(),
+  notas: z.string(),
+});
+type SolicitudInput = z.input<typeof solicitudSchema>;
+type SolicitudOutput = z.output<typeof solicitudSchema>;
+
+function valoresIniciales(): SolicitudInput {
+  const prefs = leerSolicitudPreferencias();
+  return {
+    modo: solicitudSchema.shape.modo.catch("Marítimo").parse(prefs.modo),
+    tipo: solicitudSchema.shape.tipo.catch("Importación").parse(prefs.tipo),
+    tipoEmbarque: prefs.tipoEmbarque,
+    origen: "", destino: "", puertoOrigenId: null, puertoDestinoId: null,
+    mercancia: "", notas: "",
+  };
+}
+
 export function useSolicitudCotizacionForm(clienteId?: string) {
-  // Se recuerda la última elección del cliente.
-  const prefsIniciales = useMemo(() => leerSolicitudPreferencias(), []);
-  const [modo, setModoRaw] = useState<ModoTransporte>(prefsIniciales.modo as ModoTransporte);
-  const [tipo, setTipo] = useState<TipoOperacion>(prefsIniciales.tipo as TipoOperacion);
-  const [tipoEmbarque, setTipoEmbarque] = useState<string>(prefsIniciales.tipoEmbarque);
-  const [origen, setOrigenRaw] = useState("");
-  const [destino, setDestinoRaw] = useState("");
-  // Etapa 5: identidad de puerto opcional (sólo Marítimo, texto libre → null).
-  const [puertoOrigenId, setPuertoOrigenId] = useState<string | null>(null);
-  const [puertoDestinoId, setPuertoDestinoId] = useState<string | null>(null);
-  const [mercancia, setMercancia] = useState("");
-  const [notas, setNotas] = useState("");
+  const [defaultValues] = useState(valoresIniciales);
+  const { control, setValue, getValues, handleSubmit: submit, reset: resetForm, formState: { dirtyFields } } =
+    useForm<SolicitudInput, undefined, SolicitudOutput>({
+      defaultValues,
+      resolver: zodResolver(solicitudSchema),
+      mode: "onBlur",
+    });
+  const [modo, tipo, tipoEmbarque, origen, destino, puertoOrigenId, puertoDestinoId, mercancia, notas] =
+    useWatch({ control, name: ["modo", "tipo", "tipoEmbarque", "origen", "destino", "puertoOrigenId", "puertoDestinoId", "mercancia", "notas"] });
   const [intentoEnvio, setIntentoEnvio] = useState(false);
 
   /** Al salir de Marítimo se conserva el texto y se limpian los IDs. */
   const setModo = (nuevo: ModoTransporte) => {
-    setModoRaw(nuevo);
+    setValue("modo", nuevo, { shouldDirty: true });
     if (!esModoMaritimoSolicitud(nuevo)) {
-      setPuertoOrigenId(null);
-      setPuertoDestinoId(null);
+      setValue("puertoOrigenId", null);
+      setValue("puertoDestinoId", null);
     }
   };
+  const setTipo = (nuevo: SetStateAction<TipoOperacion>) =>
+    setValue("tipo", typeof nuevo === "function" ? nuevo(getValues("tipo")) : nuevo, { shouldDirty: true });
+  const setTipoEmbarque = (nuevo: SetStateAction<string>) =>
+    setValue("tipoEmbarque", typeof nuevo === "function" ? nuevo(getValues("tipoEmbarque")) : nuevo, { shouldDirty: true });
+  const setMercancia = (nuevo: SetStateAction<string>) =>
+    setValue("mercancia", typeof nuevo === "function" ? nuevo(getValues("mercancia")) : nuevo, { shouldDirty: true });
+  const setNotas = (nuevo: SetStateAction<string>) =>
+    setValue("notas", typeof nuevo === "function" ? nuevo(getValues("notas")) : nuevo, { shouldDirty: true });
 
   const setOrigen = (texto: string, puertoId: string | null = null) => {
-    setOrigenRaw(texto);
-    setPuertoOrigenId(puertoId);
-    if (puertoId && puertoId === puertoDestinoId) setPuertoDestinoId(null);
+    setValue("origen", texto, { shouldDirty: true });
+    setValue("puertoOrigenId", puertoId);
+    if (puertoId && puertoId === getValues("puertoDestinoId")) setValue("puertoDestinoId", null);
   };
   const setDestino = (texto: string, puertoId: string | null = null) => {
-    setDestinoRaw(texto);
-    setPuertoDestinoId(puertoId);
-    if (puertoId && puertoId === puertoOrigenId) setPuertoOrigenId(null);
+    setValue("destino", texto, { shouldDirty: true });
+    setValue("puertoDestinoId", puertoId);
+    if (puertoId && puertoId === getValues("puertoOrigenId")) setValue("puertoOrigenId", null);
   };
 
-  const origenVacio = origen.trim() === "";
-  const destinoVacio = destino.trim() === "";
+  // La UI conserva su validación síncrona al enviar; el mismo esquema sirve
+  // al resolver sin modificar el texto que recibe la mutación existente.
+  const origenVacio = !solicitudSchema.shape.origen.safeParse(origen).success;
+  const destinoVacio = !solicitudSchema.shape.destino.safeParse(destino).success;
   const puedeEnviar = Boolean(clienteId) && !origenVacio && !destinoVacio;
-
-  const isDirty =
-    !origenVacio ||
-    !destinoVacio ||
-    mercancia.trim() !== "" ||
-    notas.trim() !== "" ||
-    modo !== prefsIniciales.modo ||
-    tipo !== prefsIniciales.tipo ||
-    tipoEmbarque !== prefsIniciales.tipoEmbarque;
-
+  // Texto sólo en blanco y los IDs auxiliares no activaban la confirmación.
+  // RHF mantiene el baseline y revierte dirty al volver al valor inicial.
+  const isDirty = Boolean(
+    dirtyFields.modo || dirtyFields.tipo || dirtyFields.tipoEmbarque ||
+    (dirtyFields.origen && origen.trim()) || (dirtyFields.destino && destino.trim()) ||
+    (dirtyFields.mercancia && mercancia.trim()) || (dirtyFields.notas && notas.trim()),
+  );
   const faltantes = useMemo(() => {
     const items: string[] = [];
     if (origenVacio) items.push("Origen");
@@ -64,31 +93,15 @@ export function useSolicitudCotizacionForm(clienteId?: string) {
   }, [origenVacio, destinoVacio, clienteId]);
 
   const reset = () => {
-    const prefs = leerSolicitudPreferencias();
-    setModoRaw(prefs.modo as ModoTransporte);
-    setTipo(prefs.tipo as TipoOperacion);
-    setTipoEmbarque(prefs.tipoEmbarque);
-    setOrigenRaw("");
-    setDestinoRaw("");
-    setPuertoOrigenId(null);
-    setPuertoDestinoId(null);
-    setMercancia("");
-    setNotas("");
+    // Se actualizan juntos los valores y el baseline a las preferencias vigentes.
+    resetForm(valoresIniciales());
     setIntentoEnvio(false);
   };
 
   return {
-    modo, setModo,
-    tipo, setTipo,
-    tipoEmbarque, setTipoEmbarque,
-    origen, setOrigen,
-    destino, setDestino,
-    puertoOrigenId, puertoDestinoId,
-    mercancia, setMercancia,
-    notas, setNotas,
-    intentoEnvio, setIntentoEnvio,
-    origenVacio, destinoVacio,
-    puedeEnviar, isDirty, faltantes, reset,
+    modo, setModo, tipo, setTipo, tipoEmbarque, setTipoEmbarque,
+    origen, setOrigen, destino, setDestino, puertoOrigenId, puertoDestinoId,
+    mercancia, setMercancia, notas, setNotas, intentoEnvio, setIntentoEnvio,
+    origenVacio, destinoVacio, puedeEnviar, isDirty, faltantes, reset, submit,
   };
 }
-

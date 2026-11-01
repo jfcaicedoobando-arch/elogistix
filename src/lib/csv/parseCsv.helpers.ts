@@ -51,6 +51,7 @@ export function buildEffectiveHeaders(
 ): { effective: string[]; unique: string[] } {
   const effective: string[] = [];
   const seen = new Map<string, number>();
+  const used = new Set<string>();
   let vacios = 0;
   const duplicados: string[] = [];
 
@@ -61,16 +62,20 @@ export function buildEffectiveHeaders(
       vacios++;
       continue;
     }
-    const aliased = aliases[norm] ?? norm;
-    const count = seen.get(aliased) ?? 0;
-    if (count === 0) {
-      seen.set(aliased, 1);
-      effective.push(aliased);
-    } else {
-      seen.set(aliased, count + 1);
-      const suffixed = `${aliased}_${count + 1}`;
+    const aliased = Object.hasOwn(aliases, norm) ? aliases[norm] ?? norm : norm;
+    let count = (seen.get(aliased) ?? 0) + 1;
+    let name = count === 1 ? aliased : `${aliased}_${count}`;
+    // La primera columna conserva su nombre; las siguientes usan un sufijo
+    // libre, incluso si colisionan con un nombre que ya traía `_N` en el CSV.
+    while (used.has(name)) {
+      count++;
+      name = `${aliased}_${count}`;
+    }
+    seen.set(aliased, count);
+    used.add(name);
+    effective.push(name);
+    if (name !== aliased) {
       duplicados.push(aliased);
-      effective.push(suffixed);
     }
   }
 
@@ -116,12 +121,12 @@ export function tokenize(cleaned: string, delimiter: "," | ";"): string[][] {
 }
 
 export function buildAliasMap(raw?: Record<string, string>): Record<string, string> {
-  const aliases: Record<string, string> = {};
+  const aliases: [string, string][] = [];
   for (const [k, v] of Object.entries(raw ?? {})) {
     const nk = normalizeHeader(k);
-    if (nk) aliases[nk] = normalizeHeader(v) || v;
+    if (nk) aliases.push([nk, normalizeHeader(v) || v]);
   }
-  return aliases;
+  return Object.fromEntries(aliases);
 }
 
 export function rowsFromRecords(
@@ -132,13 +137,14 @@ export function rowsFromRecords(
   for (let r = 1; r < records.length; r++) {
     const raw = records[r];
     if (raw.every((c) => c.trim() === "")) continue;
-    const obj: Record<string, string> = {};
+    const entries: [string, string][] = [];
     for (let idx = 0; idx < effective.length; idx++) {
       const h = effective[idx];
       if (!h) continue;
-      obj[h] = (raw[idx] ?? "").trim();
+      entries.push([h, (raw[idx] ?? "").trim()]);
     }
-    rows.push(obj);
+    // fromEntries crea propiedades propias también para `__proto__`.
+    rows.push(Object.fromEntries(entries));
   }
   return rows;
 }

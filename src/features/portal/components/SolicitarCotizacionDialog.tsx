@@ -18,7 +18,7 @@ import { getErrorMessage } from "@/lib/errors";
 import { guardarSolicitudPreferencias } from "@/features/portal/domain/solicitudPreferencias";
 import { COPY_VALIDACION } from "@/lib/copy/publicoCopy";
 import { FaltantesHint } from "@/features/facturacion/components/FaltantesHint";
-import { useFormDialogCerrar } from "@/components/shared/formDialogCloseContext";
+import { FormDialogCancelarBoton } from "@/components/shared/FormDialogCancelarBoton";
 import { useSolicitudCotizacionForm } from "@/features/portal/hooks/useSolicitudCotizacionForm";
 import { SolicitanteSelect } from "@/features/portal/components/SolicitanteSelect";
 import { SolicitudServicioFields } from "@/features/portal/components/SolicitudServicioFields";
@@ -41,7 +41,6 @@ export function SolicitarCotizacionDialog({ open, onOpenChange, clientes }: Prop
   // invalidación de caché no se debilitan por la elección de la UI.
   const clienteIds = useMemo(() => clientes.map((c) => c.id), [clientes]);
   const solicitar = useSolicitarCotizacion(clienteIds);
-  const cerrar = useFormDialogCerrar();
 
   // Con una sola empresa se preselecciona en cuanto cargan los vínculos; con
   // varias nunca se preselecciona (evita atribuir la solicitud a la equivocada).
@@ -68,38 +67,40 @@ export function SolicitarCotizacionDialog({ open, onOpenChange, clientes }: Prop
 
   const handleSubmit = async () => {
     f.setIntentoEnvio(true);
-    if (!puedeEnviar || !clienteId) return;
+    if (!clienteId) return;
 
-    try {
-      const res = await solicitar.mutateAsync({
-        clienteId,
-        modo,
-        tipo,
-        origen,
-        destino,
-        tipoEmbarque,
-        descripcionMercancia: mercancia,
-        notas,
-        puertoOrigenId,
-        puertoDestinoId,
-      });
+    await f.submit(async ({ modo, tipo, origen, destino, tipoEmbarque, mercancia, notas, puertoOrigenId, puertoDestinoId }) => {
+      try {
+        const res = await solicitar.mutateAsync({
+          clienteId,
+          modo,
+          tipo,
+          origen,
+          destino,
+          tipoEmbarque,
+          descripcionMercancia: mercancia,
+          notas,
+          puertoOrigenId,
+          puertoDestinoId,
+        });
 
-      guardarSolicitudPreferencias({ modo, tipo, tipoEmbarque });
-      notifySuccess(undefined, {
-        title: "Solicitud enviada",
-        description: `Registramos tu solicitud ${res.folio}. Nuestro equipo te enviará la cotización.`,
-      });
-      resetTodo();
-      onOpenChange(false);
-      navigate("/portal/cotizaciones");
-    } catch (error: unknown) {
-      notifyError(undefined, {
-        title: "No pudimos enviar la solicitud",
-        description: getErrorMessage(error),
-        error,
-        method: "PORTAL_SOLICITAR_COTIZACION",
-      });
-    }
+        guardarSolicitudPreferencias({ modo, tipo, tipoEmbarque });
+        notifySuccess(undefined, {
+          title: "Solicitud enviada",
+          description: `Registramos tu solicitud ${res.folio}. Nuestro equipo te enviará la cotización.`,
+        });
+        resetTodo();
+        onOpenChange(false);
+        navigate("/portal/cotizaciones");
+      } catch (error: unknown) {
+        notifyError(undefined, {
+          title: "No pudimos enviar la solicitud",
+          description: getErrorMessage(error),
+          error,
+          method: "PORTAL_SOLICITAR_COTIZACION",
+        });
+      }
+    })();
   };
 
   return (
@@ -119,9 +120,7 @@ export function SolicitarCotizacionDialog({ open, onOpenChange, clientes }: Prop
           {intentoEnvio && !puedeEnviar && (
             <FaltantesHint items={faltantes} className="mr-auto" />
           )}
-          <Button variant="outline" onClick={() => (cerrar ? cerrar() : onOpenChange(false))}>
-            Cancelar
-          </Button>
+          <FormDialogCancelarBoton onCancelar={() => { resetTodo(); onOpenChange(false); }} />
           {/* Defecto 3: el botón sólo se bloquea mientras se envía. Así el
               handler puede activar `intentoEnvio` y anunciar qué falta. */}
           <Button onClick={handleSubmit} loading={solicitar.isPending} disabled={solicitar.isPending}>
