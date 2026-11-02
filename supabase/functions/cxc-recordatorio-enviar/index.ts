@@ -6,7 +6,8 @@ import { wrapEdgeHandler } from '../_shared/sentry.ts';
 import { authenticate, authorizeOrgRole, ROLES_COBRANZA_FISCAL } from '../_shared/auth.ts';
 import { enviarEmailPlantilla } from '../_shared/enviarEmailPlantilla.ts';
 
-import { DESTINATARIO_NO_PERMITIDO, emailPerteneceACliente } from '../_shared/destinatarioCliente.ts';
+import { DESTINATARIO_NO_PERMITIDO } from '../_shared/destinatarioCliente.ts';
+import { resolveDestinatarioRecordatorio } from '../_shared/recordatorioDestinatario.ts';
 
 
 const SITE_NAME = 'elogistix';
@@ -87,28 +88,6 @@ function autorizarCobranza(
   organizationId: string,
 ): Promise<boolean> {
   return authorizeOrgRole(adminClient, userId, organizationId, ROLES_COBRANZA_FISCAL);
-}
-
-async function resolveDestinatario(
-  adminClient: SupabaseClient,
-  clienteId: string,
-  contactoEmail?: string | null,
-): Promise<string | null> {
-  // M8: un destinatario explícito debe pertenecer al cliente.
-  if (contactoEmail) {
-    const permitido = await emailPerteneceACliente(adminClient, clienteId, contactoEmail);
-    return permitido ? contactoEmail : null;
-  }
-
-  const { data } = await adminClient
-    .from('contactos_cliente')
-    .select('email')
-    .eq('cliente_id', clienteId)
-    .not('email', 'is', null)
-    .order('created_at', { ascending: true })
-    .limit(1)
-    .maybeSingle();
-  return data?.email ?? null;
 }
 
 async function loadPerfil(adminClient: SupabaseClient, userId: string) {
@@ -226,7 +205,7 @@ Deno.serve(wrapEdgeHandler('cxc-recordatorio-enviar', async (req) => {
       return corsJson({ error: 'No autorizado para esta organización' }, 403, req);
     }
 
-    const destinatario = await resolveDestinatario(supabaseAdmin, factura.cliente_id, contacto_email);
+    const destinatario = await resolveDestinatarioRecordatorio(supabaseAdmin, factura.cliente_id, contacto_email);
     if (!destinatario) {
       return contacto_email
         ? corsJson(

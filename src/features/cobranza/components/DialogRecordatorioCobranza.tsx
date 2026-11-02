@@ -10,6 +10,8 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { useRecordatorioCobranza } from "@/features/cobranza/hooks/useRecordatorioCobranza";
+import { useDestinatarioRecordatorio } from "@/features/cobranza/hooks/useDestinatarioRecordatorio";
+import { DestinatarioRecordatorioAviso } from "./DestinatarioRecordatorioAviso";
 import { formatCurrency } from "@/lib/formatters";
 
 export interface FacturaRecordatorio {
@@ -31,6 +33,7 @@ interface Props {
 
 export function DialogRecordatorioCobranza({ open, onOpenChange, factura }: Props) {
   const [nota, setNota] = useState("");
+  const destinatario = useDestinatarioRecordatorio(factura?.factura_id, open);
   const { mutate, isPending } = useRecordatorioCobranza({
     onSuccess: () => {
       setNota("");
@@ -42,10 +45,13 @@ export function DialogRecordatorioCobranza({ open, onOpenChange, factura }: Prop
 
   const vencida = factura.dias_vencido > 0;
   const saldo = factura.saldo ?? factura.total ?? 0;
-  const puedeEnviar = !isPending;
+  const email = destinatario.data?.factura_id === factura.factura_id ? destinatario.data.destinatario : null;
+  const consultando = destinatario.isPending || destinatario.isFetching;
+  const puedeEnviar = open && !isPending && !consultando && !destinatario.isError && !!email;
 
   const handleEnviar = () => {
-    mutate({ facturaId: factura.factura_id, nota: nota.trim() });
+    if (!puedeEnviar || !email || !destinatario.isCurrentScope()) return;
+    mutate({ facturaId: factura.factura_id, nota: nota.trim(), contactoEmail: email });
   };
 
   const footer = (
@@ -69,9 +75,17 @@ export function DialogRecordatorioCobranza({ open, onOpenChange, factura }: Prop
       title={`Recordatorio de pago — ${factura.numero}`}
       description={`${factura.cliente_nombre ?? "Cliente"} · Saldo ${formatCurrency(saldo, factura.moneda)} · ${vencida ? `Vencida ${factura.dias_vencido}d` : `Por vencer ${Math.abs(factura.dias_vencido)}d`}`}
       size="md"
+      busy={isPending}
       footer={footer}
     >
       <div className="space-y-4">
+        <DestinatarioRecordatorioAviso
+          email={email}
+          isLoading={consultando}
+          isError={destinatario.isError}
+          onRetry={() => { void destinatario.refetch(); }}
+          disabled={isPending}
+        />
         <div className="space-y-2">
           <Label htmlFor="nota-recordatorio">Mensaje opcional</Label>
           <Textarea
@@ -82,9 +96,6 @@ export function DialogRecordatorioCobranza({ open, onOpenChange, factura }: Prop
             rows={4}
             maxLength={2000}
           />
-          <p className="text-xs text-muted-foreground">
-            El correo se enviará al contacto principal del cliente. Si no hay correo, se pedirá elegir uno.
-          </p>
         </div>
       </div>
     </FormDialogShell>

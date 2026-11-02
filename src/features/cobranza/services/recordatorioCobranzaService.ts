@@ -18,6 +18,28 @@ export interface RecordatorioCobranzaResult {
   enviado_a: string;
 }
 
+export interface DestinatarioRecordatorio {
+  ok: true;
+  factura_id: string;
+  destinatario: string | null;
+}
+
+/** Endpoint separado: consultar nunca puede enviar en un backend antiguo. */
+export async function consultarDestinatarioRecordatorio(facturaId: string): Promise<DestinatarioRecordatorio> {
+  const { data, error } = await supabase.functions.invoke<DestinatarioRecordatorio>(
+    "cxc-recordatorio-destinatario", { body: { factura_id: facturaId } },
+  );
+  if (error) {
+    const body = await parseFunctionError(error);
+    throw new Error(body.error ?? body.message ?? "No se pudo consultar el destinatario.");
+  }
+  if (!data?.ok || data.factura_id !== facturaId
+    || (data.destinatario !== null && typeof data.destinatario !== "string")) {
+    throw new Error("No se pudo consultar el destinatario.");
+  }
+  return data;
+}
+
 export async function enviarRecordatorioCobranza(
   input: RecordatorioCobranzaInput,
 ): Promise<RecordatorioCobranzaResult> {
