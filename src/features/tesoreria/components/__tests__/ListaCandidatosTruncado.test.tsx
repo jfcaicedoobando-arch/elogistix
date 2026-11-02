@@ -24,7 +24,11 @@ function renderLista(props: Partial<Parameters<typeof ListaCandidatos>[0]> = {})
   render(
     <ListaCandidatos
       candidatos={[]}
+      hasData
       isLoading={false}
+      isFetching={false}
+      isError={false}
+      onRetry={vi.fn()}
       isPending={false}
       onConciliar={vi.fn()}
       onIgnorar={vi.fn()}
@@ -34,9 +38,10 @@ function renderLista(props: Partial<Parameters<typeof ListaCandidatos>[0]> = {})
 }
 
 describe("ListaCandidatos (MNY-P2.6)", () => {
-  it("sin resultados y lista completa dice 'Sin candidatos'", () => {
+  it("sin resultados confirmados pide comprobar el pago antes de registrarlo", () => {
     renderLista();
-    expect(screen.getByText(/Sin candidatos/i)).toBeInTheDocument();
+    expect(screen.getByText(/Revisa en Cobranza o Compras si el pago ya está registrado/i)).toBeInTheDocument();
+    expect(screen.queryByText(/Crea el pago manualmente/i)).not.toBeInTheDocument();
   });
 
   it("sin resultados y búsqueda recortada avisa que puede haber más", () => {

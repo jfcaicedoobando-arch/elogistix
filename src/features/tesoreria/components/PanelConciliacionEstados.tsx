@@ -9,12 +9,12 @@ import { Eye } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { StatusBadge } from "@/components/shared/StatusBadge";
 import { Button } from "@/components/ui/button";
-import { CardSkeleton } from "@/components/shared/skeletons";
 import { formatCurrency, formatDate } from "@/lib/formatters";
 import type { Candidato } from "@/features/tesoreria/services/sugerirCandidatos";
 import { SectionHeading } from "@/components/shared/SectionHeading";
 import type { RefPago, TipoPagoDetalle } from "@/features/tesoreria/domain/pagoDetalle";
 import type { MovimientoBBVA } from "@/features/tesoreria/services/conciliacion";
+import { EstadoConsultaCandidatos, type EstadoConsultaCandidatosProps } from "./EstadoConsultaCandidatos";
 
 export function EstadoConciliado({
   tienePago,
@@ -68,11 +68,10 @@ export function EstadoIgnorado({
   );
 }
 
-interface ListaCandidatosProps {
+interface ListaCandidatosProps extends EstadoConsultaCandidatosProps {
   candidatos: readonly Candidato[];
   /** MNY-P2.6: `true` = la búsqueda quedó recortada, puede haber más pagos. */
   truncado?: boolean;
-  isLoading: boolean;
   isPending: boolean;
   onConciliar: (tipo: "cxc" | "cxp", pagoId: string) => void;
   onIgnorar: () => void;
@@ -81,31 +80,32 @@ interface ListaCandidatosProps {
 export function ListaCandidatos({
   candidatos,
   truncado = false,
-  isLoading,
+  hasData, isLoading, isFetching, isError, onRetry,
   isPending,
   onConciliar,
   onIgnorar,
 }: ListaCandidatosProps) {
+  const mostrarDatos = hasData && !isLoading;
   return (
     <>
-      <div>
+      <div className="space-y-2">
         <SectionHeading as="h3" variant="overline" className="mb-2">
           Candidatos (±$1, ±5 días)
         </SectionHeading>
-        {isLoading ? <CardSkeleton lines={2} showHeader={false} /> : null}
-        {!isLoading && candidatos.length === 0 ? (
+        <EstadoConsultaCandidatos {...{ hasData, isLoading, isFetching, isError, onRetry }} />
+        {mostrarDatos && !isError && candidatos.length === 0 ? (
           <p className="text-body-sm text-muted-foreground">
             {truncado
               ? "La búsqueda se detuvo antes de revisar todos los pagos: puede haber coincidencias que no se alcanzaron a leer. Acota la fecha o busca el pago desde CxC/CxP."
-              : "Sin candidatos. Crea el pago manualmente desde CxC/CxP o ignora este movimiento."}
+              : "No encontramos pagos compatibles con este movimiento. Revisa en Cobranza o Compras si el pago ya está registrado y comprueba su moneda, fecha e importe. Si aún no existe, regístralo con los datos reales."}
           </p>
         ) : null}
-        {!isLoading && truncado && candidatos.length > 0 ? (
+        {mostrarDatos && truncado && candidatos.length > 0 ? (
           <p className="text-body-sm text-muted-foreground mb-2">
             Lista recortada: pueden existir más coincidencias además de las mostradas.
           </p>
         ) : null}
-        {!isLoading && candidatos.length > 0 ? (
+        {mostrarDatos && candidatos.length > 0 ? (
           <ul className="space-y-2">
             {candidatos.map((c) => (
               <li key={`${c.tipo}-${c.pago_id}`} className="border rounded p-2 text-body-sm space-y-1">
