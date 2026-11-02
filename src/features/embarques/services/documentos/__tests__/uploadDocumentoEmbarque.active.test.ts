@@ -59,6 +59,52 @@ describe("prelectura documental viva antes de claim/storage", () => {
   });
 });
 describe("UPDATE activo normal y cacheado", () => {
+  it("fallo de upload conserva el archivo anterior sin UPDATE ni limpieza", async () => {
+    const error = new Error("storage-no-disponible");
+    mock.queue("documentos_embarque", { archivo: "anterior-fixture.pdf" });
+    fx.upload.mockRejectedValueOnce(error);
+    await expect(uploadDocumentoEmbarque("e1", "d1", file())).rejects.toBe(error);
+    expect(mock.tableCalls.some(c => c.ops.includes("update"))).toBe(false);
+    expect(fx.anterior).not.toHaveBeenCalled(); expect(fx.limpiar).not.toHaveBeenCalled();
+    expect(fx.actividad).not.toHaveBeenCalled();
+    expect(mock.rpcCalls.map(c => c.fn)).toEqual(["idempotency_claim"]);
+  });
+  it.each([true, false])("commit diferido sólo limpia anterior tras éxito confirmado (%s)", async exitoso => {
+    const error = new Error("commit-documento");
+    mock.queue("documentos_embarque", { archivo: "anterior-fixture.pdf" });
+    mock.queue("documentos_embarque", exitoso ? [{ id: "d1" }] : null, exitoso ? null : error);
+    let confirmar!: () => void; let iniciar!: () => void;
+    const pendiente = new Promise<void>(resolve => { confirmar = resolve; });
+    const iniciado = new Promise<void>(resolve => { iniciar = resolve; });
+    mock.supabase.from.mockImplementation(table => {
+      const chain = from(table);
+      if (mock.tableCalls.length === 2) {
+        const then = chain.then as (callback: (res: unknown) => unknown) => Promise<unknown>;
+        chain.then = async (callback: (res: unknown) => unknown) => {
+          iniciar(); await pendiente; return then(callback);
+        };
+      }
+      return chain;
+    });
+    const upload = uploadDocumentoEmbarque("e1", "d1", file());
+    const resultado = exitoso ? expect(upload).resolves.toMatchObject({ cached: false }) : expect(upload).rejects.toBe(error);
+    await iniciado;
+    expect(fx.upload).toHaveBeenCalledOnce();
+    expect(fx.anterior).not.toHaveBeenCalled(); expect(fx.limpiar).not.toHaveBeenCalled();
+    expect(fx.actividad).not.toHaveBeenCalled();
+    expect(mock.rpcCalls.map(c => c.fn)).toEqual(["idempotency_claim"]);
+    confirmar(); await resultado;
+    const nuevoPath = fx.upload.mock.calls[0][0];
+    if (exitoso) {
+      expect(fx.anterior).toHaveBeenCalledExactlyOnceWith("anterior-fixture.pdf", nuevoPath, "upload_documento_embarque:reemplazo");
+      expect(fx.limpiar).not.toHaveBeenCalled();
+    } else {
+      expect(fx.anterior).not.toHaveBeenCalled();
+      expect(fx.limpiar).toHaveBeenCalledExactlyOnceWith(nuevoPath, "upload_documento_embarque:commit_fallido");
+      expect(fx.actividad).not.toHaveBeenCalled();
+      expect(mock.rpcCalls.map(c => c.fn)).toEqual(["idempotency_claim"]);
+    }
+  });
   it("upload vivo conserva commit, store, actividad y limpieza de anterior", async () => {
     mock.queue("documentos_embarque", { archivo: "anterior-fixture.pdf" }); mock.queue("documentos_embarque", [{ id: "d1" }]);
     const result = await uploadDocumentoEmbarque("e1", "d1", file()); expect(result.cached).toBe(false); filtros(0); filtros(1);
