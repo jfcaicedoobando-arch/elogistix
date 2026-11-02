@@ -3,6 +3,7 @@
  * ≤200 líneas (Power of 10). Re-exportado por `ayudaContent.ts`.
  */
 import type { AyudaModulo } from "./ayudaTypes";
+import { HUECO_ETA_BUFFER_DIAS } from "@/features/facturacion/services/huecoFacturacion/constants";
 import {
   DOCUMENTOS_OBLIGATORIOS_CLIENTE,
   DOCUMENTOS_OBLIGATORIOS_CLIENTE_CREDITO,
@@ -46,10 +47,10 @@ export const MODULOS: AyudaModulo[] = [
     audiencia: ["Vendedor", "Ejecutivo de Pricing"],
     faqs: [
       { pregunta: "¿Cómo empiezo una cotización y cuándo uso una tarifa?", respuesta: "En Datos generales del asistente, elige modo de transporte y tipo de operación. Para marítimo, completa ruta y tipo de carga; selecciona una tarifa compatible cuando corresponda. En aéreo, terrestre y otras operaciones, revisa o captura los costos en Costos y utilidad según las opciones habilitadas. El contenedor marítimo no es un requisito de todos los modos." },
-      { pregunta: "¿Qué hago si no hay tarifa para esa ruta?", respuesta: "Marca la cotización como 'requiere pricing' y notifica al Ejecutivo de Pricing. Él captura/negocia la tarifa en Costeo y la cotización se actualiza." },
+      { pregunta: "¿Qué hago si no hay tarifa para esa ruta?", respuesta: "Si la operación requiere tarifa y no encuentras una compatible, abre la oportunidad en CRM → Pricing → Nueva solicitud. Guarda la solicitud y revisa el tarifario. Si ninguna opción te sirve, usa Enviar a Pricing desde el detalle. Cuando recibas una respuesta, revísala y aplícala con Usar en la cotización cuando esa opción esté disponible. Después revisa Costos y utilidad antes de continuar." },
       { pregunta: "¿Quién puede sobrescribir una tarifa sugerida (override)?", respuesta: "Sólo Gerente Comercial y admins. El Vendedor propone, el Gerente aprueba. El override queda registrado en bitácora con quién y por qué." },
       { pregunta: "¿Dónde veo el margen de mi cotización?", respuesta: "Revisa los costos en Costos y utilidad, prepara la venta en Cotización del cliente y comprueba la comparación venta/costo en Resumen. La utilidad es preliminar mientras los importes sean estimados; el alcance de consulta depende de tu rol." },
-      { pregunta: "¿Cómo hago el handoff al Coordinador Logístico?", respuesta: "Cuando el cliente confirma, abre la cotización → botón 'Convertir a embarque'. Se crea el embarque con expediente, se copian datos y el Coordinador recibe la notificación." },
+      { pregunta: "¿Cómo hago el handoff al Coordinador Logístico?", respuesta: "Cuando la cotización esté Aceptada, abre su detalle y usa Crear embarque cuando tu rol lo permita. Si aparece la revalidación de tarifa, revisa las diferencias antes de elegir una opción de creación. Después continúa el seguimiento operativo desde el embarque creado." },
       { pregunta: "¿Puedo enviar la cotización por correo desde el ERP?", respuesta: "Sí. Botón 'Enviar por correo' en el detalle de la cotización. Adjunta el PDF, valida el dominio del destinatario y registra el envío en bitácora." },
     ],
   },
@@ -60,7 +61,7 @@ export const MODULOS: AyudaModulo[] = [
     audiencia: ["Ejecutivo de Pricing", "Gerente Comercial"],
     faqs: [
       { pregunta: "¿Cómo capturo una tarifa nueva?", respuesta: "Costeo → Tarifas → '+ Nueva tarifa'. Ruta (origen/destino con UN/LOCODE), tipo de contenedor, partner (proveedor), vigencia, días libres y frecuencia del servicio. Sin alguno de esos campos no entra al ranking." },
-      { pregunta: "¿Cómo funciona el Top 3 ranking?", respuesta: "Para una ruta + contenedor dados, el sistema ordena las tarifas vigentes por costo total considerando flete, días libres y frecuencia. Las 3 mejores se le ofrecen al Vendedor en el asistente de cotización." },
+      { pregunta: "¿Cómo funciona el Top 3 ranking?", respuesta: "Se muestran hasta 3 tarifas vigentes compatibles con la ruta y el contenedor. Primero se ordenan por costo comparable: flete base más recargos incluidos en el total. Si empatan, se priorizan más días de crédito y después más días libres de demoras. La frecuencia no cambia este orden." },
       { pregunta: "¿Cómo vinculo un agente a un proveedor?", respuesta: "En la tarifa, campo 'Partner'. Es obligatorio: cada agente debe estar vinculado a un proveedor del directorio para que CXP pueda recibir su factura después." },
       { pregunta: "¿Qué es la carta garantía y cuándo se usa?", respuesta: "Documento que firmas con la naviera para liberar el contenedor sin pagar demoras al momento. Se registra en el embarque y NO es facturable al cliente." },
       { pregunta: "¿De dónde salen las demoras facturadas al cliente?", respuesta: "El ERP calcula, a partir de las fechas de la cronología del embarque, un tabulador escalonado de días extra × tarifa contra cliente. Aparece como concepto en la proforma; el costo equivalente (lo que cobra la naviera) entra a CXP." },
@@ -72,8 +73,8 @@ export const MODULOS: AyudaModulo[] = [
     resumen: "Crear, editar y dar seguimiento al ciclo cotización → entrega.",
     audiencia: ["Coordinador Logístico", "Gerente de Operaciones"],
     faqs: [
-      { pregunta: "¿Cómo creo un embarque desde cero?", respuesta: "Embarques → Nuevo embarque. Sigue los pasos del asistente: Datos Generales → Datos de Ruta → Documentos → Costos y Pricing. Completa los campos requeridos para tu modo de transporte; al guardar se asigna el expediente." },
-      { pregunta: "¿Cómo lo creo desde una cotización aprobada?", respuesta: "En Cotizaciones, abre la cotización → 'Convertir a embarque'. Se copian cliente, ruta, conceptos y notas; sólo confirmas fechas y guardas. Es el handoff oficial Vendedor → Coordinador." },
+      { pregunta: "¿Qué necesito para crear un embarque?", respuesta: "Necesitas una cotización Aceptada. Puedes seleccionarla en Datos generales de Nuevo embarque o iniciar la creación desde el detalle de la cotización. Revisa la información heredada y completa los campos requeridos para tu modo de transporte." },
+      { pregunta: "¿Cómo lo creo desde una cotización aceptada?", respuesta: "En Cotizaciones, abre la cotización Aceptada y usa Crear embarque cuando tu rol lo permita. Si aparece la revalidación de tarifa, revisa las diferencias: las opciones de creación confirman el alta del embarque. Después revisa los datos heredados en su detalle para continuar la operación." },
       { pregunta: "¿Cuándo uso FCL vs LCL?", respuesta: "FCL si el cliente paga un contenedor completo. LCL si comparte contenedor (consolidado) — en ese caso el sistema te obliga a registrar BL House bajo un BL Master padre." },
       { pregunta: "¿Cómo avanzo el estado del embarque?", respuesta: "En el detalle, revisa la fase actual y la acción para avanzar. La cronología muestra fases como Confirmado, En Tránsito, Arribo, En Aduana, Entregado, EIR, Por liquidar y Cerrado. Las transiciones habilitadas dependen del modo de transporte y del estado actual; no todos los modos siguen la misma secuencia. Un borrador aparece como Por confirmar." },
       { pregunta: "¿Por qué no puedo avanzar el estado?", respuesta: "La siguiente transición depende del modo de transporte, la fase actual y sus requisitos. Revisa el aviso de la acción: indica qué datos o pendientes debes resolver antes de avanzar. No confundas una fecha estimada con la confirmación de un hito real." },
@@ -90,7 +91,7 @@ export const MODULOS: AyudaModulo[] = [
       { pregunta: "¿Qué es 'Por capturar'?", respuesta: "Bandeja con costos del embarque (sugeridos por la tarifa) que todavía no tienen factura de proveedor recibida. Es la lista del Auxiliar Contable: cuando llega el PDF/XML, lo captura desde aquí." },
       { pregunta: "¿Cómo subo una factura de proveedor?", respuesta: "Compras → CXP → 'Nueva factura' (o desde 'Por capturar', botón 'Capturar'). Sube el XML o PDF; el sistema parsea RFC, monto e IVA y te muestra los costos del embarque candidatos para conciliar." },
       { pregunta: "¿Qué es el folio interno FP-XXXXXX?", respuesta: "Identificador único por organización para cada factura de proveedor (FP-000001 en adelante). Lo asigna la BD, es inmutable y la tabla de CXP viene ordenada por folio descendente (lo más reciente arriba)." },
-      { pregunta: "¿Quién autoriza pagar al proveedor?", respuesta: "Sólo Tesorero (y admins). El Auxiliar Contable captura, el Tesorero paga — separación de funciones a propósito." },
+      { pregunta: "¿Quién aprueba la factura y quién registra el pago?", respuesta: "El Auxiliar Contable, el Contador o un administrador capturan la factura. El Contador o un administrador la aprueban. Una vez aprobada, el Tesorero o un administrador pueden registrar el pago. Aprobar la factura y registrar su pago son pasos distintos." },
       { pregunta: "¿Cómo veo qué facturas están vencidas?", respuesta: "Compras → Facturas → Por pagar, o Dinero → Antigüedad CxP. Revisa el saldo y los días de vencimiento por factura." },
       { pregunta: "¿Por qué no puedo eliminar un proveedor?", respuesta: "Si tiene facturas, embarques o tarifas vinculadas, el sistema lo bloquea (te dice cuántos registros depende de él). Hay que migrarlos primero." },
     ],
@@ -107,8 +108,8 @@ export const MODULOS: AyudaModulo[] = [
       { pregunta: "¿Cómo cancelo un CFDI?", respuesta: "Detalle de la factura → 'Cancelar'. Eliges motivo SAT (01, 02, 03, 04) y, si aplica, el folio del CFDI sustituto. Queda registrado en bitácora." },
       { pregunta: "¿Cuándo emito un complemento de pago (REP)?", respuesta: "Cuando se cobra una factura PPD, total o parcialmente. Al aplicar el cobro se solicita el timbrado cuando corresponde. Revisa REP pendientes si queda en proceso o presenta un error; no registres otra vez el cobro. Cancelar un REP aceptado por el SAT da de baja su cobro en el ERP y recalcula el saldo y sus vínculos bancarios, pero no devuelve dinero en el banco." },
       { pregunta: "¿Cómo descargo el layout contable?", respuesta: "Facturación → tab Facturas → 'Layout contable'. CSV con RFC, subtotal, IVA, uso CFDI y todos los campos que tu contador necesita." },
-      { pregunta: "¿Qué es el 'Hueco de facturación'?", respuesta: "Embarques cuyo ETD pasó hace más de 5 días sin factura emitida. Indica que el proveedor ya nos cobró pero al cliente no — riesgo de capital de trabajo." },
-      { pregunta: "¿Cómo registro una promesa de pago?", respuesta: "Facturación → Cartera → abre la factura vencida → 'Registrar promesa'. El sistema crea recordatorio para esa fecha." },
+      { pregunta: "¿Qué es el 'Hueco de facturación'?", respuesta: `Por facturar reúne embarques con ETA vencida o dentro de los próximos ${HUECO_ETA_BUFFER_DIAS} días y ventas pendientes de emisión, incluidos conceptos añadidos después de una factura anterior. Abre el embarque para revisar los conceptos que faltan. Consulta Compras para comprobar las facturas y pagos del proveedor.` },
+      { pregunta: "¿Cómo envío un recordatorio de cobro?", respuesta: "Abre la factura desde Cobranza y usa Enviar recordatorio. Añade un mensaje si hace falta y confirma el envío." },
     ],
   },
   {
@@ -172,13 +173,13 @@ export const MODULOS: AyudaModulo[] = [
     resumen: "Quién puede hacer qué dentro del ERP.",
     audiencia: ["Administrador de organización"],
     faqs: [
-      { pregunta: "¿Cómo invito a un usuario?", respuesta: "Usuarios → 'Nuevo Usuario'. Email, contraseña inicial y rol (dropdown agrupado por área: Administración / Operaciones / Comercial / Finanzas / Soporte). El usuario debe cambiar su contraseña al primer login." },
+      { pregunta: "¿Cómo invito a un usuario?", respuesta: "En Usuarios, pulsa Nuevo Usuario y completa correo y rol. Por defecto se enviará una invitación para que la persona defina su contraseña. Desactiva Invitar por correo si necesitas crear el acceso con una contraseña temporal." },
       { pregunta: "¿Cuáles son los 12 roles asignables?", respuesta: "Admin (org). Operaciones: Gerente de Operaciones, Gerente Visor, Coordinador Logístico. Comercial: Gerente Comercial, Ejecutivo de Pricing, Vendedor/KAM. Finanzas: Contador, Tesorero, Auxiliar Contable, Ejecutivo de Cobranza. Soporte: Atención a Clientes." },
       { pregunta: "¿Qué hace cada uno?", respuesta: "El dropdown del modal de nuevo usuario muestra la descripción de cada rol. Resumen: Vendedor arma cotizaciones; Pricing negocia tarifas con partners; Coordinador ejecuta embarques tras el handoff; Contador timbra y emite; Tesorero paga y concilia; Auxiliar captura facturas de proveedor; Cobranza da seguimiento a vencidas." },
-      { pregunta: "¿Cómo funciona el handoff Vendedor → Coordinador?", respuesta: "El Vendedor arma la cotización con P&L preliminar. Cuando el cliente confirma, dispara 'Convertir a embarque' — el Coordinador Logístico recibe el embarque y toma el control operativo. El Vendedor sigue viendo embarques y cobranza de sus cuentas." },
+      { pregunta: "¿Cómo funciona el handoff Vendedor → Coordinador?", respuesta: "Con la cotización Aceptada, usa Crear embarque desde su detalle cuando tu rol lo permita. Al crearlo, continúa el seguimiento operativo desde Embarques. El Vendedor consulta sus cuentas según el alcance de su rol." },
       { pregunta: "¿Quién aprueba un override de tarifa?", respuesta: "Sólo Gerente Comercial y admins. El Vendedor o Pricing proponen; el override queda en bitácora con quién aprobó y motivo." },
       { pregunta: "¿Cómo cambio el rol de un usuario existente?", respuesta: "Usuarios → abre el usuario → cambia el rol → guarda. El cambio aplica inmediatamente al siguiente refresh de su sesión." },
-      { pregunta: "¿Puedo tener un usuario con varios roles?", respuesta: "No. Cada usuario tiene un rol único por organización. Para responsabilidades cruzadas, asigna el rol con más permisos (típicamente Gerente)." },
+      { pregunta: "¿Puedo tener un usuario con varios roles?", respuesta: "Cada usuario tiene un rol por organización. Revisa la descripción de cada rol y elige el que corresponda a las tareas autorizadas de esa persona. Si ningún rol cubre sus responsabilidades, consulta con el responsable de permisos antes de cambiarlo. Comprueba el acceso después del cambio." },
     ],
   },
 ];

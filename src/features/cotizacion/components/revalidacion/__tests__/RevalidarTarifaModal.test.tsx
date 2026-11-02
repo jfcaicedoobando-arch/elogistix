@@ -39,7 +39,7 @@ describe("RevalidarTarifaModal", () => {
     expect(container.querySelector("[role=dialog]")).toBeNull();
   });
 
-  it("severidad informativa muestra botones Mantener y Refrescar", () => {
+  it("severidad informativa permite crear con costos cotizados o tarifa vigente", () => {
     const onMantener = vi.fn();
     const onRefrescar = vi.fn();
     render(
@@ -52,9 +52,9 @@ describe("RevalidarTarifaModal", () => {
         onSolicitarReaprobacion={() => {}}
       />,
     );
-    fireEvent.click(screen.getByRole("button", { name: /mantener costos/i }));
+    fireEvent.click(screen.getByRole("button", { name: /crear embarque con costos cotizados/i }));
     expect(onMantener).toHaveBeenCalled();
-    fireEvent.click(screen.getByRole("button", { name: /refrescar desde tarifa/i }));
+    fireEvent.click(screen.getByRole("button", { name: /crear embarque con tarifa vigente/i }));
     expect(onRefrescar).toHaveBeenCalled();
   });
 
@@ -70,7 +70,7 @@ describe("RevalidarTarifaModal", () => {
         onSolicitarReaprobacion={onReaprob}
       />,
     );
-    expect(screen.queryByRole("button", { name: /refrescar/i })).toBeNull();
+    expect(screen.queryByRole("button", { name: /crear embarque/i })).toBeNull();
     fireEvent.click(screen.getByRole("button", { name: /re-aprobación/i }));
     expect(onReaprob).toHaveBeenCalled();
   });
