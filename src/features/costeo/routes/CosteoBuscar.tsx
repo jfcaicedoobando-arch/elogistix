@@ -9,6 +9,7 @@ import { DatePickerMx } from "@/components/ui/date-picker-mx";
 import { PortIdSelect, TipoContenedorSelect } from "@/features/catalogos";
 
 import { useTopTarifas } from "@/features/costeo/hooks/useTopTarifas";
+import { usePuertosDeRutas } from "@/features/costeo/hooks/usePuertosDeRutas";
 import { useDiagnosticoTarifas } from "@/features/costeo/hooks/useDiagnosticoTarifas";
 import { TarifasSinResultado } from "@/features/costeo/components/TarifasSinResultado";
 import { TarifaResultCard } from "@/features/costeo/components/TarifaResultCard";
@@ -27,11 +28,12 @@ export default function CosteoBuscar() {
   const [tipo, setTipo] = useState("");
   const [fecha, setFecha] = useState(todayLocalISO());
   const mismoPuerto = !!origen && origen === destino;
+  const { origenes, destinos, sinRutas } = usePuertosDeRutas(origen);
 
-  // Origen y destino deben diferir; si coinciden no disparamos la búsqueda.
+  // Al cambiar origen, el destino sólo se conserva si tiene ruta activa con él.
   const elegirOrigen = (id: string) => {
     setOrigen(id);
-    if (id && id === destino) setDestino("");
+    if (id !== origen) setDestino("");
   };
 
   const { data: tarifas = [], isFetching, isError, isSuccess, refetch, tipoContenedorIds } = useTopTarifas({
@@ -57,6 +59,13 @@ export default function CosteoBuscar() {
         description="Top 3 tarifas vigentes ordenadas por precio total, días de crédito y días libres de demoras."
       />
 
+      {sinRutas && (
+        <Card className="p-4">
+          <p className="text-body text-muted-foreground" role="status">
+            Aún no hay rutas marítimas dadas de alta. Créalas en Costeo → Rutas.
+          </p>
+        </Card>
+      )}
       <Card className="p-4" role="search" aria-label="Filtros de búsqueda de tarifa">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
           <div>
@@ -65,6 +74,8 @@ export default function CosteoBuscar() {
               id="buscar-origen"
               value={origen}
               onChange={elegirOrigen}
+              puertos={origenes}
+              disabled={sinRutas}
               placeholder="Buscar puerto de origen…"
             />
           </div>
@@ -74,8 +85,10 @@ export default function CosteoBuscar() {
               id="buscar-destino"
               value={destino}
               onChange={setDestino}
+              puertos={destinos}
+              disabled={!origen}
               excludeId={origen}
-              placeholder="Buscar puerto de destino…"
+              placeholder={origen ? "Buscar puerto de destino…" : "Elige primero el origen"}
             />
           </div>
 

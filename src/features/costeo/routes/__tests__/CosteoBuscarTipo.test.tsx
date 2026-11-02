@@ -34,6 +34,9 @@ const diagMock = vi.fn((_: { enabled: boolean }) => ({ diagnostico: undefined })
 vi.mock("@/features/costeo/hooks/useDiagnosticoTarifas", () => ({
   useDiagnosticoTarifas: (a: { enabled: boolean }) => diagMock(a),
 }));
+vi.mock("@/features/costeo/hooks/usePuertosDeRutas", () => ({
+  usePuertosDeRutas: () => ({ origenes: [], destinos: [], isLoading: false, sinRutas: false }),
+}));
 
 import CosteoBuscar from "../CosteoBuscar";
 import { createWrapper } from "@/test/utils/queryWrapper";
