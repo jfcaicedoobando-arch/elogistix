@@ -16,7 +16,10 @@ const TIPO_DRY = {
 };
 
 vi.mock("@/features/catalogos/hooks", () => ({
-  useTiposContenedor: () => ({ data: [TIPO_DRY, TIPO_HC] }),
+  useTiposContenedor: () => ({
+    data: [TIPO_DRY, TIPO_HC], isLoading: false, isPending: false, isFetching: false,
+    isError: false, isSuccess: true, isEnabled: true, error: null, refetch: vi.fn(),
+  }),
 }));
 
 vi.mock("@/features/catalogos", async (orig) => ({
@@ -39,7 +42,8 @@ vi.mock("@/features/costeo/hooks/usePuertosDeRutas", () => ({
     origenes: [{ id: "buscar-origen", name: "Origen de prueba", country: "Prueba", code: "XXORI" }],
     destinos: origenId === "buscar-origen"
       ? [{ id: "buscar-destino", name: "Destino de prueba", country: "Prueba", code: "XXDES" }] : [],
-    isLoading: false, sinRutas: false,
+    isLoading: false, sinRutas: false, isError: false, isRetrying: false,
+    actualizando: false, reintentar: vi.fn(),
   }),
 }));
 

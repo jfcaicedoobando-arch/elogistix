@@ -17,11 +17,11 @@ const fixtures = vi.hoisted(() => ({
 }));
 
 vi.mock("@/features/catalogos/hooks", () => ({
-  usePuertos: () => ({ data: fixtures.catalogo }),
-  useTiposContenedor: () => ({ data: [TIPO] }),
+  usePuertos: () => successfulQuery(fixtures.catalogo),
+  useTiposContenedor: () => successfulQuery([TIPO]),
 }));
 vi.mock("@/features/costeo/hooks/useCosteoRutas", () => ({
-  useCosteoRutas: () => ({ data: fixtures.rutas, isLoading: false }),
+  useCosteoRutas: () => successfulQuery(fixtures.rutas),
 }));
 vi.mock("@/features/costeo/hooks/useTopTarifas", () => ({
   useTopTarifas: (params: unknown) => fixtures.top(params),
@@ -61,6 +61,13 @@ const RUTAS: RutaPuertos[] = [
   { puerto_origen_id: UNKNOWN, puerto_destino_id: D, activa: true },
   { puerto_origen_id: A, puerto_destino_id: UNKNOWN, activa: true },
 ];
+
+function successfulQuery<T>(data: T) {
+  return {
+    data, isLoading: false, isPending: false, isFetching: false, isError: false,
+    isSuccess: true, isEnabled: true, error: null, refetch: vi.fn(),
+  };
+}
 
 beforeEach(() => {
   fixtures.rutas = RUTAS.map((ruta) => ({ ...ruta }));
