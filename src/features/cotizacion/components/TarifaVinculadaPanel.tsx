@@ -27,7 +27,7 @@ import type { FilaCostoLocal } from "@/features/cotizacion/types";
 import type { TopTarifaRow } from "@/features/costeo/types";
 import { destinoDe, etiquetaRutaCompleta, origenDe } from "@/features/costeo";
 import { resolveTipoContenedorId, computeTarifaWarnings, faltaCatalogoParaValidarTipo } from "./tarifaVinculadaPanel.helpers";
-import { EmptyStateInline } from "@/components/empty/EmptyStateInline";
+import { TarifaVinculadaEstadoConsulta } from "./TarifaVinculadaEstadoConsulta";
 
 
 // ── Component ────────────────────────────────────────────────────────────────
@@ -54,7 +54,7 @@ export default function TarifaVinculadaPanel({
   const tipoContenedorActual = watch("tipoContenedor");
 
 
-  const { data: tarifa, isLoading } = useTarifaVinculada(tarifaId);
+  const { data: tarifa, isLoading, isFetching, isError, isSuccess, refetch } = useTarifaVinculada(tarifaId);
   const sinCatalogoParaValidar = faltaCatalogoParaValidarTipo(tarifa, tipoContenedorActual, tiposContenedor, cargandoTipos);
 
   const tipoContenedorIdInicial = resolveTipoContenedorId(
@@ -112,21 +112,13 @@ export default function TarifaVinculadaPanel({
         )}
 
 
-        {tarifaId && isLoading && (
-          <EmptyStateInline loading message="Cargando tarifa…" className="py-2" />
-        )}
-
-        {tarifaId && !isLoading && !tarifa && (
-          <div className="flex items-start gap-2 rounded-md border border-warning/30 bg-warning/5 p-3">
-            <AlertTriangle className="size-4 text-warning mt-0.5" />
-            <div className="flex-1 text-body">
-              <p className="font-medium">La tarifa vinculada ya no está vigente o fue eliminada.</p>
-              <p className="text-muted-foreground">Quita el vínculo y elige una nueva tarifa.</p>
-            </div>
-            <Button type="button" size="sm" variant="ghost" onClick={quitarVinculo}>
-              <Unlink className="size-4 mr-1" /> Quitar
-            </Button>
-          </div>
+        {tarifaId && (
+          <TarifaVinculadaEstadoConsulta
+            tieneDatos={!!tarifa}
+            ausenciaConfirmada={isSuccess && tarifa === null}
+            isLoading={isLoading} isFetching={isFetching} isError={isError}
+            onRetry={() => void refetch()} onQuitar={quitarVinculo}
+          />
         )}
 
         {tarifa && (

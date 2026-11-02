@@ -6,7 +6,7 @@ import AvisoCostosDesactualizados from "./AvisoCostosDesactualizados";
 
 import { calcTotalsPL, type FilaCostoLocal } from "./costosPLTypes";
 import { useCostosAutoSync } from "@/features/cotizacion/hooks/wizard/useCostosAutoSync";
-import { marcarEditadaAMano, type DesajusteCostos } from "@/features/cotizacion/domain/costosAutoGenerados";
+import { esCostoAutoGenerado, marcarEditadaAMano, type DesajusteCostos } from "@/features/cotizacion/domain/costosAutoGenerados";
 import { destinoDe, etiquetaRutaCompleta, origenDe } from "@/features/costeo";
 
 /** Campos cuya edición manual desvincula la fila de su origen automático. */
@@ -102,6 +102,12 @@ export default function SeccionCostosInternosPLLocal({ filas, setFilas, onDesaju
             Flete LCL precargado desde el Paso 1 (captura manual). Puedes editar, agregar o eliminar conceptos.
           </AlertDescription>
         </Alert>
+      )}
+      {filas.some(esCostoAutoGenerado) && (
+        <p className="text-body-sm text-muted-foreground">
+          Si editas el concepto, proveedor, moneda, unidad, cantidad o importes de una fila precargada,
+          esa fila se conserva como manual y ya no se recalcula desde el Paso 1. Revisa y ajusta sus importes.
+        </p>
       )}
 
       <TablaCostosLocal
