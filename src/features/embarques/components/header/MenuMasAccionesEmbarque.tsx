@@ -40,15 +40,20 @@ export function MenuMasAccionesEmbarque(props: {
               <MoreHorizontal className="h-4 w-4" />
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-48">
+          <DropdownMenuContent align="end" className="w-[min(24rem,calc(100vw-2rem))]">
             <DropdownMenuItem
-              onSelect={(e) => {
-                e.preventDefault();
-                onCompartirTracking();
-              }}
+              onSelect={onCompartirTracking}
               disabled={trackingPending}
+              className="group items-start"
             >
-              <Share2 className="h-4 w-4 mr-2" /> Compartir tracking
+              <Share2 className="h-4 w-4 mr-2 mt-0.5 shrink-0" />
+              <span>
+                <span className="block">Copiar enlace público de seguimiento</span>
+                <span className="block text-body-sm text-muted-foreground group-focus:text-accent-foreground group-data-[highlighted]:text-accent-foreground">
+                  Quien tenga el enlace podrá ver estado, ruta, fechas, historial y avance documental.
+                  No incluye archivos ni notas internas. Sólo se copia; tú decides a quién enviarlo.
+                </span>
+              </span>
             </DropdownMenuItem>
             {tieneLinkActivo && (
               <DropdownMenuItem
@@ -57,8 +62,13 @@ export function MenuMasAccionesEmbarque(props: {
                   onRevocarTracking();
                 }}
                 disabled={trackingPending}
+                className="group items-start"
               >
-                <Link2Off className="h-4 w-4 mr-2" /> Revocar liga de tracking
+                <Link2Off className="h-4 w-4 mr-2 mt-0.5 shrink-0" />
+                <span>
+                  <span className="block">Revocar este enlace</span>
+                  <span className="block text-body-sm text-muted-foreground group-focus:text-accent-foreground group-data-[highlighted]:text-accent-foreground">El enlace vigente dejará de abrir este seguimiento.</span>
+                </span>
               </DropdownMenuItem>
             )}
             <DropdownMenuItem

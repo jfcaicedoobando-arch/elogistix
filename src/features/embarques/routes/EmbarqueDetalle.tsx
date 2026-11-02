@@ -16,6 +16,7 @@ import DialogEliminarEmbarque from "@/features/embarques/components/DialogElimin
 import DialogDuplicarEmbarque from "@/features/embarques/components/DialogDuplicarEmbarque";
 import { EmbarqueDetalleHeader } from "@/features/embarques/components/EmbarqueDetalleHeader";
 import { EmbarqueDetalleTabs } from "@/features/embarques/components/EmbarqueDetalleTabs";
+import { EnlaceTrackingCopiadoDialog } from "@/features/embarques/components/tracking/EnlaceTrackingCopiadoDialog";
 import { LoadingState, NotFoundState } from "./EmbarqueDetalleStates";
 import { useRegisterBreadcrumbLabel } from "@/lib/contexts/BreadcrumbContext";
 
@@ -56,7 +57,8 @@ export default function EmbarqueDetalle() {
   const [dialogEliminarAbierto, setDialogEliminarAbierto] = useState(false);
   const [dialogDuplicarAbierto, setDialogDuplicarAbierto] = useState(false);
 
-  const { handleCompartirTracking, handleRevocarTracking, tieneLinkActivo, isPending: trackingPending } = useEmbarqueDetalleTracking(id);
+  const { handleCompartirTracking, handleRevocarTracking, tieneLinkActivo, avisoEnlace,
+    cerrarAvisoEnlace, isPending: trackingPending } = useEmbarqueDetalleTracking(id);
 
   if (!isLoading && !error && !embarque) return <NotFoundState />;
 
@@ -67,6 +69,7 @@ export default function EmbarqueDetalle() {
 
   return (
     <PageContainer>
+      <EnlaceTrackingCopiadoDialog aviso={avisoEnlace} onClose={cerrarAvisoEnlace} />
       <CargaGuard
         isLoading={isLoading}
         isError={!!error}

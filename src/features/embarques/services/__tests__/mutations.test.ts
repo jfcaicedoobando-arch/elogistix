@@ -305,6 +305,24 @@ describe("actualizarEstadoEmbarque", () => {
 });
 
 describe("actualizarFechaLlegadaRealEmbarque", () => {
+  it("En Proceso también pasa a Arribo y admite fecha igual al ETD", async () => {
+    mock.setTableResult("embarques", { data: { estado: "En Proceso", etd: "2026-07-20", fecha_llegada_real: null }, error: null });
+    await actualizarFechaLlegadaRealEmbarque(UUID, "2026-07-20");
+    const update = [...mock.tableCalls].reverse().find((c) => c.ops.includes("update"))!;
+    expect(update.opArgs[update.ops.indexOf("update")][0]).toEqual({ fecha_llegada_real: "2026-07-20", estado: "Arribo" });
+  });
+
+  it.each([
+    [{ estado: "En Tránsito", fecha_llegada_real: "2026-07-19" }, /ya tiene una fecha de llegada real/],
+    [{ estado: "Confirmado", fecha_llegada_real: null }, /Confirma y pon en tránsito/],
+    [{ estado: "En Tránsito", etd: "2026-07-21", fecha_llegada_real: null }, /no puede ser anterior al ETD/],
+  ])("mantiene los requisitos anticipados en el formulario: %j", async (current, mensaje) => {
+    mock.setTableResult("embarques", { data: current, error: null });
+    await expect(actualizarFechaLlegadaRealEmbarque(UUID, "2026-07-20")).rejects.toThrow(mensaje);
+    expect(mock.tableCalls.some((c) => c.ops.includes("update"))).toBe(false);
+    expect(registrarActividadMock).not.toHaveBeenCalled();
+  });
+
   it("avanza a 'Arribo' cuando el estado actual es 'En Tránsito' (v13.303.22)", async () => {
     mock.setTableResult("embarques", { data: { estado: "En Tránsito" }, error: null });
     await actualizarFechaLlegadaRealEmbarque(UUID, "2026-07-20");

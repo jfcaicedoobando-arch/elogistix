@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useCreateTrackingLink, useDeleteTrackingLink, useTrackingLinks } from "@/features/embarques/hooks/useTrackingLinks";
 import { esTrackingLinkVigente, fetchTrackingLinks, TRACKING_LINK_VIGENCIA_DIAS } from "@/features/embarques/services/tracking";
 import type { Tables } from "@/integrations/supabase/types";
@@ -19,6 +19,13 @@ export function useEmbarqueDetalleTracking(embarqueId: string | undefined) {
   const createTrackingLink = useCreateTrackingLink();
   const deleteTrackingLink = useDeleteTrackingLink();
   const linksQuery = useTrackingLinks(embarqueId);
+  const [avisoEnlace, setAvisoEnlace] = useState<{ embarqueId: string; expiresAt: string | null } | null>(null);
+  const contexto = useRef(0);
+  useEffect(() => {
+    contexto.current += 1;
+    setAvisoEnlace(null);
+    return () => { contexto.current += 1; };
+  }, [embarqueId]);
 
   const linkActivo = useMemo(
     () => (linksQuery.data ?? []).find((l) => esTrackingLinkVigente(l)) ?? null,
@@ -27,6 +34,7 @@ export function useEmbarqueDetalleTracking(embarqueId: string | undefined) {
 
   const handleCompartirTracking = async () => {
     if (!embarqueId) return;
+    const contextoInicial = contexto.current;
     try {
       // Re-consulta fresca: la cache puede estar vieja si otro usuario creó
       // una liga hace un momento. Reusar evita acumular tokens vivos.
@@ -40,7 +48,9 @@ export function useEmbarqueDetalleTracking(embarqueId: string | undefined) {
       }
       const url = `${window.location.origin}/tracking/${link.token}`;
       await navigator.clipboard.writeText(url);
-      notifySuccess(undefined, { title: "Enlace copiado", description: "El enlace de tracking fue copiado al portapapeles." });
+      if (contexto.current !== contextoInicial) return;
+      setAvisoEnlace({ embarqueId, expiresAt: link.expires_at });
+      notifySuccess(undefined, { title: "Enlace público copiado", description: "Revisa su alcance y vencimiento antes de enviarlo." });
     } catch (error) {
       notifyError(undefined, { title: "Error al generar enlace", error,
         method: "HANDLE_COMPARTIR_TRACKING", context: { embarqueId } });
@@ -59,6 +69,8 @@ export function useEmbarqueDetalleTracking(embarqueId: string | undefined) {
   return {
     handleCompartirTracking,
     handleRevocarTracking,
+    avisoEnlace: avisoEnlace && avisoEnlace.embarqueId === embarqueId ? { expiresAt: avisoEnlace.expiresAt } : null,
+    cerrarAvisoEnlace: () => setAvisoEnlace(null),
     tieneLinkActivo: linkActivo !== null,
     isPending: createTrackingLink.isPending || deleteTrackingLink.isPending,
   };
