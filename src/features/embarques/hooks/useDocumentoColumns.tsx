@@ -74,7 +74,7 @@ export function useDocumentoColumns(opts: Options): ColumnDef<DocumentoEmbarqueR
                 }}
               >
                 {uploadingDocId !== doc.id && <Upload className="h-4 w-4 mr-1" />}
-                Subir
+                {doc.archivo ? "Reemplazar archivo" : "Subir archivo"}
               </Button>
             )}
             {puedeMarcarNoAplica && (

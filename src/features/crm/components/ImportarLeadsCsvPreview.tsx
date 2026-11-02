@@ -58,6 +58,9 @@ export function ImportarLeadsCsvPreview({
         {exactos > 0 && <Badge variant="destructive">{exactos} duplicados (se omiten)</Badge>}
         {posibles > 0 && <Badge variant="secondary">{posibles} posibles duplicados</Badge>}
       </div>
+      <p className="text-body-sm text-muted-foreground">
+        Los duplicados exactos se omiten. Las filas válidas marcadas como posibles duplicados sí se importarán: revisa las coincidencias antes de continuar. Para quitar una fila, corrige el CSV y vuelve a cargarlo.
+      </p>
       <div className="border rounded max-h-64 overflow-auto text-body-sm">
         <Table className="w-full">
           <TableHeader className="bg-muted sticky top-0">

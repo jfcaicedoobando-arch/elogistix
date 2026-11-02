@@ -58,7 +58,7 @@ export function CostoTotalBlock({
               </button>
             </TooltipTrigger>
             <TooltipContent className="max-w-xs text-body-sm">
-              Flete base + todos los recargos vigentes a la fecha seleccionada. No incluye demoras ni cargos no previstos.
+              Flete base más recargos marcados para incluirse en el total comparable. No incluye demoras ni cargos no previstos.
             </TooltipContent>
           </Tooltip>
         </div>
@@ -94,7 +94,7 @@ export function WinnerBadge() {
   return (
     <div className="absolute -top-3 left-1/2 -translate-x-1/2">
       <Badge className="bg-success text-success-foreground border-success gap-1">
-        <Trophy className="size-3" /> Mejor opción
+        <Trophy className="size-3" /> Primera en el ranking
       </Badge>
     </div>
   );
