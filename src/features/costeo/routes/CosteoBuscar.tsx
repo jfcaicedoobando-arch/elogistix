@@ -11,11 +11,10 @@ import { PortIdSelect, TipoContenedorSelect } from "@/features/catalogos";
 import { useTopTarifas } from "@/features/costeo/hooks/useTopTarifas";
 import { usePuertosDeRutas } from "@/features/costeo/hooks/usePuertosDeRutas";
 import { useDiagnosticoTarifas } from "@/features/costeo/hooks/useDiagnosticoTarifas";
+import { CosteoBuscarFuentes } from "@/features/costeo/components/CosteoBuscarFuentes";
 import { CosteoBuscarResultados } from "@/features/costeo/components/CosteoBuscarResultados";
 import { PageContainer } from "@/components/shared/PageContainer";
 import { PageHeader } from "@/components/shared/PageHeader";
-import { EmptyStateInline } from "@/components/empty/EmptyStateInline";
-import { MapPinned } from "lucide-react";
 import { todayLocalISO } from "@/lib/date/today";
 
 export default function CosteoBuscar() {
@@ -24,7 +23,8 @@ export default function CosteoBuscar() {
   const [tipo, setTipo] = useState("");
   const [fecha, setFecha] = useState(todayLocalISO());
   const mismoPuerto = !!origen && origen === destino;
-  const { origenes, destinos, sinRutas } = usePuertosDeRutas(origen);
+  const fuentes = usePuertosDeRutas(origen);
+  const { origenes, destinos } = fuentes;
 
   // Un refresco puede retirar la ruta seleccionada: no consultar ni mostrar
   // resultados guardados para puertos que ya no son elegibles.
@@ -62,14 +62,7 @@ export default function CosteoBuscar() {
         description="Top 3 tarifas vigentes ordenadas por precio total, días de crédito y días libres de demoras."
       />
 
-      {sinRutas && (
-        <Card className="p-4" role="status">
-          <EmptyStateInline
-            icon={MapPinned}
-            message="Aún no hay rutas marítimas dadas de alta. Créalas en Costeo → Rutas."
-          />
-        </Card>
-      )}
+      <CosteoBuscarFuentes estado={fuentes} />
       <Card className="p-4" role="search" aria-label="Filtros de búsqueda de tarifa">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
           <div>
@@ -79,7 +72,7 @@ export default function CosteoBuscar() {
               value={origenVigente}
               onChange={elegirOrigen}
               puertos={origenes}
-              disabled={sinRutas}
+              disabled={origenes.length === 0}
               placeholder="Buscar puerto de origen…"
             />
           </div>
