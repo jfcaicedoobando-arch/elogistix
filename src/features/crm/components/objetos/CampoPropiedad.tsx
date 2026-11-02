@@ -16,6 +16,8 @@ interface Props {
   valor?: ValorCrm;
   disabled: boolean;
   onGuardar: (v: ValorEntrada) => void;
+  onEditar?: (tieneCambios: boolean) => void;
+  descripcionId?: string;
 }
 
 function inicialTexto(prop: PropiedadCrm, v?: ValorCrm): string {
@@ -25,7 +27,7 @@ function inicialTexto(prop: PropiedadCrm, v?: ValorCrm): string {
   return v.valor_texto ?? "";
 }
 
-export function CampoPropiedad({ prop, valor, disabled, onGuardar }: Props) {
+export function CampoPropiedad({ prop, valor, disabled, onGuardar, onEditar, descripcionId }: Props) {
   const [texto, setTexto] = useState(() => inicialTexto(prop, valor));
   const seleccionados = (valor?.opcion_ids ?? []).map((id) => idVigente(prop.opciones, id));
   const activas = prop.opciones.filter((o) => !o.archivada || seleccionados.includes(o.id));
@@ -35,7 +37,7 @@ export function CampoPropiedad({ prop, valor, disabled, onGuardar }: Props) {
     return (
       <Select value={seleccionados[0] ?? NINGUNA} disabled={disabled}
         onValueChange={(v) => onGuardar(v === NINGUNA ? null : v)}>
-        <SelectTrigger id={id} aria-label={prop.etiqueta}><SelectValue /></SelectTrigger>
+        <SelectTrigger id={id} aria-label={prop.etiqueta} aria-describedby={descripcionId}><SelectValue /></SelectTrigger>
         <SelectContent>
           <SelectItem value={NINGUNA}>Sin definir</SelectItem>
           {activas.map((o) => <SelectItem key={o.id} value={o.id}>{o.etiqueta}</SelectItem>)}
@@ -48,7 +50,7 @@ export function CampoPropiedad({ prop, valor, disabled, onGuardar }: Props) {
     const alternar = (opId: string, on: boolean) =>
       onGuardar(on ? [...seleccionados, opId] : seleccionados.filter((s) => s !== opId));
     return (
-      <div className="flex flex-wrap gap-3" role="group" aria-label={prop.etiqueta}>
+      <div className="flex flex-wrap gap-3" role="group" aria-label={prop.etiqueta} aria-describedby={descripcionId}>
         {activas.map((o) => (
           <label key={o.id} className="flex items-center gap-1.5 text-body-sm">
             <Checkbox checked={seleccionados.includes(o.id)} disabled={disabled}
@@ -64,8 +66,9 @@ export function CampoPropiedad({ prop, valor, disabled, onGuardar }: Props) {
   return (
     <Input
       id={id} type={tipoInput} value={texto} disabled={disabled} aria-label={prop.etiqueta}
-      onChange={(e) => setTexto(e.target.value)}
+      onChange={(e) => { setTexto(e.target.value); onEditar?.(e.target.value !== inicialTexto(prop, valor)); }}
       onBlur={() => { if (texto !== inicialTexto(prop, valor)) onGuardar(texto || null); }}
+      aria-describedby={descripcionId}
       maxLength={prop.tipo === "texto" ? 500 : undefined}
     />
   );
