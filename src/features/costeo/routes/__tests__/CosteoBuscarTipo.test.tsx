@@ -35,7 +35,12 @@ vi.mock("@/features/costeo/hooks/useDiagnosticoTarifas", () => ({
   useDiagnosticoTarifas: (a: { enabled: boolean }) => diagMock(a),
 }));
 vi.mock("@/features/costeo/hooks/usePuertosDeRutas", () => ({
-  usePuertosDeRutas: () => ({ origenes: [], destinos: [], isLoading: false, sinRutas: false }),
+  usePuertosDeRutas: (origenId: string) => ({
+    origenes: [{ id: "buscar-origen", name: "Origen de prueba", country: "Prueba", code: "XXORI" }],
+    destinos: origenId === "buscar-origen"
+      ? [{ id: "buscar-destino", name: "Destino de prueba", country: "Prueba", code: "XXDES" }] : [],
+    isLoading: false, sinRutas: false,
+  }),
 }));
 
 import CosteoBuscar from "../CosteoBuscar";

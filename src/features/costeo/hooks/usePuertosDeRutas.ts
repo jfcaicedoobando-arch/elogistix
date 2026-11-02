@@ -1,6 +1,6 @@
 import { useMemo } from "react";
 import { usePuertos } from "@/features/catalogos/hooks";
-import type { PuertoOption } from "@/features/catalogos/components/PortIdSelect.helpers";
+import type { PuertoOption } from "@/features/catalogos";
 import { useCosteoRutas } from "@/features/costeo/hooks/useCosteoRutas";
 import { destinosDeOrigen, origenesDeRutas } from "@/features/costeo/utils/puertosDeRutas";
 
