@@ -6,10 +6,10 @@ Deno.test('H21: adaptador real autentica, aplica rol de la empresa y sólo consu
     const handler = await load('./index.ts');
     const response = await handler(request());
     assert.equal(response.status, 200);
-    assert.deepEqual(await response.json(), { ok: true, factura_id: FACTURA_A, destinatario: 'anterior-a@example.test' });
+    assert.deepEqual(await response.json(), { ok: true, version: 2, factura_id: FACTURA_A, destinatario: { organization_id: 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa', cliente_id: 'cccccccc-cccc-cccc-cccc-cccccccccccc', contacto_id: '33333333-3333-3333-3333-333333333333', email: 'anterior-a@example.test' } });
     assert.ok(calls.some(call => call.path === '/auth/v1/user'));
     assert.ok(calls.some(call => call.path === '/rest/v1/organization_members'
-      && new URLSearchParams(call.query).get('organization_id') === 'eq.org-a'));
+      && new URLSearchParams(call.query).get('organization_id') === 'eq.aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa'));
     assert.ok(calls.every(call => call.method === 'GET'));
   });
 });
@@ -51,7 +51,7 @@ Deno.test('H21: conserva la excepción existente de super_admin de plataforma', 
     tables.user_roles.push({ user_id: 'user-a', role: 'super_admin' });
     const response = await (await load('./index.ts'))(request(FACTURA_B));
     assert.equal(response.status, 200);
-    assert.equal((await response.json()).destinatario, 'ajeno-b@example.test');
+    assert.equal((await response.json()).destinatario.email, 'ajeno-b@example.test');
   });
 });
 
@@ -91,40 +91,42 @@ Deno.test('H21: revocar el token tras preview impide enviar antes de consultar l
   });
 });
 
-Deno.test('H21: cambiar el correo confirmado y retirarlo de la allowlist rechaza sin fallback ni envío', async () => {
+Deno.test('H21: cambiar el correo del contacto confirmado rechaza sin sustitución ni envío', async () => {
   await withFixtureTransport(async ({ tables, calls, load }) => {
     const preview = await (await load('./index.ts'))(request());
     const email = (await preview.json()).destinatario;
     tables.contactos_cliente[0].email = 'actualizado-a@example.test';
     const response = await (await load('../cxc-recordatorio-enviar/index.ts'))(request(FACTURA_A, email));
-    assert.equal(response.status, 400);
+    assert.equal(response.status, 409);
     assert.deepEqual(await response.json(), {
-      error: 'El correo no pertenece a los contactos del cliente', code: 'DESTINATARIO_NO_PERMITIDO',
+      error: 'El correo del contacto cambió. Vuelve a consultar y revisa el destinatario antes de enviar.', code: 'DESTINATARIO_CAMBIO',
     });
     assert.ok(calls.every(call => call.method === 'GET' || call.path === '/rest/v1/rpc/saldo_factura'));
     assert.ok(!calls.some(call => call.path.includes('email_send_log') || call.path.includes('factura_recordatorios')));
   });
 });
 
-Deno.test('H21: un correo explícito de otro cliente se rechaza sin usar el destinatario por defecto', async () => {
+Deno.test('H21: un correo confirmado que no coincide con el contacto se rechaza sin buscar otro destinatario', async () => {
   await withFixtureTransport(async ({ calls, load }) => {
-    const response = await (await load('../cxc-recordatorio-enviar/index.ts'))(request(FACTURA_A, 'ajeno-b@example.test'));
-    assert.equal(response.status, 400);
+    const preview = await (await load('./index.ts'))(request());
+    const target = (await preview.json()).destinatario;
+    const response = await (await load('../cxc-recordatorio-confirmar/index.ts'))(request(FACTURA_A, { ...target, email: 'ajeno-b@example.test' }));
+    assert.equal(response.status, 409);
     assert.ok(!calls.some(call => call.path.includes('email_send_log') || call.path.includes('factura_recordatorios')));
   });
 });
 
-Deno.test('H21: si cambia el cliente de la factura y el correo deja su allowlist, se rechaza sin fallback', async () => {
+Deno.test('H21: si cambia el cliente de la factura, se rechaza la identidad confirmada sin sustitución', async () => {
   await withFixtureTransport(async ({ tables, calls, load }) => {
     const preview = await (await load('./index.ts'))(request());
     const email = (await preview.json()).destinatario;
-    tables.clientes.push({ id: 'cliente-c', organization_id: 'org-a', email: 'principal-c@example.test', deleted_at: null });
-    tables.contactos_cliente.push({ id: 'contacto-c', cliente_id: 'cliente-c', organization_id: 'org-a',
+    tables.clientes.push({ id: 'eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee', organization_id: 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa', email: 'principal-c@example.test', deleted_at: null });
+    tables.contactos_cliente.push({ id: '66666666-6666-6666-6666-666666666666', cliente_id: 'eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee', organization_id: 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa',
       email: 'contacto-c@example.test', created_at: '2026-01-01', deleted_at: null });
-    tables.facturas[0].cliente_id = 'cliente-c';
+    tables.facturas[0].cliente_id = 'eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee';
     const response = await (await load('../cxc-recordatorio-enviar/index.ts'))(request(FACTURA_A, email));
-    assert.equal(response.status, 400);
-    assert.equal((await response.json()).code, 'DESTINATARIO_NO_PERMITIDO');
+    assert.equal(response.status, 409);
+    assert.equal((await response.json()).code, 'FACTURA_CAMBIO');
     assert.ok(!calls.some(call => call.path.includes('email_send_log') || call.path.includes('factura_recordatorios')));
   });
 });
@@ -133,8 +135,8 @@ Deno.test('H21: si la factura pasa a otra organización, se vuelve a exigir la m
   await withFixtureTransport(async ({ tables, calls, load }) => {
     const preview = await (await load('./index.ts'))(request());
     const email = (await preview.json()).destinatario;
-    tables.facturas[0].organization_id = 'org-b';
-    tables.facturas[0].cliente_id = 'cliente-b';
+    tables.facturas[0].organization_id = 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb';
+    tables.facturas[0].cliente_id = 'dddddddd-dddd-dddd-dddd-dddddddddddd';
     const reads = calls.filter(call => call.path === '/rest/v1/contactos_cliente').length;
     const response = await (await load('../cxc-recordatorio-enviar/index.ts'))(request(FACTURA_A, email));
     assert.equal(response.status, 403);

@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { confirmado } from '@/features/cobranza/services/__tests__/recordatorioFixtures';
 import { createWrapper } from '@/test/utils/queryWrapper';
 import { DialogRecordatorioCobranza, type FacturaRecordatorio } from '../DialogRecordatorioCobranza';
 import { setAuthSnapshot } from '@/lib/auth/authSnapshot';
@@ -12,7 +13,7 @@ const factura: FacturaRecordatorio = {
   factura_id: 'factura-a', numero: 'F-001', total: 100, saldo: 50, moneda: 'MXN', dias_vencido: 2,
 };
 const consulta = (id = factura.factura_id, email: string | null = 'anterior@example.test') => ({
-  data: { ok: true, factura_id: id, destinatario: email }, error: null,
+  data: { ok: true, version: 2, factura_id: id, destinatario: email === null ? null : confirmado(email) }, error: null,
 });
 const props = () => ({ open: true, factura, onOpenChange: vi.fn() });
 const enviar = () => screen.getByRole('button', { name: 'Enviar recordatorio' });
@@ -36,8 +37,8 @@ describe('confirmación del destinatario del recordatorio', () => {
     expect(mocks.invoke).toHaveBeenCalledWith('cxc-recordatorio-destinatario', { body: { factura_id: 'factura-a' } });
     fireEvent.change(screen.getByLabelText('Mensaje opcional'), { target: { value: '  Mensaje ficticio  ' } });
     fireEvent.click(enviar());
-    await waitFor(() => expect(mocks.invoke).toHaveBeenCalledWith('cxc-recordatorio-enviar', {
-      body: { factura_id: 'factura-a', nota: 'Mensaje ficticio', canal: 'email', contacto_email: 'anterior@example.test' },
+    await waitFor(() => expect(mocks.invoke).toHaveBeenCalledWith('cxc-recordatorio-confirmar', {
+      body: { factura_id: 'factura-a', nota: 'Mensaje ficticio', canal: 'email', confirmacion_version: 2, destinatario_confirmado: confirmado('anterior@example.test') },
     }));
     await waitFor(() => expect(p.onOpenChange).toHaveBeenCalledWith(false));
   });
@@ -79,8 +80,8 @@ describe('confirmación del destinatario del recordatorio', () => {
     expect(screen.queryByText('anterior@example.test', { exact: false })).not.toBeInTheDocument();
     mocks.invoke.mockResolvedValueOnce({ data: { ok: true, enviado_a: 'otro@example.test' }, error: null });
     fireEvent.click(enviar());
-    await waitFor(() => expect(mocks.invoke).toHaveBeenLastCalledWith('cxc-recordatorio-enviar', {
-      body: { factura_id: 'factura-b', nota: '', canal: 'email', contacto_email: 'otro@example.test' },
+    await waitFor(() => expect(mocks.invoke).toHaveBeenLastCalledWith('cxc-recordatorio-confirmar', {
+      body: { factura_id: 'factura-b', nota: '', canal: 'email', confirmacion_version: 2, destinatario_confirmado: confirmado('otro@example.test') },
     }));
   });
 
@@ -134,8 +135,8 @@ describe('confirmación del destinatario del recordatorio', () => {
     await waitFor(() => expect(mocks.notifyError).toHaveBeenCalled());
     expect(p.onOpenChange).not.toHaveBeenCalled();
     expect(mocks.invoke).toHaveBeenCalledTimes(2);
-    expect(mocks.invoke).toHaveBeenLastCalledWith('cxc-recordatorio-enviar', {
-      body: { factura_id: 'factura-a', nota: '', canal: 'email', contacto_email: 'anterior@example.test' },
+    expect(mocks.invoke).toHaveBeenLastCalledWith('cxc-recordatorio-confirmar', {
+      body: { factura_id: 'factura-a', nota: '', canal: 'email', confirmacion_version: 2, destinatario_confirmado: confirmado('anterior@example.test') },
     });
   });
 });

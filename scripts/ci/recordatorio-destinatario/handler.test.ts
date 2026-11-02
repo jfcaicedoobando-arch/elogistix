@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 import { createDestinatarioRecordatorioHandler } from '../../../supabase/functions/cxc-recordatorio-destinatario/handler.ts';
-import { resolveDestinatarioRecordatorio } from '../../../supabase/functions/_shared/recordatorioDestinatario.ts';
+import { consultarDestinatarioRecordatorio, validarDestinatarioConfirmado } from '../../../supabase/functions/_shared/recordatorioDestinatario.ts';
 import { FACTURA_ID, fakeClient } from './fixtures';
 
 const request = () => new Request('https://example.test/consulta', {
@@ -10,7 +10,7 @@ const request = () => new Request('https://example.test/consulta', {
 function setup(options: Parameters<typeof fakeClient>[0] = {}) {
   const db = fakeClient(options);
   const authorize = vi.fn(async () => true);
-  const resolve = vi.fn(resolveDestinatarioRecordatorio);
+  const resolve = vi.fn(consultarDestinatarioRecordatorio);
   const authenticate = vi.fn(async () => ({ userId: 'user-a', adminClient: db.client }));
   const handler = createDestinatarioRecordatorioHandler({
     authenticate, authorize, resolve, parseFacturaId: () => FACTURA_ID,
@@ -24,10 +24,11 @@ describe('consulta autorizada del destinatario del recordatorio', () => {
     const s = setup();
     const response = await s.handler(request());
     expect(response.status).toBe(200);
-    expect(await response.json()).toEqual({ ok: true, factura_id: FACTURA_ID, destinatario: 'anterior@example.test' });
+    expect(await response.json()).toEqual({ ok: true, version: 2, factura_id: FACTURA_ID,
+      destinatario: { organization_id: 'org-a', cliente_id: 'cliente-a', contacto_id: 'first', email: 'anterior@example.test' } });
     expect(s.authorize).toHaveBeenCalledWith(s.client, 'user-a', 'org-a');
-    expect(s.resolve).toHaveBeenCalledWith(s.client, 'cliente-a');
-    expect(s.from.mock.calls.map(([table]) => table)).toEqual(['facturas', 'contactos_cliente']);
+    expect(s.resolve).toHaveBeenCalledWith(s.client, { id: FACTURA_ID, organization_id: 'org-a', cliente_id: 'cliente-a' });
+    expect(s.from.mock.calls.map(([table]) => table)).toEqual(['facturas', 'clientes', 'contactos_cliente']);
     expect(s.writes).not.toHaveBeenCalled();
     expect(response.headers.get('cache-control')).toBe('no-store');
   });
@@ -67,9 +68,11 @@ describe('consulta autorizada del destinatario del recordatorio', () => {
 
   it('valida el destinatario explícito sin sustituirlo por el contacto por defecto', async () => {
     const { client } = fakeClient();
-    expect(await resolveDestinatarioRecordatorio(client, 'cliente-a', 'reciente@example.test'))
+    const factura = { id: FACTURA_ID, organization_id: 'org-a', cliente_id: 'cliente-a' };
+    const target = { organization_id: 'org-a', cliente_id: 'cliente-a', contacto_id: 'recent', email: 'reciente@example.test' };
+    expect(await validarDestinatarioConfirmado(client, factura, target))
       .toBe('reciente@example.test');
-    expect(await resolveDestinatarioRecordatorio(client, 'cliente-a', 'ajeno@example.test')).toBeNull();
-    expect(await resolveDestinatarioRecordatorio(client, 'cliente-a', 'ya-no-existe@example.test')).toBeNull();
+    await expect(validarDestinatarioConfirmado(client, factura, { ...target, email: 'ajeno@example.test' })).rejects.toThrow();
+    await expect(validarDestinatarioConfirmado(client, factura, { ...target, contacto_id: 'ya-no-existe' })).rejects.toThrow();
   });
 });

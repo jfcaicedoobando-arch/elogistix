@@ -1,42 +1,66 @@
 import assert from 'node:assert/strict';
+import type { DestinatarioConfirmado } from '../_shared/recordatorioDestinatario.ts';
 
 export const FACTURA_A = '11111111-1111-1111-1111-111111111111';
 export const FACTURA_B = '22222222-2222-2222-2222-222222222222';
 export type Row = Record<string, unknown>;
 export type Tables = Record<string, Row[]>;
 
+function selectRows(source: Row[], url: URL): Row[] {
+  let rows = source.map(row => ({ ...row }));
+  for (const [column, filter] of url.searchParams) {
+    if (filter.startsWith('eq.')) rows = rows.filter(row => String(row[column]) === filter.slice(3));
+    else if (filter.startsWith('in.(')) {
+      const values = filter.slice(4, -1).split(',');
+      rows = rows.filter(row => values.includes(String(row[column])));
+    } else if (filter === 'not.is.null') rows = rows.filter(row => row[column] !== null);
+    else if (filter === 'is.null') rows = rows.filter(row => row[column] === null);
+  }
+  const order = url.searchParams.get('order');
+  if (order) {
+    const [column, direction] = order.split('.');
+    rows.sort((a, b) => String(a[column]).localeCompare(String(b[column])) * (direction === 'desc' ? -1 : 1));
+  }
+  const limit = url.searchParams.get('limit');
+  return limit ? rows.slice(0, Number(limit)) : rows;
+}
+
 export function fixtureTables(): Tables {
   return {
     facturas: [
-      { id: FACTURA_A, organization_id: 'org-a', cliente_id: 'cliente-a', numero: 'QA-A', total: 100, moneda: 'MXN' },
-      { id: FACTURA_B, organization_id: 'org-b', cliente_id: 'cliente-b', numero: 'QA-B', total: 100, moneda: 'MXN' },
+      { id: FACTURA_A, organization_id: 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa', cliente_id: 'cccccccc-cccc-cccc-cccc-cccccccccccc', numero: 'QA-A', total: 100, moneda: 'MXN' },
+      { id: FACTURA_B, organization_id: 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb', cliente_id: 'dddddddd-dddd-dddd-dddd-dddddddddddd', numero: 'QA-B', total: 100, moneda: 'MXN' },
     ],
     clientes: [
-      { id: 'cliente-a', organization_id: 'org-a', email: 'principal-a@example.test', deleted_at: null },
-      { id: 'cliente-b', organization_id: 'org-b', email: 'principal-b@example.test', deleted_at: null },
+      { id: 'cccccccc-cccc-cccc-cccc-cccccccccccc', organization_id: 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa', email: 'principal-a@example.test', deleted_at: null },
+      { id: 'dddddddd-dddd-dddd-dddd-dddddddddddd', organization_id: 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb', email: 'principal-b@example.test', deleted_at: null },
     ],
     contactos_cliente: [
-      { id: 'contacto-a', cliente_id: 'cliente-a', organization_id: 'org-a', email: 'anterior-a@example.test', created_at: '2026-01-01', deleted_at: null },
-      { id: 'contacto-a2', cliente_id: 'cliente-a', organization_id: 'org-a', email: 'reciente-a@example.test', created_at: '2026-02-01', deleted_at: null },
-      { id: 'contacto-b', cliente_id: 'cliente-b', organization_id: 'org-b', email: 'ajeno-b@example.test', created_at: '2025-01-01', deleted_at: null },
+      { id: '33333333-3333-3333-3333-333333333333', cliente_id: 'cccccccc-cccc-cccc-cccc-cccccccccccc', organization_id: 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa', email: 'anterior-a@example.test', created_at: '2026-01-01', deleted_at: null },
+      { id: '44444444-4444-4444-4444-444444444444', cliente_id: 'cccccccc-cccc-cccc-cccc-cccccccccccc', organization_id: 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa', email: 'reciente-a@example.test', created_at: '2026-02-01', deleted_at: null },
+      { id: '55555555-5555-5555-5555-555555555555', cliente_id: 'dddddddd-dddd-dddd-dddd-dddddddddddd', organization_id: 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb', email: 'ajeno-b@example.test', created_at: '2025-01-01', deleted_at: null },
     ],
     user_roles: [],
-    organization_members: [{ id: 'm-a', user_id: 'user-a', organization_id: 'org-a', role: 'contador' }],
+    profiles: [{ id: 'user-a', nombre: 'Ejecutivo ficticio', email: 'ejecutivo@example.test', telefono: '' }],
+    organizations: [{ id: 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa', nombre: 'Empresa ficticia' }],
+    organization_members: [{ id: 'm-a', user_id: 'user-a', organization_id: 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa', role: 'contador' }],
   };
 }
 
-export function request(facturaId = FACTURA_A, contactoEmail?: string, token = 'token-a') {
+export function request(facturaId = FACTURA_A, confirmado?: DestinatarioConfirmado, token = 'token-a') {
   return new Request('https://example.test/functions/v1/recordatorio', {
     method: 'POST', headers: { Authorization: `Bearer ${token}`, Origin: 'https://librecarga.com' },
-    body: JSON.stringify({ factura_id: facturaId, contacto_email: contactoEmail }),
+    body: JSON.stringify({ factura_id: facturaId, confirmacion_version: 2, destinatario_confirmado: confirmado }),
   });
 }
 
-/** SDK y middleware reales, sólo transporte HTTP ficticio; prohíbe toda escritura. */
+/** SDK, middleware, plantilla y transporte reales, con HTTP local ficticio y sin red. */
 export async function withFixtureTransport(run: (state: {
   tables: Tables;
   tokens: Record<string, string | null>;
   calls: { path: string; method: string; query: string }[];
+  delivery: { enabled: boolean; status: number; historyStatus: number; emails: Row[]; history: Row[]; logs: Row[] };
+  controls: { beforeRead?: (table: string) => void };
   load: (relative: string) => Promise<(req: Request) => Promise<Response>>;
 }) => Promise<void>) {
   const originalFetch = globalThis.fetch;
@@ -56,12 +80,17 @@ export async function withFixtureTransport(run: (state: {
   const tables = fixtureTables();
   const tokens: Record<string, string | null> = { 'token-a': 'user-a', 'token-b': 'user-b' };
   const calls: { path: string; method: string; query: string }[] = [];
+  const delivery = { enabled: false, status: 200, historyStatus: 201,
+    emails: [] as Row[], history: [] as Row[], logs: [] as Row[] };
+  const controls: { beforeRead?: (table: string) => void } = {};
   const env: Record<string, string> = {
     SUPABASE_URL: 'https://h21-guard-fixture.example.test', SUPABASE_ANON_KEY: 'synthetic-anon',
     SUPABASE_SERVICE_ROLE_KEY: 'synthetic-service',
+    LOVABLE_API_KEY: 'synthetic-email-key',
+    LOVABLE_SEND_URL: 'https://h21-guard-fixture.example.test/fixture-mail',
   };
   Object.defineProperty(Deno, 'env', { ...originalEnv, value: { get: (key: string) => env[key] } });
-  globalThis.fetch = (input, init) => {
+  globalThis.fetch = async (input, init) => {
     const req = new Request(input, init);
     const url = new URL(req.url);
     assert.equal(url.origin, env.SUPABASE_URL, 'No se permite red externa');
@@ -75,30 +104,32 @@ export async function withFixtureTransport(run: (state: {
         : json({ message: 'Invalid token', code: 'bad_jwt' }, 401);
     }
     if (url.pathname === '/rest/v1/rpc/saldo_factura') return json(100);
+    if (delivery.enabled && req.method === 'POST') {
+      const body = await req.json();
+      if (url.pathname === '/fixture-mail') {
+        delivery.emails.push(body);
+        return delivery.status === 200 ? json({ id: 'offline-message' })
+          : json({ error: { message: 'Fallo ficticio de transporte', code: 'invalid_request' } }, delivery.status);
+      }
+      if (url.pathname === '/rest/v1/rpc/email_send_log_touch') {
+        delivery.logs.push(body); return json(true);
+      }
+      if (url.pathname === '/rest/v1/factura_recordatorios') {
+        delivery.history.push(body);
+        return delivery.historyStatus === 201 ? json([], 201)
+          : json({ message: 'Historial ficticio no disponible', code: 'fixture_failure' }, delivery.historyStatus);
+      }
+    }
     assert.equal(req.method, 'GET', 'No se permiten escrituras ni correos');
     assert.ok(url.pathname.startsWith('/rest/v1/'), 'Destino inesperado');
     const table = url.pathname.slice('/rest/v1/'.length);
     assert.ok(table in tables, `Tabla no prevista: ${table}`);
-    let rows = tables[table].map(row => ({ ...row }));
-    for (const [column, filter] of url.searchParams) {
-      if (filter.startsWith('eq.')) rows = rows.filter(row => String(row[column]) === filter.slice(3));
-      else if (filter.startsWith('in.(')) {
-        const values = filter.slice(4, -1).split(',');
-        rows = rows.filter(row => values.includes(String(row[column])));
-      } else if (filter === 'not.is.null') rows = rows.filter(row => row[column] !== null);
-      else if (filter === 'is.null') rows = rows.filter(row => row[column] === null);
-    }
-    const order = url.searchParams.get('order');
-    if (order) {
-      const [column, direction] = order.split('.');
-      rows.sort((a, b) => String(a[column]).localeCompare(String(b[column])) * (direction === 'desc' ? -1 : 1));
-    }
-    const limit = url.searchParams.get('limit');
-    if (limit) rows = rows.slice(0, Number(limit));
+    controls.beforeRead?.(table);
+    const rows = selectRows(tables[table], url);
     return json(req.headers.get('accept')?.includes('vnd.pgrst.object') ? rows[0] ?? null : rows);
   };
   try {
-    await run({ tables, tokens, calls, load: async (relative) => {
+    await run({ tables, tokens, calls, delivery, controls, load: async (relative) => {
       let handler: ((req: Request) => Promise<Response>) | undefined;
       Object.defineProperty(Deno, 'serve', { configurable: true, writable: true,
         enumerable: originalServe.enumerable, value: (fn: typeof handler) => { handler = fn; } });

@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { confirmado } from '@/features/cobranza/services/__tests__/recordatorioFixtures';
 import { createWrapper } from '@/test/utils/queryWrapper';
 import { DialogRecordatorioCobranza, type FacturaRecordatorio } from '../DialogRecordatorioCobranza';
 import { setAuthSnapshot, syncAuthSessionUser } from '@/lib/auth/authSnapshot';
@@ -15,7 +16,7 @@ const initial = { userId: 'user-a', email: null, organizationId: 'org-a', organi
 const factura: FacturaRecordatorio = {
   factura_id: 'factura-a', numero: 'QA-A', total: 100, saldo: 50, moneda: 'MXN', dias_vencido: 1,
 };
-const response = { data: { ok: true, factura_id: 'factura-a', destinatario: 'confirmado@example.test' }, error: null };
+const response = { data: { ok: true, version: 2, factura_id: 'factura-a', destinatario: confirmado('confirmado@example.test') }, error: null };
 const send = () => screen.getByRole('button', { name: 'Enviar recordatorio' });
 
 beforeEach(() => {
@@ -25,6 +26,20 @@ beforeEach(() => {
 });
 
 describe('revocación del destinatario confirmado por ámbito de sesión', () => {
+  it('un cambio de sesión tras pulsar enviar pero antes del transporte cancela la operación', async () => {
+    invoke.mockResolvedValueOnce(response).mockReturnValueOnce(new Promise(() => {}));
+    const onOpenChange = vi.fn();
+    render(<DialogRecordatorioCobranza open factura={factura} onOpenChange={onOpenChange} />, { wrapper: createWrapper() });
+    await waitFor(() => expect(send()).toBeEnabled());
+    await act(async () => {
+      fireEvent.click(send());
+      setAuthSnapshot({ ...initial, userId: 'user-b' });
+    });
+    await waitFor(() => expect(invoke).toHaveBeenCalledTimes(2));
+    expect(invoke.mock.calls.every(([name]) => name === 'cxc-recordatorio-destinatario')).toBe(true);
+    expect(onOpenChange).not.toHaveBeenCalled();
+  });
+
   it.each([
     ['usuario', () => setAuthSnapshot({ ...initial, userId: 'user-b' })],
     ['organización', () => setAuthSnapshot({ ...initial, organizationId: 'org-b' })],

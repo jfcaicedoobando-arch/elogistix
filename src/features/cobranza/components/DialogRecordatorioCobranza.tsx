@@ -3,14 +3,12 @@
  *
  * v13.313.1
  */
-import { useState } from "react";
 import { Mail } from "lucide-react";
 import { FormDialogShell } from "@/components/shared/FormDialogShell";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
-import { useRecordatorioCobranza } from "@/features/cobranza/hooks/useRecordatorioCobranza";
-import { useDestinatarioRecordatorio } from "@/features/cobranza/hooks/useDestinatarioRecordatorio";
+import { useDialogRecordatorioController } from "@/features/cobranza/hooks/useDialogRecordatorioController";
 import { DestinatarioRecordatorioAviso } from "./DestinatarioRecordatorioAviso";
 import { formatCurrency } from "@/lib/formatters";
 
@@ -32,27 +30,14 @@ interface Props {
 }
 
 export function DialogRecordatorioCobranza({ open, onOpenChange, factura }: Props) {
-  const [nota, setNota] = useState("");
-  const destinatario = useDestinatarioRecordatorio(factura?.factura_id, open);
-  const { mutate, isPending } = useRecordatorioCobranza({
-    onSuccess: () => {
-      setNota("");
-      onOpenChange(false);
-    },
-  });
+  const { nota, setNota, email, consultando, puedeEnviar, requiereRevision, errorMessage,
+    isPending, isError, handleEnviar, revisarDestinatario }
+    = useDialogRecordatorioController(factura?.factura_id, open, onOpenChange);
 
   if (!factura) return null;
 
   const vencida = factura.dias_vencido > 0;
   const saldo = factura.saldo ?? factura.total ?? 0;
-  const email = destinatario.data?.factura_id === factura.factura_id ? destinatario.data.destinatario : null;
-  const consultando = destinatario.isPending || destinatario.isFetching;
-  const puedeEnviar = open && !isPending && !consultando && !destinatario.isError && !!email;
-
-  const handleEnviar = () => {
-    if (!puedeEnviar || !email || !destinatario.isCurrentScope()) return;
-    mutate({ facturaId: factura.factura_id, nota: nota.trim(), contactoEmail: email });
-  };
 
   const footer = (
     <div className="flex justify-end gap-2">
@@ -82,8 +67,10 @@ export function DialogRecordatorioCobranza({ open, onOpenChange, factura }: Prop
         <DestinatarioRecordatorioAviso
           email={email}
           isLoading={consultando}
-          isError={destinatario.isError}
-          onRetry={() => { void destinatario.refetch(); }}
+          isError={isError}
+          errorMessage={errorMessage}
+          requiereRevision={requiereRevision}
+          onRetry={() => { void revisarDestinatario(); }}
           disabled={isPending}
         />
         <div className="space-y-2">

@@ -6,14 +6,16 @@ interface Props {
   isError: boolean;
   onRetry: () => void;
   disabled: boolean;
+  errorMessage?: string;
+  requiereRevision?: boolean;
 }
 
-export function DestinatarioRecordatorioAviso({ email, isLoading, isError, onRetry, disabled }: Props) {
+export function DestinatarioRecordatorioAviso({ email, isLoading, isError, onRetry, disabled, errorMessage, requiereRevision }: Props) {
   if (isLoading) return <p role="status" className="text-body-sm text-muted-foreground">Consultando destinatario…</p>;
   if (isError) return (
     <div role="alert" className="space-y-2 text-body-sm">
-      <p>No pudimos consultar el destinatario. Reintenta antes de enviar el recordatorio.</p>
-      <Button variant="outline" onClick={onRetry} disabled={disabled}>Reintentar consulta</Button>
+      <p>{errorMessage ?? 'No pudimos consultar el destinatario. Reintenta antes de enviar el recordatorio.'}</p>
+      <Button variant="outline" onClick={onRetry} disabled={disabled}>{requiereRevision ? 'Revisar destinatario' : 'Reintentar consulta'}</Button>
     </div>
   );
   if (!email) return (

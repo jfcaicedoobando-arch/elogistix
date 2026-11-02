@@ -49,7 +49,7 @@ export const facturacion = {
   contactosClienteEnvio: (clienteId?: string | null) => ['contactos-cliente-envio', clienteId] as const,
   destinatarioRecordatorio: (facturaId: string | undefined, userId: string | null,
     organizationId: string | null, generation: number) =>
-    ['facturacion', 'destinatario-recordatorio', organizationId, userId, generation, facturaId] as const,
+    ['facturacion', 'destinatario-recordatorio-v2', organizationId, userId, generation, facturaId] as const,
   /** Ola 14 · R5FE-02: claves del asistente de refacturación, antes inline en los hooks. */
   refacturacionCaso: (facturaId?: string | null) => ['refacturacion', 'caso', facturaId] as const,
   refacturacionFactura: (id?: string | null) => ['refacturacion', 'factura', id] as const,
