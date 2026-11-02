@@ -52,6 +52,13 @@ export function ProveedorDetalleHeader({
           {provisional && <Badge variant="destructive">Provisional · pendiente de Contabilidad</Badge>}
         </div>
       }
+      meta={provisional ? (
+        <div className="space-y-2 text-body-sm text-muted-foreground">
+          <p>Puede usarse para capturar tarifas. Mientras siga provisional, no se podrán registrar sus facturas ni pagos.</p>
+          <p>Antes de aprobar, Contabilidad debe completar en Editar: RFC / Tax ID, contacto, correo y al menos uno de estos datos bancarios: CLABE, SWIFT o IBAN.</p>
+          <p>Aprobar retira sólo el bloqueo por alta provisional; las facturas y los pagos conservan sus demás validaciones.</p>
+        </div>
+      ) : undefined}
       trailing={canEdit ? (
         <>
           {provisional && puedeAprobarProveedor(effectiveRole) && (

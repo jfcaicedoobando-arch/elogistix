@@ -14,12 +14,15 @@ export function ProveedoresProvisionalesAviso() {
       <AlertTitle>
         Provisionales por aprobar ({data.length})
       </AlertTitle>
-      <AlertDescription className="mt-2 flex flex-wrap gap-2">
-        {data.map((p) => (
-          <Link key={p.id} to={`/proveedores/${p.id}`}>
-            <Badge variant="outline" className="hover:bg-muted">{p.nombre}</Badge>
-          </Link>
-        ))}
+      <AlertDescription className="mt-2 space-y-2">
+        <p>Estos proveedores permiten capturar tarifas, pero sus facturas y pagos están bloqueados mientras sigan provisionales. Abre su ficha para revisar los datos que Contabilidad debe completar antes de aprobar.</p>
+        <div className="flex flex-wrap gap-2">
+          {data.map((p) => (
+            <Link key={p.id} to={`/proveedores/${p.id}`}>
+              <Badge variant="outline" className="hover:bg-muted">{p.nombre}</Badge>
+            </Link>
+          ))}
+        </div>
       </AlertDescription>
     </Alert>
   );

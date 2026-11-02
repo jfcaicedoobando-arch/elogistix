@@ -121,8 +121,9 @@ export default function TabPuertos() {
       <DoubleConfirmDeleteDialog
         open={!!puertoAEliminar}
         onOpenChange={(open) => { if (!open) setPuertoAEliminar(null); }}
-        entityName={puertoAEliminar ? `el puerto "${puertoAEliminar.name}"` : "este puerto"}
-        description="El puerto dejará de estar disponible en cotizaciones y embarques nuevos."
+        entityName={puertoAEliminar ? `el puerto "${puertoAEliminar.name}" del catálogo compartido` : "este puerto del catálogo compartido"}
+        description="Esta eliminación afecta al catálogo de todas las empresas. Para ocultarlo sólo en la empresa activa, usa Visible en mi empresa."
+        finalDescription={`Confirma la eliminación del puerto "${puertoAEliminar?.name ?? ""}" del catálogo compartido de todas las empresas.`}
         isPending={eliminarPuerto.isPending}
         onConfirm={() => {
           if (puertoAEliminar) eliminarPuerto.mutate(puertoAEliminar.id);
