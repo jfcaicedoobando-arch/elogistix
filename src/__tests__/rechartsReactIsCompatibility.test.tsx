@@ -88,16 +88,19 @@ describe("React-is compatibility through real Recharts SVG", () => {
   });
 
   it("preserves colors on Cells supplied directly by map", async () => {
+    expect.hasAssertions();
     const { container } = render(<CellDiscoveryChart fragment={false} />);
     await expectSvgColors(container, PIE_PATHS, CELL_COLORS);
   });
 
   it("preserves the same Cell colors inside a React Fragment", async () => {
+    expect.hasAssertions();
     const { container } = render(<CellDiscoveryChart fragment />);
     await expectSvgColors(container, PIE_PATHS, CELL_COLORS);
   });
 
   it("keeps the CRM funnel's stage colors with its real responsive BarChart", async () => {
+    expect.hasAssertions();
     const { container } = render(<CrmEmbudoChart embudo={[
       { etapa: "Primera", cantidad: 40 }, { etapa: "Segunda", cantidad: 25 }, { etapa: "Tercera", cantidad: 10 },
     ]} />);
@@ -105,6 +108,7 @@ describe("React-is compatibility through real Recharts SVG", () => {
   });
 
   it("keeps dynamic CRM report slice colors with its real responsive PieChart", async () => {
+    expect.hasAssertions();
     const { container } = render(<GraficaReporte tipo="pastel" medida="conteo" datos={[
       { etiqueta: "Primera", valor: 40 }, { etiqueta: "Segunda", valor: 60 },
     ]} />);
@@ -112,6 +116,7 @@ describe("React-is compatibility through real Recharts SVG", () => {
   });
 
   it("keeps all five purchase aging tones with only router context", async () => {
+    expect.hasAssertions();
     const { container } = render(<MemoryRouter><ComprasAgingChart totales={{
       vigente: 100, d_1_30: 80, d_31_60: 60, d_61_90: 40, mas_90: 20, total: 300,
     }} /></MemoryRouter>);
@@ -121,6 +126,7 @@ describe("React-is compatibility through real Recharts SVG", () => {
   });
 
   it("keeps the latest profitability month highlighted", async () => {
+    expect.hasAssertions();
     const { container } = render(<RentabilidadSection margen6m={[
       { mes: "2026-08", margen_pct: 12, utilidad_mxn: 120 },
       { mes: "2026-09", margen_pct: 18, utilidad_mxn: 180 },
@@ -132,6 +138,7 @@ describe("React-is compatibility through real Recharts SVG", () => {
   });
 
   it("keeps losses destructive and preserves the other top-report colors", async () => {
+    expect.hasAssertions();
     const { container } = render(<ReportesTopChart isLoading={false} data={[
       { name: "Pérdida", profit: -40 }, { name: "Primera", profit: 100 }, { name: "Segunda", profit: 60 },
     ]} />);
