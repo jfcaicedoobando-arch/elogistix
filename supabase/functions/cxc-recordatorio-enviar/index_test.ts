@@ -6,10 +6,9 @@
  *
  * Run: deno test --no-check --allow-read supabase/functions/cxc-recordatorio-enviar/index_test.ts
  */
-// @ts-nocheck — Deno runtime.
-import { assert, assertStringIncludes } from "https://deno.land/std@0.224.0/assert/mod.ts";
+import assert from 'node:assert/strict';
 
-const src = await Deno.readTextFile(new URL("./index.ts", import.meta.url));
+const src = await Deno.readTextFile(new URL("./handler.ts", import.meta.url));
 
 Deno.test("P2: el insert en factura_recordatorios ocurre DESPUÉS del envío", () => {
   const idxSend = src.indexOf("await sendRecordatorio(");
@@ -18,7 +17,7 @@ Deno.test("P2: el insert en factura_recordatorios ocurre DESPUÉS del envío", (
 });
 
 Deno.test("P2: message_id estable por ventana (sin Date.now() crudo)", () => {
-  assertStringIncludes(src, "messageIdRecordatorio(factura.id, canal)");
+  assert.ok(src.includes("messageIdRecordatorio(factura.id, canal)"));
   assert(!src.includes("recordatorio-${templateData.numero}-${Date.now()}"), "quedó idempotency por Date.now()");
 });
 
@@ -26,6 +25,6 @@ Deno.test("P2: fallo de registro tras envío exitoso no devuelve 500 (evita rein
   const idx = src.indexOf("if (insertError)");
   assert(idx > 0);
   const bloque = src.slice(idx, idx + 400);
-  assertStringIncludes(bloque, "console.error");
+  assert.ok(bloque.includes("console.error"));
   assert(!bloque.includes("throw"), "no debe lanzar tras un envío exitoso");
 });
