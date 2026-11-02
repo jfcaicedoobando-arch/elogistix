@@ -30,7 +30,7 @@ interface Grafo {
 }
 
 /** Grafo de imports relativos alcanzables desde `<raiz>/<funcion>/index.ts`. */
-export function recorrerGrafo(raiz: string, funcion: string): Grafo {
+function recorrerGrafo(raiz: string, funcion: string): Grafo {
   const entrada = path.join(raiz, funcion, "index.ts");
   const visitados = new Set<string>();
   const pendientes = [entrada];
