@@ -13,6 +13,7 @@ import { useClientPagedList } from "@/hooks/shared/useClientPagedList";
 import { useProformasListas, type FilaProformaLista } from "@/features/facturacion/hooks/useProformasListas";
 import { BandejaShell } from "./BandejaShell";
 import { COL_W } from "@/components/shared/dataTable/columnWidths";
+import { FilteredListEmptyState } from "@/components/empty/FilteredListEmptyState";
 
 const columns = defineColumns<FilaProformaLista>([
   {
@@ -85,12 +86,11 @@ export function BandejaProformasListas() {
             columns={columns}
             data={paged.rows}
             isLoading={paged.isLoading}
-            emptyState={
-              <div className="flex flex-col items-center justify-center gap-2 py-12 text-center text-body text-muted-foreground px-4">
-                <FileCheck2 className="h-8 w-8 opacity-40" strokeWidth={1.5} />
-                <span>Sin proformas aceptadas pendientes de convertir a CFDI.</span>
-              </div>
-            }
+            emptyState={<FilteredListEmptyState
+              filtered={paged.activeCount > 0} onClearFilters={paged.resetAll} icon={FileCheck2}
+              message="Sin proformas listas para crear un borrador de factura."
+              hint="Las proformas listas aparecerán aquí para continuar con la facturación."
+            />}
             rowKey={(r) => r.id}
             getRowHref={(r) => `/proformas/${r.id}`}
             getRowAriaLabel={(r) => `Abrir proforma ${r.numero || r.id}`}

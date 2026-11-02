@@ -1,11 +1,4 @@
-/**
- * Página de Antigüedad de Saldos (aging) de CxC.
- * Ruta: `/cobranza/aging`. Tabla por cliente + 5 KPIs por cubeta.
- *
- * v13.462.0 — Armonización de las tres vistas de antigüedad:
- * selector de moneda (MXN/USD/EUR no se mezclan), fecha de corte, drill-down
- * por cliente, KPIs y cubetas compartidas con CxP y el reporte contable.
- */
+/** Antigüedad CxC por cliente y moneda; la fecha reclasifica los saldos actuales. */
 import { useMemo, useState } from "react";
 import { LayoutList, Download, FileSpreadsheet } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
@@ -17,6 +10,7 @@ import { PageHeader } from "@/components/shared/PageHeader";
 import { PageContainer } from "@/components/shared/PageContainer";
 import { ResponsiveDataTable } from "@/components/shared/dataTable/ResponsiveDataTable";
 import { CargaGuard } from "@/components/shared/states/CargaGuard";
+import { FilteredListEmptyState } from "@/components/empty/FilteredListEmptyState";
 
 import { buildCxcAgingColumns } from "@/features/cxc/components/cxcAgingColumns";
 import { CxcAgingDrillDownDialog } from "@/features/cxc/components/CxcAgingDrillDownDialog";
@@ -176,8 +170,12 @@ export default function CxcAging() {
             pagination={paged.pagination}
             onRowClick={(r) => setDrilldown({ cli: r, cubeta: cubetaDesdeFiltro(paged.filters.cubeta) })}
             getRowAriaLabel={(r) => `Ver facturas con saldo de ${r.cliente_nombre}`}
-            emptyMessage="Sin saldos pendientes"
-            emptyHint="No hay facturas con saldo abierto."
+            emptyState={<FilteredListEmptyState
+              filtered={paged.activeCount > 0} onClearFilters={paged.resetAll}
+              message={`Sin saldos pendientes por cobrar en ${monedaActiva}.`}
+              hint="No hay facturas con saldo abierto en esta moneda."
+              filteredHint={`Prueba otra búsqueda o limpia los filtros para ver los saldos en ${monedaActiva}. Se conserva la fecha para antigüedad.`}
+            />}
             striped
             hoverable
             density={TABLE_DENSITY.embebida}
