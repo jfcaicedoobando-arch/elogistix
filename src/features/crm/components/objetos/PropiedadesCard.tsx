@@ -25,17 +25,22 @@ function mismoValor(a?: ValorCrm, b?: ValorCrm) {
     && JSON.stringify([...(a.opcion_ids ?? [])].sort()) === JSON.stringify([...(b?.opcion_ids ?? [])].sort());
 }
 
-function EstadoCampo({ id, estado, actualizando }: { id: string; estado?: EstadoAutoguardado; actualizando: boolean }) {
+function EstadoCampo({ id, estado, coincide, consultando }: {
+  id: string; estado?: EstadoAutoguardado; coincide: boolean; consultando: boolean;
+}) {
   const textos = {
     editando: "Cambios sin guardar",
     guardando: "Guardando…",
     guardado: "Guardado",
     error: "No se pudo guardar. Vuelve a intentarlo al salir del campo o al elegir una opción.",
   };
+  const confirmado = consultando
+    ? "Cambio guardado. Actualizando el campo…"
+    : "El cambio se guardó, pero la última consulta devuelve otro valor. Revisa el campo.";
   return (
     <p id={id} role={estado === "error" ? "alert" : "status"}
       className={`min-h-4 text-xs ${estado === "error" ? "text-destructive" : "text-muted-foreground"}`}>
-      {estado === "guardado" && actualizando ? "Cambio guardado. Actualizando el campo…" : estado ? textos[estado] : ""}
+      {estado === "guardado" && !coincide ? confirmado : estado ? textos[estado] : ""}
     </p>
   );
 }
@@ -80,7 +85,8 @@ function PropiedadesContenido({ objeto, registroId, canEdit }: Props) {
                   onGuardar={(valor) => void guardar.guardarCampo({ propiedadId: p.id, tipo: p.tipo, valor })}
                 />
                 <EstadoCampo id={`estado-prop-${p.id}`} estado={guardar.estados[p.id]}
-                  actualizando={!mismoValor(guardar.confirmados[p.id], valores.data?.find((v) => v.propiedad_id === p.id))} />
+                  coincide={mismoValor(guardar.confirmados[p.id], valores.data?.find((v) => v.propiedad_id === p.id))}
+                  consultando={valores.isFetching} />
               </div>
             ))}
           </div>

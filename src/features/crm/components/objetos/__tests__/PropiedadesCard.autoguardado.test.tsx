@@ -186,6 +186,24 @@ describe("feedback de autoguardado en fichas CRM con IO ficticio", () => {
     });
   });
 
+  it("avisa si la consulta termina con otro valor sin decir que sigue actualizando ni repetir la escritura", async () => {
+    await tarjeta();
+    const select = screen.getByRole("combobox", { name: "Fuente" });
+    let resolver!: (r: { data: ValorCrm[]; error: null }) => void;
+    io.refresco = () => new Promise((resolve) => { resolver = resolve; });
+    fireEvent.keyDown(select, { key: "ArrowDown" });
+    fireEvent.click(await screen.findByRole("option", { name: "Referido" }));
+    await waitFor(() => expect(io.writes).toHaveLength(1));
+    await completar(0);
+    expect(select).toHaveAccessibleDescription("Cambio guardado. Actualizando el campo…");
+    await act(async () => { resolver({ data: [{ ...io.valores[0], opcion_ids: ["Marítimo"] }], error: null }); });
+    await waitFor(() => {
+      expect(select).toHaveTextContent("Marítimo");
+      expect(select).toHaveAccessibleDescription("El cambio se guardó, pero la última consulta devuelve otro valor. Revisa el campo.");
+    });
+    expect(io.writes).toHaveLength(1);
+  });
+
   it("guarda multiselección al marcar y asocia feedback con su grupo", async () => {
     await tarjeta();
     fireEvent.click(screen.getByRole("checkbox", { name: "Marítimo" }));
