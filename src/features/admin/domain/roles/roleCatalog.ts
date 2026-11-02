@@ -44,7 +44,7 @@ export const ROLE_DESCRIPTIONS: Record<AppRole, string> = {
   contador: "Emite facturas a cliente, aprueba notas de crédito y supervisa el estado de resultados. Acceso financiero completo.",
   tesorero: "Ejecuta pagos a proveedores, conciliación bancaria y liquidación de comisiones. No emite facturas.",
   auxiliar_contable: "Captura facturas de proveedor (XML/PDF) y las concilia contra costos del embarque. No autoriza pagos.",
-  ejecutivo_cobranza: "Da seguimiento a cartera vencida, registra promesas de pago y captura cobros. No emite facturas ni autoriza pagos.",
+  ejecutivo_cobranza: "Da seguimiento a cartera vencida, envía recordatorios de cobro y captura cobros. No emite facturas ni autoriza pagos.",
   vendedor: "Arma cotizaciones de sus cuentas con costos y P&L preliminar, ve sus márgenes y hace handoff al Coordinador Logístico al confirmarse. Trabaja CRM completo.",
   customer_service: "Solo lectura operativa: embarques, tracking, clientes. Sin acceso a finanzas, configuración ni CRM.",
   cliente: "Acceso restringido al portal del cliente.",

@@ -79,7 +79,7 @@ export function BloqueVinculacion({
               <Command>
                 <CommandInput placeholder="Buscar por folio o cliente…" />
                 <CommandList>
-                  <CommandEmpty>Sin cotizaciones aceptadas</CommandEmpty>
+                  <CommandEmpty>No se encontraron cotizaciones aceptadas. Revisa la búsqueda o consulta al responsable comercial en Cotizaciones.</CommandEmpty>
                   <CommandGroup>
                     {cotizacionesAceptadas.map((cot) => (
                       <CommandItem
