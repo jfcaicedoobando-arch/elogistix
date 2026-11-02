@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { Plus, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -34,6 +34,7 @@ export function TabDocumentos({
 }: Props) {
   const [docToDelete, setDocToDelete] = useState<DocumentoEmbarqueRow | null>(null);
   const [docToReject, setDocToReject] = useState<DocumentoEmbarqueRow | null>(null);
+  const [replacement, setReplacement] = useState<{ documento: DocumentoEmbarqueRow; archivo: File } | null>(null);
   const [addOpen, setAddOpen] = useState(false);
   const { focus, registerRef, clearFocus } = useFocusSection();
   const filtrarFaltantes = focus === "faltantes";
@@ -43,9 +44,18 @@ export function TabDocumentos({
     return documentos.filter(d => (!d.archivo || d.archivo === '') && d.estado !== 'No aplica');
   }, [documentos, filtrarFaltantes]);
 
+  const requestUpload = useCallback((docId: string, archivo: File) => {
+    const documento = documentos.find(doc => doc.id === docId);
+    if (documento?.archivo) {
+      setReplacement({ documento, archivo });
+      return;
+    }
+    onUpload(docId, archivo);
+  }, [documentos, onUpload]);
+
   const columns = useDocumentoColumns({
     canEdit, uploadingDocId, downloadingDocId, deletingDocId, togglingNoAplicaDocId,
-    onUpload, onDownload, onDelete, onToggleNoAplica,
+    onUpload: requestUpload, onDownload, onDelete, onToggleNoAplica,
     onRequestDelete: setDocToDelete,
     rechazandoDocId,
     onRequestRechazo: onRechazar ? setDocToReject : undefined,
@@ -106,6 +116,23 @@ export function TabDocumentos({
           if (docToReject && onRechazar) await onRechazar(docToReject, motivo);
           setDocToReject(null);
         }}
+      />
+
+      <ConfirmActionDialog
+        open={!!replacement}
+        onOpenChange={(open) => { if (!open) setReplacement(null); }}
+        title="¿Reemplazar archivo?"
+        variant="destructive"
+        confirmLabel="Reemplazar archivo"
+        confirmDisabled={!canEdit}
+        onConfirm={() => {
+          if (!replacement || !canEdit) return;
+          setReplacement(null);
+          onUpload(replacement.documento.id, replacement.archivo);
+        }}
+        description={
+          <>Se reemplazará el archivo adjunto de “{replacement?.documento.nombre}” por “{replacement?.archivo.name}”. El archivo anterior dejará de estar disponible en este documento. Descárgalo antes de continuar si necesitas conservarlo.</>
+        }
       />
 
       <ConfirmActionDialog

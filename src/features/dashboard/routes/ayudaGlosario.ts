@@ -3,6 +3,7 @@
  * (Power of 10). Re-exportado por `ayudaContent.ts`.
  */
 import type { GlossaryTerm } from "./ayudaTypes";
+import { HUECO_ETA_BUFFER_DIAS } from "@/features/facturacion/services/huecoFacturacion/constants";
 import { TIPO_IVA_AYUDA_GENERAL, TIPO_IVA_OPCIONES } from "@/lib/financial/tipoIvaSat";
 
 export const GLOSARIO: GlossaryTerm[] = [
@@ -35,7 +36,7 @@ export const GLOSARIO: GlossaryTerm[] = [
 
   // Pricing y costeo
   { termino: "Tarifa vigente", definicion: "Tarifa negociada con un proveedor logístico y con fecha de validez. En las cotizaciones marítimas se buscan opciones compatibles con ruta, carga y contenedor cuando corresponde. No sustituye la revisión de los costos de cada modo de transporte." },
-  { termino: "Top 3 ranking", definicion: "Las 3 mejores tarifas para una ruta dada, ordenadas por costo total (flete + free time + frecuencia)." },
+  { termino: "Top 3 ranking", definicion: "Hasta 3 tarifas compatibles, ordenadas por costo comparable: flete base más recargos incluidos en el total. En empate, se priorizan más días de crédito y después más días libres de demoras. La frecuencia no cambia el orden." },
   { termino: "Override de tarifa", definicion: "Modificación manual de una tarifa sugerida en una cotización. Sólo el Gerente Comercial o admin pueden autorizarlo." },
   { termino: "Partner / Agente", definicion: "Proveedor de servicio logístico (naviera, agente en destino, transportista). Se administra en Directorio → Proveedores." },
   { termino: "Tarifa-first", definicion: "Cotización basada en una tarifa vigente cuando la operación lo permite. El asistente empieza por modo de transporte y datos generales; los costos se revisan o capturan en Costos y utilidad. No todas las modalidades requieren contenedor marítimo." },
@@ -54,7 +55,7 @@ export const GLOSARIO: GlossaryTerm[] = [
   { termino: "Estado de resultados", definicion: "Reporte de ventas − costos − gastos por periodo, con diferencia cambiaria. Vive en /profit." },
   { termino: "Diferencia cambiaria", definicion: "Ganancia o pérdida por variación del tipo de cambio entre la fecha de la venta y la fecha del cobro." },
   { termino: "Antigüedad de saldos (aging)", definicion: "Clasificación de saldos pendientes por tramos de vencimiento. Permite distinguir lo que aún no vence de lo vencido y priorizar la cobranza o el pago." },
-  { termino: "Hueco de facturación", definicion: "Embarques cuyo ETD pasó hace más de 5 días sin factura. El proveedor ya nos cobró pero al cliente no — riesgo de capital de trabajo." },
+  { termino: "Hueco de facturación", definicion: `Embarques con ETA vencida o dentro de los próximos ${HUECO_ETA_BUFFER_DIAS} días y ventas pendientes de emisión, incluidos conceptos añadidos después de una factura anterior. Consulta Compras para comprobar las facturas y pagos del proveedor.` },
   { termino: "Proforma", definicion: "Documento previo a la factura, sin valor fiscal. Su aprobación depende de la política del cliente. Crear un borrador de factura desde ella no equivale a timbrar un CFDI." },
   { termino: "Factura", definicion: "Comprobante fiscal con valor legal (en México requiere timbrado SAT con CFDI 4.0). Aquí se genera, timbra y conserva en PDF/XML." },
   { termino: "Liquidación", definicion: "Pago a proveedores (navieras, aduanas, fletes locales). En el ERP se marca cada costo directo como Pagado/Pendiente." },

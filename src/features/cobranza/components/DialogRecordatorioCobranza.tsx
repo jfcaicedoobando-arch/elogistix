@@ -3,13 +3,13 @@
  *
  * v13.313.1
  */
-import { useState } from "react";
 import { Mail } from "lucide-react";
 import { FormDialogShell } from "@/components/shared/FormDialogShell";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
-import { useRecordatorioCobranza } from "@/features/cobranza/hooks/useRecordatorioCobranza";
+import { useDialogRecordatorioController } from "@/features/cobranza/hooks/useDialogRecordatorioController";
+import { DestinatarioRecordatorioAviso } from "./DestinatarioRecordatorioAviso";
 import { formatCurrency } from "@/lib/formatters";
 
 export interface FacturaRecordatorio {
@@ -30,23 +30,14 @@ interface Props {
 }
 
 export function DialogRecordatorioCobranza({ open, onOpenChange, factura }: Props) {
-  const [nota, setNota] = useState("");
-  const { mutate, isPending } = useRecordatorioCobranza({
-    onSuccess: () => {
-      setNota("");
-      onOpenChange(false);
-    },
-  });
+  const { nota, setNota, email, consultando, puedeEnviar, requiereRevision, errorMessage,
+    isPending, isError, handleEnviar, revisarDestinatario }
+    = useDialogRecordatorioController(factura?.factura_id, open, onOpenChange);
 
   if (!factura) return null;
 
   const vencida = factura.dias_vencido > 0;
   const saldo = factura.saldo ?? factura.total ?? 0;
-  const puedeEnviar = !isPending;
-
-  const handleEnviar = () => {
-    mutate({ facturaId: factura.factura_id, nota: nota.trim() });
-  };
 
   const footer = (
     <div className="flex justify-end gap-2">
@@ -69,9 +60,19 @@ export function DialogRecordatorioCobranza({ open, onOpenChange, factura }: Prop
       title={`Recordatorio de pago — ${factura.numero}`}
       description={`${factura.cliente_nombre ?? "Cliente"} · Saldo ${formatCurrency(saldo, factura.moneda)} · ${vencida ? `Vencida ${factura.dias_vencido}d` : `Por vencer ${Math.abs(factura.dias_vencido)}d`}`}
       size="md"
+      busy={isPending}
       footer={footer}
     >
       <div className="space-y-4">
+        <DestinatarioRecordatorioAviso
+          email={email}
+          isLoading={consultando}
+          isError={isError}
+          errorMessage={errorMessage}
+          requiereRevision={requiereRevision}
+          onRetry={() => { void revisarDestinatario(); }}
+          disabled={isPending}
+        />
         <div className="space-y-2">
           <Label htmlFor="nota-recordatorio">Mensaje opcional</Label>
           <Textarea
@@ -82,9 +83,6 @@ export function DialogRecordatorioCobranza({ open, onOpenChange, factura }: Prop
             rows={4}
             maxLength={2000}
           />
-          <p className="text-xs text-muted-foreground">
-            El correo se enviará al contacto principal del cliente. Si no hay correo, se pedirá elegir uno.
-          </p>
         </div>
       </div>
     </FormDialogShell>
