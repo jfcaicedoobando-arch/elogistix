@@ -81,7 +81,7 @@ export function StepDatosGenerales({
             <AlertCircle className="h-4 w-4" />
             <AlertTitle>Cotización requerida</AlertTitle>
             <AlertDescription>
-              Tu rol requiere iniciar el embarque desde una cotización Aceptada. Selecciona una cotización en la sección inferior para continuar.
+              Para crear este embarque necesitas vincular una cotización Aceptada. Selecciónala en la sección inferior para continuar.
             </AlertDescription>
           </Alert>
         )}
