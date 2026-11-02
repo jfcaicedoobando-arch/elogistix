@@ -59,6 +59,8 @@ const CRITICAL = [
   "supabase/functions/facturapi-recuperar-claim/index.ts",
   // 13.315.0 — Recordatorios de cobro y estado de cuenta CxC
   "supabase/functions/cxc-recordatorio-enviar/index.ts",
+  "supabase/functions/cxc-recordatorio-destinatario/index.ts",
+  "supabase/functions/cxc-recordatorio-confirmar/index.ts",
   "supabase/functions/cxc-estado-cuenta-enviar/index.ts",
   // 13.430.1 — Mantenimiento CxP y verificación SAT en lote
   "supabase/functions/verificar-sat-lote/index.ts",

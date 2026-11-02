@@ -67,7 +67,7 @@ export function RevalidarTarifaModal({
       onOpenChange={onOpenChange}
       icon={ShieldCheck}
       title={title}
-      description={description}
+      description={esBloqueante ? description : `${description} Las opciones Crear embarque confirman la creación con esos costos.`}
       size="2xl"
       // Mientras se crea el embarque o se solicita la re-aprobación no se
       // permite cerrar con ESC / clic fuera / botón X (el shell marca aria-busy).
@@ -90,11 +90,11 @@ export function RevalidarTarifaModal({
             <>
               {reaprobada && onCrearConReaprobacion && (
                 <Button variant="outline" onClick={onCrearConReaprobacion} disabled={loading}>
-                  Crear con la re-aprobación de ventas
+                  Crear embarque con re-aprobación de ventas
                 </Button>
               )}
               <Button variant="outline" onClick={onMantener} disabled={loading}>
-                Mantener costos cotizados
+                Crear embarque con costos cotizados
               </Button>
               {onSustituir && (
                 <Button variant="outline" onClick={onSustituir} disabled={loading}>
@@ -103,7 +103,7 @@ export function RevalidarTarifaModal({
               )}
               <Button onClick={onRefrescar} disabled={loading}>
                 <RefreshCw className="h-4 w-4 mr-2" aria-hidden />
-                Refrescar desde tarifa vigente
+                Crear embarque con tarifa vigente
               </Button>
             </>
           )}
