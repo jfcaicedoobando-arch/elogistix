@@ -85,7 +85,7 @@ export function CrearEmbarqueConRevalidacion({ cotizacionId, numContenedores }: 
       <BuscarTarifaDialog
         open={buscarOpen}
         onOpenChange={setBuscarOpen}
-        selectLabel="Usar esta tarifa para el embarque"
+        selectLabel="Usar tarifa y crear embarque"
         initial={filtrosTarifa}
         onElegir={handleTarifaElegida}
       />

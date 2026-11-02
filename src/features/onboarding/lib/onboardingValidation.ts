@@ -33,7 +33,7 @@ export function validateOnboarding(input: {
       return {
         ok: false,
         message:
-          "Captura el RFC de la organización o marca “omitir datos fiscales” para hacerlo después.",
+          "Captura el RFC de la organización o pulsa Configurar después.",
       };
     }
     if (!RFC_REGEX.test(rfcClean)) {

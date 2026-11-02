@@ -63,8 +63,8 @@ export function ClienteDetalleDialogs(p: Props) {
         open={p.deleteDialogOpen}
         onOpenChange={p.closeDeleteDialog}
         entityName="este contacto"
-        description="Estás a punto de eliminar este contacto del cliente. ¿Deseas continuar?"
-        finalDescription="Esta acción no se puede deshacer. El contacto será eliminado permanentemente. ¿Confirmas la eliminación?"
+        description="El contacto dejará de aparecer en la ficha del cliente. ¿Deseas continuar?"
+        finalDescription="El contacto se enviará a la Papelera. Administración podrá restaurarlo mientras no se purgue definitivamente."
         onConfirm={p.confirmDelete}
         isPending={p.isContactDeleting}
       />

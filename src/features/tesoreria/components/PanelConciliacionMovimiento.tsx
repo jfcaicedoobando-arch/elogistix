@@ -35,7 +35,7 @@ function movimientoParaCandidatos(movimiento: MovimientoBBVA | null) {
 
 export function PanelConciliacionMovimiento({ movimiento, onClose, moneda = "MXN" }: Props) {
   const { canCapturarMovimientoBancario: puedeCapturar } = usePermissions();
-  const { data: sugerencias, isLoading } = useSugerirCandidatos(movimientoParaCandidatos(movimiento));
+  const { data: sugerencias, isLoading, isFetching, isError, refetch } = useSugerirCandidatos(movimientoParaCandidatos(movimiento));
   const { candidatos, truncado } = desempacarSugerencias(sugerencias);
   const conciliar = useConciliarPago();
   const ignorar = useIgnorarMovimiento();
@@ -108,7 +108,11 @@ export function PanelConciliacionMovimiento({ movimiento, onClose, moneda = "MXN
             onVerPago={() => setVerPago(true)} onDesconciliar={onDesconciliar}
             candidatos={candidatos}
             truncado={truncado}
+            hasData={sugerencias !== undefined}
             isLoading={isLoading}
+            isFetching={isFetching}
+            isError={isError}
+            onRetry={() => { void refetch(); }}
             isPending={conciliar.isPending}
             onConciliar={onConciliar}
             onIgnorar={() => setOpenIgnorar(true)}
