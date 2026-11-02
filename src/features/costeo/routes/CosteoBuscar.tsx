@@ -11,13 +11,9 @@ import { PortIdSelect, TipoContenedorSelect } from "@/features/catalogos";
 import { useTopTarifas } from "@/features/costeo/hooks/useTopTarifas";
 import { usePuertosDeRutas } from "@/features/costeo/hooks/usePuertosDeRutas";
 import { useDiagnosticoTarifas } from "@/features/costeo/hooks/useDiagnosticoTarifas";
-import { TarifasSinResultado } from "@/features/costeo/components/TarifasSinResultado";
-import { TarifaResultCard } from "@/features/costeo/components/TarifaResultCard";
-import { computeRankingMeta } from "@/features/costeo/utils/rankingLabels";
+import { CosteoBuscarResultados } from "@/features/costeo/components/CosteoBuscarResultados";
 import { PageContainer } from "@/components/shared/PageContainer";
 import { PageHeader } from "@/components/shared/PageHeader";
-import { LoadingState } from "@/components/shared/states/LoadingState";
-import { ErrorState } from "@/components/shared/states/ErrorState";
 import { EmptyStateInline } from "@/components/empty/EmptyStateInline";
 import { MapPinned } from "lucide-react";
 import { todayLocalISO } from "@/lib/date/today";
@@ -30,26 +26,33 @@ export default function CosteoBuscar() {
   const mismoPuerto = !!origen && origen === destino;
   const { origenes, destinos, sinRutas } = usePuertosDeRutas(origen);
 
-  // Al cambiar origen, el destino sólo se conserva si tiene ruta activa con él.
+  // Un refresco puede retirar la ruta seleccionada: no consultar ni mostrar
+  // resultados guardados para puertos que ya no son elegibles.
+  const origenVigente = origenes.some((puerto) => puerto.id === origen) ? origen : "";
+  const destinoVigente = destinos.some((puerto) => puerto.id === destino) ? destino : "";
+  const rutaCompleta = !!origenVigente && !!destinoVigente && !mismoPuerto;
+  const destinoConsulta = rutaCompleta ? destinoVigente : "";
+
+  // Al cambiar origen, se elige de nuevo un destino de sus rutas activas.
   const elegirOrigen = (id: string) => {
     setOrigen(id);
     if (id !== origen) setDestino("");
   };
 
   const { data: tarifas = [], isFetching, isError, isSuccess, refetch, tipoContenedorIds } = useTopTarifas({
-    puertoOrigenId: origen,
-    puertoDestinoId: mismoPuerto ? "" : destino,
+    puertoOrigenId: origenVigente,
+    puertoDestinoId: destinoConsulta,
     tipoContenedorId: tipo,
     fecha,
   });
 
   const { diagnostico } = useDiagnosticoTarifas({
-    puertoOrigenId: origen,
-    puertoDestinoId: mismoPuerto ? "" : destino,
+    puertoOrigenId: origenVigente,
+    puertoDestinoId: destinoConsulta,
     tipoContenedorIds,
     // Sólo diagnosticar una búsqueda que TERMINÓ bien y vino vacía; un fallo
     // de red/RPC no es "no hay tarifas".
-    enabled: !mismoPuerto && !isFetching && !isError && isSuccess && tarifas.length === 0,
+    enabled: rutaCompleta && !isFetching && !isError && isSuccess && tarifas.length === 0,
   });
 
   return (
@@ -60,10 +63,11 @@ export default function CosteoBuscar() {
       />
 
       {sinRutas && (
-        <Card className="p-4">
-          <p className="text-body text-muted-foreground" role="status">
-            Aún no hay rutas marítimas dadas de alta. Créalas en Costeo → Rutas.
-          </p>
+        <Card className="p-4" role="status">
+          <EmptyStateInline
+            icon={MapPinned}
+            message="Aún no hay rutas marítimas dadas de alta. Créalas en Costeo → Rutas."
+          />
         </Card>
       )}
       <Card className="p-4" role="search" aria-label="Filtros de búsqueda de tarifa">
@@ -72,7 +76,7 @@ export default function CosteoBuscar() {
             <Label htmlFor="buscar-origen">Puerto de origen</Label>
             <PortIdSelect
               id="buscar-origen"
-              value={origen}
+              value={origenVigente}
               onChange={elegirOrigen}
               puertos={origenes}
               disabled={sinRutas}
@@ -83,12 +87,12 @@ export default function CosteoBuscar() {
             <Label htmlFor="buscar-destino">Puerto de destino</Label>
             <PortIdSelect
               id="buscar-destino"
-              value={destino}
+              value={destinoConsulta}
               onChange={setDestino}
               puertos={destinos}
-              disabled={!origen}
-              excludeId={origen}
-              placeholder={origen ? "Buscar puerto de destino…" : "Elige primero el origen"}
+              disabled={!origenVigente}
+              excludeId={origenVigente}
+              placeholder={origenVigente ? "Buscar puerto de destino…" : "Elige primero el origen"}
             />
           </div>
 
@@ -103,47 +107,15 @@ export default function CosteoBuscar() {
         </div>
       </Card>
 
-      {mismoPuerto ? (
-        <Card className="p-4">
-          <p className="text-body text-destructive" role="alert">
-            El puerto de origen y el de destino deben ser distintos.
-          </p>
-        </Card>
-      ) : !origen || !destino || !tipo ? (
-        <Card>
-          <EmptyStateInline
-            icon={MapPinned}
-            message="Selecciona ruta y tipo de contenedor para ver las tarifas vigentes."
-          />
-        </Card>
-      ) : isFetching ? (
-        <Card>
-          <LoadingState label="Buscando tarifas…" />
-        </Card>
-      ) : isError ? (
-        <Card>
-          <ErrorState
-            title="No pudimos consultar las tarifas"
-            description="Hubo un problema de conexión o del servidor. Esto no significa que no existan tarifas para esta ruta."
-            onRetry={() => void refetch()}
-          />
-        </Card>
-      ) : tarifas.length === 0 ? (
-        <Card>
-          <TarifasSinResultado diagnostico={diagnostico} />
-        </Card>
-      ) : (
-        (() => {
-          const meta = computeRankingMeta(tarifas);
-          return (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {tarifas.map((t, i) => (
-                <TarifaResultCard key={t.id} row={t} rank={i + 1} meta={meta[i]} />
-              ))}
-            </div>
-          );
-        })()
-      )}
+      <CosteoBuscarResultados
+        mismoPuerto={mismoPuerto}
+        seleccionCompleta={rutaCompleta && !!tipo}
+        tarifas={tarifas}
+        isFetching={isFetching}
+        isError={isError}
+        diagnostico={diagnostico}
+        onRetry={() => void refetch()}
+      />
     </PageContainer>
   );
 }

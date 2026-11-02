@@ -2,7 +2,7 @@
  * Helpers puros: puertos de origen/destino que tienen una ruta marítima
  * activa dada de alta en Costeo → Rutas.
  */
-import type { PuertoOption } from "@/features/catalogos/components/PortIdSelect.helpers";
+import type { PuertoOption } from "@/features/catalogos";
 
 export interface RutaPuertos {
   puerto_origen_id: string;
