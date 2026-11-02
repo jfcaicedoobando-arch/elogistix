@@ -1,5 +1,5 @@
 /**
- * Bandeja "Por facturar" (hueco de facturación): embarques cerrados sin CFDI.
+ * Bandeja "Por facturar": embarques con ventas pendientes de emisión según ETA.
  * Estados unificados vía `<BandejaShell />`.
  */
 import { Download, PackageCheck } from "lucide-react";
@@ -15,6 +15,7 @@ import { BandejaShell } from "./BandejaShell";
 import { getDiasVencidosTone } from "@/lib/ui/uiMappings";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
+import { HUECO_ETA_BUFFER_DIAS } from "@/features/facturacion/services/huecoFacturacion/constants";
 
 export function BandejaPorFacturar() {
   const { filas, isLoading, isError, refetch, totalEmbarques, totalUsd, totalMxn, exportarCsv } =
@@ -44,7 +45,7 @@ export function BandejaPorFacturar() {
       <div className="flex items-center justify-between flex-wrap gap-2">
         <div className="text-body text-muted-foreground">
           <span className="font-semibold text-foreground tabular-nums">{totalEmbarques}</span>{" "}
-          embarque(s) sin CFDI (ETA vencida o dentro de 3 días) ·{" "}
+          embarque(s) con ventas pendientes de emisión (ETA vencida o dentro de {HUECO_ETA_BUFFER_DIAS} días) ·{" "}
           <span className="tabular-nums">{formatCurrency(totalUsd, "USD")}</span> ·{" "}
           <span className="tabular-nums">{formatCurrency(totalMxn, "MXN")}</span>
         </div>

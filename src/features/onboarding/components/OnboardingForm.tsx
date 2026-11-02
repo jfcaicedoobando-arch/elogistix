@@ -58,9 +58,7 @@ export function OnboardingForm({
       )}
 
       <div className="space-y-2">
-        <Label htmlFor="onb-rfc">
-          RFC <span className="text-xs font-normal text-muted-foreground">(opcional)</span>
-        </Label>
+        <Label htmlFor="onb-rfc">RFC de la organización</Label>
         <Input
           id="onb-rfc"
           value={rfc}
@@ -70,7 +68,7 @@ export function OnboardingForm({
           autoComplete="off"
         />
         <p className="text-xs text-muted-foreground">
-          12 caracteres para persona moral, 13 para persona física. Requerido para emitir facturas.
+          Para Guardar y continuar, captura el RFC: 12 caracteres para persona moral o 13 para persona física. Si prefieres hacerlo después, usa Configurar después.
         </p>
       </div>
 
@@ -122,7 +120,7 @@ export function OnboardingForm({
         </Button>
       </div>
       <p className="text-center text-xs text-muted-foreground">
-        Puedes explorar la app y completar tus datos fiscales cuando quieras.
+        Al pulsar Configurar después, continuarás sin guardar el RFC ni la dirección capturados. Puedes completarlos después en Configuración.
       </p>
     </form>
   );
