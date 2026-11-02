@@ -10,6 +10,7 @@ import { PropiedadesCard } from "../PropiedadesCard";
 const io = vi.hoisted(() => ({
   from: vi.fn(), notifyError: vi.fn(), valores: [] as ValorCrm[],
   refresco: null as null | (() => Promise<{ data: ValorCrm[]; error: null }>),
+  definiciones: null as null | (() => Promise<{ data: PropiedadCrm[]; error: null }>),
   writes: [] as Array<{ fila: ValorCrm & { registro_id: string }; resolve: (r: { error: Error | null }) => void }>,
 }));
 vi.mock("@/integrations/supabase/client", () => ({ supabase: { from: io.from } }));
@@ -50,10 +51,11 @@ beforeEach(() => {
   io.valores = [];
   io.writes = [];
   io.refresco = null;
+  io.definiciones = null;
   io.notifyError.mockClear();
   io.from.mockReset().mockImplementation((tabla: string) => ({
     select: () => ({ eq: () => ({
-      order: () => ({ limit: async () => ({ data: propiedades, error: null }) }),
+      order: () => ({ limit: async () => io.definiciones ? io.definiciones() : ({ data: propiedades, error: null }) }),
       limit: async () => io.refresco ? io.refresco() : ({ data: io.valores, error: null }),
     }) }),
     upsert: (fila: ValorCrm & { registro_id: string }) => {
@@ -199,8 +201,34 @@ describe("feedback de autoguardado en fichas CRM con IO ficticio", () => {
     await act(async () => { resolver({ data: [{ ...io.valores[0], opcion_ids: ["Marítimo"] }], error: null }); });
     await waitFor(() => {
       expect(select).toHaveTextContent("Marítimo");
-      expect(select).toHaveAccessibleDescription("El cambio se guardó, pero la última consulta devuelve otro valor. Revisa el campo.");
+      expect(select).toHaveAccessibleDescription("El cambio se guardó, pero el campo muestra otro valor. Revisa la captura antes de continuar.");
     });
+    expect(io.writes).toHaveLength(1);
+  });
+
+  it.each([false, true])("el estado refleja el texto local tras recuperar definiciones con valores lentos (edición posterior: %s)", async (editar) => {
+    io.valores = [{ propiedad_id: "nombre", valor_texto: "A", valor_numero: null, valor_fecha: null, opcion_ids: null }];
+    await tarjeta();
+    const input = screen.getByLabelText("Nombre comercial");
+    fireEvent.change(input, { target: { value: "B" } });
+    fireEvent.blur(input);
+    await waitFor(() => expect(io.writes).toHaveLength(1));
+    let resolver!: (r: { data: ValorCrm[]; error: null }) => void;
+    io.refresco = () => new Promise((resolve) => { resolver = resolve; });
+    io.definiciones = async () => { throw new Error("Definiciones interrumpidas"); };
+    await completar(0);
+    expect(await screen.findByRole("alert")).toHaveTextContent("Hay cambios guardados");
+    io.definiciones = null;
+    fireEvent.click(screen.getByRole("button", { name: "Reintentar" }));
+    const remontado = await screen.findByLabelText("Nombre comercial");
+    expect(remontado).toHaveValue("A");
+    if (editar) fireEvent.change(remontado, { target: { value: "Borrador nuevo" } });
+    await act(async () => { resolver({ data: io.valores, error: null }); });
+    await waitFor(() => expect(remontado).toHaveAccessibleDescription(editar
+      ? "Cambios sin guardar"
+      : "El cambio se guardó, pero el campo muestra otro valor. Revisa la captura antes de continuar."));
+    expect(remontado).toHaveValue(editar ? "Borrador nuevo" : "A");
+    expect(screen.queryByText("Guardado")).toBeNull();
     expect(io.writes).toHaveLength(1);
   });
 
