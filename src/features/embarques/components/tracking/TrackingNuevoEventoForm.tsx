@@ -6,9 +6,9 @@
  *      la naviera. Se actualiza `embarques.eta` (el ETA vigente que consume
  *      toda la app) y se registra un evento `Cambio de ETA` en la bitácora.
  *      El `eta_original` queda congelado por trigger de BD.
- *   2. **Marcar Llegada real** — única vía para avanzar el embarque de
- *      "En Tránsito" a "Llegada". Se actualiza `fecha_llegada_real` y
- *      `estado='Llegada'`, y se registra un evento `Arribo a Puerto`.
+ *   2. **Registrar llegada real** — registra `fecha_llegada_real` y el evento
+ *      `Arribo a Puerto`. Desde En Tránsito/En Proceso avanza a Arribo;
+ *      en etapas posteriores compatibles conserva el estado.
 
  *
  * Los otros tipos de evento históricos (Zarpe, Transbordo, Descarga, etc.)
@@ -83,9 +83,9 @@ export function TrackingNuevoEventoForm({
           >
             <MapPin className="h-5 w-5 text-primary shrink-0 mt-0.5" />
             <div>
-              <div className="font-medium text-body">Marcar Llegada real</div>
+              <div className="font-medium text-body">Registrar llegada real</div>
               <div className="text-body-sm text-muted-foreground mt-1">
-                Fecha en que llegó la carga. Avanza el embarque a "Llegada".
+                Registra cuándo llegó la carga. Desde En Tránsito o En Proceso pasa a Arribo; en etapas posteriores compatibles conserva su estado.
               </div>
             </div>
           </button>

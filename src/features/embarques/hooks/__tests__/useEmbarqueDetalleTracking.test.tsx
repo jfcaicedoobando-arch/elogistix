@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { renderHook, act } from "@testing-library/react";
+import { renderHook, act, waitFor } from "@testing-library/react";
 import { createWrapper } from "@/test/utils/queryWrapper";
 
 const { mockCreateLink, mockFetchLinks, mockDeleteLink } = vi.hoisted(() => ({
@@ -46,7 +46,7 @@ afterEach(() => {
 describe("useEmbarqueDetalleTracking", () => {
   it("sin liga vigente: crea una NUEVA con vigencia de 30 días y la copia", async () => {
     mockFetchLinks.mockResolvedValue([]);
-    mockCreateLink.mockResolvedValue({ id: "tl-1", embarque_id: "e-1", token: "tok-xyz", expires_at: "2026-09-30T00:00:00Z" });
+    mockCreateLink.mockResolvedValue({ id: "tl-1", embarque_id: "e-1", token: "tok-xyz", expires_at: "2030-01-15T18:20:45Z" });
     const { result } = renderHook(() => useEmbarqueDetalleTracking("e-1"), {
       wrapper: createWrapper(),
     });
@@ -64,6 +64,10 @@ describe("useEmbarqueDetalleTracking", () => {
     expect(clipboardWriteMock).toHaveBeenCalledWith(
       expect.stringContaining("tok-xyz"),
     );
+    expect(result.current.avisoEnlace).toEqual({ expiresAt: "2030-01-15T18:20:45Z" });
+    act(() => result.current.cerrarAvisoEnlace());
+    expect(result.current.avisoEnlace).toBeNull();
+    expect(mockDeleteLink).not.toHaveBeenCalled();
   });
 
   it("con liga vigente: la REUTILIZA y no crea otra", async () => {
@@ -74,10 +78,12 @@ describe("useEmbarqueDetalleTracking", () => {
       expires_at: new Date(Date.now() + 10 * 24 * 60 * 60 * 1000).toISOString(),
       created_at: new Date().toISOString(),
     };
-    mockFetchLinks.mockResolvedValue([vigente]);
+    const cacheada = { ...vigente, expires_at: new Date(Date.now() + 20 * 86400000).toISOString() };
+    mockFetchLinks.mockResolvedValueOnce([cacheada]).mockResolvedValue([vigente]);
     const { result } = renderHook(() => useEmbarqueDetalleTracking("e-1"), {
       wrapper: createWrapper(),
     });
+    await waitFor(() => expect(result.current.tieneLinkActivo).toBe(true));
     await act(async () => {
       await result.current.handleCompartirTracking();
     });
@@ -85,6 +91,10 @@ describe("useEmbarqueDetalleTracking", () => {
     expect(clipboardWriteMock).toHaveBeenCalledWith(
       expect.stringContaining("tok-vigente"),
     );
+    expect(result.current.avisoEnlace).toEqual({ expiresAt: vigente.expires_at });
+    await act(async () => { await result.current.handleRevocarTracking(); });
+    expect(mockDeleteLink).toHaveBeenCalledWith({ linkId: vigente.id, embarqueId: "e-1" });
+    expect(mockCreateLink).not.toHaveBeenCalled();
   });
 
   it("liga legacy eterna (expires_at NULL) NO se reutiliza: crea una nueva", async () => {
@@ -112,6 +122,61 @@ describe("useEmbarqueDetalleTracking", () => {
       await result.current.handleCompartirTracking();
     });
     expect(mockFetchLinks).not.toHaveBeenCalled();
+    expect(mockCreateLink).not.toHaveBeenCalled();
+  });
+
+  it("no afirma que se copió si el portapapeles falla después de crear", async () => {
+    mockFetchLinks.mockResolvedValue([]);
+    mockCreateLink.mockResolvedValue({ id: "tl-1", embarque_id: "e-1", token: "tok-xyz", expires_at: "2030-01-15T18:20:45Z" });
+    clipboardWriteMock.mockRejectedValue(new Error("Portapapeles bloqueado"));
+    const { result } = renderHook(() => useEmbarqueDetalleTracking("e-1"), { wrapper: createWrapper() });
+    await act(async () => { await result.current.handleCompartirTracking(); });
+    expect(mockCreateLink).toHaveBeenCalledTimes(1);
+    expect(result.current.avisoEnlace).toBeNull();
+    expect(mockDeleteLink).not.toHaveBeenCalled();
+  });
+
+  it("cierra el aviso al cambiar de embarque y no lo recupera al regresar", async () => {
+    mockFetchLinks.mockResolvedValue([]);
+    mockCreateLink.mockResolvedValue({ id: "tl-1", embarque_id: "e-1", token: "tok-xyz", expires_at: "2030-01-15T18:20:45Z" });
+    const { result, rerender } = renderHook(({ id }) => useEmbarqueDetalleTracking(id), {
+      initialProps: { id: "e-1" }, wrapper: createWrapper(),
+    });
+    await act(async () => { await result.current.handleCompartirTracking(); });
+    expect(result.current.avisoEnlace).not.toBeNull();
+    rerender({ id: "e-2" });
+    expect(result.current.avisoEnlace).toBeNull();
+    rerender({ id: "e-1" });
+    expect(result.current.avisoEnlace).toBeNull();
+  });
+
+  it.each(["lectura", "portapapeles"])("descarta el aviso del embarque anterior si cambia durante %s", async (fase) => {
+    const vigente = { id: "tl-1", embarque_id: "e-1", token: "tok-anterior", expires_at: "2030-01-15T18:20:45Z" };
+    mockFetchLinks.mockResolvedValue([vigente]);
+    const { result, rerender } = renderHook(({ id }) => useEmbarqueDetalleTracking(id), {
+      initialProps: { id: "e-1" }, wrapper: createWrapper(),
+    });
+    await waitFor(() => expect(result.current.tieneLinkActivo).toBe(true));
+    let liberarLectura!: (value: typeof vigente[]) => void;
+    let liberarCopia!: () => void;
+    const lectura = new Promise<typeof vigente[]>(resolve => { liberarLectura = resolve; });
+    const copia = new Promise<void>(resolve => { liberarCopia = resolve; });
+    if (fase === "lectura") mockFetchLinks.mockReturnValueOnce(lectura);
+    else clipboardWriteMock.mockReturnValueOnce(copia);
+    let operacion!: Promise<void>;
+    act(() => { operacion = result.current.handleCompartirTracking(); });
+    if (fase === "portapapeles") await waitFor(() => expect(clipboardWriteMock).toHaveBeenCalled());
+    rerender({ id: "e-2" });
+    await act(async () => {
+      liberarLectura([vigente]);
+      liberarCopia();
+      await operacion;
+    });
+    if (fase === "lectura") expect(clipboardWriteMock).not.toHaveBeenCalled();
+    else expect(clipboardWriteMock).toHaveBeenCalledWith(expect.stringContaining("tok-anterior"));
+    expect(result.current.avisoEnlace).toBeNull();
+    rerender({ id: "e-1" });
+    expect(result.current.avisoEnlace).toBeNull();
     expect(mockCreateLink).not.toHaveBeenCalled();
   });
 });
