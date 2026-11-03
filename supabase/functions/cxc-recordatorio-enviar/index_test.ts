@@ -8,7 +8,7 @@
  */
 import assert from 'node:assert/strict';
 
-const src = await Deno.readTextFile(new URL("./handler.ts", import.meta.url));
+const src = await Deno.readTextFile(new URL("../_shared/recordatorio/handler.ts", import.meta.url));
 
 Deno.test("P2: el insert en factura_recordatorios ocurre DESPUÉS del envío", () => {
   const idxSend = src.indexOf("await sendRecordatorio(");
