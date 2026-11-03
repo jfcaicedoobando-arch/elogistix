@@ -19,6 +19,7 @@ import { useAuth } from "@/lib/contexts/AuthContext";
 import { FinanceDashboard } from "@/features/dashboard/finance/FinanceDashboard";
 import { PageContainer } from "@/components/shared/PageContainer";
 import { CargaGuard } from "@/components/shared/states/CargaGuard";
+import { GuiaPrimerosPasos } from "@/features/dashboard/components/primeros-pasos/GuiaPrimerosPasos";
 
 const ROLES_FINANCIEROS = new Set([
   "contador",
@@ -29,10 +30,12 @@ const ROLES_FINANCIEROS = new Set([
 
 export default function Dashboard() {
   const { effectiveRole } = useAuth();
-  if (effectiveRole && ROLES_FINANCIEROS.has(effectiveRole)) {
-    return <FinanceDashboard />;
-  }
-  return <OperationalDashboard />;
+  return (
+    <div className="space-y-4 sm:space-y-6">
+      <GuiaPrimerosPasos />
+      {effectiveRole && ROLES_FINANCIEROS.has(effectiveRole) ? <FinanceDashboard /> : <OperationalDashboard />}
+    </div>
+  );
 }
 
 function OperationalDashboard() {

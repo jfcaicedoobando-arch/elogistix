@@ -12,6 +12,7 @@ import { Badge } from "@/components/ui/badge";
 import { EmptyStateInline } from "@/components/empty/EmptyStateInline";
 import { GLOSARIO, MODULOS } from "./ayudaContent";
 import { PageContainer } from "@/components/shared/PageContainer";
+import { GuiaPrimerosPasos } from "@/features/dashboard/components/primeros-pasos/GuiaPrimerosPasos";
 
 /**
  * Página /ayuda — onboarding y referencia rápida para el usuario final.
@@ -48,6 +49,7 @@ export default function Ayuda() {
         title="Centro de ayuda"
         description="Glosario, preguntas frecuentes y guías rápidas para usar el ERP en operación diaria."
       />
+      <GuiaPrimerosPasos ubicacion="ayuda" />
 
       <Card>
         <CardContent className="p-4">
