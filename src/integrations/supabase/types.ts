@@ -11711,6 +11711,10 @@ export type Database = {
         }
         Returns: Json
       }
+      diagnosticar_baja_embarque: {
+        Args: { p_embarque_id: string }
+        Returns: Json
+      }
       eliminar_embarque_completo: {
         Args: { p_embarque_id: string }
         Returns: undefined

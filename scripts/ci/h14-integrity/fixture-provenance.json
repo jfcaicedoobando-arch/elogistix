@@ -1,0 +1,19 @@
+{
+  "source_run": "b76cfcbabad044f8b1c26a4717292c25",
+  "baseline_commit": "e302a5a8baee295a5de83adc91265c87cbf45988",
+  "original_helpers_sha256": "e9b230e691831aef52c858f83e944191990146c6552a11d5a8f32379dc7ec262",
+  "original_fixtures_sha256": "aa2aebdec709de45f0c6d170cf9dc313cdaaec887b56d3698b0c25953524d2c0",
+  "new_helpers_sha256": "e0b336d8b98575cbd7f38781474123a39eeb14577a3241367201ee322a540dfe",
+  "originals_modified": false,
+  "changes": [
+    "combine temporary invoker-only fixture constructors",
+    "remove historical expected-by-code oracle and metadata",
+    "extend structural links and independent zero-value cases",
+    "include 31 financial and operative table snapshots",
+    "use per-entity fictitious budget category labels for multiple supplier invoices"
+  ],
+  "executed_by_author": false,
+  "executed_by_root_in_owned_local_lab": true,
+  "validated_local_run": "c04c9938f0684246819ed79383e07a97",
+  "sql_remote_executed": false
+}

@@ -7,6 +7,7 @@ const cfg={ssl:false}, clients=[]; let tests=[];
 const E=path.join(root,'.selector148-logs'); fs.mkdirSync(E,{recursive:true});
 const profile=require('./profile.cjs').createProfile();
 const save=require('./evidence.cjs').createEvidenceWriter(E,profile);
+const {verifyRestoreEvidence}=require('./restore-evidence.cjs');
 const installer=fs.readFileSync(path.join(root,state.installer),'utf8');
 require('./installer.cjs').verifyInstaller(installer);
 // Variants are derived only from the SHA-verified registered disabled body.
@@ -75,10 +76,9 @@ async function failedInstall(q,tag,expected){const before=await snap(q,tag+'-bef
 (async()=>{
 // Inspect the existing manifest guard's result; never discover/run it twice.
 const restoreLog=fs.readFileSync(path.join(process.env.SELECTOR148_GUARD_LOG_DIR || '/tmp/guards-logs','insurance_trash_restore.log'),'utf8');
-assert(!/\b(?:ERROR|FATAL|PANIC):/.test(restoreLog));
-assert.equal((restoreLog.match(/NOTICE:\s+PASS:/g)||[]).length,64,'restore successor must finish all 64 assertions');
+verifyRestoreEvidence(restoreLog);
 for(const label of ['gate is off before rejected wrong-tenant tombstone insert','wrong-tenant tombstone INSERT is rejected by the exact composite FK [23503/insurance_pf_same_org_fk]','rejected wrong-tenant tombstone insert preserves every existing policy row','rejected wrong-tenant tombstone insert leaves restore gate off'])assert(restoreLog.includes(label));
-pass('manifest restore successor completed 60 retained paths and four exact cross-tenant rejection/preservation assertions');
+pass('manifest restore successor completed 64 retained assertions and 23 H14 admission/atomicity assertions');
 admin=new Client({...cfg,database:'template1'});await admin.connect();clients.push(admin);
 const identity=(await admin.query("SELECT current_setting('server_version_num') version,current_setting('max_locks_per_transaction') max_locks")).rows[0];
 assert(Number(identity.version)>=170000&&Number(identity.version)<180000);assert.equal(identity.max_locks,'64');save('server-identity',identity);

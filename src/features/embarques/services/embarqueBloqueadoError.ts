@@ -1,38 +1,28 @@
-/**
- * EmbarqueBloqueadoError (Fase E, v13.301.74)
- *
- * La RPC `eliminar_embarque_completo` levanta `RAISE EXCEPTION` con:
- *   - MESSAGE: "LC_EMBARQUE_BLOQUEADO: el embarque <exp> tiene dependencias..."
- *   - HINT:    JSON con el desglose de motivos.
- *
- * Este módulo detecta ese contrato en el `PostgrestError` que devuelve
- * Supabase y lo re-emite como una excepción tipada para que la UI pueda
- * abrir `DialogEliminarEmbarqueBloqueado` sin regex ad-hoc.
- */
+/** Typed server rejection, including the versioned canonical diagnostic. */
+import { z } from "zod";
+import { parseDiagnosticoBajaEmbarque, type DiagnosticoBajaEmbarque } from "./diagnosticoBajaEmbarque";
 
-export interface MotivosBloqueoEmbarque {
-  facturas: number;
-  cxp: number;
-  pagos_cxc: number;
-  pagos_cxp: number;
-  notas_credito_cxc: number;
-  notas_credito_cxp: number;
-  comisiones_definitivas: number;
-  proformas: number;
-  cerrado: boolean;
-  expediente: string;
-}
+const count = z.number().int().nonnegative().max(Number.MAX_SAFE_INTEGER).default(0);
+const legacyMotivosSchema = z.object({
+  facturas: count,
+  cxp: count,
+  pagos_cxc: count,
+  pagos_cxp: count,
+  notas_credito_cxc: count,
+  notas_credito_cxp: count,
+  comisiones_definitivas: count,
+  proformas: count,
+  cerrado: z.boolean().default(false),
+  expediente: z.string(),
+}).strict();
 
+/** Legacy valid HINTs remain readable while the server is published first. */
+export type MotivosBloqueoEmbarque = z.infer<typeof legacyMotivosSchema> | DiagnosticoBajaEmbarque;
 
 export class EmbarqueBloqueadoError extends Error {
-  motivos: MotivosBloqueoEmbarque;
-
-  constructor(motivos: MotivosBloqueoEmbarque) {
-    super(
-      `La eliminación del embarque ${motivos.expediente} está bloqueada.`,
-    );
+  constructor(readonly motivos: MotivosBloqueoEmbarque) {
+    super(`La eliminación del embarque ${motivos.expediente} está bloqueada.`);
     this.name = "EmbarqueBloqueadoError";
-    this.motivos = motivos;
   }
 }
 
@@ -41,45 +31,25 @@ interface PostgrestLike {
   hint?: unknown;
 }
 
-function looksLikePostgrest(err: unknown): err is PostgrestLike {
-  return typeof err === "object" && err !== null && ("message" in err || "hint" in err);
-}
-
-function safeParseMotivos(raw: string): MotivosBloqueoEmbarque | null {
+function safeParseMotivos(raw: string, embarqueId?: string): MotivosBloqueoEmbarque | null {
   try {
-    const parsedUnknown: unknown = JSON.parse(raw);
-    if (typeof parsedUnknown !== "object" || parsedUnknown === null) return null;
-    const parsed = parsedUnknown as Partial<MotivosBloqueoEmbarque>;
-    if (typeof parsed.expediente !== "string") return null;
-    return {
-      facturas: Number(parsed.facturas) || 0,
-      cxp: Number(parsed.cxp) || 0,
-      pagos_cxc: Number(parsed.pagos_cxc) || 0,
-      pagos_cxp: Number(parsed.pagos_cxp) || 0,
-      notas_credito_cxc: Number(parsed.notas_credito_cxc) || 0,
-      notas_credito_cxp: Number(parsed.notas_credito_cxp) || 0,
-      comisiones_definitivas: Number(parsed.comisiones_definitivas) || 0,
-      proformas: Number(parsed.proformas) || 0,
-
-      cerrado: Boolean(parsed.cerrado),
-      expediente: parsed.expediente,
-    };
+    const data: unknown = JSON.parse(raw);
+    if (typeof data !== "object" || data === null || Array.isArray(data)) return null;
+    if ("version" in data) {
+      const result = parseDiagnosticoBajaEmbarque(data, embarqueId);
+      return result.bloqueado ? result : null;
+    }
+    return legacyMotivosSchema.parse(data);
   } catch {
     return null;
   }
 }
 
-/**
- * Detecta el marcador `LC_EMBARQUE_BLOQUEADO` en un error de Supabase y
- * devuelve una `EmbarqueBloqueadoError` tipada. Devuelve `null` si no
- * corresponde al contrato (el caller debe re-lanzar el error original).
- */
-export function toEmbarqueBloqueadoError(err: unknown): EmbarqueBloqueadoError | null {
-  if (!looksLikePostgrest(err)) return null;
-  const message = typeof err.message === "string" ? err.message : "";
-  if (!message.includes("LC_EMBARQUE_BLOQUEADO")) return null;
-  const hint = typeof err.hint === "string" ? err.hint : "";
-  const motivos = safeParseMotivos(hint);
-  if (!motivos) return null;
-  return new EmbarqueBloqueadoError(motivos);
+/** Invalid/incompatible HINTs keep the original error; never infer an empty result. */
+export function toEmbarqueBloqueadoError(err: unknown, embarqueId?: string): EmbarqueBloqueadoError | null {
+  if (typeof err !== "object" || err === null) return null;
+  const error = err as PostgrestLike;
+  if (typeof error.message !== "string" || !error.message.includes("LC_EMBARQUE_BLOQUEADO")) return null;
+  const motivos = typeof error.hint === "string" ? safeParseMotivos(error.hint, embarqueId) : null;
+  return motivos ? new EmbarqueBloqueadoError(motivos) : null;
 }

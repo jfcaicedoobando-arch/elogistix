@@ -152,4 +152,13 @@ describe("useEliminarEmbarque", () => {
       expect(spy).toHaveBeenCalledWith({ queryKey: queryKeys.cotizaciones.all });
     });
   });
+
+  it("transmite el scope de confirmación fijo hasta la frontera del service", async () => {
+    const scope = { organizationId: "org-original", isCurrent: () => true, assertCurrent: () => {} };
+    const { wrapper } = makeWrapper();
+    const { result } = renderHook(() => useEliminarEmbarque(scope), { wrapper });
+    await result.current.mutateAsync("emb-9");
+    expect(eliminarEmbarqueRpc).toHaveBeenLastCalledWith("emb-9", scope);
+  });
+
 });

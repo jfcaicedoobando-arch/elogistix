@@ -9,6 +9,7 @@ import {
 } from "@/features/auditoria/services/bitacora";
 import { logger } from "@/lib/observability/logger";
 import { reportCaughtError } from "@/lib/observability/reportCaughtError";
+import type { captureAuthOperationScope } from "@/lib/auth/authOperationScope";
 
 
 export type { EntradaBitacora };
@@ -37,6 +38,7 @@ export function useRegistrarActividad() {
       entidad_id?: string | null;
       entidad_nombre?: string;
       detalles?: Record<string, unknown>;
+      authScope?: ReturnType<typeof captureAuthOperationScope>;
     }) => {
       if (!user) return;
       await insertBitacora({
@@ -47,6 +49,7 @@ export function useRegistrarActividad() {
         entidadId: entrada.entidad_id ?? null,
         entidadNombre: entrada.entidad_nombre ?? "",
         detalles: entrada.detalles,
+        authScope: entrada.authScope,
       });
     },
     onSuccess: () => {

@@ -2,6 +2,8 @@
 -- Verifica: (1) se puede registrar un pago aunque el embarque esté Cerrado y el
 -- concepto de costo queda marcado como Pagado; (2) el candado sigue bloqueando
 -- la edición manual de importes en conceptos_costo de un embarque Cerrado.
+-- El fixture completo se revierte; su limpieza no puede borrar un cerrado.
+BEGIN;
 DO $$
 DECLARE
   v_org uuid;
@@ -14,6 +16,9 @@ DECLARE
   v_cc uuid;
   v_liq text;
   v_bloqueado boolean := false;
+  v_baja_bloqueada boolean := false;
+  v_mensaje text;
+  v_before jsonb;
 BEGIN
   INSERT INTO public.organizations (nombre, rfc, plan, activo)
   VALUES ('TEST PAGO CERRADO', 'TPC000000XX0', 'basico', true)
@@ -112,19 +117,37 @@ BEGIN
   END IF;
 
   ----------------------------------------------------------------------------
-  PERFORM set_config('app.bypass_cierre', 'on', true);
-  DELETE FROM public.pagos_proveedor WHERE organization_id = v_org;
-  DELETE FROM public.proveedor_facturas_conceptos WHERE organization_id = v_org;
-  DELETE FROM public.proveedor_facturas WHERE organization_id = v_org;
-  DELETE FROM public.conceptos_costo WHERE organization_id = v_org;
-  DELETE FROM public.proveedores WHERE organization_id = v_org;
-  DELETE FROM public.presupuesto_categorias WHERE organization_id = v_org;
-  DELETE FROM public.embarques WHERE organization_id = v_org;
-  DELETE FROM public.clientes WHERE organization_id = v_org;
-  DELETE FROM public.organization_members WHERE organization_id = v_org;
-  DELETE FROM public.organizations WHERE id = v_org;
-  DELETE FROM auth.users WHERE id = v_uid;
-  PERFORM set_config('app.bypass_cierre', 'off', true);
+  -- Caso 3: H14 impide borrar el cerrado y conserva toda la relación de pago.
+  -- No se habilita ningún bypass para limpiar el fixture: lo revierte ROLLBACK.
+  SELECT jsonb_build_object(
+    'embarque', (SELECT to_jsonb(e) FROM public.embarques e WHERE id = v_emb),
+    'concepto', (SELECT to_jsonb(c) FROM public.conceptos_costo c WHERE id = v_cc),
+    'factura', (SELECT to_jsonb(f) FROM public.proveedor_facturas f WHERE id = v_pf),
+    'vinculos', (SELECT jsonb_agg(to_jsonb(c) ORDER BY id)
+      FROM public.proveedor_facturas_conceptos c WHERE proveedor_factura_id = v_pf),
+    'pagos', (SELECT jsonb_agg(to_jsonb(p) ORDER BY id)
+      FROM public.pagos_proveedor p WHERE organization_id = v_org)) INTO v_before;
+  BEGIN
+    DELETE FROM public.embarques WHERE id = v_emb;
+  EXCEPTION WHEN check_violation THEN
+    GET STACKED DIAGNOSTICS v_mensaje = MESSAGE_TEXT;
+    IF position('LC_EMBARQUE_BLOQUEADO:' IN v_mensaje) <> 1 THEN RAISE; END IF;
+    v_baja_bloqueada := true;
+  END;
+  IF NOT v_baja_bloqueada THEN
+    RAISE EXCEPTION 'TEST FAIL: H14 permitió borrar el embarque Cerrado';
+  END IF;
+  IF jsonb_build_object(
+    'embarque', (SELECT to_jsonb(e) FROM public.embarques e WHERE id = v_emb),
+    'concepto', (SELECT to_jsonb(c) FROM public.conceptos_costo c WHERE id = v_cc),
+    'factura', (SELECT to_jsonb(f) FROM public.proveedor_facturas f WHERE id = v_pf),
+    'vinculos', (SELECT jsonb_agg(to_jsonb(c) ORDER BY id)
+      FROM public.proveedor_facturas_conceptos c WHERE proveedor_factura_id = v_pf),
+    'pagos', (SELECT jsonb_agg(to_jsonb(p) ORDER BY id)
+      FROM public.pagos_proveedor p WHERE organization_id = v_org)) IS DISTINCT FROM v_before THEN
+    RAISE EXCEPTION 'TEST FAIL: la baja rechazada alteró el embarque o su historia de pago';
+  END IF;
 
   RAISE NOTICE 'OK: pagos a proveedor permitidos en embarques Cerrados.';
 END $$;
+ROLLBACK;

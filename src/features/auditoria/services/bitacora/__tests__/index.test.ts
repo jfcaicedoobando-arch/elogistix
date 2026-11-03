@@ -5,10 +5,11 @@ const mock = await vi.hoisted(async () => {
 });
 vi.mock("@/integrations/supabase/client", () => ({ supabase: mock.supabase }));
 
-import { fetchBitacora } from "../index";
+import { fetchBitacora, insertBitacora } from "../index";
 
 beforeEach(() => {
   mock.tableCalls.length = 0;
+  mock.rpcCalls.length = 0;
 });
 
 describe("bitacora/index", () => {
@@ -56,5 +57,28 @@ describe("bitacora/index", () => {
     expect(String(call.opArgs[orIdx]?.[0])).toContain("created_at.lt.2026-02-01T00:00:00.000Z");
     expect(res.cursorSiguiente).toEqual({ createdAt: "2026-01-01T00:00:00.000Z", id: "b2" });
   });
+
+  it("suprime la actividad diferida de una baja cuando cambió su contexto", async () => {
+    await insertBitacora({ usuarioId: "actor-a", usuarioEmail: "actor@example.invalid", accion: "eliminar",
+      modulo: "embarques", entidadId: "embarque-a", detalles: { modo: "Aéreo" }, authScope: { isCurrent: () => false } });
+    expect(mock.rpcCalls).toEqual([]);
+  });
+
+  it("conserva el evento de UI de la baja y sus detalles en el contexto vigente", async () => {
+    mock.setRpcResult("registrar_bitacora", { data: null, error: null });
+    await insertBitacora({ usuarioId: "actor-a", usuarioEmail: "actor@example.invalid", accion: "eliminar",
+      modulo: "embarques", entidadId: "embarque-a", entidadNombre: "H14 Ficticio", detalles: { modo: "Aéreo" }, authScope: { isCurrent: () => true } });
+    expect(mock.rpcCalls).toContainEqual({ fn: "registrar_bitacora", args: { p_modulo: "embarques", p_accion: "eliminar",
+      p_entidad_id: "embarque-a", p_entidad_nombre: "H14 Ficticio", p_detalles: { modo: "Aéreo" } } });
+  });
+
+
+  it("fija la empresa capturada sólo cuando la baja proporciona un scope explícito", async () => {
+    mock.setRpcResult("registrar_bitacora", { data: null, error: null });
+    await insertBitacora({ usuarioId: "actor-sa", usuarioEmail: "actor@example.invalid", accion: "eliminar", modulo: "embarques",
+      entidadId: "embarque-a", authScope: { organizationId: "org-original", isCurrent: () => true } });
+    expect(mock.rpcCalls).toContainEqual({ fn: "registrar_bitacora", args: expect.objectContaining({ p_organization_id: "org-original" }) });
+  });
+
 });
 

@@ -182,16 +182,20 @@ BEGIN
   -- Only the consolidated result counts. Both independently persisted markers
   -- exclude originals, even when the result is rejected/cancelled/deleted.
   UPDATE public.proformas SET estado_proforma = 'cancelada' WHERE id = v_p;
-  INSERT INTO public.proformas(id, organization_id, embarque_id, cliente_id, cliente_nombre,
-    expediente, numero, estado_aprobacion, es_consolidada, proformas_origen)
-  VALUES (v_result, v_org, v_e, v_cli, 'Synthetic proforma client', 'ELPCA90001',
-    'TEST-PROFORMA-CONSOLIDATED', 'aprobada', true, ARRAY[v_original1, v_original2]);
+  -- Match consolidar_proformas: persist sources before the result references
+  -- their IDs, then point the legacy consolidada_en marker at that result.
+  -- No forward/missing reference is manufactured and no guard is disabled.
   INSERT INTO public.proformas(id, organization_id, embarque_id, cliente_id, cliente_nombre,
     expediente, numero, estado_aprobacion, estado_revision, consolidada_en, snapshot_emision)
   VALUES (v_original1, v_org, v_e, v_cli, 'Synthetic proforma client', 'ELPCA90001',
     'TEST-PROFORMA-ORIGINAL1', 'aprobada', 'consolidada', NULL, v_snapshot),
     (v_original2, v_org, v_e, v_cli, 'Synthetic proforma client', 'ELPCA90001',
-    'TEST-PROFORMA-ORIGINAL2', 'aprobada', 'pendiente', v_result, v_snapshot);
+    'TEST-PROFORMA-ORIGINAL2', 'aprobada', 'pendiente', NULL, v_snapshot);
+  INSERT INTO public.proformas(id, organization_id, embarque_id, cliente_id, cliente_nombre,
+    expediente, numero, estado_aprobacion, es_consolidada, proformas_origen)
+  VALUES (v_result, v_org, v_e, v_cli, 'Synthetic proforma client', 'ELPCA90001',
+    'TEST-PROFORMA-CONSOLIDATED', 'aprobada', true, ARRAY[v_original1, v_original2]);
+  UPDATE public.proformas SET consolidada_en = v_result WHERE id = v_original2;
   SELECT jsonb_agg(to_jsonb(p) ORDER BY id) INTO v_original_rows
   FROM public.proformas p WHERE id IN (v_original1, v_original2);
   PERFORM pg_temp.assert_proforma_flag(v_e, true, 'operative consolidated result');

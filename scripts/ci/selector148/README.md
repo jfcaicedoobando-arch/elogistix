@@ -53,8 +53,9 @@ UI change, or permission expansion.
 
 ## Coverage inventory
 
-- Main rollback manifest: unchanged financial guards, the verbatim 64-assertion
-  restore successor, and one disabled selector ACL/literal guard. The two Audit54
+- Main rollback manifest: unchanged financial guards, the reviewed restore
+  successor with 64 retained assertions plus 23 H14 admission/atomicity assertions,
+  and one disabled selector ACL/literal guard. The two Audit54
   `test_rls_*` manifest entries are removed because automatic RLS discovery already
   executes them. Starting reference: 213 manifest entries -> 212; 50 RLS suites.
 - Serial: exact triple parity and integrated security/pagination on two install
@@ -69,8 +70,17 @@ UI change, or permission expansion.
   controlled cancellation/statement timeout with the generic selector error.
 - Serial: 10,001 committed candidate rows in 41 batches under the normal 64-lock
   setting. Rejects partial/empty-success output; the assertion preserves all data.
-- The serial runner checks the existing restore guard log for all 64 notices and
-  the four exact rejected-INSERT/state-preservation labels. It does not rerun it.
+- The serial runner checks the existing restore guard log for the exact ordered
+  87 notices (64 retained plus 23 H14), including repeated historical-parent
+  messages, and the four exact rejected-INSERT/state-preservation labels. Any
+  missing, additional, duplicated or reordered notice, or SQL error, fails it.
+  It does not rerun the guard.
+
+`contract.json` pins the reviewed H14 restore successor's exact SQL hash and
+ordered notice profile. Its pre-H14 hash remains as provenance. This CI binding
+update changes only that guard's frozen-file pin; selector SQL, installer and
+activation pins, parity expectations, FKs, roles, migrations and permissions
+retain their existing bytes and checks.
 
 Security/parity tests and all DDL/committed tests are absent from the parallel
 manifest. No `test_rls_*` suite is registered twice. The selector is never added

@@ -29,6 +29,7 @@ on:
       - "scripts/ci/audit54-cxc-runtime-fixtures.py"
       - "scripts/ci/selector148/**"
       - "scripts/ci/cxp-approval/**"
+      - "scripts/ci/h14-integrity/**"
       - "scripts/ci/crm-prospecto-kam/**"
       - "scripts/ci/crm-cliente/**"
       - "scripts/ci/demo-guard/**"
@@ -61,6 +62,7 @@ on:
       - "scripts/ci/audit54-cxc-runtime-fixtures.py"
       - "scripts/ci/selector148/**"
       - "scripts/ci/cxp-approval/**"
+      - "scripts/ci/h14-integrity/**"
       - "scripts/ci/crm-prospecto-kam/**"
       - "scripts/ci/crm-cliente/**"
       - "scripts/ci/demo-guard/**"
@@ -133,6 +135,8 @@ jobs:
         with:
           # No se hace push/fetch autenticado.
           persist-credentials: false
+          # H14 reconstructs the pinned pre-forward base through Git blobs only.
+          fetch-depth: 0
 
       - name: Setup Node
         uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
@@ -296,6 +300,27 @@ jobs:
           if-no-files-found: warn
           retention-days: 7
 
+      - name: H14 financial history and races in owned strict replay clones
+        timeout-minutes: 15
+        # Rebuild pinned base + fictional history + reviewed forward, never seed postgres.
+        # Must precede broad CI grants and auth.users FK relaxation below.
+        env:
+          ISOLATED_QA_DB: '1'
+          H14_INTEGRITY_DISPOSABLE: '1'
+          H14_POSTGRES_SERVICE_ID: ${{ job.services.postgres.id }}
+        run: |
+          python3 -I scripts/ci/h14-integrity/test_static.py -v
+          python3 -I scripts/ci/h14-integrity/ci_run.py
+
+      - name: H14 strict regression evidence
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: h14-integrity-${{ github.run_attempt }}
+          path: reports/h14-integrity-ci/
+          if-no-files-found: warn
+          retention-days: 7
+
       - name: Post-migrate (drop auth.users FKs para CI)
         run: $PSQL -f supabase/tests/rls/_ci_post_migrate.sql
 
@@ -367,7 +392,9 @@ jobs:
 
       - name: Guards conductuales + schema invariants (manifiesto bloqueante)
         env:
-          JOBS: 4
+          # Historical fixtures isolate named triggers transactionally. Their
+          # ALTER TABLE locks share this database, so do not overlap sessions.
+          JOBS: 1
           LOG_DIR: /tmp/guards-logs
         run: bash scripts/ci/run-guards.sh
 

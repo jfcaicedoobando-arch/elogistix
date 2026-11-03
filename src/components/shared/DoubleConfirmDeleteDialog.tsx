@@ -22,7 +22,8 @@ interface DoubleConfirmDeleteDialogProps {
   children?: ReactNode;
   /** Etiqueta del botón destructivo final. La purga debe indicarse explícitamente. */
   confirmLabel?: string;
-  onConfirm: () => void | Promise<void>;
+  /** false keeps the dialog open after a recoverable server rejection. */
+  onConfirm: () => void | boolean | Promise<void | boolean>;
   isPending?: boolean;
 }
 
@@ -129,8 +130,8 @@ function DoubleConfirmInner({
                   // N-EC-02: si `onConfirm` falla, NO cerramos (el usuario
                   // puede reintentar o cancelar) y no dejamos rejection suelto.
                   try {
-                    await onConfirm();
-                    close();
+                    const confirmed = await onConfirm();
+                    if (confirmed !== false) close();
                   } catch (err) {
                     console.error("[DoubleConfirmDeleteDialog] onConfirm rechazó:", err);
                   }
@@ -155,8 +156,8 @@ function DoubleConfirmInner({
                 e.preventDefault();
                 // N-EC-02: mismo criterio que el Enter del input.
                 try {
-                  await onConfirm();
-                  close();
+                  const confirmed = await onConfirm();
+                  if (confirmed !== false) close();
                 } catch (err) {
                   console.error("[DoubleConfirmDeleteDialog] onConfirm rechazó:", err);
                 }

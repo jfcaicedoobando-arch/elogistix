@@ -1,4 +1,5 @@
--- Prepared CI successor: retain 60 supported restore assertions and add 4 explicit cross-tenant INSERT rejection/rollback assertions. Not yet executed in Actions.
+-- Retain the supported restore assertions and exact FK rejection; add H14
+-- admission/atomicity controls and rollback-only pre-H14 parent tombstones.
 -- Local candidate regression; real authenticated callers, rollback-only synthetic fixtures.
 BEGIN;
 \i supabase/tests/rls/_helpers.sql
@@ -19,6 +20,67 @@ BEGIN
   rejected:=true;
  END;
  PERFORM pg_temp.ok(rejected,label || ' [' || expected_state || ']');
+END $$;
+CREATE FUNCTION pg_temp.reject_h14_scope(stmt text,label text) RETURNS void LANGUAGE plpgsql AS $$
+DECLARE msg text; rejected boolean:=false;
+BEGIN
+ BEGIN EXECUTE stmt;
+ EXCEPTION WHEN insufficient_privilege THEN
+  GET STACKED DIAGNOSTICS msg=MESSAGE_TEXT;
+  IF msg IS DISTINCT FROM 'LC_FORBIDDEN: vínculo financiero fuera de la organización autorizada' THEN
+   RAISE EXCEPTION 'FIXTURE ERROR %: unexpected H14 scope message',label;
+  END IF;
+  rejected:=true;
+ END;
+ PERFORM pg_temp.ok(rejected,label || ' [42501/exact LC_FORBIDDEN]');
+END $$;
+CREATE FUNCTION pg_temp.insurance_h14_trigger_state(p_table regclass,p_trigger text,p_expected text)
+RETURNS void LANGUAGE plpgsql AS $$
+DECLARE actual text;
+BEGIN
+ SELECT tgenabled::text INTO actual FROM pg_trigger WHERE tgrelid=p_table AND tgname=p_trigger;
+ IF actual IS DISTINCT FROM p_expected THEN
+  RAISE EXCEPTION 'INSURANCE FIXTURE: trigger % on % expected %, got %',p_trigger,p_table,p_expected,actual;
+ END IF;
+END $$;
+-- Pre-H14 tombstones must remain testable without permitting new financial
+-- deletion. This owner-only, rollback-only seed first proves the real guard's
+-- atomic rejection, isolates only its named parent trigger, and restores it
+-- before any authenticated restore RPC. No FK or writer guard is disabled.
+CREATE FUNCTION pg_temp.insurance_historical_parent(ship uuid,stamp timestamptz,actor uuid)
+RETURNS void LANGUAGE plpgsql AS $$
+DECLARE before_header jsonb; before_children jsonb; after_children jsonb;
+BEGIN
+ IF current_user <> 'postgres' OR session_user <> 'postgres' THEN
+  RAISE EXCEPTION 'INSURANCE FIXTURE: historical parent seed requires owner in rollback-only transaction';
+ END IF;
+ PERFORM pg_temp.insurance_h14_trigger_state('public.embarques','a00_h14_guard_baja','O');
+ SELECT to_jsonb(e) INTO STRICT before_header FROM public.embarques e WHERE id=ship;
+ SELECT jsonb_build_object(
+  'costs',(SELECT jsonb_agg(to_jsonb(c) ORDER BY c.id) FROM public.conceptos_costo c WHERE embarque_id=ship),
+  'policies',(SELECT jsonb_agg(to_jsonb(s) ORDER BY s.id) FROM public.seguros_embarque s WHERE embarque_id=ship)
+ ) INTO before_children;
+ PERFORM pg_temp.reject(format('UPDATE public.embarques SET deleted_at=%L,deleted_by=%L WHERE id=%L',stamp,actor,ship),
+  '23514','LC_EMBARQUE_BLOQUEADO','H14 rejects a new financial parent tombstone before historical seeding');
+ PERFORM pg_temp.ok((SELECT to_jsonb(e) FROM public.embarques e WHERE id=ship)=before_header,
+  'H14 rejected parent tombstone preserves every header field');
+ SELECT jsonb_build_object(
+  'costs',(SELECT jsonb_agg(to_jsonb(c) ORDER BY c.id) FROM public.conceptos_costo c WHERE embarque_id=ship),
+  'policies',(SELECT jsonb_agg(to_jsonb(s) ORDER BY s.id) FROM public.seguros_embarque s WHERE embarque_id=ship)
+ ) INTO after_children;
+ PERFORM pg_temp.ok(after_children IS NOT DISTINCT FROM before_children,'H14 rejected parent tombstone preserves costs and policies');
+ ALTER TABLE public.embarques DISABLE TRIGGER a00_h14_guard_baja;
+ PERFORM pg_temp.insurance_h14_trigger_state('public.embarques','a00_h14_guard_baja','D');
+ UPDATE public.embarques SET deleted_at=stamp,deleted_by=actor WHERE id=ship;
+ ALTER TABLE public.embarques ENABLE TRIGGER a00_h14_guard_baja;
+ PERFORM pg_temp.insurance_h14_trigger_state('public.embarques','a00_h14_guard_baja','O');
+ PERFORM pg_temp.ok((SELECT deleted_at IS NOT DISTINCT FROM stamp FROM public.embarques WHERE id=ship),
+  'historical fixture parent has the exact deletion batch with H14 re-enabled');
+ SELECT jsonb_build_object(
+  'costs',(SELECT jsonb_agg(to_jsonb(c) ORDER BY c.id) FROM public.conceptos_costo c WHERE embarque_id=ship),
+  'policies',(SELECT jsonb_agg(to_jsonb(s) ORDER BY s.id) FROM public.seguros_embarque s WHERE embarque_id=ship)
+ ) INTO after_children;
+ PERFORM pg_temp.ok(after_children IS NOT DISTINCT FROM before_children,'historical parent seeding changes no costs or policies');
 END $$;
 CREATE FUNCTION pg_temp.policy(pf uuid,ship uuid,org uuid,premium numeric DEFAULT 100,deleted timestamptz DEFAULT NULL,number text DEFAULT 'Synthetic policy')
 RETURNS uuid LANGUAGE plpgsql AS $$
@@ -128,14 +190,25 @@ BEGIN
  SELECT to_jsonb(x) INTO before_row FROM seguros_embarque x WHERE id=s;
  PERFORM restore_record('seguros_embarque',s);
  PERFORM pg_temp.ok((SELECT deleted_at IS NULL AND proveedor_factura_id=pf AND (to_jsonb(x)-'deleted_at'-'updated_at')=(before_row-'deleted_at'-'updated_at') FROM seguros_embarque x WHERE id=s),'sufficiently covered linked policy restores with full identity preserved');
- -- A cross-tenant tombstone cannot now be seeded. Assert the rejection at
- -- INSERT instead of bypassing the FK to manufacture an invalid restore fixture.
+ -- A cross-tenant tombstone cannot now be seeded. Prove the real H14 rejection
+ -- first, then isolate that trigger only to retain the exact independent FK
+ -- assertion. No invalid row is manufactured and every guard is restored.
  PERFORM pg_temp.as_postgres();
  pf:=pg_temp.invoice(other_e,fx.org_b,other_prov,other_cat);
  SELECT jsonb_agg(to_jsonb(x) ORDER BY x.id) INTO before_row FROM seguros_embarque x;
  PERFORM pg_temp.ok(current_setting('app.papelera_restore',true)='off','gate is off before rejected wrong-tenant tombstone insert');
+ PERFORM pg_temp.insurance_h14_trigger_state('public.seguros_embarque','a00_h14_guard_escritura','O');
+ PERFORM pg_temp.reject_h14_scope(format('SELECT pg_temp.policy(%L,%L,%L,100,now())',pf,e,fx.org_a),
+  'H14 rejects wrong-tenant tombstone INSERT with all guards active');
+ PERFORM pg_temp.ok((SELECT jsonb_agg(to_jsonb(x) ORDER BY x.id) FROM seguros_embarque x)=before_row,
+  'H14 rejected wrong-tenant tombstone insert preserves every existing policy row');
+ PERFORM pg_temp.ok(current_setting('app.papelera_restore',true)='off','H14 rejected wrong-tenant tombstone insert leaves restore gate off');
+ ALTER TABLE public.seguros_embarque DISABLE TRIGGER a00_h14_guard_escritura;
+ PERFORM pg_temp.insurance_h14_trigger_state('public.seguros_embarque','a00_h14_guard_escritura','D');
  PERFORM pg_temp.reject_fk(format('SELECT pg_temp.policy(%L,%L,%L,100,now())',pf,e,fx.org_a),
   'insurance_pf_same_org_fk','wrong-tenant tombstone INSERT is rejected by the exact composite FK');
+ ALTER TABLE public.seguros_embarque ENABLE TRIGGER a00_h14_guard_escritura;
+ PERFORM pg_temp.insurance_h14_trigger_state('public.seguros_embarque','a00_h14_guard_escritura','O');
  PERFORM pg_temp.ok((SELECT jsonb_agg(to_jsonb(x) ORDER BY x.id) FROM seguros_embarque x)=before_row,
   'rejected wrong-tenant tombstone insert preserves every existing policy row');
  PERFORM pg_temp.ok(current_setting('app.papelera_restore',true)='off','rejected wrong-tenant tombstone insert leaves restore gate off');
@@ -156,7 +229,7 @@ BEGIN
   PERFORM pg_temp.ok((SELECT to_jsonb(x) FROM seguros_embarque x WHERE id=s)=before_row,'rejected '||failure_case||' restore preserves full policy state');
   PERFORM pg_temp.ok(current_setting('app.papelera_restore',true)='off','rejected '||failure_case||' restore rolls back gate');
  END LOOP;
- -- Invoke both the delegating RPC and direct unchanged cascade. Earlier restored concepts must roll back on policy failure.
+ -- Invoke both the delegating RPC and cascade. All restored rows must roll back on policy failure.
  FOREACH failure_case IN ARRAY ARRAY['rpc','direct'] LOOP
   PERFORM pg_temp.as_postgres(); e:=gen_random_uuid(); cc:=gen_random_uuid();
   INSERT INTO embarques(id,organization_id,cliente_id,expediente,modo,tipo,tipo_cambio_usd) VALUES(e,fx.org_a,cli,CASE WHEN failure_case='rpc' THEN 'DEMO-2026-158904' ELSE 'DEMO-2026-158905' END,'Marítimo','Importación',20);
@@ -167,15 +240,17 @@ BEGIN
   independent:=pg_temp.policy(NULL,e,fx.org_a,100,t-interval '1 day');
   UPDATE conceptos_costo SET deleted_at=t,deleted_by=fx.admin_a WHERE id=cc;
   UPDATE seguros_embarque SET deleted_at=t WHERE id=s;
-  UPDATE embarques SET deleted_at=t,deleted_by=fx.admin_a WHERE id=e;
+  PERFORM pg_temp.insurance_historical_parent(e,t,fx.admin_a);
   PERFORM pg_temp.as_user(fx.admin_a);
   IF failure_case='rpc' THEN PERFORM restore_record('embarques',e); ELSE PERFORM restaurar_embarque_cascade(e); END IF;
-  PERFORM pg_temp.ok((SELECT deleted_at IS NULL FROM embarques WHERE id=e) AND (SELECT deleted_at IS NULL FROM conceptos_costo WHERE id=cc) AND (SELECT deleted_at IS NULL FROM seguros_embarque WHERE id=s),'cascade '||failure_case||' restores concept then allocation-linked policy before header');
+  PERFORM pg_temp.ok((SELECT deleted_at IS NULL FROM embarques WHERE id=e) AND (SELECT deleted_at IS NULL FROM conceptos_costo WHERE id=cc) AND (SELECT deleted_at IS NULL FROM seguros_embarque WHERE id=s),'cascade '||failure_case||' restores header, concept and allocation-linked policy atomically');
   PERFORM pg_temp.ok((SELECT deleted_at=t-interval '1 day' FROM seguros_embarque WHERE id=independent),'cascade '||failure_case||' preserves independent deletion batch');
   PERFORM pg_temp.ok(current_setting('app.papelera_restore',true)='off','cascade '||failure_case||' closes gate');
   UPDATE conceptos_costo SET deleted_at=now() WHERE id=cc;
   UPDATE seguros_embarque SET deleted_at=now() WHERE id=s;
-  UPDATE embarques SET deleted_at=now() WHERE id=e;
+  PERFORM pg_temp.as_postgres();
+  PERFORM pg_temp.insurance_historical_parent(e,now(),fx.admin_a);
+  PERFORM pg_temp.as_user(fx.admin_a);
   UPDATE proveedor_facturas SET subtotal=60,total=69.6 WHERE id=pf;
   PERFORM pg_temp.as_postgres();
   SELECT jsonb_build_object('shipment',(SELECT to_jsonb(x) FROM embarques x WHERE id=e),'policy',(SELECT to_jsonb(x) FROM seguros_embarque x WHERE id=s),'concept',(SELECT to_jsonb(x) FROM conceptos_costo x WHERE id=cc)) INTO before_row;

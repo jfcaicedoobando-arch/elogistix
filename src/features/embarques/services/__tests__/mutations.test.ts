@@ -31,6 +31,9 @@ import {
 } from "@/features/embarques/services/mutations";
 
 
+import { setAuthSnapshot } from "@/lib/auth/authSnapshot";
+import { captureAuthOperationScope, syncActiveOrganizationScope } from "@/lib/auth/authOperationScope";
+
 const UUID = "11111111-1111-4111-8111-111111111111";
 const UUID2 = "22222222-2222-4222-8222-222222222222";
 
@@ -288,6 +291,39 @@ describe("eliminarEmbarqueRpc", () => {
       expect((err as InstanceType<typeof EmbarqueBloqueadoError>).motivos).toEqual(motivos);
     }
   });
+
+  it.each(["success", "blocked"])("descarta continuación tardía %s después de cambiar empresa", async (outcome) => {
+    const actor = (organizationId: string) => {
+      setAuthSnapshot({ userId: "actor-h14", organizationId, role: "admin_org", effectiveRole: "admin_org", email: null, organizationName: null });
+      syncActiveOrganizationScope({ userId: "actor-h14", organizationId });
+    };
+    actor("org-a");
+    let finish!: (value: { data: null; error: unknown }) => void;
+    const response = new Promise<{ data: null; error: unknown }>((resolve) => { finish = resolve; });
+    mock.supabase.rpc.mockImplementationOnce(() => response);
+    const request = eliminarEmbarqueRpc(UUID);
+    actor("org-b");
+    finish({ data: null, error: outcome === "blocked" ? { message: "LC_EMBARQUE_BLOQUEADO", hint: JSON.stringify({ expediente: "NO-MOSTRAR-A", cerrado: true }) } : null });
+    await expect(request).rejects.toThrow("Revisa el estado del embarque al volver al contexto original");
+    expect(registrarActividadMock).not.toHaveBeenCalled();
+  });
+
+
+  it("no construye la RPC cuando cambió el scope fijo antes de entrar al service", async () => {
+    const actor = (organizationId: string) => {
+      setAuthSnapshot({ userId: "actor-sa", organizationId: null, role: "super_admin", effectiveRole: "super_admin", email: null, organizationName: null });
+      syncActiveOrganizationScope({ userId: "actor-sa", organizationId });
+    };
+    actor("org-a");
+    const scopeFijo = captureAuthOperationScope();
+    actor("org-b");
+    mock.setRpcResult("eliminar_embarque_completo", { data: null, error: null });
+    const outcome = await eliminarEmbarqueRpc(UUID, scopeFijo).then(() => ({ ok: true }), (error: Error) => ({ error }));
+    expect(mock.rpcCalls).toEqual([]);
+    expect(outcome).toMatchObject({ error: expect.objectContaining({ message: expect.stringContaining("contexto original") }) });
+    expect(registrarActividadMock).not.toHaveBeenCalled();
+  });
+
 });
 
 describe("actualizarEstadoEmbarque", () => {

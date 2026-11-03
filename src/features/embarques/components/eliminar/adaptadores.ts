@@ -1,13 +1,10 @@
 import type { EmbarqueDependenciasFinancieras } from "@/features/embarques/hooks";
 import type { MotivosBloqueoEmbarque } from "@/features/embarques/services";
+import { diagnosticoADependencias } from "@/features/embarques/services/dependenciasFinancieras";
 
-/**
- * Adapta los motivos server-side (Fase E) al shape del hook client-side
- * `useEmbarqueDependenciasFinancieras` que consume el diálogo de bloqueo.
- * No conocemos los folios/ids desde el server (sólo counts + expediente),
- * así que se dejan las listas vacías y el componente muestra "… y N más".
- */
+/** Preserve every reason; legacy HINTs have counts but no invoice examples. */
 export function motivosADependencias(m: MotivosBloqueoEmbarque): EmbarqueDependenciasFinancieras {
+  if ("version" in m) return diagnosticoADependencias(m);
   return {
     tieneDependencias: true,
     cxc: { count: m.facturas, facturas: [] },
@@ -15,6 +12,7 @@ export function motivosADependencias(m: MotivosBloqueoEmbarque): EmbarqueDepende
     notasCredito: m.notas_credito_cxc + m.notas_credito_cxp,
     pagos: m.pagos_cxc + m.pagos_cxp,
     proformas: m.proformas,
+    comisionesDefinitivas: m.comisiones_definitivas,
+    cerrado: m.cerrado,
   };
 }
-

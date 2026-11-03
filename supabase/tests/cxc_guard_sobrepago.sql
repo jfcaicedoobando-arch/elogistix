@@ -228,13 +228,25 @@ END
 $caso6$ LANGUAGE plpgsql;
 
 -- -------------------------------------------------------------
--- CASO 7: tenant mismatch (pago de org2 contra factura de org1)
--- → 23514 LC_TENANT_MISMATCH
+-- CASO 7: tenant mismatch (pago de org2 contra factura de org1).
+-- Con todas las guardas activas H14 rechaza primero sin exponer el padre.
+-- Después se aísla sólo H14 para conservar el control exacto del guard legado.
 -- -------------------------------------------------------------
 DO $caso7$
 DECLARE
-  v_sqlstate text; v_msg text;
+  v_sqlstate text; v_msg text; v_before jsonb; v_after jsonb;
 BEGIN
+  IF current_user <> 'postgres' OR session_user <> 'postgres' THEN
+    RAISE EXCEPTION 'CASO 7 FIXTURE: aislamiento de guardas sólo como owner en esta transacción rollback-only';
+  END IF;
+  IF (SELECT tgenabled FROM pg_trigger WHERE tgrelid='public.pagos_factura'::regclass
+       AND tgname='a00_h14_guard_escritura') IS DISTINCT FROM 'O' THEN
+    RAISE EXCEPTION 'CASO 7 FIXTURE: H14 debe estar habilitado antes del control';
+  END IF;
+  SELECT jsonb_build_object(
+    'facturas', (SELECT jsonb_agg(to_jsonb(f) ORDER BY f.id) FROM public.facturas f),
+    'pagos', (SELECT jsonb_agg(to_jsonb(p) ORDER BY p.id) FROM public.pagos_factura p)
+  ) INTO v_before;
   BEGIN
     INSERT INTO public.pagos_factura
       (id, factura_id, organization_id, fecha_pago, monto, moneda, tipo_cambio,
@@ -248,6 +260,44 @@ BEGIN
   EXCEPTION WHEN OTHERS THEN
     GET STACKED DIAGNOSTICS v_sqlstate = RETURNED_SQLSTATE, v_msg = MESSAGE_TEXT;
   END;
+  IF v_sqlstate IS DISTINCT FROM '42501'
+     OR v_msg IS DISTINCT FROM 'LC_FORBIDDEN: vínculo financiero fuera de la organización autorizada' THEN
+    RAISE EXCEPTION 'CASO 7 FALLÓ: H14 esperaba rechazo exacto 42501/LC_FORBIDDEN, obtuvo % / %', v_sqlstate, v_msg;
+  END IF;
+  SELECT jsonb_build_object(
+    'facturas', (SELECT jsonb_agg(to_jsonb(f) ORDER BY f.id) FROM public.facturas f),
+    'pagos', (SELECT jsonb_agg(to_jsonb(p) ORDER BY p.id) FROM public.pagos_factura p)
+  ) INTO v_after;
+  IF v_after IS DISTINCT FROM v_before THEN
+    RAISE EXCEPTION 'CASO 7 FALLÓ: el rechazo H14 alteró pagos o facturas';
+  END IF;
+  RAISE NOTICE 'CASO 7 H14 OK: rechazo exacto 42501 sin cambios de filas';
+
+  -- No se desactiva ninguna FK ni otra guarda; el ROLLBACK final también
+  -- revierte este aislamiento del fixture si cualquier comprobación falla.
+  ALTER TABLE public.pagos_factura DISABLE TRIGGER a00_h14_guard_escritura;
+  IF (SELECT tgenabled FROM pg_trigger WHERE tgrelid='public.pagos_factura'::regclass
+       AND tgname='a00_h14_guard_escritura') IS DISTINCT FROM 'D' THEN
+    RAISE EXCEPTION 'CASO 7 FIXTURE: H14 no quedó aislado para probar el guard legado';
+  END IF;
+  BEGIN
+    INSERT INTO public.pagos_factura
+      (id, factura_id, organization_id, fecha_pago, monto, moneda, tipo_cambio,
+       monto_aplicado_factura, forma_pago, referencia, notas, diferencia_cambiaria_mxn)
+    VALUES
+      ('44444444-4444-4444-4444-444444444407',
+       '33333333-3333-3333-3333-333333333307',
+       '99999999-9999-9999-9999-999999999999',
+       CURRENT_DATE, 100, 'MXN', 1, 100, 'Transferencia', 'CXC-C7', '', 0);
+    v_sqlstate := '00000';
+  EXCEPTION WHEN OTHERS THEN
+    GET STACKED DIAGNOSTICS v_sqlstate = RETURNED_SQLSTATE, v_msg = MESSAGE_TEXT;
+  END;
+  ALTER TABLE public.pagos_factura ENABLE TRIGGER a00_h14_guard_escritura;
+  IF (SELECT tgenabled FROM pg_trigger WHERE tgrelid='public.pagos_factura'::regclass
+       AND tgname='a00_h14_guard_escritura') IS DISTINCT FROM 'O' THEN
+    RAISE EXCEPTION 'CASO 7 FIXTURE: H14 no quedó restaurado';
+  END IF;
   IF v_sqlstate = '00000' THEN
     RAISE EXCEPTION 'CASO 7 FALLÓ: pago cross-tenant fue aceptado';
   END IF;
@@ -257,6 +307,13 @@ BEGIN
   IF v_sqlstate <> '23514'
      OR (v_msg NOT LIKE 'LC_TENANT_MISMATCH%' AND v_msg NOT LIKE 'LC_ORG_CRUZADA%') THEN
     RAISE EXCEPTION 'CASO 7 FALLÓ: se esperaba LC_TENANT_MISMATCH/LC_ORG_CRUZADA con 23514, vino % / %', v_sqlstate, v_msg;
+  END IF;
+  SELECT jsonb_build_object(
+    'facturas', (SELECT jsonb_agg(to_jsonb(f) ORDER BY f.id) FROM public.facturas f),
+    'pagos', (SELECT jsonb_agg(to_jsonb(p) ORDER BY p.id) FROM public.pagos_factura p)
+  ) INTO v_after;
+  IF v_after IS DISTINCT FROM v_before THEN
+    RAISE EXCEPTION 'CASO 7 FALLÓ: el rechazo legado alteró pagos o facturas';
   END IF;
   RAISE NOTICE 'CASO 7 OK: tenant mismatch rechazado (%)', v_msg;
 END

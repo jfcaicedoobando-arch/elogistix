@@ -11,6 +11,7 @@ import {
 import type { ContenedorBorrador } from '@/features/embarques/types/contenedor';
 import { toEmbarqueBloqueadoError } from "./embarqueBloqueadoError";
 import { registrarBitacoraEmbarque } from "./bitacoraEmbarques";
+import { captureAuthOperationScope } from "@/lib/auth/authOperationScope";
 export { EmbarqueBloqueadoError, type MotivosBloqueoEmbarque } from "./embarqueBloqueadoError";
 
 // Schemas para validar los payloads de retorno de las RPCs.
@@ -139,7 +140,14 @@ export async function duplicarEmbarqueRpc(
   return resultado;
 }
 
-export async function eliminarEmbarqueRpc(embarqueId: string): Promise<void> {
+export async function eliminarEmbarqueRpc(embarqueId: string, expectedScope?: ReturnType<typeof captureAuthOperationScope>): Promise<void> {
+  const authScope = expectedScope ?? captureAuthOperationScope();
+  const comprobarContexto = () => {
+    if (!authScope.isCurrent()) throw new Error(
+      "Cambió la sesión o la organización durante la solicitud de eliminación. Revisa el estado del embarque al volver al contexto original.",
+    );
+  };
+  comprobarContexto();
   try {
     await run(
       Sentry.startSpan(
@@ -148,18 +156,22 @@ export async function eliminarEmbarqueRpc(embarqueId: string): Promise<void> {
       ),
     );
   } catch (err) {
+    comprobarContexto();
     // v13.301.74 (Fase E): la RPC ahora usa RAISE EXCEPTION con marcador
     // `LC_EMBARQUE_BLOQUEADO` + JSON de motivos en el HINT cuando el
     // embarque tiene facturas vivas, CxP, pagos, NCs, comisiones
     // definitivas o está cerrado. Convertimos ese error a un tipo propio
     // para que la UI pueda abrir el dialog de bloqueo con desglose real.
-    const bloqueado = toEmbarqueBloqueadoError(err);
+    const bloqueado = toEmbarqueBloqueadoError(err, embarqueId);
     if (bloqueado) throw bloqueado;
     throw err;
   }
+  comprobarContexto();
   await registrarBitacoraEmbarque({
     accion: "eliminar_embarque",
     entidadId: embarqueId,
+    organizationId: authScope.organizationId ?? undefined,
+    authScope,
   });
 }
 

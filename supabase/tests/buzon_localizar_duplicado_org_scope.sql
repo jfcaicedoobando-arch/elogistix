@@ -3,9 +3,12 @@
 --
 -- `buzon_localizar_duplicado` es SECURITY DEFINER y decide si expone
 -- factura_id/embarque_id/folio de un duplicado. Este test cubre una
--- relación CORRUPTA cross-org todavía representable (documento del buzón
+-- relación CORRUPTA cross-org histórica (documento del buzón
 -- de la Org A cuya `proveedor_factura_id` apunta a una factura de la Org B)
 -- y un duplicado fiscal válido de la Org B: ambos devuelven 'ajeno' sin ids.
+-- H14 impide nuevas relaciones corruptas: se comprueba su rechazo y se
+-- siembra sólo el histórico como owner, aislando su trigger durante el INSERT.
+-- El lector se prueba después de restaurar el trigger; todo se revierte.
 -- La nueva FK compuesta impide crear una factura A con embarque B. El
 -- antiguo caso de lectura de ese segundo salto imposible se sustituye por
 -- rechazo exacto del INSERT y preservación de todas las filas existentes.
@@ -18,6 +21,18 @@
 -- =============================================================
 
 BEGIN;
+
+CREATE FUNCTION pg_temp.buzon_h14_trigger_state(p_table regclass, p_expected text)
+RETURNS void LANGUAGE plpgsql AS $$
+DECLARE v_actual text;
+BEGIN
+  SELECT tgenabled::text INTO v_actual FROM pg_trigger
+  WHERE tgrelid=p_table AND tgname='a00_h14_guard_escritura';
+  IF v_actual IS DISTINCT FROM p_expected THEN
+    RAISE EXCEPTION 'BUZON FIXTURE: trigger H14 en % esperaba %, obtuvo %', p_table, p_expected, v_actual;
+  END IF;
+END;
+$$;
 
 DO $fixture$
 DECLARE
@@ -37,9 +52,13 @@ DECLARE
   v_estado_antes jsonb;
   v_estado_despues jsonb;
   v_sqlstate text;
+  v_msg text;
   v_constraint text;
   v_doc_a uuid;        -- documento del buzón de la org A que apunta a v_fact_b
 BEGIN
+  IF current_user <> 'postgres' OR session_user <> 'postgres' THEN
+    RAISE EXCEPTION 'BUZON FIXTURE: histórico corrupto sólo como owner en esta transacción rollback-only';
+  END IF;
   INSERT INTO public.organizations (id, nombre, rfc, plan, activo)
   VALUES (v_org_a, 'TEST ORG A DEDUPE', 'TOA000000XX0', 'basico', true)
   ON CONFLICT (id) DO NOTHING;
@@ -87,7 +106,44 @@ BEGIN
 
   -- CASO CORRUPTO #1: documento CAPTURADO del buzón de la org A cuyo
   -- `proveedor_factura_id` quedó apuntando (por corrupción/migración mala) a
-  -- la factura VIVA de la org B.
+  -- la factura VIVA de la org B. Primero se prueba que H14 ya no permite
+  -- crear esa relación, con rechazo exacto y sin modificar filas existentes.
+  PERFORM pg_temp.buzon_h14_trigger_state('public.embarque_facturas_entrantes', 'O');
+  SELECT jsonb_build_object(
+    'facturas', (SELECT jsonb_agg(to_jsonb(f) ORDER BY f.id) FROM public.proveedor_facturas f),
+    'embarques', (SELECT jsonb_agg(to_jsonb(e) ORDER BY e.id) FROM public.embarques e),
+    'documentos', (SELECT jsonb_agg(to_jsonb(d) ORDER BY d.id) FROM public.embarque_facturas_entrantes d)
+  ) INTO v_estado_antes;
+  BEGIN
+    INSERT INTO public.embarque_facturas_entrantes (
+      organization_id, embarque_id, archivo_path, archivo_hash, nombre_archivo,
+      estado, proveedor_factura_id, uuid_fiscal
+    ) VALUES (
+      v_org_a, v_emb_a, 'org-a/doc-corrupto.pdf', 'hashcorruptoab12', 'doc-corrupto.pdf',
+      'capturada', v_fact_b, 'UUID-CORRUPTO-0001'
+    );
+    v_sqlstate := '00000';
+  EXCEPTION WHEN OTHERS THEN
+    GET STACKED DIAGNOSTICS v_sqlstate = RETURNED_SQLSTATE, v_msg = MESSAGE_TEXT;
+  END;
+  IF v_sqlstate IS DISTINCT FROM '42501'
+     OR v_msg IS DISTINCT FROM 'LC_FORBIDDEN: vínculo financiero fuera de la organización autorizada' THEN
+    RAISE EXCEPTION 'BUZON H14: esperaba rechazo exacto 42501/LC_FORBIDDEN, obtuvo % / %', v_sqlstate, v_msg;
+  END IF;
+  SELECT jsonb_build_object(
+    'facturas', (SELECT jsonb_agg(to_jsonb(f) ORDER BY f.id) FROM public.proveedor_facturas f),
+    'embarques', (SELECT jsonb_agg(to_jsonb(e) ORDER BY e.id) FROM public.embarques e),
+    'documentos', (SELECT jsonb_agg(to_jsonb(d) ORDER BY d.id) FROM public.embarque_facturas_entrantes d)
+  ) INTO v_estado_despues;
+  IF v_estado_despues IS DISTINCT FROM v_estado_antes THEN
+    RAISE EXCEPTION 'BUZON H14: rechazo cross-org alteró facturas, embarques o documentos';
+  END IF;
+  RAISE NOTICE 'BUZON H14 OK: nuevo vínculo cross-org rechazado atómicamente';
+
+  -- Sólo se aísla el nuevo trigger para representar historia anterior a H14.
+  -- Las FK y el resto de triggers siguen activos; no es un camino de producto.
+  ALTER TABLE public.embarque_facturas_entrantes DISABLE TRIGGER a00_h14_guard_escritura;
+  PERFORM pg_temp.buzon_h14_trigger_state('public.embarque_facturas_entrantes', 'D');
   INSERT INTO public.embarque_facturas_entrantes (
     organization_id, embarque_id, archivo_path, archivo_hash, nombre_archivo,
     estado, proveedor_factura_id, uuid_fiscal
@@ -95,23 +151,61 @@ BEGIN
     v_org_a, v_emb_a, 'org-a/doc-corrupto.pdf', 'hashcorruptoab12', 'doc-corrupto.pdf',
     'capturada', v_fact_b, 'UUID-CORRUPTO-0001'
   ) RETURNING id INTO v_doc_a;
+  ALTER TABLE public.embarque_facturas_entrantes ENABLE TRIGGER a00_h14_guard_escritura;
+  PERFORM pg_temp.buzon_h14_trigger_state('public.embarque_facturas_entrantes', 'O');
 
   -- CASO RECHAZADO #2: la FK compuesta hace imposible una factura A con
   -- embarque B. Se conserva sólo el bypass del trigger de negocio que usaba
-  -- este fixture para alcanzar la FK; ninguna FK ni trigger RI se desactiva.
+  -- este fixture para alcanzar la FK, junto con el nuevo H14 que la precede;
+  -- ninguna FK ni trigger RI se desactiva.
   -- El bloque interior exige 23503 y el nombre exacto, no cualquier error.
   IF (SELECT tgenabled FROM pg_trigger
        WHERE tgrelid = 'public.proveedor_facturas'::regclass
          AND tgname = 'trg_org_proveedor_facturas_embarque_id') IS DISTINCT FROM 'O' THEN
     RAISE EXCEPTION 'CASO 2 FALLÓ: el trigger de organización debe estar habilitado antes del fixture';
   END IF;
+  PERFORM pg_temp.buzon_h14_trigger_state('public.proveedor_facturas', 'O');
   SELECT jsonb_build_object(
     'facturas', (SELECT jsonb_agg(to_jsonb(f) ORDER BY f.id) FROM public.proveedor_facturas f),
     'embarques', (SELECT jsonb_agg(to_jsonb(e) ORDER BY e.id) FROM public.embarques e),
     'documentos', (SELECT jsonb_agg(to_jsonb(d) ORDER BY d.id) FROM public.embarque_facturas_entrantes d)
   ) INTO v_estado_antes;
 
+  BEGIN
+    INSERT INTO public.proveedor_facturas (
+      organization_id, proveedor_id, folio_proveedor, categoria_presupuesto_id,
+      folio_interno, embarque_id, subtotal, total, moneda, estado, estado_aprobacion,
+      uuid_fiscal
+    ) VALUES (
+      v_org_a, v_prov_a, 'DEDUPE-A-02', v_cat_a, 'FP-DEDUPE-A2', v_emb_b, 500, 500,
+      'USD'::public.moneda, 'Vigente'::public.estado_proveedor_factura, 'aprobada',
+      'UUID-CORRUPTO-RECHAZADO-0002'
+    );
+    v_sqlstate := '00000';
+  EXCEPTION WHEN OTHERS THEN
+    GET STACKED DIAGNOSTICS v_sqlstate = RETURNED_SQLSTATE, v_msg = MESSAGE_TEXT;
+  END;
+  IF v_sqlstate IS DISTINCT FROM '42501'
+     OR v_msg IS DISTINCT FROM 'LC_FORBIDDEN: vínculo financiero fuera de la organización autorizada' THEN
+    RAISE EXCEPTION 'CASO 2 H14: esperaba rechazo exacto 42501/LC_FORBIDDEN, obtuvo % / %', v_sqlstate, v_msg;
+  END IF;
+  SELECT jsonb_build_object(
+    'facturas', (SELECT jsonb_agg(to_jsonb(f) ORDER BY f.id) FROM public.proveedor_facturas f),
+    'embarques', (SELECT jsonb_agg(to_jsonb(e) ORDER BY e.id) FROM public.embarques e),
+    'documentos', (SELECT jsonb_agg(to_jsonb(d) ORDER BY d.id) FROM public.embarque_facturas_entrantes d)
+  ) INTO v_estado_despues;
+  IF v_estado_despues IS DISTINCT FROM v_estado_antes THEN
+    RAISE EXCEPTION 'CASO 2 H14: rechazo alteró facturas, embarques o documentos';
+  END IF;
+  RAISE NOTICE 'CASO 2 H14 OK: factura cross-org rechazada atómicamente con guardas activas';
+
   ALTER TABLE public.proveedor_facturas DISABLE TRIGGER trg_org_proveedor_facturas_embarque_id;
+  IF (SELECT tgenabled FROM pg_trigger WHERE tgrelid='public.proveedor_facturas'::regclass
+       AND tgname='trg_org_proveedor_facturas_embarque_id') IS DISTINCT FROM 'D' THEN
+    RAISE EXCEPTION 'CASO 2 FIXTURE: el trigger de organización no quedó aislado';
+  END IF;
+  ALTER TABLE public.proveedor_facturas DISABLE TRIGGER a00_h14_guard_escritura;
+  PERFORM pg_temp.buzon_h14_trigger_state('public.proveedor_facturas', 'D');
   BEGIN
     INSERT INTO public.proveedor_facturas (
       organization_id, proveedor_id, folio_proveedor, categoria_presupuesto_id,
@@ -130,6 +224,8 @@ BEGIN
         v_sqlstate, v_constraint;
     END IF;
   END;
+  ALTER TABLE public.proveedor_facturas ENABLE TRIGGER a00_h14_guard_escritura;
+  PERFORM pg_temp.buzon_h14_trigger_state('public.proveedor_facturas', 'O');
   ALTER TABLE public.proveedor_facturas ENABLE TRIGGER trg_org_proveedor_facturas_embarque_id;
 
   IF (SELECT tgenabled FROM pg_trigger

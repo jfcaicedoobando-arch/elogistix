@@ -1,5 +1,14 @@
 # Changelog
 
+## [13.824.87] - Unreleased
+
+### Protección de la historia financiera al dar de baja embarques
+
+- Prepara una validación compartida del diagnóstico y la baja que reconoce vínculos financieros directos e indirectos, conserva sus documentos y muestra conteos completos con ejemplos separados, incluidos los motivos de cierre y comisiones.
+- Prepara protección de concurrencia entre la baja y la creación, restauración o traslado de vínculos, con rechazo seguro de contextos de autorización inválidos. Conserva las reglas documentales, los cálculos y el alcance de acceso existente.
+- Conserva la restauración oficial de historia financiera: coordina la operación con la baja, revalida permisos tras esperar y restaura primero el embarque; un fallo en sus hijos revierte la operación completa.
+- Incluye migración forward, espejos y regresiones aisladas. La presencia de esta entrega no acredita aplicación remota, despliegue ni fusión; el servidor debe actualizarse y verificarse antes de publicar su consumidor.
+
 ## [13.824.86] - 2026-10-26
 
 ### Reconciliación de refacturación y controles de CI

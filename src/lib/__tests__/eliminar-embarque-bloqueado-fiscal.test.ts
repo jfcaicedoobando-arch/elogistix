@@ -2,7 +2,7 @@
  * Guardrail Fase E (v13.301.74) — eliminar_embarque_completo con guardas fiscales.
  *
  * Blinda que la última migración que redefine `eliminar_embarque_completo`:
- *  - Recolecta los 6 contadores de dependencias fiscales + estado cerrado.
+ *  - Delega al recolector canónico vigente, con ocho motivos documentales y estado cerrado.
  *  - Levanta `RAISE EXCEPTION` con el marcador `LC_EMBARQUE_BLOQUEADO` y
  *    JSON de motivos en el `HINT`.
  *  - No borra `facturas` ni `proveedor_facturas` (nunca) — el cascade viejo
@@ -29,9 +29,9 @@ function migracionesOrdenadas(): string[] {
  * de un SQL, respetando la etiqueta de dollar-quoting con la que abre el cuerpo
  * (`$$` o `$function$`) para no derramarse hacia funciones vecinas.
  */
-function extraerDefiniciones(sql: string): string[] {
+function extraerDefiniciones(sql: string, fn: string): string[] {
   const out: string[] = [];
-  const inicio = new RegExp(`CREATE OR REPLACE FUNCTION ${FN.replace(".", "\\.")}`, "g");
+  const inicio = new RegExp(`CREATE OR REPLACE FUNCTION ${fn.replaceAll(".", "\\.")}\\s*\\(`, "g");
   for (const m of sql.matchAll(inicio)) {
     const desde = m.index ?? 0;
     const tag = /AS\s+(\$[A-Za-z_]*\$)/.exec(sql.slice(desde));
@@ -50,12 +50,12 @@ function extraerDefiniciones(sql: string): string[] {
  * perdido una guarda (bastaba con que una migración antigua la tuviera). Ahora
  * se lee sólo la ÚLTIMA definición — la vigente en la base de datos.
  */
-function readDefinicionVigente(): string {
+function readDefinicionVigente(fn: string): string {
   for (const f of migracionesOrdenadas().reverse()) {
-    const defs = extraerDefiniciones(fs.readFileSync(path.join(MIGRATIONS_DIR, f), "utf8"));
+    const defs = extraerDefiniciones(fs.readFileSync(path.join(MIGRATIONS_DIR, f), "utf8"), fn);
     if (defs.length > 0) return defs[defs.length - 1];
   }
-  throw new Error(`No se encontró FUNCTION ${FN}`);
+  throw new Error(`No se encontró FUNCTION ${fn}`);
 }
 
 /** Los GRANT sobreviven a `CREATE OR REPLACE`, así que se buscan en todo el historial. */
@@ -68,32 +68,43 @@ function readGrants(): string {
 }
 
 describe("Fase E — eliminar_embarque_completo bloquea por dependencias fiscales", () => {
-  const sql = readDefinicionVigente();
+  const sql = readDefinicionVigente(FN);
+  const collector = readDefinicionVigente("public._h14_dependencias_baja_embarque");
   const grants = readGrants();
 
-  it("recolecta los 6 contadores + estado cerrado antes de decidir", () => {
-    // facturas vivas (excluye Cancelada|Sustituida). Tolerante a espacios.
+  it("delega los ocho motivos al recolector vigente antes de decidir o modificar hijos", () => {
     expect(sql).toMatch(
-      /FROM public\.facturas[\s\S]{0,200}estado NOT IN \('Cancelada',\s*'Sustituida'\)/,
+      /v_motivos\s*:=\s*public\._h14_dependencias_baja_embarque\(p_embarque_id,\s*v_org,/,
+    );
+    expect(sql).toMatch(/IF \(v_motivos->>'bloqueado'\)::boolean IS TRUE THEN/);
+    const read = sql.indexOf("public._h14_dependencias_baja_embarque(");
+    const decision = sql.indexOf("IF (v_motivos->>'bloqueado')");
+    expect(read).toBeLessThan(decision);
+    expect(decision).toBeLessThan(sql.indexOf("UPDATE public."));
+    // facturas vivas (excluye Cancelada|Sustituida). Tolerante a espacios.
+    expect(collector).toMatch(
+      /FROM public\.facturas f, factura_ids ids[\s\S]{0,200}f\.deleted_at IS NULL\s+AND f\.estado NOT IN \('Cancelada',\s*'Sustituida'\)/,
     );
     // proveedor_facturas vivas (la versión vigente cuenta toda CxP no borrada)
-    expect(sql).toMatch(
-      /FROM public\.proveedor_facturas[\s\S]{0,200}deleted_at IS NULL/,
+    expect(collector).toMatch(
+      /FROM public\.proveedor_facturas f, cxp_ids ids[\s\S]{0,200}f\.deleted_at IS NULL/,
     );
     // pagos_factura y pagos_proveedor
-    expect(sql).toMatch(/FROM public\.pagos_factura pf[\s\S]{0,120}JOIN public\.facturas/);
-    expect(sql).toMatch(/FROM public\.pagos_proveedor pp[\s\S]{0,120}JOIN public\.proveedor_facturas/);
+    expect(collector).toMatch(/FROM public\.pagos_factura p, factura_ids ids[\s\S]{0,240}p\.factura_id = ANY\(ids\.ids\) OR p\.embarque_id = p_embarque_id[\s\S]{0,160}p\.deleted_at IS NULL/);
+    expect(collector).toMatch(/FROM public\.pagos_proveedor p, cxp_ids ids[\s\S]{0,240}p\.proveedor_factura_id = ANY\(ids\.ids\)[\s\S]{0,160}p\.deleted_at IS NULL/);
     // notas de crédito CxC y CxP
-    expect(sql).toMatch(/FROM public\.factura_notas_credito nc/);
-    expect(sql).toMatch(/FROM public\.proveedor_notas_credito nc/);
+    expect(collector).toMatch(/FROM public\.factura_notas_credito n, factura_ids ids[\s\S]{0,240}n\.deleted_at IS NULL/);
+    expect(collector).toMatch(/FROM public\.proveedor_notas_credito n, cxp_ids ids[\s\S]{0,240}n\.deleted_at IS NULL/);
     // comisiones definitivas
-    expect(sql).toMatch(/FROM public\.comisiones_devengadas[\s\S]{0,80}definitiva = true/);
+    expect(collector).toMatch(/FROM public\.comisiones_devengadas c[\s\S]{0,120}c\.definitiva IS TRUE/);
+    // proformas vivas, incluido borrador
+    expect(collector).toMatch(/COALESCE\(p\.estado_proforma, 'pendiente'\) NOT IN \('cancelada', 'facturada'\)/);
   });
 
   it("bloquea con RAISE EXCEPTION + LC_EMBARQUE_BLOQUEADO + JSON en HINT", () => {
     expect(sql).toMatch(/RAISE EXCEPTION 'LC_EMBARQUE_BLOQUEADO/);
     expect(sql).toMatch(/USING HINT = v_motivos::text/);
-    // El JSON de motivos debe exponer las 9 llaves que consume el cliente.
+    // El HINT es el resultado del recolector; conserva las llaves previas y el contrato v1.
     for (const key of [
       "'facturas'",
       "'cxp'",
@@ -104,14 +115,23 @@ describe("Fase E — eliminar_embarque_completo bloquea por dependencias fiscale
       "'comisiones_definitivas'",
       "'cerrado'",
       "'expediente'",
+      "'proformas'",
+      "'version'",
+      "'embarque_id'",
+      "'bloqueado'",
+      "'ejemplos_cxc'",
+      "'ejemplos_cxp'",
     ]) {
-      expect(sql).toContain(key);
+      expect(collector).toContain(key);
     }
   });
 
   it("incluye el estado 'Cerrado' o cerrado_at en la condición de bloqueo", () => {
-    expect(sql).toMatch(/v_estado = 'Cerrado'/);
-    expect(sql).toMatch(/v_cerrado_at IS NOT NULL/);
+    expect(collector).toMatch(/'cerrado', e\.estado = 'Cerrado' OR e\.cerrado_at IS NOT NULL/);
+    const block = /'bloqueado',([\s\S]+?),\s*'ejemplos_cxc'/.exec(collector);
+    expect(block).not.toBeNull();
+    expect(block![1]).toContain("e.estado = 'Cerrado'");
+    expect(block![1]).toContain("e.cerrado_at IS NOT NULL");
   });
 
   it("NUNCA borra facturas ni proveedor_facturas (fix Bug 7)", () => {
@@ -119,6 +139,7 @@ describe("Fase E — eliminar_embarque_completo bloquea por dependencias fiscale
     // el test lo detecta antes de que llegue a producción.
     expect(sql).not.toMatch(/UPDATE public\.facturas\s+SET deleted_at/);
     expect(sql).not.toMatch(/UPDATE public\.proveedor_facturas\s+SET deleted_at/);
+    expect(collector).not.toMatch(/\b(?:UPDATE|DELETE|INSERT)\b/);
   });
 
   it("soft-deletea sólo los hijos operativos + el embarque padre", () => {
