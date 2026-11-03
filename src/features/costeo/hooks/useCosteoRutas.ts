@@ -10,9 +10,8 @@ import {
   CosteoRutaDuplicadaError,
   type CosteoRutaInput,
 } from "@/features/costeo/services/rutas";
-import { mensajeConstraintUnico } from "@/lib/errors/pgConstraintMessages";
+import { mensajeErrorCosteo } from "@/features/costeo/utils/mensajeErrorCosteo";
 
-const MSG_REINTENTAR = "Intenta de nuevo. Si el problema sigue, avisa a soporte.";
 
 
 export function useCosteoRutas() {
@@ -42,12 +41,12 @@ export function useCosteoRutaMutations() {
     },
     onSuccess: () => { invalidate(); toast({ title: "Ruta agregada" }); },
     onError: (e: Error) => notifyError(undefined, { title: e instanceof CosteoRutaDuplicadaError ? "Ruta duplicada" : "Error al agregar",
-      description: mensajeConstraintUnico(e.message) ?? MSG_REINTENTAR, error: e, method: "FEATURES_COSTEO_HOOKS_USECOSTEORUTAS_1" }),
+      description: mensajeErrorCosteo(e), error: e, method: "FEATURES_COSTEO_HOOKS_USECOSTEORUTAS_1" }),
   });
   const eliminar = useMutation({
     mutationFn: (id: string) => deleteCosteoRuta(id),
     onSuccess: () => { invalidate(); toast({ title: "Ruta eliminada" }); },
-    onError: (e: Error) => notifyError(undefined, { title: "Error al eliminar", description: mensajeConstraintUnico(e.message) ?? MSG_REINTENTAR, error: e, method: "FEATURES_COSTEO_HOOKS_USECOSTEORUTAS_2" }),
+    onError: (e: Error) => notifyError(undefined, { title: "Error al eliminar", description: mensajeErrorCosteo(e), error: e, method: "FEATURES_COSTEO_HOOKS_USECOSTEORUTAS_2" }),
   });
   return { crear, eliminar };
 }
