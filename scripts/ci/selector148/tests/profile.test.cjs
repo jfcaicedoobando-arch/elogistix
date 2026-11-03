@@ -6,6 +6,77 @@ const cp=require('node:child_process'),vm=require('node:vm');
 const {createProfile}=require('../profile.cjs');
 const {createEvidenceWriter}=require('../evidence.cjs');
 const {createSnapshotter,sections}=require('../snapshots.cjs');
+const {verifyRestoreEvidence}=require('../restore-evidence.cjs');
+const restoreContract=require('../contract.json');
+const restoreNotices=restoreContract.restore_evidence.notices;
+const restoreEvidenceLog=notices=>notices.map(notice=>'psql:supabase/tests/insurance_trash_restore.sql:259: NOTICE:  '+notice).join('\n')+'\n';
+
+test('restore evidence binds the reviewed successor, predecessor provenance and 64 retained plus 23 H14 assertions',()=>{
+  const expected=restoreContract.restore_evidence;
+  assert.equal(expected.file,'supabase/tests/insurance_trash_restore.sql');
+  assert.equal(expected.pre_h14_sha256,'78f0c001eed881e51ffdae23c0ce736f40e2b23bd613099c8ebda0fd680c68ac');
+  assert.equal(restoreContract.frozen_files[expected.file],'eb091562e677b5466129ae02af95ce4713acce999fde62b00e5cf2d13c07b25f');
+  assert.equal(expected.retained_assertions,64);assert.equal(expected.h14_assertions,23);
+  assert.equal(restoreNotices.length,87);
+  assert.equal(restoreNotices.filter(notice=>/^PASS: (?:H14 |historical )/.test(notice)).length,23);
+  assert.equal(restoreNotices.filter(notice=>notice==='PASS: H14 rejected parent tombstone preserves every header field').length,4);
+});
+
+for(const [label,format] of [
+  ['plain',notice=>'NOTICE:  '+notice],
+  ['psql source prefix',notice=>'psql:supabase/tests/insurance_trash_restore.sql:259: NOTICE:  '+notice],
+  ['verbose SQLSTATE',notice=>'psql:supabase/tests/insurance_trash_restore.sql:259: NOTICE:  00000: '+notice+'\nLOCATION:  exec_stmt_raise, pl_exec.c:3911'],
+])test('restore evidence accepts all 87 ordered notices with '+label,()=>{
+  const log='BEGIN\r\n'+restoreNotices.map(format).join('\r\n')+'\r\nROLLBACK\r\n';
+  assert.deepEqual(verifyRestoreEvidence(log),restoreNotices);
+});
+
+for(const label of [
+  'gate is off before rejected wrong-tenant tombstone insert',
+  'wrong-tenant tombstone INSERT is rejected by the exact composite FK [23503/insurance_pf_same_org_fk]',
+  'rejected wrong-tenant tombstone insert preserves every existing policy row',
+  'rejected wrong-tenant tombstone insert leaves restore gate off',
+  'H14 rejects wrong-tenant tombstone INSERT with all guards active [42501/exact LC_FORBIDDEN]',
+  'historical fixture parent has the exact deletion batch with H14 re-enabled',
+])test('restore evidence rejects missing retained/H14 notice: '+label,()=>{
+  const notices=[...restoreNotices],index=notices.indexOf('PASS: '+label);
+  assert(index>=0);notices.splice(index,1);
+  assert.throws(()=>verifyRestoreEvidence(restoreEvidenceLog(notices)),/exact 64 retained and 23 H14 assertions in order/);
+});
+
+for(const [label,mutate] of [
+  ['extra PASS notice',notices=>notices.push('PASS: unexpected extra assertion')],
+  ['extra non-PASS notice',notices=>notices.push('unexpected extra diagnostic')],
+  ['duplicate replacing a different notice',notices=>{notices[1]=notices[0]}],
+  ['reordered different notices',notices=>{[notices[0],notices[1]]=[notices[1],notices[0]]}],
+])test('restore evidence rejects '+label,()=>{
+  const notices=[...restoreNotices];mutate(notices);
+  assert.throws(()=>verifyRestoreEvidence(restoreEvidenceLog(notices)),/exact 64 retained and 23 H14 assertions in order/);
+});
+
+test('restore evidence rejects a notice whose payload moves to the next line',()=>{
+  const log=restoreEvidenceLog(restoreNotices).replace('NOTICE:  PASS:','NOTICE:  \nPASS:');
+  assert.throws(()=>verifyRestoreEvidence(log),/exact 64 retained and 23 H14 assertions in order/);
+});
+
+for(const severity of ['ERROR','FATAL','PANIC'])test('restore evidence rejects SQL '+severity+' despite all 87 notices',()=>{
+  const log=restoreEvidenceLog(restoreNotices)+'psql:supabase/tests/insurance_trash_restore.sql:259: '+severity+':  XX000: synthetic failure\n';
+  assert.throws(()=>verifyRestoreEvidence(log),/contains a SQL error/);
+});
+
+test('actual runner verifies the existing manifest restore log before its first database operation',()=>{
+  const source=fs.readFileSync(path.join(__dirname,'../run.cjs'),'utf8');
+  const check=source.slice(source.indexOf('// Inspect the existing manifest guard'),source.indexOf('\nadmin=new Client'));
+  const log=restoreEvidenceLog(restoreNotices),reads=[],verified=[],passed=[];
+  const context={path,assert,process:{env:{SELECTOR148_GUARD_LOG_DIR:'/synthetic/guards-logs'}},
+    fs:{readFileSync(file,encoding){reads.push([file,encoding]);return log}},
+    verifyRestoreEvidence(actual){verified.push(actual);return verifyRestoreEvidence(actual)},
+    pass(message){passed.push(message)}};
+  vm.runInNewContext(check,context);
+  assert.deepEqual(reads,[['/synthetic/guards-logs/insurance_trash_restore.log','utf8']]);
+  assert.deepEqual(verified,[log]);
+  assert.deepEqual(passed,['manifest restore successor completed 64 retained assertions and 23 H14 admission/atomicity assertions']);
+});
 
 test('profiling preserves sync/async values, errors and measures nested operations without summing wall',async()=>{
   let now=0;const error=new Error('synthetic');
