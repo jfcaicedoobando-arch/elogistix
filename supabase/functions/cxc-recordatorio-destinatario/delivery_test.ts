@@ -54,7 +54,7 @@ Deno.test('H21 v2: fallo del historial tras envío exitoso devuelve éxito y no 
 
 Deno.test('H21: conserva la clave idempotente de la ventana existente sin prometer deduplicación local', async () => {
   await withFixtureTransport(async () => {
-    const { messageIdRecordatorio } = await import('../cxc-recordatorio-enviar/entrega.ts');
+    const { messageIdRecordatorio } = await import('../_shared/recordatorio/entrega.ts');
     assert.equal(messageIdRecordatorio(FACTURA_A, 'email', 600_001), messageIdRecordatorio(FACTURA_A, 'email', 1_199_999));
     assert.notEqual(messageIdRecordatorio(FACTURA_A, 'email', 600_001), messageIdRecordatorio(FACTURA_A, 'email', 1_200_000));
   });

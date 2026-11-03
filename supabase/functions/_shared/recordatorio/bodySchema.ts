@@ -1,5 +1,5 @@
 import { z } from 'npm:zod@4.6.7';
-import { cxcEmail, cxcGuid } from '../_shared/cxcInputValidation.ts';
+import { cxcEmail, cxcGuid } from '../cxcInputValidation.ts';
 
 export const BodySchema = z.object({
   factura_id: cxcGuid(),
