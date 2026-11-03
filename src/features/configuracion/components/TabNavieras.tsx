@@ -135,8 +135,9 @@ export default function TabNavieras() {
       <DoubleConfirmDeleteDialog
         open={!!navieraAEliminar}
         onOpenChange={(open) => { if (!open) setNavieraAEliminar(null); }}
-        entityName={navieraAEliminar ? `la naviera "${navieraAEliminar.name}"` : "esta naviera"}
-        description="La naviera se eliminará del catálogo. Las cotizaciones y embarques existentes no se modifican."
+        entityName={navieraAEliminar ? `la naviera "${navieraAEliminar.name}" del catálogo compartido` : "esta naviera del catálogo compartido"}
+        description="Esta eliminación afecta al catálogo de todas las empresas. Para ocultarla sólo en la empresa activa, usa Visible en mi empresa."
+        finalDescription={`Confirma la eliminación de la naviera "${navieraAEliminar?.name ?? ""}" del catálogo compartido de todas las empresas.`}
         isPending={eliminarNaviera.isPending}
         onConfirm={() => {
           if (navieraAEliminar) eliminarNaviera.mutate(navieraAEliminar.id);

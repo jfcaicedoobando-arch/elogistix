@@ -20,7 +20,7 @@ export default function DialogEliminarEmbarqueBloqueado({ expediente, deps }: Pr
     <div className="space-y-3 text-body">
       <p>
         El embarque <strong>{expediente}</strong> tiene documentos financieros asociados.
-        Cancela primero los siguientes documentos antes de eliminarlo:
+        Revisa la siguiente lista con Contabilidad para decidir el procedimiento que corresponda antes de volver a intentar la eliminación:
       </p>
 
       {deps.cxc.count > 0 && (
@@ -74,7 +74,7 @@ export default function DialogEliminarEmbarqueBloqueado({ expediente, deps }: Pr
 
 
       <p className="text-body-sm text-muted-foreground">
-        Una vez que canceles o desliges estos documentos del embarque, podrás intentar la eliminación nuevamente.
+        Después de revisar las dependencias con Contabilidad y completar el procedimiento autorizado que corresponda, vuelve a intentar la eliminación. La Papelera no evita estos bloqueos.
       </p>
     </div>
   );

@@ -114,8 +114,9 @@ export default function TabTiposContenedor() {
       <DoubleConfirmDeleteDialog
         open={!!tipoAEliminar}
         onOpenChange={(open) => { if (!open) setTipoAEliminar(null); }}
-        entityName={tipoAEliminar ? `el tipo de contenedor "${tipoAEliminar.name}"` : "este tipo de contenedor"}
-        description="El tipo de contenedor dejará de estar disponible en cotizaciones y embarques nuevos."
+        entityName={tipoAEliminar ? `el tipo de contenedor "${tipoAEliminar.name}" del catálogo compartido` : "este tipo de contenedor del catálogo compartido"}
+        description="Esta eliminación afecta al catálogo de todas las empresas. Para ocultarlo sólo en la empresa activa, usa Visible en mi empresa."
+        finalDescription={`Confirma la eliminación del tipo de contenedor "${tipoAEliminar?.name ?? ""}" del catálogo compartido de todas las empresas.`}
         isPending={eliminarTipo.isPending}
         onConfirm={() => {
           if (tipoAEliminar) eliminarTipo.mutate(tipoAEliminar.id);
