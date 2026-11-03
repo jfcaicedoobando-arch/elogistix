@@ -172,7 +172,8 @@ describe("useEmbarqueDetalleTracking", () => {
       liberarCopia();
       await operacion;
     });
-    expect(clipboardWriteMock).toHaveBeenCalledWith(expect.stringContaining("tok-anterior"));
+    if (fase === "lectura") expect(clipboardWriteMock).not.toHaveBeenCalled();
+    else expect(clipboardWriteMock).toHaveBeenCalledWith(expect.stringContaining("tok-anterior"));
     expect(result.current.avisoEnlace).toBeNull();
     rerender({ id: "e-1" });
     expect(result.current.avisoEnlace).toBeNull();
