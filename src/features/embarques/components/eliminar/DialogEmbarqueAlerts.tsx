@@ -63,7 +63,7 @@ export function DialogEmbarqueVerificandoAlert({
     <AlertDialog open={open} onOpenChange={(v) => { if (!v) onClose(); }}>
       <AlertDialogContent className={dialogSize.sm}>
         <AlertDialogHeader>
-          <AlertDialogTitle>Verificando dependencias…</AlertDialogTitle>
+          <AlertDialogTitle>Verificación de dependencias</AlertDialogTitle>
           <AlertDialogDescription asChild>
             <div className="space-y-2 text-body">
               {isLoading && (
