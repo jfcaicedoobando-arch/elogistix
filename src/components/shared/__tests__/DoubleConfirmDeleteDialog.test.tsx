@@ -173,4 +173,24 @@ describe("<DoubleConfirmDeleteDialog />", () => {
     expect(errSpy).toHaveBeenCalled();
     errSpy.mockRestore();
   });
+
+  it.each(["click", "Enter"])("onConfirm=false mantiene abierto tras %s sin registrar un error", async (method) => {
+    const onOpenChange = vi.fn();
+    const onConfirm = vi.fn().mockResolvedValue(false);
+    const error = vi.spyOn(console, "error").mockImplementation(() => {});
+    render(<DoubleConfirmDeleteDialog open entityName="registro" onConfirm={onConfirm} onOpenChange={onOpenChange} />);
+    fireEvent.click(screen.getByRole("button", { name: "Continuar" }));
+    const input = screen.getByPlaceholderText("ELIMINAR");
+    fireEvent.change(input, { target: { value: "ELIMINAR" } });
+    await act(async () => {
+      if (method === "click") fireEvent.click(screen.getByRole("button", { name: /^eliminar$/i }));
+      else fireEvent.keyDown(input, { key: "Enter", code: "Enter" });
+    });
+    expect(onConfirm).toHaveBeenCalledTimes(1);
+    expect(onOpenChange).not.toHaveBeenCalledWith(false);
+    expect(screen.getByText("Confirmar eliminación")).toBeInTheDocument();
+    expect(error).not.toHaveBeenCalled();
+    error.mockRestore();
+  });
+
 });

@@ -52,8 +52,8 @@ export const embarques = {
   contenedoresInfoMap: (ids: string[]) => ['embarque-contenedores-info-map', ids] as const,
   docsFaltantes: (embarqueId?: string, estadoDestino?: string | null) =>
     ['embarque_docs_faltantes', embarqueId, estadoDestino] as const,
-  dependenciasFinancieras: (embarqueId?: string) =>
-    ['embarques', 'dependencias-financieras', embarqueId] as const,
+  dependenciasFinancieras: (embarqueId?: string, scope: readonly unknown[] = []) =>
+    ['embarques', 'dependencias-financieras', embarqueId, ...scope] as const,
   tarifaInfo: (embarqueId?: string, scope: readonly unknown[] = []) => ['embarques', 'tarifa-info', embarqueId, ...scope] as const,
   /** Columnas internas (sólo staff) leídas vía `embarques_interno_v`. */
   interno: (embarqueId?: string, scope: readonly unknown[] = []) => ['embarques', 'interno', embarqueId, ...scope] as const,

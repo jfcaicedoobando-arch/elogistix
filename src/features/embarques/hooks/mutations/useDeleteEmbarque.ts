@@ -9,11 +9,14 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { queryKeys } from '@/lib/query';
 import { eliminarEmbarqueRpc } from '@/features/embarques/services';
 import { invalidateProfitDependencies } from '@/features/profit/hooks/invalidateProfitDependencies';
+import type { captureAuthOperationScope } from '@/lib/auth/authOperationScope';
 
-export function useEliminarEmbarque() {
+export function useEliminarEmbarque(authScope?: ReturnType<typeof captureAuthOperationScope>) {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (embarqueId: string) => eliminarEmbarqueRpc(embarqueId),
+    mutationFn: (embarqueId: string) => authScope
+      ? eliminarEmbarqueRpc(embarqueId, authScope)
+      : eliminarEmbarqueRpc(embarqueId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.embarques.all });
       queryClient.invalidateQueries({ queryKey: queryKeys.cotizaciones.all });

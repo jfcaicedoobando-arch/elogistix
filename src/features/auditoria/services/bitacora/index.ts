@@ -95,12 +95,15 @@ export async function insertBitacora(entrada: {
   entidadId?: string | null;
   entidadNombre?: string;
   detalles?: Record<string, unknown>;
+  authScope?: { isCurrent: () => boolean; organizationId?: string | null };
 }): Promise<void> {
+  if (entrada.authScope && !entrada.authScope.isCurrent()) return;
   // DEFECTO 8: el INSERT directo está REVOKE; la RPC ignora cualquier
   // usuario_id/email que se le mande y usa siempre el del servidor.
   void entrada.usuarioId;
   void entrada.usuarioEmail;
   const { error } = await supabase.rpc("registrar_bitacora", {
+    ...(entrada.authScope?.organizationId ? { p_organization_id: entrada.authScope.organizationId } : {}),
     p_modulo: entrada.modulo,
     p_accion: entrada.accion,
     p_entidad_id: entrada.entidadId ?? undefined,

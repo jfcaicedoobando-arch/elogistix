@@ -18,11 +18,13 @@ export function DialogEmbarqueBloqueadoAlert({
   expediente,
   deps,
   onClose,
+  onRetry,
 }: {
   open: boolean;
   expediente: string;
   deps: EmbarqueDependenciasFinancieras;
   onClose: () => void;
+  onRetry: () => void;
 }) {
   return (
     <AlertDialog open={open} onOpenChange={(v) => { if (!v) onClose(); }}>
@@ -37,7 +39,8 @@ export function DialogEmbarqueBloqueadoAlert({
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
-          <AlertDialogAction onClick={onClose}>Entendido</AlertDialogAction>
+          <AlertDialogAction onClick={(event) => { event.preventDefault(); onRetry(); }}>Volver a verificar</AlertDialogAction>
+          <AlertDialogAction onClick={onClose}>Cerrar</AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>
     </AlertDialog>
@@ -53,11 +56,15 @@ export function DialogEmbarqueVerificandoAlert({
   isLoading,
   hasError,
   onClose,
+  onRetry,
+  errorMessage,
 }: {
   open: boolean;
   isLoading: boolean;
   hasError: boolean;
   onClose: () => void;
+  onRetry?: () => void;
+  errorMessage?: string;
 }) {
   return (
     <AlertDialog open={open} onOpenChange={(v) => { if (!v) onClose(); }}>
@@ -67,20 +74,21 @@ export function DialogEmbarqueVerificandoAlert({
           <AlertDialogDescription asChild>
             <div className="space-y-2 text-body">
               {isLoading && (
-                <p className="flex items-center gap-2 text-muted-foreground">
+                <p role="status" aria-live="polite" className="flex items-center gap-2 text-muted-foreground">
                   <Loader2 className="h-4 w-4 animate-spin" aria-hidden />
                   Verificando documentos financieros asociados…
                 </p>
               )}
               {hasError && (
-                <p className="text-destructive">
-                  No pudimos completar la verificación de dependencias financieras. Cierra este diálogo antes de volver a intentar la eliminación. Si el problema continúa, comparte el expediente con Contabilidad.
+                <p role="alert" className="text-destructive">
+                  {errorMessage ?? "No pudimos completar la verificación. Vuelve a verificar antes de intentar eliminar el embarque. Si el problema continúa, comparte el expediente con Contabilidad."}
                 </p>
               )}
             </div>
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
+          {hasError && onRetry && <AlertDialogAction onClick={(event) => { event.preventDefault(); onRetry(); }}>Volver a verificar</AlertDialogAction>}
           <AlertDialogAction onClick={onClose}>Cerrar</AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>

@@ -1,5 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { toEmbarqueBloqueadoError, EmbarqueBloqueadoError } from "../embarqueBloqueadoError";
+import { diagnosticoBaja, EMBARQUE_ID, OTRO_EMBARQUE_ID, FACTURA_ID } from "./fixtures/diagnosticoBaja.fixture";
 
 const motivosValidos = {
   facturas: 2,
@@ -84,11 +85,26 @@ describe("toEmbarqueBloqueadoError", () => {
     expect(result?.motivos).toEqual(motivosValidos);
   });
 
-  it("convierte valores no numéricos con Number() usando fallback 0", () => {
+  it("rechaza valores no numéricos sin inventar conteos cero", () => {
     const hint = JSON.stringify({ expediente: "EXP-003", facturas: "abc", cxp: "no-num" });
     const err = { message: "LC_EMBARQUE_BLOQUEADO", hint };
     const result = toEmbarqueBloqueadoError(err);
-    expect(result?.motivos.facturas).toBe(0);
-    expect(result?.motivos.cxp).toBe(0);
+    expect(result).toBeNull();
   });
+
+  it("conserva el HINT v1 con cierre, comisiones y ejemplos", () => {
+    const hint = diagnosticoBaja({ bloqueado: true, facturas: 2, cerrado: true, comisiones_definitivas: 1,
+      ejemplos_cxc: [{ id: FACTURA_ID, folio: "F-FICTICIA", estado: "Emitida" }] });
+    const result = toEmbarqueBloqueadoError({ message: "LC_EMBARQUE_BLOQUEADO", hint: JSON.stringify(hint) }, EMBARQUE_ID);
+    expect(result?.motivos).toEqual(hint);
+  });
+
+  it.each([
+    diagnosticoBaja({ bloqueado: true, cerrado: true, version: 2 as never }),
+    diagnosticoBaja({ embarque_id: OTRO_EMBARQUE_ID, bloqueado: true, cerrado: true }),
+    diagnosticoBaja(),
+  ])("no interpreta un HINT incompatible, de otro embarque o incoherente %#", (hint) => {
+    expect(toEmbarqueBloqueadoError({ message: "LC_EMBARQUE_BLOQUEADO", hint: JSON.stringify(hint) }, EMBARQUE_ID)).toBeNull();
+  });
+
 });

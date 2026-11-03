@@ -120,6 +120,34 @@ BEGIN
   END LOOP;
 END
 $crm_empresa_owner_restore$;
+-- H14 helpers are owner-only in the forward migration. Undo only the two
+-- blanket CI grants above; placing them in _ci_service_role_only would add a
+-- service_role capability that does not exist in the reviewed migration.
+DO $h14_owner_restore$
+DECLARE v_signature text;
+BEGIN
+  FOREACH v_signature IN ARRAY ARRAY[
+    'public._h14_assert_actor_baja_embarque(uuid)',
+    'public._h14_proformas_baja_embarque(uuid,uuid)',
+    'public._h14_facturas_baja_embarque(uuid,uuid,uuid[])',
+    'public._h14_cxp_baja_embarque(uuid,uuid)',
+    'public._h14_dependencias_baja_embarque(uuid,uuid,boolean)',
+    'public._h14_mutex_baja_embarque(uuid,boolean)',
+    'public._h14_validar_actor_org_baja(uuid)',
+    'public._h14_grafo_fila_baja(uuid,text,jsonb)',
+    'public._h14_validar_fila_org_baja(uuid,text,jsonb)',
+    'public._h14_embarque_visible_actor_baja(uuid,uuid)',
+    'public._h14_documento_bloqueante_baja(uuid,text,uuid)',
+    'public._h14_fila_bloqueante_baja(uuid,text,jsonb)',
+    'public._h14_guard_escritor_baja()',
+    'public._h14_guard_baja_embarque()'
+  ] LOOP
+    IF pg_catalog.to_regprocedure(v_signature) IS NOT NULL THEN
+      EXECUTE format('REVOKE EXECUTE ON FUNCTION %s FROM authenticated, service_role', v_signature);
+    END IF;
+  END LOOP;
+END
+$h14_owner_restore$;
 -- The broad CI-only CRUD grant above must not reopen direct DOF writes.
 REVOKE INSERT, UPDATE, DELETE ON public.tipos_cambio_dof FROM authenticated;
 \ir _ci_check_global_catalog_acl.sql
