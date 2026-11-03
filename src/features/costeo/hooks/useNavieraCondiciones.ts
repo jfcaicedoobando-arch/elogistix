@@ -15,9 +15,8 @@ import { fetchProveedoresPorTipo } from "@/features/costeo/services/agentes";
 import type { NavieraCondicionInput, DemorasTramoInput } from "@/features/costeo/types/navieraCondicion";
 
 import { notifyError } from "@/lib/ui/appFeedback";
-import { mensajeConstraintUnico } from "@/lib/errors/pgConstraintMessages";
+import { mensajeErrorCosteo } from "@/features/costeo/utils/mensajeErrorCosteo";
 
-const MSG_REINTENTAR = "Intenta de nuevo. Si el problema sigue, avisa a soporte.";
 
 export function useCondicionesNaviera() {
   const { organizationId } = useOrganization();
@@ -43,7 +42,7 @@ export function useCondicionNavieraMutations() {
       toast({ title: "Condiciones guardadas" });
     },
     onError: (e: Error) =>
-      notifyError(undefined, { title: "Error al guardar", description: mensajeConstraintUnico(e.message) ?? MSG_REINTENTAR, error: e, method: "FEATURES_COSTEO_HOOKS_USENAVIERACONDICIONES_1" }),
+      notifyError(undefined, { title: "Error al guardar", description: mensajeErrorCosteo(e), error: e, method: "FEATURES_COSTEO_HOOKS_USENAVIERACONDICIONES_1" }),
   });
 
   const eliminar = useMutation({
@@ -53,7 +52,7 @@ export function useCondicionNavieraMutations() {
       toast({ title: "Condiciones eliminadas" });
     },
     onError: (e: Error) =>
-      notifyError(undefined, { title: "Error al eliminar", description: mensajeConstraintUnico(e.message) ?? MSG_REINTENTAR, error: e, method: "FEATURES_COSTEO_HOOKS_USENAVIERACONDICIONES_2" }),
+      notifyError(undefined, { title: "Error al eliminar", description: mensajeErrorCosteo(e), error: e, method: "FEATURES_COSTEO_HOOKS_USENAVIERACONDICIONES_2" }),
   });
 
   return { guardar, eliminar };
@@ -85,7 +84,7 @@ export function useReemplazarTramos() {
       toast({ title: "Tabulador actualizado" });
     },
     onError: (e: Error) =>
-      notifyError(undefined, { title: "Error al guardar tabulador", description: mensajeConstraintUnico(e.message) ?? MSG_REINTENTAR, error: e, method: "FEATURES_COSTEO_HOOKS_USENAVIERACONDICIONES_3" }),
+      notifyError(undefined, { title: "Error al guardar tabulador", description: mensajeErrorCosteo(e), error: e, method: "FEATURES_COSTEO_HOOKS_USENAVIERACONDICIONES_3" }),
   });
 }
 

@@ -14,9 +14,8 @@ import {
   type FetchTarifasFilters,
   type TarifaInput,
 } from "@/features/costeo/services/tarifas";
-import { mensajeConstraintUnico } from "@/lib/errors/pgConstraintMessages";
+import { mensajeErrorCosteo } from "@/features/costeo/utils/mensajeErrorCosteo";
 
-const MSG_REINTENTAR = "Intenta de nuevo. Si el problema sigue, avisa a soporte.";
 
 
 /**
@@ -118,7 +117,7 @@ export function useCosteoTarifaMutations(organizationIdOverride?: string | null)
       }
     },
     onError: (e: Error) =>
-      notifyError(undefined, { title: "Error al guardar tarifas", description: mensajeConstraintUnico(e.message) ?? MSG_REINTENTAR, error: e, method: "FEATURES_COSTEO_HOOKS_USECOSTEOTARIFAS_6" }),
+      notifyError(undefined, { title: "Error al guardar tarifas", description: mensajeErrorCosteo(e), error: e, method: "FEATURES_COSTEO_HOOKS_USECOSTEOTARIFAS_6" }),
   });
 
   const actualizar = useMutationWithFeedback({
