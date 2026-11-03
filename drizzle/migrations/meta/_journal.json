@@ -169,6 +169,13 @@
       "when": 1792536220603,
       "tag": "0023_margen_minimo_utilidad_rpc",
       "breakpoints": true
+    },
+    {
+      "idx": 24,
+      "version": "7",
+      "when": 1793750202303,
+      "tag": "0024_h14_baja_embarque_integridad_financiera",
+      "breakpoints": true
     }
   ]
 }

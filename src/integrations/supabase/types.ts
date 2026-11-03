@@ -10021,6 +10021,54 @@ export type Database = {
         Returns: Json
       }
       _es_rol_interno: { Args: never; Returns: boolean }
+      _h14_assert_actor_baja_embarque: {
+        Args: { p_embarque_id: string }
+        Returns: string
+      }
+      _h14_cxp_baja_embarque: {
+        Args: { p_embarque_id: string; p_org: string }
+        Returns: string[]
+      }
+      _h14_dependencias_baja_embarque: {
+        Args: { p_ejemplos?: boolean; p_embarque_id: string; p_org: string }
+        Returns: Json
+      }
+      _h14_documento_bloqueante_baja: {
+        Args: { p_id: string; p_org: string; p_tipo: string }
+        Returns: boolean
+      }
+      _h14_embarque_visible_actor_baja: {
+        Args: { p_embarque: string; p_org: string }
+        Returns: boolean
+      }
+      _h14_facturas_baja_embarque: {
+        Args: { p_embarque_id: string; p_org: string; p_proformas: string[] }
+        Returns: string[]
+      }
+      _h14_fila_bloqueante_baja: {
+        Args: { p_fila: Json; p_org: string; p_tabla: string }
+        Returns: boolean
+      }
+      _h14_grafo_fila_baja: {
+        Args: { p_fila: Json; p_org: string; p_tabla: string }
+        Returns: string[]
+      }
+      _h14_mutex_baja_embarque: {
+        Args: { p_esperar?: boolean; p_org: string }
+        Returns: undefined
+      }
+      _h14_proformas_baja_embarque: {
+        Args: { p_embarque_id: string; p_org: string }
+        Returns: string[]
+      }
+      _h14_validar_actor_org_baja: {
+        Args: { p_org: string }
+        Returns: undefined
+      }
+      _h14_validar_fila_org_baja: {
+        Args: { p_fila: Json; p_org: string; p_tabla: string }
+        Returns: undefined
+      }
       _lock_cuenta_bancaria: {
         Args: { p_cuenta_id: string }
         Returns: {
@@ -11667,6 +11715,10 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      diagnosticar_baja_embarque: {
+        Args: { p_embarque_id: string }
+        Returns: Json
+      }
       direccion_totales: { Args: { p_desde: string }; Returns: Json }
       dof_dias_habiles_entre: {
         Args: { _desde: string; _hasta: string }
@@ -11709,10 +11761,6 @@ export type Database = {
           p_request_id?: string
           p_tipo_cambio?: number
         }
-        Returns: Json
-      }
-      diagnosticar_baja_embarque: {
-        Args: { p_embarque_id: string }
         Returns: Json
       }
       eliminar_embarque_completo: {
