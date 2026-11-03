@@ -2,7 +2,7 @@ import { authenticate, authorizeOrgRole, ROLES_COBRANZA_FISCAL } from '../_share
 import { buildCors, handlePreflightStrict } from '../_shared/cors.ts';
 import { wrapEdgeHandler } from '../_shared/sentry.ts';
 import { consultarDestinatarioRecordatorio } from '../_shared/recordatorioDestinatario.ts';
-import { BodySchema, DestinatarioConfirmadoSchema } from '../cxc-recordatorio-enviar/bodySchema.ts';
+import { BodySchema, DestinatarioConfirmadoSchema } from '../_shared/recordatorio/bodySchema.ts';
 import { createDestinatarioRecordatorioHandler } from './handler.ts';
 
 const schema = BodySchema.pick({ factura_id: true });

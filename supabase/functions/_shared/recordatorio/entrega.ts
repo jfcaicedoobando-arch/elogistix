@@ -1,5 +1,5 @@
 import { createClient } from 'npm:@supabase/supabase-js@2.118.0';
-import { enviarEmailPlantilla } from '../_shared/enviarEmailPlantilla.ts';
+import { enviarEmailPlantilla } from '../enviarEmailPlantilla.ts';
 import type { TemplateData } from './factura.ts';
 
 // Conserva la clave por ventana existente; el transporte recibe esa clave.

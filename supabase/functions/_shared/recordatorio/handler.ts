@@ -1,7 +1,7 @@
-import { authenticate, authorizeOrgRole, ROLES_COBRANZA_FISCAL } from '../_shared/auth.ts';
-import { buildCors, handlePreflightStrict } from '../_shared/cors.ts';
+import { authenticate, authorizeOrgRole, ROLES_COBRANZA_FISCAL } from '../auth.ts';
+import { buildCors, handlePreflightStrict } from '../cors.ts';
 import { ConfirmarBodySchema } from './bodySchema.ts';
-import { RevisionDestinatarioError, validarDestinatarioConfirmado } from '../_shared/recordatorioDestinatario.ts';
+import { RevisionDestinatarioError, validarDestinatarioConfirmado } from '../recordatorioDestinatario.ts';
 import { buildTemplateData, loadFactura, loadOrgName, loadPerfil, loadSaldoFactura } from './factura.ts';
 import { messageIdRecordatorio, sendRecordatorio } from './entrega.ts';
 
