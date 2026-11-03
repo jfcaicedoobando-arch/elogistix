@@ -468,7 +468,7 @@ class SQLAllowlistConfigTests(unittest.TestCase):
         # existing allowlists. Never disable rules or substitute weaker rules.
         self.assertEqual(set(rule), {"id", "allowlists"})
         self.assertEqual(rule["id"], "generic-api-key")
-        self.assertEqual(len(rule["allowlists"]), 3)
+        self.assertEqual(len(rule["allowlists"]), 4)
         allowlist = rule["allowlists"][0]
         self.assertEqual(set(allowlist), {
             "description", "condition", "paths", "regexTarget", "regexes",
@@ -799,6 +799,94 @@ class DenoDigestFixtureConstructionTests(unittest.TestCase):
         self.assertTrue(all(kwargs["expected_leak"] for _, kwargs in cases[8:]))
         self.assertTrue(all(args[0] == DenoDigestAllowlistConfigTests.readme_path
                             for args, kwargs in cases if not kwargs["expected_leak"]))
+
+
+class H14FixtureDigestAllowlistConfigTests(unittest.TestCase):
+    contract_path = "scripts/ci/h14-integrity/runtime-contract.json"
+    fixture_path = "scripts/ci/h14-integrity/" + "au" + "th.sql"
+    fixture_digest = "a814d70a5439b80a5507cb9d153863ae92aa685c117249a20be0e26fcb1377e5"
+
+    @classmethod
+    def line(cls):
+        # Construct the detector keyword and digest together only at runtime.
+        return '    "' + cls.fixture_path + '": "' + cls.fixture_digest + '",'
+
+    def test_exception_is_bound_to_the_reviewed_fixture_bytes(self):
+        fixture = HERE.parent.parent / self.fixture_path
+        self.assertEqual(hashlib.sha256(fixture.read_bytes()).hexdigest(), self.fixture_digest)
+        contract = json.loads((HERE.parent.parent / self.contract_path).read_text())
+        self.assertEqual(contract["files"][self.fixture_path], self.fixture_digest)
+
+    def test_exact_path_and_complete_json_line_are_both_required(self):
+        allowlist = tomllib.loads(CONFIG.decode())["rules"][0]["allowlists"][3]
+        self.assertEqual(set(allowlist), {"description", "condition", "paths", "regexTarget", "regexes"})
+        self.assertEqual(allowlist["condition"], "AND")
+        self.assertEqual(allowlist["regexTarget"], "line")
+        self.assertEqual(allowlist["paths"], [r"^scripts/ci/h14-integrity/runtime-contract\.json$"])
+        self.assertEqual(len(allowlist["regexes"]), 1)
+
+        def allowed(path, line):
+            return bool(re.search(allowlist["paths"][0], path)
+                        and re.search(allowlist["regexes"][0], line))
+
+        for initial in ("", "\n", "\r\n"):
+            for final in ("", "\n", "\r\n"):
+                self.assertTrue(allowed(self.contract_path, initial + self.line() + final))
+        for path in ("other.json", self.contract_path + ".bak", "backup/" + self.contract_path):
+            self.assertFalse(allowed(path, self.line()))
+        other_digest = hashlib.sha256(b"synthetic-other-h14-fixture-digest").hexdigest()
+        for line in (
+            self.line().replace(self.fixture_digest, other_digest),
+            self.line().replace(".sql", "_key.sql"),
+            self.line().replace('",', '"'),
+            self.line()[1:],
+            "prefix" + self.line(),
+            self.line() + " injected",
+            self.line() + "\nextra",
+        ):
+            self.assertFalse(allowed(self.contract_path, line))
+
+
+@unittest.skipUnless(REAL_BINARY, "Gitleaks not installed locally; real controls are required in CI")
+class RealH14FixtureDigestAllowlistTests(RealSQLAllowlistTests):
+    # Reuse the private scanner fixture without repeating the SQL test set.
+    test_real_each_verified_join_is_allowed_only_in_exact_baseline = None
+    test_real_mutated_sql_context_is_not_allowlisted = None
+    test_real_synthetic_credential_literals_in_baseline_are_detected = None
+    test_real_other_default_rule_remains_active_in_baseline = None
+
+    def test_real_reviewed_digest_is_allowed_only_in_exact_contract(self):
+        path = H14FixtureDigestAllowlistConfigTests.contract_path
+        line = H14FixtureDigestAllowlistConfigTests.line() + "\n"
+        self.scan_case(path, line, expected_leak=False)
+        self.scan_case(path, '{\n  "files": {\n' + line + '  }\n}\n', expected_leak=False)
+        for wrong_path in ("other.json", path + ".bak", "backup/" + path):
+            with self.subTest(path=wrong_path):
+                self.scan_case(wrong_path, line, expected_leak=True)
+
+    def test_real_other_digest_and_context_are_detected_in_contract(self):
+        path = H14FixtureDigestAllowlistConfigTests.contract_path
+        line = H14FixtureDigestAllowlistConfigTests.line()
+        digest = H14FixtureDigestAllowlistConfigTests.fixture_digest
+        other_digest = hashlib.sha256(b"synthetic-other-h14-fixture-digest").hexdigest()
+        for content in (
+            line.replace(digest, other_digest),
+            line.replace(".sql", "_key.sql"),
+            "prefix" + line,
+            line + " injected",
+        ):
+            with self.subTest(mutated_context=True):
+                self.scan_case(path, content + "\n", expected_leak=True)
+
+    def test_real_additional_credential_in_contract_is_detected(self):
+        path = H14FixtureDigestAllowlistConfigTests.contract_path
+        line = H14FixtureDigestAllowlistConfigTests.line()
+        # Inert high-entropy canary assembled only for the private test scanner.
+        canary = "".join(("Q8z4V2n9", "B7x5L3p6", "R1s0T4m8"))
+        credential = "api" + "_key = '" + canary + "'"
+        for separator in ("\n", " "):
+            with self.subTest(separator=repr(separator)):
+                self.scan_case(path, line + separator + credential + "\n", expected_leak=True)
 
 
 if __name__ == "__main__":

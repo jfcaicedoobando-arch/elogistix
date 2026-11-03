@@ -240,6 +240,101 @@ EXCEPTION WHEN OTHERS THEN
       'table_name',et,'column_name',ec,'constraint_name',en));
 END $$;
 
+-- Exercise the official restoration paths against the pre-forward tombstone.
+-- The deliberate outer subtransaction rollback preserves that historical
+-- rowset for the other suites, including after the successful restore case.
+CREATE FUNCTION pg_temp.h14_fin_restore_run(p_case text)
+RETURNS jsonb LANGUAGE plpgsql SECURITY INVOKER AS $$
+DECLARE
+  e uuid; oa uuid; ob uuid; actor uuid; cost uuid; supplier uuid; invoice uuid; insurance uuid;
+  episode timestamptz; baseline_a jsonb; baseline_b jsonb; a0 jsonb; b0 jsonb; a1 jsonb; b1 jsonb;
+  caller jsonb; observed jsonb; st text:='00000'; msg text; hint text; detail text;
+  gate_before text; gate_after text; expected_state text; expected_marker text;
+  ok boolean:=false; parent_and_cost_live boolean; financial_same boolean; restored_rollback boolean;
+  phase text:='historical_fixture'; statement text;
+BEGIN
+  PERFORM pg_temp.h14_fin_owner();
+  SELECT e0.id,e0.organization_id,e0.deleted_at INTO STRICT e,oa,episode
+    FROM public.embarques e0 JOIN public.clientes c ON c.id=e0.cliente_id
+    WHERE c.email='h14-pre-forward-purge-history@example.invalid' AND e0.deleted_at IS NOT NULL;
+  SELECT user_id INTO STRICT actor FROM public.organization_members WHERE organization_id=oa AND role='admin_org';
+  SELECT id INTO STRICT ob FROM public.organizations WHERE nombre='H14 FIN H14.pre-forward.purge B';
+  SELECT id INTO STRICT invoice FROM public.facturas WHERE embarque_id=e AND deleted_at IS NULL;
+  SELECT cc.id,pf.id INTO STRICT cost,supplier FROM public.conceptos_costo cc
+    JOIN public.proveedor_facturas_conceptos pfc ON pfc.concepto_costo_id=cc.id
+    JOIN public.proveedor_facturas pf ON pf.id=pfc.proveedor_factura_id
+    WHERE cc.embarque_id=e AND cc.deleted_at=episode AND pf.deleted_at IS NULL;
+  PERFORM pg_temp.h14_fin_assert(episode IS NOT NULL,'restoration needs a real pre-forward deletion episode');
+  baseline_a:=pg_temp.h14_fin_snapshot(oa);baseline_b:=pg_temp.h14_fin_snapshot(ob);
+  expected_state:=CASE WHEN p_case='R01.restore_history_positive' THEN '00000' ELSE '23514' END;
+  expected_marker:=CASE p_case WHEN 'R02.reject_child_restore_still_dead' THEN 'LC_EMBARQUE_ELIMINADO'
+    WHEN 'R03.restore_failure_atomic' THEN 'LC_SEGURO_COBERTURA_INCOMPLETA' END;
+  PERFORM pg_temp.h14_fin_assert(p_case IN('R01.restore_history_positive','R02.reject_child_restore_still_dead','R03.restore_failure_atomic'),
+    'unknown restoration case');
+  BEGIN
+    IF p_case='R03.restore_failure_atomic' THEN
+      -- A deleted policy is valid historical input. Its live provider invoice
+      -- covers100, while the policy requires200; the real coverage trigger
+      -- must reject reactivation after the parent and cost have been visited.
+      insurance:=pg_temp.h14_fin_uuid(p_case,'insufficient-policy');
+      INSERT INTO public.seguros_embarque(id,organization_id,embarque_id,aseguradora,numero_poliza,
+        vigencia_desde,vigencia_hasta,prima,moneda,proveedor_factura_id,deleted_at)
+        VALUES(insurance,oa,e,'H14 fictitious','H14 restore atomicity',public.fecha_negocio_mx(),
+          public.fecha_negocio_mx()+1,200,'MXN',supplier,episode);
+      PERFORM pg_temp.h14_fin_assert((SELECT subtotal=100 AND moneda::text='MXN' FROM public.proveedor_facturas WHERE id=supplier),
+        'coverage failure must derive from the independent fixture amounts');
+    END IF;
+    a0:=pg_temp.h14_fin_snapshot(oa);b0:=pg_temp.h14_fin_snapshot(ob);
+    caller:=pg_temp.h14_fin_actor(actor);PERFORM pg_temp.h14_fin_assert_actor(actor,oa);
+    gate_before:=coalesce(nullif(current_setting('app.papelera_restore',true),''),'off');
+    statement:=CASE p_case
+      WHEN 'R01.restore_history_positive' THEN format('SELECT public.restaurar_embarque_cascade(%L::uuid)',e)
+      WHEN 'R02.reject_child_restore_still_dead' THEN format('SELECT public.restore_record(''conceptos_costo'',%L::uuid)',cost)
+      ELSE format('SELECT public.restore_record(''embarques'',%L::uuid)',e) END;
+    phase:='official_restore';
+    BEGIN EXECUTE statement;
+    EXCEPTION WHEN OTHERS THEN
+      GET STACKED DIAGNOSTICS st=RETURNED_SQLSTATE,msg=MESSAGE_TEXT,hint=PG_EXCEPTION_HINT,detail=PG_EXCEPTION_DETAIL;
+    END;
+    PERFORM pg_temp.h14_fin_owner();
+    a1:=pg_temp.h14_fin_snapshot(oa);b1:=pg_temp.h14_fin_snapshot(ob);
+    gate_after:=coalesce(nullif(current_setting('app.papelera_restore',true),''),'off');
+    parent_and_cost_live:=EXISTS(SELECT 1 FROM public.embarques WHERE id=e AND deleted_at IS NULL AND deleted_by IS NULL)
+      AND EXISTS(SELECT 1 FROM public.conceptos_costo WHERE id=cost AND deleted_at IS NULL AND deleted_by IS NULL);
+    financial_same:=pg_temp.h14_fin_financial(a0) IS NOT DISTINCT FROM pg_temp.h14_fin_financial(a1);
+    ok:=st=expected_state AND gate_before='off' AND gate_after='off' AND financial_same AND b0 IS NOT DISTINCT FROM b1;
+    IF expected_state='00000' THEN
+      ok:=ok AND parent_and_cost_live
+        AND pg_temp.h14_fin_other_operatives(a0,e) IS NOT DISTINCT FROM pg_temp.h14_fin_other_operatives(a1,e)
+        AND EXISTS(SELECT 1 FROM public.facturas WHERE id=invoice AND deleted_at IS NULL)
+        AND EXISTS(SELECT 1 FROM public.proveedor_facturas WHERE id=supplier AND deleted_at IS NULL);
+    ELSE
+      ok:=ok AND left(msg,length(expected_marker))=expected_marker
+        AND a0 IS NOT DISTINCT FROM a1 AND parent_and_cost_live IS FALSE;
+    END IF;
+    observed:=jsonb_build_object('phase',phase,'caller',caller,'statement',statement,
+      'sqlstate',st,'message',msg,'hint',hint,'detail',detail,'restore_gate_before',gate_before,'restore_gate_after',gate_after,
+      'parent_and_cost_live',parent_and_cost_live,'financial_rows_unchanged',financial_same,
+      'before_a',a0,'after_a',a1,'before_b',b0,'after_b',b1,
+      'no_partial_effects_on_rejection',CASE WHEN st='00000' THEN NULL ELSE a0 IS NOT DISTINCT FROM a1 AND b0 IS NOT DISTINCT FROM b1 END);
+    RAISE EXCEPTION USING ERRCODE='ZH140',MESSAGE='H14 rollback-only restoration observation';
+  EXCEPTION WHEN SQLSTATE 'ZH140' THEN NULL;
+  END;
+  PERFORM pg_temp.h14_fin_owner();
+  restored_rollback:=baseline_a IS NOT DISTINCT FROM pg_temp.h14_fin_snapshot(oa)
+    AND baseline_b IS NOT DISTINCT FROM pg_temp.h14_fin_snapshot(ob);
+  RETURN jsonb_build_object('case_id',p_case,'expected_by_code',jsonb_build_object('sqlstate',expected_state,
+    'message_prefix',expected_marker,'preserve_financial_history',true,'outer_fixture_rollback',true),
+    'reproduction_complete',ok IS TRUE AND restored_rollback,'observed',observed||jsonb_build_object(
+      'pre_forward_history_preserved_by_outer_rollback',restored_rollback));
+EXCEPTION WHEN OTHERS THEN
+  GET STACKED DIAGNOSTICS st=RETURNED_SQLSTATE,msg=MESSAGE_TEXT,hint=PG_EXCEPTION_HINT,detail=PG_EXCEPTION_DETAIL;
+  PERFORM pg_temp.h14_fin_owner();
+  RETURN jsonb_build_object('case_id',p_case,'expected_by_code',jsonb_build_object('context_valid',true),
+    'reproduction_complete',false,'observed',jsonb_build_object('phase',phase,'sqlstate',st,'message',msg,
+      'hint',hint,'detail',detail,'harness_or_fixture_error',true));
+END $$;
+
 CREATE TEMP TABLE h14_fin_results(case_id text PRIMARY KEY,result jsonb NOT NULL);
 INSERT INTO h14_fin_results VALUES ('B01.base',pg_temp.h14_fin_run('B01','base'));
 SELECT 'H14_RESULT '||result::text FROM h14_fin_results WHERE case_id='B01.base';
@@ -345,8 +440,15 @@ SELECT 'H14_RESULT '||result::text FROM h14_fin_results WHERE case_id='X12.base'
 INSERT INTO h14_fin_results VALUES ('X13.base',pg_temp.h14_fin_run('X13','base'));
 SELECT 'H14_RESULT '||result::text FROM h14_fin_results WHERE case_id='X13.base';
 
+INSERT INTO h14_fin_results VALUES ('R01.restore_history_positive',pg_temp.h14_fin_restore_run('R01.restore_history_positive'));
+SELECT 'H14_RESULT '||result::text FROM h14_fin_results WHERE case_id='R01.restore_history_positive';
+INSERT INTO h14_fin_results VALUES ('R02.reject_child_restore_still_dead',pg_temp.h14_fin_restore_run('R02.reject_child_restore_still_dead'));
+SELECT 'H14_RESULT '||result::text FROM h14_fin_results WHERE case_id='R02.reject_child_restore_still_dead';
+INSERT INTO h14_fin_results VALUES ('R03.restore_failure_atomic',pg_temp.h14_fin_restore_run('R03.restore_failure_atomic'));
+SELECT 'H14_RESULT '||result::text FROM h14_fin_results WHERE case_id='R03.restore_failure_atomic';
+
 DO $$ BEGIN
-  PERFORM pg_temp.h14_fin_assert((SELECT count(*)=50 FROM h14_fin_results),'all 50 finance variants must be recorded');
+  PERFORM pg_temp.h14_fin_assert((SELECT count(*)=53 FROM h14_fin_results),'all 50 finance and three restoration variants must be recorded');
   PERFORM pg_temp.h14_fin_assert((SELECT bool_and((result->>'reproduction_complete')::boolean IS TRUE) FROM h14_fin_results),
     'correction contract/context/fixture failed; inspect H14_RESULT');
 END $$;

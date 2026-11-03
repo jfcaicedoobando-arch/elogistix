@@ -78,4 +78,8 @@ export const LC_CODE_MESSAGES: Record<string, string> = {
     "El selector de facturas no está disponible en este momento. Vuelve a intentarlo más tarde.",
   LC_BITACORA_ACCION_RESERVADA:
     "Las aprobaciones y rechazos se registran automáticamente al realizar esa acción en la factura.",
+  LC_EMBARQUE_EN_USO:
+    "Los vínculos financieros se están actualizando. Consulta el estado y vuelve a intentarlo.",
+  LC_EMBARQUE_AISLAMIENTO_NO_SOPORTADO:
+    "No se pudo completar la operación con la configuración de la conexión. Contacta al administrador para revisarla.",
 };

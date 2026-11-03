@@ -1,5 +1,7 @@
 -- Local candidate acceptance: ordinary writes on a complete disposable schema.
 -- No production setup, identity/access changes, or persistent test helpers.
+-- Historical tombstones briefly disable only the shipment H14 delete guard;
+-- the guard is verified on again before any restoration RPC is exercised.
 BEGIN;
 \i supabase/tests/rls/_helpers.sql
 CREATE FUNCTION pg_temp.coverage_assert(ok boolean,label text) RETURNS void LANGUAGE plpgsql AS $$
@@ -18,6 +20,41 @@ BEGIN
   rejected:=true;
  END;
  PERFORM pg_temp.coverage_assert(rejected,label);
+END $$;
+-- This owner-only setup represents rows deleted before H14, not an available
+-- application operation. The owner's mutation must reject without row changes;
+-- the original authenticated actor is restored before the restoration RPC.
+CREATE FUNCTION pg_temp.coverage_legacy_tombstone(ship uuid, stamp timestamptz, actor uuid)
+RETURNS void LANGUAGE plpgsql AS $$
+DECLARE before_row jsonb; affected integer;
+BEGIN
+ PERFORM pg_temp.coverage_assert(auth.uid()=actor AND current_setting('role',true)='authenticated',
+  'legacy fixture starts with the original actor');
+ PERFORM pg_temp.as_postgres();
+ PERFORM pg_temp.coverage_assert(current_user='postgres' AND session_user='postgres' AND auth.uid() IS NULL,
+  'historical setup and H14 rejection use the SQL owner without JWT claims');
+ PERFORM pg_temp.coverage_assert((SELECT tgenabled='O'
+   AND tgfoid='public._h14_guard_baja_embarque()'::regprocedure
+   FROM pg_trigger WHERE tgrelid='public.embarques'::regclass AND tgname='a00_h14_guard_baja'),
+  'H14 guard is enabled before the historical fixture');
+ SELECT to_jsonb(e) INTO STRICT before_row FROM public.embarques e WHERE id=ship;
+ PERFORM pg_temp.coverage_reject(format('UPDATE public.embarques SET deleted_at=%L WHERE id=%L',stamp,ship),
+  'H14 rejects the SQL owner tombstone with live invoice history','LC_EMBARQUE_BLOQUEADO:');
+ PERFORM pg_temp.coverage_assert((SELECT to_jsonb(e) FROM public.embarques e WHERE id=ship)=before_row,
+  'rejected tombstone preserves the complete shipment row');
+ ALTER TABLE public.embarques DISABLE TRIGGER a00_h14_guard_baja;
+ UPDATE public.embarques SET deleted_at=stamp WHERE id=ship;
+ GET DIAGNOSTICS affected=ROW_COUNT;
+ ALTER TABLE public.embarques ENABLE TRIGGER a00_h14_guard_baja;
+ PERFORM pg_temp.coverage_assert(affected=1 AND (SELECT deleted_at=stamp
+  FROM public.embarques WHERE id=ship),'exactly one historical shipment tombstone seeded');
+ PERFORM pg_temp.coverage_assert((SELECT tgenabled='O'
+   AND tgfoid='public._h14_guard_baja_embarque()'::regprocedure
+   FROM pg_trigger WHERE tgrelid='public.embarques'::regclass AND tgname='a00_h14_guard_baja'),
+  'H14 guard is enabled again before the restoration RPC');
+ PERFORM pg_temp.as_user(actor);
+ PERFORM pg_temp.coverage_assert(auth.uid()=actor AND current_setting('role',true)='authenticated',
+  'original actor restored before the restoration RPC');
 END $$;
 CREATE FUNCTION pg_temp.policy(pf uuid,ship uuid,org uuid,premium numeric,currency text DEFAULT 'MXN')
 RETURNS uuid LANGUAGE plpgsql AS $$
@@ -158,7 +195,7 @@ BEGIN
  UPDATE proveedor_facturas SET subtotal=60,total=69.6 WHERE id=pf;
  PERFORM pg_temp.coverage_reject(format('SELECT restore_record(''seguros_embarque'',%L)',s),'insufficient restore RPC rejects atomically');
  PERFORM pg_temp.coverage_assert((SELECT deleted_at IS NOT NULL FROM seguros_embarque WHERE id=s),'failed restore preserves deletion');
- -- Real cascade restore orders concepts -> policy -> shipment.
+ -- Real cascade restore must validate the policy after its concepts, atomically.
  -- Use a new shipment with one policy to isolate rollback/order assertions.
  e:=gen_random_uuid();cc:=gen_random_uuid();
  INSERT INTO embarques(id,organization_id,cliente_id,expediente,modo,tipo,tipo_cambio_usd,tipo_cambio_eur)
@@ -166,18 +203,26 @@ BEGIN
  INSERT INTO conceptos_costo(id,organization_id,embarque_id,proveedor_id,concepto,monto,moneda)
  VALUES(cc,fx.org_a,e,prov,'Cascade allocation',100,'MXN');
  pf:=pg_temp.invoice(e,fx.org_a,prov,cat,100);s:=pg_temp.policy(pf,e,fx.org_a,100);
- at_time:=clock_timestamp();
+ -- _guard_soft_delete normalizes authenticated child tombstones to now().
+ -- The owner-seeded parent must use that same transaction deletion episode.
+ at_time:=now();
  UPDATE conceptos_costo SET deleted_at=at_time WHERE id=cc;
  UPDATE seguros_embarque SET deleted_at=at_time WHERE id=s;
- UPDATE embarques SET deleted_at=at_time WHERE id=e;
+ PERFORM pg_temp.coverage_assert((SELECT deleted_at=at_time FROM conceptos_costo WHERE id=cc)
+  AND (SELECT deleted_at=at_time FROM seguros_embarque WHERE id=s),
+  'valid historical cascade children share the transaction deletion episode');
+ PERFORM pg_temp.coverage_legacy_tombstone(e,at_time,fx.admin_a);
  PERFORM restaurar_embarque_cascade(e);
  PERFORM pg_temp.coverage_assert((SELECT deleted_at IS NULL FROM embarques WHERE id=e)
   AND (SELECT deleted_at IS NULL FROM seguros_embarque WHERE id=s)
-  AND (SELECT deleted_at IS NULL FROM conceptos_costo WHERE id=cc),'real cascade restores valid policy before shipment header');
- at_time:=clock_timestamp();
+  AND (SELECT deleted_at IS NULL FROM conceptos_costo WHERE id=cc),'real cascade restores valid policy, concepts and shipment together');
+ at_time:=now();
  UPDATE conceptos_costo SET deleted_at=at_time WHERE id=cc;
  UPDATE seguros_embarque SET deleted_at=at_time WHERE id=s;
- UPDATE embarques SET deleted_at=at_time WHERE id=e;
+ PERFORM pg_temp.coverage_assert((SELECT deleted_at=at_time FROM conceptos_costo WHERE id=cc)
+  AND (SELECT deleted_at=at_time FROM seguros_embarque WHERE id=s),
+  'insufficient historical cascade children share the transaction deletion episode');
+ PERFORM pg_temp.coverage_legacy_tombstone(e,at_time,fx.admin_a);
  UPDATE proveedor_facturas SET subtotal=60,total=69.6 WHERE id=pf;
  PERFORM pg_temp.as_postgres();
  SELECT jsonb_build_object('shipment',(SELECT to_jsonb(x) FROM embarques x WHERE id=e),

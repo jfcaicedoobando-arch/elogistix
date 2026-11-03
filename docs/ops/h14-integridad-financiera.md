@@ -16,6 +16,8 @@ El diseño serializa por organización las mutaciones relevantes del grafo finan
 
 Las mutaciones protegidas requieren READ COMMITTED. Las escrituras relevantes en REPEATABLE READ o SERIALIZABLE deben rechazarse de forma explícita: un snapshot antiguo puede omitir relaciones creadas después, aunque se bloquee el padre. Las lecturas no cambian de aislamiento ni adquieren un mutex mutante.
 
+La restauración oficial conserva su autorización y ACL existentes. Adquiere el mutex antes de bloquear el padre, vuelve a comprobar identidad, organización y roles tras esperar y recaptura el episodio de baja. Restaura primero el embarque y después sus hijos; los conceptos siguen precediendo a las pólizas. Un fallo de un hijo revierte también el padre y la puerta local de restauración. Los escritores financieros no admiten un bypass mediante esa puerta.
+
 La serialización por organización es una decisión técnica conservadora y puede producir contención entre documentos distintos de la misma empresa. Una alternativa futura sería una coordinación más granular por anclas documentales, con pruebas específicas para grafos inicialmente vacíos, reasignaciones, restauraciones y documentos consolidados. No se debe retirar la coordinación antes de demostrar ese invariante.
 
 ## Alcance que requiere revisión
@@ -40,16 +42,18 @@ Los vínculos de garantías que sí tienen factura de proveedor entran en la cob
 
 ## Evidencia del candidato
 
-Candidato SQL: `20261103100000_h14_baja_embarque_integridad_financiera.sql`, SHA-256 `3706671509934b9c5a45b32997c987c2038a22befdeff5cb35b76fe459560dc1`. La preparación local reconstruyó la base Git e302 con 346 migraciones y cuatro entradas Drizzle; creó historia ficticia antes del forward y verificó que sus datos lógicos no cambiaron al aplicarlo.
+Candidato SQL: `20261103100000_h14_baja_embarque_integridad_financiera.sql`, SHA-256 `e926236c6a54d353c905477677ae31f5ff1800caed1734c9cf2a65ee457c087e`. La preparación local reconstruyó la base Git e302 con 346 migraciones y cuatro entradas Drizzle; creó historia ficticia antes del forward y verificó que sus datos lógicos no cambiaron al aplicarlo.
 
-El ensayo final aislado completó 135 casos: 51 financieros, 26 de autorización, 44 de escritores/restauraciones y 14 de concurrencia. Incluye conversión real local de dos proformas a factura borrador compartida, purga bloqueada antes de borrar anclas, ambos órdenes de commit/rollback, grafos inicialmente vacíos, revalidación de permisos tras esperar y seis rutas oficiales de `restore_record`. Todos los rechazos comprobados conservaron los datos anteriores a la operación.
+El ensayo final aislado `372958c495c14694a58f25f66effe7ef` completó 140 casos: 54 financieros, 26 de autorización, 44 de escritores/restauraciones y 16 de concurrencia. Incluye conversión real local de dos proformas a factura borrador compartida, purga bloqueada antes de borrar anclas, ambos órdenes de commit/rollback, grafos inicialmente vacíos, revalidación de permisos tras esperar y seis rutas oficiales de `restore_record`. Añade restauración histórica válida, rechazo de restauración individual con padre eliminado, rollback completo por cobertura insuficiente y carreras de restauración, baja y revocación. Todos los rechazos comprobados conservaron los datos anteriores a la operación.
 
 El caso agregado de escala comparó siete conjuntos esperados contra el resolver anterior y la implementación nueva, con 2.000 embarques y 80 proformas ajenos a la familia. Los tiempos del fixture son descriptivos y de orden fijo; no estiman latencia o capacidad productiva. El diagnóstico no promete congelar los datos después de responder.
 
 Las cuatro suites conservaron su esquema; la base origen y los roles del cluster quedaron iguales. Finanzas y autorización confirmaron rollback lógico; no se afirma rollback de secuencias. Se verificó la ausencia de los contenedores al terminar. El baseline del repositorio corresponde al quinto clon separado, con el post-migrate de CI y pg_dump 17.9 oficial; las pruebas de seguridad se ejecutaron antes de esos grants de CI.
 
+Después de capturar ese baseline pasaron también siete guards existentes en el quinto clon, con el arnés de CI y ejecución secuencial. Conservan sus comprobaciones de restricciones, cobertura, aislamiento de empresas y restauración; los fixtures históricos aíslan sólo los triggers nombrados y los reactivan antes de las RPC. Sus datos y esquema permanecieron iguales al finalizar. Esta evidencia posterior al arnés no sustituye las cuatro suites estrictas anteriores.
+
 Además pasaron 111 pruebas frontend pertinentes con servicios ficticios, TypeScript, la auditoría de arquitectura y ocho pruebas Python de contratos del harness. La autenticación HTTP/JWT firmada, el navegador contra infraestructura desplegada y los proveedores fiscales quedan fuera de esta evidencia.
 
-La lane H14 de `.github/workflows/rls-tests.yml` ejecuta `test_static.py` y `ci_run.py` antes del post-migrate. Su contrato `scripts/ci/h14-integrity/runtime-contract.json` fija los hashes y los 135 IDs; el runner exige el servicio PostgreSQL efímero del mismo job de Actions. Los logs y resultados por caso se publican como artefacto de CI. Esta ruta no aplica SQL en bases remotas.
+La lane H14 de `.github/workflows/rls-tests.yml` ejecuta `test_static.py` y `ci_run.py` antes del post-migrate. Su contrato `scripts/ci/h14-integrity/runtime-contract.json` fija los hashes y los 140 IDs; el runner exige el servicio PostgreSQL efímero del mismo job de Actions. Los logs y resultados por caso se publican como artefacto de CI. Esta ruta no aplica SQL en bases remotas.
 
 Estos resultados acreditan el candidato y los límites descritos. La decisión de anticipos/garantías anterior y la aplicación remota siguen separadas.

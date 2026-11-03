@@ -10,40 +10,41 @@ import { resolve } from "node:path";
 
 const MIGRATIONS_DIR = resolve(process.cwd(), "supabase/migrations");
 
-function findLatestBody(): string {
-  const files = readdirSync(MIGRATIONS_DIR).sort();
-  let latest = "";
-  for (const f of files) {
-    const body = readFileSync(resolve(MIGRATIONS_DIR, f), "utf8");
-    if (/FUNCTION\s+public\.eliminar_embarque_completo\b/i.test(body)) {
-      latest = body;
+/** Sólo la definición vigente y su cuerpo dollar-quoted, sin funciones vecinas. */
+function findLatestBody(fn: string): string {
+  const inicio = new RegExp(
+    `CREATE\\s+OR\\s+REPLACE\\s+FUNCTION\\s+${fn.replaceAll(".", "\\.")}\\s*\\(`,
+    "gi",
+  );
+  for (const file of readdirSync(MIGRATIONS_DIR).filter((f) => f.endsWith(".sql")).sort().reverse()) {
+    const sql = readFileSync(resolve(MIGRATIONS_DIR, file), "utf8");
+    const definitions: string[] = [];
+    for (const match of sql.matchAll(inicio)) {
+      const start = match.index;
+      const tag = /AS\s+(\$[A-Za-z_]*\$)/.exec(sql.slice(start));
+      if (!tag) continue;
+      const open = start + tag.index + tag[0].length;
+      const close = sql.indexOf(tag[1], open);
+      if (close !== -1) definitions.push(sql.slice(start, close + tag[1].length));
     }
+    if (definitions.length > 0) return definitions[definitions.length - 1];
   }
-  return latest;
-}
-
-/**
- * Índice de la ÚLTIMA definición (no del COMMENT ON FUNCTION, que también
- * menciona el nombre y dejaba el slice vacío).
- */
-function lastDefIndex(body: string): number {
-  let idx = -1;
-  for (const m of body.matchAll(
-    /CREATE\s+OR\s+REPLACE\s+FUNCTION\s+public\.eliminar_embarque_completo\b/gi,
-  )) {
-    idx = m.index ?? idx;
-  }
-  return idx;
+  throw new Error(`No se encontró FUNCTION ${fn}`);
 }
 
 describe("eliminar_embarque_completo bloquea proformas en borrador", () => {
-  const body = findLatestBody();
+  const rpc = findLatestBody("public.eliminar_embarque_completo");
+  const collector = findLatestBody("public._h14_dependencias_baja_embarque");
 
-  it("la última definición cuenta proformas NOT IN ('cancelada','facturada')", () => {
-    const idx = lastDefIndex(body);
-    const slice = body.slice(idx);
-    expect(slice).toMatch(
-      /estado_proforma[\s\S]{0,120}NOT\s+IN\s*\(\s*'cancelada'\s*,\s*'facturada'\s*\)/i,
+  it("delega al recolector vigente que incluye borradores y excluye canceladas y facturadas", () => {
+    expect(rpc).toMatch(
+      /v_motivos\s*:=\s*public\._h14_dependencias_baja_embarque\(p_embarque_id,\s*v_org,/,
     );
+    expect(rpc).toMatch(/IF \(v_motivos->>'bloqueado'\)::boolean IS TRUE THEN/);
+    expect(collector).toMatch(/public\._h14_proformas_baja_embarque\(p_embarque_id,\s*p_org\)/);
+    expect(collector).toMatch(
+      /FROM public\.proformas p, proforma_ids ids[\s\S]{0,240}p\.deleted_at IS NULL\s+AND COALESCE\(p\.estado_proforma, 'pendiente'\) NOT IN \('cancelada', 'facturada'\)/,
+    );
+    expect(collector).not.toMatch(/estado_aprobacion/);
   });
 });

@@ -18,7 +18,7 @@ Los fixtures se derivan del ensayo aislado final `b76cfcbabad044f8b1c26a4717292c
 
 | Lote | Casos |
 |---|---|
-| Finanzas serial | B01/B02; L01-L05 con productor real; estados E01-E08; P01 muestra frente a conteo; P02 monedas/importes sin validar tasas reales; H01/H02/H04; vínculos CxP agregados |
+| Finanzas serial | B01/B02; L01-L05 con productor real; estados E01-E08; P01 muestra frente a conteo; P02 purga ante historia financiera previa; H01/H02/H04; vínculos CxP agregados; R01-R03 restauración histórica y atomicidad |
 | Diagnóstico | Mismo conjunto y conteos que HINT de rechazo, categorías cerrada/comisión, muestras máximas 20, conteos completos, deduplicación de un documento por múltiples caminos, sin DML |
 | Autorización | A01-A07, A05 ahora rechazo explícito; diagnóstico sin filtración cross-org, lector de otra empresa, anon/sin UID, ACL de helpers privados, búsqueda segura y Super Admin fuera de empresa activa |
 | Escritores | INSERT, restaurar, mover FK y activar vínculo contra embarque borrado; documentos vivos/cancelados según contrato conservado; mismo tenant y control de otro tenant |
@@ -46,16 +46,16 @@ La evidencia distingue pruebas SQL/RLS de HTTP/JWT/UI. Los controles de nulabili
 
 ## Preparación y evidencia
 
-La suite actual declara 51 casos financieros, 26 de autorización, 44 de escritores y 14 carreras. Los conteos exactos y hashes ejecutados se fijan en `runtime-contract.json`; el runner rechaza faltantes, duplicados y observaciones no confirmadas. La ejecución local usa además un manifiesto independiente de overlay/infra y un quinto clon sólo para el snapshot oficial de CI.
+La suite actual declara 54 casos financieros, 26 de autorización, 44 de escritores y 16 carreras. Los conteos exactos y hashes ejecutados se fijan en `runtime-contract.json`; el runner rechaza faltantes, duplicados y observaciones no confirmadas. La ejecución local usa además un manifiesto independiente de overlay/infra y un quinto clon para el snapshot oficial de CI y, después, siete guards existentes con el arnés de CI.
 
-Los primeros intentos locales completaron replay e historia ficticia, y confirmaron Finance/Auth/Carreras. El lote de escritores detectó errores de sus constructores antes de emitir casos: etiqueta de categoría duplicada y edición de concepto tras emitir factura. Las correcciones se limitaron a los fixtures; las guardas del ERP permanecen activas. El estado terminal de cada ensayo, incluido cleanup, es la fuente de verdad del informe de ejecución.
+Los fixtures históricos que ya no se pueden crear con las nuevas guardas se preparan de forma explícita como propietario SQL y dentro de rollback. Comprueban primero el rechazo de la guarda activa, aíslan únicamente el trigger nombrado y lo reactivan y verifican antes de llamar a la RPC como el actor original. Los episodios de baja usan `now()`, como la guarda existente. El bloque de guards de CI se ejecuta secuencialmente para no solapar sus locks de DDL en una base compartida.
 
 ## Resultado local y alcance pendiente
 
-El ensayo local de root `c04c9938f0684246819ed79383e07a97` terminó con 135 observaciones completas, cuatro suites exit 0 y limpieza confirmada. Finanzas incluye 45 llamadas al RPC de baja (9 permitidas y 36 rechazos), cinco restricciones de constructibilidad E06/E08 y un agregado P03 de siete comparaciones de conjuntos. Los 44 casos de escritores incluyen seis restauraciones por `restore_record`, rutas directas, purga y rechazo de aislamientos no soportados. C14 comprueba la revocación durante una espera real del mutex.
+El ensayo local `372958c495c14694a58f25f66effe7ef` terminó con 140 observaciones completas, cuatro suites exit 0 y siete guards existentes aprobados. Finanzas incluye 45 llamadas al RPC de baja (9 permitidas y 36 rechazos), cinco restricciones de constructibilidad E06/E08, un agregado P03 de siete comparaciones de conjuntos y tres casos de restauración histórica. Los 44 casos de escritores incluyen seis restauraciones por `restore_record`, rutas directas, purga y rechazo de aislamientos no soportados. C14 comprueba revocación durante la espera de baja; C15 hace lo mismo para restauración y C16 comprueba restauración confirmada antes del rechazo de una baja concurrente.
 
-El candidato conservó los datos ficticios previos al forward; los esquemas, datos del origen y roles permanecieron iguales durante las pruebas. Las secuencias están excluidas de la garantía de rollback. El quinto clon local se usa exclusivamente para generar el snapshot oficial posterior al arnés de CI.
+El candidato conservó los datos ficticios previos al forward; los esquemas, datos del origen y roles permanecieron iguales durante las pruebas. Las secuencias están excluidas de la garantía de rollback. El quinto clon produjo el snapshot oficial posterior al arnés de CI; sus siete guards posteriores conservaron esquema y datos. Se confirmó la eliminación del contenedor y su ausencia por CID y etiqueta de ejecución.
 
-La comparación de inventario OID de todas las funciones privadas `_h14_*` se añadió a A08 después de ese ensayo local, conservando sus 26 IDs y 56 comprobaciones de ACL. El head definitivo debe validar ese archivo y todos los hashes mediante la lane de Actions. La evidencia de CI se guarda en `reports/h14-integrity-ci/` y en el artifact `h14-integrity-<run_attempt>`.
+A08 incluye el inventario OID exacto de los 14 helpers privados y 56 comprobaciones de ejecución denegada. El head definitivo debe validar todos los hashes mediante la lane de Actions. La evidencia de CI se guarda en `reports/h14-integrity-ci/` y en el artifact `h14-integrity-<run_attempt>`.
 
 Las observaciones SQL, RLS y SSR no certifican el recorrido HTTP/JWT firmado ni un despliegue. Los criterios de estados existentes se conservan; las decisiones de negocio adicionales se documentan aparte del éxito de la regresión.

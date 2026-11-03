@@ -52,3 +52,13 @@ regexTarget = "line"
 # The character class preserves the literal context without flagging this regex.
 # Keep unsupported CRLF/EOF projections detectable; only the published LF block.
 regexes = ['''^(?:\n)?su SHA256 coincide con el digest publicado por la AP[I] oficial de GitHub:\n`a0c3101b4158d1dfb7d6a78a7bf0f3de80c96bb423c152beec8beb22786f2238`\.[ \t]*(?:\n)?$''']
+
+[[rules.allowlists]]
+description = "Verified H14 authorization fixture SHA256; exact frozen-contract JSON line only"
+condition = "AND"
+paths = ['''^scripts/ci/h14-integrity/runtime-contract\.json$''']
+regexTarget = "line"
+# This digest identifies the reviewed fictitious SQL fixture, not a credential.
+# Keep its exact field, digest, indentation and comma; other values still scan.
+# The character class avoids treating this configuration source as a finding.
+regexes = ['''^(?:\r?\n)?    "scripts/ci/h14-integrity/au[t]h\.sql": "a814d70a5439b80a5507cb9d153863ae92aa685c117249a20be0e26fcb1377e5",(?:\r?\n)?$''']

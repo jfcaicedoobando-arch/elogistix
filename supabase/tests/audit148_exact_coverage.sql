@@ -1,6 +1,7 @@
 -- Audit148: coordinated exact documentary coverage, ordinary full-schema writes.
 -- Run from the repository root on a disposable schema containing the candidate.
--- All fixtures and pg_temp helpers roll back. No trigger/constraint is disabled.
+-- All fixtures and pg_temp helpers roll back. Only the shipment H14 delete guard
+-- is briefly disabled to reproduce pre-migration tombstones, then verified on.
 -- The old audit148_full_coverage_write.sql regression remains independently useful.
 BEGIN;
 \i supabase/tests/rls/_helpers.sql
@@ -25,6 +26,42 @@ BEGIN
     rejected := true;
   END;
   PERFORM pg_temp.exact148_assert(rejected, label);
+END $$;
+
+-- Historical restoration fixtures must not become a product bypass: first
+-- prove the owner's delete is rejected with H14 enabled, then seed one pre-H14
+-- tombstone and restore the guard and original actor before the restoration RPC.
+CREATE FUNCTION pg_temp.exact148_legacy_tombstone(p_ship uuid, p_stamp timestamptz, p_actor uuid)
+RETURNS void LANGUAGE plpgsql AS $$
+DECLARE before_row jsonb; affected integer;
+BEGIN
+  PERFORM pg_temp.exact148_assert(auth.uid() = p_actor
+    AND current_setting('role', true) = 'authenticated', 'legacy fixture starts with the original actor');
+  PERFORM pg_temp.as_postgres();
+  PERFORM pg_temp.exact148_assert(current_user = 'postgres' AND session_user = 'postgres'
+    AND auth.uid() IS NULL, 'historical setup and H14 rejection use the SQL owner without JWT claims');
+  PERFORM pg_temp.exact148_assert((SELECT tgenabled = 'O'
+      AND tgfoid = 'public._h14_guard_baja_embarque()'::regprocedure
+    FROM pg_trigger WHERE tgrelid = 'public.embarques'::regclass
+      AND tgname = 'a00_h14_guard_baja'), 'H14 guard is enabled before the historical fixture');
+  SELECT to_jsonb(e) INTO STRICT before_row FROM public.embarques e WHERE id = p_ship;
+  PERFORM pg_temp.exact148_reject(format('UPDATE public.embarques SET deleted_at=%L WHERE id=%L', p_stamp, p_ship),
+    'H14 rejects the SQL owner tombstone with live invoice history', 'LC_EMBARQUE_BLOQUEADO:');
+  PERFORM pg_temp.exact148_assert((SELECT to_jsonb(e) FROM public.embarques e WHERE id = p_ship) = before_row,
+    'rejected tombstone preserves the complete shipment row');
+  ALTER TABLE public.embarques DISABLE TRIGGER a00_h14_guard_baja;
+  UPDATE public.embarques SET deleted_at = p_stamp WHERE id = p_ship;
+  GET DIAGNOSTICS affected = ROW_COUNT;
+  ALTER TABLE public.embarques ENABLE TRIGGER a00_h14_guard_baja;
+  PERFORM pg_temp.exact148_assert(affected = 1 AND (SELECT deleted_at = p_stamp
+    FROM public.embarques WHERE id = p_ship), 'exactly one historical shipment tombstone seeded');
+  PERFORM pg_temp.exact148_assert((SELECT tgenabled = 'O'
+      AND tgfoid = 'public._h14_guard_baja_embarque()'::regprocedure
+    FROM pg_trigger WHERE tgrelid = 'public.embarques'::regclass
+      AND tgname = 'a00_h14_guard_baja'), 'H14 guard is enabled again before the restoration RPC');
+  PERFORM pg_temp.as_user(p_actor);
+  PERFORM pg_temp.exact148_assert(auth.uid() = p_actor
+    AND current_setting('role', true) = 'authenticated', 'original actor restored before the restoration RPC');
 END $$;
 
 CREATE FUNCTION pg_temp.exact148_policy(p_invoice uuid, p_ship uuid, p_org uuid,
@@ -394,17 +431,23 @@ BEGIN
   UPDATE public.proveedor_facturas SET subtotal = 199.99, iva = 31.9984, total = 231.9884 WHERE id = f.invoice;
   p := pg_temp.exact148_pair(f.ship, f.policy, 'insuficiente', 'actual fiscal reduction caps preserved allocations');
 
-  -- A real allocation-only cascade: invoice header is NULL and both linked
-  -- concepts must restore BEFORE the policy, while the shipment is still deleted.
+  -- A real allocation-only cascade over pre-H14 history: invoice header is NULL
+  -- and both linked concepts must restore before the policy is validated.
   n := n + 1;
   SELECT * INTO STRICT f FROM pg_temp.exact148_fixture(orgs.org_a, provider, category, client, n);
   UPDATE public.proveedor_facturas SET embarque_id = NULL, subtotal = 100, total = 100 WHERE id = f.invoice;
   PERFORM pg_temp.exact148_line(orgs.org_a, f.invoice, f.concept, 33.3333);
   PERFORM pg_temp.exact148_line(orgs.org_a, f.invoice, f.second_concept, 66.6667);
-  stamp := clock_timestamp();
+  -- _guard_soft_delete normalizes authenticated child tombstones to now().
+  -- The owner-seeded parent must use that same transaction deletion episode.
+  stamp := now();
   UPDATE public.conceptos_costo SET deleted_at = stamp WHERE id IN (f.concept, f.second_concept);
   UPDATE public.seguros_embarque SET deleted_at = stamp WHERE id = f.policy;
-  UPDATE public.embarques SET deleted_at = stamp WHERE id = f.ship;
+  PERFORM pg_temp.exact148_assert((SELECT count(*) = 2 FROM public.conceptos_costo
+      WHERE id IN (f.concept, f.second_concept) AND deleted_at = stamp)
+    AND (SELECT deleted_at = stamp FROM public.seguros_embarque WHERE id = f.policy),
+    'valid historical cascade children share the transaction deletion episode');
+  PERFORM pg_temp.exact148_legacy_tombstone(f.ship, stamp, orgs.admin_a);
   PERFORM public.restaurar_embarque_cascade(f.ship);
   PERFORM pg_temp.exact148_assert((SELECT deleted_at IS NULL FROM public.embarques WHERE id = f.ship)
     AND (SELECT deleted_at IS NULL AND proveedor_factura_id = f.invoice FROM public.seguros_embarque WHERE id = f.policy)
@@ -414,10 +457,14 @@ BEGIN
       WHERE proveedor_factura_id = f.invoice AND concepto_costo_id IN (f.concept, f.second_concept)),
     'allocation-only real cascade restores all dependencies without inventing header membership');
   p := pg_temp.exact148_pair(f.ship, f.policy, 'completa', 'allocation-only cascade reader/writer parity');
-  stamp := clock_timestamp();
+  stamp := now();
   UPDATE public.conceptos_costo SET deleted_at = stamp WHERE id IN (f.concept, f.second_concept);
   UPDATE public.seguros_embarque SET deleted_at = stamp WHERE id = f.policy;
-  UPDATE public.embarques SET deleted_at = stamp WHERE id = f.ship;
+  PERFORM pg_temp.exact148_assert((SELECT count(*) = 2 FROM public.conceptos_costo
+      WHERE id IN (f.concept, f.second_concept) AND deleted_at = stamp)
+    AND (SELECT deleted_at = stamp FROM public.seguros_embarque WHERE id = f.policy),
+    'insufficient historical cascade children share the transaction deletion episode');
+  PERFORM pg_temp.exact148_legacy_tombstone(f.ship, stamp, orgs.admin_a);
   UPDATE public.proveedor_facturas SET subtotal = 60, total = 60 WHERE id = f.invoice;
   PERFORM pg_temp.as_postgres();
   SELECT jsonb_build_object(

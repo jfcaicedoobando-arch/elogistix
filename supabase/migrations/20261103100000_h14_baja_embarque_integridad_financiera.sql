@@ -4,7 +4,7 @@
 BEGIN;
 CREATE TEMP TABLE h14_baja_metadata_before ON COMMIT DROP AS
 SELECT p.oid, to_jsonb(p) - 'prosrc' AS metadata
-FROM pg_catalog.pg_proc p WHERE p.oid IN ('public.eliminar_embarque_completo(uuid)'::regprocedure, 'public.purgar_embarque_cascade(uuid)'::regprocedure);
+FROM pg_catalog.pg_proc p WHERE p.oid IN ('public.eliminar_embarque_completo(uuid)'::regprocedure, 'public.purgar_embarque_cascade(uuid)'::regprocedure, 'public.restaurar_embarque_cascade(uuid)'::regprocedure);
 DO $preconditions$
 DECLARE r record; p pg_catalog.pg_proc%ROWTYPE;
 BEGIN
@@ -25,11 +25,12 @@ BEGIN
     ('public._h14_guard_baja_embarque()',ARRAY['9cdcb03d59701b5eb691b420e8e1cf2d']::text[],true,'v','trigger',ARRAY['postgres=X/postgres']::text[]),
     ('public.diagnosticar_baja_embarque(uuid)',ARRAY['e47d56141992d3afb0d3c81f50191fda']::text[],true,'v','jsonb',ARRAY['authenticated=X/postgres','postgres=X/postgres','service_role=X/postgres']::text[]),
     ('public.eliminar_embarque_completo(uuid)',ARRAY['e66c05becee10cb05816519539f1b69d','f603355293c0d33598d12fdc44cb9b26']::text[],true,'v','void',ARRAY['authenticated=X/postgres','postgres=X/postgres','service_role=X/postgres']::text[]),
-    ('public.purgar_embarque_cascade(uuid)',ARRAY['f533510aa9fd814aa071a638135c82c9','05e482ef7cea9f8cf6d2a3c812a908c6','d03f859c24b0a83097c095730823bde5']::text[],true,'v','void',ARRAY['authenticated=X/postgres','postgres=X/postgres','service_role=X/postgres']::text[])
+    ('public.purgar_embarque_cascade(uuid)',ARRAY['f533510aa9fd814aa071a638135c82c9','05e482ef7cea9f8cf6d2a3c812a908c6','d03f859c24b0a83097c095730823bde5']::text[],true,'v','void',ARRAY['authenticated=X/postgres','postgres=X/postgres','service_role=X/postgres']::text[]),
+    ('public.restaurar_embarque_cascade(uuid)',ARRAY['a3c02349de880e10e09c36ddb0b4686a','288e55533ab4e28a8652e0201df9e734','d702a1b73aa279f7c313613265abf837']::text[],true,'v','void',ARRAY['authenticated=X/postgres','postgres=X/postgres','service_role=X/postgres']::text[])
   ) v(signature, body_hashes, definer, volatility, return_type, acl) LOOP
     SELECT * INTO p FROM pg_catalog.pg_proc WHERE oid = pg_catalog.to_regprocedure(r.signature);
     IF NOT FOUND THEN
-      IF r.signature IN ('public.eliminar_embarque_completo(uuid)', 'public.purgar_embarque_cascade(uuid)') THEN
+      IF r.signature IN ('public.eliminar_embarque_completo(uuid)', 'public.purgar_embarque_cascade(uuid)', 'public.restaurar_embarque_cascade(uuid)') THEN
         RAISE EXCEPTION 'H14_PREFLIGHT: missing existing mutation signature %', r.signature;
       END IF;
       CONTINUE;
@@ -1122,6 +1123,80 @@ $function$;
 REVOKE ALL ON FUNCTION public.purgar_embarque_cascade(uuid) FROM PUBLIC, anon;
 GRANT EXECUTE ON FUNCTION public.purgar_embarque_cascade(uuid) TO authenticated, service_role, postgres;
 
+-- Preserve the existing restore authority and timestamp-based cascade. The
+-- parent must be active before its financial children can be reactivated.
+CREATE OR REPLACE FUNCTION public.restaurar_embarque_cascade(p_embarque_id uuid)
+RETURNS void
+LANGUAGE plpgsql VOLATILE SECURITY DEFINER
+SET search_path TO 'public'
+AS $function$
+DECLARE
+  v_uid uuid := auth.uid();
+  v_org uuid;
+  v_locked_org uuid;
+  v_deleted_at timestamptz;
+BEGIN
+  IF v_uid IS NULL THEN
+    RAISE EXCEPTION 'No autenticado';
+  END IF;
+  SELECT organization_id INTO v_org
+    FROM public.embarques
+   WHERE id = p_embarque_id AND deleted_at IS NOT NULL;
+  IF v_org IS NULL THEN
+    RAISE EXCEPTION 'Embarque no encontrado en papelera';
+  END IF;
+  -- Keep the legacy restore role gate, independently of delete capabilities.
+  IF (
+    public.has_role(v_uid, 'super_admin'::app_role)
+    OR (v_org = public.current_user_org_id()
+        AND (public.has_role(v_uid, 'admin'::app_role) OR public.has_role(v_uid, 'operador'::app_role)))
+  ) IS DISTINCT FROM TRUE THEN
+    RAISE EXCEPTION 'Permisos insuficientes';
+  END IF;
+
+  -- Use the same org-before-parent order as deletion. The mutex enforces RC;
+  -- writers still reject contention instead of waiting with child rows locked.
+  PERFORM public._h14_mutex_baja_embarque(v_org, true);
+  SELECT organization_id, deleted_at INTO v_locked_org, v_deleted_at
+    FROM public.embarques WHERE id = p_embarque_id FOR UPDATE;
+  IF NOT FOUND OR v_deleted_at IS NULL THEN
+    RAISE EXCEPTION 'Embarque no encontrado en papelera';
+  END IF;
+  IF v_locked_org IS DISTINCT FROM v_org THEN
+    RAISE EXCEPTION 'LC_EMBARQUE_EN_USO: el embarque cambió de organización; consulta el estado y vuelve a intentarlo'
+      USING ERRCODE = '55P03';
+  END IF;
+  -- A waiter must not retain a revoked role, a changed identity or a stale org.
+  IF auth.uid() IS DISTINCT FROM v_uid THEN
+    RAISE EXCEPTION 'No autenticado';
+  END IF;
+  IF (
+    public.has_role(v_uid, 'super_admin'::app_role)
+    OR (v_locked_org = public.current_user_org_id()
+        AND (public.has_role(v_uid, 'admin'::app_role) OR public.has_role(v_uid, 'operador'::app_role)))
+  ) IS DISTINCT FROM TRUE THEN
+    RAISE EXCEPTION 'Permisos insuficientes';
+  END IF;
+
+  -- D-01: official restore gate only. No financial writer bypass is added.
+  -- All changes, including the parent and this local setting, roll back if any
+  -- child fails. Recapture the deletion episode only after locking the parent.
+  PERFORM set_config('app.papelera_restore', 'on', true);
+  UPDATE public.embarques SET deleted_at = NULL, deleted_by = NULL WHERE id = p_embarque_id;
+  UPDATE public.conceptos_venta       SET deleted_at = NULL, deleted_by = NULL WHERE embarque_id = p_embarque_id AND deleted_at = v_deleted_at;
+  UPDATE public.conceptos_costo       SET deleted_at = NULL, deleted_by = NULL WHERE embarque_id = p_embarque_id AND deleted_at = v_deleted_at;
+  UPDATE public.documentos_embarque   SET deleted_at = NULL, deleted_by = NULL WHERE embarque_id = p_embarque_id AND deleted_at = v_deleted_at;
+  UPDATE public.notas_embarque        SET deleted_at = NULL, deleted_by = NULL WHERE embarque_id = p_embarque_id AND deleted_at = v_deleted_at;
+  UPDATE public.eventos_embarque      SET deleted_at = NULL, deleted_by = NULL WHERE embarque_id = p_embarque_id AND deleted_at = v_deleted_at;
+  UPDATE public.embarque_contenedores SET deleted_at = NULL, deleted_by = NULL WHERE embarque_id = p_embarque_id AND deleted_at = v_deleted_at;
+  UPDATE public.facturas              SET deleted_at = NULL, deleted_by = NULL WHERE embarque_id = p_embarque_id AND deleted_at = v_deleted_at;
+  UPDATE public.seguros_embarque      SET deleted_at = NULL                    WHERE embarque_id = p_embarque_id AND deleted_at = v_deleted_at;
+  PERFORM set_config('app.papelera_restore', 'off', true);
+END;
+$function$;
+REVOKE ALL ON FUNCTION public.restaurar_embarque_cascade(uuid) FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.restaurar_embarque_cascade(uuid) TO authenticated, service_role, postgres;
+
 DROP TRIGGER IF EXISTS a00_h14_guard_escritura ON public.facturas;
 CREATE TRIGGER a00_h14_guard_escritura BEFORE INSERT OR UPDATE OR DELETE ON public.facturas FOR EACH ROW EXECUTE FUNCTION public._h14_guard_escritor_baja();
 
@@ -1196,7 +1271,8 @@ BEGIN
     ('public._h14_guard_baja_embarque()',ARRAY['9cdcb03d59701b5eb691b420e8e1cf2d']::text[],true,'v','trigger',ARRAY['postgres=X/postgres']::text[]),
     ('public.diagnosticar_baja_embarque(uuid)',ARRAY['e47d56141992d3afb0d3c81f50191fda']::text[],true,'v','jsonb',ARRAY['authenticated=X/postgres','postgres=X/postgres','service_role=X/postgres']::text[]),
     ('public.eliminar_embarque_completo(uuid)',ARRAY['f603355293c0d33598d12fdc44cb9b26']::text[],true,'v','void',ARRAY['authenticated=X/postgres','postgres=X/postgres','service_role=X/postgres']::text[]),
-    ('public.purgar_embarque_cascade(uuid)',ARRAY['d03f859c24b0a83097c095730823bde5']::text[],true,'v','void',ARRAY['authenticated=X/postgres','postgres=X/postgres','service_role=X/postgres']::text[])
+    ('public.purgar_embarque_cascade(uuid)',ARRAY['d03f859c24b0a83097c095730823bde5']::text[],true,'v','void',ARRAY['authenticated=X/postgres','postgres=X/postgres','service_role=X/postgres']::text[]),
+    ('public.restaurar_embarque_cascade(uuid)',ARRAY['d702a1b73aa279f7c313613265abf837']::text[],true,'v','void',ARRAY['authenticated=X/postgres','postgres=X/postgres','service_role=X/postgres']::text[])
   ) v(signature, body_hashes, definer, volatility, return_type, acl) LOOP
     SELECT * INTO p FROM pg_catalog.pg_proc WHERE oid = pg_catalog.to_regprocedure(r.signature);
     IF NOT FOUND OR NOT (md5(p.prosrc) = ANY(r.body_hashes)) OR p.proowner <> 'postgres'::regrole

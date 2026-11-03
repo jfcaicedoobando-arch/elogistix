@@ -4,7 +4,7 @@
   "base_commit": "e302a5a8baee295a5de83adc91265c87cbf45988",
   "candidate_migration": {
     "path": "supabase/migrations/20261103100000_h14_baja_embarque_integridad_financiera.sql",
-    "sha256": "3706671509934b9c5a45b32997c987c2038a22befdeff5cb35b76fe459560dc1"
+    "sha256": "e926236c6a54d353c905477677ae31f5ff1800caed1734c9cf2a65ee457c087e"
   },
   "candidate_post_migrate": {
     "path": "supabase/tests/rls/_ci_post_migrate.sql",
@@ -13,17 +13,17 @@
   "candidate_rpc_md5": "f603355293c0d33598d12fdc44cb9b26",
   "files": {
     "scripts/ci/h14-integrity/fixture_helpers.sql": "e0b336d8b98575cbd7f38781474123a39eeb14577a3241367201ee322a540dfe",
-    "scripts/ci/h14-integrity/serial.sql": "41bb7d12cc0caf841ff6d15d2d78580afe5ed8bf4fe86b19ac2305213d6a7eb0",
+    "scripts/ci/h14-integrity/serial.sql": "b58dec3fae83f1b6895bc23322172eeff9739c08dc0a00493eb89944190eeb42",
     "scripts/ci/h14-integrity/auth.sql": "a814d70a5439b80a5507cb9d153863ae92aa685c117249a20be0e26fcb1377e5",
     "scripts/ci/h14-integrity/writers.sql": "93b8b484100bddb9945521f5906c9be29bd6b021f584281776ca63a5a09aaabb",
     "scripts/ci/h14-integrity/capture.sql": "615e936e7a4854f21f738575dba1aea3220377240003842c867cf140c13f40de",
-    "scripts/ci/h14-integrity/concurrency.py": "12676765c38f0427f01f0c3a9be996576a2ef4b31e0d6097fdba9da311e01ce4",
+    "scripts/ci/h14-integrity/concurrency.py": "db208f6f7d7d9a935d1e050cd3741ca4d8e800031edf6140c32ea2508f472e71",
     "scripts/ci/h14-integrity/driver_local.py": "5e8b434e0f2e21cfffaa6583c16f617dc43323072b0f3347f8127b545e052aaf",
     "scripts/ci/h14-integrity/scale-equivalence.sql": "a0d26352b08a1ff2923486223caa6e69e9e4e522e63f00a4b8fcddaf2c4cb3a4",
     "scripts/ci/h14-integrity/pre_migration_history.sql": "261e49ad1043c574c9dc30c84ac4e57ec7509927f434b6193fb35367bf9796d7",
     "scripts/ci/h14-integrity/ci_run.py": "06ffe7af3b462e04217a6e9e9ccb919c1af65ada17ce66a36f8296e94253e33a",
     "scripts/ci/h14-integrity/test_static.py": "26c85e9d2ebfb21edb3de3f2af9874624ce9217e22dd22716b8f3d201a26b117",
-    "supabase/migrations/20261103100000_h14_baja_embarque_integridad_financiera.sql": "3706671509934b9c5a45b32997c987c2038a22befdeff5cb35b76fe459560dc1",
+    "supabase/migrations/20261103100000_h14_baja_embarque_integridad_financiera.sql": "e926236c6a54d353c905477677ae31f5ff1800caed1734c9cf2a65ee457c087e",
     "supabase/tests/rls/_ci_post_migrate.sql": "13d2fb58654d82572996565b74fdb57245d43d22676b5838c92f918f3bedac18"
   },
   "bundle_paths": {
@@ -91,6 +91,9 @@
       "X11.base",
       "X12.base",
       "X13.base",
+      "R01.restore_history_positive",
+      "R02.reject_child_restore_still_dead",
+      "R03.restore_failure_atomic",
       "P03.inverse_family_scale"
     ],
     "auth": [
@@ -181,7 +184,9 @@
       "C11",
       "C12",
       "C13",
-      "C14"
+      "C14",
+      "C15",
+      "C16"
     ]
   }
 }

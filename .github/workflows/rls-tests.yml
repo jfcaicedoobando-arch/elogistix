@@ -392,7 +392,9 @@ jobs:
 
       - name: Guards conductuales + schema invariants (manifiesto bloqueante)
         env:
-          JOBS: 4
+          # Historical fixtures isolate named triggers transactionally. Their
+          # ALTER TABLE locks share this database, so do not overlap sessions.
+          JOBS: 1
           LOG_DIR: /tmp/guards-logs
         run: bash scripts/ci/run-guards.sh
 

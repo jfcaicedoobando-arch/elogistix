@@ -22,7 +22,7 @@ import uuid
 
 SOURCE = "e302a5a8baee295a5de83adc91265c87cbf45988"
 
-CASES = tuple("C"+str(i).zfill(2) for i in range(1,15))
+CASES = tuple("C"+str(i).zfill(2) for i in range(1,17))
 EXPECTED = {
  "C01":"Dependency after preview but before RPC must block without partial mutation.",
  "C02":"Deleter mutex first: writer 55P03, then deleted-target 23514 in a new transaction.",
@@ -37,7 +37,9 @@ EXPECTED = {
  "C11":"Two-target writer reentry and reverse contender avoid deadlock, second55P03.",
  "C12":"RR stale writer after committed deletion must fail closed, no new edge.",
  "C13":"Serializable stale writer after committed deletion must fail closed, no new edge.",
- "C14":"Role revoked while RPC waits after its initial actor gate must reject after lock, without partial effects."
+ "C14":"Role revoked while RPC waits after its initial actor gate must reject after lock, without partial effects.",
+ "C15":"Official restore waiting on the org mutex must revalidate a normally revoked membership, without restoring history.",
+ "C16":"Restore-first uncommitted transaction holds the org mutex; waiting deletion must reject after restore commits, preserving active financial history."
 }
 
 
@@ -449,15 +451,36 @@ def metadata(owner, lab):
 
 def seed(owner, case):
     owner.run("BEGIN")
-    f = owner.json("SELECT pg_temp.h14_fin_seed(" + lit(case) + ");")
+    if case in ("C15","C16"):
+        # The forward must preserve this deliberately pre-existing history.
+        # No post-forward bypass is used to manufacture a dead financed parent.
+        f=owner.json("""SELECT jsonb_build_object(
+          'case_key',"""+lit(case)+""",'org_a',e.organization_id,
+          'org_b',(SELECT id FROM public.organizations WHERE nombre='H14 FIN H14.pre-forward.purge B'),
+          'actor_a',(SELECT user_id FROM public.organization_members WHERE organization_id=e.organization_id AND role='admin_org'),
+          'actor_b',(SELECT m.user_id FROM public.organization_members m JOIN public.organizations o ON o.id=m.organization_id WHERE o.nombre='H14 FIN H14.pre-forward.purge B' AND m.role='admin_org'),
+          'cliente_a',e.cliente_id,
+          'embarque_a',e.id,
+          'embarque_b',(SELECT eb.id FROM public.embarques eb JOIN public.organizations o ON o.id=eb.organization_id WHERE o.nombre='H14 FIN H14.pre-forward.purge B'),
+          'mutex_target',(SELECT ec.id FROM public.embarques ec WHERE ec.organization_id=e.organization_id AND ec.id<>e.id AND ec.deleted_at IS NULL),
+          'invoice_id',(SELECT id FROM public.facturas WHERE embarque_id=e.id AND deleted_at IS NULL),
+          'supplier_id',(SELECT id FROM public.proveedor_facturas WHERE embarque_id=e.id AND deleted_at IS NULL),
+          'cost_id',(SELECT cc.id FROM public.conceptos_costo cc JOIN public.proveedor_facturas_conceptos pfc ON pfc.concepto_costo_id=cc.id JOIN public.proveedor_facturas pf ON pf.id=pfc.proveedor_factura_id WHERE cc.embarque_id=e.id AND cc.deleted_at=e.deleted_at AND pf.deleted_at IS NULL))
+          FROM public.embarques e JOIN public.clientes c ON c.id=e.cliente_id
+          WHERE c.email='h14-pre-forward-purge-history@example.invalid' AND e.deleted_at IS NOT NULL""")
+        for field in ('mutex_target','invoice_id','supplier_id','cost_id'):
+            f[field]=uid(f[field])
+    else:
+        f = owner.json("SELECT pg_temp.h14_fin_seed(" + lit(case) + ");")
     for field in ("org_a", "org_b", "actor_a", "actor_b", "embarque_a", "embarque_b", "cliente_a"):
         f[field] = uid(f[field])
     if case=="C02":
         f["lock_row_id"] = owner.json("SELECT jsonb_build_object('id',pg_temp.h14_fin_sale(" + sql_json(f) + ",'race-first-row'," + lit(f["embarque_a"]) + "::uuid));")["id"]
-    if case in ("C04","C14"):
+    if case in ("C04","C14","C15"):
         actor = str(uuid.uuid5(uuid.UUID("f14c0000-0000-4000-8000-000000000000"), owner.lab.run_id + ":"+case+":coordinator"))
         owner.run("INSERT INTO auth.users(id,email,raw_user_meta_data) VALUES(" + lit(actor) + "::uuid," + lit(actor+"@example.invalid") + ",'{\"skip_auto_org\":true}'::jsonb)")
-        owner.run("INSERT INTO public.organization_members(organization_id,user_id,role) VALUES(" + lit(f["org_a"]) + "::uuid," + lit(actor) + "::uuid,'coordinador_logistico')")
+        role='admin_org' if case=='C15' else 'coordinador_logistico'
+        owner.run("INSERT INTO public.organization_members(organization_id,user_id,role) VALUES(" + lit(f["org_a"]) + "::uuid," + lit(actor) + "::uuid,"+lit(role)+")")
         f["revoked_actor"] = actor
     owner.run("COMMIT")
     return f
@@ -518,6 +541,18 @@ def final_state(owner,f,dep=None):
     return owner.json("SELECT jsonb_build_object('shipment_deleted',(SELECT deleted_at IS NOT NULL FROM public.embarques WHERE id="+lit(f['embarque_a'])+"::uuid),'dependency_exists',"+("(SELECT count(*) FROM public.proformas WHERE id="+lit(dep)+"::uuid AND deleted_at IS NULL)" if dep else '0')+")")
 
 
+def restore_sql(f):
+    return 'SELECT public.restaurar_embarque_cascade('+lit(f['embarque_a'])+'::uuid)'
+
+
+def restore_history_state(session,f):
+    return session.json("SELECT jsonb_build_object('shipment_deleted',(SELECT deleted_at IS NOT NULL FROM public.embarques WHERE id="+lit(f['embarque_a'])+"::uuid),"
+        "'cost_deleted',(SELECT deleted_at IS NOT NULL FROM public.conceptos_costo WHERE id="+lit(f['cost_id'])+"::uuid),"
+        "'customer_invoice_live',EXISTS(SELECT 1 FROM public.facturas WHERE id="+lit(f['invoice_id'])+"::uuid AND deleted_at IS NULL),"
+        "'supplier_invoice_live',EXISTS(SELECT 1 FROM public.proveedor_facturas WHERE id="+lit(f['supplier_id'])+"::uuid AND deleted_at IS NULL),"
+        "'restore_gate',coalesce(nullif(current_setting('app.papelera_restore',true),''),'off'))")
+
+
 def advisory_barrier(owner,rpc,writer,lab,case):
     deadline=min(time.monotonic()+8,lab.deadline)
     while time.monotonic()<deadline:
@@ -551,7 +586,54 @@ def run_case(lab,owner,case):
     try:
         f=seed(owner,case);lab.save(case+'-seed.json',f)
         rpc=new_actor_session(lab,case+'-rpc',f)
-        if case in ('C01','C04'):
+        if case=='C15':
+            initial=restore_history_state(owner,f)
+            require(initial=={'shipment_deleted':True,'cost_deleted':True,'customer_invoice_live':True,'supplier_invoice_live':True,'restore_gate':'off'},'restore waiter starts from preserved pre-forward history')
+            actor=f['revoked_actor'];rpc.run('ROLLBACK');entry=rpc.auth(actor,f['org_a'])
+            writer=new_actor_session(lab,case+'-mutex-writer',f)
+            answer=mutation(writer,dependency_sql(f,target=f['mutex_target'],name='restore-wait-mutex'),f['actor_a'],f['org_a'])
+            require(answer['error'] is False,'real writer on live control shipment must own the same org mutex')
+            rpc.start('SELECT pg_temp.h14_race_statement('+lit(restore_sql(f))+')')
+            observed['barrier_before_revocation']=advisory_barrier(owner,rpc,writer,lab,case)
+            revoker=new_actor_session(lab,case+'-revoker',f)
+            gone=revoker.json('WITH gone AS (DELETE FROM public.organization_members WHERE organization_id='+lit(f['org_a'])+'::uuid AND user_id='+lit(actor)+'::uuid RETURNING user_id) SELECT jsonb_build_object(\'count\',count(*)) FROM gone')
+            require(gone['count']==1,'restore revocation deletes exactly one real membership');revoker.run('COMMIT')
+            mirror=owner.json('SELECT jsonb_build_object(\'memberships\',(SELECT count(*) FROM public.organization_members WHERE user_id='+lit(actor)+'::uuid),\'roles\',(SELECT count(*) FROM public.user_roles WHERE user_id='+lit(actor)+'::uuid))')
+            require(mirror=={'memberships':0,'roles':0},'membership trigger removes the restored actor role mirror')
+            observed['barrier_after_revocation']=advisory_barrier(owner,rpc,writer,lab,case)
+            before,snapshots['after_revocation']=lab.snapshot(owner,case,'after-revocation',f)
+            writer.run('ROLLBACK')
+            answer=rpc_result(rpc.finish(timeout=20),actor,f['org_a'],True,True)
+            assert_error(answer,'P0001','Permisos insuficientes')
+            after_actor=rpc.auth_snapshot();check_actor(after_actor,actor,None,False,False)
+            require(after_actor['claims']==entry['claims'],'restore waiter retains its original stale claims')
+            rpc.run('ROLLBACK');after,snapshots['after_rpc']=lab.snapshot(owner,case,'after-rpc',f)
+            require(before==after and restore_history_state(owner,f)==initial,'revoked restore must preserve every business row and tombstone')
+            observed.update(restore=answer,entry_actor=entry,actor_after=after_actor,revocation=mirror,business_snapshots_unchanged=True,final_state=initial)
+        elif case=='C16':
+            initial=restore_history_state(owner,f)
+            require(initial=={'shipment_deleted':True,'cost_deleted':True,'customer_invoice_live':True,'supplier_invoice_live':True,'restore_gate':'off'},'restore-first race starts from preserved pre-forward history')
+            financial_before=owner.json('SELECT pg_temp.h14_fin_financial(pg_temp.h14_fin_snapshot('+lit(f['org_a'])+'::uuid))')
+            other_before=owner.json('SELECT pg_temp.h14_fin_other_operatives(pg_temp.h14_fin_snapshot('+lit(f['org_a'])+'::uuid),'+lit(f['embarque_a'])+'::uuid)')
+            before,snapshots['before_restore']=lab.snapshot(owner,case,'before-restore',f)
+            restorer=new_actor_session(lab,case+'-restore-first',f)
+            answer=mutation(restorer,restore_sql(f),f['actor_a'],f['org_a']);require(answer['error'] is False,'official history restore must complete before its transaction is released')
+            restored_view=restore_history_state(restorer,f)
+            require(restored_view==(initial|{'shipment_deleted':False,'cost_deleted':False}),'restorer sees parent and linked cost active with original financial documents')
+            require(restore_history_state(owner,f)==initial,'uncommitted restore must remain invisible to the independent owner')
+            start_rpc(rpc,f);observed['barrier_before_restore_commit']=advisory_barrier(owner,rpc,restorer,lab,case)
+            restorer.run('COMMIT')
+            after_restore,snapshots['after_restore_commit']=lab.snapshot(owner,case,'after-restore-commit',f)
+            require(restore_history_state(owner,f)==restored_view,'committed restore must be independently visible before evaluating deletion')
+            require(financial_before==owner.json('SELECT pg_temp.h14_fin_financial(pg_temp.h14_fin_snapshot('+lit(f['org_a'])+'::uuid))'),'restoration must preserve financial document row images')
+            require(other_before==owner.json('SELECT pg_temp.h14_fin_other_operatives(pg_temp.h14_fin_snapshot('+lit(f['org_a'])+'::uuid),'+lit(f['embarque_a'])+'::uuid)'),'restoration must not touch other operation rows')
+            require(before['org_b']==after_restore['org_b'],'restore-first race preserves the other company')
+            deletion=finish_rpc(rpc,f);assert_error(deletion,'23514','LC_EMBARQUE_BLOQUEADO')
+            hint=json.loads(deletion['hint']);require(hint['facturas']==1 and hint['cxp']==1,'waiting deletion must see both restored historical invoice paths')
+            after,snapshots['after_delete_rejection']=lab.snapshot(owner,case,'after-delete-rejection',f)
+            require(after_restore==after and restore_history_state(owner,f)==restored_view,'delete rejection leaves restored history active without partial effects')
+            observed.update(restore=answer,restorer_view=restored_view,rpc=deletion,financial_rows_unchanged=True,other_operatives_unchanged=True,final_state=restored_view)
+        elif case in ('C01','C04'):
             actor=f.get('revoked_actor',f['actor_a'])
             if case=='C04':
                 rpc.run('ROLLBACK');rpc.auth(actor,f['org_a'],admin=False)
