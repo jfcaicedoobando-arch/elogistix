@@ -143,10 +143,10 @@ export const LC_CODE_MESSAGES_CRM: Record<string, string> = {
     "La oportunidad está en otra operación. Espera un momento y vuelve a intentar aceptar la cotización.",
   LC_COTIZACION_GANADORA_EXISTE:
     "Esta oportunidad ya tiene una cotización ganadora. Recarga la pantalla: sólo una cotización puede quedar aceptada o en operación por oportunidad.",
-  // v13.823.58 · la cotización ya está aceptada pero su enlace con la
-  // oportunidad quedó incompleto: no se repara en automático.
+  // La aceptación se rechaza (la cotización NO cambia) porque la oportunidad
+  // ya está cerrada o no cumple las condiciones; el usuario puede resolverlo.
   LC_COTIZACION_ACEPTACION_INCONSISTENTE:
-    "La cotización ya está aceptada, pero su enlace con la oportunidad quedó incompleto. Avisa a soporte: requiere revisión manual, no se corrige en automático.",
+    "No se pudo aceptar: la oportunidad de esta cotización ya está cerrada o tiene otra cotización ganadora. Reabre la oportunidad en CRM y vuelve a intentar.",
   LC_COTIZACION_GANADORA_INMUTABLE:
     "La cotización ganadora no puede cambiar de oportunidad ni de organización.",
   LC_OPORTUNIDAD_PERDIDA_REQUIERE_REAPERTURA:
