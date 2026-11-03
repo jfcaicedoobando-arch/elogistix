@@ -41,7 +41,7 @@ function EstadoCampo({ id, estado, coincide, consultando }: {
     : "El cambio se guardó, pero el campo muestra otro valor. Revisa la captura antes de continuar.";
   return (
     <p id={id} role={estado === "error" ? "alert" : "status"}
-      className={`min-h-4 text-xs ${estado === "error" ? "text-destructive" : "text-muted-foreground"}`}>
+      className={`min-h-4 text-body-sm ${estado === "error" ? "text-destructive" : "text-muted-foreground"}`}>
       {estado === "guardado" && !coincide ? confirmado : estado ? textos[estado] : ""}
     </p>
   );
