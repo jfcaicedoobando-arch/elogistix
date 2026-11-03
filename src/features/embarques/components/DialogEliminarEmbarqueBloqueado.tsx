@@ -19,8 +19,8 @@ export default function DialogEliminarEmbarqueBloqueado({ expediente, deps }: Pr
   return (
     <div className="space-y-3 text-body">
       <p>
-        El embarque <strong>{expediente}</strong> tiene documentos financieros asociados.
-        Revisa la siguiente lista con Contabilidad para decidir el procedimiento que corresponda antes de volver a intentar la eliminación:
+        La eliminación del embarque <strong>{expediente}</strong> está bloqueada.
+        Revisa los motivos disponibles con Contabilidad para decidir el procedimiento que corresponda antes de volver a intentarlo.
       </p>
 
       {deps.cxc.count > 0 && (
@@ -64,7 +64,7 @@ export default function DialogEliminarEmbarqueBloqueado({ expediente, deps }: Pr
           <AlertTriangle className="mt-0.5 h-4 w-4 text-warning" />
           <div>
             {deps.proformas > 0 && (
-              <p>Proformas listas para facturar: <strong>{deps.proformas}</strong></p>
+              <p>Proformas asociadas: <strong>{deps.proformas}</strong></p>
             )}
             {deps.notasCredito > 0 && <p>Notas de crédito ligadas: <strong>{deps.notasCredito}</strong></p>}
             {deps.pagos > 0 && <p>Pagos registrados: <strong>{deps.pagos}</strong></p>}
@@ -74,7 +74,7 @@ export default function DialogEliminarEmbarqueBloqueado({ expediente, deps }: Pr
 
 
       <p className="text-body-sm text-muted-foreground">
-        Después de revisar las dependencias con Contabilidad y completar el procedimiento autorizado que corresponda, vuelve a intentar la eliminación. La Papelera no evita estos bloqueos.
+        Después de revisar el bloqueo con Contabilidad y completar el procedimiento autorizado que corresponda, vuelve a intentar la eliminación. La Papelera no evita estos bloqueos.
       </p>
     </div>
   );

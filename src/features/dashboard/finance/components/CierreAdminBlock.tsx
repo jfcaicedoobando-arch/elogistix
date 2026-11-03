@@ -28,7 +28,7 @@ export function CierreAdminBlock({ huecoTotal, huecoUsd, huecoMxn, loading }: Pr
           </CardTitle>
           <Button variant="link" size="sm" asChild className="h-auto p-0 text-body-sm">
             <Link to="/facturacion" className="flex items-center gap-1">
-              Ver hueco <ArrowRight className="h-3 w-3" />
+              Ver facturación <ArrowRight className="h-3 w-3" />
             </Link>
           </Button>
         </CardHeader>
