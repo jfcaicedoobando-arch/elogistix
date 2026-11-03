@@ -29,7 +29,7 @@ export class EmbarqueBloqueadoError extends Error {
 
   constructor(motivos: MotivosBloqueoEmbarque) {
     super(
-      `El embarque ${motivos.expediente} tiene dependencias fiscales o está cerrado.`,
+      `La eliminación del embarque ${motivos.expediente} está bloqueada.`,
     );
     this.name = "EmbarqueBloqueadoError";
     this.motivos = motivos;

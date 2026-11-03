@@ -20,6 +20,7 @@ export const MODULOS: AyudaModulo[] = [
     resumen: "Tu pantalla de arranque: qué pasa hoy en la operación.",
     audiencia: ["Todos"],
     faqs: [
+      { pregunta: "¿Por dónde empiezo?", respuesta: "En el ERP interno, empieza por la tarea que te corresponde y los módulos disponibles para tu rol. Una cotización puede usar un cliente existente o un prospecto procedente del CRM. Para continuar una operación, abre Embarques; crear uno requiere una cotización Aceptada. Consulta las guías de cada módulo para revisar sus requisitos. Crear el borrador de una factura y timbrarlo son pasos distintos; captura, aprobación, pago y conciliación también se revisan por separado." },
       { pregunta: "¿Qué muestra el dashboard?", respuesta: "Cards de arribos del mes (con utilidad proyectada), embarques en riesgo (demoras), facturación pendiente y comisiones devengadas. Cambia según tu rol: un vendedor ve sólo sus cuentas, un coordinador ve toda la operación." },
       { pregunta: "¿Para qué sirve el toggle 'míos / todos'?", respuesta: "Lo ven vendedores y operadores. Filtra el dashboard a sólo los embarques/cuentas asignados a ti, o muestra los de toda la organización." },
       { pregunta: "¿Qué significan los colores de los badges?", respuesta: "Rojo = atención urgente (factura vencida, demora). Amarillo = próximo a vencer (ETA en ≤1 día). Azul = informativo. Gris = sin pendientes." },
