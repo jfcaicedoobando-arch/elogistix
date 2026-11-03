@@ -1,11 +1,4 @@
-/**
- * Página de Antigüedad de Saldos (aging) de CxP.
- * Ruta: `/compras/aging`. Tabla por proveedor + 5 KPIs por cubeta.
- *
- * v13.173.0 (Ola 1 · Filtros globales) — search + filtro de cubeta + orden +
- * paginación con URL sync a través de `useClientPagedList` y
- * `<UnifiedFiltersBar />`.
- */
+/** Antigüedad CxP por proveedor y moneda; la fecha reclasifica los saldos actuales. */
 import { useMemo, useState } from "react";
 import { LayoutList, Download } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
@@ -16,6 +9,7 @@ import {
 import { PageHeader } from "@/components/shared/PageHeader";
 import { PageContainer } from "@/components/shared/PageContainer";
 import { ResponsiveDataTable } from "@/components/shared/dataTable/ResponsiveDataTable";
+import { FilteredListEmptyState } from "@/components/empty/FilteredListEmptyState";
 
 import { buildCxpAgingColumns } from "@/features/cxp/components/cxpAgingColumns";
 import { useCxpAging } from "@/features/cxp/hooks/useCxpAging";
@@ -171,7 +165,12 @@ export default function CxpAging() {
             pagination={paged.pagination}
             onRowClick={(r) => setDrilldown({ prov: r, cubeta: cubetaDesdeFiltro(paged.filters.cubeta) })}
             getRowAriaLabel={(r) => `Ver facturas con saldo de ${r.proveedor_nombre}`}
-            emptyMessage="Sin saldos pendientes"
+            emptyState={<FilteredListEmptyState
+              filtered={paged.activeCount > 0} onClearFilters={paged.resetAll}
+              message={`Sin saldos pendientes por pagar en ${monedaActiva}.`}
+              hint="No hay facturas de proveedor con saldo abierto en esta moneda."
+              filteredHint={`Prueba otra búsqueda o limpia los filtros para ver los saldos en ${monedaActiva}. Se conserva la fecha para antigüedad.`}
+            />}
             striped
             hoverable
             density={TABLE_DENSITY.embebida}

@@ -6,6 +6,7 @@ import { Download, PackageCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { ResponsiveDataTable } from "@/components/shared/dataTable/ResponsiveDataTable";
+import { FilteredListEmptyState } from "@/components/empty/FilteredListEmptyState";
 import { formatCurrency, formatDate, toTitleCase } from "@/lib/formatters";
 import { useHuecoFacturacion } from "@/features/facturacion/hooks";
 import { huecoFacturacionColumns } from "@/features/facturacion/components/huecoFacturacionColumns";
@@ -72,12 +73,11 @@ export function BandejaPorFacturar() {
               columns={huecoFacturacionColumns}
               data={paged.rows}
               isLoading={paged.isLoading}
-              emptyState={
-                <div className="flex flex-col items-center justify-center gap-2 py-12 text-center text-body text-muted-foreground px-4">
-                  <PackageCheck className="h-8 w-8 opacity-40" strokeWidth={1.5} />
-                  <span>Sin embarques listos por facturar — no hay hueco de facturación.</span>
-                </div>
-              }
+              emptyState={<FilteredListEmptyState
+                filtered={paged.activeCount > 0} onClearFilters={paged.resetAll} icon={PackageCheck}
+                message="Sin ventas pendientes de emisión en esta bandeja."
+                hint="Revisa el alcance por ETA indicado arriba."
+              />}
               rowKey={(row) => row.embarque_id}
               getRowHref={(row) => `/embarques/${row.embarque_id}?tab=facturacion`}
               getRowAriaLabel={(row) => `Abrir embarque ${row.expediente ?? row.embarque_id}`}
