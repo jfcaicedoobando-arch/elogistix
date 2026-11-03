@@ -74,7 +74,7 @@ export function DialogEmbarqueVerificandoAlert({
               )}
               {hasError && (
                 <p className="text-destructive">
-                  No se pudo verificar dependencias financieras. Intenta nuevamente.
+                  No pudimos completar la verificación de dependencias financieras. Cierra este diálogo antes de volver a intentar la eliminación. Si el problema continúa, comparte el expediente con Contabilidad.
                 </p>
               )}
             </div>

@@ -35,23 +35,23 @@ export const ROLE_LABELS: Record<AppRole, string> = {
 
 export const ROLE_DESCRIPTIONS: Record<AppRole, string> = {
   super_admin: "Acceso total a la plataforma e impersonación cross-tenant.",
-  admin_org: "Dueño funcional de la organización. Administra usuarios, configuración, catálogos y todos los módulos.",
-  gerente_operaciones: "Supervisa embarques, documentación y operativo diario. Lee finanzas y aprueba; no toca configuración ni usuarios.",
+  admin_org: "Administra usuarios, configuración y catálogos de su organización.",
+  gerente_operaciones: "Supervisa embarques, documentación y operación diaria. Consulta información financiera y gestiona las acciones operativas habilitadas para su rol. Sin administración de usuarios ni configuración.",
   gerente_visor: "Ve toda la operación y finanzas de la organización. No crea, edita ni aprueba nada. Ideal para auditoría o dirección.",
   gerente_comercial: "Supervisa al equipo de ventas. Ve CRM completo, cotizaciones con márgenes, clientes y comisiones. Sin tesorería ni usuarios.",
-  coordinador_logistico: "Opera embarques, tracking y documentación tras el handoff del Vendedor. No ve márgenes ni costos internos.",
+  coordinador_logistico: "Gestiona embarques, tracking y documentación. Consulta y edita costos del embarque y continúa la operación desde cotizaciones aceptadas.",
   ejecutivo_pricing: "Negocia y mantiene tarifas con partners (navieras, agentes, transportistas). Trabaja Costeo y propone overrides; el Gerente Comercial los aprueba.",
-  contador: "Emite facturas a cliente, aprueba notas de crédito y supervisa el estado de resultados. Acceso financiero completo.",
+  contador: "Emite facturas a cliente, captura y aprueba facturas de proveedor, registra cobros y consulta resultados financieros. Los pagos a proveedores corresponden a Tesorería.",
   tesorero: "Ejecuta pagos a proveedores, conciliación bancaria y liquidación de comisiones. No emite facturas.",
   auxiliar_contable: "Captura facturas de proveedor (XML/PDF) y las concilia contra costos del embarque. No autoriza pagos.",
   ejecutivo_cobranza: "Da seguimiento a cartera vencida, envía recordatorios de cobro y captura cobros. No emite facturas ni autoriza pagos.",
-  vendedor: "Arma cotizaciones de sus cuentas con costos y P&L preliminar, ve sus márgenes y hace handoff al Coordinador Logístico al confirmarse. Trabaja CRM completo.",
-  customer_service: "Solo lectura operativa: embarques, tracking, clientes. Sin acceso a finanzas, configuración ni CRM.",
+  vendedor: "Prepara cotizaciones y consulta costos y márgenes. Gestiona sus propios leads, oportunidades y actividades, y entrega a Operaciones las cotizaciones confirmadas.",
+  customer_service: "Consulta embarques y clientes; crea, edita y envía cotizaciones según su estado. Sin acceso a CRM, configuración ni módulos financieros.",
   cliente: "Acceso restringido al portal del cliente.",
   agente_carga: "Acceso al portal del agente: sube tarifas marítimas, carta garantía y demoras de su propio agente. No ve datos comerciales internos.",
-  admin: "Rol legado. Usar Administrador en su lugar.",
-  operador: "Rol legado. Usar Coordinador Logístico en su lugar.",
-  viewer: "Rol legado. Usar Atención a Clientes en su lugar.",
+  admin: "Rol heredado. Revisa las tareas y los permisos antes de sustituirlo por otro rol.",
+  operador: "Rol heredado. Revisa las tareas y los permisos antes de sustituirlo por otro rol.",
+  viewer: "Rol heredado. Revisa las tareas y los permisos antes de sustituirlo por otro rol.",
 };
 
 export const ROLE_BADGE_CLASSES: Record<AppRole, string> = {
