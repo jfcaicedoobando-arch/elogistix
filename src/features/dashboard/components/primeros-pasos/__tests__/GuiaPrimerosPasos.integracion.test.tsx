@@ -22,6 +22,7 @@ vi.mock("@/lib/contexts/OrganizationContext", () => ({ useOrganization: () => co
 
 // usePermissions y el selector de dominio permanecen reales.
 import { GuiaPrimerosPasos } from "../GuiaPrimerosPasos";
+import { ContenidoPrimerosPasos } from "../ContenidoPrimerosPasos";
 import Ayuda from "@/features/dashboard/routes/Ayuda";
 
 function RutaActual() {
@@ -61,6 +62,16 @@ beforeEach(() => {
 afterEach(() => vi.unstubAllGlobals());
 
 describe("Guía contextual conectada a permisos reales", () => {
+  it("cero tareas anuncia el estado sin ofrecer acciones ni reintentar", () => {
+    const retry = vi.fn(async () => {});
+    render(<ContenidoPrimerosPasos resultado={{ estado: "disponible", contexto: "organizacion", tareas: [] }} onRetry={retry} />);
+    expect(screen.getByRole("status")).toHaveTextContent("No hay tareas de esta guía disponibles para tu acceso actual.");
+    expect(screen.getByRole("status")).toHaveTextContent("Consulta las preguntas frecuentes de los módulos que puedes abrir.");
+    expect(screen.queryByRole("link")).not.toBeInTheDocument();
+    expect(screen.queryByRole("button")).not.toBeInTheDocument();
+    expect(retry).not.toHaveBeenCalled();
+  });
+
   it("es opcional, expone su expansión y sólo navega al elegir un enlace", () => {
     const fetch = vi.fn();
     vi.stubGlobal("fetch", fetch);

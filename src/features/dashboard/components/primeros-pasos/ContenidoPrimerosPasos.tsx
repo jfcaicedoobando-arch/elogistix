@@ -3,6 +3,7 @@ import { Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { ErrorState } from "@/components/shared/states/ErrorState";
+import { EmptyStateInline } from "@/components/empty/EmptyStateInline";
 import type { ResultadoPrimerosPasos } from "@/features/dashboard/domain/primerosPasos";
 
 interface Props {
@@ -47,7 +48,14 @@ export function ContenidoPrimerosPasos({ resultado, onRetry }: Props) {
     );
   }
   if (resultado.tareas.length === 0) {
-    return <p role="status" className="text-body text-muted-foreground">No hay tareas de esta guía disponibles para tu acceso actual. Consulta las preguntas frecuentes de los módulos que puedes abrir.</p>;
+    return (
+      <div role="status">
+        <EmptyStateInline
+          density="compact"
+          message="No hay tareas de esta guía disponibles para tu acceso actual. Consulta las preguntas frecuentes de los módulos que puedes abrir."
+        />
+      </div>
+    );
   }
   return (
     <div className="space-y-3">
