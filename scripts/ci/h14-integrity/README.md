@@ -36,6 +36,8 @@ Se usará el protocolo de sesiones y marcadores probado en H14, conservando ON_E
 
 El protocolo revisado usa un mutex advisory de transacción por organización antes de resolver el grafo; el mutador espera y los escritores usan intento inmediato con `55P03`. Después se protegen los padres mediante locks de fila. La suite prueba el orden observable y los resultados, incluyendo un grafo inicialmente vacío y la revocación durante la espera; no deduce el orden por timestamps transaccionales.
 
+La prueba bancaria existente se adapta a esa respuesta de contención: A conserva un cobro sin confirmar, B debe rechazar exactamente con `55P03 / LC_EMBARQUE_EN_USO` y no persistir efectos. Tras confirmar A, B reintenta en una transacción nueva con la misma llave y debe recuperar los mismos identificadores, un solo cobro y un solo abono. La misma llave con otro importe debe seguir rechazándose. Una variante de QA pausa B antes de la guarda H14 para ejercitar además el rescate de `unique_violation` del RPC; esa barrera es instrumentación de prueba, no una espera prometida en producción. Ninguna guarda financiera se desactiva en estas variantes. La prueba de factura manual conserva su barrera de idempotencia anterior al INSERT.
+
 ## CI y laboratorio local
 
 La lane debe ejecutarse después del replay completo y antes de `_ci_post_migrate.sql`, sin blanket grants ni relajación de FKs. Usa clones propios de la base estricta, captura invariantes del origen y destruye los clones al finalizar. No acepta URLs, rutas libpq heredadas ni un CID arbitrario.

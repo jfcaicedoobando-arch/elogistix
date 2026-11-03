@@ -20,6 +20,8 @@ La restauración oficial conserva su autorización y ACL existentes. Adquiere el
 
 La serialización por organización es una decisión técnica conservadora y puede producir contención entre documentos distintos de la misma empresa. Una alternativa futura sería una coordinación más granular por anclas documentales, con pruebas específicas para grafos inicialmente vacíos, reasignaciones, restauraciones y documentos consolidados. No se debe retirar la coordinación antes de demostrar ese invariante.
 
+La respuesta de cobros concurrentes cambia de forma observable. Antes, dos llamadas simultáneas con la misma llave podían esperar el conflicto de unicidad y devolver éxito. Con la guarda activa, la segunda escritura puede recibir `55P03 / LC_EMBARQUE_EN_USO` antes de llegar a ese conflicto. Debe consultar el estado y reintentar en una transacción nueva con la misma llave; no se promete éxito inmediato de ambas llamadas. El diálogo conserva esa llave mientras permanece abierto. El reintento de un cobro ya confirmado debe devolver los mismos identificadores de pago y movimiento bancario; reutilizar la llave con otro importe debe rechazarse sin modificarlo.
+
 ## Alcance que requiere revisión
 
 Se conserva la distinción vigente de estados de CxC, CxP, proformas, pagos, notas de crédito y comisiones. Los vínculos con `activa=false` no se convierten por sí solos en un bloqueo nuevo. Los vínculos estructurales vivos se protegen independientemente de su importe; este criterio de integridad no sustituye las reglas de asignación positiva usadas por reportes y cierres de CxP.
