@@ -51,14 +51,14 @@ export interface CosteoRutaInput {
   activa?: boolean;
 }
 
-export class CosteoRutaDuplicadaError extends Error {
+export class CosteoRutaDuplicadaError extends ReglaNegocioError {
   constructor() {
     super("Esta ruta marítima ya está registrada en tu organización.");
     this.name = "CosteoRutaDuplicadaError";
   }
 }
 
-export class CosteoRutaMismoPuertoError extends Error {
+export class CosteoRutaMismoPuertoError extends ReglaNegocioError {
   constructor() {
     super("El puerto de origen y el de destino deben ser distintos.");
     this.name = "CosteoRutaMismoPuertoError";
