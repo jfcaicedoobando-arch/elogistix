@@ -47,6 +47,13 @@ DECLARE
   v_mes     int  := EXTRACT(month FROM v_hoy)::int;
   v_guard_check int;
   v_guard_rejected boolean;
+  v_h14_parent_before jsonb;
+  v_h14_financial_before jsonb;
+  v_h14_financial_after jsonb;
+  v_h14_rejected boolean := false;
+  v_h14_state text;
+  v_h14_message text;
+  v_h14_affected int;
 BEGIN
   -- ── Seed (como postgres, bypass RLS) ─────────────────────────────────────
   BEGIN
@@ -74,13 +81,14 @@ BEGIN
   INSERT INTO public.proveedores(id, organization_id, nombre, categoria, tipo)
   VALUES (prov_a, org_a, 'Proveedor SoftDelete', 'Logistico', 'Naviera');
 
-  -- Embarque BORRADO: ningún reporte debe exponer su expediente ni su P&L.
+  -- Se siembra VIVO para crear sus finanzas legalmente. Antes de los reportes
+  -- se reproduce el estado BORRADO histórico que H14 ya no permite crear.
   -- `modo` y `tipo` son NOT NULL en base limpia (en prod traen valor
   -- por migración posterior): se declaran explícitamente.
   INSERT INTO public.embarques(id, organization_id, expediente, cliente_id, cliente_nombre,
-                              modo, tipo, estado, incoterm, deleted_at)
+                              modo, tipo, estado, incoterm)
   VALUES (emb_a, org_a, 'ELSDL00001', cli_a, 'Cliente SoftDelete',
-          'Marítimo', 'Importación', 'Confirmado', 'FOB', now());
+          'Marítimo', 'Importación', 'Confirmado', 'FOB');
 
   -- Factura viva con saldo (cartera) ligada al embarque borrado.
   INSERT INTO public.facturas(id, organization_id, cliente_id, cliente_nombre, embarque_id,
@@ -129,6 +137,95 @@ BEGIN
   INSERT INTO public.cuentas_bancarias(id, organization_id, alias, banco, moneda,
                                        saldo_inicial, fecha_saldo_inicial, deleted_at)
   VALUES (cta_borr, org_a, 'SD Cuenta borrada', 'BBVA', 'MXN', 0, v_hoy - 30, now());
+
+  -- Estado LEGADO anterior a H14: sólo datos ficticios, owner y ROLLBACK.
+  -- Primero se prueba que el guard real rechaza una baja nueva sin cambiar
+  -- el padre ni sus finanzas. Sólo se aísla el trigger exacto del padre para
+  -- reproducir UNA tumba histórica; writers y demás triggers siguen activos.
+  PERFORM pg_temp.as_postgres();
+  PERFORM pg_temp.assert((current_user = 'postgres' AND session_user = 'postgres'
+    AND auth.uid() IS NULL
+    AND NULLIF(current_setting('request.jwt.claims', true), '') IS NULL) IS TRUE,
+    'H14 fixture histórico requiere postgres sin claims JWT');
+  PERFORM pg_temp.assert((
+    SELECT tgenabled = 'O'
+      AND tgfoid = 'public._h14_guard_baja_embarque()'::regprocedure::oid
+    FROM pg_trigger WHERE tgrelid = 'public.embarques'::regclass
+      AND tgname = 'a00_h14_guard_baja'
+  ) IS TRUE, 'H14 guard de baja debe estar habilitado y conservar su función antes del fixture');
+
+  SELECT to_jsonb(e) INTO STRICT v_h14_parent_before
+  FROM public.embarques e WHERE id = emb_a;
+  SELECT jsonb_build_object(
+    'facturas', (SELECT jsonb_agg(to_jsonb(f) ORDER BY f.id)
+      FROM public.facturas f WHERE organization_id = org_a),
+    'pagos_factura', (SELECT jsonb_agg(to_jsonb(p) ORDER BY p.id)
+      FROM public.pagos_factura p WHERE organization_id = org_a),
+    'proveedor_facturas', (SELECT jsonb_agg(to_jsonb(f) ORDER BY f.id)
+      FROM public.proveedor_facturas f WHERE organization_id = org_a),
+    'pagos_proveedor', (SELECT jsonb_agg(to_jsonb(p) ORDER BY p.id)
+      FROM public.pagos_proveedor p WHERE organization_id = org_a)
+  ) INTO v_h14_financial_before;
+
+  BEGIN
+    UPDATE public.embarques SET deleted_at = now() WHERE id = emb_a;
+  EXCEPTION WHEN OTHERS THEN
+    GET STACKED DIAGNOSTICS v_h14_state = RETURNED_SQLSTATE,
+      v_h14_message = MESSAGE_TEXT;
+    PERFORM pg_temp.assert((v_h14_state = '23514'
+      AND v_h14_message = 'LC_EMBARQUE_BLOQUEADO: el embarque ELSDL00001 tiene dependencias fiscales o está cerrado') IS TRUE,
+      format('H14 baja nueva falló con error inesperado: %s / %s', v_h14_state, v_h14_message));
+    v_h14_rejected := true;
+  END;
+  PERFORM pg_temp.assert(v_h14_rejected,
+    'H14 permitió una baja nueva del embarque con finanzas vivas');
+  PERFORM pg_temp.assert((SELECT to_jsonb(e) FROM public.embarques e WHERE id = emb_a)
+    IS NOT DISTINCT FROM v_h14_parent_before,
+    'H14 rechazo de baja alteró el padre');
+  SELECT jsonb_build_object(
+    'facturas', (SELECT jsonb_agg(to_jsonb(f) ORDER BY f.id)
+      FROM public.facturas f WHERE organization_id = org_a),
+    'pagos_factura', (SELECT jsonb_agg(to_jsonb(p) ORDER BY p.id)
+      FROM public.pagos_factura p WHERE organization_id = org_a),
+    'proveedor_facturas', (SELECT jsonb_agg(to_jsonb(f) ORDER BY f.id)
+      FROM public.proveedor_facturas f WHERE organization_id = org_a),
+    'pagos_proveedor', (SELECT jsonb_agg(to_jsonb(p) ORDER BY p.id)
+      FROM public.pagos_proveedor p WHERE organization_id = org_a)
+  ) INTO v_h14_financial_after;
+  PERFORM pg_temp.assert(v_h14_financial_after IS NOT DISTINCT FROM v_h14_financial_before,
+    'H14 rechazo de baja alteró las filas financieras');
+
+  BEGIN
+    ALTER TABLE public.embarques DISABLE TRIGGER a00_h14_guard_baja;
+    UPDATE public.embarques SET deleted_at = now() WHERE id = emb_a;
+    GET DIAGNOSTICS v_h14_affected = ROW_COUNT;
+    ALTER TABLE public.embarques ENABLE TRIGGER a00_h14_guard_baja;
+  EXCEPTION WHEN OTHERS THEN
+    -- La subtransacción revierte también el DISABLE; se restaura explícito.
+    ALTER TABLE public.embarques ENABLE TRIGGER a00_h14_guard_baja;
+    RAISE;
+  END;
+  PERFORM pg_temp.assert((
+    SELECT tgenabled = 'O'
+      AND tgfoid = 'public._h14_guard_baja_embarque()'::regprocedure::oid
+    FROM pg_trigger WHERE tgrelid = 'public.embarques'::regclass
+      AND tgname = 'a00_h14_guard_baja'
+  ) IS TRUE, 'H14 guard de baja debe estar habilitado y conservar su función antes de reportes');
+  PERFORM pg_temp.assert((v_h14_affected = 1 AND (
+    SELECT deleted_at IS NOT NULL FROM public.embarques WHERE id = emb_a
+  )) IS TRUE, 'H14 fixture histórico debe borrar exactamente un embarque');
+  SELECT jsonb_build_object(
+    'facturas', (SELECT jsonb_agg(to_jsonb(f) ORDER BY f.id)
+      FROM public.facturas f WHERE organization_id = org_a),
+    'pagos_factura', (SELECT jsonb_agg(to_jsonb(p) ORDER BY p.id)
+      FROM public.pagos_factura p WHERE organization_id = org_a),
+    'proveedor_facturas', (SELECT jsonb_agg(to_jsonb(f) ORDER BY f.id)
+      FROM public.proveedor_facturas f WHERE organization_id = org_a),
+    'pagos_proveedor', (SELECT jsonb_agg(to_jsonb(p) ORDER BY p.id)
+      FROM public.pagos_proveedor p WHERE organization_id = org_a)
+  ) INTO v_h14_financial_after;
+  PERFORM pg_temp.assert(v_h14_financial_after IS NOT DISTINCT FROM v_h14_financial_before,
+    'H14 fixture histórico alteró las filas financieras');
 
   -- ── T1/T2. libro_pagos ignora pagos de documentos borrados ───────────────
   PERFORM pg_temp.as_user(u_admin);
