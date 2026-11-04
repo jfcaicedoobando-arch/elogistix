@@ -185,5 +185,12 @@
     "replays": [
       "20261103100000_h14_baja_embarque_integridad_financiera.sql"
     ]
+  },
+  {
+    "file": "0025_h14_diagnostico_baja_lectura_acotada.sql",
+    "sha256": "bfe066d7773bae939b4b14a7d57c4a6e6570dbd966bcb5fa73ea2a6bb85992e5",
+    "replays": [
+      "20261104020000_h14_diagnostico_baja_lectura_acotada.sql"
+    ]
   }
 ]

@@ -176,6 +176,13 @@
       "when": 1793750202303,
       "tag": "0024_h14_baja_embarque_integridad_financiera",
       "breakpoints": true
+    },
+    {
+      "idx": 25,
+      "version": "7",
+      "when": 1793811867447,
+      "tag": "0025_h14_diagnostico_baja_lectura_acotada",
+      "breakpoints": true
     }
   ]
 }
