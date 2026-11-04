@@ -206,10 +206,11 @@ BEGIN
   INSERT INTO public.presupuesto_categorias(id,organization_id,nombre,tipo_contable)
     VALUES(cat,(p_f->>'org_a')::uuid,'H14 Categoria ficticia '||cat::text,'CostoDirectoEmbarque');
   INSERT INTO public.proveedor_facturas(id,organization_id,proveedor_id,categoria_presupuesto_id,
-    folio_proveedor,embarque_id,subtotal,iva,total,moneda,tipo_cambio_usd,estado,estado_aprobacion)
+    folio_proveedor,embarque_id,subtotal,iva,total,moneda,tipo_cambio_usd,estado,estado_aprobacion,fecha_emision)
   VALUES(x,(p_f->>'org_a')::uuid,prov,cat,'H14-'||x::text,(p_f->>'embarque_a')::uuid,
     p_amount,0,p_amount,'MXN',20,CASE WHEN p_state='Cancelada' THEN 'Cancelada'::public.estado_proveedor_factura ELSE 'Vigente'::public.estado_proveedor_factura END,
-    CASE WHEN p_state='Cancelada' THEN 'pendiente'::public.estado_aprobacion_factura_proveedor ELSE 'aprobada'::public.estado_aprobacion_factura_proveedor END);
+    CASE WHEN p_state='Cancelada' THEN 'pendiente'::public.estado_aprobacion_factura_proveedor ELSE 'aprobada'::public.estado_aprobacion_factura_proveedor END,
+    public.fecha_negocio_mx());
   -- Cancelada is a residual relational fixture: INSERT under real constraints,
   -- NOT an assertion that the normal cancellation RPC preserves embarque_id.
   IF p_state='Pagada' THEN

@@ -178,5 +178,12 @@
       "0023_margen_minimo_utilidad_rpc.sql"
     ],
     "scope": "isolated-ci"
+  },
+  {
+    "file": "0024_h14_baja_embarque_integridad_financiera.sql",
+    "sha256": "ea07fc4a0064813482d84a3d7924867dc941cfc9b6ea9993bf75427c4a8af88b",
+    "replays": [
+      "20261103100000_h14_baja_embarque_integridad_financiera.sql"
+    ]
   }
 ]
