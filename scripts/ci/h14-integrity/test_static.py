@@ -127,6 +127,43 @@ class CiBoundaryTests(unittest.TestCase):
                 ci.parse_rows("H14_RESULT " + json.dumps(row) + "\n", ["C01", "C02"], evidence)
             self.assertEqual(json.loads(evidence.read_text()), [row])
 
+    def test_reader_budget_ledger_rejects_omission_duplicate_and_failed_result(self):
+        ids = ['B01.base', 'P04.reader_budget_empty', 'P04.reader_budget_shared']
+        complete = [dict(case_id=case, expected_by_code={}, observed={}, reproduction_complete=True)
+                    for case in ids]
+        wire = lambda rows: ''.join('H14_RESULT ' + json.dumps(row) + '\n' for row in rows)
+        self.assertEqual(ci.parse_rows(wire(complete), ids), complete)
+        mutations = {
+            'omitted-budget': complete[:-1],
+            'duplicate-budget': complete + [complete[-1]],
+            'failed-budget': complete[:-1] + [complete[-1] | {'reproduction_complete': False}],
+        }
+        with tempfile.TemporaryDirectory(prefix='h14-budget-ledger-') as tmp:
+            for name, partial in mutations.items():
+                with self.subTest(name=name):
+                    evidence = Path(tmp) / (name + '.json')
+                    with self.assertRaises(RuntimeError):
+                        ci.parse_rows(wire(partial), ids, evidence)
+                    self.assertEqual(json.loads(evidence.read_text()), partial)
+
+    def test_forward_collector_preserves_private_invoker_metadata(self):
+        before = dict(oid=101, body_md5='1' * 32, owner='postgres',
+                      acl=['postgres=X/postgres'], security_definer=False,
+                      config=['search_path=public'], volatility='v', language='plpgsql')
+        after = before | {'body_md5': ci.COLLECTOR_MD5}
+        ci.check_collector_postimage(before, after, ci.COLLECTOR_MD5)
+        mutations = {
+            'wrong-body': {'body_md5': '2' * 32},
+            'changed-identity': {'oid': 102},
+            'expanded-acl': {'acl': ['postgres=X/postgres', 'authenticated=X/postgres']},
+            'definer': {'security_definer': True},
+            'changed-owner': {'owner': 'different-role'},
+            'changed-config': {'config': ['search_path=public', 'statement_timeout=0']},
+        }
+        for name, fields in mutations.items():
+            with self.subTest(name=name), self.assertRaises(RuntimeError):
+                ci.check_collector_postimage(before, after | fields, ci.COLLECTOR_MD5)
+
     def test_unexpected_super_admin_cannot_mask_a_role_fixture_error(self):
         actual = dict(current_user="authenticated", session_user="postgres", auth_uid="actor",
                       org="tenant", isolation="read committed", admin=True,

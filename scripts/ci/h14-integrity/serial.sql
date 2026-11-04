@@ -456,3 +456,5 @@ ROLLBACK;
 
 -- Independent rollback-only scale/equivalence transaction; one declared observation.
 \ir scale-equivalence.sql
+-- Full public reader at the authenticated 8 s budget, with unrelated history.
+\ir reader-budget.sql
