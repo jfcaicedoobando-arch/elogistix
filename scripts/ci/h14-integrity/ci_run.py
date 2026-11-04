@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """H14 strict regression in the exact PostgreSQL service owned by this Actions job.
 
-Replays pinned Git blobs in an owned empty database, installs the reviewed
-candidate over fictional history, and runs the four suites in disposable clones.
+Replays pinned Git blobs in an owned empty database, installs the reviewed H14
+and forward correction over fictional history, and runs four disposable suites.
 No container creation, image pull, remote database, or service-postgres DML.
 """
 import contextlib
@@ -25,6 +25,8 @@ ROOT = HERE.parents[2]
 BASE = 'e302a5a8baee295a5de83adc91265c87cbf45988'
 PIN = 'postgres@sha256:66b6a97eac1771fc78bd201b918b4253859f436c6913aeede97bd5366cce89ae'
 MIGRATION = 'supabase/migrations/20261103100000_h14_baja_embarque_integridad_financiera.sql'
+FORWARD_MIGRATION = 'supabase/migrations/20261104020000_h14_diagnostico_baja_lectura_acotada.sql'
+COLLECTOR_MD5 = '3aafb5cf009c477e626357cb9ba78da8'
 ARCHIVE = 'scripts/ci/drizzle-history/archive/ec96cf2e4bbb4443be463f1496da0189df2d1bef'
 SOURCE_FILES = frozenset((
     'scripts/ci/rls-prepare-db.sh', 'scripts/ci/selector148/profile-replay.sh',
@@ -41,7 +43,8 @@ SOURCE_FILES = frozenset((
 ACTIVE_EVIDENCE = None
 ACTIVE_RECORD = None
 RUNTIME_NAMES = frozenset(('serial.sql', 'fixture_helpers.sql', 'auth.sql', 'writers.sql',
-                           'capture.sql', 'concurrency.py', 'driver_local.py', 'pre_migration_history.sql', 'scale-equivalence.sql'))
+                           'capture.sql', 'concurrency.py', 'driver_local.py', 'pre_migration_history.sql',
+                           'scale-equivalence.sql', 'reader-budget.sql'))
 
 
 def require(condition, message):
@@ -202,13 +205,18 @@ def load_contract():
     require(c['schema_version'] == 1 and c['base_commit'] == BASE, 'Unexpected H14 baseline contract')
     require(c['candidate_migration']['path'] == MIGRATION
             and re.fullmatch(r'[a-f0-9]{32}', c['candidate_rpc_md5']) is not None, 'Reviewed candidate identity required')
+    require(c['candidate_forward_migration']['path'] == FORWARD_MIGRATION
+            and c['candidate_collector_md5'] == COLLECTOR_MD5, 'Reviewed forward correction required')
+    require(FORWARD_MIGRATION in c['files']
+            and c['files'][FORWARD_MIGRATION] == c['candidate_forward_migration']['sha256'],
+            'Forward companion must have one reviewed hash')
     require(c['candidate_post_migrate']['path'] == 'supabase/tests/rls/_ci_post_migrate.sql', 'Unexpected post-migrate companion')
     require(set(c['expected_case_ids']) == {'finance', 'auth', 'writers', 'races'}, 'Exactly four suites required')
     for ids in c['expected_case_ids'].values():
         require(ids and len(ids) == len(set(ids)) and all(isinstance(x, str) and x for x in ids), 'Explicit unique IDs required')
     required = {'scripts/ci/h14-integrity/' + x for x in RUNTIME_NAMES}
     require(required <= set(c['files']) and set(c['bundle_paths']) == required, 'Exact H14 runtime bindings required')
-    companions={MIGRATION,c['candidate_post_migrate']['path'],
+    companions={MIGRATION,FORWARD_MIGRATION,c['candidate_post_migrate']['path'],
                 'scripts/ci/h14-integrity/ci_run.py','scripts/ci/h14-integrity/test_static.py'}
     require(set(c['files']) <= required | companions, 'Unknown runtime companion')
     for relative, expected in c['files'].items():
@@ -219,9 +227,19 @@ def load_contract():
         require(actual.resolve(strict=True) == actual and actual.is_file() and not actual.is_symlink()
                 and re.fullmatch(r'[a-f0-9]{64}', expected) is not None and digest(actual) == expected,
                 'Runtime file changed: ' + relative)
-    for item in (c['candidate_migration'], c['candidate_post_migrate']):
+    for item in (c['candidate_migration'], c['candidate_forward_migration'], c['candidate_post_migrate']):
         require(digest(ROOT / item['path']) == item['sha256'], 'Candidate companion hash changed')
     return c, hashlib.sha256(content).hexdigest()
+
+
+def check_collector_postimage(before, after, expected_md5):
+    require(isinstance(before, dict) and isinstance(after, dict), 'Missing collector metadata')
+    require(after.get('body_md5') == expected_md5, 'Forward collector postimage mismatch')
+    identity = lambda row: {key: value for key, value in row.items() if key != 'body_md5'}
+    require(identity(before) == identity(after), 'Forward changed collector identity/ACL/configuration')
+    require(after.get('owner') == 'postgres' and after.get('security_definer') is False
+            and after.get('acl') == ['postgres=X/postgres']
+            and after.get('config') == ['search_path=public'], 'Forward collector must remain private invoker')
 
 
 def parse_rows(stdout, expected, evidence=None):
@@ -260,6 +278,8 @@ def main():
     require(out.resolve(strict=True) == out, 'Symlinked evidence directory refused')
     record = {'run_id': run_id, 'status': 'running', 'contract_sha256': contract_sha, 'base_commit': BASE,
               'candidate_migration':contract['candidate_migration'], 'candidate_rpc_md5':contract['candidate_rpc_md5'],
+              'candidate_forward_migration':contract['candidate_forward_migration'],
+              'candidate_collector_md5':contract['candidate_collector_md5'], 'candidate_forward_applied': False,
               'candidate_post_migrate':contract['candidate_post_migrate'],
               'post_migrate_executed': False, 'databases': [], 'suites': [], 'errors': [], 'cleanup_errors': []}
     ACTIVE_EVIDENCE, ACTIVE_RECORD = out / 'result.json', record
@@ -425,6 +445,25 @@ def main():
             history_before = data(base, 'history-before-candidate')
             require(digest(ROOT / MIGRATION) == contract['candidate_migration']['sha256'], 'Candidate changed during replay')
             query(base, (ROOT / MIGRATION).read_text(), 'candidate-install', timeout=180)
+            collector_metadata_sql = """SELECT jsonb_build_object(
+                'oid', p.oid::bigint, 'body_md5', md5(p.prosrc), 'owner', p.proowner::regrole::text,
+                'acl', coalesce(p.proacl, acldefault('f',p.proowner))::text[],
+                'security_definer', p.prosecdef, 'config', p.proconfig, 'volatility', p.provolatile,
+                'parallel', p.proparallel, 'strict', p.proisstrict, 'leakproof', p.proleakproof,
+                'language', l.lanname, 'argument_names', p.proargnames,
+                'argument_defaults', pg_get_expr(p.proargdefaults,0), 'argument_types', p.proargtypes::text,
+                'result_type', p.prorettype::regtype::text)
+                FROM pg_proc p JOIN pg_language l ON l.oid=p.prolang
+                WHERE p.oid='public._h14_dependencias_baja_embarque(uuid,uuid,boolean)'::regprocedure;"""
+            collector_before = json.loads(query(base, collector_metadata_sql, 'collector-before-forward'))
+            require(digest(ROOT / FORWARD_MIGRATION) == contract['candidate_forward_migration']['sha256'],
+                    'Forward correction changed during replay')
+            query(base, (ROOT / FORWARD_MIGRATION).read_text(), 'candidate-forward-install', timeout=180)
+            record['candidate_forward_applied'] = True
+            collector_after = json.loads(query(base, collector_metadata_sql, 'collector-after-forward'))
+            record['collector_postimage'] = collector_after
+            check_collector_postimage(collector_before, collector_after, contract['candidate_collector_md5'])
+            record['collector_metadata_preserved'] = True
             history_after = data(base, 'history-after-candidate')
             require(history_before == history_after, 'Candidate changed existing fictional history')
             record['history_unchanged'] = True

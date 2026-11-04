@@ -1,6 +1,6 @@
 # H14: preparación de la protección de historia financiera
 
-Estado: propuesta para revisión. Este documento no acredita fusión, aplicación remota ni publicación.
+Estado: definición técnica y preparación de publicación. La aplicación se acredita con evidencia específica de cada release; este documento no acredita un despliegue.
 
 La baja debe conservar los documentos financieros y rechazar vínculos activos directos o indirectos. Los criterios documentales de estado existentes se conservan. La pertenencia de un vínculo estructural no modifica importes, atribución, P&L ni cálculos fiscales; un importe cero puede seguir documentando una relación.
 
@@ -41,6 +41,22 @@ Los vínculos de garantías que sí tienen factura de proveedor entran en la cob
 3. Aplicar y verificar el servidor mediante un procedimiento revisado; comprobar lecturas y rechazos con datos ficticios autorizados antes de publicar interfaz.
 4. Publicar interfaz y verificar el diagnóstico, el rechazo final, el cambio de organización y los reintentos.
 5. Si la interfaz necesita volver atrás, conservar las guardas del servidor. Una reversión que retire esas guardas reabre los casos de integridad reproducidos; no forma parte de un rollback seguro.
+
+### Presupuesto de lectura del diagnóstico
+
+La corrección `20261104020000_h14_diagnostico_baja_lectura_acotada.sql` reemplaza únicamente el collector privado. Materializa sus ocho conteos una sola vez y selecciona los candidatos estructurales ajenos antes de evaluar su estado financiero. Conserva las dieciséis comprobaciones de incoherencia, los estados documentales, el contrato versión 1 y una sola sentencia/snapshot. El lector y la validación final siguen compartiendo el collector; no cambian el mutex, las reglas financieras, la autorización ni los límites del servidor.
+
+El problema se reprodujo en PostgreSQL aislado con fixtures ficticios y JIT desactivado: el plan original evaluaba helpers sobre documentos ajenos antes de filtrar sus vínculos. Con 501 proformas terminales ajenas y 326 facturas ajenas, el lector original y una variante que sólo materializaba los conteos agotaron el presupuesto de 8 segundos con plan genérico. El prefiltro estructural completó las 24 lecturas del ensayo, con el mismo payload que el original y 3–19 ms observados en la fase de mayor volumen. Son tiempos de ese laboratorio, no una previsión de latencia productiva ni una prueba HTTP/JWT del candidato.
+
+Las dos regresiones `P04.reader_budget_empty` y `P04.reader_budget_shared` añaden lecturas del RPC público con el rol `authenticated` del fixture SQL, planes custom/generic y dos repeticiones. Cada sentencia de lectura tiene un límite de 8 segundos y debe validar los ocho conteos y el contrato. Se conservan los 140 identificadores anteriores. La finalización del runner no basta: los resultados declarados deben estar completos y aprobados.
+
+Antes de publicar:
+
+1. Verificar revisión y CI del SHA final, incluido el replay con el forward y las dos regresiones de presupuesto. No repetir `20261103100000_h14_baja_embarque_integridad_financiera.sql`.
+2. Serializar los despliegues y establecer una ventana sin otro DDL sobre el collector. El preflight detecta una preimagen inesperada al consultarla, pero no bloquea otro reemplazo entre esa consulta y `CREATE OR REPLACE`; si no se puede asegurar esa ventana, no aplicar. Revisar cuerpo, propietario, ACL, firma y configuración. `CREATE OR REPLACE` conserva los permisos y el postflight exige la misma frontera privada.
+3. Aplicar únicamente el nuevo forward mediante el procedimiento autorizado y verificar el MD5 del cuerpo `3aafb5cf009c477e626357cb9ba78da8`, la ACL privada y los controles existentes. No elevar el timeout ni retirar comprobaciones para conseguir una respuesta.
+4. Desde una sesión legítima con capacidad de baja y organización activa, consultar una sola vez un embarque ficticio autorizado. Validar versión, identidad, conteos, ejemplos y coherencia de `bloqueado`; cerrar sin confirmar la baja. Una respuesta válida bloqueada acredita el lector, no una baja permitida.
+5. Mantener la publicación pendiente si esa lectura falla. Las mediciones locales no sustituyen esa comprobación de aplicación. Conservar las guardas H14 al recuperar la interfaz.
 
 ## Evidencia del candidato
 

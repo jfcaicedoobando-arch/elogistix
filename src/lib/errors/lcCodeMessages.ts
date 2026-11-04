@@ -82,4 +82,8 @@ export const LC_CODE_MESSAGES: Record<string, string> = {
     "Los vínculos financieros se están actualizando. Consulta el estado y vuelve a intentarlo.",
   LC_EMBARQUE_AISLAMIENTO_NO_SOPORTADO:
     "No se pudo completar la operación con la configuración de la conexión. Contacta al administrador para revisarla.",
+  LC_H14_READER_PREFLIGHT:
+    "No se puede actualizar el diagnóstico de baja porque la base de datos difiere de la versión revisada. Solicita una revisión técnica antes de continuar.",
+  LC_H14_READER_POSTFLIGHT:
+    "La actualización del diagnóstico de baja no superó la verificación de integridad. Solicita una revisión técnica antes de volver a aplicarla.",
 };

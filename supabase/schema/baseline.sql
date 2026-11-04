@@ -4668,7 +4668,26 @@ BEGIN
     SELECT public._h14_facturas_baja_embarque(p_embarque_id, p_org, p.ids) AS ids FROM proforma_ids p
   ), cxp_ids AS MATERIALIZED (
     SELECT public._h14_cxp_baja_embarque(p_embarque_id, p_org) AS ids
-  ), motivos AS (
+  ), proformas_ajenas_directas AS MATERIALIZED (
+    -- Resolve structural candidates before invoking their financial-state helpers.
+    SELECT p.* FROM public.proformas p
+    WHERE p.organization_id IS DISTINCT FROM p_org
+      AND (p.embarque_id = p_embarque_id
+        OR p_embarque_id = ANY(COALESCE(p.embarques_ids, ARRAY[]::uuid[])))
+  ), proformas_ajenas_padres AS MATERIALIZED (
+    SELECT padre.* FROM public.proformas padre, proforma_ids ids
+    WHERE padre.organization_id IS DISTINCT FROM p_org
+      AND (COALESCE(padre.proformas_origen, ARRAY[]::uuid[]) && ids.ids
+        OR padre.id IN (SELECT p.consolidada_en FROM public.proformas p WHERE p.id = ANY(ids.ids)))
+  ), facturas_ajenas_proformas AS MATERIALIZED (
+    SELECT f.id, f.organization_id FROM public.facturas f, proforma_ids ids
+    WHERE f.organization_id IS DISTINCT FROM p_org
+      AND (f.proforma_id = ANY(ids.ids)
+        OR EXISTS (SELECT 1 FROM public.proformas p WHERE p.id = ANY(ids.ids)
+          AND f.id IN (p.factura_id, p.factura_secundaria_id))
+        OR EXISTS (SELECT 1 FROM public.conceptos_factura cf WHERE cf.factura_id = f.id
+          AND cf.deleted_at IS NULL AND cf.proforma_id_origen = ANY(ids.ids)))
+  ), motivos AS MATERIALIZED (
     SELECT
       (SELECT count(*) FROM public.facturas f, factura_ids ids
         WHERE f.id = ANY(ids.ids) AND f.organization_id = p_org AND f.deleted_at IS NULL
@@ -4698,28 +4717,17 @@ BEGIN
       EXISTS (SELECT 1 FROM public.facturas f WHERE f.embarque_id = p_embarque_id
         AND f.organization_id IS DISTINCT FROM p_org
         AND public._h14_documento_bloqueante_baja(f.organization_id, 'facturas', f.id))
-      OR EXISTS (SELECT 1 FROM public.proformas p WHERE
-        (p.embarque_id = p_embarque_id OR p_embarque_id = ANY(COALESCE(p.embarques_ids, ARRAY[]::uuid[])))
-        AND p.organization_id IS DISTINCT FROM p_org
-        AND (public._h14_fila_bloqueante_baja(p.organization_id, 'proformas', to_jsonb(p))
+      OR EXISTS (SELECT 1 FROM proformas_ajenas_directas p WHERE
+        (public._h14_fila_bloqueante_baja(p.organization_id, 'proformas', to_jsonb(p))
           OR EXISTS (SELECT 1 FROM public.facturas f WHERE
             (f.proforma_id = p.id OR f.id IN (p.factura_id, p.factura_secundaria_id)
               OR EXISTS (SELECT 1 FROM public.conceptos_factura cf WHERE cf.factura_id = f.id
                 AND cf.proforma_id_origen = p.id AND cf.deleted_at IS NULL))
             AND public._h14_documento_bloqueante_baja(f.organization_id, 'facturas', f.id))))
-      OR EXISTS (SELECT 1 FROM public.proformas padre, proforma_ids ids
-        WHERE padre.organization_id IS DISTINCT FROM p_org
-          AND (COALESCE(padre.proformas_origen, ARRAY[]::uuid[]) && ids.ids
-            OR padre.id IN (SELECT p.consolidada_en FROM public.proformas p WHERE p.id = ANY(ids.ids)))
-          AND public._h14_fila_bloqueante_baja(padre.organization_id, 'proformas', to_jsonb(padre)))
-      OR EXISTS (SELECT 1 FROM public.facturas f, proforma_ids ids
-        WHERE f.organization_id IS DISTINCT FROM p_org
-          AND (f.proforma_id = ANY(ids.ids)
-            OR EXISTS (SELECT 1 FROM public.proformas p WHERE p.id = ANY(ids.ids)
-              AND f.id IN (p.factura_id, p.factura_secundaria_id))
-            OR EXISTS (SELECT 1 FROM public.conceptos_factura cf WHERE cf.factura_id = f.id
-              AND cf.deleted_at IS NULL AND cf.proforma_id_origen = ANY(ids.ids)))
-          AND public._h14_documento_bloqueante_baja(f.organization_id, 'facturas', f.id))
+      OR EXISTS (SELECT 1 FROM proformas_ajenas_padres padre
+        WHERE public._h14_fila_bloqueante_baja(padre.organization_id, 'proformas', to_jsonb(padre)))
+      OR EXISTS (SELECT 1 FROM facturas_ajenas_proformas f
+        WHERE public._h14_documento_bloqueante_baja(f.organization_id, 'facturas', f.id))
       OR EXISTS (SELECT 1 FROM public.comisiones_devengadas c WHERE c.embarque_id = p_embarque_id
         AND c.organization_id IS DISTINCT FROM p_org AND c.definitiva IS TRUE)
       OR EXISTS (SELECT 1 FROM public.pagos_factura p WHERE p.embarque_id = p_embarque_id

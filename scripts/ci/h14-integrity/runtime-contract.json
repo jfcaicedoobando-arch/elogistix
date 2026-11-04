@@ -13,7 +13,7 @@
   "candidate_rpc_md5": "f603355293c0d33598d12fdc44cb9b26",
   "files": {
     "scripts/ci/h14-integrity/fixture_helpers.sql": "a6ea509e6c5551563e2b572080fba338d1192a314b2ab7d7ce6ec7df0c871ba7",
-    "scripts/ci/h14-integrity/serial.sql": "b58dec3fae83f1b6895bc23322172eeff9739c08dc0a00493eb89944190eeb42",
+    "scripts/ci/h14-integrity/serial.sql": "44349904be061e739135bd99b98978bef9754c07604324113fe9a5aa99988f57",
     "scripts/ci/h14-integrity/auth.sql": "a814d70a5439b80a5507cb9d153863ae92aa685c117249a20be0e26fcb1377e5",
     "scripts/ci/h14-integrity/writers.sql": "93b8b484100bddb9945521f5906c9be29bd6b021f584281776ca63a5a09aaabb",
     "scripts/ci/h14-integrity/capture.sql": "615e936e7a4854f21f738575dba1aea3220377240003842c867cf140c13f40de",
@@ -21,10 +21,12 @@
     "scripts/ci/h14-integrity/driver_local.py": "5e8b434e0f2e21cfffaa6583c16f617dc43323072b0f3347f8127b545e052aaf",
     "scripts/ci/h14-integrity/scale-equivalence.sql": "a0d26352b08a1ff2923486223caa6e69e9e4e522e63f00a4b8fcddaf2c4cb3a4",
     "scripts/ci/h14-integrity/pre_migration_history.sql": "261e49ad1043c574c9dc30c84ac4e57ec7509927f434b6193fb35367bf9796d7",
-    "scripts/ci/h14-integrity/ci_run.py": "06ffe7af3b462e04217a6e9e9ccb919c1af65ada17ce66a36f8296e94253e33a",
-    "scripts/ci/h14-integrity/test_static.py": "26c85e9d2ebfb21edb3de3f2af9874624ce9217e22dd22716b8f3d201a26b117",
+    "scripts/ci/h14-integrity/ci_run.py": "47d88aa4f966c042fe727f63640ea9942a854ddfe2c0ccdf9b374d6f32611326",
+    "scripts/ci/h14-integrity/test_static.py": "66c163e51f1f4c4c581ba7e020fc0f3c6bfcebbc8168b1b9673795ac499df9ef",
     "supabase/migrations/20261103100000_h14_baja_embarque_integridad_financiera.sql": "e926236c6a54d353c905477677ae31f5ff1800caed1734c9cf2a65ee457c087e",
-    "supabase/tests/rls/_ci_post_migrate.sql": "13d2fb58654d82572996565b74fdb57245d43d22676b5838c92f918f3bedac18"
+    "supabase/tests/rls/_ci_post_migrate.sql": "13d2fb58654d82572996565b74fdb57245d43d22676b5838c92f918f3bedac18",
+    "scripts/ci/h14-integrity/reader-budget.sql": "f744ee012858e5875d06cbed9a82e2560d37293e3cf3fcd11e89c278aa66d0a4",
+    "supabase/migrations/20261104020000_h14_diagnostico_baja_lectura_acotada.sql": "9a7c54759c63186421fa860d6ed2722f9cfd88c729edf6bd8a5f47f1f2a68ef7"
   },
   "bundle_paths": {
     "scripts/ci/h14-integrity/fixture_helpers.sql": "finance/fixture_helpers.sql",
@@ -35,7 +37,8 @@
     "scripts/ci/h14-integrity/concurrency.py": "races/concurrency.py",
     "scripts/ci/h14-integrity/driver_local.py": "races/driver_local.py",
     "scripts/ci/h14-integrity/scale-equivalence.sql": "finance/scale-equivalence.sql",
-    "scripts/ci/h14-integrity/pre_migration_history.sql": "prep/pre_migration_history.sql"
+    "scripts/ci/h14-integrity/pre_migration_history.sql": "prep/pre_migration_history.sql",
+    "scripts/ci/h14-integrity/reader-budget.sql": "finance/reader-budget.sql"
   },
   "pre_migration_fixture": "scripts/ci/h14-integrity/pre_migration_history.sql",
   "pre_migration_fixture_helpers": "scripts/ci/h14-integrity/fixture_helpers.sql",
@@ -94,7 +97,9 @@
       "R01.restore_history_positive",
       "R02.reject_child_restore_still_dead",
       "R03.restore_failure_atomic",
-      "P03.inverse_family_scale"
+      "P03.inverse_family_scale",
+      "P04.reader_budget_empty",
+      "P04.reader_budget_shared"
     ],
     "auth": [
       "A01-cross-tenant",
@@ -188,5 +193,10 @@
       "C15",
       "C16"
     ]
-  }
+  },
+  "candidate_forward_migration": {
+    "path": "supabase/migrations/20261104020000_h14_diagnostico_baja_lectura_acotada.sql",
+    "sha256": "9a7c54759c63186421fa860d6ed2722f9cfd88c729edf6bd8a5f47f1f2a68ef7"
+  },
+  "candidate_collector_md5": "3aafb5cf009c477e626357cb9ba78da8"
 }

@@ -78815,7 +78815,8 @@
       "20261016060000_crm_empresa_prospecto_kam_propio.sql",
       "20261016070000_crm_cliente_identidad_atomica.sql",
       "20261016080000_crm_oportunidad_origen_empresa.sql",
-      "20261103100000_h14_baja_embarque_integridad_financiera.sql"
+      "20261103100000_h14_baja_embarque_integridad_financiera.sql",
+      "20261104020000_h14_diagnostico_baja_lectura_acotada.sql"
     ]
   }
 }
