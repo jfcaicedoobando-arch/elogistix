@@ -2,6 +2,7 @@ import { readIsolatedDrizzleReplay } from "../../../scripts/ci/drizzle-history/c
 import { describe, it, expect } from "vitest";
 import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { execFileSync } from "node:child_process";
+import { createHash } from "node:crypto";
 import { scanDrizzleReplay, type DrizzleReplayEntry } from "../../../scripts/lib/audit-drizzle-replay";
 
 describe("canonical migration reconstruction", () => {
@@ -13,6 +14,30 @@ describe("canonical migration reconstruction", () => {
     expect(scanDrizzleReplay(sources("drizzle/migrations"), sources("supabase/migrations"), mapping, readIsolatedDrizzleReplay())).toEqual([]);
     expect(existsSync("supabase/releases/external-migrations.tsv")).toBe(false);
     expect(existsSync("scripts/db/replay-files.sh")).toBe(false);
+  });
+
+  it("accounts for deployed H14 through its existing atomic canonical migration only once", () => {
+    const file = "0024_h14_baja_embarque_integridad_financiera.sql";
+    const replay = "20261103100000_h14_baja_embarque_integridad_financiera.sql";
+    const mapping = JSON.parse(readFileSync("drizzle/replay.json", "utf8")) as DrizzleReplayEntry[];
+    expect(mapping.filter(entry => entry.file === file)).toEqual([{
+      file,
+      sha256: "ea07fc4a0064813482d84a3d7924867dc941cfc9b6ea9993bf75427c4a8af88b",
+      replays: [replay],
+    }]);
+    const source = readFileSync(`drizzle/migrations/${file}`, "utf8");
+    const canonical = readFileSync(`supabase/migrations/${replay}`, "utf8");
+    const hash = (sql: string) => createHash("sha256").update(sql).digest("hex");
+    expect(hash(source)).toBe("ea07fc4a0064813482d84a3d7924867dc941cfc9b6ea9993bf75427c4a8af88b");
+    expect(hash(canonical)).toBe("e926236c6a54d353c905477677ae31f5ff1800caed1734c9cf2a65ee457c087e");
+    // Drizzle history omits only the outer transaction; every guard, grant and body stays identical.
+    const withoutOuterTransaction = (sql: string) => sql
+      .replace(/^((?:--[^\n]*\n){3})BEGIN;\n/, "$1")
+      .replace(/\nCOMMIT;\n$/, "\n");
+    expect(source).toBe(withoutOuterTransaction(canonical));
+    expect(readIsolatedDrizzleReplay().has(file)).toBe(false);
+    expect(readdirSync("supabase/migrations").filter(name => name.endsWith(".sql")
+      && withoutOuterTransaction(readFileSync(`supabase/migrations/${name}`, "utf8")) === source)).toEqual([replay]);
   });
 
   it("orders the six unpublished financial fixes after the integrated upstream replays", () => {

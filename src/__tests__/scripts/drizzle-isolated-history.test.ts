@@ -69,10 +69,12 @@ describe("isolated Drizzle history is not deployment-eligible", () => {
     const root = fixture();
     const path = join(root, "drizzle/replay.json");
     const entries = JSON.parse(read(path));
-    entries.at(-1).scope = "production";
+    const isolatedEntry = entries.find((entry: DrizzleReplayEntry) => entry.file === "0023_margen_minimo_utilidad_rpc.sql");
+    expect(isolatedEntry).toBeDefined();
+    isolatedEntry.scope = "production";
     writeFileSync(path, JSON.stringify(entries));
     expect(() => readIsolatedDrizzleReplay(root)).toThrow(/mapping mismatch/);
-    entries.at(-1).scope = "isolated-ci";
+    isolatedEntry.scope = "isolated-ci";
     entries.push({ file: "unreviewed.sql", scope: "isolated-ci", replays: [] });
     writeFileSync(path, JSON.stringify(entries));
     expect(() => readIsolatedDrizzleReplay(root)).toThrow(/Unreviewed/);
