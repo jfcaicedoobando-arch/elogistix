@@ -120,10 +120,15 @@ describe("vendedoras service", () => {
   });
 
   it("asignarVendedoraEmbarque: actualiza vendedora_id", async () => {
-    mock.setTableResult("embarques", { data: [], error: null });
+    mock.setTableResult("embarques", { data: [{ id: "e1" }], error: null });
     await asignarVendedoraEmbarque("e1", "v1");
     expect(mock.tableCalls[0].ops).toContain("update");
     expect(mock.getMutationPayload("embarques", "update")).toEqual({ vendedora_id: "v1" });
+  });
+
+  it("asignarVendedoraEmbarque: sin fila afectada no reporta éxito", async () => {
+    mock.setTableResult("embarques", { data: [], error: null });
+    await expect(asignarVendedoraEmbarque("e1", "v1")).rejects.toThrow("No se pudo asignar");
   });
 
   it.each([

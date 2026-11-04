@@ -136,7 +136,7 @@ function SeccionConfig({ vendedoras }: { vendedoras: VendedoraOpt[] }) {
 }
 
 function SeccionEmbarquesSinAsignar({ vendedoras }: { vendedoras: VendedoraOpt[] }) {
-  const { data: embarques = [] } = useEmbarquesSinVendedora();
+  const { data: embarques = [], isError } = useEmbarquesSinVendedora();
   const asignar = useAsignarVendedoraEmbarque();
   const [sel, setSel] = useState<Record<string, string>>({});
 
@@ -146,7 +146,9 @@ function SeccionEmbarquesSinAsignar({ vendedoras }: { vendedoras: VendedoraOpt[]
         <CardTitle>Embarques sin vendedora asignada ({embarques.length})</CardTitle>
       </CardHeader>
       <CardContent>
-        {embarques.length === 0 ? (
+        {isError ? (
+          <p role="alert" className="text-sm text-destructive">No se pudieron cargar los embarques. Recarga la página.</p>
+        ) : embarques.length === 0 ? (
           <EmptyStateInline icon={CheckCircle2} message="Todos los embarques tienen vendedora asignada." />
         ) : (
           <div className="space-y-1.5 max-h-[400px] overflow-y-auto">
@@ -165,7 +167,11 @@ function SeccionEmbarquesSinAsignar({ vendedoras }: { vendedoras: VendedoraOpt[]
                 <Button
                   size="sm" variant="outline"
                   disabled={!sel[e.id] || asignar.isPending}
-                  onClick={() => asignar.mutate({ embarqueId: e.id, vendedoraId: sel[e.id] })}
+                  onClick={() => asignar.mutate({
+                    embarqueId: e.id,
+                    vendedoraId: sel[e.id],
+                    etiqueta: `${e.expediente} → ${vendedoras.find((v) => v.id === sel[e.id])?.nombre ?? "vendedora"}`,
+                  })}
                 >
 
                   Asignar

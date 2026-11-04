@@ -127,9 +127,13 @@ export async function asignarVendedoraEmbarque(
   embarqueId: string,
   vendedoraId: string,
 ): Promise<void> {
-  await run(
-    supabase.from("embarques").update({ vendedora_id: vendedoraId }).eq("id", embarqueId),
-  );
+  const { data: filas, error } = await supabase
+    .from("embarques").update({ vendedora_id: vendedoraId }).eq("id", embarqueId).select("id");
+  if (error) throw error;
+  // Sin fila afectada = sin permiso o embarque inexistente: no registrar éxito falso.
+  if (!Array.isArray(filas) || filas.length === 0) {
+    throw new Error("No se pudo asignar: el embarque no existe o no tienes permiso.");
+  }
   await registrarActividad({
     modulo: "embarques",
     accion: "asignar_vendedora_embarque",

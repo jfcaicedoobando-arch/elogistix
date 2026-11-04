@@ -20,7 +20,7 @@ import type { UsuarioVendedor } from "../services/vendedoras";
 type VendedoraOpt = UsuarioVendedor;
 
 export function TabLiquidaciones({ vendedoras }: { vendedoras: VendedoraOpt[] }) {
-  const { data: liquidaciones = [], isLoading } = useLiquidaciones();
+  const { data: liquidaciones = [], isLoading, isError } = useLiquidaciones();
   const [genOpen, setGenOpen] = useState(false);
   const [pagoOpen, setPagoOpen] = useState<LiquidacionRow | null>(null);
   const [cancelOpen, setCancelOpen] = useState<LiquidacionRow | null>(null);
@@ -84,6 +84,9 @@ export function TabLiquidaciones({ vendedoras }: { vendedoras: VendedoraOpt[] })
         </div>
       )}
 
+      {isError && (
+        <p role="alert" className="text-sm text-destructive">No se pudieron cargar las liquidaciones. Recarga la página.</p>
+      )}
       <Card>
         <CardContent className="p-0">
           <DataTable

@@ -183,6 +183,13 @@
       "when": 1793811867447,
       "tag": "0025_h14_diagnostico_baja_lectura_acotada",
       "breakpoints": true
+    },
+    {
+      "idx": 26,
+      "version": "7",
+      "when": 1793824978016,
+      "tag": "0026_comisiones_recalcular_al_asignar_vendedora",
+      "breakpoints": true
     }
   ]
 }

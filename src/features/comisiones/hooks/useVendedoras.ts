@@ -82,12 +82,15 @@ export function useUpdateVendedoraConfig() {
 export function useAsignarVendedoraEmbarque() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (p: { embarqueId: string; vendedoraId: string }) =>
+    mutationFn: (p: { embarqueId: string; vendedoraId: string; etiqueta?: string }) =>
       asignarVendedoraEmbarque(p.embarqueId, p.vendedoraId),
-    onSuccess: () => {
+    onSuccess: (_d, p) => {
       qc.invalidateQueries({ queryKey: queryKeys.comisiones.embarquesSinVendedora() });
       qc.invalidateQueries({ queryKey: queryKeys.comisiones.all });
-      notifySuccess(undefined, { title: "Vendedora asignada" });
+      notifySuccess(undefined, {
+        title: p.etiqueta ? `Asignado: ${p.etiqueta}` : "Vendedora asignada",
+        description: "Sus comisiones ya cobradas se recalcularon y aparecen en Devengadas.",
+      });
     },
     onError: (error: Error) => {
       notifyError(undefined, { title: "No se pudo asignar vendedora", description: getErrorMessage(error), error, method: "ASSIGN_VENDEDORA" });
