@@ -9,7 +9,7 @@ import { useUsuariosOrgCrm } from "@/features/crm/hooks/usePricingCrm";
 import { paisesDePuertos, puertoTrasCambioPais } from "@/features/crm/services/pricing/puertosPorPais";
 import { CampoPuerto } from "./CampoPuerto";
 import {
-  ETIQUETA_COMPLEJIDAD, INCOTERMS_PRICING, SERVICIOS_PRICING, type SolicitudPricingInsert,
+  INCOTERMS_PRICING, SERVICIOS_PRICING, type SolicitudPricingInsert,
   aNumero, UNIDADES_MEDIDA_PRICING,
 } from "@/features/crm/services/pricing/tiposPricing";
 import { CampoLista, CampoSiNo, CampoTexto } from "./CamposPricing";
@@ -24,8 +24,6 @@ interface Props {
   disabled?: boolean;
 }
 
-const COMPLEJIDADES = (Object.keys(ETIQUETA_COMPLEJIDAD) as Array<keyof typeof ETIQUETA_COMPLEJIDAD>)
-  .map((k) => ({ value: k, label: ETIQUETA_COMPLEJIDAD[k] }));
 
 export function SolicitudPricingCampos({ datos, set, disabled }: Props) {
   const { data: usuarios = [] } = useUsuariosOrgCrm();
@@ -55,8 +53,6 @@ export function SolicitudPricingCampos({ datos, set, disabled }: Props) {
         <CampoTexto id="pr-cliente" label="Cliente" {...d} value={datos.cliente} onChange={txt("cliente")} />
         <CampoLista id="pr-servicio" label="Modo de transporte" required {...d} value={datos.servicio}
           opciones={SERVICIOS_PRICING} onChange={(v) => set("servicio", v)} />
-        <CampoLista id="pr-complejidad" label="Complejidad" {...d} value={datos.complejidad ?? "media"}
-          opciones={COMPLEJIDADES} onChange={(v) => v && set("complejidad", v)} />
         <CampoLista id="pr-incoterm" label="Incoterm" {...d} value={datos.incoterm}
           opciones={INCOTERMS_PRICING} onChange={(v) => set("incoterm", v)} />
         <CampoLista id="pr-tipo-operacion" label="Tipo de operación" {...d} value={datos.tipo_operacion ?? null}

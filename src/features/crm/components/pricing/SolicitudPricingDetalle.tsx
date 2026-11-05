@@ -4,6 +4,8 @@
  * capturadas con el formulario anterior se muestran sólo para consulta.
  */
 import { useState } from "react";
+import { AjustePlazoPricing } from "./AjustePlazoPricing";
+import { esGerenteOps } from "@/features/crm/services/pricing/plazoPricing";
 import { useNavigate } from "react-router";
 import { useAuth } from "@/lib/contexts/AuthContext";
 import { usePermissions } from "@/hooks/shared/usePermissions";
@@ -54,6 +56,7 @@ export function SolicitudPricingDetalle({ solicitud: s }: Props) {
       <SolicitudPricingDialog open={editando} onOpenChange={setEditando}
         oportunidadId={s.oportunidad_id ?? ""} solicitud={s} />
       <ResumenSolicitudPricing solicitud={s} />
+      {esGerenteOps(effectiveRole) && <AjustePlazoPricing solicitud={s} />}
       <AdjuntosSolicitudPricing organizationId={s.organization_id} solicitudId={s.id}
         puedeAdjuntar={s.estado !== "cancelada"} />
       <OpcionesTarifario solicitud={s} puedeElegir={puedeElegir} />
@@ -66,7 +69,7 @@ export function SolicitudPricingDetalle({ solicitud: s }: Props) {
         tarifas={tarifasRespuesta.data ?? []} isLoading={tarifasRespuesta.isLoading}
         isError={tarifasRespuesta.isError} onSaved={() => { void tarifasRespuesta.refetch(); }}
         onCotizar={puedeCotizar ? cotizarRespuesta : undefined}
-        editable={s.estado === "enviada" && puedeAgregarTarifaRespuesta(effectiveRole)} />
+        editable={(s.estado === "enviada" || s.estado === "respondida") && puedeAgregarTarifaRespuesta(effectiveRole)} />
     </div>
   );
 }

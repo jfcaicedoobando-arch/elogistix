@@ -4,7 +4,7 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { formatFechaDia } from "@/lib/formatters/dates";
 import { useUsuariosOrgCrm } from "@/features/crm/hooks/usePricingCrm";
-import { ETIQUETA_COMPLEJIDAD, UNIDADES_MEDIDA_PRICING, type ComplejidadPricing, type SolicitudPricingRow } from "@/features/crm/services/pricing/tiposPricing";
+import { ETIQUETA_COMPLEJIDAD, ETIQUETA_TIPO_SOLICITUD, UNIDADES_MEDIDA_PRICING, type ComplejidadPricing, type SolicitudPricingRow } from "@/features/crm/services/pricing/tiposPricing";
 
 const siNo = (v: boolean | null) => (v == null ? null : v ? "Sí" : "No");
 
@@ -14,6 +14,8 @@ export function ResumenSolicitudPricing({ solicitud: s }: { solicitud: Solicitud
   const campos: Array<[string, string | number | null]> = [
     ["Solicitante", solicitante], ["Fecha", formatFechaDia(s.fecha)], ["Cliente", s.cliente],
     ["Modo de transporte", s.servicio], ["Complejidad", ETIQUETA_COMPLEJIDAD[s.complejidad as ComplejidadPricing] ?? s.complejidad],
+    ["Tipo de solicitud", s.tipo_solicitud ? ETIQUETA_TIPO_SOLICITUD[s.tipo_solicitud] ?? s.tipo_solicitud : null],
+    ["Tipo de operación", s.tipo_operacion], ["Sector económico", s.sector_economico],
     ["Incoterm", s.incoterm], ["IMO", siNo(s.imo)], ["Commodity", s.commodity],
     ["Container Size", s.container_size], ["Tipo de contenedor", s.tipo_carga], ["Quantity", s.cantidad],
     ["Estibable", siNo(s.estibable)], ["Weight", s.peso],
@@ -31,6 +33,8 @@ export function ResumenSolicitudPricing({ solicitud: s }: { solicitud: Solicitud
             <p className="text-body-sm">{v ?? "—"}</p>
           </div>
         ))}
+        {s.complejidad_motivo && <Motivo titulo="Motivo del cambio de complejidad" texto={s.complejidad_motivo} />}
+        {s.plazo_motivo && <Motivo titulo="Motivo del nuevo plazo" texto={s.plazo_motivo} />}
         {s.notas && (
           <div className="col-span-full">
             <p className="text-caption text-muted-foreground">Notas importantes</p>
@@ -39,5 +43,14 @@ export function ResumenSolicitudPricing({ solicitud: s }: { solicitud: Solicitud
         )}
       </CardContent>
     </Card>
+  );
+}
+
+function Motivo({ titulo, texto }: { titulo: string; texto: string }) {
+  return (
+    <div className="col-span-full">
+      <p className="text-caption text-muted-foreground">{titulo}</p>
+      <p className="whitespace-pre-wrap text-body-sm">{texto}</p>
+    </div>
   );
 }

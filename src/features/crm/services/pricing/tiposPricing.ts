@@ -22,7 +22,12 @@ export const UNIDADES_MEDIDA_PRICING = [
 export type ComplejidadPricing = "baja" | "media" | "alta";
 
 export const ETIQUETA_COMPLEJIDAD: Record<ComplejidadPricing, string> = {
-  baja: "Baja (8 h)", media: "Media (24 h)", alta: "Alta (48 h)",
+  baja: "Cotización estándar (sin contador)",
+  media: "Nueva ruta/agente/Incoterm (36 h)",
+  alta: "Especial, proyecto o multimodal (48 h)",
+};
+export const ETIQUETA_TIPO_SOLICITUD: Record<string, string> = {
+  nuevas_tarifas: "Nuevas tarifas con otros agentes", nueva_ruta: "Nueva ruta sin agentes identificados",
 };
 export const ETIQUETA_ESTADO_PRICING: Record<string, string> = {
   borrador: "Borrador", enviada: "Enviada", respondida: "Respondida", cancelada: "Cancelada",
@@ -55,13 +60,20 @@ export const OPCION_VACIA: OpcionPricingForm = {
 export function mensajeErrorPricing(err: unknown): string {
   const msg = err instanceof Error ? err.message : String((err as { message?: string })?.message ?? "");
   const mapa: Record<string, string> = {
-    LC_PRICING_INCOMPLETA: "Falta el servicio, el origen o el destino.",
+    LC_PRICING_SOLO_GERENTE_OPS: "Solo el gerente de operaciones o un administrador puede hacer este cambio.",
+    LC_PRICING_MOTIVO_REQUERIDO: "Escribe una justificación de al menos 10 caracteres.",
+    LC_PRICING_PLAZO_NO_AMPLIABLE: "Solo se amplía el plazo de solicitudes especiales enviadas.",
+    LC_PRICING_PLAZO_FUERA_DE_TIEMPO: "Ya pasaron las 8 horas para ampliar el plazo.",
+    LC_PRICING_HORAS_INVALIDAS: "El nuevo plazo debe ser mayor a 48 h y hasta 720 h.",
     LC_PRICING_SIN_OPCIONES: "Agrega al menos una opción antes de responder.",
     LC_PRICING_SIN_PERMISO: "Solo Pricing o el solicitante pueden hacer esto.",
     LC_PRICING_NO_EDITABLE: "La solicitud ya no acepta cambios en opciones.",
     LC_PRICING_ESTADO_INVALIDO: "La solicitud ya cambió de estado. Recarga la página.",
     LC_PRICING_SOLICITANTE_INVALIDO: "El solicitante no pertenece a la empresa.",
   };
+  const faltan = /LC_PRICING_INCOMPLETA:\s*(.+)/.exec(msg);
+  if (faltan) return `Faltan campos obligatorios: ${faltan[1]}.`;
+  if (msg.includes("LC_PRICING_INCOMPLETA")) return "Faltan campos obligatorios.";
   const clave = Object.keys(mapa).find((k) => msg.includes(k));
   return clave ? mapa[clave] : "No se pudo completar la acción.";
 }

@@ -8,7 +8,7 @@ export function datosCopiaSolicitud(s: SolicitudPricingRow): SolicitudPricingIns
   const {
     id: _id, folio: _folio, estado: _estado, created_at: _c, updated_at: _u, created_by: _cb,
     deleted_at: _d, enviada_at: _e, vence_at: _v, respondida_at: _r, tarifa_tarifario_id: _t,
-    fecha: _f, ...datos
+    fecha: _f, tipo_solicitud: _ts, complejidad_motivo: _cm, plazo_motivo: _pm, ...datos
   } = s;
   return { ...datos, folio: "" };
 }

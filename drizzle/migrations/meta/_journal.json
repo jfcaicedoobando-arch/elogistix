@@ -211,6 +211,13 @@
       "when": 1793914223349,
       "tag": "0029_cotizacion_handover",
       "breakpoints": true
+    },
+    {
+      "idx": 30,
+      "version": "7",
+      "when": 1793914785346,
+      "tag": "0030_pricing_reglas_plazos",
+      "breakpoints": true
     }
   ]
 }

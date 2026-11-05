@@ -28,6 +28,7 @@ vi.mock("../AdjuntosSolicitudPricing", () => ({ AdjuntosSolicitudPricing: () => 
 vi.mock("../ResumenSolicitudPricing", () => ({ ResumenSolicitudPricing: () => null }));
 vi.mock("../OpcionPricingEditor", () => ({ OpcionPricingEditor: () => null }));
 vi.mock("../RelojPricing", () => ({ RelojPricing: () => null }));
+vi.mock("../AjustePlazoPricing", () => ({ AjustePlazoPricing: () => null }));
 
 const solicitud: SolicitudPricingRow = {
   id: "sol", organization_id: "org", oportunidad_id: "op", solicitante_id: "solicitante", created_by: "creador",
@@ -35,7 +36,7 @@ const solicitud: SolicitudPricingRow = {
   cantidad: 1, cliente: null, commodity: null, container_size: null, deleted_at: null, delivery: null,
   destino: "Manzanillo", dimensiones: null, enviada_at: null, estibable: null, fecha_tentativa_carga: null,
   imo: null, incoterm: "FAS", notas: null, origen: "Ningbo", peso: null, pod: null, pol: null,
-  respondida_at: null, servicio: "Marítimo", tipo_carga: "40' High Cube", unidad_medida: null, tipo_operacion: null, sector_economico: null,
+  respondida_at: null, servicio: "Marítimo", tipo_carga: "40' High Cube", unidad_medida: null, tipo_operacion: null, sector_economico: null, tipo_solicitud: null, complejidad_motivo: null, plazo_motivo: null,
   vence_at: null, tarifa_tarifario_id: null,
 };
 const tarifa: TarifaRespuestaRow = {
@@ -60,7 +61,7 @@ describe("cotizar la respuesta desde el detalle compartido de CRM y bandeja", ()
     expect(m.navigate).toHaveBeenCalledExactlyOnceWith("/cotizaciones/nueva?tarifa=tarifa-respuesta&solicitud=sol&oportunidad=op");
     expect(m.elegir).not.toHaveBeenCalled();
     expect(m.accion).toHaveBeenCalledTimes(1);
-    expect(screen.queryByRole("button", { name: "Agregar tarifa" })).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Agregar tarifa" })).toBeInTheDocument();
   });
   it.each(["admin", "admin_org", "super_admin", "ejecutivo_pricing", "gerente_operaciones"] as const)("permite cotizar al rol Pricing %s sin ser creador", (role) => {
     m.role = role;

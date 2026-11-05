@@ -4730,6 +4730,7 @@ export type Database = {
           cliente: string | null
           commodity: string | null
           complejidad: string
+          complejidad_motivo: string | null
           container_size: string | null
           created_at: string
           created_by: string | null
@@ -4751,6 +4752,7 @@ export type Database = {
           organization_id: string
           origen: string | null
           peso: string | null
+          plazo_motivo: string | null
           pod: string | null
           pol: string | null
           respondida_at: string | null
@@ -4760,6 +4762,7 @@ export type Database = {
           tarifa_tarifario_id: string | null
           tipo_carga: string | null
           tipo_operacion: string | null
+          tipo_solicitud: string | null
           unidad_medida: string | null
           updated_at: string
           vence_at: string | null
@@ -4769,6 +4772,7 @@ export type Database = {
           cliente?: string | null
           commodity?: string | null
           complejidad?: string
+          complejidad_motivo?: string | null
           container_size?: string | null
           created_at?: string
           created_by?: string | null
@@ -4790,6 +4794,7 @@ export type Database = {
           organization_id: string
           origen?: string | null
           peso?: string | null
+          plazo_motivo?: string | null
           pod?: string | null
           pol?: string | null
           respondida_at?: string | null
@@ -4799,6 +4804,7 @@ export type Database = {
           tarifa_tarifario_id?: string | null
           tipo_carga?: string | null
           tipo_operacion?: string | null
+          tipo_solicitud?: string | null
           unidad_medida?: string | null
           updated_at?: string
           vence_at?: string | null
@@ -4808,6 +4814,7 @@ export type Database = {
           cliente?: string | null
           commodity?: string | null
           complejidad?: string
+          complejidad_motivo?: string | null
           container_size?: string | null
           created_at?: string
           created_by?: string | null
@@ -4829,6 +4836,7 @@ export type Database = {
           organization_id?: string
           origen?: string | null
           peso?: string | null
+          plazo_motivo?: string | null
           pod?: string | null
           pol?: string | null
           respondida_at?: string | null
@@ -4838,6 +4846,7 @@ export type Database = {
           tarifa_tarifario_id?: string | null
           tipo_carga?: string | null
           tipo_operacion?: string | null
+          tipo_solicitud?: string | null
           unidad_medida?: string | null
           updated_at?: string
           vence_at?: string | null
@@ -10030,6 +10039,18 @@ export type Database = {
       _crm_es_pricing: { Args: { p_org: string }; Returns: boolean }
       _crm_folio_pricing_prefijo: { Args: { p_ts: string }; Returns: string }
       _crm_opcion_vigente: { Args: { p_id: string }; Returns: string }
+      _crm_pricing_avisar_cambio: {
+        Args: {
+          p_msg: string
+          p_org: string
+          p_sol: string
+          p_solicitante: string
+          p_titulo: string
+        }
+        Returns: undefined
+      }
+      _crm_pricing_es_gerente_ops: { Args: { p_org: string }; Returns: boolean }
+      _crm_pricing_horas: { Args: { p_complejidad: string }; Returns: number }
       _crm_vincular_cotizacion_core: {
         Args: {
           p_actor_email?: string
@@ -11549,6 +11570,14 @@ export type Database = {
           telefono: string
           telefono_norm: string
         }[]
+      }
+      crm_pricing_ampliar_plazo: {
+        Args: { p_horas: number; p_id: string; p_motivo: string }
+        Returns: Json
+      }
+      crm_pricing_cambiar_complejidad: {
+        Args: { p_complejidad: string; p_id: string; p_motivo: string }
+        Returns: Json
       }
       crm_propagar_conversion_cliente: {
         Args: {

@@ -3,7 +3,8 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { SolicitudPricingRow } from "@/features/crm/services/pricing/tiposPricing";
 
-const services = vi.hoisted(() => ({ enviarSolicitud: vi.fn() }));
+const services = vi.hoisted(() => ({ enviarSolicitud: vi.fn(), actualizarSolicitud: vi.fn() }));
+vi.mock("@/features/crm/hooks/useOpcionesTarifario", () => ({ useOpcionesTarifario: () => ({ opciones: [], isLoading: false }) }));
 vi.mock("@/features/crm/services/pricing/pricingCrm", () => services);
 vi.mock("@/features/crm/services/pricing/tarifasParaPricing", () => ({ listarTarifasParaPricing: vi.fn() }));
 vi.mock("@/lib/ui/appFeedback", () => ({ notifySuccess: vi.fn(), notifyError: vi.fn() }));
@@ -15,10 +16,10 @@ import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
 const solicitud: SolicitudPricingRow = {
   id: "s1", organization_id: "org1", oportunidad_id: "o1", solicitante_id: "u1", created_by: "u1",
   estado: "borrador", folio: "SP1", fecha: "2026-10-08", complejidad: "media", created_at: "", updated_at: "",
-  cantidad: null, cliente: null, commodity: null, container_size: null, deleted_at: null, delivery: null,
-  destino: "Manzanillo", dimensiones: null, enviada_at: null, estibable: null, fecha_tentativa_carga: null,
-  imo: null, incoterm: null, notas: null, origen: "Shanghai", peso: null, pod: null, pol: null,
-  respondida_at: null, servicio: "Marítimo", tipo_carga: null, unidad_medida: null, tipo_operacion: null, sector_economico: null, vence_at: null, tarifa_tarifario_id: null,
+  cantidad: 1, cliente: "ACME", commodity: "Llantas", container_size: null, deleted_at: null, delivery: null,
+  destino: "Manzanillo", dimensiones: "1x1x1", enviada_at: null, estibable: true, fecha_tentativa_carga: null,
+  imo: false, incoterm: "FOB", notas: null, origen: "Shanghai", peso: "1000", pod: "MXZLO", pol: "CNSHA",
+  respondida_at: null, servicio: "Marítimo", tipo_carga: "40' HC", unidad_medida: "kg", tipo_operacion: "Importación", sector_economico: "General", tipo_solicitud: null, complejidad_motivo: null, plazo_motivo: null, vence_at: null, tarifa_tarifario_id: null,
 };
 const auth = { userId: "u1", email: null, organizationId: "org1", organizationName: null, role: "operador", effectiveRole: "operador" };
 function diferido() {
@@ -33,6 +34,7 @@ function Vista({ fila = solicitud, puede = true }: { fila?: SolicitudPricingRow;
 beforeEach(() => {
   setAuthSnapshot(auth);
   services.enviarSolicitud.mockReset().mockResolvedValue(undefined);
+  services.actualizarSolicitud.mockReset().mockResolvedValue(undefined);
   vi.mocked(notifySuccess).mockClear(); vi.mocked(notifyError).mockClear();
   vi.stubGlobal("fetch", vi.fn(() => { throw new Error("No se permite red real"); }));
   client = new QueryClient({ defaultOptions: { queries: { retry: false }, mutations: { retry: false } } });

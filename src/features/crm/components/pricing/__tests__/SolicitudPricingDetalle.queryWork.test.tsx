@@ -36,7 +36,7 @@ const solicitud: SolicitudPricingRow = {
   cantidad: null, cliente: null, commodity: null, container_size: null, deleted_at: null, delivery: null,
   destino: null, dimensiones: null, enviada_at: null, estibable: null, fecha_tentativa_carga: null,
   imo: null, incoterm: null, notas: null, origen: null, peso: null, pod: null, pol: null,
-  respondida_at: null, servicio: null, tipo_carga: null, unidad_medida: null, tipo_operacion: null, sector_economico: null, vence_at: null, tarifa_tarifario_id: null,
+  respondida_at: null, servicio: null, tipo_carga: null, unidad_medida: null, tipo_operacion: null, sector_economico: null, tipo_solicitud: null, complejidad_motivo: null, plazo_motivo: null, vence_at: null, tarifa_tarifario_id: null,
 };
 const tarifa: TarifaRespuestaRow = {
   id: "t1", flete_base: 100, moneda: "USD", unidad_flete: null, carta_garantia: null,
@@ -109,7 +109,8 @@ describe("respuesta Pricing con un único observador", () => {
     rerender(view("respondida"));
     await act(async () => { await vi.advanceTimersByTimeAsync(60_000); });
     expect(mocks.read).toHaveBeenCalledTimes(2);
-    expect(screen.queryByRole("button", { name: "Agregar tarifa" })).not.toBeInTheDocument();
+    // Pricing puede seguir agregando tarifas aunque la solicitud ya esté respondida.
+    expect(screen.getByRole("button", { name: "Agregar tarifa" })).toBeInTheDocument();
   });
 
   it("mantiene la pausa en segundo plano y reanuda las lecturas al volver", async () => {

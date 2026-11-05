@@ -115,7 +115,7 @@ describe("invalidación acotada de Pricing", () => {
     expect(notifySuccess).not.toHaveBeenCalled();
     expect(notifyError).toHaveBeenCalledWith(undefined, expect.objectContaining({
       title: "Solicitud guardada; envío sin confirmar", error: errorEnvio,
-      description: "Falta el servicio, el origen o el destino.",
+      description: "Faltan campos obligatorios.",
     }));
   });
 
