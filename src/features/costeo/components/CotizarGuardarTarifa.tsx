@@ -26,18 +26,21 @@ interface Props {
   guardar: (onGuardada: (t: CosteoTarifa) => void) => void;
 }
 
-export function CotizarGuardarTarifa({ disabled, guardar }: Props) {
+export function CotizarGuardarTarifa(props: Props) {
   const { effectiveRole } = useAuth();
+  return puedeCotizarYGuardar(effectiveRole) ? <CotizarGuardarTarifaPanel {...props} /> : null;
+}
+
+function CotizarGuardarTarifaPanel({ disabled, guardar }: Props) {
   const { organizationId } = useOrgActiva();
   const navigate = useNavigate();
   const [clienteId, setClienteId] = useState("");
-  const permitido = puedeCotizarYGuardar(effectiveRole);
   const { data: clientes = [] } = useQuery({
     queryKey: ["clientes", "especiales", organizationId],
     queryFn: () => fetchClientesEspeciales(organizationId ?? ""),
-    enabled: permitido && !!organizationId,
+    enabled: !!organizationId,
   });
-  if (!permitido || clientes.length === 0) return null;
+  if (clientes.length === 0) return null;
 
   return (
     <div className="flex flex-wrap items-center gap-2 rounded-md border border-border p-3">

@@ -5,14 +5,14 @@ const mock = await vi.hoisted(async () => {
 vi.mock("@/integrations/supabase/client", () => ({ supabase: mock.supabase }));
 import { obtenerAutorizacionCliente } from "../autorizacionClienteService";
 const combinaciones = [{ cot: false, pro: false }, { cot: false, pro: true }, { cot: true, pro: false }, { cot: true, pro: true }];
-const conservador = { requiereAutorizacionCotizacion: true, requiereAutorizacionProforma: true, esClienteDeCasa: false };
+const conservador = { requiereAutorizacionCotizacion: true, requiereAutorizacionProforma: true, esClienteDeCasa: false, esEspecial: false };
 beforeEach(() => mock.reset());
 describe("cliente/autorización: flags vivos y defaults ante ausencia", () => {
   it.each(combinaciones)("cliente vivo conserva flags cot=$cot pro=$pro", async ({ cot, pro }) => {
     mock.source("clientes", { id: "cli-test", requiere_autorizacion_cotizacion: cot, requiere_autorizacion_proforma: pro, deleted_at: null });
-    expect(await obtenerAutorizacionCliente("cli-test")).toEqual({ requiereAutorizacionCotizacion: cot, requiereAutorizacionProforma: pro, esClienteDeCasa: !cot && !pro });
+    expect(await obtenerAutorizacionCliente("cli-test")).toEqual({ requiereAutorizacionCotizacion: cot, requiereAutorizacionProforma: pro, esClienteDeCasa: !cot && !pro, esEspecial: false });
     const call = mock.tableCalls[0]; expect(call.opArgs).toContainEqual(["id", "cli-test"]); expect(call.opArgs).toContainEqual(["deleted_at", null]);
-    expect(call.opArgs[call.ops.indexOf("select")]).toEqual(["id, requiere_autorizacion_cotizacion, requiere_autorizacion_proforma"]);
+    expect(call.opArgs[call.ops.indexOf("select")]).toEqual(["id, requiere_autorizacion_cotizacion, requiere_autorizacion_proforma, tipo_cliente"]);
   });
   it.each(combinaciones)("cliente borrado ignora flags cot=$cot pro=$pro y vuelve a defaults", async ({ cot, pro }) => {
     mock.source("clientes", { id: "cli-test", requiere_autorizacion_cotizacion: cot, requiere_autorizacion_proforma: pro, deleted_at: "2026-10-01" });
