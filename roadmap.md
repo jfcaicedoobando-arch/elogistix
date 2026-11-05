@@ -4,4 +4,4 @@
 - [ ] Fase 2: obligatorios al enviar, adjuntos, tipo de solicitud automático, complejidad 36 h / 48 h, cambio del gerente con justificación, notificaciones y "Atrasada". — espera revisión de la Fase 1.
 - [ ] Fase 3: prospecto sólo borrador + "Pedir alta como cliente"; exigir oportunidad "En cotización" a clientes generales.
 - [ ] Fase 4: botón "Cotizar y guardar tarifa" para clientes especiales.
-- [ ] Fase 5: Handover con reparto por turno. — espera respuestas: ¿qué es "Cliente FK"?, ¿el handover crea embarque en borrador o sólo notifica?
+- [ ] Fase 5: Handover con reparto por turno. — "Cliente FK" se calcula de la fuente (Finkargo = SÍ). Espera respuesta: ¿el handover crea embarque en borrador o sólo notifica?
