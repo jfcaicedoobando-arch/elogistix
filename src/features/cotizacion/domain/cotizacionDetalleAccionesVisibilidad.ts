@@ -48,7 +48,9 @@ export function visibilidadAcciones(params: {
     // P0 — la puerta visible coincide con la cerradura: rol con alta de
     // clientes + prospecto aceptado + oportunidad ligada. Sin oportunidad queda
     // sólo el banner que guía a vincularla.
-    mostrarConvertirCliente: esAceptada && esProspecto && puedeAltaCliente && tieneOportunidad,
+    // Fase 3b: el alta se hace en Borrador, antes de enviar (Aceptada sólo históricos).
+    mostrarConvertirCliente:
+      (estado === "Borrador" || esAceptada) && esProspecto && puedeAltaCliente && tieneOportunidad,
     mostrarCrearEmbarque: puertaEmbarque && tieneVenta,
     // P0 (bug 10): cotización aceptada sin venta capturada — se explica en vez
     // de ofrecer un botón que generaría un embarque en cero. Sólo a quien

@@ -65,8 +65,11 @@ describe("visibilidadAcciones — estado En operación sin embarque", () => {
 
 describe("visibilidadAcciones — Aceptar antes de Convertir", () => {
   const prospecto = { ...base, esProspecto: true, puedeAltaCliente: true, tieneOportunidad: true, tieneEmbarquesVinculados: false };
-  it.each(["Borrador", "Solicitada", "Enviada"])("no adelanta conversión en %s", (estado) => {
+  it.each(["Solicitada", "Enviada"])("no ofrece conversión en %s", (estado) => {
     expect(visibilidadAcciones({ ...prospecto, estado }).mostrarConvertirCliente).toBe(false);
+  });
+  it("Fase 3b: ofrece el alta como cliente en Borrador, antes de enviar", () => {
+    expect(visibilidadAcciones({ ...prospecto, estado: "Borrador" }).mostrarConvertirCliente).toBe(true);
   });
   it("ofrece conversión sólo después de aceptar sin adelantar embarque", () => {
     const acciones = visibilidadAcciones(prospecto);

@@ -239,6 +239,13 @@
       "when": 1793918703468,
       "tag": "0033_handover_embarque_al_aceptar",
       "breakpoints": true
+    },
+    {
+      "idx": 34,
+      "version": "7",
+      "when": 1793921590121,
+      "tag": "0034_prospecto_solo_borrador",
+      "breakpoints": true
     }
   ]
 }

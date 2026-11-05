@@ -108,6 +108,8 @@ export const LC_CODE_MESSAGES_CRM: Record<string, string> = {
     "La cotización necesita un cliente. Selecciona el cliente al que va dirigida.",
   LC_COT_PROSPECTO_CON_CLIENTE:
     "Una cotización de prospecto no puede tener cliente asignado. Elige prospecto o cliente, no ambos.",
+  LC_COT_PROSPECTO_SOLO_BORRADOR:
+    "Un prospecto sólo puede tener cotizaciones en borrador. Usa \"Convertir a Cliente\" antes de enviarla.",
   LC_COT_PROSPECTO_SIN_EMPRESA:
     "Captura el nombre de la empresa del prospecto antes de guardar la cotización.",
   LC_LEAD_YA_ASIGNADO:

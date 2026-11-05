@@ -58,7 +58,9 @@ export function CotizacionDetalleAcciones({
   const base = accionesCotizacionPermitidas(estado, total, rol, { creadaPor, usuarioActual }, requiereAutorizacionCliente);
   // Sin autorización interna no se envía ni se acepta desde captura (la base también lo bloquea).
   const bloqueada = !clienteEspecial && requiereAutorizacionParaAvanzar(estado, autorizadaAt);
-  const acciones = { ...base, enviar: base.enviar && !bloqueada, aceptar: base.aceptar && !bloqueada };
+  // Fase 3b: un prospecto no sale de borrador; primero se da de alta como cliente.
+  const frenada = bloqueada || esProspecto;
+  const acciones = { ...base, enviar: base.enviar && !frenada, aceptar: base.aceptar && !frenada };
   const {
     esEnCaptura, mostrarAceptarRechazar, mostrarConvertirCliente,
     mostrarCrearEmbarque, mostrarFaltaVenta, mostrarRecotizar,
