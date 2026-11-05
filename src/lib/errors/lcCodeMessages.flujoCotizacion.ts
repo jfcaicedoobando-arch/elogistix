@@ -2,6 +2,8 @@
 export const LC_CODE_MESSAGES_FLUJO_COTIZACION: Record<string, string> = {
   LC_COT_SIN_AUTORIZACION:
     "La cotización necesita autorización de un administrador o del gerente comercial antes de enviarla o aceptarla.",
+  LC_COT_EMBARQUE_VIVO:
+    "Esta cotización ya tiene embarque. Cancela primero el embarque y después la cotización.",
   LC_COT_AUTORIZACION_SOLO_RPC: "La autorización sólo se cambia con los botones de autorización.",
   LC_COT_SOLO_AUTORIZADOR: "Sólo un administrador o el gerente comercial puede autorizar cotizaciones.",
   LC_COT_MARGEN_BAJO_MINIMO:

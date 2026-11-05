@@ -232,6 +232,13 @@
       "when": 1793916741514,
       "tag": "0032_cliente_especial_sin_autorizacion",
       "breakpoints": true
+    },
+    {
+      "idx": 33,
+      "version": "7",
+      "when": 1793918703468,
+      "tag": "0033_handover_embarque_al_aceptar",
+      "breakpoints": true
     }
   ]
 }
