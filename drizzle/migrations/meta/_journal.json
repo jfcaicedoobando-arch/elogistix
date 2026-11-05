@@ -225,6 +225,13 @@
       "when": 1793916066388,
       "tag": "0031_cotizacion_autorizacion",
       "breakpoints": true
+    },
+    {
+      "idx": 32,
+      "version": "7",
+      "when": 1793916741514,
+      "tag": "0032_cliente_especial_sin_autorizacion",
+      "breakpoints": true
     }
   ]
 }

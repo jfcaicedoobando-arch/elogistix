@@ -24,6 +24,7 @@ import {
 } from "./TarifaForm.helpers";
 import { BotonCancelarTarifa } from "./TarifaFormCancelar";
 import { TarifaPricingFields } from "./TarifaPricingFields";
+import { CotizarGuardarTarifa } from "./CotizarGuardarTarifa";
 import { useTarifaFormReset } from "../hooks/useTarifaFormReset";
 import { formatUSD } from "@/lib/formatters";
 import { useTarifaSubmit } from "@/features/costeo/hooks/useTarifaSubmit";
@@ -98,6 +99,13 @@ export function TarifaForm({ open, onOpenChange, onSaved, initial, tarifaId, age
     ejecutarSubmit();
   };
 
+  // Clientes especiales: guarda una sola ruta y abre la cotización con la tarifa.
+  const cotizarYGuardar = (onGuardada: (t: Awaited<ReturnType<typeof crear.mutateAsync>>) => void) => {
+    setIntentoEnvio(true);
+    if (!valido || pendiente || rutaIds.length !== 1) return;
+    crear.mutate({ ...form, ruta_id: rutaIds[0] }, { onSuccess: (t) => { onSaved?.(); onOpenChange(false); onGuardada(t); } });
+  };
+
   const guardarLabel = computeGuardarLabel({ pendiente, esEdicion, rutasCount: rutaIds.length });
 
   return (
@@ -141,6 +149,9 @@ export function TarifaForm({ open, onOpenChange, onSaved, initial, tarifaId, age
       }
     >
       <form id="tarifa-form" onSubmit={guardar} className="space-y-4">
+        {!esEdicion && !agenteIdFijo && (
+          <CotizarGuardarTarifa disabled={!valido || pendiente || rutaIds.length !== 1} guardar={cotizarYGuardar} />
+        )}
         <p id="tarifa-form-resumen" className="text-body-sm text-muted-foreground" aria-live="polite">
           {tooltipFaltantes ?? "Listo para guardar."}
         </p>

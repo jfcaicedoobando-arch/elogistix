@@ -9,6 +9,8 @@ export interface ClienteAutorizacion {
   requiereAutorizacionCotizacion: boolean;
   requiereAutorizacionProforma: boolean;
   esClienteDeCasa: boolean;
+  /** Cliente especial (tarifa propia): sus cotizaciones no piden autorización interna. */
+  esEspecial: boolean;
 }
 
 export async function obtenerAutorizacionCliente(
@@ -16,7 +18,7 @@ export async function obtenerAutorizacionCliente(
 ): Promise<ClienteAutorizacion> {
   const { data, error } = await supabase
     .from("clientes")
-    .select("id, requiere_autorizacion_cotizacion, requiere_autorizacion_proforma")
+    .select("id, requiere_autorizacion_cotizacion, requiere_autorizacion_proforma, tipo_cliente")
     .eq("id", clienteId)
     .is("deleted_at", null)
     .maybeSingle();
@@ -27,5 +29,6 @@ export async function obtenerAutorizacionCliente(
     requiereAutorizacionCotizacion: cot,
     requiereAutorizacionProforma: pro,
     esClienteDeCasa: !cot && !pro,
+    esEspecial: data?.tipo_cliente === "especial",
   };
 }

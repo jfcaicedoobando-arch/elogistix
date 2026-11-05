@@ -40,6 +40,8 @@ interface AccionesProps {
   autorizadaAt?: string | null;
   autorizacionSolicitadaAt?: string | null;
   margenAutorizado?: number | null;
+  /** Cliente especial: el servidor autoriza solo al enviar/aceptar. */
+  clienteEspecial?: boolean;
 }
 
 export function CotizacionDetalleAcciones({
@@ -50,11 +52,12 @@ export function CotizacionDetalleAcciones({
   puedeAltaCliente = false,
   tieneOportunidad = false,
   autorizadaAt = null, autorizacionSolicitadaAt = null, margenAutorizado = null,
+  clienteEspecial = false,
 }: AccionesProps) {
   const [recotizarOpen, setRecotizarOpen] = useState(false);
   const base = accionesCotizacionPermitidas(estado, total, rol, { creadaPor, usuarioActual }, requiereAutorizacionCliente);
   // Sin autorización interna no se envía ni se acepta desde captura (la base también lo bloquea).
-  const bloqueada = requiereAutorizacionParaAvanzar(estado, autorizadaAt);
+  const bloqueada = !clienteEspecial && requiereAutorizacionParaAvanzar(estado, autorizadaAt);
   const acciones = { ...base, enviar: base.enviar && !bloqueada, aceptar: base.aceptar && !bloqueada };
   const {
     esEnCaptura, mostrarAceptarRechazar, mostrarConvertirCliente,
@@ -75,7 +78,10 @@ export function CotizacionDetalleAcciones({
   return (
     <div className="flex flex-wrap items-center gap-2">
       {!requiereAutorizacionCliente && <BadgeClienteDeCasa tipo="cotizacion" />}
-      {esEnCaptura && (
+      {esEnCaptura && clienteEspecial && (
+        <span className="text-body-sm text-muted-foreground">Cliente especial: no requiere autorización</span>
+      )}
+      {esEnCaptura && !clienteEspecial && (
         <AutorizacionCotizacion cotizacionId={cotizacionId} estado={estado} autorizadaAt={autorizadaAt}
           solicitadaAt={autorizacionSolicitadaAt} margenAutorizado={margenAutorizado}
           puedeSolicitar={puedeEscribirCotizaciones(rol)} puedeAutorizar={esAutorizadorCotizacion(rol)}

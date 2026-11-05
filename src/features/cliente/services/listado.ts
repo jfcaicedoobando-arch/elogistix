@@ -106,3 +106,13 @@ export async function fetchClientesForSelect(organizationId: string | null) {
   if (organizationId) query = query.eq("organization_id", organizationId);
   return unwrapOr(query, []);
 }
+
+/** Clientes especiales (tarifa propia) de la organización, para "Cotizar y guardar tarifa". */
+export async function fetchClientesEspeciales(organizationId: string) {
+  return unwrapOr(
+    supabase.from("clientes").select("id, nombre")
+      .eq("organization_id", organizationId).eq("tipo_cliente", "especial")
+      .is("deleted_at", null).order("nombre"),
+    [],
+  );
+}

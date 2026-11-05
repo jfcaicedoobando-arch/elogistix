@@ -16,6 +16,7 @@ const DEFAULT_AUTORIZACION: ClienteAutorizacion = {
   requiereAutorizacionCotizacion: true,
   requiereAutorizacionProforma: true,
   esClienteDeCasa: false,
+  esEspecial: false,
 };
 
 export function useClienteAutorizacion(clienteId: string | null | undefined) {
