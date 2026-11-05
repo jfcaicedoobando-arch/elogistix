@@ -1,3 +1,4 @@
+import { normalizarTipoCliente } from "@/features/cliente/utils/tipoCliente";
 import { useParams } from "react-router";
 import ClienteSummaryCards from "@/features/cliente/components/ClienteSummaryCards";
 import { ClienteDetalleDialogs } from "@/features/cliente/components/detalle/ClienteDetalleDialogs";
@@ -57,6 +58,7 @@ function mapFormulario(cliente: ClienteRow) {
     dias_credito: cliente.dias_credito ?? null,
     limite_credito_mxn: cliente.limite_credito_mxn ?? null,
     sin_comision: Boolean(cliente.sin_comision),
+    tipo_cliente: normalizarTipoCliente(cliente.tipo_cliente),
     requiere_autorizacion_cotizacion: leerFlagAutorizacion(cliente, "requiere_autorizacion_cotizacion"),
     requiere_autorizacion_proforma: leerFlagAutorizacion(cliente, "requiere_autorizacion_proforma"),
   };

@@ -952,6 +952,7 @@ export type Database = {
           rfc: string
           sin_comision: boolean
           telefono: string
+          tipo_cliente: string
           updated_at: string
           uso_cfdi_default: string | null
         }
@@ -981,6 +982,7 @@ export type Database = {
           rfc?: string
           sin_comision?: boolean
           telefono?: string
+          tipo_cliente?: string
           updated_at?: string
           uso_cfdi_default?: string | null
         }
@@ -1010,6 +1012,7 @@ export type Database = {
           rfc?: string
           sin_comision?: boolean
           telefono?: string
+          tipo_cliente?: string
           updated_at?: string
           uso_cfdi_default?: string | null
         }
@@ -11165,6 +11168,7 @@ export type Database = {
           rfc: string
           sin_comision: boolean
           telefono: string
+          tipo_cliente: string
           updated_at: string
           uso_cfdi_default: string | null
         }[]

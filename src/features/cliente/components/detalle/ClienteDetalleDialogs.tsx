@@ -1,3 +1,4 @@
+import type { TipoCliente } from "@/features/cliente/utils/tipoCliente";
 import DialogContacto from "@/features/cliente/components/DialogContacto";
 import DialogEditarCliente from "@/features/cliente/components/DialogEditarCliente";
 import DoubleConfirmDeleteDialog from "@/components/shared/DoubleConfirmDeleteDialog";
@@ -18,6 +19,7 @@ interface Cliente {
   limite_credito_mxn: number | null;
   /** v13.386.0 — cuenta directa: sus embarques no generan comisión por defecto. */
   sin_comision: boolean;
+  tipo_cliente: TipoCliente;
   /** v13.624.0 — política de autorización ("cliente de casa"). */
   requiere_autorizacion_cotizacion: boolean;
   requiere_autorizacion_proforma: boolean;

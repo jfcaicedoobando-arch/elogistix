@@ -17,6 +17,7 @@ import { notifyError } from "@/lib/ui/appFeedback";
 import { normalizarRazonSocial } from "@/lib/text/razonSocial";
 import { CondicionesCreditoSection } from "./CondicionesCreditoSection";
 import { ComisionClienteSection } from "./ComisionClienteSection";
+import { TipoClienteSection } from "./TipoClienteSection";
 import { AutorizacionClienteSection } from "./AutorizacionClienteSection";
 import { usePermissions } from "@/hooks/shared";
 import { getErrorMessage } from "@/lib/errors";
@@ -156,6 +157,8 @@ export default function DialogEditarCliente({ open, onOpenChange, cliente, onSav
       </FormDialogSection>
 
       <CondicionesCreditoSection form={form} setForm={setForm} />
+
+      <TipoClienteSection form={form} setForm={setForm} disabled={!canConfigurarAutorizacionCliente} />
 
       <ComisionClienteSection form={form} setForm={setForm} />
 

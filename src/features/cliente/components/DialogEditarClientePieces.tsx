@@ -1,3 +1,4 @@
+import type { TipoCliente } from "@/features/cliente/utils/tipoCliente";
 /**
  * Piezas del modal "Editar Cliente": tipo del formulario y campo de texto
  * reutilizable. Extraído para mantener el componente ≤200 líneas.
@@ -20,6 +21,7 @@ export interface ClienteData {
   dias_credito: number | null;
   limite_credito_mxn: number | null;
   sin_comision: boolean;
+  tipo_cliente: TipoCliente;
   requiere_autorizacion_cotizacion: boolean;
   requiere_autorizacion_proforma: boolean;
 }

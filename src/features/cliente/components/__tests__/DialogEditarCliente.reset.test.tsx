@@ -26,6 +26,7 @@ const base = {
   dias_credito: 30,
   limite_credito_mxn: null,
   sin_comision: false,
+  tipo_cliente: "general" as const,
   requiere_autorizacion_cotizacion: false,
   requiere_autorizacion_proforma: false,
 };

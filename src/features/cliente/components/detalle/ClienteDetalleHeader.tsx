@@ -26,6 +26,7 @@ interface Cliente {
   limite_credito_mxn?: number | null;
   requiere_autorizacion_cotizacion?: boolean | null;
   requiere_autorizacion_proforma?: boolean | null;
+  tipo_cliente?: string | null;
 }
 
 interface Props {
@@ -70,8 +71,9 @@ export function ClienteDetalleHeader({ cliente, canEdit, onEdit }: Props) {
         ) : undefined
       }
       badge={
-        badges.length > 0 || clienteDeCasa ? (
+        badges.length > 0 || clienteDeCasa || cliente.tipo_cliente === "especial" ? (
           <div className="flex flex-wrap items-center gap-2">
+            {cliente.tipo_cliente === "especial" && <Badge>Cliente especial</Badge>}
             {clienteDeCasa && <BadgeClienteDeCasa tipo="cliente" />}
             {badges.map((b, i) => (
               <Badge key={b} variant={i === 0 ? "secondary" : "outline"} className="font-normal">
