@@ -6,6 +6,14 @@ export interface MetadataRespuestaPricing {
   cantidad: number | null;
   servicio: string | null;
   tipo_carga: string | null;
+  commodity?: string | null;
+  imo?: boolean | null;
+  estibable?: boolean | null;
+  peso?: string | null;
+  unidad_medida?: string | null;
+  notas?: string | null;
+  tipo_operacion?: string | null;
+  sector_economico?: string | null;
 }
 
 /** Rechaza una respuesta no representable antes de cambiar la captura. */

@@ -13,6 +13,8 @@ import {
   aNumero, UNIDADES_MEDIDA_PRICING,
 } from "@/features/crm/services/pricing/tiposPricing";
 import { CampoLista, CampoSiNo, CampoTexto } from "./CamposPricing";
+import { TIPOS } from "@/constants/wizardConstants";
+import { SECTORES } from "@/constants/cotizacionMercancia";
 
 export type DatosSolicitud = Omit<SolicitudPricingInsert, "folio" | "organization_id" | "oportunidad_id">;
 
@@ -57,6 +59,10 @@ export function SolicitudPricingCampos({ datos, set, disabled }: Props) {
           opciones={COMPLEJIDADES} onChange={(v) => v && set("complejidad", v)} />
         <CampoLista id="pr-incoterm" label="Incoterm" {...d} value={datos.incoterm}
           opciones={INCOTERMS_PRICING} onChange={(v) => set("incoterm", v)} />
+        <CampoLista id="pr-tipo-operacion" label="Tipo de operación" {...d} value={datos.tipo_operacion ?? null}
+          opciones={TIPOS} onChange={(v) => set("tipo_operacion", v)} />
+        <CampoLista id="pr-sector" label="Sector económico" {...d} value={datos.sector_economico ?? null}
+          opciones={SECTORES} onChange={(v) => set("sector_economico", v)} />
       </FormDialogSection>
       <FormDialogSection title="Carga">
         <CampoSiNo id="pr-imo" label="IMO" {...d} value={datos.imo} onChange={(v) => set("imo", v)} />

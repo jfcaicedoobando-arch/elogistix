@@ -22,7 +22,7 @@ export const esEnNegociacion = (nombre: string | null | undefined) => norm(nombr
 async function leerSolicitudes(filtro: { organizationId: string; oportunidadId?: string; clienteId?: string }) {
   return leerTodasLasPaginas("opciones de Pricing", (desde, hasta) => {
     let q = supabase.from("crm_solicitudes_pricing")
-      .select("id, folio, tarifa_tarifario_id, incoterm, cantidad, servicio, tipo_carga, oportunidad:crm_oportunidades!crm_solicitudes_pricing_oportunidad_id_fkey!inner(id, cliente_id, etapa:crm_etapas_pipeline!crm_oportunidades_etapa_id_fkey(nombre))")
+      .select("id, folio, tarifa_tarifario_id, incoterm, cantidad, servicio, tipo_carga, commodity, imo, estibable, peso, unidad_medida, notas, tipo_operacion, sector_economico, oportunidad:crm_oportunidades!crm_solicitudes_pricing_oportunidad_id_fkey!inner(id, cliente_id, etapa:crm_etapas_pipeline!crm_oportunidades_etapa_id_fkey(nombre))")
       .eq("organization_id", filtro.organizationId).eq("oportunidad.organization_id", filtro.organizationId)
       .eq("oportunidad.etapa.organization_id", filtro.organizationId).eq("oportunidad.etapa.activa", true).eq("oportunidad.etapa.tipo", "abierta")
       .is("oportunidad.etapa.deleted_at", null).eq("estado", "respondida").is("deleted_at", null).is("oportunidad.deleted_at", null);

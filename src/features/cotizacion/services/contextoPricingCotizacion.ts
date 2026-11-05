@@ -40,7 +40,7 @@ async function resolverDestinatario(oportunidadId: string, organizationId: strin
 async function resolverSolicitud({ organizationId, solicitudId, oportunidadId, tarifaId }: ContextoPricingParams): Promise<MetadataRespuestaPricing | null> {
   if (!solicitudId) return null; // Enlaces históricos no infieren una solicitud por tarifa.
   const { data: s, error } = await supabase.from("crm_solicitudes_pricing")
-    .select("id, oportunidad_id, tarifa_tarifario_id, incoterm, cantidad, servicio, tipo_carga")
+    .select("id, oportunidad_id, tarifa_tarifario_id, incoterm, cantidad, servicio, tipo_carga, commodity, imo, estibable, peso, unidad_medida, notas, tipo_operacion, sector_economico")
     .eq("organization_id", organizationId).eq("id", solicitudId).eq("estado", "respondida").is("deleted_at", null).maybeSingle();
   if (error) throw error;
   if (!s || s.oportunidad_id !== oportunidadId) throw new Error("La solicitud no corresponde a esta oportunidad o ya no está respondida.");

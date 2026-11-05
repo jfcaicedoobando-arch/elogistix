@@ -4715,10 +4715,12 @@ export type Database = {
           pod: string | null
           pol: string | null
           respondida_at: string | null
+          sector_economico: string | null
           servicio: string | null
           solicitante_id: string
           tarifa_tarifario_id: string | null
           tipo_carga: string | null
+          tipo_operacion: string | null
           unidad_medida: string | null
           updated_at: string
           vence_at: string | null
@@ -4752,10 +4754,12 @@ export type Database = {
           pod?: string | null
           pol?: string | null
           respondida_at?: string | null
+          sector_economico?: string | null
           servicio?: string | null
           solicitante_id: string
           tarifa_tarifario_id?: string | null
           tipo_carga?: string | null
+          tipo_operacion?: string | null
           unidad_medida?: string | null
           updated_at?: string
           vence_at?: string | null
@@ -4789,10 +4793,12 @@ export type Database = {
           pod?: string | null
           pol?: string | null
           respondida_at?: string | null
+          sector_economico?: string | null
           servicio?: string | null
           solicitante_id?: string
           tarifa_tarifario_id?: string | null
           tipo_carga?: string | null
+          tipo_operacion?: string | null
           unidad_medida?: string | null
           updated_at?: string
           vence_at?: string | null
