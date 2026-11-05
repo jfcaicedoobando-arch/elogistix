@@ -47,7 +47,7 @@ const borrador: SolicitudPricingRow = {
   cantidad: null, cliente: null, commodity: null, container_size: null, deleted_at: null, delivery: null,
   destino: "Manzanillo", dimensiones: null, enviada_at: null, estibable: null, fecha_tentativa_carga: null,
   imo: null, incoterm: null, notas: null, origen: "Shanghai", peso: null, pod: null, pol: null,
-  respondida_at: null, servicio: "Marítimo", tipo_carga: null, unidad_medida: null, vence_at: null, tarifa_tarifario_id: null,
+  respondida_at: null, servicio: "Marítimo", tipo_carga: null, unidad_medida: null, tipo_operacion: null, sector_economico: null, vence_at: null, tarifa_tarifario_id: null,
 };
 let client: QueryClient;
 function Harness({ clienteNombre = "Cliente" }: { clienteNombre?: string }) {

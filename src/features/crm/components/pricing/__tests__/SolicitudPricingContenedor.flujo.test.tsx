@@ -32,7 +32,7 @@ const inicial: SolicitudPricingRow = {
   cantidad: null, cliente: null, commodity: null, container_size: null, deleted_at: null, delivery: null,
   destino: null, dimensiones: null, enviada_at: null, estibable: null, fecha_tentativa_carga: null,
   imo: null, incoterm: null, notas: null, origen: null, peso: null, pod: "Manzanillo", pol: "Shanghai",
-  respondida_at: null, servicio: "Marítimo", tipo_carga: null, unidad_medida: null, vence_at: null, tarifa_tarifario_id: null,
+  respondida_at: null, servicio: "Marítimo", tipo_carga: null, unidad_medida: null, tipo_operacion: null, sector_economico: null, vence_at: null, tarifa_tarifario_id: null,
 };
 const tarifas: TarifaTarifario[] = ["20GP", "40GP", "40HC"].map((code, i) => ({
   id: code, flete_base: 100 + i, moneda: "USD", dias_libres_demoras: 14,
