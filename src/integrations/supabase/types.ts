@@ -2712,6 +2712,45 @@ export type Database = {
           },
         ]
       }
+      cotizacion_handovers: {
+        Row: {
+          coordinador_id: string | null
+          cotizacion_id: string
+          created_at: string
+          id: string
+          organization_id: string
+        }
+        Insert: {
+          coordinador_id?: string | null
+          cotizacion_id: string
+          created_at?: string
+          id?: string
+          organization_id: string
+        }
+        Update: {
+          coordinador_id?: string | null
+          cotizacion_id?: string
+          created_at?: string
+          id?: string
+          organization_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cotizacion_handovers_cotizacion_id_fkey"
+            columns: ["cotizacion_id"]
+            isOneToOne: true
+            referencedRelation: "cotizaciones"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cotizacion_handovers_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       cotizacion_plantillas: {
         Row: {
           created_at: string

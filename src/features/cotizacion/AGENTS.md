@@ -1,3 +1,4 @@
 # Decisiones técnicas Cotizaciones
 - Comercial de cotización: `cotizaciones.vendedor_id` lo elige el formulario con el mismo `VendedorSelect` de Oportunidades; `vendedor_email` lo resuelve sólo el trigger `_cotizacion_vendedor_misma_org` (exige miembro de la misma org) y las cotizaciones históricas quedan sin asignar. Why: etiqueta comercial confiable por tenant sin inferir dueños pasados.
 - Solicitud de Pricing → Cotización: el mapeo de campos vive sólo en `domain/mapeoSolicitudCotizacion.ts` y sólo llena campos vacíos de la cotización. Why: una sola tabla de formatos sin pisar captura del usuario.
+- Handover: lo crea sólo el trigger `_cotizacion_crear_handover` (una fila por cotización en `cotizacion_handovers`) al pasar a Aceptada; asigna el coordinador_logistico con asignación más antigua bajo advisory lock y avisa por `notificaciones_internas`, sin crear embarque. Why: reparto justo y atómico sin duplicar avisos.

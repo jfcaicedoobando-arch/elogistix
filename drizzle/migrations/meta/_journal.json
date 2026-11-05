@@ -204,6 +204,13 @@
       "when": 1793913427792,
       "tag": "0028_pricing_tipo_operacion_sector",
       "breakpoints": true
+    },
+    {
+      "idx": 29,
+      "version": "7",
+      "when": 1793914223349,
+      "tag": "0029_cotizacion_handover",
+      "breakpoints": true
     }
   ]
 }
