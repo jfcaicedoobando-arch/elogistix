@@ -2863,6 +2863,10 @@ export type Database = {
           aceptada_en: string | null
           aceptada_por: string | null
           agente_id: string | null
+          autorizacion_motivo: string | null
+          autorizacion_solicitada_at: string | null
+          autorizada_at: string | null
+          autorizada_por: string | null
           carta_garantia: boolean
           cliente_id: string | null
           cliente_nombre: string
@@ -2899,6 +2903,7 @@ export type Database = {
           lcl_dias_libres_almacenaje: number | null
           lcl_minimo_flete: number | null
           lcl_tarifa_wm: number | null
+          margen_autorizado_pct: number | null
           modalidad_equipo: string | null
           modo: Database["public"]["Enums"]["modo_transporte"]
           moneda: Database["public"]["Enums"]["moneda"]
@@ -2959,6 +2964,10 @@ export type Database = {
           aceptada_en?: string | null
           aceptada_por?: string | null
           agente_id?: string | null
+          autorizacion_motivo?: string | null
+          autorizacion_solicitada_at?: string | null
+          autorizada_at?: string | null
+          autorizada_por?: string | null
           carta_garantia?: boolean
           cliente_id?: string | null
           cliente_nombre?: string
@@ -2995,6 +3004,7 @@ export type Database = {
           lcl_dias_libres_almacenaje?: number | null
           lcl_minimo_flete?: number | null
           lcl_tarifa_wm?: number | null
+          margen_autorizado_pct?: number | null
           modalidad_equipo?: string | null
           modo: Database["public"]["Enums"]["modo_transporte"]
           moneda?: Database["public"]["Enums"]["moneda"]
@@ -3055,6 +3065,10 @@ export type Database = {
           aceptada_en?: string | null
           aceptada_por?: string | null
           agente_id?: string | null
+          autorizacion_motivo?: string | null
+          autorizacion_solicitada_at?: string | null
+          autorizada_at?: string | null
+          autorizada_por?: string | null
           carta_garantia?: boolean
           cliente_id?: string | null
           cliente_nombre?: string
@@ -3091,6 +3105,7 @@ export type Database = {
           lcl_dias_libres_almacenaje?: number | null
           lcl_minimo_flete?: number | null
           lcl_tarifa_wm?: number | null
+          margen_autorizado_pct?: number | null
           modalidad_equipo?: string | null
           modo?: Database["public"]["Enums"]["modo_transporte"]
           moneda?: Database["public"]["Enums"]["moneda"]
@@ -10022,6 +10037,8 @@ export type Database = {
         }
         Returns: undefined
       }
+      _cotizacion_es_autorizador: { Args: { p_org: string }; Returns: boolean }
+      _cotizacion_margen_pct: { Args: { p_id: string }; Returns: number }
       _crear_embarque_replicar_conceptos: {
         Args: {
           p_conceptos_venta: Json
@@ -10626,6 +10643,10 @@ export type Database = {
           pfc_id: string
           proveedor_factura_id: string
         }[]
+      }
+      autorizar_cotizacion: {
+        Args: { p_id: string; p_motivo?: string }
+        Returns: Json
       }
       avanzar_estado_embarque: {
         Args: {
@@ -13260,6 +13281,10 @@ export type Database = {
       soft_delete_record: {
         Args: { _id: string; _table: string }
         Returns: undefined
+      }
+      solicitar_autorizacion_cotizacion: {
+        Args: { p_id: string }
+        Returns: Json
       }
       solicitar_reaprobacion_tarifa: {
         Args: { p_cotizacion_id: string; p_delta_jsonb: Json }

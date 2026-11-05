@@ -218,6 +218,13 @@
       "when": 1793914785346,
       "tag": "0030_pricing_reglas_plazos",
       "breakpoints": true
+    },
+    {
+      "idx": 31,
+      "version": "7",
+      "when": 1793916066388,
+      "tag": "0031_cotizacion_autorizacion",
+      "breakpoints": true
     }
   ]
 }

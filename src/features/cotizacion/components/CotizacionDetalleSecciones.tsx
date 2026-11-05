@@ -9,6 +9,8 @@ import {
   AccionCrearEmbarque,
 } from "@/features/cotizacion/components/CotizacionDetalleAccionesBotones";
 import type { AppRole } from "@/types/appRole";
+import { AutorizacionCotizacion } from "@/features/cotizacion/components/autorizacion/AutorizacionCotizacion";
+import { esAutorizadorCotizacion, requiereAutorizacionParaAvanzar } from "@/features/cotizacion/domain/autorizacionCotizacion";
 import { BadgeClienteDeCasa } from "@/components/shared/BadgeClienteDeCasa";
 
 export { CotizacionDetalleEmbarques } from "@/features/cotizacion/components/CotizacionDetalleEmbarques";
@@ -34,6 +36,10 @@ interface AccionesProps {
   puedeAltaCliente?: boolean;
   /** P0 — la conversión exige oportunidad ligada (cotización ganadora). */
   tieneOportunidad?: boolean;
+  /** Autorización interna (admin / gerente comercial). */
+  autorizadaAt?: string | null;
+  autorizacionSolicitadaAt?: string | null;
+  margenAutorizado?: number | null;
 }
 
 export function CotizacionDetalleAcciones({
@@ -43,15 +49,13 @@ export function CotizacionDetalleAcciones({
   requiereAutorizacionCliente = true,
   puedeAltaCliente = false,
   tieneOportunidad = false,
+  autorizadaAt = null, autorizacionSolicitadaAt = null, margenAutorizado = null,
 }: AccionesProps) {
   const [recotizarOpen, setRecotizarOpen] = useState(false);
-  const acciones = accionesCotizacionPermitidas(
-    estado,
-    total,
-    rol,
-    { creadaPor, usuarioActual },
-    requiereAutorizacionCliente,
-  );
+  const base = accionesCotizacionPermitidas(estado, total, rol, { creadaPor, usuarioActual }, requiereAutorizacionCliente);
+  // Sin autorización interna no se envía ni se acepta desde captura (la base también lo bloquea).
+  const bloqueada = requiereAutorizacionParaAvanzar(estado, autorizadaAt);
+  const acciones = { ...base, enviar: base.enviar && !bloqueada, aceptar: base.aceptar && !bloqueada };
   const {
     esEnCaptura, mostrarAceptarRechazar, mostrarConvertirCliente,
     mostrarCrearEmbarque, mostrarFaltaVenta, mostrarRecotizar,
@@ -71,6 +75,12 @@ export function CotizacionDetalleAcciones({
   return (
     <div className="flex flex-wrap items-center gap-2">
       {!requiereAutorizacionCliente && <BadgeClienteDeCasa tipo="cotizacion" />}
+      {esEnCaptura && (
+        <AutorizacionCotizacion cotizacionId={cotizacionId} estado={estado} autorizadaAt={autorizadaAt}
+          solicitadaAt={autorizacionSolicitadaAt} margenAutorizado={margenAutorizado}
+          puedeSolicitar={puedeEscribirCotizaciones(rol)} puedeAutorizar={esAutorizadorCotizacion(rol)}
+          tieneTotal={Number(total) > 0} />
+      )}
       {esEnCaptura && (
         <AccionesCaptura
           cotizacionId={cotizacionId}

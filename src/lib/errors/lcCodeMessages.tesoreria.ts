@@ -171,6 +171,8 @@ export const LC_CODE_MESSAGES_TESORERIA: Record<string, string> = {
     "Ese cambio de estado de la liquidación no está permitido.",
   LC_LIQUIDACION_CANCELADA_INMUTABLE:
     "Una liquidación cancelada ya no se puede modificar. Genera una liquidación nueva.",
+  LC_COMISION_LIQUIDADA:
+    "Ese embarque ya tiene comisiones liquidadas: no se puede cambiar la vendedora.",
   LC_COMISION_DELETE_PROHIBIDO:
     "Las comisiones y liquidaciones no se borran: usa la cancelación oficial para dejar rastro.",
   LC_SIN_TC_DOF:

@@ -85,6 +85,9 @@ export function CotizacionDetalleContenido({
           requiereAutorizacionCliente={autorizacion.requiereAutorizacionCotizacion}
           puedeAltaCliente={canAltaCliente}
           tieneOportunidad={!!cotizacion.oportunidad_id}
+          autorizadaAt={(cotizacion as { autorizada_at?: string | null }).autorizada_at ?? null}
+          autorizacionSolicitadaAt={(cotizacion as { autorizacion_solicitada_at?: string | null }).autorizacion_solicitada_at ?? null}
+          margenAutorizado={(cotizacion as { margen_autorizado_pct?: number | null }).margen_autorizado_pct ?? null}
         />
       )}
 
