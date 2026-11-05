@@ -85,7 +85,7 @@ describe("useClienteDetalleController", () => {
       uso_cfdi_default: "G03",
       dias_credito: null,
       limite_credito_mxn: null,
-      sin_comision: false, tipo_cliente: "general", requiere_autorizacion_cotizacion: true, requiere_autorizacion_proforma: true,
+      sin_comision: false, tipo_cliente: "general" as const, requiere_autorizacion_cotizacion: true, requiere_autorizacion_proforma: true,
     };
 
     await act(async () => {
