@@ -54,12 +54,21 @@ describe("bounded Drizzle0035 dynamic replay model", () => {
   });
 
   it("rejects unsupported journal order, timestamps, additions and source order", () => {
-    for (const changed of [journal.slice(0, 36), [...journal, { idx: 37, tag: "0037_new", when: journal[36].when + 1 }],
+    for (const changed of [journal.slice(0, 37), [...journal, { idx: 38, tag: "0038_new", when: journal[37].when + 1 }],
+      journal.map((entry: object, idx: number) => idx === 37 ? { ...entry, when: journal[36].when } : entry),
+      journal.map((entry: object, idx: number) => idx === 37 ? { ...entry, tag: "0037_other" } : entry),
       journal.map((entry: object, idx: number) => idx === 36 ? { ...entry, when: journal[35].when } : entry),
       journal.map((entry: object, idx: number) => idx === 35 ? { ...entry, tag: "0035_other" } : entry)]) {
       expect(() => aplicarDrizzle0035(historical, sources, changed)).toThrow(/order/);
     }
     expect(() => aplicarDrizzle0035(historical, new Map([...sources].reverse()), journal)).toThrow(/order/);
+  });
+
+  it("rejects an unreviewed later0037 even when the earlier patch is intact", () => {
+    const key = "0037_cotizacion_especial_trigger_permissions.sql";
+    const changed = new Map(sources);
+    changed.set(key, sources.get(key)! + "\nCREATE OR REPLACE FUNCTION public.sync_cotizacion_embarque_link() RETURNS trigger LANGUAGE plpgsql AS $$ BEGIN RETURN NULL; END $$;");
+    expect(() => aplicarDrizzle0035(historical, changed, journal)).toThrow(/later source/);
   });
 
   it("still rejects altered output instead of accepting a matching exception", () => {

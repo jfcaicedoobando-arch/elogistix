@@ -33,8 +33,9 @@ describe("isolated Drizzle history is not deployment-eligible", () => {
       "0030_pricing_reglas_plazos.sql", "0031_cotizacion_autorizacion.sql",
       "0032_cliente_especial_sin_autorizacion.sql", "0033_handover_embarque_al_aceptar.sql",
       "0034_prospecto_solo_borrador.sql", "0035_cotizacion_aceptada_hasta_confirmar_embarque.sql", "0036_cotizacion_handover_tenant_scope.sql",
+      "0037_cotizacion_especial_trigger_permissions.sql",
     ]);
-    expect(readIsolatedDrizzleReplay().size).toBe(14);
+    expect(readIsolatedDrizzleReplay().size).toBe(15);
     const archive = paths[1].replace("0022_refacturar_proforma_abre_edicion.sql", "meta/_journal.json");
     expect(JSON.parse(read(archive)).entries[22]).toMatchObject({ idx: 22, when: 1792518064767, tag: "0022_refacturar_proforma_abre_edicion" });
     expect(JSON.parse(read("drizzle/migrations/meta/_journal.json")).entries[22].tag).toBe("0022_cotizacion_comercial");
@@ -48,7 +49,7 @@ describe("isolated Drizzle history is not deployment-eligible", () => {
   it("reconstructs the new sources in journal order without rewriting immutable SQL", () => {
     const current = HISTORY.slice(4);
     const journal = JSON.parse(read("drizzle/migrations/meta/_journal.json"));
-    expect(current.map(item => item.file)).toEqual(journal.entries.slice(26, 37).map(
+    expect(current.map(item => item.file)).toEqual(journal.entries.slice(26, 38).map(
       (entry: { tag: string }) => `${entry.tag}.sql`,
     ));
     for (const item of current) {
@@ -78,6 +79,17 @@ describe("isolated Drizzle history is not deployment-eligible", () => {
     expect(read("supabase/tests/_guards_manifest.txt").split("\n")).toContain(
       "supabase/tests/cotizacion_aceptada_hasta_confirmar.sql",
     );
+  });
+
+  it("chains the unapplied special-quote fix after main 0036 with a strict timestamp", () => {
+    const journal = JSON.parse(read("drizzle/migrations/meta/_journal.json")).entries;
+    const tenant = JSON.parse(read("drizzle/migrations/meta/0036_snapshot.json"));
+    const special = JSON.parse(read("drizzle/migrations/meta/0037_snapshot.json"));
+    expect(special.prevId).toBe(tenant.id);
+    expect(special.id).not.toBe(tenant.id);
+    expect(journal[37]).toEqual({ idx: 37, version: "7", when: 1793990589448,
+      tag: "0037_cotizacion_especial_trigger_permissions", breakpoints: true });
+    expect(journal[37].when).toBeGreaterThan(journal[36].when);
   });
 
   it.each(HISTORY.slice(4))("pins source and fixture bytes for $file", item => {

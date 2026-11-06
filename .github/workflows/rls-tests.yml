@@ -328,7 +328,9 @@ jobs:
           retention-days: 7
 
       - name: Post-migrate (drop auth.users FKs para CI)
-        run: $PSQL -f supabase/tests/rls/_ci_post_migrate.sql
+        run: |
+          $PSQL -f supabase/tests/rls/_ci_post_migrate.sql
+          $PSQL -f supabase/tests/rls/_ci_preserve_cotizacion_especial_acl.sql
 
       - name: Verify RLS coverage
         run: $PSQL -f supabase/tests/rls/_ci_verify_rls.sql

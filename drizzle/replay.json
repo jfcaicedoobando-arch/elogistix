@@ -280,5 +280,13 @@
       "0036_cotizacion_handover_tenant_scope.sql"
     ],
     "scope": "isolated-ci"
+  },
+  {
+    "file": "0037_cotizacion_especial_trigger_permissions.sql",
+    "sha256": "e398f843fa18c56f4cfd222d6329c24c3e259c406b817dbac2d7bab5fbb62eb0",
+    "replays": [
+      "0037_cotizacion_especial_trigger_permissions.sql"
+    ],
+    "scope": "isolated-ci"
   }
 ]

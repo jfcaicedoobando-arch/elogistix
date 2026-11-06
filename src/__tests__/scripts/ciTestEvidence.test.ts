@@ -81,6 +81,25 @@ describe("CI catalog: effective discovery", () => {
     expect(source(acl)).toContain("RAISE EXCEPTION 'CI_COTIZACION_MARGEN_ACL");
   });
 
+  it("preserves the special-quote trigger ACL outside the frozen post-migrate companion", () => {
+    const check = "supabase/tests/rls/_ci_check_cotizacion_especial_acl.sql";
+    const preserve = "supabase/tests/rls/_ci_preserve_cotizacion_especial_acl.sql";
+    for (const path of [check, preserve]) {
+      expect(catalog.entries).toContainEqual(expect.objectContaining({ path, lane: "sql-support" }));
+    }
+    for (const preparer of ["scripts/ci/rls-prepare-db.sh", "scripts/db/local-verify.sh"]) {
+      expect(source(preparer)).toContain(`-f ${check} || exit 1`);
+    }
+    for (const preparer of [".github/workflows/rls-tests.yml", "scripts/db/local-verify.sh"]) {
+      const text = source(preparer);
+      expect(text.indexOf(preserve)).toBeGreaterThan(text.indexOf("supabase/tests/rls/_ci_post_migrate.sql"));
+    }
+    expect(source(preserve)).toContain("REVOKE EXECUTE ON FUNCTION public._cotizacion_autorizacion_guard() FROM authenticated, service_role;");
+    expect(source(preserve)).toContain("\\ir _ci_check_cotizacion_especial_acl.sql");
+    expect(source(check)).toContain("pg_catalog.aclexplode(v_proc.proacl)");
+    expect(source(check)).toContain("search_path=pg_catalog, public, pg_temp");
+  });
+
   it("labels manual/backend lanes without claiming they ran in ordinary CI", () => {
     expect(catalog.entries.find(entry => entry.path.endsWith("/smoke_test.ts"))?.mode).toBe("manual");
     expect(catalog.entries.filter(entry => entry.lane === "pdf-real" && entry.mode === "automatic").map(entry => entry.path))

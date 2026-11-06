@@ -5,6 +5,8 @@ export const LC_CODE_MESSAGES_FLUJO_COTIZACION: Record<string, string> = {
   LC_COT_EMBARQUE_VIVO:
     "Esta cotización ya tiene embarque. Cancela primero el embarque y después la cotización.",
   LC_COT_AUTORIZACION_SOLO_RPC: "La autorización sólo se cambia con los botones de autorización.",
+  LC_COT_TRIGGER_CONTEXTO_INVALIDO:
+    "No se pudo validar la autorización de esta cotización. Contacta al administrador.",
   LC_COT_SOLO_AUTORIZADOR: "Sólo un administrador o el gerente comercial puede autorizar cotizaciones.",
   LC_COT_MARGEN_BAJO_MINIMO:
     "El margen está por debajo del mínimo (o no se puede calcular). Escribe una justificación de al menos 10 caracteres para autorizar.",

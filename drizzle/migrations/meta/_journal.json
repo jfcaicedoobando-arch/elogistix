@@ -260,6 +260,13 @@
       "when": 1793990589447,
       "tag": "0036_cotizacion_handover_tenant_scope",
       "breakpoints": true
+    },
+    {
+      "idx": 37,
+      "version": "7",
+      "when": 1793990589448,
+      "tag": "0037_cotizacion_especial_trigger_permissions",
+      "breakpoints": true
     }
   ]
 }

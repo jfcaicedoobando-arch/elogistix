@@ -276,3 +276,5 @@ supabase/tests/padres_activos_recalculo_tc.sql
 supabase/tests/cotizacion_handover_tenant_scope.sql
 
 supabase/tests/cotizacion_aceptada_hasta_confirmar.sql
+
+supabase/tests/cotizacion_especial_autorizacion.sql

@@ -288,6 +288,7 @@ if [ "$REUSE" != "1" ]; then
   # Check product ACL before the broad test-harness grants.
   "${PSQL[@]}" -f supabase/tests/rls/_ci_check_handover_tenant_acl.sql || exit 1
   "${PSQL[@]}" -f supabase/tests/rls/_ci_check_cotizacion_margen_acl.sql || exit 1
+  "${PSQL[@]}" -f supabase/tests/rls/_ci_check_cotizacion_especial_acl.sql || exit 1
 
 
 
@@ -320,6 +321,7 @@ if [ "$REUSE" != "1" ]; then
 
   step "Post-migrate + verificación de cobertura RLS"
   run_sql supabase/tests/rls/_ci_post_migrate.sql post_migrate || exit 1
+  run_sql supabase/tests/rls/_ci_preserve_cotizacion_especial_acl.sql special_acl || exit 1
   run_sql supabase/tests/rls/_ci_verify_rls.sql verify_rls || exit 1
 
 
