@@ -21,12 +21,16 @@ DO $$
 DECLARE
   org_a   uuid := gen_random_uuid();
   cli_a   uuid := gen_random_uuid();
+  authorizer uuid := gen_random_uuid();
   cot_id  uuid;
   versiones int;
   bloqueada boolean := false;
 
 BEGIN
   INSERT INTO public.organizations(id, nombre) VALUES (org_a, 'RLS R4 Cot Guard');
+  INSERT INTO auth.users(id,email) VALUES (authorizer,'r4guard-authorizer@example.invalid');
+  INSERT INTO public.organization_members(organization_id,user_id,role)
+    VALUES (org_a,authorizer,'gerente_comercial');
   INSERT INTO public.clientes(id, nombre, rfc, email, organization_id)
     VALUES (cli_a, 'Cli R4 Cot Guard', 'XAXX010101000', 'r4guard@example.com', org_a);
 
@@ -48,6 +52,18 @@ BEGIN
   cot_id := gen_random_uuid();
   INSERT INTO public.cotizaciones(id, organization_id, cliente_id, cliente_nombre, folio, modo, tipo, incoterm, estado, subtotal, conceptos_venta)
     VALUES (cot_id, org_a, cli_a, 'Cli R4 Cot Guard', 'COT-R4G-2', 'Marítimo', 'Importación', 'FOB', 'Solicitada', 1000, '[{"descripcion":"Flete","unidad_medida":"Servicio","cantidad":1,"precio_unitario":1000,"moneda":"USD","total":1000,"aplica_iva":false}]'::jsonb);
+  -- 0031: the transition is available only after actual commercial approval.
+  BEGIN
+    UPDATE public.cotizaciones SET estado = 'Enviada' WHERE id = cot_id;
+    RAISE EXCEPTION 'R4: una cotización no autorizada pasó a Enviada';
+  EXCEPTION WHEN raise_exception THEN
+    IF SQLERRM NOT LIKE 'LC_COT_SIN_AUTORIZACION:%' THEN RAISE; END IF;
+  END;
+  PERFORM pg_temp.as_user(authorizer);
+  PERFORM public.autorizar_cotizacion(cot_id, 'Autorización sintética para transición R4');
+  PERFORM pg_temp.assert((SELECT autorizada_at IS NOT NULL AND autorizada_por=authorizer
+    FROM public.cotizaciones WHERE id=cot_id), 'R4: autorización por RPC requerida');
+  PERFORM pg_temp.as_postgres();
   UPDATE public.cotizaciones SET estado = 'Enviada' WHERE id = cot_id;
   PERFORM pg_temp.assert(
     (SELECT estado::text FROM public.cotizaciones WHERE id = cot_id) = 'Enviada',
@@ -65,6 +81,18 @@ BEGIN
   cot_id := gen_random_uuid();
   INSERT INTO public.cotizaciones(id, organization_id, cliente_id, cliente_nombre, folio, modo, tipo, incoterm, estado, subtotal, conceptos_venta)
     VALUES (cot_id, org_a, cli_a, 'Cli R4 Cot Guard', 'COT-R4G-3', 'Marítimo', 'Importación', 'FOB', 'Solicitada', 1000, '[{"descripcion":"Flete","unidad_medida":"Servicio","cantidad":1,"precio_unitario":1000,"moneda":"USD","total":1000,"aplica_iva":false}]'::jsonb);
+  -- 0031: the transition is available only after actual commercial approval.
+  BEGIN
+    UPDATE public.cotizaciones SET estado = 'Aceptada' WHERE id = cot_id;
+    RAISE EXCEPTION 'R4: una cotización no autorizada pasó a Aceptada';
+  EXCEPTION WHEN raise_exception THEN
+    IF SQLERRM NOT LIKE 'LC_COT_SIN_AUTORIZACION:%' THEN RAISE; END IF;
+  END;
+  PERFORM pg_temp.as_user(authorizer);
+  PERFORM public.autorizar_cotizacion(cot_id, 'Autorización sintética para transición R4');
+  PERFORM pg_temp.assert((SELECT autorizada_at IS NOT NULL AND autorizada_por=authorizer
+    FROM public.cotizaciones WHERE id=cot_id), 'R4: autorización por RPC requerida');
+  PERFORM pg_temp.as_postgres();
   UPDATE public.cotizaciones SET estado = 'Aceptada' WHERE id = cot_id;
   PERFORM pg_temp.assert(
     (SELECT estado::text FROM public.cotizaciones WHERE id = cot_id) = 'Aceptada',

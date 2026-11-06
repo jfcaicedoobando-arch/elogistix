@@ -103,6 +103,10 @@ GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA public TO authentic
 GRANT ALL ON ALL TABLES IN SCHEMA public TO service_role;
 GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA public TO authenticated, service_role;
 GRANT EXECUTE ON ALL FUNCTIONS IN SCHEMA public TO authenticated, service_role;
+-- 0031 keeps this data-by-ID helper owner-only; undo only the two grants
+-- introduced above, then reassert the same ACL checked before the harness.
+REVOKE EXECUTE ON FUNCTION public._cotizacion_margen_pct(uuid) FROM authenticated, service_role;
+\ir _ci_check_cotizacion_margen_acl.sql
 -- Remove only the two CI-added grants; 0022 and replay ACL stay immutable.
 REVOKE EXECUTE ON FUNCTION public._cotizacion_vendedor_misma_org() FROM authenticated, service_role;
 -- Undo only the CI-added EXECUTE grants on the already-verified 0017 helpers.

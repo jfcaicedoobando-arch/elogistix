@@ -129,6 +129,7 @@ DECLARE
   v_motivo uuid := 'cc57cc57-0000-4000-8000-000000000601';
   v_lead_b uuid := 'cc57cc57-0000-4000-8000-000000000701';
   v_vend uuid := 'cc57cc57-0000-4000-8000-000000000801';  -- vendedor de la op1
+  v_cancel uuid := 'cc57cc57-0000-4000-8000-000000000803'; -- cancelación operativa
   v_acept uuid := 'cc57cc57-0000-4000-8000-000000000802'; -- quien acepta por RPC
   v_snap_at timestamptz := now() - interval '90 days';
   v_res jsonb;
@@ -420,6 +421,19 @@ BEGIN
     'K: el monto histórico del snapshot se conserva (nunca el subtotal vivo)');
 
   -- ===== G) Papelera conserva la historia =====
+  -- 0033: primero se debe cancelar el embarque, no saltar el guard de cierre.
+  PERFORM pg_temp.espera_lc(
+    format('UPDATE public.cotizaciones SET deleted_at = now() WHERE id = %L', v_c1),
+    'LC_COT_EMBARQUE_VIVO', 'G papelera bloqueada mientras el embarque está vivo');
+  INSERT INTO auth.users(id,email) VALUES (v_cancel,'cot-cancela-a@test.local');
+  INSERT INTO public.organization_members(organization_id,user_id,role)
+    VALUES (v_org_a,v_cancel,'admin_org');
+  PERFORM pg_temp.as_user(v_cancel);
+  PERFORM public.avanzar_estado_embarque(v_emb, 'Cancelado', 'cot-cancela-a@test.local',
+    'Otro', 'Cancelación sintética previa a prueba de papelera');
+  PERFORM pg_temp.assert((SELECT estado='Cancelado' FROM public.embarques WHERE id=v_emb),
+    'G: el RPC canceló el embarque antes de enviar la cotización a papelera');
+  PERFORM pg_temp.as_postgres();
   UPDATE public.cotizaciones SET deleted_at = now() WHERE id = v_c1;
   SELECT o.*, NULL::crm_etapa_tipo AS etapa_tipo INTO r
     FROM public.crm_oportunidades o WHERE o.id = v_op1;

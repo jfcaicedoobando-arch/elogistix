@@ -77,8 +77,9 @@ La copia aislada no es una revisión de autorización para producción:
 
 El harness local requirió únicamente desactivar sockets Unix en una copia
 transitoria del ejecutor y usar TCP 127.0.0.1; no hubo conexiones a bases del
-proyecto. No se regeneró el baseline SQL ni se ejecutó despliegue, backfill,
-cambio de datos históricos o aplicación remota de migraciones.
+proyecto. Se regeneró posteriormente el baseline SQL de CI según la revisión descrita
+abajo. No se ejecutó despliegue, backfill, cambio de datos históricos ni
+aplicación remota de migraciones.
 
 ## Forward 0035: corrección de la barrera de tenant
 
@@ -106,3 +107,86 @@ comprobación ACL previa a post-migrate, la integridad final y el test SQL
 `.db-verify-logs/20261106-065005/`. Tests estáticos finales: 49/49 y
 `audit:migrations` limpio. Esta evidencia no equivale a CI remoto completo ni
 a una revisión del catálogo productivo. No se conectó a una base del proyecto.
+
+
+## Catálogo, fixtures y fidelidad de ACL
+
+El primer CI remoto detectó que el nuevo test de handover no estaba clasificado.
+Se registra como guard ejecutable en `_guards_manifest.txt`; su comprobación de
+ACL vive en `supabase/tests/rls/_ci_check_handover_tenant_acl.sql`, clasificada
+como soporte SQL y ejecutada por ambos preparadores antes de los grants del
+harness. Las pruebas del catálogo comprueban la conexión efectiva, no sólo la
+presencia del nombre.
+
+La historia completa cambia prerrequisitos reales de cuatro fixtures:
+
+- `ola6_transaccional.sql`: convierte prospecto desde Borrador mediante la RPC
+  real y conserva las dos llamadas/idempotencia. Autoriza mediante RPC, envía y
+  vence mediante `expirar_cotizaciones_job` antes de probar reactivación. Todo
+  termina en ROLLBACK, sin fabricar ganadora ni autorización.
+- `pricing_subtotal_moneda_canonica.sql`: autoriza con gerente sintético antes
+  de la aceptación combinada con tipo de cambio. Conserva las aserciones de
+  conversión monetaria e inmutabilidad originales.
+- `cotizacion_ganadora_autoridad_unica.sql`: exige el rechazo por embarque vivo,
+  cancela mediante RPC autenticada y luego verifica que Papelera conserve la
+  ganadora y valor histórico.
+- `test_rls_reg_r4_cotizacion_guard.sql`: prueba el rechazo específico sin
+  autorización y usa la RPC para habilitar Enviada/Aceptada. Conserva las
+  transiciones y snapshots originales.
+
+No se deshabilitan triggers ni se escriben columnas de autorización directamente.
+Los actores, organizaciones y operaciones son sintéticos y transaccionales.
+
+Drizzle0031 deja `_cotizacion_margen_pct(uuid)` sólo al propietario postgres.
+Los grants masivos del harness reabrían su ejecución a authenticated/service_role
+antes del linter. Se comprueba la ACL exacta antes del harness, se retiran sólo
+esos dos grants artificiales y se vuelve a comprobar la ACL. No se cambia el
+cuerpo de la función, el umbral, su configuración ni la ACL de producción.
+El nuevo soporte `_ci_check_cotizacion_margen_acl.sql` falla si falta la función,
+los roles, el propietario esperado, SECURITY DEFINER, retorno numeric o ACL
+exacta owner-only. No se incorpora a una lista de excepciones del linter.
+
+## Snapshot revisado y evidencia recuperada
+
+El baseline de CI fue generado con PostgreSQL17.11 y el normalizador existente.
+Una revisión independiente comparó los22 cuerpos nuevos/modificados contra la
+última definición de0026–0034 y revisó los restantes objetos de0026–0035.
+La corrección posterior sólo quita los dos GRANT artificiales al helper de
+margen. SHA-256 del baseline final revisado:
+`0f00dbd7e1e2d6a9917e33dbe865d1b3ca6a1bc021e5ec6e557183bcce3a2408`.
+No se cambió la normalización para esconder deriva.
+
+La validación local previa a la pérdida del checkout pasó224/224 guards,
+66/66 suites RLS y34/34 pruebas del catálogo. Sobreviven los logs y el snapshot
+exacto. El checkout compartido desapareció durante la publicación; esta sección
+se reconstruye de nuevo, no se presenta como recuperación byte a byte del texto
+anterior. Los parches de fixtures/ACL recuperados del diff independiente y las
+nuevas ediciones requieren nueva validación en el checkout recuperado. Los
+resultados anteriores no sustituyen esa ejecución.
+
+### Hallazgo histórico separado, no corregido aquí
+
+La ruta automática de cliente especial en `_cotizacion_autorizacion_guard`
+(0032, SECURITY INVOKER) llama al helper owner-only de0031. En una prueba
+sintética autenticada, enviar esa cotización produce `permission denied for
+function _cotizacion_margen_pct`. Los grants artificiales anteriores del harness
+ocultaban esta incompatibilidad. Se registra como defecto funcional separado:
+no se amplían permisos ni se modifica producto/margen para hacer pasar CI.
+El éxito de las suites enumeradas no certifica esa ruta especial.
+
+### Nueva validación tras recuperar el checkout
+
+Se repitió la reconstrucción completa en PostgreSQL17.9 efímero, con binaries
+oficiales y conexión loopback, usando el checkout recuperado. Resultado:
+224/224 guards,66/66 suites RLS y34/34 pruebas del catálogo en verde; inventario
+completo224 guards,66 RLS y25 soportes SQL. La regeneración con pg_dump17.9
+coincide byte a byte con el baseline final recuperado (SHA arriba), sin cambiar
+el normalizador. Log de reconstrucción: `.db-verify-logs/20261106-074943/`.
+`git diff --check` y sintaxis Bash de ambos preparadores pasaron.
+
+Los cuatro fixtures y el ajuste ACL se restauraron del diff retenido por el
+revisor independiente. El registro/wiring del test handover y su regresión de
+catálogo se reconstruyeron y validaron de nuevo; no se afirma identidad de
+bytes con la edición anterior. No hubo conexiones a bases del proyecto ni
+aplicación remota de migraciones. El hallazgo del cliente especial permanece
+fuera del alcance de esta corrección CI.

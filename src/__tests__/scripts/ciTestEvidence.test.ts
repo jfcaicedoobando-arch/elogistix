@@ -45,6 +45,42 @@ describe("CI catalog: effective discovery", () => {
     expect(sql).not.toMatch(/^COMMIT;/m);
   });
 
+  it("routes handover behavior to guards and checks product ACL before harness grants", () => {
+    const guard = "supabase/tests/cotizacion_handover_tenant_scope.sql";
+    const acl = "supabase/tests/rls/_ci_check_handover_tenant_acl.sql";
+    expect(catalog.entries).toContainEqual(expect.objectContaining({ path: guard, lane: "sql-guards" }));
+    expect(catalog.entries).toContainEqual(expect.objectContaining({ path: acl, lane: "sql-support" }));
+    for (const preparer of ["scripts/ci/rls-prepare-db.sh", "scripts/db/local-verify.sh"]) {
+      const script = source(preparer);
+      const check = script.indexOf(`-f ${acl} || exit 1`);
+      expect(check).toBeGreaterThan(script.indexOf("done <<< \"$isolated_history\""));
+      expect(check).toBeLessThan(script.indexOf(preparer.includes("rls-prepare")
+        ? "replay_profile_begin replay_final_check"
+        : "run_sql supabase/tests/rls/_ci_post_migrate.sql", check));
+    }
+    expect(source(guard)).toMatch(/^BEGIN;/m);
+    expect(source(guard)).toMatch(/^ROLLBACK;\s*$/m);
+    expect(source(guard)).not.toMatch(/^COMMIT;/m);
+  });
+
+  it("preserves the margin helper owner-only ACL around blanket CI grants", () => {
+    const acl = "supabase/tests/rls/_ci_check_cotizacion_margen_acl.sql";
+    expect(catalog.entries).toContainEqual(expect.objectContaining({ path: acl, lane: "sql-support" }));
+    for (const preparer of ["scripts/ci/rls-prepare-db.sh", "scripts/db/local-verify.sh"]) {
+      expect(source(preparer)).toContain(`-f ${acl} || exit 1`);
+    }
+    const post = source("supabase/tests/rls/_ci_post_migrate.sql");
+    const grant = post.indexOf("GRANT EXECUTE ON ALL FUNCTIONS IN SCHEMA public TO authenticated, service_role;");
+    const revoke = post.indexOf("REVOKE EXECUTE ON FUNCTION public._cotizacion_margen_pct(uuid) FROM authenticated, service_role;");
+    const check = post.indexOf("\\ir _ci_check_cotizacion_margen_acl.sql");
+    expect(grant).toBeGreaterThanOrEqual(0);
+    expect(revoke).toBeGreaterThan(grant);
+    expect(check).toBeGreaterThan(revoke);
+    expect(source(acl)).toContain("pg_catalog.aclexplode(v_proc.proacl)");
+    expect(source(acl)).toContain("ARRAY['anon', 'authenticated', 'service_role']");
+    expect(source(acl)).toContain("RAISE EXCEPTION 'CI_COTIZACION_MARGEN_ACL");
+  });
+
   it("labels manual/backend lanes without claiming they ran in ordinary CI", () => {
     expect(catalog.entries.find(entry => entry.path.endsWith("/smoke_test.ts"))?.mode).toBe("manual");
     expect(catalog.entries.filter(entry => entry.lane === "pdf-real" && entry.mode === "automatic").map(entry => entry.path))
