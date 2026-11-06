@@ -1,34 +1,19 @@
-import { useQuery } from "@tanstack/react-query";
+import { useHandoverProveedores } from "@/features/cotizacion/hooks/useHandoverProveedores";
+import { useCotizacionHandover } from "@/features/cotizacion/hooks/useCotizacionHandover";
 import { ArrowRightLeft } from "lucide-react";
-import { useAuth } from "@/lib/contexts/AuthContext";
-import { useOrganization } from "@/lib/contexts/OrganizationContext";
 import { SectionHeading } from "@/components/shared/SectionHeading";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { formatFechaHoraCorta, formatNumber, nombreDesdeEmail } from "@/lib/formatters";
 import type { CotizacionRow } from "@/features/cotizacion/types";
-import { fetchHandover, fetchHandoverProveedores } from "@/features/cotizacion/services/handover";
-import { puedeVerHandover } from "@/features/cotizacion/domain/handoverVisibilidad";
-import { cotizaciones } from "@/features/cotizacion/queryKeys";
 import { useTiposContenedor } from "@/features/catalogos/hooks";
 import { resolveTipoContenedorNombre } from "@/lib/domain/tipoContenedor";
 
 export function CotizacionHandover({ cotizacion }: { cotizacion: CotizacionRow }) {
-  const { effectiveRole } = useAuth();
-  const { organizationId } = useOrganization();
+  const { visible, query } = useCotizacionHandover(cotizacion);
   const { data: tiposContenedor = [] } = useTiposContenedor();
-  const visible = puedeVerHandover(effectiveRole, organizationId, cotizacion.organization_id);
-  const query = useQuery({
-    queryKey: cotizaciones.handover(cotizacion.id, organizationId, cotizacion.updated_at),
-    enabled: visible,
-    queryFn: () => organizationId ? fetchHandover(cotizacion.id, organizationId) : Promise.resolve(null),
-  });
 
-  const proveedores = useQuery({
-    queryKey: cotizaciones.handoverProveedores(cotizacion.agente_id ?? null, cotizacion.naviera_id ?? null),
-    enabled: visible && Boolean(query.data),
-    queryFn: () => fetchHandoverProveedores(cotizacion.agente_id, cotizacion.naviera_id),
-  });
+  const proveedores = useHandoverProveedores(cotizacion, visible && Boolean(query.data));
 
   if (!visible) return null;
   if (query.isLoading) return <Skeleton className="h-24 w-full" />;
@@ -46,6 +31,12 @@ export function CotizacionHandover({ cotizacion }: { cotizacion: CotizacionRow }
   return (
     <section className="border-y py-4 space-y-4" aria-label="Ficha de handover">
       <SectionHeading icon={<ArrowRightLeft className="size-4" />}>Ficha de handover</SectionHeading>
+      {proveedores.isError && (
+        <div className="space-y-2">
+          <p role="alert" className="text-body-sm text-destructive">No pudimos cargar el agente y la naviera.</p>
+          <Button variant="outline" size="sm" onClick={() => void proveedores.refetch()}>Reintentar proveedores</Button>
+        </div>
+      )}
       <dl className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 text-body">
         {fields.map(([label, value]) => (
           <div key={label} className="min-w-0">
@@ -61,7 +52,7 @@ export function CotizacionHandover({ cotizacion }: { cotizacion: CotizacionRow }
 type TiposContenedor = ReturnType<typeof useTiposContenedor>["data"];
 function handoverFields(
   cotizacion: CotizacionRow, createdAt: string,
-  tiposContenedor: NonNullable<TiposContenedor>, prov: { agente: string | null; naviera: string | null } | undefined,
+  tiposContenedor: NonNullable<TiposContenedor>, prov: { agente: string | null; naviera: string | null } | null | undefined,
 ): Array<[string, string]> {
   return [
     ["Cliente", cotizacion.cliente_nombre || cotizacion.prospecto_empresa || "—"],

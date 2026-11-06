@@ -6,7 +6,7 @@ existing company.
 
 The canonical prospect conversion resolves all explicit opportunity/lead company
 IDs before customer insertion, rejects conflicting identities, and locks company
-then lead then quotation/opportunity. This preserves PR366's company-first order.
+then lead then quotation/opportunity. This preserves PR 366's company-first order.
 It rechecks tenant, current deletion state and unassigned/equal client under the
 lock. A generated client UUID is reserved on that exact company in the same
 subtransaction as the INSERT. The schema currently has no FK on
@@ -28,7 +28,7 @@ python3 scripts/ci/crm-cliente/test_static.py -v
 ```
 
 Runtime runs in `rls-tests.yml` before broad grants or FK relaxation, reusing the
-existing PR366 adapter and its exact PostgreSQL 17.9 service, isolated opt-ins,
+existing PR 366 adapter and its exact PostgreSQL 17.9 service, isolated opt-ins,
 two owned clones, source fingerprints, OID/owner checked cleanup and unchanged KAM
 function metadata. It accepts no database URL or caller SQL. The only adapter
 extension is an evidence-directory constant.
@@ -53,3 +53,38 @@ incompatible NEW plus clear/demote/delete state.
 Lock-dependent cases require an actual `pg_blocking_pids` barrier.
 Offline source contracts do not constitute runtime evidence.
 
+
+## Historical replay and current catalog are separate evidence
+
+Drizzle 0034 evolves conversion to support a Borrador prospect and prevents newly
+sending/accepting that prospect before customer creation. Reapplying the older
+identity migration to that final catalog is a real downgrade, not idempotent
+replay. The exact fingerprint failure must therefore remain enforced.
+
+The original whole-migration runner now runs in the isolated replay checkpoint
+immediately before 0026, after 0021–0023 and the canonical chain. Missing/failed
+checkpoint evidence aborts preparation. It retains the accepted-quote fixtures,
+complete migration replay, two owned clones and exact source fingerprints.
+
+`run-final-actions.py` is a dedicated current-catalog verifier, not a replay.
+It does not execute the historical migration or replace any function. It pins
+0034 bytes and its isolated mirror, compares all eight effective identity
+function bodies plus owner/security/search_path/ACL, and retains the exact KAM
+contract. Its two owned clones run the same 19 identity/concurrency cases using
+Borrador fixtures. Blocking barriers and all identity/row assertions are shared;
+only the quote's initial stage differs. Source data/catalog fingerprints and
+clone catalog/security are preserved, with owner/OID-checked teardown.
+
+Evidence stays separate in `reports/crm-cliente-concurrency/` (historical) and
+`reports/crm-cliente-final-concurrency/` (current). `verify-evidence.py both`
+requires the same source commit, two successful dropped clones per stage and
+all 19 named cases; it cannot label verify-only as migration replay.
+
+Local validation after this correction used fresh official PostgreSQL 17.9 on
+loopback, without Docker: both stages ran two real clones,19/19 cases each,
+including committed races and actual lock barriers. Historical replay left the
+exact fingerprint unchanged and both source catalogs/data were preserved.
+Current source bodies/ACL matched 0034. This is local SQL evidence, not a claim
+that the Actions container adapter ran locally; the complete pinned-container
+workflow still requires its remote run. No application data, product migration,
+margin setting or real/project database was modified.

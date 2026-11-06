@@ -1,6 +1,7 @@
 -- Ola 6 · Integridad transaccional: RPCs atómicas (A3, M3, M4, M7, M15).
 -- Verifica: reactivación de cotización, conversiones idempotentes y borrado de
 -- proforma bloqueado cuando ya está facturada.
+BEGIN;
 DO $$
 DECLARE
   v_org uuid;
@@ -28,7 +29,6 @@ DECLARE
   v_n integer;
   v_flete numeric;
   v_admin uuid := 'a06a06a0-0000-4000-8000-000000000001';
-  v_etapa_gan uuid;
 BEGIN
   -- v13.823.55: convertir_lead_rpc exige sesión real. Esta suite corre como
   -- postgres (sin uid), así que declara el claim de proceso interno.
@@ -71,47 +71,21 @@ BEGIN
     organization_id, estado, estado_anterior, folio, modo, tipo, conceptos_venta,
     es_prospecto, prospecto_empresa, oportunidad_id
   ) VALUES (
-    v_org, 'Vencida'::public.estado_cotizacion, 'Enviada'::public.estado_cotizacion,
+    v_org, 'Borrador'::public.estado_cotizacion, NULL,
     'COT-OLA6-0001', 'Marítimo'::public.modo_transporte, 'Importación'::public.tipo_operacion,
     '[{"descripcion":"FLETE OLA6","cantidad":1,"precio_unitario":1000,"moneda":"USD","aplica_iva":false}]'::jsonb,
-    -- v13.777.9: la segmentación comercial exige cliente ligado fuera de
-    -- borrador; esta cotización es de prospecto (M3 la convierte a cliente).
+    -- 0034: el prospecto nace en Borrador y M3 lo convierte antes de enviar.
     true, 'PROSPECTO OLA6', v_op_a3
   ) RETURNING id INTO v_cot;
-
-  v_estado := public.reactivar_cotizacion_rpc(v_cot);
-  IF v_estado <> 'Enviada' THEN
-    RAISE EXCEPTION 'OLA6 A3 FAIL: esperaba Enviada, obtuve %', v_estado;
-  END IF;
-
-  -- Segunda llamada debe fallar: ya no está vencida/archivada.
-  BEGIN
-    PERFORM public.reactivar_cotizacion_rpc(v_cot);
-    RAISE EXCEPTION 'OLA6 A3 FAIL: reactivar dos veces debería fallar';
-  EXCEPTION WHEN SQLSTATE 'P0001' THEN
-    IF SQLERRM NOT LIKE '%LC_COTIZACION_NO_REACTIVABLE%' THEN RAISE; END IF;
-  END;
 
   ----------------------------------------------------------------------------
   -- M3: convertir_prospecto_a_cliente_rpc (idempotente, sin duplicar clientes)
   ----------------------------------------------------------------------------
-  -- v13.823.65: la conversión canónica exige cotización Aceptada, oportunidad
-  -- ganadora en etapa 'ganada', prospecto (lead) vivo y captura fiscal completa.
-  INSERT INTO public.crm_etapas_pipeline (organization_id, nombre, tipo, orden, activa)
-  VALUES (v_org, 'Ganada OLA6', 'ganada'::public.crm_etapa_tipo, 9, true)
-  RETURNING id INTO v_etapa_gan;
-
-  UPDATE public.crm_oportunidades
-     SET etapa_id = v_etapa_gan, cotizacion_ganadora_id = v_cot, cliente_id = NULL
-   WHERE id = v_op_a3;
-
-  UPDATE public.cotizaciones
-     SET es_prospecto = true, cliente_id = NULL,
-         estado = 'Aceptada'::public.estado_cotizacion
-   WHERE id = v_cot;
-
+  -- 0034: conversión en Borrador, antes de solicitar autorización y enviar.
+  -- La oportunidad sigue abierta, sin fabricar una aceptación histórica.
   PERFORM set_config('request.jwt.claims',
     json_build_object('sub', v_admin, 'role', 'authenticated')::text, true);
+  PERFORM set_config('role', 'authenticated', true);
 
   v_res := public.convertir_prospecto_a_cliente_rpc(
     v_cot,
@@ -143,6 +117,27 @@ BEGIN
     RAISE EXCEPTION 'OLA6 M3 FAIL: se crearon clientes extra en la organización';
   END IF;
 
+  -- A3: con el cliente ya convertido, autorizar por RPC y vencer una enviada.
+  PERFORM public.autorizar_cotizacion(v_cot, 'Autorización sintética de prueba Ola6');
+  UPDATE public.cotizaciones SET estado = 'Enviada' WHERE id = v_cot;
+  UPDATE public.cotizaciones SET fecha_vigencia = CURRENT_DATE - 1 WHERE id = v_cot;
+  PERFORM set_config('role', 'service_role', true);
+  PERFORM public.expirar_cotizaciones_job();
+  PERFORM set_config('role', 'authenticated', true);
+  v_estado := public.reactivar_cotizacion_rpc(v_cot);
+  IF v_estado <> 'Enviada' THEN
+    RAISE EXCEPTION 'OLA6 A3 FAIL: esperaba Enviada, obtuve %', v_estado;
+  END IF;
+
+  -- Segunda llamada debe fallar: ya no está vencida/archivada.
+  BEGIN
+    PERFORM public.reactivar_cotizacion_rpc(v_cot);
+    RAISE EXCEPTION 'OLA6 A3 FAIL: reactivar dos veces debería fallar';
+  EXCEPTION WHEN SQLSTATE 'P0001' THEN
+    IF SQLERRM NOT LIKE '%LC_COTIZACION_NO_REACTIVABLE%' THEN RAISE; END IF;
+  END;
+
+  RESET ROLE;
   -- Se restaura el claim de proceso interno para el resto de la suite.
   PERFORM set_config('request.jwt.claims',
     json_build_object('role', 'service_role')::text, true);
@@ -287,24 +282,7 @@ BEGIN
     IF SQLERRM NOT LIKE '%LC_TARIFA_NO_ENCONTRADA%' THEN RAISE; END IF;
   END;
 
-  -- Limpieza
-  DELETE FROM public.costeo_tarifa_recargos WHERE organization_id = v_org;
-  DELETE FROM public.costeo_tarifas WHERE organization_id = v_org;
-  DELETE FROM public.costeo_rutas WHERE organization_id = v_org;
-  DELETE FROM public.costeo_agentes WHERE organization_id = v_org;
-  DELETE FROM public.proveedores WHERE organization_id = v_org;
-  DELETE FROM public.proformas WHERE organization_id = v_org;
-  DELETE FROM public.embarques WHERE organization_id = v_org;
-  DELETE FROM public.crm_oportunidades WHERE organization_id = v_org;
-  DELETE FROM public.crm_leads WHERE organization_id = v_org;
-  DELETE FROM public.crm_etapas_pipeline WHERE organization_id = v_org;
-  DELETE FROM public.cotizaciones WHERE organization_id = v_org;
-  DELETE FROM public.clientes WHERE organization_id = v_org;
-  -- La conversión canónica deja huella en la bitácora y la membresía sembrada
-  -- también referencia la organización.
-  DELETE FROM public.bitacora_actividad WHERE organization_id = v_org;
-  DELETE FROM public.organization_members WHERE organization_id = v_org;
-  DELETE FROM public.organizations WHERE id = v_org;
-
+  -- El ROLLBACK revierte todos los fixtures, incluidos handover y auditoría.
   RAISE NOTICE 'OK ola6_transaccional (A3, M3, M4, M7, M15)';
 END$$;
+ROLLBACK;

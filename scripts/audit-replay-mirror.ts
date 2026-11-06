@@ -8,12 +8,18 @@
  * del cuerpo SQL/PLpgSQL. No cambia SQL, no ejecuta migraciones y no sustituye
  * replay, permisos o invariantes en una BD efímera. Sólo modela declaraciones
  * CREATE OR REPLACE FUNCTION public.<nombre sin comillas>: CREATE simple,
- * nombres entrecomillados, ALTER/DROP y SQL dinámico requieren replay real.
+ * nombres entrecomillados y ALTER/DROP requieren replay real. El único SQL
+ * dinámico modelado es Drizzle0035: fuente/preimágenes fijadas, orden y
+ * ocurrencias comprobados; ningún otro DO se interpreta. Los triggers y ACL
+ * de ese patch siguen requiriendo replay real.
  * Uso: bun run audit:replay-mirror.
  */
 import fs from "node:fs";
 import path from "node:path";
-import { auditarReplayMirror, leerBaseline } from "./lib/replayMirror";
+import { auditarIndiceReplayMirror, indexarMigraciones, leerBaseline } from "./lib/replayMirror";
+
+import { aplicarDrizzle0035 } from "./lib/replayMirrorDrizzle0035";
+import { readIsolatedDrizzleReplay } from "./ci/drizzle-history/control.mjs";
 
 const ROOT = process.cwd();
 const SCHEMA_DIR = path.join(ROOT, "supabase", "schema");
@@ -39,7 +45,10 @@ try {
     const relative = path.relative(ROOT, file).split(path.sep).join("/");
     return [relative, fs.readFileSync(file, "utf8")] as const;
   }).filter(([file]) => !EXENTOS.has(file) && !DIRS_EXENTOS.some((dir) => file.startsWith(dir))));
-  const result = auditarReplayMirror(espejos, migraciones, baseline);
+  const isolated = readIsolatedDrizzleReplay(ROOT);
+  const journal = JSON.parse(fs.readFileSync(path.join(ROOT, "drizzle/migrations/meta/_journal.json"), "utf8")).entries;
+  const index = aplicarDrizzle0035(indexarMigraciones(migraciones), isolated, journal);
+  const result = auditarIndiceReplayMirror(espejos, index, baseline);
   if (result.violaciones.length) {
     console.error("❌ audit:replay-mirror — divergencia o excepción fuera de su huella exacta:");
     for (const violation of result.violaciones) console.error(`  - ${violation}`);

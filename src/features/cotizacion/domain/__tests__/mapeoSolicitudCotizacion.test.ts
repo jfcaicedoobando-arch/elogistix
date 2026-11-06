@@ -31,3 +31,19 @@ describe("pesoSolicitudAKg", () => {
     expect(pesoSolicitudAKg("0", "kg")).toBeNull();
   });
 });
+
+
+describe("cuantización física del peso", () => {
+  it.each([
+    ["1.125", "kg", 1.13],
+    ["1.005", "kg", 1],
+    ["1", "g", 0],
+    ["1,234.5", "kg", 1234.5],
+  ])("preserva el redondeo histórico de %s %s", (peso, unidad, esperado) => {
+    expect(pesoSolicitudAKg(peso, unidad)).toBe(esperado);
+  });
+  it("no convierte pesos negativos ni infinitos", () => {
+    expect(pesoSolicitudAKg("-1", "kg")).toBeNull();
+    expect(pesoSolicitudAKg("Infinity", "kg")).toBeNull();
+  });
+});

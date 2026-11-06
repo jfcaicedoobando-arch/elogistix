@@ -285,6 +285,9 @@ if [ "$REUSE" != "1" ]; then
       fail "historia aislada no aplica: $f"; tail -n 30 "$migr_log" >&2; exit 1;
     }
   done <<< "$isolated_history"
+  # Check product ACL before the broad test-harness grants.
+  "${PSQL[@]}" -f supabase/tests/rls/_ci_check_handover_tenant_acl.sql || exit 1
+  "${PSQL[@]}" -f supabase/tests/rls/_ci_check_cotizacion_margen_acl.sql || exit 1
 
 
 

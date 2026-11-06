@@ -132,6 +132,18 @@ SELECT set_config('request.jwt.claims','',true);
 INSERT INTO public.crm_etapas_pipeline(id,organization_id,nombre,tipo,activa)
 VALUES ('70000000-0000-4000-8000-000000000031','70000000-0000-4000-8000-000000000001','Synthetic won','ganada',true);
 UPDATE public.cotizaciones SET conceptos_venta='[{"cantidad":1,"precio_unitario":1.41,"moneda":"USD"}]',tipo_cambio_usd=20 WHERE id='70000000-0000-4000-8000-000000000080';
+-- 0031: a real same-tenant authorizer grants approval through the public RPC.
+INSERT INTO auth.users(id,email) VALUES
+ ('70000000-0000-4000-8000-000000000013','pricing70-subtotal-authorizer@example.invalid');
+INSERT INTO public.organization_members(organization_id,user_id,role) VALUES
+ ('70000000-0000-4000-8000-000000000001','70000000-0000-4000-8000-000000000013','gerente_comercial');
+SELECT set_config('request.jwt.claims','{"sub":"70000000-0000-4000-8000-000000000013","role":"authenticated"}',true);
+SET LOCAL ROLE authenticated;
+SELECT public.autorizar_cotizacion('70000000-0000-4000-8000-000000000080','Autorización de fixture financiero');
+SELECT pg_temp.assert((SELECT autorizada_por=auth.uid() AND autorizada_at IS NOT NULL
+ FROM public.cotizaciones WHERE id='70000000-0000-4000-8000-000000000080'),'19b Required authorization was granted through RPC');
+SET LOCAL ROLE postgres;
+SELECT set_config('request.jwt.claims','',true);
 UPDATE public.cotizaciones SET estado='Aceptada',tipo_cambio_usd=25 WHERE id='70000000-0000-4000-8000-000000000080';
 SELECT pg_temp.assert((SELECT subtotal=35.25 AND estado='Aceptada' FROM public.cotizaciones WHERE id='70000000-0000-4000-8000-000000000080') AND (SELECT valor_real=35.25 AND moneda='MXN' FROM public.crm_oportunidades WHERE id='70000000-0000-4000-8000-000000000040'),'20 Combined acceptance and TC sees converted valor_real');
 SELECT pg_temp.reject('UPDATE public.cotizaciones SET tipo_cambio_usd=30 WHERE id=''70000000-0000-4000-8000-000000000080''','P0001','LC_COTIZACION_INMUTABLE');

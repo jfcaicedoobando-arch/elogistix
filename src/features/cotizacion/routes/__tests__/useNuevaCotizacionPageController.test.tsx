@@ -33,7 +33,7 @@ vi.mock("@/features/cliente/hooks", () => ({
 }));
 
 const wizardState = {
-  form: { getValues: () => ({ prospectoEmpresa: "ACME" }) },
+  form: { getValues: () => ({ prospectoEmpresa: "ACME" }), setValue: vi.fn(), trigger: vi.fn() },
   cotizacionId: null as string | null,
   currentStep: 1,
   costosInternos: [],
@@ -70,7 +70,8 @@ vi.mock("@/features/cotizacion/hooks/wizard/useCotizacionDraftAutosave", () => (
 
 const prefillArgs: Record<string, unknown>[] = [];
 const pricingPrefillArgs: Record<string, unknown>[] = [];
-vi.mock("@/features/cotizacion/hooks/wizard/usePrefillContextoPricing", () => ({ usePrefillContextoPricing: (args: Record<string, unknown>) => { pricingPrefillArgs.push(args); } }));
+const pricingPrefillState: ReturnType<typeof import("@/features/cotizacion/hooks/wizard/usePrefillContextoPricing").usePrefillContextoPricing> = { estado: "inactivo", isLoading: false };
+vi.mock("@/features/cotizacion/hooks/wizard/usePrefillContextoPricing", () => ({ usePrefillContextoPricing: (args: Record<string, unknown>) => { pricingPrefillArgs.push(args); return pricingPrefillState; } }));
 vi.mock("@/features/cotizacion/hooks/wizard/usePrefillProspectoOportunidad", () => ({
   usePrefillProspectoOportunidad: (args: Record<string, unknown>) => { prefillArgs.push(args); },
 }));
@@ -109,6 +110,7 @@ beforeEach(() => {
   autosaveArgs.length = 0;
   prefillArgs.length = 0;
   pricingPrefillArgs.length = 0;
+  pricingPrefillState.estado = "inactivo";
   wizardState.cotizacionId = null;
   wizardState.currentStep = 1;
   draftRestore.restaurando = false;
@@ -281,5 +283,30 @@ describe("useNuevaCotizacionPageController — guard Pricing", () => {
     wizardState.cotizacionId = cotizacionId;
     render(search);
     expect(pricingPrefillArgs.at(-1)).toMatchObject({ enabled, oportunidadId: esperarOportunidad ? "opp-1" : null, organizationId: "org-1" });
+  });
+});
+
+
+describe("cliente especial después del prefill Pricing", () => {
+  it.each(["inactivo", "cargando", "error", "captura-conservada"] as const)(
+    "no fija el cliente mientras Pricing está %s", (estado) => {
+      pricingPrefillState.estado = estado;
+      render("?tarifa=t1&cliente=cli-1");
+      expect(wizardState.form.setValue).not.toHaveBeenCalled();
+    },
+  );
+
+  it("fija y valida el cliente sólo tras aplicar Pricing", () => {
+    pricingPrefillState.estado = "cargando";
+    const { rerender } = render("?tarifa=t1&cliente=cli-1");
+    expect(wizardState.form.setValue).not.toHaveBeenCalled();
+    pricingPrefillState.estado = "aplicado";
+    rerender();
+    expect(wizardState.form.setValue).toHaveBeenCalledWith(
+      "clienteId", "cli-1", { shouldDirty: true, shouldValidate: true },
+    );
+    expect(wizardState.form.trigger).toHaveBeenCalledWith("clienteId");
+    rerender();
+    expect(wizardState.form.setValue).toHaveBeenCalledTimes(1);
   });
 });

@@ -13,6 +13,19 @@ export const HISTORY = [
   { file: `${ARCHIVE}/0022_refacturar_proforma_abre_edicion.sql`, sha256: '8b4272fdc0abdbbbedac41c46e28694f611a59c240e0509bdf02ec2f8b9446fa' },
   { file: '0022_cotizacion_comercial.sql', sha256: '5cc034df0035d1f9b1722aa9bfad12ff68965bde22273500f55903bf9b60ed38', eligibleName: '20261026184900_replay_cotizacion_comercial.sql' },
   { file: '0023_margen_minimo_utilidad_rpc.sql', sha256: 'b106eb27b920f2d34825e9141a46d2ed51943c4ccad69cca8c2f970d2348c86a', eligibleName: '20261026185000_replay_margen_minimo_utilidad_rpc.sql' },
+  // Current 0026–0036 follow the earlier isolated sources in journal order.
+  { file: '0026_comisiones_recalcular_al_asignar_vendedora.sql', sha256: '5076f939bde9c6fe4bd2798f5690c8163c636165ec9ced561af170bb986f5e03', eligibleName: '20261106000000_replay_comisiones_recalcular_al_asignar_vendedora.sql' },
+  { file: '0027_clientes_tipo_cliente.sql', sha256: '5a325b83b2365e11ceb2d0ce3c5796a645b6ae4e991752b0b782d6c589b13be4', eligibleName: '20261106010000_replay_clientes_tipo_cliente.sql' },
+  { file: '0028_pricing_tipo_operacion_sector.sql', sha256: 'ea21108f86701bccffa72615886df94d9538825a37d938cda5e2b496186f5eb0', eligibleName: '20261106020000_replay_pricing_tipo_operacion_sector.sql' },
+  { file: '0029_cotizacion_handover.sql', sha256: '05945750400de4633ecfc21823d1d8989feda8385645d0e8130240d9d7a7757c', eligibleName: '20261106030000_replay_cotizacion_handover.sql' },
+  { file: '0030_pricing_reglas_plazos.sql', sha256: '4a8714a7515e5a7074f173be388f9e88f12f147b0109237dfd956d5a61123271', eligibleName: '20261106040000_replay_pricing_reglas_plazos.sql' },
+  { file: '0031_cotizacion_autorizacion.sql', sha256: 'a816f3bf9741eb94f98ab36ea6e5f6cc882ac4e5ffb4228d49fb8bd2a1e191be', eligibleName: '20261106050000_replay_cotizacion_autorizacion.sql' },
+  { file: '0032_cliente_especial_sin_autorizacion.sql', sha256: '4fc32a90805b39d55b133317177931ce5613154b475fd9ef7e916708ca6e8a35', eligibleName: '20261106060000_replay_cliente_especial_sin_autorizacion.sql' },
+  { file: '0033_handover_embarque_al_aceptar.sql', sha256: 'f0dc291eb349afcc3a3c770d19e3717b56b528e02010680375eab599fd0bfb59', eligibleName: '20261106070000_replay_handover_embarque_al_aceptar.sql' },
+  { file: '0034_prospecto_solo_borrador.sql', sha256: 'b4daeecf283e43b5e85ab0fc1dec0f1c322c4a0150549c5d4bbb23b48210e0b5', eligibleName: '20261106080000_replay_prospecto_solo_borrador.sql' },
+  // Forward fix after 0029's table and the complete immutable history.
+  { file: '0035_cotizacion_aceptada_hasta_confirmar_embarque.sql', sha256: '9565c53c94e45d33bdf96242937dbaa0036dd7b122f0b7018739b0fe5128c277', eligibleName: '20261106090000_replay_cotizacion_aceptada_hasta_confirmar_embarque.sql' },
+  { file: '0036_cotizacion_handover_tenant_scope.sql', sha256: 'a72308bf9b13502051fa0b212c43c81a4a69589cd5dc4ac0bec249f805c5ce1a', eligibleName: '20261106100000_cotizacion_handover_tenant_scope.sql' },
 ];
 const ARCHIVED_METADATA = [
   [`${ARCHIVE}/meta/0022_snapshot.json`, '002a1cff39197fe3431f23193a4229e1c845cbcd0ab5eaa074efded812b0081d'],

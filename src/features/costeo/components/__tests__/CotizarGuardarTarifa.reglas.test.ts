@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { puedeCotizarYGuardar, rutaCotizacionTarifa } from "../CotizarGuardarTarifa";
+import { puedeCotizarYGuardar, rutaCotizacionTarifa } from "../../domain/cotizarGuardarTarifa";
 
 describe("Cotizar y guardar tarifa (clientes especiales)", () => {
   it("sólo coordinador logístico, gerente de operaciones y administradores", () => {

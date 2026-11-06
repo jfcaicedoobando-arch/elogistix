@@ -26,13 +26,16 @@ import { usePermissions } from "@/hooks/shared";
 import { CotizacionHandover } from "./CotizacionHandover";
 import type { CotizacionDetalleContenidoProps as Props } from "./cotizacionDetalleContenido.types";
 
-function datosAutorizacion(cotizacion: Props["cotizacion"]) {
+function datosAutorizacion(cotizacion: Props["cotizacion"], clienteEspecial: boolean) {
   return {
     version: cotizacion.version ?? 1,
     creadaPor: cotizacion.created_by ?? null,
-    autorizadaAt: cotizacion.autorizada_at ?? null,
-    autorizacionSolicitadaAt: cotizacion.autorizacion_solicitada_at ?? null,
-    margenAutorizado: cotizacion.margen_autorizado_pct ?? null,
+    autorizacionInterna: {
+      autorizadaAt: cotizacion.autorizada_at ?? null,
+      autorizacionSolicitadaAt: cotizacion.autorizacion_solicitada_at ?? null,
+      margenAutorizado: cotizacion.margen_autorizado_pct ?? null,
+      clienteEspecial,
+    },
   };
 }
 
@@ -85,7 +88,7 @@ export function CotizacionDetalleContenido({
           esProspecto={cotizacion.es_prospecto}
           numContenedores={cotizacion.num_contenedores}
           cotizacionId={id}
-          {...datosAutorizacion(cotizacion)}
+          {...datosAutorizacion(cotizacion, autorizacion.esEspecial)}
           tieneEmbarquesVinculados={embarquesVinculados.length > 0 || !!cotizacion.embarque_id}
           onCambiarEstado={handleCambiarEstado}
           onAbrirConvertir={abrirDialogConvertir}
@@ -95,7 +98,6 @@ export function CotizacionDetalleContenido({
           requiereAutorizacionCliente={autorizacion.requiereAutorizacionCotizacion}
           puedeAltaCliente={canAltaCliente}
           tieneOportunidad={!!cotizacion.oportunidad_id}
-          clienteEspecial={autorizacion.esEspecial}
         />
       )}
 

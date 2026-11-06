@@ -211,12 +211,17 @@ def load_contract():
             and c['files'][FORWARD_MIGRATION] == c['candidate_forward_migration']['sha256'],
             'Forward companion must have one reviewed hash')
     require(c['candidate_post_migrate']['path'] == 'supabase/tests/rls/_ci_post_migrate.sql', 'Unexpected post-migrate companion')
+    support = c['candidate_post_migrate_support']
+    require(support['path'] == 'supabase/tests/rls/_ci_check_cotizacion_margen_acl.sql',
+            'Exact reviewed post-migrate ACL companion required')
+    require(c['files'].get(support['path']) == support['sha256'],
+            'Post-migrate ACL companion must have one reviewed hash')
     require(set(c['expected_case_ids']) == {'finance', 'auth', 'writers', 'races'}, 'Exactly four suites required')
     for ids in c['expected_case_ids'].values():
         require(ids and len(ids) == len(set(ids)) and all(isinstance(x, str) and x for x in ids), 'Explicit unique IDs required')
     required = {'scripts/ci/h14-integrity/' + x for x in RUNTIME_NAMES}
     require(required <= set(c['files']) and set(c['bundle_paths']) == required, 'Exact H14 runtime bindings required')
-    companions={MIGRATION,FORWARD_MIGRATION,c['candidate_post_migrate']['path'],
+    companions={MIGRATION,FORWARD_MIGRATION,c['candidate_post_migrate']['path'],support['path'],
                 'scripts/ci/h14-integrity/ci_run.py','scripts/ci/h14-integrity/test_static.py'}
     require(set(c['files']) <= required | companions, 'Unknown runtime companion')
     for relative, expected in c['files'].items():
@@ -227,7 +232,7 @@ def load_contract():
         require(actual.resolve(strict=True) == actual and actual.is_file() and not actual.is_symlink()
                 and re.fullmatch(r'[a-f0-9]{64}', expected) is not None and digest(actual) == expected,
                 'Runtime file changed: ' + relative)
-    for item in (c['candidate_migration'], c['candidate_forward_migration'], c['candidate_post_migrate']):
+    for item in (c['candidate_migration'], c['candidate_forward_migration'], c['candidate_post_migrate'], support):
         require(digest(ROOT / item['path']) == item['sha256'], 'Candidate companion hash changed')
     return c, hashlib.sha256(content).hexdigest()
 

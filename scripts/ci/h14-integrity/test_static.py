@@ -2,6 +2,8 @@
 """No-database checks for the strict session observation protocol."""
 import importlib.util
 import json
+import hashlib
+from unittest.mock import patch
 from pathlib import Path
 import queue
 import sys
@@ -171,6 +173,32 @@ class CiBoundaryTests(unittest.TestCase):
         with self.assertRaises(RuntimeError):
             m.check_actor(actual, "actor", "tenant", True, True)
 
+
+class PostMigrateCompanionTests(unittest.TestCase):
+    def test_only_reviewed_owner_acl_restoration_changed(self):
+        source=(ci.ROOT/'supabase/tests/rls/_ci_post_migrate.sql').read_bytes()
+        delta=(b"-- 0031 keeps this data-by-ID helper owner-only; undo only the two grants\n"
+               b"-- introduced above, then reassert the same ACL checked before the harness.\n"
+               b"REVOKE EXECUTE ON FUNCTION public._cotizacion_margen_pct(uuid) FROM authenticated, service_role;\n"
+               b"\\ir _ci_check_cotizacion_margen_acl.sql\n")
+        self.assertEqual(source.count(delta),1)
+        self.assertEqual(hashlib.sha256(source.replace(delta,b'',1)).hexdigest(),
+                         '13d2fb58654d82572996565b74fdb57245d43d22676b5838c92f918f3bedac18')
+        self.assertLess(source.index(b'GRANT EXECUTE ON ALL FUNCTIONS IN SCHEMA public'),source.index(delta))
+    def test_contract_includes_exact_transitive_support_and_rejects_mutation(self):
+        contract,_=ci.load_contract()
+        support=contract['candidate_post_migrate_support']
+        self.assertEqual(contract['files'][support['path']],support['sha256'])
+        actual_digest=ci.digest
+        with patch.object(ci,'digest',side_effect=lambda path: '0'*64 if Path(path)==ci.ROOT/support['path'] else actual_digest(path)):
+            with self.assertRaisesRegex(RuntimeError,'Runtime file changed'):
+                ci.load_contract()
+    def test_modern_companion_is_not_replayed_on_historical_base(self):
+        self.assertFalse(ci.permitted_source('supabase/tests/rls/_ci_post_migrate.sql'))
+        self.assertFalse(ci.permitted_source('supabase/tests/rls/_ci_check_cotizacion_margen_acl.sql'))
+        contract,_=ci.load_contract()
+        self.assertNotIn(contract['candidate_post_migrate']['path'],contract['bundle_paths'])
+        self.assertNotIn(contract['candidate_post_migrate_support']['path'],contract['bundle_paths'])
 
 if __name__ == "__main__":
     unittest.main()

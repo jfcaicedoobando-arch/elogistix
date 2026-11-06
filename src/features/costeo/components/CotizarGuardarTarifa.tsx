@@ -4,21 +4,14 @@
  * Sólo coordinador logístico / gerente de operaciones (y administradores).
  */
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
 import { useNavigate } from "react-router";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useAuth } from "@/lib/contexts/AuthContext";
-import { useOrgActiva } from "@/hooks/shared/useOrgActiva";
-import { fetchClientesEspeciales } from "@/features/cliente/services/listado";
+import { useClientesEspeciales } from "@/features/cliente/hooks/useClientesEspeciales";
+import { Hint } from "@/components/shared/Hint";
+import { puedeCotizarYGuardar, rutaCotizacionTarifa } from "../domain/cotizarGuardarTarifa";
 import type { CosteoTarifa } from "@/features/costeo/types";
-
-const ROLES = new Set(["coordinador_logistico", "gerente_operaciones", "admin_org", "admin", "super_admin"]);
-
-export const puedeCotizarYGuardar = (rol: string | null | undefined) => !!rol && ROLES.has(rol);
-
-export const rutaCotizacionTarifa = (tarifaId: string, clienteId: string) =>
-  `/cotizaciones/nueva?tarifa=${encodeURIComponent(tarifaId)}&cliente=${encodeURIComponent(clienteId)}`;
 
 interface Props {
   disabled: boolean;
@@ -32,14 +25,9 @@ export function CotizarGuardarTarifa(props: Props) {
 }
 
 function CotizarGuardarTarifaPanel({ disabled, guardar }: Props) {
-  const { organizationId } = useOrgActiva();
   const navigate = useNavigate();
   const [clienteId, setClienteId] = useState("");
-  const { data: clientes = [] } = useQuery({
-    queryKey: ["clientes", "especiales", organizationId],
-    queryFn: () => fetchClientesEspeciales(organizationId ?? ""),
-    enabled: !!organizationId,
-  });
+  const { data: clientes = [] } = useClientesEspeciales();
   if (clientes.length === 0) return null;
 
   return (
@@ -53,11 +41,12 @@ function CotizarGuardarTarifaPanel({ disabled, guardar }: Props) {
           {clientes.map((c) => <SelectItem key={c.id} value={c.id}>{c.nombre}</SelectItem>)}
         </SelectContent>
       </Select>
-      <Button type="button" variant="secondary" disabled={disabled || !clienteId}
-        title={clienteId ? undefined : "Elige un cliente especial"}
-        onClick={() => guardar((t) => navigate(rutaCotizacionTarifa(t.id, clienteId)))}>
-        Cotizar y guardar tarifa
-      </Button>
+      <Hint label={clienteId ? undefined : "Elige un cliente especial"}>
+        <Button type="button" variant="secondary" disabled={disabled || !clienteId}
+          onClick={() => guardar((t) => navigate(rutaCotizacionTarifa(t.id, clienteId)))}>
+          Cotizar y guardar tarifa
+        </Button>
+      </Hint>
     </div>
   );
 }

@@ -8,7 +8,7 @@
   },
   "candidate_post_migrate": {
     "path": "supabase/tests/rls/_ci_post_migrate.sql",
-    "sha256": "13d2fb58654d82572996565b74fdb57245d43d22676b5838c92f918f3bedac18"
+    "sha256": "5f22bbf9bbcd12da5a7041883054fcbde7e45a1bc3d8b28cd898c2d0b4e6aece"
   },
   "candidate_rpc_md5": "f603355293c0d33598d12fdc44cb9b26",
   "files": {
@@ -21,12 +21,13 @@
     "scripts/ci/h14-integrity/driver_local.py": "5e8b434e0f2e21cfffaa6583c16f617dc43323072b0f3347f8127b545e052aaf",
     "scripts/ci/h14-integrity/scale-equivalence.sql": "a0d26352b08a1ff2923486223caa6e69e9e4e522e63f00a4b8fcddaf2c4cb3a4",
     "scripts/ci/h14-integrity/pre_migration_history.sql": "261e49ad1043c574c9dc30c84ac4e57ec7509927f434b6193fb35367bf9796d7",
-    "scripts/ci/h14-integrity/ci_run.py": "47d88aa4f966c042fe727f63640ea9942a854ddfe2c0ccdf9b374d6f32611326",
-    "scripts/ci/h14-integrity/test_static.py": "66c163e51f1f4c4c581ba7e020fc0f3c6bfcebbc8168b1b9673795ac499df9ef",
+    "scripts/ci/h14-integrity/ci_run.py": "3e32b8b40cc8c2415306a739d2bc14f7110075a372fefd39cdb0e6e30b96d5e0",
+    "scripts/ci/h14-integrity/test_static.py": "9dbf27cb78709c1c404ba9971f7dfa1b8ead9e1bb00a6475e3f9d2afb57d816f",
     "supabase/migrations/20261103100000_h14_baja_embarque_integridad_financiera.sql": "e926236c6a54d353c905477677ae31f5ff1800caed1734c9cf2a65ee457c087e",
-    "supabase/tests/rls/_ci_post_migrate.sql": "13d2fb58654d82572996565b74fdb57245d43d22676b5838c92f918f3bedac18",
+    "supabase/tests/rls/_ci_post_migrate.sql": "5f22bbf9bbcd12da5a7041883054fcbde7e45a1bc3d8b28cd898c2d0b4e6aece",
     "scripts/ci/h14-integrity/reader-budget.sql": "f744ee012858e5875d06cbed9a82e2560d37293e3cf3fcd11e89c278aa66d0a4",
-    "supabase/migrations/20261104020000_h14_diagnostico_baja_lectura_acotada.sql": "9a7c54759c63186421fa860d6ed2722f9cfd88c729edf6bd8a5f47f1f2a68ef7"
+    "supabase/migrations/20261104020000_h14_diagnostico_baja_lectura_acotada.sql": "9a7c54759c63186421fa860d6ed2722f9cfd88c729edf6bd8a5f47f1f2a68ef7",
+    "supabase/tests/rls/_ci_check_cotizacion_margen_acl.sql": "95fd982a53f76804dd0b4fe3ddeecac51b5d33f4654e833121b077ba0ba1daa5"
   },
   "bundle_paths": {
     "scripts/ci/h14-integrity/fixture_helpers.sql": "finance/fixture_helpers.sql",
@@ -198,5 +199,9 @@
     "path": "supabase/migrations/20261104020000_h14_diagnostico_baja_lectura_acotada.sql",
     "sha256": "9a7c54759c63186421fa860d6ed2722f9cfd88c729edf6bd8a5f47f1f2a68ef7"
   },
-  "candidate_collector_md5": "3aafb5cf009c477e626357cb9ba78da8"
+  "candidate_collector_md5": "3aafb5cf009c477e626357cb9ba78da8",
+  "candidate_post_migrate_support": {
+    "path": "supabase/tests/rls/_ci_check_cotizacion_margen_acl.sql",
+    "sha256": "95fd982a53f76804dd0b4fe3ddeecac51b5d33f4654e833121b077ba0ba1daa5"
+  }
 }

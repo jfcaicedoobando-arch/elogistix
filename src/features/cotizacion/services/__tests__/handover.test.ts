@@ -4,7 +4,7 @@ const mock = await vi.hoisted(async () => {
   return createSupabaseMock();
 });
 vi.mock("@/integrations/supabase/client", () => ({ supabase: mock.supabase }));
-import { fetchHandover } from "../handover";
+import { fetchHandover, fetchHandoverProveedores } from "../handover";
 
 beforeEach(() => { mock.resetResults(); mock.tableCalls.length = 0; });
 describe("lectura del handover existente", () => {
@@ -23,5 +23,24 @@ describe("lectura del handover existente", () => {
   it("propaga errores de lectura para mostrar reintento", async () => {
     mock.setTableResult("cotizacion_handovers", { data: null, error: { message: "Sin acceso" } });
     await expect(fetchHandover("c1", "org1")).rejects.toThrow();
+  });
+});
+describe("proveedores del handover", () => {
+  it("acota el agente por empresa y consulta la naviera global por id", async () => {
+    mock.setTableResult("costeo_agentes", { data: { nombre: "Agente QA" }, error: null });
+    mock.setTableResult("navieras", { data: { name: "Naviera QA" }, error: null });
+    expect(await fetchHandoverProveedores("org1", "a1", "n1")).toEqual({ agente: "Agente QA", naviera: "Naviera QA" });
+    const [agente, naviera] = mock.tableCalls;
+    const filtros = (call: typeof agente) => call.ops.flatMap((op, i) => op === "eq" ? [call.opArgs[i]] : []);
+    expect(filtros(agente)).toEqual([["id", "a1"], ["organization_id", "org1"]]);
+    expect(filtros(naviera)).toEqual([["id", "n1"]]);
+  });
+  it("no consulta proveedores sin identificadores", async () => {
+    expect(await fetchHandoverProveedores("org1", null, undefined)).toEqual({ agente: null, naviera: null });
+    expect(mock.tableCalls).toHaveLength(0);
+  });
+  it("propaga errores sin convertirlos en ausencia", async () => {
+    mock.setTableResult("costeo_agentes", { data: null, error: { message: "Sin acceso" } });
+    await expect(fetchHandoverProveedores("org1", "a1", null)).rejects.toThrow();
   });
 });

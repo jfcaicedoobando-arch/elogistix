@@ -200,10 +200,24 @@ done
 # Recovered Drizzle history is test-only: this entrypoint already requires
 # loopback + an empty public schema. No production migration directory changes.
 isolated_history="$(node scripts/ci/drizzle-history/control.mjs list)" || exit 1
+crm_identity_checked=0
 while IFS= read -r f; do
+  if [[ "${CRM_IDENTITY_CI:-}" == 1 && "$f" == scripts/ci/drizzle-history/0026_comisiones_recalcular_al_asignar_vendedora.sql ]]; then
+    [[ "$crm_identity_checked" == 0 ]] || { echo "::error::CRM identity checkpoint repeated"; exit 1; }
+    python3 scripts/ci/crm-cliente/test_static.py -v || exit 1
+    python3 scripts/ci/crm-cliente/run-actions.py || exit 1
+    python3 scripts/ci/crm-cliente/verify-evidence.py historical || exit 1
+    crm_identity_checked=1
+  fi
   echo "▶ Isolated Drizzle history: $f"
   "${PSQL[@]}" --single-transaction -f "$f" || exit 1
 done <<< "$isolated_history"
+if [[ "${CRM_IDENTITY_CI:-}" == 1 && "$crm_identity_checked" != 1 ]]; then
+  echo "::error::Missing CRM identity historical checkpoint"; exit 1
+fi
+# Check product ACL before the broad test-harness grants.
+"${PSQL[@]}" -f supabase/tests/rls/_ci_check_handover_tenant_acl.sql || exit 1
+"${PSQL[@]}" -f supabase/tests/rls/_ci_check_cotizacion_margen_acl.sql || exit 1
 replay_profile_begin replay_final_check
 
 if [[ "${AUD54_CI:-}" == 1 && "$audit54_runtime_checked" != 1 ]]; then
