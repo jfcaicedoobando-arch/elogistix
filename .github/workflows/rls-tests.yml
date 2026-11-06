@@ -331,6 +331,7 @@ jobs:
         run: |
           $PSQL -f supabase/tests/rls/_ci_post_migrate.sql
           $PSQL -f supabase/tests/rls/_ci_preserve_cotizacion_especial_acl.sql
+          $PSQL -f supabase/tests/rls/_ci_preserve_coordinador_acl.sql
 
       - name: Verify RLS coverage
         run: $PSQL -f supabase/tests/rls/_ci_verify_rls.sql

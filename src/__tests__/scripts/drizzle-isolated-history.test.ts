@@ -37,8 +37,9 @@ describe("isolated Drizzle history is not deployment-eligible", () => {
       "0037_cotizacion_especial_trigger_permissions.sql",
       "0038_coordinador_fijo_por_cliente.sql",
       "0039_cotizacion_margen_moneda_homogenea.sql",
+      "0040_coordinador_permission_boundary.sql",
     ]);
-    expect(readIsolatedDrizzleReplay().size).toBe(17);
+    expect(readIsolatedDrizzleReplay().size).toBe(18);
     const archive = paths[1].replace("0022_refacturar_proforma_abre_edicion.sql", "meta/_journal.json");
     expect(JSON.parse(read(archive)).entries[22]).toMatchObject({ idx: 22, when: 1792518064767, tag: "0022_refacturar_proforma_abre_edicion" });
     expect(JSON.parse(read("drizzle/migrations/meta/_journal.json")).entries[22].tag).toBe("0022_cotizacion_comercial");
@@ -52,7 +53,7 @@ describe("isolated Drizzle history is not deployment-eligible", () => {
   it("reconstructs the new sources in journal order without rewriting immutable SQL", () => {
     const current = HISTORY.slice(4);
     const journal = JSON.parse(read("drizzle/migrations/meta/_journal.json"));
-    expect(current.map(item => item.file)).toEqual(journal.entries.slice(26, 40).map(
+    expect(current.map(item => item.file)).toEqual(journal.entries.slice(26, 41).map(
       (entry: { tag: string }) => `${entry.tag}.sql`,
     ));
     for (const item of current) {
