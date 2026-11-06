@@ -1,5 +1,7 @@
 # Roadmap: flujo de cotización + Handover
 
+- [ ] Mantener la cotización aceptada en «Aceptada» antes de iniciar el embarque; aclarar si el borrador automático se conserva y el cambio ocurre al confirmarlo.
+
 - [x] Mostrar la ficha de handover en el detalle de cotización para Administración y Vendedor/KAM; conservar acceso de Operaciones y aislamiento por empresa.
 
 - [x] Fase 1: Tipo de operación y Sector económico en la solicitud; datos de la solicitud pasan solos a la cotización (mercancía, IMO, estibable, peso en kg, notas, tipo, sector).
