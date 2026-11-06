@@ -15,6 +15,7 @@
 
 - Subdirectorios (`src/features/crm`, `cotizacion`, `proformas`, `cxp`) tienen su propio `AGENTS.md`: léelo antes de cambiar archivos ahí.
 - Handover detail is read-only and loads the existing handover row with quotation and active-organization filters; reuse quotation operational data, never generate handovers from the UI. Why: expose the existing handover without changing notification recipients, assignment, or tenant policies.
+- Quotation-to-shipment draft creation only persists the shipment link; `sync_cotizacion_embarque_link` also listens to shipment status and promotes accepted quotations only for operational states, excluding draft, quotation and cancelled. Why: confirmation, not automatic draft creation, starts operations while preserving cancellation housekeeping.
 
 - Margen mínimo comercial: se lee con `useMargenMinimo` (config `comercial/margen_minimo_utilidad_pct`, default en `lib/domain/margenMinimo.ts`) y sólo se escribe por el RPC `set_margen_minimo_utilidad` (admin/gerente_comercial); la edición de embarques exige autorización sólo si cambió montos y el margen queda por debajo. Why: un solo umbral configurable reutilizable en cotizaciones.
 

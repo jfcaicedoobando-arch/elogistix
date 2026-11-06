@@ -1,6 +1,6 @@
 # Roadmap: flujo de cotización + Handover
 
-- [ ] Mantener la cotización aceptada en «Aceptada» antes de iniciar el embarque; aclarar si el borrador automático se conserva y el cambio ocurre al confirmarlo.
+- [x] Conservar el borrador automático y «Aceptada» hasta confirmar el embarque; corregir Kuartz y validar la transición.
 
 - [x] Mostrar la ficha de handover en el detalle de cotización para Administración y Vendedor/KAM; conservar acceso de Operaciones y aislamiento por empresa.
 
