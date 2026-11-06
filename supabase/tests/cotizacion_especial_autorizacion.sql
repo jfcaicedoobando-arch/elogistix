@@ -31,7 +31,8 @@ BEGIN
      AND autorizacion_motivo='Cliente especial: no requiere autorización') THEN
     RAISE EXCEPTION 'QA0037: authenticated automatic authorization/margin failed';
   END IF;
-  SELECT id INTO STRICT v_handover FROM public.cotizacion_handovers WHERE cotizacion_id=v_cot AND coordinador_id=v_coord;
+  -- Main0038 assigns special clients to the quote creator, not the round-robin coordinator.
+  SELECT id INTO STRICT v_handover FROM public.cotizacion_handovers WHERE cotizacion_id=v_cot AND coordinador_id=v_actor;
   BEGIN
     PERFORM public._cotizacion_margen_pct(v_cot);
     RAISE EXCEPTION 'QA0037: private helper exposed';

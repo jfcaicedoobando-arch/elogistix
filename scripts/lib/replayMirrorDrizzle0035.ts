@@ -29,6 +29,34 @@ function verificarFuentePosterior(sources: ReadonlyMap<string, string>): void {
     !== "e398f843fa18c56f4cfd222d6329c24c3e259c406b817dbac2d7bab5fbb62eb0") {
     throw new Error("Drizzle0035: unreviewed later source");
   }
+  // Reviewed0038 changes coordinator assignment, never either modeled target.
+  const coordinator = sources.get("0038_coordinador_fijo_por_cliente.sql");
+  if (!coordinator || createHash("sha256").update(coordinator).digest("hex")
+    !== "6df25cd241868aea34f5d245db90ddc7de931b0fcce5268795eaf22706802c93") {
+    throw new Error("Drizzle0035: unreviewed later source");
+  }
+  // Reviewed0039 only replaces the margin helper, never either modeled target.
+  const margin = sources.get("0039_cotizacion_margen_moneda_homogenea.sql");
+  if (!margin || createHash("sha256").update(margin).digest("hex")
+    !== "4d20a86450c946c2d73845dbf41ff93d4fb93490243f8967737d1165bd163f79") {
+    throw new Error("Drizzle0035: unreviewed later source");
+  }
+}
+
+function verificarOrdenJournal(sources: ReadonlyMap<string, string>, journal: JournalEntry[]): void {
+  // The caller verifies every isolated source/mirror against HISTORY. Require
+  // the actual current journal order too; a later migration needs fresh review.
+  const current = journal.slice(26);
+  const ordered = [...sources.keys()].filter(file => Number(file.slice(0, 4)) >= 26);
+  if (journal.length !== 40 || current.some((entry, offset) => entry.idx !== offset + 26
+    || `${entry.tag}.sql` !== ordered[offset] || entry.when <= journal[entry.idx - 1].when)
+    || current.length !== ordered.length || journal[35].tag + ".sql" !== PATCH_0035
+    || journal[36].tag !== "0036_cotizacion_handover_tenant_scope"
+    || journal[37].tag !== "0037_cotizacion_especial_trigger_permissions"
+    || journal[38].tag !== "0038_coordinador_fijo_por_cliente"
+    || journal[39].tag !== "0039_cotizacion_margen_moneda_homogenea") {
+    throw new Error("Drizzle0035: unsupported source/journal order");
+  }
 }
 
 export function aplicarDrizzle0035(index: Index, sources: ReadonlyMap<string, string>, journal: JournalEntry[]): Index {
@@ -36,17 +64,7 @@ export function aplicarDrizzle0035(index: Index, sources: ReadonlyMap<string, st
   if (!sql || createHash("sha256").update(sql).digest("hex") !== SOURCE_HASH) {
     throw new Error("Drizzle0035: unsupported or missing patch source");
   }
-  // The caller verifies every isolated source/mirror against HISTORY. Require
-  // the actual current journal order too; a later migration needs fresh review.
-  const current = journal.slice(26);
-  const ordered = [...sources.keys()].filter(file => Number(file.slice(0, 4)) >= 26);
-  if (journal.length !== 38 || current.some((entry, offset) => entry.idx !== offset + 26
-    || `${entry.tag}.sql` !== ordered[offset] || entry.when <= journal[entry.idx - 1].when)
-    || current.length !== ordered.length || journal[35].tag + ".sql" !== PATCH_0035
-    || journal[36].tag !== "0036_cotizacion_handover_tenant_scope"
-    || journal[37].tag !== "0037_cotizacion_especial_trigger_permissions") {
-    throw new Error("Drizzle0035: unsupported source/journal order");
-  }
+  verificarOrdenJournal(sources, journal);
   verificarFuentePosterior(sources);
   const result = new Map(index);
   for (const patch of patches) {

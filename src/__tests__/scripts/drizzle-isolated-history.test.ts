@@ -3,6 +3,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, describe, expect, it } from "vitest";
 import { HISTORY, listIsolatedHistory, readIsolatedDrizzleReplay } from "../../../scripts/ci/drizzle-history/control.mjs";
+import { extraerFunciones } from "../../../scripts/lib/replayMirrorFunctions";
 import { scanDrizzleReplay, type DrizzleReplayEntry } from "../../../scripts/lib/audit-drizzle-replay";
 
 const roots: string[] = [];
@@ -34,8 +35,10 @@ describe("isolated Drizzle history is not deployment-eligible", () => {
       "0032_cliente_especial_sin_autorizacion.sql", "0033_handover_embarque_al_aceptar.sql",
       "0034_prospecto_solo_borrador.sql", "0035_cotizacion_aceptada_hasta_confirmar_embarque.sql", "0036_cotizacion_handover_tenant_scope.sql",
       "0037_cotizacion_especial_trigger_permissions.sql",
+      "0038_coordinador_fijo_por_cliente.sql",
+      "0039_cotizacion_margen_moneda_homogenea.sql",
     ]);
-    expect(readIsolatedDrizzleReplay().size).toBe(15);
+    expect(readIsolatedDrizzleReplay().size).toBe(17);
     const archive = paths[1].replace("0022_refacturar_proforma_abre_edicion.sql", "meta/_journal.json");
     expect(JSON.parse(read(archive)).entries[22]).toMatchObject({ idx: 22, when: 1792518064767, tag: "0022_refacturar_proforma_abre_edicion" });
     expect(JSON.parse(read("drizzle/migrations/meta/_journal.json")).entries[22].tag).toBe("0022_cotizacion_comercial");
@@ -49,7 +52,7 @@ describe("isolated Drizzle history is not deployment-eligible", () => {
   it("reconstructs the new sources in journal order without rewriting immutable SQL", () => {
     const current = HISTORY.slice(4);
     const journal = JSON.parse(read("drizzle/migrations/meta/_journal.json"));
-    expect(current.map(item => item.file)).toEqual(journal.entries.slice(26, 38).map(
+    expect(current.map(item => item.file)).toEqual(journal.entries.slice(26, 40).map(
       (entry: { tag: string }) => `${entry.tag}.sql`,
     ));
     for (const item of current) {
@@ -90,6 +93,39 @@ describe("isolated Drizzle history is not deployment-eligible", () => {
     expect(journal[37]).toEqual({ idx: 37, version: "7", when: 1793990589448,
       tag: "0037_cotizacion_especial_trigger_permissions", breakpoints: true });
     expect(journal[37].when).toBeGreaterThan(journal[36].when);
+  });
+
+  it("preserves the upstream coordinator migration before the unapplied margin fix", () => {
+    const journal = JSON.parse(read("drizzle/migrations/meta/_journal.json")).entries;
+    const special = JSON.parse(read("drizzle/migrations/meta/0037_snapshot.json"));
+    const coordinator = JSON.parse(read("drizzle/migrations/meta/0038_snapshot.json"));
+    const margin = JSON.parse(read("drizzle/migrations/meta/0039_snapshot.json"));
+    expect(coordinator.prevId).toBe(special.id);
+    expect(margin.prevId).toBe(coordinator.id);
+    expect(margin.id).not.toBe(coordinator.id);
+    expect(journal[38]).toEqual({ idx: 38, version: "7", when: 1794002479398,
+      tag: "0038_coordinador_fijo_por_cliente", breakpoints: true });
+    expect(journal[39]).toEqual({ idx: 39, version: "7", when: 1794002479399,
+      tag: "0039_cotizacion_margen_moneda_homogenea", breakpoints: true });
+    expect(journal[38].when).toBeGreaterThan(journal[37].when);
+    expect(journal[39].when).toBeGreaterThan(journal[38].when);
+    expect(read("supabase/tests/_guards_manifest.txt").split("\n")).toContain(
+      "supabase/tests/cotizacion_margen_mxn_sin_tc.sql",
+    );
+  });
+
+  it("matches only the reviewed margin helper in the independently regenerated baseline", () => {
+    const source = extraerFunciones(read("drizzle/migrations/0039_cotizacion_margen_moneda_homogenea.sql"));
+    const baseline = extraerFunciones(read("supabase/schema/baseline.sql").replaceAll(
+      "CREATE FUNCTION public.", "CREATE OR REPLACE FUNCTION public.",
+    ));
+    expect(source.map(definition => definition.firma)).toEqual(["_cotizacion_margen_pct(uuid)"]);
+    // pg_dump quotes the exact GUC identifiers; preserve every other attribute/body byte.
+    const dumpedSource = source[0].cuerpo.replace(
+      "SET search_path TO pg_catalog, public, pg_temp AS",
+      "SET search_path TO 'pg_catalog', 'public', 'pg_temp' AS",
+    );
+    expect(baseline.find(definition => definition.firma === source[0].firma)?.cuerpo).toBe(dumpedSource);
   });
 
   it.each(HISTORY.slice(4))("pins source and fixture bytes for $file", item => {

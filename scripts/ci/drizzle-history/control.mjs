@@ -13,7 +13,7 @@ export const HISTORY = [
   { file: `${ARCHIVE}/0022_refacturar_proforma_abre_edicion.sql`, sha256: '8b4272fdc0abdbbbedac41c46e28694f611a59c240e0509bdf02ec2f8b9446fa' },
   { file: '0022_cotizacion_comercial.sql', sha256: '5cc034df0035d1f9b1722aa9bfad12ff68965bde22273500f55903bf9b60ed38', eligibleName: '20261026184900_replay_cotizacion_comercial.sql' },
   { file: '0023_margen_minimo_utilidad_rpc.sql', sha256: 'b106eb27b920f2d34825e9141a46d2ed51943c4ccad69cca8c2f970d2348c86a', eligibleName: '20261026185000_replay_margen_minimo_utilidad_rpc.sql' },
-  // Current 0026–0037 follow the earlier isolated sources in journal order.
+  // Current 0026–0039 follow the earlier isolated sources in journal order.
   { file: '0026_comisiones_recalcular_al_asignar_vendedora.sql', sha256: '5076f939bde9c6fe4bd2798f5690c8163c636165ec9ced561af170bb986f5e03', eligibleName: '20261106000000_replay_comisiones_recalcular_al_asignar_vendedora.sql' },
   { file: '0027_clientes_tipo_cliente.sql', sha256: '5a325b83b2365e11ceb2d0ce3c5796a645b6ae4e991752b0b782d6c589b13be4', eligibleName: '20261106010000_replay_clientes_tipo_cliente.sql' },
   { file: '0028_pricing_tipo_operacion_sector.sql', sha256: 'ea21108f86701bccffa72615886df94d9538825a37d938cda5e2b496186f5eb0', eligibleName: '20261106020000_replay_pricing_tipo_operacion_sector.sql' },
@@ -27,6 +27,8 @@ export const HISTORY = [
   { file: '0035_cotizacion_aceptada_hasta_confirmar_embarque.sql', sha256: '9565c53c94e45d33bdf96242937dbaa0036dd7b122f0b7018739b0fe5128c277', eligibleName: '20261106090000_replay_cotizacion_aceptada_hasta_confirmar_embarque.sql' },
   { file: '0036_cotizacion_handover_tenant_scope.sql', sha256: 'a72308bf9b13502051fa0b212c43c81a4a69589cd5dc4ac0bec249f805c5ce1a', eligibleName: '20261106100000_cotizacion_handover_tenant_scope.sql' },
   { file: '0037_cotizacion_especial_trigger_permissions.sql', sha256: 'e398f843fa18c56f4cfd222d6329c24c3e259c406b817dbac2d7bab5fbb62eb0', eligibleName: '20261106110000_cotizacion_especial_trigger_permissions.sql' },
+  { file: '0038_coordinador_fijo_por_cliente.sql', sha256: '6df25cd241868aea34f5d245db90ddc7de931b0fcce5268795eaf22706802c93', eligibleName: '20261106120000_coordinador_fijo_por_cliente.sql' },
+  { file: '0039_cotizacion_margen_moneda_homogenea.sql', sha256: '4d20a86450c946c2d73845dbf41ff93d4fb93490243f8967737d1165bd163f79', eligibleName: '20261106130000_cotizacion_margen_moneda_homogenea.sql' },
 ];
 const ARCHIVED_METADATA = [
   [`${ARCHIVE}/meta/0022_snapshot.json`, '002a1cff39197fe3431f23193a4229e1c845cbcd0ab5eaa074efded812b0081d'],
