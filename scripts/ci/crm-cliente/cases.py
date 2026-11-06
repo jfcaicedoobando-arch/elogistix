@@ -45,7 +45,8 @@ BEGIN
 END $helper$;
 """
 
-def run(context, m):
+def run(context, m, *, quote_stage='Aceptada'):
+    m.require(quote_stage in ('Aceptada', 'Borrador'), 'Explicit historical/current quote stage required')
     m.require(context.database.startswith('crm_prospecto_kam_'), 'Owned adapter clone required')
     h = m.Harness(context)
     record = {'status': 'running', 'source_commit': context.source_commit, 'cases': [], 'events': []}
@@ -92,8 +93,8 @@ def run(context, m):
             f['quote']=str(uuid.uuid4())
             q=m.literal
             created=h.query("BEGIN; INSERT INTO public.cotizaciones(id,organization_id,folio,modo,tipo,oportunidad_id,es_prospecto,prospecto_empresa,created_by) VALUES ("+
-                    ','.join((q(f['quote']),q(f['org']),q('CRM-QA-'+f['quote']),q('Marítimo'),q('Importación'),q(f['op']),"true",q('Prospecto identity'),q(f['actor'])))+"); "
-                    "UPDATE public.cotizaciones SET estado='Aceptada' WHERE id="+q(f['quote'])+"; "
+                    ','.join((q(f['quote']),q(f['org']),q('CRM-QA-'+f['quote']),q('Marítimo'),q('Importación'),q(f['op']),"true",q('Prospecto identity'),q(f['actor'])))+"); " +
+                    ("UPDATE public.cotizaciones SET estado='Aceptada' WHERE id="+q(f['quote'])+"; " if quote_stage == 'Aceptada' else "") +
                     "SELECT jsonb_build_object('lead',lead_id) FROM public.crm_oportunidades WHERE id="+q(f['op'])+"; COMMIT;",'quote-fixture')
             f['lead']=created['lead']
         writer(f)

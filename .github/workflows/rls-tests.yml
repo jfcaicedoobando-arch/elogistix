@@ -189,6 +189,9 @@ jobs:
       # migraciones posteriores.
       - name: Preparar BD (bootstrap + squash + replay de migraciones)
         env:
+          CRM_IDENTITY_CI: '1'
+          CRM_PROSPECTO_KAM_DISPOSABLE: '1'
+          CRM_PROSPECTO_KAM_POSTGRES_SERVICE_ID: ${{ job.services.postgres.id }}
           AUD54_CI: '1'
           ISOLATED_QA_DB: '1'
           FINANCIAL49_CI: '1'
@@ -249,14 +252,17 @@ jobs:
           CRM_PROSPECTO_KAM_POSTGRES_SERVICE_ID: ${{ job.services.postgres.id }}
         run: |
           python3 scripts/ci/crm-cliente/test_static.py -v
-          python3 scripts/ci/crm-cliente/run-actions.py
+          python3 scripts/ci/crm-cliente/run-final-actions.py
+          python3 scripts/ci/crm-cliente/verify-evidence.py both
 
       - name: CRM client identity evidence
         if: always()
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: crm-cliente-concurrency-${{ github.run_attempt }}
-          path: reports/crm-cliente-concurrency/
+          path: |
+            reports/crm-cliente-concurrency/
+            reports/crm-cliente-final-concurrency/
           if-no-files-found: warn
           retention-days: 7
 
