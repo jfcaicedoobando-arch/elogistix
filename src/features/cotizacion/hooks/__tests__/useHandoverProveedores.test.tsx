@@ -41,7 +41,7 @@ describe("useHandoverProveedores", () => {
     await act(async () => { await result.current.refetch(); });
     expect(mocks.fetchHandoverProveedores).not.toHaveBeenCalled();
   });
-  it("oculta datos previos y bloquea lecturas al cambiar de empresa", async () => {
+  it("oculta proveedores previos y bloquea su lectura al cambiar de empresa", async () => {
     const { result, rerender } = setup();
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
     mocks.organizationId = "org2";
@@ -62,7 +62,7 @@ describe("useHandoverProveedores", () => {
     await act(async () => { await result.current.refetch(); });
     expect(mocks.fetchHandoverProveedores).not.toHaveBeenCalled();
   });
-  it("no consulta cuando falta empresa activa", async () => {
+  it("no consulta proveedores cuando falta empresa activa", async () => {
     mocks.organizationId = null;
     const { result } = setup();
     await act(async () => { await result.current.refetch(); });

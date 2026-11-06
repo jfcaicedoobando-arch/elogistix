@@ -213,3 +213,35 @@ byte con el baseline conciliado, SHA-256
 Frente al baseline anterior sólo cambian las dos funciones y el trigger de
 main0035; no cambian ACL, comisiones ni margen. El fix separado para la ruta de
 cliente especial no se incorpora. No se conectó ni se migró ninguna base real.
+
+
+### Auditor estático de los espejos después de main0035
+
+El espejo `sync_cotizacion_embarque_link.sql` de main carecía del terminador
+externo `;`. Se corrige sólo el espejo, sin modificar la migración histórica
+ni relajar el parser. Esa corrección expuso una segunda limitación: el auditor
+sólo indexaba declaraciones de Supabase y omitía el patch dinámico de Drizzle0035.
+
+`replayMirrorDrizzle0035.ts` modela exclusivamente ese patch revisado. Verifica
+su SHA-256 literal, las fuentes/espejos aislados, el orden actual del journal,
+las firmas y migraciones Supabase vigentes y la huella completa de las dos
+preimágenes. Deriva los cuerpos con las sustituciones de0035 (una ocurrencia
+en `crear_embarque_borrador_core` y dos en `sync_cotizacion_embarque_link`).
+Conserva los atributos completos de cada declaración. No lee el espejo ni el
+snapshot para fabricar el resultado y no añade excepciones al baseline del
+auditor. Cambios de fuente, preimagen, orden o futuras migraciones requieren
+revisión: el modelo falla cerrado. No es un intérprete general de DO, ni
+certifica triggers, ACL o el estado de una base remota.
+
+Las regresiones comparan el resultado derivado con los espejos y con el
+baseline regenerado en PostgreSQL17.9, además de rechazar mutaciones de fuente,
+preimagen, definición posterior, orden, timestamp y salida. El replay real
+225/225 guards y66/66 RLS sigue siendo la evidencia de ejecución SQL.
+
+Validación de esta corrección:48/48 pruebas de parser/modelo, TypeScript app,
+ESLint de archivos cambiados y `git diff --check` en verde. Pasan las seis
+CLIs `audit:manifest`, `audit:schema`, `audit:schema-functions`,
+`audit:migrations`, `audit:replay-mirror` y `audit:rpc-sync`. Esta última se
+corrió sin PGHOST, sólo estática; no se consultó un catálogo remoto. El auditor
+de espejos verifica257 firmas en228 archivos, manteniendo únicamente las dos
+excepciones históricas originales.

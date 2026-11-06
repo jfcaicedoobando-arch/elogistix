@@ -61,7 +61,11 @@ function validarExcepcion(entrada: EntradaBaseline, espejo: DefinicionFuncion,
 
 export function auditarReplayMirror(espejos: ReadonlyMap<string, string>,
   migraciones: ReadonlyMap<string, string>, baseline: EntradaBaseline[]) {
-  const indice = indexarMigraciones(migraciones);
+  return auditarIndiceReplayMirror(espejos, indexarMigraciones(migraciones), baseline);
+}
+
+export function auditarIndiceReplayMirror(espejos: ReadonlyMap<string, string>,
+  indice: ReturnType<typeof indexarMigraciones>, baseline: EntradaBaseline[]) {
   const entradas = new Map(baseline.map((entry) => [`${entry.espejo}::${entry.firma}`, entry]));
   const usadas = new Set<string>();
   const violaciones: string[] = [];
