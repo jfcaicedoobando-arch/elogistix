@@ -67,3 +67,37 @@ El candidato conservó los datos ficticios previos al forward; los esquemas, dat
 A08 incluye el inventario OID exacto de los 14 helpers privados y 56 comprobaciones de ejecución denegada. El head definitivo debe validar todos los hashes mediante la lane de Actions. La evidencia de CI se guarda en `reports/h14-integrity-ci/` y en el artifact `h14-integrity-<run_attempt>`.
 
 Las observaciones SQL, RLS y SSR no certifican el recorrido HTTP/JWT firmado ni un despliegue. Los criterios de estados existentes se conservan; las decisiones de negocio adicionales se documentan aparte del éxito de la regresión.
+
+## Actualización del companion de CI: preservación de ACL de margen
+
+El post-migrate actual difiere del companion previamente revisado únicamente en
+cuatro líneas: dos comentarios, un REVOKE de EXECUTE al helper de margen para
+`authenticated` y `service_role`, y la inclusión de su aserción owner-only.
+Estas líneas deshacen sólo los grants artificiales anteriores del harness.
+No modifican el cálculo, configuración comercial, migraciones ni permisos reales.
+
+La prueba de contrato retira ese bloque exacto y exige que los bytes restantes
+reproduzcan el SHA-256 anterior
+`13d2fb58654d82572996565b74fdb57245d43d22676b5838c92f918f3bedac18`.
+El companion actual tiene SHA-256
+`5f22bbf9bbcd12da5a7041883054fcbde7e45a1bc3d8b28cd898c2d0b4e6aece`.
+Su aserción transitiva `_ci_check_cotizacion_margen_acl.sql` también queda fijada
+por un hash único y una ruta explícita; cambiarla provoca rechazo del contrato.
+
+Estos companions se verifican como procedencia del checkout actual, pero H14
+**no los ejecuta** sobre su base histórica. No pertenecen a `SOURCE_FILES`, a la
+allowlist del replay ni a `bundle_paths`; `post_migrate_executed` sigue siendo
+false. El replay de BASE, migraciones candidatas, fixtures y casos H14 permanecen
+intactos. No se intenta revocar ni comprobar un helper de 0031 inexistente en
+esa etapa histórica.
+
+Validación local del ajuste: 13 pruebas estáticas, carga completa de todos los
+hashes y rechazo de una mutación del companion transitivo. No se afirma una
+nueva ejecución integral del adaptador Docker H14: ese transporte no está
+disponible localmente y el commit BASE no está en este checkout reducido.
+La ejecución completa debe quedar acreditada por el workflow remoto.
+
+Inventario de otros pins: el índice de compatibilidad de
+`acceptance-candidate-review` pertenece a otra rama/base de revisión congelada;
+no se actualiza para este PR. Tampoco se reescriben hashes en evidencias
+históricas bajo `docs/qa/`.
