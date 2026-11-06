@@ -21,6 +21,16 @@ const patches = [
     next: "NEW.estado NOT IN ('Borrador'::estado_embarque, 'Cotización'::estado_embarque, 'Cancelado'::estado_embarque)", occurrences: 2 },
 ] as const;
 
+function verificarFuentePosterior(sources: ReadonlyMap<string, string>): void {
+  // Reviewed0037 changes only the authorization guard and margin search_path;
+  // it must not redefine either modeled0035 target. Pin exact bytes independently.
+  const special = sources.get("0037_cotizacion_especial_trigger_permissions.sql");
+  if (!special || createHash("sha256").update(special).digest("hex")
+    !== "e398f843fa18c56f4cfd222d6329c24c3e259c406b817dbac2d7bab5fbb62eb0") {
+    throw new Error("Drizzle0035: unreviewed later source");
+  }
+}
+
 export function aplicarDrizzle0035(index: Index, sources: ReadonlyMap<string, string>, journal: JournalEntry[]): Index {
   const sql = sources.get(PATCH_0035);
   if (!sql || createHash("sha256").update(sql).digest("hex") !== SOURCE_HASH) {
@@ -30,12 +40,14 @@ export function aplicarDrizzle0035(index: Index, sources: ReadonlyMap<string, st
   // the actual current journal order too; a later migration needs fresh review.
   const current = journal.slice(26);
   const ordered = [...sources.keys()].filter(file => Number(file.slice(0, 4)) >= 26);
-  if (journal.length !== 37 || current.some((entry, offset) => entry.idx !== offset + 26
+  if (journal.length !== 38 || current.some((entry, offset) => entry.idx !== offset + 26
     || `${entry.tag}.sql` !== ordered[offset] || entry.when <= journal[entry.idx - 1].when)
     || current.length !== ordered.length || journal[35].tag + ".sql" !== PATCH_0035
-    || journal[36].tag !== "0036_cotizacion_handover_tenant_scope") {
+    || journal[36].tag !== "0036_cotizacion_handover_tenant_scope"
+    || journal[37].tag !== "0037_cotizacion_especial_trigger_permissions") {
     throw new Error("Drizzle0035: unsupported source/journal order");
   }
+  verificarFuentePosterior(sources);
   const result = new Map(index);
   for (const patch of patches) {
     const previous = index.get(patch.signature);

@@ -23,5 +23,7 @@
   "supabase/tests/rls/history/demo-prefreeze/test_rls_demo_seed_tenant_guard.sql": "Literal pre-freeze suite; two positive isolated clone executions required by reports/demo-guard-prefreeze/actions-result.json before 20261015050000",
   "supabase/tests/selector148_disabled_gate.sql": "Serial selector148 clone contract; not a parallel guard",
   "supabase/tests/rls/_ci_check_handover_tenant_acl.sql": "Product handover ACL assertion after verified isolated Drizzle replay and before CI blanket grants, executed by rls-prepare-db.sh and local-verify.sh",
-  "supabase/tests/rls/_ci_check_cotizacion_margen_acl.sql": "Exact owner-only Drizzle 0031 helper ACL assertion before and after undoing CI blanket EXECUTE grants; no margin logic or configuration changes"
+  "supabase/tests/rls/_ci_check_cotizacion_margen_acl.sql": "Exact owner-only Drizzle 0031 helper ACL assertion before and after undoing CI blanket EXECUTE grants; no margin logic or configuration changes",
+  "supabase/tests/rls/_ci_check_cotizacion_especial_acl.sql": "Exact owner-only Drizzle0037 trigger ACL and trusted search paths, checked before and after blanket CI grants",
+  "supabase/tests/rls/_ci_preserve_cotizacion_especial_acl.sql": "Undo only blanket CI EXECUTE grants on the Drizzle0037 trigger and assert its exact private boundary"
 }

@@ -2167,10 +2167,15 @@ BEGIN
   RETURN NEW;
 END $$;
 CREATE FUNCTION public._cotizacion_autorizacion_guard() RETURNS trigger
-    LANGUAGE plpgsql
-    SET search_path TO 'public'
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 'pg_catalog', 'public', 'pg_temp'
     AS $$
 BEGIN
+  -- This owner-only entry point is valid only as the existing row trigger.
+  IF TG_RELID <> 'public.cotizaciones'::regclass OR TG_LEVEL <> 'ROW'
+     OR TG_WHEN <> 'BEFORE' OR TG_OP NOT IN ('INSERT', 'UPDATE') THEN
+    RAISE EXCEPTION 'LC_COT_TRIGGER_CONTEXTO_INVALIDO' USING ERRCODE = '42501';
+  END IF;
   IF TG_OP = 'INSERT' THEN
     NEW.autorizacion_solicitada_at := NULL; NEW.autorizada_at := NULL; NEW.autorizada_por := NULL;
     NEW.margen_autorizado_pct := NULL; NEW.autorizacion_motivo := NULL;
@@ -2190,9 +2195,17 @@ BEGIN
     NEW.autorizacion_motivo := NULL; NEW.autorizacion_solicitada_at := NULL;
   END IF;
   IF OLD.estado IN ('Borrador','Solicitada') AND NEW.estado IN ('Enviada','Aceptada') AND NEW.autorizada_at IS NULL THEN
+    -- Never use a changed primary key/tenant to select another quote's margin.
+    IF NEW.organization_id IS DISTINCT FROM OLD.organization_id OR NEW.id IS DISTINCT FROM OLD.id THEN
+      RAISE EXCEPTION 'LC_COT_NO_ENCONTRADA' USING ERRCODE = '42501';
+    END IF;
     -- Clientes especiales (tarifa propia) no piden autorización: se registra como autorizada automáticamente.
-    IF EXISTS (SELECT 1 FROM clientes c WHERE c.id = NEW.cliente_id
+    IF EXISTS (SELECT 1 FROM public.clientes c WHERE c.id = NEW.cliente_id
                AND c.organization_id = NEW.organization_id AND c.tipo_cliente = 'especial') THEN
+      -- Table UPDATE still uses caller RLS. Bound the privileged margin lookup as well.
+      IF auth.uid() IS NULL OR NEW.organization_id IS DISTINCT FROM public.org_scope() THEN
+        RAISE EXCEPTION 'LC_COT_NO_ENCONTRADA' USING ERRCODE = '42501';
+      END IF;
       NEW.autorizada_at := now();
       NEW.autorizada_por := auth.uid();
       NEW.margen_autorizado_pct := public._cotizacion_margen_pct(NEW.id);
@@ -2331,7 +2344,7 @@ CREATE FUNCTION public._cotizacion_es_autorizador(p_org uuid) RETURNS boolean
 $$;
 CREATE FUNCTION public._cotizacion_margen_pct(p_id uuid) RETURNS numeric
     LANGUAGE plpgsql STABLE SECURITY DEFINER
-    SET search_path TO 'public'
+    SET search_path TO 'pg_catalog', 'public', 'pg_temp'
     AS $$
 DECLARE c record; v_venta numeric := 0; v_costo numeric := 0; v_tc numeric; r record;
 BEGIN
@@ -41872,8 +41885,7 @@ GRANT ALL ON FUNCTION public._convertir_proformas_insertar_conceptos(p_factura_i
 GRANT ALL ON FUNCTION public._convertir_proformas_insertar_conceptos(p_factura_id uuid, p_proforma_ids uuid[], p_org uuid, p_es_consolidada boolean, p_moneda public.moneda) TO authenticated;
 REVOKE ALL ON FUNCTION public._costeo_tarifa_solicitud_guard() FROM PUBLIC;
 GRANT ALL ON FUNCTION public._costeo_tarifa_solicitud_guard() TO service_role;
-GRANT ALL ON FUNCTION public._cotizacion_autorizacion_guard() TO authenticated;
-GRANT ALL ON FUNCTION public._cotizacion_autorizacion_guard() TO service_role;
+REVOKE ALL ON FUNCTION public._cotizacion_autorizacion_guard() FROM PUBLIC;
 REVOKE ALL ON FUNCTION public._cotizacion_bloquear_cierre_con_embarque() FROM PUBLIC;
 GRANT ALL ON FUNCTION public._cotizacion_bloquear_cierre_con_embarque() TO authenticated;
 GRANT ALL ON FUNCTION public._cotizacion_bloquear_cierre_con_embarque() TO service_role;
