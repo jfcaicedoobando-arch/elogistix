@@ -2254,20 +2254,35 @@ DECLARE
   v_coord uuid;
   v_fk text;
   v_msg text;
+  v_tipo text;
+  v_fijo uuid;
 BEGIN
   IF NEW.autorizada_at IS NULL OR OLD.autorizada_at IS NOT NULL THEN RETURN NEW; END IF;
   IF EXISTS (SELECT 1 FROM cotizacion_handovers WHERE cotizacion_id = NEW.id) THEN RETURN NEW; END IF;
-  -- Serializa el turno por organización para que dos autorizaciones simultáneas no caigan al mismo coordinador.
   PERFORM pg_advisory_xact_lock(hashtext('handover:' || NEW.organization_id::text));
-  SELECT m.user_id INTO v_coord
-  FROM organization_members m
-  LEFT JOIN LATERAL (
-    SELECT max(h.created_at) AS ultima FROM cotizacion_handovers h
-    WHERE h.organization_id = m.organization_id AND h.coordinador_id = m.user_id
-  ) u ON true
-  WHERE m.organization_id = NEW.organization_id AND m.role = 'coordinador_logistico'
-  ORDER BY u.ultima NULLS FIRST, m.created_at, m.user_id
-  LIMIT 1;
+  SELECT c.tipo_cliente, c.coordinador_logistico_id INTO v_tipo, v_fijo
+    FROM clientes c WHERE c.id = NEW.cliente_id AND c.organization_id = NEW.organization_id;
+  IF v_tipo = 'especial' THEN
+    -- Clientes especiales: los atiende quien creó la cotización.
+    v_coord := NEW.created_by;
+  ELSIF v_fijo IS NOT NULL AND EXISTS (SELECT 1 FROM organization_members m
+      WHERE m.organization_id = NEW.organization_id AND m.user_id = v_fijo AND m.role = 'coordinador_logistico') THEN
+    v_coord := v_fijo;
+  ELSE
+    SELECT m.user_id INTO v_coord
+    FROM organization_members m
+    LEFT JOIN LATERAL (
+      SELECT max(h.created_at) AS ultima FROM cotizacion_handovers h
+      WHERE h.organization_id = m.organization_id AND h.coordinador_id = m.user_id
+    ) u ON true
+    WHERE m.organization_id = NEW.organization_id AND m.role = 'coordinador_logistico'
+    ORDER BY u.ultima NULLS FIRST, m.created_at, m.user_id
+    LIMIT 1;
+    IF v_coord IS NOT NULL AND NEW.cliente_id IS NOT NULL THEN
+      UPDATE clientes SET coordinador_logistico_id = v_coord
+       WHERE id = NEW.cliente_id AND organization_id = NEW.organization_id;
+    END IF;
+  END IF;
   INSERT INTO cotizacion_handovers (organization_id, cotizacion_id, coordinador_id)
   VALUES (NEW.organization_id, NEW.id, v_coord);
   SELECT CASE WHEN EXISTS (
@@ -2346,25 +2361,50 @@ CREATE FUNCTION public._cotizacion_margen_pct(p_id uuid) RETURNS numeric
     LANGUAGE plpgsql STABLE SECURITY DEFINER
     SET search_path TO 'pg_catalog', 'public', 'pg_temp'
     AS $$
-DECLARE c record; v_venta numeric := 0; v_costo numeric := 0; v_tc numeric; r record;
+DECLARE
+  c record; r record; v_tc numeric;
+  v_venta numeric := 0; v_costo numeric := 0;
+  v_has_mxn boolean := false; v_has_other boolean := false;
 BEGIN
-  SELECT conceptos_venta, tipo_cambio_usd INTO c FROM cotizaciones WHERE id = p_id;
+  SELECT conceptos_venta, tipo_cambio_usd INTO c FROM public.cotizaciones WHERE id = p_id;
   v_tc := NULLIF(c.tipo_cambio_usd, 0);
   FOR r IN SELECT coalesce(e->>'moneda', 'USD') AS moneda,
                   coalesce((e->>'cantidad')::numeric, 0) * coalesce((e->>'precio_unitario')::numeric, 0) AS monto
            FROM jsonb_array_elements(CASE WHEN jsonb_typeof(c.conceptos_venta) = 'array' THEN c.conceptos_venta ELSE '[]'::jsonb END) e
   LOOP
     IF r.moneda = 'MXN' THEN
-      IF v_tc IS NULL THEN RETURN NULL; END IF;
-      v_venta := v_venta + r.monto / v_tc;
-    ELSE v_venta := v_venta + r.monto; END IF;
+      v_has_mxn := v_has_mxn OR r.monto <> 0;
+    ELSE
+      -- Preserve the established non-MXN/default-USD interpretation.
+      v_has_other := v_has_other OR r.monto <> 0;
+    END IF;
   END LOOP;
-  FOR r IN SELECT moneda, coalesce(costo_total, 0) AS monto FROM cotizacion_costos WHERE cotizacion_id = p_id AND deleted_at IS NULL LOOP
+  FOR r IN SELECT moneda, coalesce(costo_total, 0) AS monto
+           FROM public.cotizacion_costos WHERE cotizacion_id = p_id AND deleted_at IS NULL
+  LOOP
     IF r.moneda = 'MXN' THEN
-      IF v_tc IS NULL THEN RETURN NULL; END IF;
-      v_costo := v_costo + r.monto / v_tc;
-    ELSE v_costo := v_costo + r.monto; END IF;
+      v_has_mxn := v_has_mxn OR r.monto <> 0;
+    ELSE
+      v_has_other := v_has_other OR r.monto <> 0;
+    END IF;
   END LOOP;
+  -- Classify before arithmetic: neither an unnecessary FX division in a
+  -- homogeneous quote nor an unnecessary raw subtotal in a mixed quote.
+  IF v_has_mxn AND v_has_other AND v_tc IS NULL THEN RETURN NULL; END IF;
+  -- Preserve historical per-line conversion/order only for effective mixtures.
+    FOR r IN SELECT coalesce(e->>'moneda', 'USD') AS moneda,
+                    coalesce((e->>'cantidad')::numeric, 0) * coalesce((e->>'precio_unitario')::numeric, 0) AS monto
+             FROM jsonb_array_elements(CASE WHEN jsonb_typeof(c.conceptos_venta) = 'array' THEN c.conceptos_venta ELSE '[]'::jsonb END) e
+    LOOP
+      IF v_has_mxn AND v_has_other AND r.moneda = 'MXN' THEN v_venta := v_venta + r.monto / v_tc;
+      ELSE v_venta := v_venta + r.monto; END IF;
+    END LOOP;
+    FOR r IN SELECT moneda, coalesce(costo_total, 0) AS monto
+             FROM public.cotizacion_costos WHERE cotizacion_id = p_id AND deleted_at IS NULL
+    LOOP
+      IF v_has_mxn AND v_has_other AND r.moneda = 'MXN' THEN v_costo := v_costo + r.monto / v_tc;
+      ELSE v_costo := v_costo + r.monto; END IF;
+    END LOOP;
   IF v_venta <= 0 THEN RETURN NULL; END IF;
   RETURN round((v_venta - v_costo) / v_venta * 100, 2);
 END $$;
@@ -6253,6 +6293,14 @@ BEGIN
     RAISE EXCEPTION 'Este proveedor está pendiente de aprobación por Contabilidad' USING ERRCODE='23514'; END IF;
   RETURN NEW;
 END $$;
+CREATE FUNCTION public._puede_asignar_coordinador(p_org uuid) RETURNS boolean
+    LANGUAGE sql STABLE SECURITY DEFINER
+    SET search_path TO 'public'
+    AS $$
+  SELECT public.has_role(auth.uid(), 'super_admin'::app_role) OR EXISTS (
+    SELECT 1 FROM organization_members m WHERE m.organization_id = p_org AND m.user_id = auth.uid()
+      AND m.role::text IN ('gerente_operaciones','admin','admin_org'));
+$$;
 CREATE FUNCTION public._reabrir_entrantes_factura() RETURNS trigger
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
@@ -9704,6 +9752,23 @@ BEGIN
   RETURN v_proforma;
 END;
 $$;
+CREATE FUNCTION public.asignar_coordinador_cliente(p_cliente_id uuid, p_coordinador_id uuid) RETURNS void
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 'public'
+    AS $$
+DECLARE v_org uuid;
+BEGIN
+  SELECT organization_id INTO v_org FROM clientes WHERE id = p_cliente_id;
+  IF v_org IS NULL THEN RAISE EXCEPTION 'LC_CLIENTE_NO_EXISTE: cliente no encontrado' USING ERRCODE = 'P0001'; END IF;
+  IF NOT public._puede_asignar_coordinador(v_org) THEN
+    RAISE EXCEPTION 'LC_SIN_PERMISO: sólo gerente de operaciones o administración' USING ERRCODE = '42501';
+  END IF;
+  IF p_coordinador_id IS NOT NULL AND NOT EXISTS (SELECT 1 FROM organization_members
+      WHERE organization_id = v_org AND user_id = p_coordinador_id AND role = 'coordinador_logistico') THEN
+    RAISE EXCEPTION 'LC_COORDINADOR_INVALIDO: el usuario no es coordinador logístico de la empresa' USING ERRCODE = 'P0001';
+  END IF;
+  UPDATE clientes SET coordinador_logistico_id = p_coordinador_id WHERE id = p_cliente_id;
+END $$;
 CREATE FUNCTION public.assert_factura_viva_para_pago() RETURNS trigger
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
@@ -15712,6 +15777,7 @@ CREATE TABLE public.clientes (
     requiere_autorizacion_cotizacion boolean DEFAULT true NOT NULL,
     requiere_autorizacion_proforma boolean DEFAULT true NOT NULL,
     tipo_cliente text DEFAULT 'general'::text NOT NULL,
+    coordinador_logistico_id uuid,
     CONSTRAINT clientes_limite_credito_mxn_nonneg CHECK (((limite_credito_mxn IS NULL) OR (limite_credito_mxn >= (0)::numeric))),
     CONSTRAINT clientes_tipo_cliente_chk CHECK ((tipo_cliente = ANY (ARRAY['general'::text, 'especial'::text])))
 );
@@ -29842,6 +29908,27 @@ BEGIN
   END IF;
 END;
 $$;
+CREATE FUNCTION public.reasignar_coordinador_handover(p_cotizacion_id uuid, p_coordinador_id uuid) RETURNS void
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 'public'
+    AS $$
+DECLARE v_org uuid; v_folio text;
+BEGIN
+  SELECT h.organization_id, c.folio INTO v_org, v_folio FROM cotizacion_handovers h
+    JOIN cotizaciones c ON c.id = h.cotizacion_id WHERE h.cotizacion_id = p_cotizacion_id;
+  IF v_org IS NULL THEN RAISE EXCEPTION 'LC_HANDOVER_NO_EXISTE: la cotización no tiene handover' USING ERRCODE = 'P0001'; END IF;
+  IF NOT public._puede_asignar_coordinador(v_org) THEN
+    RAISE EXCEPTION 'LC_SIN_PERMISO: sólo gerente de operaciones o administración' USING ERRCODE = '42501';
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM organization_members
+      WHERE organization_id = v_org AND user_id = p_coordinador_id AND role IN ('coordinador_logistico','gerente_operaciones')) THEN
+    RAISE EXCEPTION 'LC_COORDINADOR_INVALIDO: el usuario no pertenece a Operaciones' USING ERRCODE = 'P0001';
+  END IF;
+  UPDATE cotizacion_handovers SET coordinador_id = p_coordinador_id WHERE cotizacion_id = p_cotizacion_id;
+  INSERT INTO notificaciones_internas (organization_id, usuario_id, tipo, titulo, mensaje, enlace, entidad_tipo, entidad_id)
+  VALUES (v_org, p_coordinador_id, 'handover', 'Handover ' || COALESCE(v_folio, '') || ' asignado a ti',
+    'Operaciones te reasignó esta operación.', '/cotizaciones/' || p_cotizacion_id, 'cotizacion', p_cotizacion_id);
+END $$;
 CREATE FUNCTION public.reasignar_pago_factura(p_pago_id uuid, p_factura_destino_id uuid, p_caso_id uuid DEFAULT NULL::uuid, p_ordenante_nombre text DEFAULT NULL::text, p_ordenante_rfc text DEFAULT NULL::text) RETURNS uuid
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
@@ -42120,6 +42207,9 @@ GRANT ALL ON FUNCTION public._proveedor_contacto_principal_unico() TO authentica
 GRANT ALL ON FUNCTION public._proveedor_contacto_principal_unico() TO service_role;
 REVOKE ALL ON FUNCTION public._proveedor_factura_no_provisional() FROM PUBLIC;
 GRANT ALL ON FUNCTION public._proveedor_factura_no_provisional() TO service_role;
+REVOKE ALL ON FUNCTION public._puede_asignar_coordinador(p_org uuid) FROM PUBLIC;
+GRANT ALL ON FUNCTION public._puede_asignar_coordinador(p_org uuid) TO authenticated;
+GRANT ALL ON FUNCTION public._puede_asignar_coordinador(p_org uuid) TO service_role;
 REVOKE ALL ON FUNCTION public._reabrir_entrantes_factura() FROM PUBLIC;
 GRANT ALL ON FUNCTION public._reabrir_entrantes_factura() TO authenticated;
 GRANT ALL ON FUNCTION public._reabrir_entrantes_factura() TO service_role;
@@ -42274,6 +42364,9 @@ GRANT ALL ON TABLE public.proformas TO service_role;
 REVOKE ALL ON FUNCTION public.asignar_conceptos_a_proforma(p_proforma_id uuid, p_concepto_ids uuid[]) FROM PUBLIC;
 GRANT ALL ON FUNCTION public.asignar_conceptos_a_proforma(p_proforma_id uuid, p_concepto_ids uuid[]) TO authenticated;
 GRANT ALL ON FUNCTION public.asignar_conceptos_a_proforma(p_proforma_id uuid, p_concepto_ids uuid[]) TO service_role;
+REVOKE ALL ON FUNCTION public.asignar_coordinador_cliente(p_cliente_id uuid, p_coordinador_id uuid) FROM PUBLIC;
+GRANT ALL ON FUNCTION public.asignar_coordinador_cliente(p_cliente_id uuid, p_coordinador_id uuid) TO authenticated;
+GRANT ALL ON FUNCTION public.asignar_coordinador_cliente(p_cliente_id uuid, p_coordinador_id uuid) TO service_role;
 REVOKE ALL ON FUNCTION public.assert_factura_viva_para_pago() FROM PUBLIC;
 GRANT ALL ON FUNCTION public.assert_factura_viva_para_pago() TO authenticated;
 GRANT ALL ON FUNCTION public.assert_factura_viva_para_pago() TO service_role;
@@ -43226,6 +43319,9 @@ GRANT ALL ON FUNCTION public.reactivar_cotizacion_rpc(p_id uuid) TO service_role
 REVOKE ALL ON FUNCTION public.reactivar_factura_entrante(p_documento_id uuid) FROM PUBLIC;
 GRANT ALL ON FUNCTION public.reactivar_factura_entrante(p_documento_id uuid) TO authenticated;
 GRANT ALL ON FUNCTION public.reactivar_factura_entrante(p_documento_id uuid) TO service_role;
+REVOKE ALL ON FUNCTION public.reasignar_coordinador_handover(p_cotizacion_id uuid, p_coordinador_id uuid) FROM PUBLIC;
+GRANT ALL ON FUNCTION public.reasignar_coordinador_handover(p_cotizacion_id uuid, p_coordinador_id uuid) TO authenticated;
+GRANT ALL ON FUNCTION public.reasignar_coordinador_handover(p_cotizacion_id uuid, p_coordinador_id uuid) TO service_role;
 REVOKE ALL ON FUNCTION public.reasignar_pago_factura(p_pago_id uuid, p_factura_destino_id uuid, p_caso_id uuid, p_ordenante_nombre text, p_ordenante_rfc text) FROM PUBLIC;
 GRANT ALL ON FUNCTION public.reasignar_pago_factura(p_pago_id uuid, p_factura_destino_id uuid, p_caso_id uuid, p_ordenante_nombre text, p_ordenante_rfc text) TO authenticated;
 GRANT ALL ON FUNCTION public.reasignar_pago_factura(p_pago_id uuid, p_factura_destino_id uuid, p_caso_id uuid, p_ordenante_nombre text, p_ordenante_rfc text) TO service_role;

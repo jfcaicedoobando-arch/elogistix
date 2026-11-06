@@ -54,7 +54,11 @@ describe("bounded Drizzle0035 dynamic replay model", () => {
   });
 
   it("rejects unsupported journal order, timestamps, additions and source order", () => {
-    for (const changed of [journal.slice(0, 37), [...journal, { idx: 38, tag: "0038_new", when: journal[37].when + 1 }],
+    for (const changed of [journal.slice(0, 39), [...journal, { idx: 40, tag: "0040_new", when: journal[39].when + 1 }],
+      journal.map((entry: object, idx: number) => idx === 39 ? { ...entry, when: journal[38].when } : entry),
+      journal.map((entry: object, idx: number) => idx === 39 ? { ...entry, tag: "0039_other" } : entry),
+      journal.map((entry: object, idx: number) => idx === 38 ? { ...entry, when: journal[37].when } : entry),
+      journal.map((entry: object, idx: number) => idx === 38 ? { ...entry, tag: "0038_other" } : entry),
       journal.map((entry: object, idx: number) => idx === 37 ? { ...entry, when: journal[36].when } : entry),
       journal.map((entry: object, idx: number) => idx === 37 ? { ...entry, tag: "0037_other" } : entry),
       journal.map((entry: object, idx: number) => idx === 36 ? { ...entry, when: journal[35].when } : entry),
@@ -64,8 +68,7 @@ describe("bounded Drizzle0035 dynamic replay model", () => {
     expect(() => aplicarDrizzle0035(historical, new Map([...sources].reverse()), journal)).toThrow(/order/);
   });
 
-  it("rejects an unreviewed later0037 even when the earlier patch is intact", () => {
-    const key = "0037_cotizacion_especial_trigger_permissions.sql";
+  it.each(["0037_cotizacion_especial_trigger_permissions.sql", "0038_coordinador_fijo_por_cliente.sql", "0039_cotizacion_margen_moneda_homogenea.sql"])("rejects unreviewed later source %s even when the earlier patch is intact", key => {
     const changed = new Map(sources);
     changed.set(key, sources.get(key)! + "\nCREATE OR REPLACE FUNCTION public.sync_cotizacion_embarque_link() RETURNS trigger LANGUAGE plpgsql AS $$ BEGIN RETURN NULL; END $$;");
     expect(() => aplicarDrizzle0035(historical, changed, journal)).toThrow(/later source/);

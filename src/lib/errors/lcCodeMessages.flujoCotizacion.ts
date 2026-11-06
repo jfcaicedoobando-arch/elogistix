@@ -1,5 +1,8 @@
 /** Mensajes del flujo de cotización: plazos de Pricing y autorización interna. */
 export const LC_CODE_MESSAGES_FLUJO_COTIZACION: Record<string, string> = {
+  LC_CLIENTE_NO_EXISTE: "No se encontró el cliente.",
+  LC_COORDINADOR_INVALIDO: "Elige un coordinador válido de la empresa.",
+  LC_HANDOVER_NO_EXISTE: "La cotización todavía no tiene ficha de handover.",
   LC_COT_SIN_AUTORIZACION:
     "La cotización necesita autorización de un administrador o del gerente comercial antes de enviarla o aceptarla.",
   LC_COT_EMBARQUE_VIVO:

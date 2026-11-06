@@ -4,7 +4,7 @@ import { ArrowRightLeft } from "lucide-react";
 import { useAuth } from "@/lib/contexts/AuthContext";
 import { CoordinadorSelect } from "@/components/shared/CoordinadorSelect";
 import { puedeAsignarCoordinador } from "@/lib/access/coordinadorAsignacion";
-import { reasignarCoordinadorHandover } from "@/lib/operaciones/coordinador";
+import { reasignarCoordinadorHandover } from "@/features/operaciones/services";
 import { SectionHeading } from "@/components/shared/SectionHeading";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";

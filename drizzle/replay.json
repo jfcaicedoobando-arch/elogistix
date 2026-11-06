@@ -288,5 +288,21 @@
       "0037_cotizacion_especial_trigger_permissions.sql"
     ],
     "scope": "isolated-ci"
+  },
+  {
+    "file": "0038_coordinador_fijo_por_cliente.sql",
+    "sha256": "6df25cd241868aea34f5d245db90ddc7de931b0fcce5268795eaf22706802c93",
+    "replays": [
+      "0038_coordinador_fijo_por_cliente.sql"
+    ],
+    "scope": "isolated-ci"
+  },
+  {
+    "file": "0039_cotizacion_margen_moneda_homogenea.sql",
+    "sha256": "4d20a86450c946c2d73845dbf41ff93d4fb93490243f8967737d1165bd163f79",
+    "replays": [
+      "0039_cotizacion_margen_moneda_homogenea.sql"
+    ],
+    "scope": "isolated-ci"
   }
 ]
