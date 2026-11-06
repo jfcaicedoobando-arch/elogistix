@@ -26,7 +26,7 @@ const baseProps = {
 
 type AccionesProps = Parameters<typeof CotizacionDetalleAcciones>[0];
 
-function renderAcciones(overrides: Pick<AccionesProps, "estado" | "total" | "rol">) {
+function renderAcciones(overrides: Pick<AccionesProps, "estado" | "total" | "rol"> & Partial<AccionesProps>) {
   const client = new QueryClient({ defaultOptions: { queries: { retry: false }, mutations: { retry: false } } });
   return render(
     <QueryClientProvider client={client}>
@@ -115,3 +115,33 @@ describe("CotizacionDetalleAcciones — permisos espejo de las RPC", () => {
   }
 });
 
+
+
+describe("CotizacionDetalleAcciones — autorización interna agrupada", () => {
+  it("un borrador sin autorización no permite enviar", () => {
+    renderAcciones({ estado: "Borrador", total: 1500, rol: "admin" });
+    expect(screen.queryByRole("button", { name: /marcar como enviada/i })).not.toBeInTheDocument();
+    expect(screen.getByText("Sin autorizar")).toBeInTheDocument();
+  });
+
+  it("conserva el margen mostrado y permite enviar la autorización vigente", () => {
+    renderAcciones({ estado: "Borrador", total: 1500, rol: "admin",
+      autorizacionInterna: { autorizadaAt: "2026-11-01T00:00:00Z", margenAutorizado: 12 } });
+    expect(screen.getByRole("button", { name: /marcar como enviada/i })).toBeInTheDocument();
+    expect(screen.getByText("Autorizada · margen 12 %")).toBeInTheDocument();
+  });
+
+  it("un cliente especial evita la solicitud pero no libera a un prospecto", () => {
+    renderAcciones({ estado: "Borrador", total: 1500, rol: "admin", esProspecto: true,
+      autorizacionInterna: { clienteEspecial: true } });
+    expect(screen.queryByRole("button", { name: /marcar como enviada/i })).not.toBeInTheDocument();
+    expect(screen.getByText("Cliente especial: no requiere autorización")).toBeInTheDocument();
+    expect(screen.queryByText("Sin autorizar")).not.toBeInTheDocument();
+  });
+
+  it("un cliente especial no prospecto puede enviar sin autorización previa", () => {
+    renderAcciones({ estado: "Borrador", total: 1500, rol: "admin",
+      autorizacionInterna: { clienteEspecial: true } });
+    expect(screen.getByRole("button", { name: /marcar como enviada/i })).toBeInTheDocument();
+  });
+});

@@ -5,7 +5,7 @@
  */
 import { useCallback, useMemo, useState } from "react";
 import { Tag } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { TarifaFormFooter } from "./TarifaFormFooter";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { FormDialogShell } from "@/components/shared/FormDialogShell";
@@ -22,7 +22,6 @@ import {
   calcularErrores, camposFaltantes, computeGuardarLabel,
   computeValido, getTituloModal, esTarifaSucia,
 } from "./TarifaForm.helpers";
-import { BotonCancelarTarifa } from "./TarifaFormCancelar";
 import { TarifaPricingFields } from "./TarifaPricingFields";
 import { CotizarGuardarTarifa } from "./CotizarGuardarTarifa";
 import { useTarifaFormReset } from "../hooks/useTarifaFormReset";
@@ -133,19 +132,8 @@ export function TarifaForm({ open, onOpenChange, onSaved, initial, tarifaId, age
       // abajo): en pantallas angostas (≤390px) el footer sólo trae botones,
       // así ninguno de los dos se comprime ni se corta.
       footer={
-        <div className="flex w-full justify-end gap-2">
-          <BotonCancelarTarifa disabled={pendiente} onCerrarSinGuarda={() => onOpenChange(false)} />
-
-          <Button
-            type="submit"
-            form="tarifa-form"
-            disabled={!valido}
-            aria-busy={pendiente || undefined}
-            aria-describedby={tooltipFaltantes ? "tarifa-form-resumen" : undefined}
-            title={pendiente ? "Guardando…" : tooltipFaltantes} loading={pendiente}>
-            {guardarLabel}
-          </Button>
-        </div>
+        <TarifaFormFooter pendiente={pendiente} valido={valido} tooltipFaltantes={tooltipFaltantes}
+          guardarLabel={guardarLabel} onCerrar={() => onOpenChange(false)} />
       }
     >
       <form id="tarifa-form" onSubmit={guardar} className="space-y-4">

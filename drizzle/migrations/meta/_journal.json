@@ -246,6 +246,13 @@
       "when": 1793921590121,
       "tag": "0034_prospecto_solo_borrador",
       "breakpoints": true
+    },
+    {
+      "idx": 35,
+      "version": "7",
+      "when": 1793941200000,
+      "tag": "0035_cotizacion_handover_tenant_scope",
+      "breakpoints": true
     }
   ]
 }

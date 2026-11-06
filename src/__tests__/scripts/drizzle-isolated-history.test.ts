@@ -28,8 +28,13 @@ describe("isolated Drizzle history is not deployment-eligible", () => {
     expect(paths.map(path => path.split("/").at(-1))).toEqual([
       "0021_refacturar_proforma_rpc.sql", "0022_refacturar_proforma_abre_edicion.sql",
       "0022_cotizacion_comercial.sql", "0023_margen_minimo_utilidad_rpc.sql",
+      "0026_comisiones_recalcular_al_asignar_vendedora.sql", "0027_clientes_tipo_cliente.sql",
+      "0028_pricing_tipo_operacion_sector.sql", "0029_cotizacion_handover.sql",
+      "0030_pricing_reglas_plazos.sql", "0031_cotizacion_autorizacion.sql",
+      "0032_cliente_especial_sin_autorizacion.sql", "0033_handover_embarque_al_aceptar.sql",
+      "0034_prospecto_solo_borrador.sql", "0035_cotizacion_handover_tenant_scope.sql",
     ]);
-    expect(readIsolatedDrizzleReplay().size).toBe(3);
+    expect(readIsolatedDrizzleReplay().size).toBe(13);
     const archive = paths[1].replace("0022_refacturar_proforma_abre_edicion.sql", "meta/_journal.json");
     expect(JSON.parse(read(archive)).entries[22]).toMatchObject({ idx: 22, when: 1792518064767, tag: "0022_refacturar_proforma_abre_edicion" });
     expect(JSON.parse(read("drizzle/migrations/meta/_journal.json")).entries[22].tag).toBe("0022_cotizacion_comercial");
@@ -38,6 +43,44 @@ describe("isolated Drizzle history is not deployment-eligible", () => {
     const body = historical.split("AS $function$\n")[1].split("$function$;")[0];
     expect(read("supabase/schema/baseline.sql")).toContain(body);
     expect(historical).not.toContain("public.crear_proforma_atomica(");
+  });
+
+  it("reconstructs the new sources in journal order without rewriting immutable SQL", () => {
+    const current = HISTORY.slice(4);
+    const journal = JSON.parse(read("drizzle/migrations/meta/_journal.json"));
+    expect(current.map(item => item.file)).toEqual(journal.entries.slice(26, 36).map(
+      (entry: { tag: string }) => `${entry.tag}.sql`,
+    ));
+    for (const item of current) {
+      expect(readFileSync(`scripts/ci/drizzle-history/${item.file}`)).toEqual(
+        readFileSync(`drizzle/migrations/${item.file}`),
+      );
+    }
+    // Both preparers execute the verified listing, rather than a disconnected map.
+    for (const preparer of ["scripts/ci/rls-prepare-db.sh", "scripts/db/local-verify.sh"]) {
+      expect(read(preparer)).toContain('node scripts/ci/drizzle-history/control.mjs list');
+      expect(read(preparer)).toContain('done <<< "$isolated_history"');
+    }
+  });
+
+  it.each(HISTORY.slice(4))("pins source and fixture bytes for $file", item => {
+    const root = fixture();
+    for (const prefix of ["scripts/ci/drizzle-history", "drizzle/migrations"]) {
+      const file = join(root, prefix, item.file);
+      writeFileSync(file, read(file) + "\n-- drift");
+    }
+    expect(() => readIsolatedDrizzleReplay(root)).toThrow(/hash mismatch/);
+  });
+
+  it.each(HISTORY.slice(4))("rejects deployment admission and missing fixture for $file", item => {
+    const root = fixture();
+    const eligible = join(root, "supabase/migrations", "20990101000000_renamed.sql");
+    const isolated = join(root, "scripts/ci/drizzle-history", item.file);
+    writeFileSync(eligible, read(isolated));
+    expect(() => readIsolatedDrizzleReplay(root)).toThrow(/deployment-eligible/);
+    rmSync(eligible);
+    rmSync(isolated);
+    expect(() => readIsolatedDrizzleReplay(root)).toThrow();
   });
 
   it("fails closed if a fixture or its source changes, even together", () => {

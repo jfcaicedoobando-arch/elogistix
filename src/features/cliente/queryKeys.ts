@@ -1,5 +1,6 @@
 export const clientes = {
   all: ['clientes'] as const,
+  especiales: (organizationId?: string | null) => ['clientes', 'especiales', organizationId] as const,
   list: (filters: Record<string, unknown>) => ['clientes', 'list', filters] as const,
   detail: (id: string) => ['clientes', id] as const,
   select: ['clientes', 'select'] as const,

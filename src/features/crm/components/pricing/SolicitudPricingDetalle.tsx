@@ -32,14 +32,15 @@ export function SolicitudPricingDetalle({ solicitud: s }: Props) {
   const { effectiveRole, user } = useAuth();
   const { canWriteCotizaciones } = usePermissions();
   const navigate = useNavigate();
+  const userId = user?.id;
   const [editando, setEditando] = useState(false);
   const esPricing = esRolPricing(effectiveRole);
   const { data: opciones = [] } = useOpcionesPricing(s.id);
   const tarifasRespuesta = useTarifasRespuestaPricing(s.id, s.estado === "enviada");
   const editable = esPricing && s.estado === "enviada";
-  const puedeCancelar = solicitudAbierta(s) && (esPricing || s.created_by === user?.id);
-  const puedeEditar = puedeEditarSolicitud(s, user?.id, esPricing);
-  const puedeElegir = puedeUsarRespuesta(s, user?.id, esPricing);
+  const puedeCancelar = solicitudAbierta(s) && (esPricing || s.created_by === userId);
+  const puedeEditar = puedeEditarSolicitud(s, userId, esPricing);
+  const puedeElegir = puedeUsarRespuesta(s, userId, esPricing);
   const puedeCotizar = s.estado === "respondida" && puedeElegir && canWriteCotizaciones;
   const cotizarRespuesta = (tarifaId: string) => {
     // La tarifa ya responde a esta solicitud; cotizar no vuelve a seleccionarla ni cambia su estado.

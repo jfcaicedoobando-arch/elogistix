@@ -36,16 +36,7 @@ interface Props {
   onEdit: () => void;
 }
 
-/**
- * Encabezado del detalle de cliente. v13.571.0 — homologado con proveedor:
- * acción primaria sólida (Editar) + menú "Más acciones", y badges de identidad
- * fiscal/crediticia junto al título.
- * v13.624.1 — muestra el estatus de autorización (cliente de casa) para que el
- * usuario confirme el cambio sin volver a abrir el modal de edición.
- */
-export function ClienteDetalleHeader({ cliente, canEdit, onEdit }: Props) {
-  const navigate = useNavigate();
-  const volver = useVolver("/clientes");
+function identidadCliente(cliente: Cliente) {
   const badges: string[] = [];
   if (cliente.regimen_fiscal) badges.push(`Régimen ${cliente.regimen_fiscal}`);
   if (typeof cliente.dias_credito === "number") badges.push(`${cliente.dias_credito} días de crédito`);
@@ -58,6 +49,20 @@ export function ClienteDetalleHeader({ cliente, canEdit, onEdit }: Props) {
   if (!clienteDeCasa && !requiereCotizacion) badges.push("Cotizaciones sin autorización del cliente");
   if (!clienteDeCasa && !requiereProforma) badges.push("Proformas sin autorización del cliente");
 
+  return { badges, clienteDeCasa };
+}
+
+/**
+ * Encabezado del detalle de cliente. v13.571.0 — homologado con proveedor:
+ * acción primaria sólida (Editar) + menú "Más acciones", y badges de identidad
+ * fiscal/crediticia junto al título.
+ * v13.624.1 — muestra el estatus de autorización (cliente de casa) para que el
+ * usuario confirme el cambio sin volver a abrir el modal de edición.
+ */
+export function ClienteDetalleHeader({ cliente, canEdit, onEdit }: Props) {
+  const navigate = useNavigate();
+  const volver = useVolver("/clientes");
+  const { badges, clienteDeCasa } = identidadCliente(cliente);
 
   return (
     <DetailHeader

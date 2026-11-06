@@ -33,6 +33,8 @@ export function pesoSolicitudAKg(peso?: string | null, unidad?: string | null): 
   const n = Number(String(peso ?? "").replace(/,/g, "").trim());
   if (!Number.isFinite(n) || n <= 0) return null;
   const factor = A_KG[unidad ?? "kg"] ?? 1;
+  // Es peso positivo en kg, no dinero: conserva la cuantización histórica a 0.01 kg.
+  // eslint-disable-next-line no-restricted-syntax -- La regla monetaria no aplica a unidades físicas.
   return Math.round(n * factor * 100) / 100;
 }
 

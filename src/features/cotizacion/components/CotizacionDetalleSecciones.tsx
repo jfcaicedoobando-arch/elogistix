@@ -15,6 +15,13 @@ import { BadgeClienteDeCasa } from "@/components/shared/BadgeClienteDeCasa";
 
 export { CotizacionDetalleEmbarques } from "@/features/cotizacion/components/CotizacionDetalleEmbarques";
 
+interface AutorizacionInterna {
+  autorizadaAt?: string | null;
+  autorizacionSolicitadaAt?: string | null;
+  margenAutorizado?: number | null;
+  clienteEspecial?: boolean;
+}
+
 interface AccionesProps {
   estado: string;
   esProspecto: boolean;
@@ -36,59 +43,25 @@ interface AccionesProps {
   puedeAltaCliente?: boolean;
   /** P0 — la conversión exige oportunidad ligada (cotización ganadora). */
   tieneOportunidad?: boolean;
-  /** Autorización interna (admin / gerente comercial). */
-  autorizadaAt?: string | null;
-  autorizacionSolicitadaAt?: string | null;
-  margenAutorizado?: number | null;
-  /** Cliente especial: el servidor autoriza solo al enviar/aceptar. */
-  clienteEspecial?: boolean;
+  autorizacionInterna?: AutorizacionInterna;
+
 }
 
-export function CotizacionDetalleAcciones({
-  estado, esProspecto, numContenedores, cotizacionId, version,
-  tieneEmbarquesVinculados = false,
-  onCambiarEstado, onAbrirConvertir, total, rol, creadaPor, usuarioActual,
-  requiereAutorizacionCliente = true,
-  puedeAltaCliente = false,
-  tieneOportunidad = false,
-  autorizadaAt = null, autorizacionSolicitadaAt = null, margenAutorizado = null,
-  clienteEspecial = false,
-}: AccionesProps) {
+export function CotizacionDetalleAcciones(props: AccionesProps) {
+  const { estado, numContenedores, cotizacionId, version, onCambiarEstado, onAbrirConvertir, total, rol,
+    requiereAutorizacionCliente = true, autorizacionInterna } = props;
   const [recotizarOpen, setRecotizarOpen] = useState(false);
-  const base = accionesCotizacionPermitidas(estado, total, rol, { creadaPor, usuarioActual }, requiereAutorizacionCliente);
-  // Sin autorización interna no se envía ni se acepta desde captura (la base también lo bloquea).
-  const bloqueada = !clienteEspecial && requiereAutorizacionParaAvanzar(estado, autorizadaAt);
-  // Fase 3b: un prospecto no sale de borrador; primero se da de alta como cliente.
-  const frenada = bloqueada || esProspecto;
-  const acciones = { ...base, enviar: base.enviar && !frenada, aceptar: base.aceptar && !frenada };
+  const { acciones, visibilidad } = resolverAcciones(props);
   const {
     esEnCaptura, mostrarAceptarRechazar, mostrarConvertirCliente,
     mostrarCrearEmbarque, mostrarFaltaVenta, mostrarRecotizar,
-  } = visibilidadAcciones({
-    estado,
-    esProspecto,
-    tieneEmbarquesVinculados,
-    puedeAceptar: acciones.aceptar,
-    puedeRechazar: acciones.rechazar,
-    puedeAltaCliente,
-    tieneOportunidad,
-    tieneVenta: Number(total) > 0,
-    puedeCrearEmbarque: acciones.crearEmbarque,
-    puedeRecotizar: puedeEscribirCotizaciones(rol),
-  });
+  } = visibilidad;
 
   return (
     <div className="flex flex-wrap items-center gap-2">
       {!requiereAutorizacionCliente && <BadgeClienteDeCasa tipo="cotizacion" />}
-      {esEnCaptura && clienteEspecial && (
-        <span className="text-body-sm text-muted-foreground">Cliente especial: no requiere autorización</span>
-      )}
-      {esEnCaptura && !clienteEspecial && (
-        <AutorizacionCotizacion cotizacionId={cotizacionId} estado={estado} autorizadaAt={autorizadaAt}
-          solicitadaAt={autorizacionSolicitadaAt} margenAutorizado={margenAutorizado}
-          puedeSolicitar={puedeEscribirCotizaciones(rol)} puedeAutorizar={esAutorizadorCotizacion(rol)}
-          tieneTotal={Number(total) > 0} />
-      )}
+      {esEnCaptura && <AutorizacionEnCaptura cotizacionId={cotizacionId} estado={estado} rol={rol}
+        total={total} autorizacionInterna={autorizacionInterna} />}
       {esEnCaptura && (
         <AccionesCaptura
           cotizacionId={cotizacionId}
@@ -122,5 +95,47 @@ export function CotizacionDetalleAcciones({
         </>
       )}
     </div>
+  );
+}
+
+function resolverAcciones({ estado, total, rol, creadaPor, usuarioActual, esProspecto,
+  requiereAutorizacionCliente = true, tieneEmbarquesVinculados = false,
+  puedeAltaCliente = false, tieneOportunidad = false, autorizacionInterna = {},
+}: AccionesProps) {
+  const { clienteEspecial = false, autorizadaAt = null } = autorizacionInterna;
+  const base = accionesCotizacionPermitidas(estado, total, rol, { creadaPor, usuarioActual }, requiereAutorizacionCliente);
+  // Sin autorización interna no se envía ni se acepta desde captura (la base también lo bloquea).
+  const bloqueada = !clienteEspecial && requiereAutorizacionParaAvanzar(estado, autorizadaAt);
+  // Fase 3b: un prospecto no sale de borrador; primero se da de alta como cliente.
+  const frenada = bloqueada || esProspecto;
+  const acciones = { ...base, enviar: base.enviar && !frenada, aceptar: base.aceptar && !frenada };
+  const visibilidad = visibilidadAcciones({
+    estado,
+    esProspecto,
+    tieneEmbarquesVinculados,
+    puedeAceptar: acciones.aceptar,
+    puedeRechazar: acciones.rechazar,
+    puedeAltaCliente,
+    tieneOportunidad,
+    tieneVenta: Number(total) > 0,
+    puedeCrearEmbarque: acciones.crearEmbarque,
+    puedeRecotizar: puedeEscribirCotizaciones(rol),
+  });
+
+  return { acciones, visibilidad };
+}
+
+function AutorizacionEnCaptura({ cotizacionId, estado, rol, total, autorizacionInterna = {} }:
+  Pick<AccionesProps, "cotizacionId" | "estado" | "rol" | "total" | "autorizacionInterna">) {
+  const { clienteEspecial = false, autorizadaAt = null, autorizacionSolicitadaAt = null,
+    margenAutorizado = null } = autorizacionInterna;
+  if (clienteEspecial) return (
+    <span className="text-body-sm text-muted-foreground">Cliente especial: no requiere autorización</span>
+  );
+  return (
+    <AutorizacionCotizacion cotizacionId={cotizacionId} estado={estado} autorizadaAt={autorizadaAt}
+      solicitadaAt={autorizacionSolicitadaAt} margenAutorizado={margenAutorizado}
+      puedeSolicitar={puedeEscribirCotizaciones(rol)} puedeAutorizar={esAutorizadorCotizacion(rol)}
+      tieneTotal={Number(total) > 0} />
   );
 }
