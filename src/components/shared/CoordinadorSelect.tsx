@@ -2,7 +2,7 @@ import { useMutation, useQuery } from "@tanstack/react-query";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useOrganization } from "@/lib/contexts/OrganizationContext";
 import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
-import { fetchCoordinadores } from "@/lib/operaciones/coordinador";
+import { fetchCoordinadores } from "@/features/operaciones/services";
 import { queryKeys } from "@/lib/query";
 
 const SIN_ASIGNAR = "sin_asignar";

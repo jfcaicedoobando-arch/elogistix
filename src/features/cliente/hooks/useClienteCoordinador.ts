@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { useOrganization } from "@/lib/contexts/OrganizationContext";
 import { queryKeys } from "@/lib/query";
-import { asignarCoordinadorCliente, fetchCoordinadorCliente } from "@/services/operaciones";
+import { asignarCoordinadorCliente, fetchCoordinadorCliente } from "@/features/operaciones/services";
 
 export function useClienteCoordinador(clienteId: string) {
   const { organizationId } = useOrganization();
