@@ -10,3 +10,10 @@ export async function fetchHandover(cotizacionId: string, organizationId: string
       .maybeSingle(),
   );
 }
+export async function fetchHandoverProveedores(agenteId: string | null | undefined, navieraId: string | null | undefined) {
+  const [agente, naviera] = await Promise.all([
+    agenteId ? unwrap(supabase.from("costeo_agentes").select("nombre").eq("id", agenteId).maybeSingle()) : null,
+    navieraId ? unwrap(supabase.from("navieras").select("name").eq("id", navieraId).maybeSingle()) : null,
+  ]);
+  return { agente: agente?.nombre ?? null, naviera: naviera?.name ?? null };
+}

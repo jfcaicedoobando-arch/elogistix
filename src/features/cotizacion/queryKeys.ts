@@ -7,6 +7,8 @@ export const cotizaciones = {
   detail: (id: string) => ['cotizaciones', id] as const,
   handover: (id: string, organizationId: string | null, updatedAt: string) =>
     ['cotizaciones', 'handover', organizationId, id, updatedAt] as const,
+  handoverProveedores: (agenteId: string | null, navieraId: string | null) =>
+    ['cotizaciones', 'handover-proveedores', agenteId, navieraId] as const,
   pdfPreview: (id: string, organizationId: string | null) => [...pdfPreviewCotizacion(id), organizationId] as const,
   costos: (id: string) => ['cotizacion_costos', id] as const,
   costosSnapshot: (id: string) => ['cotizacion_costos', id, 'snapshot'] as const,
