@@ -3,6 +3,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { ReactNode } from "react";
 
 const mocks = vi.hoisted(() => ({ controller: vi.fn(), retry: vi.fn() }));
+vi.mock("@/features/cliente/components/detalle/ClienteCoordinadorCard", () => ({ ClienteCoordinadorCard: () => null }));
 vi.mock("@/features/cliente/hooks", () => ({ useClienteDetalleController: mocks.controller }));
 vi.mock("react-router", () => ({ useParams: () => ({ id: "cliente" }) }));
 vi.mock("@/lib/contexts/BreadcrumbContext", () => ({ useRegisterBreadcrumbLabel: vi.fn() }));

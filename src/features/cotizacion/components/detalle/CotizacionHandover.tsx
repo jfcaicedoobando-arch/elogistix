@@ -1,6 +1,10 @@
 import { useHandoverProveedores } from "@/features/cotizacion/hooks/useHandoverProveedores";
 import { useCotizacionHandover } from "@/features/cotizacion/hooks/useCotizacionHandover";
 import { ArrowRightLeft } from "lucide-react";
+import { useAuth } from "@/lib/contexts/AuthContext";
+import { CoordinadorSelect } from "@/components/shared/CoordinadorSelect";
+import { puedeAsignarCoordinador } from "@/lib/access/coordinadorAsignacion";
+import { reasignarCoordinadorHandover } from "@/lib/operaciones/coordinador";
 import { SectionHeading } from "@/components/shared/SectionHeading";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -12,6 +16,7 @@ import { resolveTipoContenedorNombre } from "@/lib/domain/tipoContenedor";
 export function CotizacionHandover({ cotizacion }: { cotizacion: CotizacionRow }) {
   const { visible, query } = useCotizacionHandover(cotizacion);
   const { data: tiposContenedor = [] } = useTiposContenedor();
+  const { effectiveRole } = useAuth();
 
   const proveedores = useHandoverProveedores(cotizacion, visible && Boolean(query.data));
 
@@ -44,6 +49,13 @@ export function CotizacionHandover({ cotizacion }: { cotizacion: CotizacionRow }
             <dd className="font-medium break-words">{value}</dd>
           </div>
         ))}
+        <CoordinadorSelect
+          label="Coordinador logístico"
+          value={query.data.coordinador_id}
+          editable={puedeAsignarCoordinador(effectiveRole)}
+          onGuardar={(id) => id ? reasignarCoordinadorHandover(cotizacion.id, id) : Promise.resolve()}
+          onGuardado={() => void query.refetch()}
+        />
       </dl>
     </section>
   );

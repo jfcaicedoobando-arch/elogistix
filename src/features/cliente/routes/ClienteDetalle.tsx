@@ -1,6 +1,7 @@
 import { normalizarTipoCliente } from "@/features/cliente/utils/tipoCliente";
 import { useParams } from "react-router";
 import ClienteSummaryCards from "@/features/cliente/components/ClienteSummaryCards";
+import { ClienteCoordinadorCard } from "@/features/cliente/components/detalle/ClienteCoordinadorCard";
 import { ClienteDetalleDialogs } from "@/features/cliente/components/detalle/ClienteDetalleDialogs";
 import {
   ClienteDetalleHeader,
@@ -148,6 +149,8 @@ export default function ClienteDetalle() {
         contactos={contarContactos(contactos.length, cliente.contacto)}
         {...mapFinancialSummary(financials)}
       />
+
+      <ClienteCoordinadorCard clienteId={cliente.id} tipoCliente={normalizarTipoCliente(cliente.tipo_cliente)} />
 
       <ClienteDetalleTabs
         cliente={cliente}

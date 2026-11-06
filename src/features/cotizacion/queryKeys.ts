@@ -7,6 +7,7 @@ export const cotizaciones = {
   detail: (id: string) => ['cotizaciones', id] as const,
   handover: (id: string, organizationId: string | null, updatedAt: string) =>
     ['cotizaciones', 'handover', organizationId, id, updatedAt] as const,
+  coordinadores: (organizationId: string | null) => ['cotizaciones', 'coordinadores', organizationId] as const,
   handoverProveedores: (organizationId: string | null, agenteId: string | null, navieraId: string | null) =>
     ['cotizaciones', 'handover-proveedores', organizationId, agenteId, navieraId] as const,
   pdfPreview: (id: string, organizationId: string | null) => [...pdfPreviewCotizacion(id), organizationId] as const,

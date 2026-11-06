@@ -930,6 +930,7 @@ export type Database = {
           ciudad: string
           codigo_postal: string | null
           contacto: string
+          coordinador_logistico_id: string | null
           cp: string
           created_at: string
           deleted_at: string | null
@@ -960,6 +961,7 @@ export type Database = {
           ciudad?: string
           codigo_postal?: string | null
           contacto?: string
+          coordinador_logistico_id?: string | null
           cp?: string
           created_at?: string
           deleted_at?: string | null
@@ -990,6 +992,7 @@ export type Database = {
           ciudad?: string
           codigo_postal?: string | null
           contacto?: string
+          coordinador_logistico_id?: string | null
           cp?: string
           created_at?: string
           deleted_at?: string | null
@@ -10191,6 +10194,7 @@ export type Database = {
         }
         Returns: number
       }
+      _puede_asignar_coordinador: { Args: { p_org: string }; Returns: boolean }
       _recalc_anticipo_saldo: {
         Args: { p_anticipo_id: string }
         Returns: undefined
@@ -10609,6 +10613,10 @@ export type Database = {
           isOneToOne: true
           isSetofReturn: false
         }
+      }
+      asignar_coordinador_cliente: {
+        Args: { p_cliente_id: string; p_coordinador_id: string }
+        Returns: undefined
       }
       assert_proformas_moneda_soportada: {
         Args: { p_proforma_ids: string[] }
@@ -11233,6 +11241,7 @@ export type Database = {
           ciudad: string
           codigo_postal: string | null
           contacto: string
+          coordinador_logistico_id: string | null
           cp: string
           created_at: string
           deleted_at: string | null
@@ -12786,6 +12795,10 @@ export type Database = {
       reactivar_cotizacion_rpc: { Args: { p_id: string }; Returns: string }
       reactivar_factura_entrante: {
         Args: { p_documento_id: string }
+        Returns: undefined
+      }
+      reasignar_coordinador_handover: {
+        Args: { p_coordinador_id: string; p_cotizacion_id: string }
         Returns: undefined
       }
       reasignar_pago_factura: {

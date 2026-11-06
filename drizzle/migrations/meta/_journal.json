@@ -267,6 +267,13 @@
       "when": 1793990589448,
       "tag": "0037_cotizacion_especial_trigger_permissions",
       "breakpoints": true
+    },
+    {
+      "idx": 38,
+      "version": "7",
+      "when": 1794002479398,
+      "tag": "0038_coordinador_fijo_por_cliente",
+      "breakpoints": true
     }
   ]
 }
