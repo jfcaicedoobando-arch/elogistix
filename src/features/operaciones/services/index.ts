@@ -9,3 +9,10 @@ export type {
   EmbarquesPorEstado,
 } from "./operacionesTypes";
 export { fetchOperacionesStats } from "./operacionesStats";
+export {
+  asignarCoordinadorCliente,
+  fetchCoordinadorCliente,
+  fetchCoordinadores,
+  reasignarCoordinadorHandover,
+  type CoordinadorOption,
+} from "./coordinador";
