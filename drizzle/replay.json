@@ -304,5 +304,13 @@
       "0039_cotizacion_margen_moneda_homogenea.sql"
     ],
     "scope": "isolated-ci"
+  },
+  {
+    "file": "0040_coordinador_permission_boundary.sql",
+    "sha256": "b50b05b0f00dad9cac4ad6257ef8fa7676eca1a51e686513947e53425723fa6a",
+    "replays": [
+      "0040_coordinador_permission_boundary.sql"
+    ],
+    "scope": "isolated-ci"
   }
 ]

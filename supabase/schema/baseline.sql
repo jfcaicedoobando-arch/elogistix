@@ -2077,6 +2077,35 @@ BEGIN
   END LOOP;
 END;
 $$;
+CREATE FUNCTION public._cliente_coordinador_guard() RETURNS trigger
+    LANGUAGE plpgsql
+    SET search_path TO 'pg_catalog', 'public', 'pg_temp'
+    AS $$
+BEGIN
+  IF TG_RELID <> 'public.clientes'::regclass OR TG_LEVEL <> 'ROW' OR TG_WHEN <> 'BEFORE'
+      OR TG_OP NOT IN ('INSERT', 'UPDATE') THEN
+    RAISE EXCEPTION 'LC_SIN_PERMISO: contexto de coordinador inválido' USING ERRCODE = '42501';
+  END IF;
+  IF TG_OP = 'INSERT' THEN
+    IF NEW.coordinador_logistico_id IS NULL THEN RETURN NEW; END IF;
+  ELSIF NEW.coordinador_logistico_id IS NOT DISTINCT FROM OLD.coordinador_logistico_id
+      AND (NEW.coordinador_logistico_id IS NULL OR NEW.organization_id IS NOT DISTINCT FROM OLD.organization_id) THEN
+    RETURN NEW;
+  END IF;
+  -- Only the actual table owner is trusted here, never a caller-controlled GUC
+  -- or trigger depth. This preserves automatic first-handover assignment.
+  IF current_user = (SELECT pg_catalog.pg_get_userbyid(c.relowner)
+      FROM pg_catalog.pg_class c WHERE c.oid = TG_RELID) THEN RETURN NEW; END IF;
+  IF NOT COALESCE(public._puede_asignar_coordinador(NEW.organization_id), false) THEN
+    RAISE EXCEPTION 'LC_SIN_PERMISO: sólo gerente de operaciones o administración' USING ERRCODE = '42501';
+  END IF;
+  IF NEW.coordinador_logistico_id IS NOT NULL AND NOT EXISTS (
+      SELECT 1 FROM public.organization_members m WHERE m.organization_id = NEW.organization_id
+        AND m.user_id = NEW.coordinador_logistico_id AND m.role = 'coordinador_logistico') THEN
+    RAISE EXCEPTION 'LC_COORDINADOR_INVALIDO: el usuario no es coordinador logístico de la empresa' USING ERRCODE = 'P0001';
+  END IF;
+  RETURN NEW;
+END $$;
 CREATE FUNCTION public._convertir_proformas_insertar_conceptos(p_factura_id uuid, p_proforma_ids uuid[], p_org uuid, p_es_consolidada boolean, p_moneda public.moneda) RETURNS void
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
@@ -2248,7 +2277,7 @@ BEGIN
 END $$;
 CREATE FUNCTION public._cotizacion_crear_handover() RETURNS trigger
     LANGUAGE plpgsql SECURITY DEFINER
-    SET search_path TO 'public'
+    SET search_path TO 'pg_catalog', 'public', 'pg_temp'
     AS $$
 DECLARE
   v_coord uuid;
@@ -2257,6 +2286,10 @@ DECLARE
   v_tipo text;
   v_fijo uuid;
 BEGIN
+  IF TG_RELID <> 'public.cotizaciones'::regclass OR TG_LEVEL <> 'ROW'
+      OR TG_WHEN <> 'AFTER' OR TG_OP <> 'UPDATE' THEN
+    RAISE EXCEPTION 'LC_SIN_PERMISO: contexto de handover inválido' USING ERRCODE = '42501';
+  END IF;
   IF NEW.autorizada_at IS NULL OR OLD.autorizada_at IS NOT NULL THEN RETURN NEW; END IF;
   IF EXISTS (SELECT 1 FROM cotizacion_handovers WHERE cotizacion_id = NEW.id) THEN RETURN NEW; END IF;
   PERFORM pg_advisory_xact_lock(hashtext('handover:' || NEW.organization_id::text));
@@ -6295,11 +6328,14 @@ BEGIN
 END $$;
 CREATE FUNCTION public._puede_asignar_coordinador(p_org uuid) RETURNS boolean
     LANGUAGE sql STABLE SECURITY DEFINER
-    SET search_path TO 'public'
+    SET search_path TO 'pg_catalog', 'public', 'pg_temp'
     AS $$
-  SELECT public.has_role(auth.uid(), 'super_admin'::app_role) OR EXISTS (
-    SELECT 1 FROM organization_members m WHERE m.organization_id = p_org AND m.user_id = auth.uid()
-      AND m.role::text IN ('gerente_operaciones','admin','admin_org'));
+  SELECT auth.uid() IS NOT NULL AND p_org IS NOT NULL
+    AND p_org = public.org_scope()
+    AND (public.has_role(auth.uid(), 'super_admin'::public.app_role) OR EXISTS (
+      SELECT 1 FROM public.organization_members m
+      WHERE m.organization_id = p_org AND m.user_id = auth.uid()
+        AND m.role::text IN ('gerente_operaciones','admin','admin_org')));
 $$;
 CREATE FUNCTION public._reabrir_entrantes_factura() RETURNS trigger
     LANGUAGE plpgsql SECURITY DEFINER
@@ -9754,11 +9790,14 @@ END;
 $$;
 CREATE FUNCTION public.asignar_coordinador_cliente(p_cliente_id uuid, p_coordinador_id uuid) RETURNS void
     LANGUAGE plpgsql SECURITY DEFINER
-    SET search_path TO 'public'
+    SET search_path TO 'pg_catalog', 'public', 'pg_temp'
     AS $$
-DECLARE v_org uuid;
+DECLARE v_org uuid; v_scope uuid := public.org_scope();
 BEGIN
-  SELECT organization_id INTO v_org FROM clientes WHERE id = p_cliente_id;
+  IF auth.uid() IS NULL OR v_scope IS NULL OR NOT public._puede_asignar_coordinador(v_scope) THEN
+    RAISE EXCEPTION 'LC_SIN_PERMISO: sólo gerente de operaciones o administración de la empresa activa' USING ERRCODE = '42501';
+  END IF;
+  SELECT organization_id INTO v_org FROM public.clientes WHERE id = p_cliente_id AND organization_id = v_scope FOR UPDATE;
   IF v_org IS NULL THEN RAISE EXCEPTION 'LC_CLIENTE_NO_EXISTE: cliente no encontrado' USING ERRCODE = 'P0001'; END IF;
   IF NOT public._puede_asignar_coordinador(v_org) THEN
     RAISE EXCEPTION 'LC_SIN_PERMISO: sólo gerente de operaciones o administración' USING ERRCODE = '42501';
@@ -9767,7 +9806,7 @@ BEGIN
       WHERE organization_id = v_org AND user_id = p_coordinador_id AND role = 'coordinador_logistico') THEN
     RAISE EXCEPTION 'LC_COORDINADOR_INVALIDO: el usuario no es coordinador logístico de la empresa' USING ERRCODE = 'P0001';
   END IF;
-  UPDATE clientes SET coordinador_logistico_id = p_coordinador_id WHERE id = p_cliente_id;
+  UPDATE public.clientes SET coordinador_logistico_id = p_coordinador_id WHERE id = p_cliente_id AND organization_id = v_org;
 END $$;
 CREATE FUNCTION public.assert_factura_viva_para_pago() RETURNS trigger
     LANGUAGE plpgsql SECURITY DEFINER
@@ -29910,12 +29949,16 @@ END;
 $$;
 CREATE FUNCTION public.reasignar_coordinador_handover(p_cotizacion_id uuid, p_coordinador_id uuid) RETURNS void
     LANGUAGE plpgsql SECURITY DEFINER
-    SET search_path TO 'public'
+    SET search_path TO 'pg_catalog', 'public', 'pg_temp'
     AS $$
-DECLARE v_org uuid; v_folio text;
+DECLARE v_org uuid; v_scope uuid := public.org_scope(); v_folio text;
 BEGIN
-  SELECT h.organization_id, c.folio INTO v_org, v_folio FROM cotizacion_handovers h
-    JOIN cotizaciones c ON c.id = h.cotizacion_id WHERE h.cotizacion_id = p_cotizacion_id;
+  IF auth.uid() IS NULL OR v_scope IS NULL OR NOT public._puede_asignar_coordinador(v_scope) THEN
+    RAISE EXCEPTION 'LC_SIN_PERMISO: sólo gerente de operaciones o administración de la empresa activa' USING ERRCODE = '42501';
+  END IF;
+  SELECT h.organization_id, c.folio INTO v_org, v_folio FROM public.cotizacion_handovers h
+    JOIN public.cotizaciones c ON c.id = h.cotizacion_id AND c.organization_id = h.organization_id
+    WHERE h.cotizacion_id = p_cotizacion_id AND h.organization_id = v_scope FOR UPDATE OF h, c;
   IF v_org IS NULL THEN RAISE EXCEPTION 'LC_HANDOVER_NO_EXISTE: la cotización no tiene handover' USING ERRCODE = 'P0001'; END IF;
   IF NOT public._puede_asignar_coordinador(v_org) THEN
     RAISE EXCEPTION 'LC_SIN_PERMISO: sólo gerente de operaciones o administración' USING ERRCODE = '42501';
@@ -29924,7 +29967,7 @@ BEGIN
       WHERE organization_id = v_org AND user_id = p_coordinador_id AND role IN ('coordinador_logistico','gerente_operaciones')) THEN
     RAISE EXCEPTION 'LC_COORDINADOR_INVALIDO: el usuario no pertenece a Operaciones' USING ERRCODE = 'P0001';
   END IF;
-  UPDATE cotizacion_handovers SET coordinador_id = p_coordinador_id WHERE cotizacion_id = p_cotizacion_id;
+  UPDATE public.cotizacion_handovers SET coordinador_id = p_coordinador_id WHERE cotizacion_id = p_cotizacion_id AND organization_id = v_org;
   INSERT INTO notificaciones_internas (organization_id, usuario_id, tipo, titulo, mensaje, enlace, entidad_tipo, entidad_id)
   VALUES (v_org, p_coordinador_id, 'handover', 'Handover ' || COALESCE(v_folio, '') || ' asignado a ti',
     'Operaciones te reasignó esta operación.', '/cotizaciones/' || p_cotizacion_id, 'cotizacion', p_cotizacion_id);
@@ -40235,6 +40278,7 @@ CREATE TRIGGER a00_h14_guard_escritura BEFORE INSERT OR DELETE OR UPDATE ON publ
 CREATE TRIGGER a00_h14_guard_escritura BEFORE INSERT OR DELETE OR UPDATE ON public.proveedor_facturas_conceptos FOR EACH ROW EXECUTE FUNCTION public._h14_guard_escritor_baja();
 CREATE TRIGGER a00_h14_guard_escritura BEFORE INSERT OR DELETE OR UPDATE ON public.proveedor_notas_credito FOR EACH ROW EXECUTE FUNCTION public._h14_guard_escritor_baja();
 CREATE TRIGGER a00_h14_guard_escritura BEFORE INSERT OR DELETE OR UPDATE ON public.seguros_embarque FOR EACH ROW EXECUTE FUNCTION public._h14_guard_escritor_baja();
+CREATE TRIGGER cliente_coordinador_guard BEFORE INSERT OR UPDATE ON public.clientes FOR EACH ROW EXECUTE FUNCTION public._cliente_coordinador_guard();
 CREATE TRIGGER costeo_tarifas_match_agente_org_trg BEFORE INSERT OR UPDATE OF organization_id, agente_id ON public.costeo_tarifas FOR EACH ROW EXECUTE FUNCTION public.costeo_tarifas_match_agente_org();
 CREATE TRIGGER crm_scoring_cortes_updated_at BEFORE UPDATE ON public.crm_scoring_cortes FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
 CREATE TRIGGER crm_scoring_reglas_updated_at BEFORE UPDATE ON public.crm_scoring_reglas FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
@@ -41967,6 +42011,7 @@ GRANT ALL ON FUNCTION public._cerrar_entrantes_por_uuid() TO service_role;
 REVOKE ALL ON FUNCTION public._ci_ensure_proformas_es_consolidada() FROM PUBLIC;
 GRANT ALL ON FUNCTION public._ci_ensure_proformas_es_consolidada() TO authenticated;
 GRANT ALL ON FUNCTION public._ci_ensure_proformas_es_consolidada() TO service_role;
+REVOKE ALL ON FUNCTION public._cliente_coordinador_guard() FROM PUBLIC;
 REVOKE ALL ON FUNCTION public._convertir_proformas_insertar_conceptos(p_factura_id uuid, p_proforma_ids uuid[], p_org uuid, p_es_consolidada boolean, p_moneda public.moneda) FROM PUBLIC;
 GRANT ALL ON FUNCTION public._convertir_proformas_insertar_conceptos(p_factura_id uuid, p_proforma_ids uuid[], p_org uuid, p_es_consolidada boolean, p_moneda public.moneda) TO service_role;
 GRANT ALL ON FUNCTION public._convertir_proformas_insertar_conceptos(p_factura_id uuid, p_proforma_ids uuid[], p_org uuid, p_es_consolidada boolean, p_moneda public.moneda) TO authenticated;
@@ -41980,8 +42025,6 @@ REVOKE ALL ON FUNCTION public._cotizacion_costos_invalidar_autorizacion() FROM P
 GRANT ALL ON FUNCTION public._cotizacion_costos_invalidar_autorizacion() TO authenticated;
 GRANT ALL ON FUNCTION public._cotizacion_costos_invalidar_autorizacion() TO service_role;
 REVOKE ALL ON FUNCTION public._cotizacion_crear_handover() FROM PUBLIC;
-GRANT ALL ON FUNCTION public._cotizacion_crear_handover() TO authenticated;
-GRANT ALL ON FUNCTION public._cotizacion_crear_handover() TO service_role;
 REVOKE ALL ON FUNCTION public._cotizacion_embarque_al_aceptar() FROM PUBLIC;
 GRANT ALL ON FUNCTION public._cotizacion_embarque_al_aceptar() TO authenticated;
 GRANT ALL ON FUNCTION public._cotizacion_embarque_al_aceptar() TO service_role;

@@ -41,6 +41,12 @@ function verificarFuentePosterior(sources: ReadonlyMap<string, string>): void {
     !== "4d20a86450c946c2d73845dbf41ff93d4fb93490243f8967737d1165bd163f79") {
     throw new Error("Drizzle0035: unreviewed later source");
   }
+  const boundary = sources.get("0040_coordinador_permission_boundary.sql");
+  if (!boundary || createHash("sha256").update(boundary).digest("hex")
+    !== "b50b05b0f00dad9cac4ad6257ef8fa7676eca1a51e686513947e53425723fa6a") {
+    throw new Error("Drizzle0035: unreviewed later source");
+  }
+
 }
 
 function verificarOrdenJournal(sources: ReadonlyMap<string, string>, journal: JournalEntry[]): void {
@@ -48,13 +54,13 @@ function verificarOrdenJournal(sources: ReadonlyMap<string, string>, journal: Jo
   // the actual current journal order too; a later migration needs fresh review.
   const current = journal.slice(26);
   const ordered = [...sources.keys()].filter(file => Number(file.slice(0, 4)) >= 26);
-  if (journal.length !== 40 || current.some((entry, offset) => entry.idx !== offset + 26
+  const expectedTail = [PATCH_0035.slice(0, -4),
+    "0036_cotizacion_handover_tenant_scope", "0037_cotizacion_especial_trigger_permissions",
+    "0038_coordinador_fijo_por_cliente", "0039_cotizacion_margen_moneda_homogenea",
+    "0040_coordinador_permission_boundary"];
+  if (journal.length !== 41 || current.some((entry, offset) => entry.idx !== offset + 26
     || `${entry.tag}.sql` !== ordered[offset] || entry.when <= journal[entry.idx - 1].when)
-    || current.length !== ordered.length || journal[35].tag + ".sql" !== PATCH_0035
-    || journal[36].tag !== "0036_cotizacion_handover_tenant_scope"
-    || journal[37].tag !== "0037_cotizacion_especial_trigger_permissions"
-    || journal[38].tag !== "0038_coordinador_fijo_por_cliente"
-    || journal[39].tag !== "0039_cotizacion_margen_moneda_homogenea") {
+    || current.length !== ordered.length || expectedTail.some((tag, offset) => journal[35 + offset]?.tag !== tag)) {
     throw new Error("Drizzle0035: unsupported source/journal order");
   }
 }
