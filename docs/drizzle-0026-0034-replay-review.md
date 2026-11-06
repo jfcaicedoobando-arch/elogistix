@@ -15,7 +15,7 @@ consumen realmente la lista verificada y ejecutan cada archivo en transacción;
 no se añadió una allowlist para silenciar DR1/DR4.
 
 No se modifica ninguna fuente, entrada de journal ni snapshot histórico.
-Se añade el forward 0035 con una nueva entrada de journal y snapshot de cadena
+Se añade el forward 0036 (inicialmente 0035 antes de conciliar main) con una nueva entrada de journal y snapshot de cadena
 (custom SQL, igual estructura vacía que 0034), además de su espejo aislado.
 No se añaden migraciones elegibles a `supabase/migrations/` ni se cambia el
 manifest de producción. Los nombres `eligibleName` del control son nombres
@@ -81,9 +81,9 @@ proyecto. Se regeneró posteriormente el baseline SQL de CI según la revisión 
 abajo. No se ejecutó despliegue, backfill, cambio de datos históricos ni
 aplicación remota de migraciones.
 
-## Forward 0035: corrección de la barrera de tenant
+## Forward 0036: corrección de la barrera de tenant
 
-El fallo real anterior no se silencia: `0035_cotizacion_handover_tenant_scope.sql`
+El fallo real anterior no se silencia: `0036_cotizacion_handover_tenant_scope.sql`
 añade una política RESTRICTIVE para authenticated con USING y WITH CHECK,
 idéntica al patrón Ola16 vigente en `20261006234100_tarifario_cargos_tenant_scope.sql`.
 No añade GRANT, no cambia la política permisiva de 0029, no modifica datos ni
@@ -190,3 +190,26 @@ catálogo se reconstruyeron y validaron de nuevo; no se afirma identidad de
 bytes con la edición anterior. No hubo conexiones a bases del proyecto ni
 aplicación remota de migraciones. El hallazgo del cliente especial permanece
 fuera del alcance de esta corrección CI.
+
+### Conciliación con main d163d42439a6 (2026-11-06)
+
+Main incorporó `0035_cotizacion_aceptada_hasta_confirmar_embarque.sql` antes de
+integrar esta rama. Se preservan literalmente su SQL, su snapshot0035 y su
+entrada35 del journal. Sólo el forward tenant de esta rama, aún no aplicado,
+se renumera a0036, conservando exactamente sus bytes SQL y su id de snapshot.
+Su `prevId` apunta al snapshot0035 de main y su `when`1793990589447 sucede al
+1793990589446 de main, para que Drizzle no omita la corrección por timestamp.
+
+Se incorpora un espejo literal isolated-ci de main0035 (SHA-256
+`9565c53c94e45d33bdf96242937dbaa0036dd7b122f0b7018739b0fe5128c277`), antes de
+0036, con hash y orden comprobados por pruebas. El test SQL nuevo de main se
+registra como guard ejecutable. No se añade un replay desplegable en Supabase.
+
+La reconstrucción completa en PostgreSQL17.9 efímero, synthetic y loopback,
+pasó225/225 guards y66/66 suites RLS. Inventario:225 guards,66 RLS y25 soportes.
+Log: `.db-verify-logs/20261106-130454/`. El snapshot regenerado coincide byte a
+byte con el baseline conciliado, SHA-256
+`57de298a9812e2c2564417bdb4a8980984d8019da74ed1ad2f1eb4499767eae9`.
+Frente al baseline anterior sólo cambian las dos funciones y el trigger de
+main0035; no cambian ACL, comisiones ni margen. El fix separado para la ruta de
+cliente especial no se incorpora. No se conectó ni se migró ninguna base real.

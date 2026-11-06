@@ -250,8 +250,15 @@
     {
       "idx": 35,
       "version": "7",
-      "when": 1793941200000,
-      "tag": "0035_cotizacion_handover_tenant_scope",
+      "when": 1793990589446,
+      "tag": "0035_cotizacion_aceptada_hasta_confirmar_embarque",
+      "breakpoints": true
+    },
+    {
+      "idx": 36,
+      "version": "7",
+      "when": 1793990589447,
+      "tag": "0036_cotizacion_handover_tenant_scope",
       "breakpoints": true
     }
   ]

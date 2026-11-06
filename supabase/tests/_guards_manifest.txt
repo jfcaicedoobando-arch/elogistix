@@ -274,3 +274,5 @@ supabase/tests/factura_eliminada_guard_hijos.sql
 # Lock active invoice/shipment parents before remaining mutating RPC work.
 supabase/tests/padres_activos_recalculo_tc.sql
 supabase/tests/cotizacion_handover_tenant_scope.sql
+
+supabase/tests/cotizacion_aceptada_hasta_confirmar.sql

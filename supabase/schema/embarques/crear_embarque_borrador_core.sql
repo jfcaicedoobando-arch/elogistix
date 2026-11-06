@@ -433,7 +433,7 @@ BEGIN
   );
 
   UPDATE public.cotizaciones
-  SET embarque_id = v_embarque_id, estado = 'En operación'::estado_cotizacion, updated_at = now()
+  SET embarque_id = v_embarque_id, updated_at = now()
   WHERE id = v_cot.id;
 
   SELECT email INTO v_user_email FROM auth.users WHERE id = auth.uid();

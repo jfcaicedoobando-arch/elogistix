@@ -16285,7 +16285,7 @@ BEGIN
     v_cot.id, v_embarque_id, v_cot.organization_id, v_target_ids, v_cot.conceptos_venta
   );
   UPDATE public.cotizaciones
-  SET embarque_id = v_embarque_id, estado = 'En operación'::estado_cotizacion, updated_at = now()
+  SET embarque_id = v_embarque_id, updated_at = now()
   WHERE id = v_cot.id;
   SELECT email INTO v_user_email FROM auth.users WHERE id = auth.uid();
   INSERT INTO public.bitacora_actividad (organization_id, usuario_id, usuario_email, modulo, accion, entidad_id, entidad_nombre, detalles)
@@ -35337,7 +35337,7 @@ BEGIN
       embarque_id = NEW.id,
       estado = CASE
         WHEN estado = 'Aceptada'::estado_cotizacion
-             AND NEW.estado <> 'Borrador'::estado_embarque
+             AND NEW.estado NOT IN ('Borrador'::estado_embarque, 'Cotización'::estado_embarque, 'Cancelado'::estado_embarque)
         THEN 'En operación'::estado_cotizacion
         ELSE estado
       END,
@@ -35346,7 +35346,7 @@ BEGIN
       AND organization_id = NEW.organization_id
       AND (
         embarque_id IS DISTINCT FROM NEW.id
-        OR (estado = 'Aceptada'::estado_cotizacion AND NEW.estado <> 'Borrador'::estado_embarque)
+        OR (estado = 'Aceptada'::estado_cotizacion AND NEW.estado NOT IN ('Borrador'::estado_embarque, 'Cotización'::estado_embarque, 'Cancelado'::estado_embarque))
       );
   END IF;
   RETURN NEW;
@@ -40463,7 +40463,7 @@ CREATE TRIGGER trg_set_revisado_at BEFORE INSERT OR UPDATE OF estado_revision ON
 CREATE TRIGGER trg_snapshot_cotizacion_al_enviar AFTER UPDATE OF estado ON public.cotizaciones FOR EACH ROW EXECUTE FUNCTION public.snapshot_cotizacion_al_enviar();
 CREATE TRIGGER trg_super_admin_org_activa_updated_at BEFORE UPDATE ON public.super_admin_org_activa FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
 CREATE TRIGGER trg_sync_conceptos_venta_facturado AFTER UPDATE ON public.proformas FOR EACH ROW EXECUTE FUNCTION public.sync_conceptos_venta_facturado();
-CREATE TRIGGER trg_sync_cotizacion_embarque_link AFTER INSERT OR UPDATE OF cotizacion_id, deleted_at ON public.embarques FOR EACH ROW EXECUTE FUNCTION public.sync_cotizacion_embarque_link();
+CREATE TRIGGER trg_sync_cotizacion_embarque_link AFTER INSERT OR UPDATE OF cotizacion_id, deleted_at, estado ON public.embarques FOR EACH ROW EXECUTE FUNCTION public.sync_cotizacion_embarque_link();
 CREATE TRIGGER trg_sync_embarque_desde_contenedor AFTER INSERT OR DELETE OR UPDATE ON public.embarque_contenedores FOR EACH ROW EXECUTE FUNCTION public.sync_embarque_desde_contenedor();
 CREATE TRIGGER trg_sync_embarque_tiene_proforma AFTER INSERT OR DELETE OR UPDATE ON public.proformas FOR EACH ROW EXECUTE FUNCTION public.sync_embarque_tiene_proforma();
 CREATE TRIGGER trg_sync_embarque_tiene_proforma_from_concepto AFTER INSERT OR DELETE OR UPDATE OF proforma_id, deleted_at ON public.conceptos_venta FOR EACH ROW EXECUTE FUNCTION public.sync_embarque_tiene_proforma_from_concepto();

@@ -266,10 +266,18 @@
     "scope": "isolated-ci"
   },
   {
-    "file": "0035_cotizacion_handover_tenant_scope.sql",
+    "file": "0035_cotizacion_aceptada_hasta_confirmar_embarque.sql",
+    "sha256": "9565c53c94e45d33bdf96242937dbaa0036dd7b122f0b7018739b0fe5128c277",
+    "replays": [
+      "0035_cotizacion_aceptada_hasta_confirmar_embarque.sql"
+    ],
+    "scope": "isolated-ci"
+  },
+  {
+    "file": "0036_cotizacion_handover_tenant_scope.sql",
     "sha256": "a72308bf9b13502051fa0b212c43c81a4a69589cd5dc4ac0bec249f805c5ce1a",
     "replays": [
-      "0035_cotizacion_handover_tenant_scope.sql"
+      "0036_cotizacion_handover_tenant_scope.sql"
     ],
     "scope": "isolated-ci"
   }
