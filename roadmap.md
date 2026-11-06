@@ -1,5 +1,7 @@
 # Roadmap: flujo de cotización + Handover
 
+- [x] Mostrar la ficha de handover en el detalle de cotización para Administración y Vendedor/KAM; conservar acceso de Operaciones y aislamiento por empresa.
+
 - [x] Fase 1: Tipo de operación y Sector económico en la solicitud; datos de la solicitud pasan solos a la cotización (mercancía, IMO, estibable, peso en kg, notas, tipo, sector).
 - [x] Fase 2: obligatorios al enviar, tipo de solicitud automático, complejidad 36 h / 48 h automática, cambio del gerente con justificación (8 h para ampliar), avisos y más respuestas tras responder.
 - [x] Fase 3 (autorización): solicitar/autorizar con margen mínimo, aviso a admin/gerente comercial, envío bloqueado sin autorización, handover al autorizar.

@@ -23,7 +23,18 @@ import { AvisoConceptosDescartados } from "@/features/cotizacion/components/Avis
 import { useAuth } from "@/lib/contexts/AuthContext";
 import { useClienteAutorizacion } from "@/features/cliente/hooks/useClienteAutorizacion";
 import { usePermissions } from "@/hooks/shared";
+import { CotizacionHandover } from "./CotizacionHandover";
 import type { CotizacionDetalleContenidoProps as Props } from "./cotizacionDetalleContenido.types";
+
+function datosAutorizacion(cotizacion: Props["cotizacion"]) {
+  return {
+    version: cotizacion.version ?? 1,
+    creadaPor: cotizacion.created_by ?? null,
+    autorizadaAt: cotizacion.autorizada_at ?? null,
+    autorizacionSolicitadaAt: cotizacion.autorizacion_solicitada_at ?? null,
+    margenAutorizado: cotizacion.margen_autorizado_pct ?? null,
+  };
+}
 
 /** Renderiza el cuerpo de la vista de detalle (todo lo que va bajo el header). */
 export function CotizacionDetalleContenido({
@@ -74,21 +85,17 @@ export function CotizacionDetalleContenido({
           esProspecto={cotizacion.es_prospecto}
           numContenedores={cotizacion.num_contenedores}
           cotizacionId={id}
-          version={(cotizacion as { version?: number }).version ?? 1}
+          {...datosAutorizacion(cotizacion)}
           tieneEmbarquesVinculados={embarquesVinculados.length > 0 || !!cotizacion.embarque_id}
           onCambiarEstado={handleCambiarEstado}
           onAbrirConvertir={abrirDialogConvertir}
           total={totalUSD + totalMXN}
           rol={effectiveRole}
-          creadaPor={(cotizacion as { created_by?: string | null }).created_by ?? null}
           usuarioActual={user?.id ?? null}
           requiereAutorizacionCliente={autorizacion.requiereAutorizacionCotizacion}
           puedeAltaCliente={canAltaCliente}
           tieneOportunidad={!!cotizacion.oportunidad_id}
-          autorizadaAt={(cotizacion as { autorizada_at?: string | null }).autorizada_at ?? null}
-          autorizacionSolicitadaAt={(cotizacion as { autorizacion_solicitada_at?: string | null }).autorizacion_solicitada_at ?? null}
           clienteEspecial={autorizacion.esEspecial}
-          margenAutorizado={(cotizacion as { margen_autorizado_pct?: number | null }).margen_autorizado_pct ?? null}
         />
       )}
 
@@ -110,6 +117,7 @@ export function CotizacionDetalleContenido({
       )}
 
       <CotizacionDatosGeneralesCard cotizacion={cotizacion} />
+      <CotizacionHandover cotizacion={cotizacion} />
       <SeccionMercanciaCotizacionDetalle cotizacion={cotizacion} />
 
       <AvisoConceptosDescartados
