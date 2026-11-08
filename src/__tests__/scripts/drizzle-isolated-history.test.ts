@@ -39,8 +39,15 @@ describe("isolated Drizzle history is not deployment-eligible", () => {
       "0039_cotizacion_margen_moneda_homogenea.sql",
       "0040_coordinador_permission_boundary.sql",
       "0041_prospecto_housekeeping_historicos.sql",
+      "0042_periodo_cerrado_campos_derivados.sql",
+      "0043_bitacora_no_falsificable.sql",
+      "0044_efe_xml_hash_unico_vivo.sql",
+      "0045_provision_owner_sin_membresia.sql",
+      "0046_cerrar_funciones_internas_abiertas.sql",
+      "0047_rls_auth_uid_initplan_backport.sql",
+      "0048_limpieza_indices_duplicados.sql",
     ]);
-    expect(readIsolatedDrizzleReplay().size).toBe(19);
+    expect(readIsolatedDrizzleReplay().size).toBe(26);
     const archive = paths[1].replace("0022_refacturar_proforma_abre_edicion.sql", "meta/_journal.json");
     expect(JSON.parse(read(archive)).entries[22]).toMatchObject({ idx: 22, when: 1792518064767, tag: "0022_refacturar_proforma_abre_edicion" });
     expect(JSON.parse(read("drizzle/migrations/meta/_journal.json")).entries[22].tag).toBe("0022_cotizacion_comercial");
@@ -54,7 +61,7 @@ describe("isolated Drizzle history is not deployment-eligible", () => {
   it("reconstructs the new sources in journal order without rewriting immutable SQL", () => {
     const current = HISTORY.slice(4);
     const journal = JSON.parse(read("drizzle/migrations/meta/_journal.json"));
-    expect(current.map(item => item.file)).toEqual(journal.entries.slice(26, 42).map(
+    expect(current.map(item => item.file)).toEqual(journal.entries.slice(26, 49).map(
       (entry: { tag: string }) => `${entry.tag}.sql`,
     ));
     for (const item of current) {

@@ -295,6 +295,55 @@
       "when": 1794159962683,
       "tag": "0041_prospecto_housekeeping_historicos",
       "breakpoints": true
+    },
+    {
+      "idx": 42,
+      "version": "7",
+      "when": 1794165989736,
+      "tag": "0042_periodo_cerrado_campos_derivados",
+      "breakpoints": true
+    },
+    {
+      "idx": 43,
+      "version": "7",
+      "when": 1794166005390,
+      "tag": "0043_bitacora_no_falsificable",
+      "breakpoints": true
+    },
+    {
+      "idx": 44,
+      "version": "7",
+      "when": 1794166108872,
+      "tag": "0044_efe_xml_hash_unico_vivo",
+      "breakpoints": true
+    },
+    {
+      "idx": 45,
+      "version": "7",
+      "when": 1794166163924,
+      "tag": "0045_provision_owner_sin_membresia",
+      "breakpoints": true
+    },
+    {
+      "idx": 46,
+      "version": "7",
+      "when": 1794166202381,
+      "tag": "0046_cerrar_funciones_internas_abiertas",
+      "breakpoints": true
+    },
+    {
+      "idx": 47,
+      "version": "7",
+      "when": 1794166254278,
+      "tag": "0047_rls_auth_uid_initplan_backport",
+      "breakpoints": true
+    },
+    {
+      "idx": 48,
+      "version": "7",
+      "when": 1794166284769,
+      "tag": "0048_limpieza_indices_duplicados",
+      "breakpoints": true
     }
   ]
 }

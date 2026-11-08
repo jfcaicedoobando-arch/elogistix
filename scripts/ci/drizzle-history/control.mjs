@@ -13,7 +13,7 @@ export const HISTORY = [
   { file: `${ARCHIVE}/0022_refacturar_proforma_abre_edicion.sql`, sha256: '8b4272fdc0abdbbbedac41c46e28694f611a59c240e0509bdf02ec2f8b9446fa' },
   { file: '0022_cotizacion_comercial.sql', sha256: '5cc034df0035d1f9b1722aa9bfad12ff68965bde22273500f55903bf9b60ed38', eligibleName: '20261026184900_replay_cotizacion_comercial.sql' },
   { file: '0023_margen_minimo_utilidad_rpc.sql', sha256: 'b106eb27b920f2d34825e9141a46d2ed51943c4ccad69cca8c2f970d2348c86a', eligibleName: '20261026185000_replay_margen_minimo_utilidad_rpc.sql' },
-  // Current 0026–0041 follow the earlier isolated sources in journal order.
+  // Current 0026–0048 follow the earlier isolated sources in journal order.
   { file: '0026_comisiones_recalcular_al_asignar_vendedora.sql', sha256: '5076f939bde9c6fe4bd2798f5690c8163c636165ec9ced561af170bb986f5e03', eligibleName: '20261106000000_replay_comisiones_recalcular_al_asignar_vendedora.sql' },
   { file: '0027_clientes_tipo_cliente.sql', sha256: '5a325b83b2365e11ceb2d0ce3c5796a645b6ae4e991752b0b782d6c589b13be4', eligibleName: '20261106010000_replay_clientes_tipo_cliente.sql' },
   { file: '0028_pricing_tipo_operacion_sector.sql', sha256: 'ea21108f86701bccffa72615886df94d9538825a37d938cda5e2b496186f5eb0', eligibleName: '20261106020000_replay_pricing_tipo_operacion_sector.sql' },
@@ -31,6 +31,14 @@ export const HISTORY = [
   { file: '0039_cotizacion_margen_moneda_homogenea.sql', sha256: '4d20a86450c946c2d73845dbf41ff93d4fb93490243f8967737d1165bd163f79', eligibleName: '20261106130000_cotizacion_margen_moneda_homogenea.sql' },
   { file: '0040_coordinador_permission_boundary.sql', sha256: 'b50b05b0f00dad9cac4ad6257ef8fa7676eca1a51e686513947e53425723fa6a', eligibleName: '20261106140000_coordinador_permission_boundary.sql' },
   { file: '0041_prospecto_housekeeping_historicos.sql', sha256: '4bc3ec9e2f34c10bd7091e8f1b9eb5e3458dce2b3f6d7664d8eec129fd27fd53', eligibleName: '20261108174500_prospecto_housekeeping_historicos.sql' },
+  // Forward fixes 2026-11-08: legacy changes that never reached production.
+  { file: '0042_periodo_cerrado_campos_derivados.sql', sha256: 'f342ee211925de673df88f4bcc6343e0ca0a33c2cab34659fe0972b49d929d65', eligibleName: '20261108190000_periodo_cerrado_campos_derivados.sql' },
+  { file: '0043_bitacora_no_falsificable.sql', sha256: '54de7ba7ff1cee2d1850a3db1557e991780b963351e0724d5729549eea8964ac', eligibleName: '20261108191000_bitacora_no_falsificable.sql' },
+  { file: '0044_efe_xml_hash_unico_vivo.sql', sha256: 'c8b73a21472318ffffaa5a9dcb7d5ce5160d80bee15668c82962c0b8d5bbe44f', eligibleName: '20261108192000_efe_xml_hash_unico_vivo.sql' },
+  { file: '0045_provision_owner_sin_membresia.sql', sha256: 'bd14472b11d4009f5439daf045e3703d0fe3910cb73dce650c160956e62c23b6', eligibleName: '20261108193000_provision_owner_sin_membresia.sql' },
+  { file: '0046_cerrar_funciones_internas_abiertas.sql', sha256: 'fbb3f321e91f0ffb29098ff38e16c9ac0424d1f7c21ed9a5e97950e015d15001', eligibleName: '20261108194000_cerrar_funciones_internas_abiertas.sql' },
+  { file: '0047_rls_auth_uid_initplan_backport.sql', sha256: '49f067b89ca5bdbc31299d621e05279639862799d0892d71cbce3cb8ea09d22a', eligibleName: '20261108195000_rls_auth_uid_initplan_backport.sql' },
+  { file: '0048_limpieza_indices_duplicados.sql', sha256: '9e135244f1f96d2b03e2abc35c3deb1efa3d44f3ee85162f52cf16eecfba7645', eligibleName: '20261108200000_limpieza_indices_duplicados.sql' },
 ];
 const ARCHIVED_METADATA = [
   [`${ARCHIVE}/meta/0022_snapshot.json`, '002a1cff39197fe3431f23193a4229e1c845cbcd0ab5eaa074efded812b0081d'],

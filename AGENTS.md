@@ -20,3 +20,4 @@
 - Margen mínimo comercial: se lee con `useMargenMinimo` (config `comercial/margen_minimo_utilidad_pct`, default en `lib/domain/margenMinimo.ts`) y sólo se escribe por el RPC `set_margen_minimo_utilidad` (admin/gerente_comercial); la edición de embarques exige autorización sólo si cambió montos y el margen queda por debajo. Why: un solo umbral configurable reutilizable en cotizaciones.
 
 - Edge sin `deno.json` propio: todo `npm:` usado en `supabase/functions/_shared` debe existir en `package.json` (devDependency con la misma versión exacta). Why: el chequeo de Deno resuelve contra `node_modules` y falla si el paquete falta.
+- Cambios antiguos no aplicados: `supabase/migrations/*` es historia inmutable; lo que nunca llegó a producción se aplica como migración Drizzle nueva partiendo de la definición viva (0042–0048), nunca reaplicando el archivo viejo. Why: los archivos de 2026-07/09 quedaron desactualizados y revertirían correcciones posteriores.

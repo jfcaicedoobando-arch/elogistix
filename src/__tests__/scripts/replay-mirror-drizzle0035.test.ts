@@ -54,7 +54,7 @@ describe("bounded Drizzle0035 dynamic replay model", () => {
   });
 
   it("rejects unsupported journal order, timestamps, additions and source order", () => {
-    for (const changed of [journal.slice(0, 40), [...journal, { idx: 42, tag: "0042_new", when: journal[41].when + 1 }],
+    for (const changed of [journal.slice(0, 40), [...journal, { idx: 49, tag: "0049_new", when: journal[48].when + 1 }],
       journal.map((entry: object, idx: number) => idx === 39 ? { ...entry, when: journal[38].when } : entry),
       journal.map((entry: object, idx: number) => idx === 39 ? { ...entry, tag: "0039_other" } : entry),
       journal.map((entry: object, idx: number) => idx === 38 ? { ...entry, when: journal[37].when } : entry),
@@ -68,7 +68,7 @@ describe("bounded Drizzle0035 dynamic replay model", () => {
     expect(() => aplicarDrizzle0035(historical, new Map([...sources].reverse()), journal)).toThrow(/order/);
   });
 
-  it.each(["0037_cotizacion_especial_trigger_permissions.sql", "0038_coordinador_fijo_por_cliente.sql", "0039_cotizacion_margen_moneda_homogenea.sql", "0040_coordinador_permission_boundary.sql", "0041_prospecto_housekeeping_historicos.sql"])("rejects unreviewed later source %s even when the earlier patch is intact", key => {
+  it.each(["0037_cotizacion_especial_trigger_permissions.sql", "0038_coordinador_fijo_por_cliente.sql", "0039_cotizacion_margen_moneda_homogenea.sql", "0040_coordinador_permission_boundary.sql", "0041_prospecto_housekeeping_historicos.sql", "0042_periodo_cerrado_campos_derivados.sql", "0048_limpieza_indices_duplicados.sql"])("rejects unreviewed later source %s even when the earlier patch is intact", key => {
     const changed = new Map(sources);
     changed.set(key, sources.get(key)! + "\nCREATE OR REPLACE FUNCTION public.sync_cotizacion_embarque_link() RETURNS trigger LANGUAGE plpgsql AS $$ BEGIN RETURN NULL; END $$;");
     expect(() => aplicarDrizzle0035(historical, changed, journal)).toThrow(/later source/);

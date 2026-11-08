@@ -51,8 +51,24 @@ function verificarFuentePosterior(sources: ReadonlyMap<string, string>): void {
   if (!prospect || createHash("sha256").update(prospect).digest("hex")
     !== "4bc3ec9e2f34c10bd7091e8f1b9eb5e3458dce2b3f6d7664d8eec129fd27fd53") {
     throw new Error("Drizzle0035: unreviewed later source");
+  }  // Reviewed0042–0048 apply legacy fixes outside both modeled targets.
+  for (const [file, expected] of REVIEWED_FORWARD_FIXES) {
+    const sql = sources.get(file);
+    if (!sql || createHash("sha256").update(sql).digest("hex") !== expected) {
+      throw new Error("Drizzle0035: unreviewed later source");
+    }
   }
 }
+
+const REVIEWED_FORWARD_FIXES: ReadonlyArray<readonly [string, string]> = [
+  ["0042_periodo_cerrado_campos_derivados.sql", "f342ee211925de673df88f4bcc6343e0ca0a33c2cab34659fe0972b49d929d65"],
+  ["0043_bitacora_no_falsificable.sql", "54de7ba7ff1cee2d1850a3db1557e991780b963351e0724d5729549eea8964ac"],
+  ["0044_efe_xml_hash_unico_vivo.sql", "c8b73a21472318ffffaa5a9dcb7d5ce5160d80bee15668c82962c0b8d5bbe44f"],
+  ["0045_provision_owner_sin_membresia.sql", "bd14472b11d4009f5439daf045e3703d0fe3910cb73dce650c160956e62c23b6"],
+  ["0046_cerrar_funciones_internas_abiertas.sql", "fbb3f321e91f0ffb29098ff38e16c9ac0424d1f7c21ed9a5e97950e015d15001"],
+  ["0047_rls_auth_uid_initplan_backport.sql", "49f067b89ca5bdbc31299d621e05279639862799d0892d71cbce3cb8ea09d22a"],
+  ["0048_limpieza_indices_duplicados.sql", "9e135244f1f96d2b03e2abc35c3deb1efa3d44f3ee85162f52cf16eecfba7645"]
+];
 
 function verificarOrdenJournal(sources: ReadonlyMap<string, string>, journal: JournalEntry[]): void {
   // The caller verifies every isolated source/mirror against HISTORY. Require
@@ -62,8 +78,9 @@ function verificarOrdenJournal(sources: ReadonlyMap<string, string>, journal: Jo
   const expectedTail = [PATCH_0035.slice(0, -4),
     "0036_cotizacion_handover_tenant_scope", "0037_cotizacion_especial_trigger_permissions",
     "0038_coordinador_fijo_por_cliente", "0039_cotizacion_margen_moneda_homogenea",
-    "0040_coordinador_permission_boundary", "0041_prospecto_housekeeping_historicos"];
-  if (journal.length !== 42 || current.some((entry, offset) => entry.idx !== offset + 26
+    "0040_coordinador_permission_boundary", "0041_prospecto_housekeeping_historicos",
+    ...REVIEWED_FORWARD_FIXES.map(([file]) => file.slice(0, -4))];
+  if (journal.length !== 49 || current.some((entry, offset) => entry.idx !== offset + 26
     || `${entry.tag}.sql` !== ordered[offset] || entry.when <= journal[entry.idx - 1].when)
     || current.length !== ordered.length || expectedTail.some((tag, offset) => journal[35 + offset]?.tag !== tag)) {
     throw new Error("Drizzle0035: unsupported source/journal order");
