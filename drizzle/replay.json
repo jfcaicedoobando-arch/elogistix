@@ -376,5 +376,13 @@
       "0048_limpieza_indices_duplicados.sql"
     ],
     "scope": "isolated-ci"
+  },
+  {
+    "file": "0049_liquidaciones_lectura_finanzas_gerentes.sql",
+    "sha256": "7ba8e14da36f37a6559f05cf427a7d1e1e9dc495fed332b9f387f75c5d589d64",
+    "replays": [
+      "0049_liquidaciones_lectura_finanzas_gerentes.sql"
+    ],
+    "scope": "isolated-ci"
   }
 ]

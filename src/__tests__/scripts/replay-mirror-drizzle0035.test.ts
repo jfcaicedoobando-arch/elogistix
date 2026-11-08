@@ -54,7 +54,7 @@ describe("bounded Drizzle0035 dynamic replay model", () => {
   });
 
   it("rejects unsupported journal order, timestamps, additions and source order", () => {
-    for (const changed of [journal.slice(0, 40), [...journal, { idx: 49, tag: "0049_new", when: journal[48].when + 1 }],
+    for (const changed of [journal.slice(0, 40), [...journal, { idx: 50, tag: "0050_new", when: journal[49].when + 1 }],
       journal.map((entry: object, idx: number) => idx === 39 ? { ...entry, when: journal[38].when } : entry),
       journal.map((entry: object, idx: number) => idx === 39 ? { ...entry, tag: "0039_other" } : entry),
       journal.map((entry: object, idx: number) => idx === 38 ? { ...entry, when: journal[37].when } : entry),

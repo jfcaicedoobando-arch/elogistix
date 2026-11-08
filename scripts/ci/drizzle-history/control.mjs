@@ -39,6 +39,7 @@ export const HISTORY = [
   { file: '0046_cerrar_funciones_internas_abiertas.sql', sha256: 'fbb3f321e91f0ffb29098ff38e16c9ac0424d1f7c21ed9a5e97950e015d15001', eligibleName: '20261108194000_cerrar_funciones_internas_abiertas.sql' },
   { file: '0047_rls_auth_uid_initplan_backport.sql', sha256: '49f067b89ca5bdbc31299d621e05279639862799d0892d71cbce3cb8ea09d22a', eligibleName: '20261108195000_rls_auth_uid_initplan_backport.sql' },
   { file: '0048_limpieza_indices_duplicados.sql', sha256: '9e135244f1f96d2b03e2abc35c3deb1efa3d44f3ee85162f52cf16eecfba7645', eligibleName: '20261108200000_limpieza_indices_duplicados.sql' },
+  { file: '0049_liquidaciones_lectura_finanzas_gerentes.sql', sha256: '7ba8e14da36f37a6559f05cf427a7d1e1e9dc495fed332b9f387f75c5d589d64', eligibleName: '20261108201000_liquidaciones_lectura_finanzas_gerentes.sql' },
 ];
 const ARCHIVED_METADATA = [
   [`${ARCHIVE}/meta/0022_snapshot.json`, '002a1cff39197fe3431f23193a4229e1c845cbcd0ab5eaa074efded812b0081d'],

@@ -13,4 +13,5 @@
 - [x] Corregir vencimiento y transiciones históricas de cotizaciones de prospecto sin permitir enviar borradores nuevos.
 - [x] Excluir gerentes de operaciones del coordinador fijo del cliente; conservarlos en la reasignación del handover.
 - [x] Registrar 0042–0048 en `drizzle/replay.json` y regenerar baseline.
-- [ ] Revisar falla previa de `supabase/tests/actualizar_cierre_periodo_rpc.sql` (organización ajena) en reconstrucción local parcial.
+- [x] Prueba de cierre de otra empresa: pasa en reconstrucción completa (la falla era de una base parcial).
+- [x] Lectura de liquidaciones para finanzas y gerencias (sólo SELECT).
