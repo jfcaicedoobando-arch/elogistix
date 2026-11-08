@@ -281,3 +281,4 @@ supabase/tests/cotizacion_especial_autorizacion.sql
 supabase/tests/cotizacion_margen_mxn_sin_tc.sql
 
 supabase/tests/coordinador_permission_boundary.sql
+supabase/tests/cotizacion_prospecto_housekeeping.sql

@@ -2,7 +2,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { unwrap, unwrapOr } from "@/lib/supabase/response";
 import { invokeUserManagement } from "@/services/userManagement";
 
-export interface CoordinadorOption { id: string; nombre: string }
+export interface CoordinadorOption { id: string; nombre: string; role: string }
 
 /** Coordinadores logísticos (y gerentes de operaciones) de la empresa activa. */
 export async function fetchCoordinadores(organizationId: string): Promise<{ opciones: CoordinadorOption[]; nombres: Map<string, string> }> {
@@ -17,7 +17,7 @@ export async function fetchCoordinadores(organizationId: string): Promise<{ opci
   const vistos = new Set<string>();
   const opciones = members
     .filter((m) => (vistos.has(m.user_id) ? false : (vistos.add(m.user_id), true)))
-    .map((m) => ({ id: m.user_id, nombre: map.get(m.user_id) ?? "Usuario sin nombre" }))
+    .map((m) => ({ id: m.user_id, nombre: map.get(m.user_id) ?? "Usuario sin nombre", role: m.role }))
     .sort((a, b) => a.nombre.localeCompare(b.nombre, "es-MX"));
   return { opciones, nombres: map };
 }

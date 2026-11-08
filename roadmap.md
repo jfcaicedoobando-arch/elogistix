@@ -10,3 +10,5 @@
 - [ ] Fase 3b: prospecto sólo borrador + "Pedir alta como cliente"; exigir oportunidad "En cotización" a clientes generales. — espera confirmación (choca con "Convertir a Cliente" tras aceptar).
 - [x] Fase 4: botón "Cotizar y guardar tarifa" (coordinador/gerente de operaciones) para clientes especiales; sus cotizaciones se autorizan solas al enviar/aceptar y generan el handover.
 - [x] Fase 5: Handover al aceptar la cotización: coordinador por turno + aviso con ficha al coordinador y gerente de operaciones. (Ahora se dispara al autorizar.)
+- [x] Corregir vencimiento y transiciones históricas de cotizaciones de prospecto sin permitir enviar borradores nuevos.
+- [x] Excluir gerentes de operaciones del coordinador fijo del cliente; conservarlos en la reasignación del handover.

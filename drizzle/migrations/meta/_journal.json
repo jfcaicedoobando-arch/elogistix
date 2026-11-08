@@ -288,6 +288,13 @@
       "when": 1794002479400,
       "tag": "0040_coordinador_permission_boundary",
       "breakpoints": true
+    },
+    {
+      "idx": 41,
+      "version": "7",
+      "when": 1794159962683,
+      "tag": "0041_prospecto_housekeeping_historicos",
+      "breakpoints": true
     }
   ]
 }

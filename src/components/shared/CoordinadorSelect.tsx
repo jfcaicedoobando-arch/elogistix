@@ -12,12 +12,14 @@ interface Props {
   label: string;
   editable: boolean;
   permitirVacio?: boolean;
+  /** La ficha del cliente sólo admite coordinadores; el handover también gerentes. */
+  soloCoordinadores?: boolean;
   onGuardar: (coordinadorId: string | null) => Promise<void>;
   onGuardado: () => void;
 }
 
 /** Muestra el coordinador; si el rol puede, permite cambiarlo con un RPC validado en la base. */
-export function CoordinadorSelect({ value, label, editable, permitirVacio, onGuardar, onGuardado }: Props) {
+export function CoordinadorSelect({ value, label, editable, permitirVacio, soloCoordinadores, onGuardar, onGuardado }: Props) {
   const { organizationId } = useOrganization();
   const opciones = useQuery({
     queryKey: queryKeys.cotizaciones.coordinadores(organizationId),
@@ -30,6 +32,8 @@ export function CoordinadorSelect({ value, label, editable, permitirVacio, onGua
     onError: (error) => notifyError(undefined, { title: "No se pudo cambiar el coordinador", error }),
   });
   const nombre = nombreDe(opciones.data, value);
+  const opcionesVisibles = (opciones.data?.opciones ?? [])
+    .filter((o) => !soloCoordinadores || o.role === "coordinador_logistico");
 
   if (!editable) {
     return <div className="min-w-0"><dt className="text-muted-foreground">{label}</dt><dd className="font-medium">{nombre}</dd></div>;
@@ -45,8 +49,8 @@ export function CoordinadorSelect({ value, label, editable, permitirVacio, onGua
         <SelectTrigger id={`coord-${label}`} aria-label={label}><SelectValue placeholder="Sin asignar" /></SelectTrigger>
         <SelectContent>
           {(permitirVacio || !value) && <SelectItem value={SIN_ASIGNAR} disabled={!permitirVacio}>Sin asignar</SelectItem>}
-          {value && !opciones.data?.opciones.some((o) => o.id === value) && <SelectItem value={value}>{nombre}</SelectItem>}
-          {(opciones.data?.opciones ?? []).map((o) => <SelectItem key={o.id} value={o.id}>{o.nombre}</SelectItem>)}
+          {value && !opcionesVisibles.some((o) => o.id === value) && <SelectItem value={value}>{nombre}</SelectItem>}
+          {opcionesVisibles.map((o) => <SelectItem key={o.id} value={o.id}>{o.nombre}</SelectItem>)}
         </SelectContent>
       </Select>
     </div>

@@ -22,6 +22,7 @@ export function ClienteCoordinadorCard({ clienteId, tipoCliente }: { clienteId: 
         value={query.data ?? null}
         editable={puedeAsignarCoordinador(effectiveRole)}
         permitirVacio
+        soloCoordinadores
         onGuardar={guardar}
         onGuardado={() => void query.refetch()}
       />

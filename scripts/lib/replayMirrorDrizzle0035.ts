@@ -46,7 +46,12 @@ function verificarFuentePosterior(sources: ReadonlyMap<string, string>): void {
     !== "b50b05b0f00dad9cac4ad6257ef8fa7676eca1a51e686513947e53425723fa6a") {
     throw new Error("Drizzle0035: unreviewed later source");
   }
-
+  // Reviewed0041 only replaces the prospect trigger, never either modeled target.
+  const prospect = sources.get("0041_prospecto_housekeeping_historicos.sql");
+  if (!prospect || createHash("sha256").update(prospect).digest("hex")
+    !== "4bc3ec9e2f34c10bd7091e8f1b9eb5e3458dce2b3f6d7664d8eec129fd27fd53") {
+    throw new Error("Drizzle0035: unreviewed later source");
+  }
 }
 
 function verificarOrdenJournal(sources: ReadonlyMap<string, string>, journal: JournalEntry[]): void {
@@ -57,8 +62,8 @@ function verificarOrdenJournal(sources: ReadonlyMap<string, string>, journal: Jo
   const expectedTail = [PATCH_0035.slice(0, -4),
     "0036_cotizacion_handover_tenant_scope", "0037_cotizacion_especial_trigger_permissions",
     "0038_coordinador_fijo_por_cliente", "0039_cotizacion_margen_moneda_homogenea",
-    "0040_coordinador_permission_boundary"];
-  if (journal.length !== 41 || current.some((entry, offset) => entry.idx !== offset + 26
+    "0040_coordinador_permission_boundary", "0041_prospecto_housekeeping_historicos"];
+  if (journal.length !== 42 || current.some((entry, offset) => entry.idx !== offset + 26
     || `${entry.tag}.sql` !== ordered[offset] || entry.when <= journal[entry.idx - 1].when)
     || current.length !== ordered.length || expectedTail.some((tag, offset) => journal[35 + offset]?.tag !== tag)) {
     throw new Error("Drizzle0035: unsupported source/journal order");
