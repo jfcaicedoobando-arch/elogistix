@@ -12,5 +12,5 @@
 - [x] Fase 5: Handover al aceptar la cotización: coordinador por turno + aviso con ficha al coordinador y gerente de operaciones. (Ahora se dispara al autorizar.)
 - [x] Corregir vencimiento y transiciones históricas de cotizaciones de prospecto sin permitir enviar borradores nuevos.
 - [x] Excluir gerentes de operaciones del coordinador fijo del cliente; conservarlos en la reasignación del handover.
-- [ ] Registrar 0042–0048 en `drizzle/replay.json` (bloqueado: la herramienta prohíbe editar `drizzle/`; requiere commit manual en GitHub con `/mnt/documents/replay-json-0042-0048.json`).
+- [x] Registrar 0042–0048 en `drizzle/replay.json` y regenerar baseline.
 - [ ] Revisar falla previa de `supabase/tests/actualizar_cierre_periodo_rpc.sql` (organización ajena) en reconstrucción local parcial.

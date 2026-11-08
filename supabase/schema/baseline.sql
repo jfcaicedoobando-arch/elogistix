@@ -897,18 +897,22 @@ BEGIN
       'cancellation_status','cancelacion_solicitada_en','cancelacion_vence_en',
       'acuse_cancelacion_xml','acuse_cancelacion_fecha','acuse_cancelacion_status',
       'uuid_fiscal','folio_fiscal','serie','serie_id','ambiente','sustituida_por',
-      'enviada_cliente_at'
+      'enviada_cliente_at','cancelado_en','cancelacion_motivo',
+      'facturapi_pendiente_id','facturapi_pendiente_at'
     ]
     WHEN 'proveedor_facturas' THEN ARRAY[
       'updated_at','estado','estado_captura','uuid_verificado','uuid_verificado_fecha',
-      'uuid_estatus_sat'
+      'uuid_estatus_sat','estado_aprobacion','aprobada_por','aprobada_at','motivo_rechazo',
+      'aprobacion_heredada','fecha_programada_pago','fecha_cancelacion','motivo_cancelacion',
+      'cancelada_por'
     ]
     WHEN 'pagos_factura' THEN ARRAY[
       'updated_at','facturapi_rep_id','uuid_rep','folio_rep','serie_rep','rep_pdf_url',
       'rep_xml_url','estado_rep','timbrado_rep_en','timbrado_rep_por','rep_error',
       'rep_cancelado_en','rep_motivo_cancel','ambiente','rep_xml_backup_path',
       'rep_cancellation_status','facturapi_rep_claim_at','rep_cancelado_facturapi_id',
-      'rep_cancelado_uuid','rep_reconciliacion_checked_at'
+      'rep_cancelado_uuid','rep_reconciliacion_checked_at',
+      'facturapi_rep_pendiente_id','facturapi_rep_pendiente_at'
     ]
     WHEN 'pagos_proveedor' THEN ARRAY['updated_at']
     WHEN 'factura_notas_credito' THEN ARRAY[
@@ -916,7 +920,8 @@ BEGIN
       'xml_url','timbrado_en','timbrado_por','cancelado_en','cancelacion_motivo','ambiente',
       'xml_backup_path','facturapi_claim_at','cancellation_status',
       'cancelacion_solicitada_en','cancelacion_vence_en','acuse_cancelacion_xml',
-      'acuse_cancelacion_fecha','acuse_cancelacion_status','reconciliacion_checked_at'
+      'acuse_cancelacion_fecha','acuse_cancelacion_status','reconciliacion_checked_at',
+      'facturapi_pendiente_id','facturapi_pendiente_at'
     ]
     WHEN 'proveedor_notas_credito' THEN ARRAY[
       'updated_at','estado','uuid_fiscal','uuid_estatus_sat','uuid_verificado_fecha',
@@ -29551,9 +29556,8 @@ BEGIN
   IF NOT EXISTS (SELECT 1 FROM auth.users WHERE id = p_owner_user_id) THEN
     RAISE EXCEPTION 'Usuario owner no existe' USING ERRCODE = '22023';
   END IF;
-  -- Ola 4 · N27: un usuario sólo puede pertenecer a UNA organización
-  -- (organization_members_user_id_unique). Sin este chequeo, la org se
-  -- creaba y la membresía se descartaba en silencio (org huérfana).
+  -- Ola 4 · N27 (aplicado 2026-11-08): un usuario sólo puede pertenecer a una
+  -- organización; sin este aviso, la empresa se creaba sin administrador.
   IF EXISTS (SELECT 1 FROM public.organization_members WHERE user_id = p_owner_user_id) THEN
     RAISE EXCEPTION 'LC_OWNER_YA_ASIGNADO: El usuario elegido ya pertenece a una organización; elige otro o retíralo primero de la actual.'
       USING ERRCODE = '23505';
@@ -29570,9 +29574,6 @@ BEGIN
   VALUES (v_nombre, v_rfc)
   RETURNING id INTO v_org_id;
   -- Rol moderno: 'admin_org' reemplaza al legacy 'admin' (bloqueado por trg_bloquear_rol_legacy_om desde v13.312.0)
-  -- Ola 4 · N27: se conserva ON CONFLICT DO NOTHING sólo como defensa
-  -- residual ante una carrera de aprovisionamientos concurrentes; la
-  -- pre-validación de arriba es el camino normal.
   INSERT INTO public.organization_members (organization_id, user_id, role)
   VALUES (v_org_id, p_owner_user_id, 'admin_org'::app_role)
   ON CONFLICT DO NOTHING;
@@ -41152,8 +41153,8 @@ ALTER TABLE ONLY public.traspasos_bancarios
     ADD CONSTRAINT traspasos_bancarios_cuenta_origen_id_fkey FOREIGN KEY (cuenta_origen_id) REFERENCES public.cuentas_bancarias(id) ON DELETE RESTRICT;
 CREATE POLICY "Admin catalog delete clientes" ON public.clientes FOR DELETE TO authenticated USING ((((organization_id = ( SELECT public.current_user_org_id() AS current_user_org_id)) OR ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'super_admin'::public.app_role) AS has_role)) AND public.es_admin_catalogo(( SELECT auth.uid() AS uid))));
 CREATE POLICY "Admin catalog delete proveedores" ON public.proveedores FOR DELETE TO authenticated USING ((((organization_id = ( SELECT public.current_user_org_id() AS current_user_org_id)) OR ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'super_admin'::public.app_role) AS has_role)) AND public.es_admin_catalogo(( SELECT auth.uid() AS uid))));
-CREATE POLICY "Admin catalogo apaga por org" ON public.catalogo_org_desactivado FOR INSERT TO authenticated WITH CHECK (((organization_id = ( SELECT public.org_scope() AS org_scope)) AND ( SELECT public.es_admin_catalogo(auth.uid()) AS es_admin_catalogo)));
-CREATE POLICY "Admin catalogo enciende por org" ON public.catalogo_org_desactivado FOR DELETE TO authenticated USING (((organization_id = ( SELECT public.org_scope() AS org_scope)) AND ( SELECT public.es_admin_catalogo(auth.uid()) AS es_admin_catalogo)));
+CREATE POLICY "Admin catalogo apaga por org" ON public.catalogo_org_desactivado FOR INSERT TO authenticated WITH CHECK (((organization_id = ( SELECT public.org_scope() AS org_scope)) AND ( SELECT public.es_admin_catalogo(( SELECT auth.uid() AS uid)) AS es_admin_catalogo)));
+CREATE POLICY "Admin catalogo enciende por org" ON public.catalogo_org_desactivado FOR DELETE TO authenticated USING (((organization_id = ( SELECT public.org_scope() AS org_scope)) AND ( SELECT public.es_admin_catalogo(( SELECT auth.uid() AS uid)) AS es_admin_catalogo)));
 CREATE POLICY "Admin delete proveedor_alias" ON public.proveedor_alias FOR DELETE TO authenticated USING ((((organization_id = ( SELECT public.current_user_org_id() AS current_user_org_id)) OR ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'super_admin'::public.app_role) AS has_role)) AND public.es_admin_catalogo(( SELECT auth.uid() AS uid))));
 CREATE POLICY "Agente CRUD own demoras tabulador" ON public.costeo_naviera_demoras_tarifa TO authenticated USING ((( SELECT public.has_role(( SELECT auth.uid() AS uid), 'agente_carga'::public.app_role) AS has_role) AND (EXISTS ( SELECT 1
    FROM public.costeo_navieras_condiciones nc
@@ -41173,7 +41174,7 @@ CREATE POLICY "Agente read own documentos" ON public.documentos_embarque FOR SEL
    FROM public.embarques e
   WHERE ((e.id = documentos_embarque.embarque_id) AND (e.organization_id = public.current_agente_org()) AND (e.agente_id IS NOT NULL) AND (e.agente_id = public.current_agente_id()))))));
 CREATE POLICY "Agente read own embarques" ON public.embarques FOR SELECT TO authenticated USING ((( SELECT public.has_role(( SELECT auth.uid() AS uid), 'agente_carga'::public.app_role) AS has_role) AND (organization_id = public.current_agente_org()) AND (agente_id IS NOT NULL) AND (agente_id = public.current_agente_id())));
-CREATE POLICY "Agente read own notas" ON public.notas_embarque FOR SELECT USING ((public.has_role(auth.uid(), 'agente_carga'::public.app_role) AND (tipo = 'cambio_estado'::public.tipo_nota) AND (deleted_at IS NULL) AND (lower(COALESCE(contenido, ''::text)) !~~ ALL (ARRAY['%[interno]%'::text, '%harness%'::text, '%e2e%'::text, '%seed%'::text, '%qa-%'::text])) AND (lower(COALESCE(usuario, ''::text)) !~~ ALL (ARRAY['%[interno]%'::text, '%harness%'::text, '%e2e%'::text, '%seed%'::text, '%qa-%'::text])) AND (EXISTS ( SELECT 1
+CREATE POLICY "Agente read own notas" ON public.notas_embarque FOR SELECT USING ((public.has_role(( SELECT auth.uid() AS uid), 'agente_carga'::public.app_role) AND (tipo = 'cambio_estado'::public.tipo_nota) AND (deleted_at IS NULL) AND (lower(COALESCE(contenido, ''::text)) !~~ ALL (ARRAY['%[interno]%'::text, '%harness%'::text, '%e2e%'::text, '%seed%'::text, '%qa-%'::text])) AND (lower(COALESCE(usuario, ''::text)) !~~ ALL (ARRAY['%[interno]%'::text, '%harness%'::text, '%e2e%'::text, '%seed%'::text, '%qa-%'::text])) AND (EXISTS ( SELECT 1
    FROM public.embarques e
   WHERE ((e.id = notas_embarque.embarque_id) AND (e.organization_id = public.current_agente_org()) AND (e.agente_id IS NOT NULL) AND (e.agente_id = public.current_agente_id()))))));
 CREATE POLICY "Agente read own row" ON public.agente_users FOR SELECT TO authenticated USING ((user_id = ( SELECT auth.uid() AS uid)));
@@ -41208,22 +41209,22 @@ CREATE POLICY "Cliente read own clientes" ON public.clientes FOR SELECT TO authe
 CREATE POLICY "Cliente read own conceptos_venta" ON public.conceptos_venta FOR SELECT TO authenticated USING ((( SELECT public.has_role(( SELECT auth.uid() AS uid), 'cliente'::public.app_role) AS has_role) AND (embarque_id IN ( SELECT embarques.id
    FROM public.embarques
   WHERE (embarques.cliente_id IN ( SELECT public.current_user_client_ids() AS current_user_client_ids))))));
-CREATE POLICY "Cliente read own cotizaciones" ON public.cotizaciones FOR SELECT TO authenticated USING (((deleted_at IS NULL) AND public.has_role(auth.uid(), 'cliente'::public.app_role) AND (cliente_id IN ( SELECT public.current_user_client_ids() AS current_user_client_ids))));
+CREATE POLICY "Cliente read own cotizaciones" ON public.cotizaciones FOR SELECT TO authenticated USING (((deleted_at IS NULL) AND public.has_role(( SELECT auth.uid() AS uid), 'cliente'::public.app_role) AND (cliente_id IN ( SELECT public.current_user_client_ids() AS current_user_client_ids))));
 CREATE POLICY "Cliente read own documentos" ON public.documentos_embarque FOR SELECT TO authenticated USING (((deleted_at IS NULL) AND ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'cliente'::public.app_role) AS has_role) AND (embarque_id IN ( SELECT e.id
    FROM public.embarques e
   WHERE ((e.deleted_at IS NULL) AND (e.cliente_id IN ( SELECT public.current_user_client_ids() AS current_user_client_ids)))))));
 CREATE POLICY "Cliente read own embarque_contenedores" ON public.embarque_contenedores FOR SELECT TO authenticated USING (((deleted_at IS NULL) AND ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'cliente'::public.app_role) AS has_role) AND (embarque_id IN ( SELECT e.id
    FROM public.embarques e
   WHERE ((e.deleted_at IS NULL) AND (e.cliente_id IN ( SELECT public.current_user_client_ids() AS current_user_client_ids)))))));
-CREATE POLICY "Cliente read own embarques" ON public.embarques FOR SELECT TO authenticated USING (((deleted_at IS NULL) AND public.has_role(auth.uid(), 'cliente'::public.app_role) AND (cliente_id IN ( SELECT public.current_user_client_ids() AS current_user_client_ids))));
-CREATE POLICY "Cliente read own eventos" ON public.eventos_embarque FOR SELECT TO authenticated USING ((public.has_role(auth.uid(), 'cliente'::public.app_role) AND (embarque_id IN ( SELECT embarques.id
+CREATE POLICY "Cliente read own embarques" ON public.embarques FOR SELECT TO authenticated USING (((deleted_at IS NULL) AND public.has_role(( SELECT auth.uid() AS uid), 'cliente'::public.app_role) AND (cliente_id IN ( SELECT public.current_user_client_ids() AS current_user_client_ids))));
+CREATE POLICY "Cliente read own eventos" ON public.eventos_embarque FOR SELECT TO authenticated USING ((public.has_role(( SELECT auth.uid() AS uid), 'cliente'::public.app_role) AND (embarque_id IN ( SELECT embarques.id
    FROM public.embarques
   WHERE (embarques.cliente_id IN ( SELECT public.current_user_client_ids() AS current_user_client_ids)))) AND ((tipo)::text = ANY (ARRAY['Zarpe'::text, 'Transbordo'::text, 'Arribo a Puerto'::text, 'Descarga'::text, 'Despacho Aduanal'::text, 'Liberación'::text, 'En Ruta Terrestre'::text, 'Entrega'::text, 'Cambio de ETA'::text])) AND (deleted_at IS NULL) AND (lower(COALESCE(descripcion, ''::text)) !~~ ALL (ARRAY['%[interno]%'::text, '%harness%'::text, '%e2e%'::text, '%seed%'::text, '%qa-%'::text])) AND (lower(COALESCE(usuario, ''::text)) !~~ ALL (ARRAY['%[interno]%'::text, '%harness%'::text, '%e2e%'::text, '%seed%'::text, '%qa-%'::text]))));
 CREATE POLICY "Cliente read own factura_notas_credito" ON public.factura_notas_credito FOR SELECT TO authenticated USING (((deleted_at IS NULL) AND ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'cliente'::public.app_role) AS has_role) AND (factura_id IN ( SELECT f.id
    FROM public.facturas f
   WHERE ((f.deleted_at IS NULL) AND (f.cliente_id IN ( SELECT public.current_user_client_ids() AS current_user_client_ids)))))));
 CREATE POLICY "Cliente read own facturas" ON public.facturas FOR SELECT TO authenticated USING (((deleted_at IS NULL) AND ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'cliente'::public.app_role) AS has_role) AND (cliente_id IN ( SELECT public.current_user_client_ids() AS current_user_client_ids))));
-CREATE POLICY "Cliente read own notas" ON public.notas_embarque FOR SELECT TO authenticated USING ((public.has_role(auth.uid(), 'cliente'::public.app_role) AND (tipo = 'cambio_estado'::public.tipo_nota) AND (deleted_at IS NULL) AND (lower(COALESCE(contenido, ''::text)) !~~ ALL (ARRAY['%[interno]%'::text, '%harness%'::text, '%e2e%'::text, '%seed%'::text, '%qa-%'::text])) AND (lower(COALESCE(usuario, ''::text)) !~~ ALL (ARRAY['%[interno]%'::text, '%harness%'::text, '%e2e%'::text, '%seed%'::text, '%qa-%'::text])) AND (embarque_id IN ( SELECT embarques.id
+CREATE POLICY "Cliente read own notas" ON public.notas_embarque FOR SELECT TO authenticated USING ((public.has_role(( SELECT auth.uid() AS uid), 'cliente'::public.app_role) AND (tipo = 'cambio_estado'::public.tipo_nota) AND (deleted_at IS NULL) AND (lower(COALESCE(contenido, ''::text)) !~~ ALL (ARRAY['%[interno]%'::text, '%harness%'::text, '%e2e%'::text, '%seed%'::text, '%qa-%'::text])) AND (lower(COALESCE(usuario, ''::text)) !~~ ALL (ARRAY['%[interno]%'::text, '%harness%'::text, '%e2e%'::text, '%seed%'::text, '%qa-%'::text])) AND (embarque_id IN ( SELECT embarques.id
    FROM public.embarques
   WHERE (embarques.cliente_id IN ( SELECT public.current_user_client_ids() AS current_user_client_ids))))));
 CREATE POLICY "Cliente read own pagos_factura" ON public.pagos_factura FOR SELECT TO authenticated USING ((( SELECT public.has_role(( SELECT auth.uid() AS uid), 'cliente'::public.app_role) AS has_role) AND (factura_id IN ( SELECT f.id
@@ -41236,13 +41237,13 @@ CREATE POLICY "Cliente read own proformas" ON public.proformas FOR SELECT TO aut
 CREATE POLICY "Cliente read own tracking_externo" ON public.tracking_externo FOR SELECT TO authenticated USING ((( SELECT public.has_role(( SELECT auth.uid() AS uid), 'cliente'::public.app_role) AS has_role) AND (embarque_id IN ( SELECT e.id
    FROM public.embarques e
   WHERE (e.cliente_id IN ( SELECT public.current_user_client_ids() AS current_user_client_ids))))));
-CREATE POLICY "Compras puede actualizar contactos de proveedor" ON public.proveedor_contactos FOR UPDATE TO authenticated USING (((organization_id = public.current_user_org_id()) AND (public.has_role(auth.uid(), 'admin'::public.app_role) OR public.has_role(auth.uid(), 'admin_org'::public.app_role) OR public.has_role(auth.uid(), 'operador'::public.app_role) OR public.has_role(auth.uid(), 'contador'::public.app_role) OR public.has_role(auth.uid(), 'super_admin'::public.app_role)))) WITH CHECK (((organization_id = public.current_user_org_id()) AND (public.has_role(auth.uid(), 'admin'::public.app_role) OR public.has_role(auth.uid(), 'admin_org'::public.app_role) OR public.has_role(auth.uid(), 'operador'::public.app_role) OR public.has_role(auth.uid(), 'contador'::public.app_role) OR public.has_role(auth.uid(), 'super_admin'::public.app_role))));
+CREATE POLICY "Compras puede actualizar contactos de proveedor" ON public.proveedor_contactos FOR UPDATE TO authenticated USING (((organization_id = public.current_user_org_id()) AND (public.has_role(( SELECT auth.uid() AS uid), 'admin'::public.app_role) OR public.has_role(( SELECT auth.uid() AS uid), 'admin_org'::public.app_role) OR public.has_role(( SELECT auth.uid() AS uid), 'operador'::public.app_role) OR public.has_role(( SELECT auth.uid() AS uid), 'contador'::public.app_role) OR public.has_role(( SELECT auth.uid() AS uid), 'super_admin'::public.app_role)))) WITH CHECK (((organization_id = public.current_user_org_id()) AND (public.has_role(( SELECT auth.uid() AS uid), 'admin'::public.app_role) OR public.has_role(( SELECT auth.uid() AS uid), 'admin_org'::public.app_role) OR public.has_role(( SELECT auth.uid() AS uid), 'operador'::public.app_role) OR public.has_role(( SELECT auth.uid() AS uid), 'contador'::public.app_role) OR public.has_role(( SELECT auth.uid() AS uid), 'super_admin'::public.app_role))));
 CREATE POLICY "Compras puede actualizar documentos de proveedor" ON public.proveedor_documentos FOR UPDATE TO authenticated USING (((organization_id = public.current_user_org_id()) AND (public.has_role(( SELECT auth.uid() AS uid), 'admin'::public.app_role) OR public.has_role(( SELECT auth.uid() AS uid), 'admin_org'::public.app_role) OR public.has_role(( SELECT auth.uid() AS uid), 'operador'::public.app_role) OR public.has_role(( SELECT auth.uid() AS uid), 'contador'::public.app_role) OR public.has_role(( SELECT auth.uid() AS uid), 'super_admin'::public.app_role)))) WITH CHECK (((organization_id = public.current_user_org_id()) AND (public.has_role(( SELECT auth.uid() AS uid), 'admin'::public.app_role) OR public.has_role(( SELECT auth.uid() AS uid), 'admin_org'::public.app_role) OR public.has_role(( SELECT auth.uid() AS uid), 'operador'::public.app_role) OR public.has_role(( SELECT auth.uid() AS uid), 'contador'::public.app_role) OR public.has_role(( SELECT auth.uid() AS uid), 'super_admin'::public.app_role))));
-CREATE POLICY "Compras puede borrar contactos de proveedor" ON public.proveedor_contactos FOR DELETE TO authenticated USING (((organization_id = public.current_user_org_id()) AND (public.has_role(auth.uid(), 'admin'::public.app_role) OR public.has_role(auth.uid(), 'admin_org'::public.app_role) OR public.has_role(auth.uid(), 'operador'::public.app_role) OR public.has_role(auth.uid(), 'contador'::public.app_role) OR public.has_role(auth.uid(), 'super_admin'::public.app_role))));
+CREATE POLICY "Compras puede borrar contactos de proveedor" ON public.proveedor_contactos FOR DELETE TO authenticated USING (((organization_id = public.current_user_org_id()) AND (public.has_role(( SELECT auth.uid() AS uid), 'admin'::public.app_role) OR public.has_role(( SELECT auth.uid() AS uid), 'admin_org'::public.app_role) OR public.has_role(( SELECT auth.uid() AS uid), 'operador'::public.app_role) OR public.has_role(( SELECT auth.uid() AS uid), 'contador'::public.app_role) OR public.has_role(( SELECT auth.uid() AS uid), 'super_admin'::public.app_role))));
 CREATE POLICY "Compras puede borrar documentos de proveedor" ON public.proveedor_documentos FOR DELETE TO authenticated USING (((organization_id = public.current_user_org_id()) AND (public.has_role(( SELECT auth.uid() AS uid), 'admin'::public.app_role) OR public.has_role(( SELECT auth.uid() AS uid), 'admin_org'::public.app_role) OR public.has_role(( SELECT auth.uid() AS uid), 'operador'::public.app_role) OR public.has_role(( SELECT auth.uid() AS uid), 'contador'::public.app_role) OR public.has_role(( SELECT auth.uid() AS uid), 'super_admin'::public.app_role))));
 CREATE POLICY "Compras puede insertar contactos de proveedor" ON public.proveedor_contactos FOR INSERT TO authenticated WITH CHECK (((organization_id = public.current_user_org_id()) AND (EXISTS ( SELECT 1
    FROM public.proveedores p
-  WHERE ((p.id = proveedor_contactos.proveedor_id) AND (p.organization_id = public.current_user_org_id())))) AND (public.has_role(auth.uid(), 'admin'::public.app_role) OR public.has_role(auth.uid(), 'admin_org'::public.app_role) OR public.has_role(auth.uid(), 'operador'::public.app_role) OR public.has_role(auth.uid(), 'contador'::public.app_role) OR public.has_role(auth.uid(), 'super_admin'::public.app_role))));
+  WHERE ((p.id = proveedor_contactos.proveedor_id) AND (p.organization_id = public.current_user_org_id())))) AND (public.has_role(( SELECT auth.uid() AS uid), 'admin'::public.app_role) OR public.has_role(( SELECT auth.uid() AS uid), 'admin_org'::public.app_role) OR public.has_role(( SELECT auth.uid() AS uid), 'operador'::public.app_role) OR public.has_role(( SELECT auth.uid() AS uid), 'contador'::public.app_role) OR public.has_role(( SELECT auth.uid() AS uid), 'super_admin'::public.app_role))));
 CREATE POLICY "Compras puede insertar documentos de proveedor" ON public.proveedor_documentos FOR INSERT TO authenticated WITH CHECK (((organization_id = public.current_user_org_id()) AND (EXISTS ( SELECT 1
    FROM public.proveedores p
   WHERE ((p.id = proveedor_documentos.proveedor_id) AND (p.organization_id = public.current_user_org_id())))) AND (public.has_role(( SELECT auth.uid() AS uid), 'admin'::public.app_role) OR public.has_role(( SELECT auth.uid() AS uid), 'admin_org'::public.app_role) OR public.has_role(( SELECT auth.uid() AS uid), 'operador'::public.app_role) OR public.has_role(( SELECT auth.uid() AS uid), 'contador'::public.app_role) OR public.has_role(( SELECT auth.uid() AS uid), 'super_admin'::public.app_role))));
@@ -41332,11 +41333,11 @@ CREATE POLICY "Org admin bitacora" ON public.bitacora_actividad FOR SELECT TO au
 CREATE POLICY "Org admins manage own org members" ON public.organization_members TO authenticated USING (public.is_org_admin(( SELECT auth.uid() AS uid), organization_id)) WITH CHECK (public.is_org_admin(( SELECT auth.uid() AS uid), organization_id));
 CREATE POLICY "Org lee cargos FOB" ON public.costeo_cargos_fob_agente FOR SELECT TO authenticated USING (((organization_id = public.org_scope()) AND (deleted_at IS NULL)));
 CREATE POLICY "Org lee cargos locales" ON public.costeo_cargos_locales_naviera FOR SELECT TO authenticated USING (((organization_id = public.org_scope()) AND (deleted_at IS NULL)));
-CREATE POLICY "Org puede actualizar documentos de cliente" ON public.cliente_documentos FOR UPDATE TO authenticated USING (((organization_id = public.current_user_org_id()) AND (public.has_role(auth.uid(), 'admin'::public.app_role) OR public.has_role(auth.uid(), 'admin_org'::public.app_role) OR public.has_role(auth.uid(), 'operador'::public.app_role) OR public.has_role(auth.uid(), 'contador'::public.app_role) OR public.has_role(auth.uid(), 'super_admin'::public.app_role)))) WITH CHECK (((organization_id = public.current_user_org_id()) AND (public.has_role(auth.uid(), 'admin'::public.app_role) OR public.has_role(auth.uid(), 'admin_org'::public.app_role) OR public.has_role(auth.uid(), 'operador'::public.app_role) OR public.has_role(auth.uid(), 'contador'::public.app_role) OR public.has_role(auth.uid(), 'super_admin'::public.app_role))));
-CREATE POLICY "Org puede borrar documentos de cliente" ON public.cliente_documentos FOR DELETE TO authenticated USING (((organization_id = public.current_user_org_id()) AND (public.has_role(auth.uid(), 'admin'::public.app_role) OR public.has_role(auth.uid(), 'admin_org'::public.app_role) OR public.has_role(auth.uid(), 'operador'::public.app_role) OR public.has_role(auth.uid(), 'contador'::public.app_role) OR public.has_role(auth.uid(), 'super_admin'::public.app_role))));
+CREATE POLICY "Org puede actualizar documentos de cliente" ON public.cliente_documentos FOR UPDATE TO authenticated USING (((organization_id = public.current_user_org_id()) AND (public.has_role(( SELECT auth.uid() AS uid), 'admin'::public.app_role) OR public.has_role(( SELECT auth.uid() AS uid), 'admin_org'::public.app_role) OR public.has_role(( SELECT auth.uid() AS uid), 'operador'::public.app_role) OR public.has_role(( SELECT auth.uid() AS uid), 'contador'::public.app_role) OR public.has_role(( SELECT auth.uid() AS uid), 'super_admin'::public.app_role)))) WITH CHECK (((organization_id = public.current_user_org_id()) AND (public.has_role(( SELECT auth.uid() AS uid), 'admin'::public.app_role) OR public.has_role(( SELECT auth.uid() AS uid), 'admin_org'::public.app_role) OR public.has_role(( SELECT auth.uid() AS uid), 'operador'::public.app_role) OR public.has_role(( SELECT auth.uid() AS uid), 'contador'::public.app_role) OR public.has_role(( SELECT auth.uid() AS uid), 'super_admin'::public.app_role))));
+CREATE POLICY "Org puede borrar documentos de cliente" ON public.cliente_documentos FOR DELETE TO authenticated USING (((organization_id = public.current_user_org_id()) AND (public.has_role(( SELECT auth.uid() AS uid), 'admin'::public.app_role) OR public.has_role(( SELECT auth.uid() AS uid), 'admin_org'::public.app_role) OR public.has_role(( SELECT auth.uid() AS uid), 'operador'::public.app_role) OR public.has_role(( SELECT auth.uid() AS uid), 'contador'::public.app_role) OR public.has_role(( SELECT auth.uid() AS uid), 'super_admin'::public.app_role))));
 CREATE POLICY "Org puede insertar documentos de cliente" ON public.cliente_documentos FOR INSERT TO authenticated WITH CHECK (((organization_id = public.current_user_org_id()) AND (EXISTS ( SELECT 1
    FROM public.clientes c
-  WHERE ((c.id = cliente_documentos.cliente_id) AND (c.organization_id = public.current_user_org_id())))) AND (public.has_role(auth.uid(), 'admin'::public.app_role) OR public.has_role(auth.uid(), 'admin_org'::public.app_role) OR public.has_role(auth.uid(), 'operador'::public.app_role) OR public.has_role(auth.uid(), 'contador'::public.app_role) OR public.has_role(auth.uid(), 'super_admin'::public.app_role))));
+  WHERE ((c.id = cliente_documentos.cliente_id) AND (c.organization_id = public.current_user_org_id())))) AND (public.has_role(( SELECT auth.uid() AS uid), 'admin'::public.app_role) OR public.has_role(( SELECT auth.uid() AS uid), 'admin_org'::public.app_role) OR public.has_role(( SELECT auth.uid() AS uid), 'operador'::public.app_role) OR public.has_role(( SELECT auth.uid() AS uid), 'contador'::public.app_role) OR public.has_role(( SELECT auth.uid() AS uid), 'super_admin'::public.app_role))));
 CREATE POLICY "Org puede ver contactos de proveedor" ON public.proveedor_contactos FOR SELECT TO authenticated USING (((organization_id = public.current_user_org_id()) OR public.has_role(( SELECT auth.uid() AS uid), 'super_admin'::public.app_role)));
 CREATE POLICY "Org puede ver documentos de cliente" ON public.cliente_documentos FOR SELECT TO authenticated USING (((organization_id = public.current_user_org_id()) OR public.has_role(( SELECT auth.uid() AS uid), 'super_admin'::public.app_role)));
 CREATE POLICY "Org puede ver documentos de proveedor" ON public.proveedor_documentos FOR SELECT TO authenticated USING (((organization_id = public.current_user_org_id()) OR public.has_role(( SELECT auth.uid() AS uid), 'super_admin'::public.app_role)));
@@ -41772,40 +41773,40 @@ CREATE POLICY crm_pricing_op_leer ON public.crm_pricing_opciones FOR SELECT TO a
 ALTER TABLE public.crm_pricing_opciones ENABLE ROW LEVEL SECURITY;
 CREATE POLICY crm_pricing_opciones_tenant_restrictive ON public.crm_pricing_opciones AS RESTRICTIVE TO authenticated USING (public.rls_tenant_scope_ok(organization_id)) WITH CHECK (public.rls_tenant_scope_ok(organization_id));
 ALTER TABLE public.crm_propiedad_opciones ENABLE ROW LEVEL SECURITY;
-CREATE POLICY crm_propiedad_opciones_admin ON public.crm_propiedad_opciones TO authenticated USING (public.has_role(auth.uid(), 'super_admin'::public.app_role)) WITH CHECK (public.has_role(auth.uid(), 'super_admin'::public.app_role));
-CREATE POLICY crm_propiedad_opciones_leer ON public.crm_propiedad_opciones FOR SELECT TO authenticated USING ((public.has_role(auth.uid(), 'super_admin'::public.app_role) OR (EXISTS ( SELECT 1
+CREATE POLICY crm_propiedad_opciones_admin ON public.crm_propiedad_opciones TO authenticated USING (public.has_role(( SELECT auth.uid() AS uid), 'super_admin'::public.app_role)) WITH CHECK (public.has_role(( SELECT auth.uid() AS uid), 'super_admin'::public.app_role));
+CREATE POLICY crm_propiedad_opciones_leer ON public.crm_propiedad_opciones FOR SELECT TO authenticated USING ((public.has_role(( SELECT auth.uid() AS uid), 'super_admin'::public.app_role) OR (EXISTS ( SELECT 1
    FROM public.organization_members om
-  WHERE (om.user_id = auth.uid())))));
+  WHERE (om.user_id = ( SELECT auth.uid() AS uid))))));
 ALTER TABLE public.crm_propiedades ENABLE ROW LEVEL SECURITY;
-CREATE POLICY crm_propiedades_admin ON public.crm_propiedades TO authenticated USING (public.has_role(auth.uid(), 'super_admin'::public.app_role)) WITH CHECK (public.has_role(auth.uid(), 'super_admin'::public.app_role));
-CREATE POLICY crm_propiedades_leer ON public.crm_propiedades FOR SELECT TO authenticated USING ((public.has_role(auth.uid(), 'super_admin'::public.app_role) OR (EXISTS ( SELECT 1
+CREATE POLICY crm_propiedades_admin ON public.crm_propiedades TO authenticated USING (public.has_role(( SELECT auth.uid() AS uid), 'super_admin'::public.app_role)) WITH CHECK (public.has_role(( SELECT auth.uid() AS uid), 'super_admin'::public.app_role));
+CREATE POLICY crm_propiedades_leer ON public.crm_propiedades FOR SELECT TO authenticated USING ((public.has_role(( SELECT auth.uid() AS uid), 'super_admin'::public.app_role) OR (EXISTS ( SELECT 1
    FROM public.organization_members om
-  WHERE (om.user_id = auth.uid())))));
+  WHERE (om.user_id = ( SELECT auth.uid() AS uid))))));
 ALTER TABLE public.crm_reportes ENABLE ROW LEVEL SECURITY;
-CREATE POLICY crm_reportes_escribir ON public.crm_reportes TO authenticated USING ((public.rls_tenant_scope_ok(organization_id) AND public.has_role(auth.uid(), 'super_admin'::public.app_role))) WITH CHECK ((public.rls_tenant_scope_ok(organization_id) AND public.has_role(auth.uid(), 'super_admin'::public.app_role)));
+CREATE POLICY crm_reportes_escribir ON public.crm_reportes TO authenticated USING ((public.rls_tenant_scope_ok(organization_id) AND public.has_role(( SELECT auth.uid() AS uid), 'super_admin'::public.app_role))) WITH CHECK ((public.rls_tenant_scope_ok(organization_id) AND public.has_role(( SELECT auth.uid() AS uid), 'super_admin'::public.app_role)));
 CREATE POLICY crm_reportes_leer ON public.crm_reportes FOR SELECT TO authenticated USING (public.rls_tenant_scope_ok(organization_id));
 CREATE POLICY crm_reportes_tenant_restrictive ON public.crm_reportes AS RESTRICTIVE TO authenticated USING (public.rls_tenant_scope_ok(organization_id)) WITH CHECK (public.rls_tenant_scope_ok(organization_id));
 ALTER TABLE public.crm_scoring_cortes ENABLE ROW LEVEL SECURITY;
-CREATE POLICY crm_scoring_cortes_borrar ON public.crm_scoring_cortes FOR DELETE TO authenticated USING (public.has_role(auth.uid(), 'super_admin'::public.app_role));
-CREATE POLICY crm_scoring_cortes_crear ON public.crm_scoring_cortes FOR INSERT TO authenticated WITH CHECK (public.has_role(auth.uid(), 'super_admin'::public.app_role));
-CREATE POLICY crm_scoring_cortes_editar ON public.crm_scoring_cortes FOR UPDATE TO authenticated USING (public.has_role(auth.uid(), 'super_admin'::public.app_role)) WITH CHECK (public.has_role(auth.uid(), 'super_admin'::public.app_role));
-CREATE POLICY crm_scoring_cortes_leer ON public.crm_scoring_cortes FOR SELECT TO authenticated USING ((public.has_role(auth.uid(), 'super_admin'::public.app_role) OR (EXISTS ( SELECT 1
+CREATE POLICY crm_scoring_cortes_borrar ON public.crm_scoring_cortes FOR DELETE TO authenticated USING (public.has_role(( SELECT auth.uid() AS uid), 'super_admin'::public.app_role));
+CREATE POLICY crm_scoring_cortes_crear ON public.crm_scoring_cortes FOR INSERT TO authenticated WITH CHECK (public.has_role(( SELECT auth.uid() AS uid), 'super_admin'::public.app_role));
+CREATE POLICY crm_scoring_cortes_editar ON public.crm_scoring_cortes FOR UPDATE TO authenticated USING (public.has_role(( SELECT auth.uid() AS uid), 'super_admin'::public.app_role)) WITH CHECK (public.has_role(( SELECT auth.uid() AS uid), 'super_admin'::public.app_role));
+CREATE POLICY crm_scoring_cortes_leer ON public.crm_scoring_cortes FOR SELECT TO authenticated USING ((public.has_role(( SELECT auth.uid() AS uid), 'super_admin'::public.app_role) OR (EXISTS ( SELECT 1
    FROM public.organization_members om
-  WHERE (om.user_id = auth.uid())))));
+  WHERE (om.user_id = ( SELECT auth.uid() AS uid))))));
 ALTER TABLE public.crm_scoring_reglas ENABLE ROW LEVEL SECURITY;
-CREATE POLICY crm_scoring_reglas_borrar ON public.crm_scoring_reglas FOR DELETE TO authenticated USING (public.has_role(auth.uid(), 'super_admin'::public.app_role));
-CREATE POLICY crm_scoring_reglas_crear ON public.crm_scoring_reglas FOR INSERT TO authenticated WITH CHECK (public.has_role(auth.uid(), 'super_admin'::public.app_role));
-CREATE POLICY crm_scoring_reglas_editar ON public.crm_scoring_reglas FOR UPDATE TO authenticated USING (public.has_role(auth.uid(), 'super_admin'::public.app_role)) WITH CHECK (public.has_role(auth.uid(), 'super_admin'::public.app_role));
-CREATE POLICY crm_scoring_reglas_leer ON public.crm_scoring_reglas FOR SELECT TO authenticated USING ((public.has_role(auth.uid(), 'super_admin'::public.app_role) OR (EXISTS ( SELECT 1
+CREATE POLICY crm_scoring_reglas_borrar ON public.crm_scoring_reglas FOR DELETE TO authenticated USING (public.has_role(( SELECT auth.uid() AS uid), 'super_admin'::public.app_role));
+CREATE POLICY crm_scoring_reglas_crear ON public.crm_scoring_reglas FOR INSERT TO authenticated WITH CHECK (public.has_role(( SELECT auth.uid() AS uid), 'super_admin'::public.app_role));
+CREATE POLICY crm_scoring_reglas_editar ON public.crm_scoring_reglas FOR UPDATE TO authenticated USING (public.has_role(( SELECT auth.uid() AS uid), 'super_admin'::public.app_role)) WITH CHECK (public.has_role(( SELECT auth.uid() AS uid), 'super_admin'::public.app_role));
+CREATE POLICY crm_scoring_reglas_leer ON public.crm_scoring_reglas FOR SELECT TO authenticated USING ((public.has_role(( SELECT auth.uid() AS uid), 'super_admin'::public.app_role) OR (EXISTS ( SELECT 1
    FROM public.organization_members om
-  WHERE (om.user_id = auth.uid())))));
+  WHERE (om.user_id = ( SELECT auth.uid() AS uid))))));
 CREATE POLICY crm_sol_pricing_crear ON public.crm_solicitudes_pricing FOR INSERT TO authenticated WITH CHECK (((organization_id = public.org_scope()) AND (estado = 'borrador'::text)));
-CREATE POLICY crm_sol_pricing_editar ON public.crm_solicitudes_pricing FOR UPDATE TO authenticated USING (((organization_id = public.org_scope()) AND (((estado = 'borrador'::text) AND (created_by = auth.uid())) OR public._crm_es_pricing(organization_id)))) WITH CHECK ((organization_id = public.org_scope()));
+CREATE POLICY crm_sol_pricing_editar ON public.crm_solicitudes_pricing FOR UPDATE TO authenticated USING (((organization_id = public.org_scope()) AND (((estado = 'borrador'::text) AND (created_by = ( SELECT auth.uid() AS uid))) OR public._crm_es_pricing(organization_id)))) WITH CHECK ((organization_id = public.org_scope()));
 CREATE POLICY crm_sol_pricing_leer ON public.crm_solicitudes_pricing FOR SELECT TO authenticated USING ((organization_id = public.org_scope()));
 ALTER TABLE public.crm_solicitudes_pricing ENABLE ROW LEVEL SECURITY;
 CREATE POLICY crm_solicitudes_pricing_tenant_restrictive ON public.crm_solicitudes_pricing AS RESTRICTIVE TO authenticated USING (public.rls_tenant_scope_ok(organization_id)) WITH CHECK (public.rls_tenant_scope_ok(organization_id));
 ALTER TABLE public.crm_tableros ENABLE ROW LEVEL SECURITY;
-CREATE POLICY crm_tableros_escribir ON public.crm_tableros TO authenticated USING ((public.rls_tenant_scope_ok(organization_id) AND public.has_role(auth.uid(), 'super_admin'::public.app_role))) WITH CHECK ((public.rls_tenant_scope_ok(organization_id) AND public.has_role(auth.uid(), 'super_admin'::public.app_role)));
+CREATE POLICY crm_tableros_escribir ON public.crm_tableros TO authenticated USING ((public.rls_tenant_scope_ok(organization_id) AND public.has_role(( SELECT auth.uid() AS uid), 'super_admin'::public.app_role))) WITH CHECK ((public.rls_tenant_scope_ok(organization_id) AND public.has_role(( SELECT auth.uid() AS uid), 'super_admin'::public.app_role)));
 CREATE POLICY crm_tableros_leer ON public.crm_tableros FOR SELECT TO authenticated USING (public.rls_tenant_scope_ok(organization_id));
 CREATE POLICY crm_tableros_tenant_restrictive ON public.crm_tableros AS RESTRICTIVE TO authenticated USING (public.rls_tenant_scope_ok(organization_id)) WITH CHECK (public.rls_tenant_scope_ok(organization_id));
 ALTER TABLE public.crm_valores ENABLE ROW LEVEL SECURITY;
@@ -41892,7 +41893,7 @@ CREATE POLICY rcl_select_admin_org ON public.role_change_log FOR SELECT TO authe
   WHERE ((om.user_id = ( SELECT auth.uid() AS uid)) AND (om.organization_id = role_change_log.organization_id) AND ((om.role)::text = ANY (ARRAY['admin'::text, 'admin_org'::text])))))));
 CREATE POLICY rcl_select_propio ON public.role_change_log FOR SELECT TO authenticated USING ((user_id = ( SELECT auth.uid() AS uid)));
 CREATE POLICY rcl_select_super_admin ON public.role_change_log FOR SELECT TO authenticated USING (( SELECT public.has_role(( SELECT auth.uid() AS uid), 'super_admin'::public.app_role) AS has_role));
-CREATE POLICY recuperaciones_select_org ON public.comisiones_recuperaciones FOR SELECT TO authenticated USING (((organization_id = public.current_user_org_id()) OR public.has_role(auth.uid(), 'super_admin'::public.app_role)));
+CREATE POLICY recuperaciones_select_org ON public.comisiones_recuperaciones FOR SELECT TO authenticated USING (((organization_id = public.current_user_org_id()) OR public.has_role(( SELECT auth.uid() AS uid), 'super_admin'::public.app_role)));
 ALTER TABLE public.refacturaciones ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.role_change_log ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.seguros_embarque ENABLE ROW LEVEL SECURITY;
@@ -42498,7 +42499,6 @@ REVOKE ALL ON FUNCTION public.calcular_comision_pago() FROM PUBLIC;
 GRANT ALL ON FUNCTION public.calcular_comision_pago() TO service_role;
 REVOKE ALL ON FUNCTION public.calcular_comision_pago(p_pago_factura_id uuid) FROM PUBLIC;
 GRANT ALL ON FUNCTION public.calcular_comision_pago(p_pago_factura_id uuid) TO service_role;
-GRANT ALL ON FUNCTION public.calcular_comision_pago(p_pago_factura_id uuid) TO authenticated;
 REVOKE ALL ON FUNCTION public.calcular_costo_demoras(p_naviera_condicion_id uuid, p_tipo_contenedor_id uuid, p_dias_excedidos integer) FROM PUBLIC;
 GRANT ALL ON FUNCTION public.calcular_costo_demoras(p_naviera_condicion_id uuid, p_tipo_contenedor_id uuid, p_dias_excedidos integer) TO authenticated;
 GRANT ALL ON FUNCTION public.calcular_costo_demoras(p_naviera_condicion_id uuid, p_tipo_contenedor_id uuid, p_dias_excedidos integer) TO service_role;
