@@ -5,7 +5,7 @@
  * Se usa en `facturapi-descargar`, `facturapi-cancelar`, `enviar-factura-email`
  * y `enviar-cotizacion-email`.
  */
-import type { SupabaseClient } from "npm:@supabase/supabase-js@2.118.0";
+import type { SupabaseClient } from "npm:@supabase/supabase-js@2.119.0";
 
 /**
  * Normaliza el nombre de la organización para usarlo como prefijo del nombre de

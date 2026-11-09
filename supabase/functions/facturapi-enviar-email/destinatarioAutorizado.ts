@@ -3,7 +3,7 @@
  * Vive fuera de `index.ts` para acotar la complejidad del handler y el tamaño
  * del archivo (reglas de lint del proyecto).
  */
-import type { SupabaseClient } from "npm:@supabase/supabase-js@2.118.0";
+import type { SupabaseClient } from "npm:@supabase/supabase-js@2.119.0";
 import { bloqueoDestinatarioOverride } from "./overrideDestinatario.ts";
 
 type SbClient = SupabaseClient;

@@ -7,7 +7,7 @@
  * Los archivos adjuntos (MSDS / documentos paso 3) NO se persisten — no son
  * serializables; al restaurar se avisa que deben re-adjuntarse.
  */
-import { getStorageRef, safeLocalStorage } from "@/lib/browserStorage";
+import { safeLocalStorage } from "@/lib/browserStorage";
 import type { EmbarqueFormValues } from "@/features/embarques/domain/mappers/embarque";
 import type { ConceptoVentaLocal, ConceptoCostoLocal } from "@/types/concepto";
 
@@ -16,7 +16,8 @@ const DRAFT_TTL_MS = 24 * 60 * 60 * 1000; // 24 h
 const CLOCK_SKEW_MS = 5 * 60 * 1000;
 export const EMBARQUE_DRAFT_DEBOUNCE_MS = 800;
 
-export const EMBARQUE_DRAFT_KEY_PREFIX = "lc:embarque:draft:";
+import { EMBARQUE_DRAFT_KEY_PREFIX } from "@/lib/auth/clearSessionDrafts";
+export { EMBARQUE_DRAFT_KEY_PREFIX, clearAllEmbarqueDrafts } from "@/lib/auth/clearSessionDrafts";
 export const embarqueDraftKey = (userId: string, organizationId?: string | null): string =>
   `${EMBARQUE_DRAFT_KEY_PREFIX}${organizationId || "sin-org"}:${userId || "anon"}`;
 
@@ -81,18 +82,6 @@ export function loadEmbarqueDraft(userId: string, organizationId?: string | null
 
 export function clearEmbarqueDraft(userId: string, organizationId?: string | null): void {
   safeLocalStorage.removeItem(embarqueDraftKey(userId, organizationId));
-}
-
-/** Barre todos los borradores de embarque del dispositivo (logout). */
-export function clearAllEmbarqueDrafts(): void {
-  const storage = getStorageRef("local");
-  if (!storage) return;
-  const keys: string[] = [];
-  for (let i = 0; i < storage.length; i++) {
-    const key = storage.key(i);
-    if (key?.startsWith(EMBARQUE_DRAFT_KEY_PREFIX)) keys.push(key);
-  }
-  for (const key of keys) safeLocalStorage.removeItem(key);
 }
 
 /** Un draft "vacío" (sólo defaults) no merece banner de restauración. */

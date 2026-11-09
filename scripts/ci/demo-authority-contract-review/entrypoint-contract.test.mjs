@@ -63,7 +63,7 @@ test('source integrity: reviewed authority bytes allow only the exact SDK import
 test('SDK migration rejects changed wiring, body, import, version, missing and duplicate imports', () => {
   const path = 'supabase/functions/demo-access/index.ts';
   const current = read(path).replaceAll('\r\n', '\n');
-  const sdkImport = 'import { createClient } from "npm:@supabase/supabase-js@2.118.0";';
+  const sdkImport = 'import { createClient } from "npm:@supabase/supabase-js@2.119.0";';
   const historical = historicalDemoSourceBytes(path, Buffer.from(current));
   const pin = sourcePins.sources.find(row => row.path === path);
   assert.equal(historical.length, pin.bytes);
@@ -72,7 +72,7 @@ test('SDK migration rejects changed wiring, body, import, version, missing and d
     current.replace('createProbeClient:', 'availabilityProvider:'),
     current.replace('initSentryEdge("demo-access")', 'initSentryEdge("changed")'),
     current.replace('npm:@supabase/', 'https://example.invalid/@supabase/'),
-    current.replace('2.118.0', '2.118.1'),
+    current.replace('2.119.0', '2.118.1'),
     current.replace(sdkImport, ''),
     current.replace(sdkImport, sdkImport + '\n' + sdkImport),
     historical.toString('utf8'),

@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict'
-import { AuthClient } from 'npm:@supabase/auth-js@2.118.0'
+import { AuthClient } from 'npm:@supabase/auth-js@2.119.0'
 
 // Exercise the production adapter and SDK with signed requests. The only
 // transport below is an in-memory PostgREST stub; --deny-net is intentional.

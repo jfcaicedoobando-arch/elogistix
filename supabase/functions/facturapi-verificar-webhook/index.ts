@@ -11,7 +11,7 @@
  * SEGURIDAD: la respuesta NUNCA incluye la API key ni el secret del webhook;
  * sólo URL, id, eventos y estado. Requiere rol emisor fiscal en la org.
  */
-import { createClient, type SupabaseClient } from "npm:@supabase/supabase-js@2.118.0";
+import { createClient, type SupabaseClient } from "npm:@supabase/supabase-js@2.119.0";
 import { corsHeaders } from "../_shared/cors.ts";
 import { wrapEdgeHandler } from "../_shared/sentry.ts";
 import { jsonResponse } from "../_shared/response.ts";

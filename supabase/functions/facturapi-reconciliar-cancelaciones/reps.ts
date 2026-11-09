@@ -7,7 +7,7 @@
  * REP quedaba en "cancelación pendiente" para siempre — mismo síntoma que EF-03
  * en la familia de notas de crédito.
  */
-import type { SupabaseClient } from "npm:@supabase/supabase-js@2.118.0";
+import type { SupabaseClient } from "npm:@supabase/supabase-js@2.119.0";
 import { captureEdgeException } from "../_shared/sentry.ts";
 import { registrarBitacoraEdge } from "../_shared/bitacora.ts";
 import { withFacturapiTimeout } from "../_shared/facturapiClient.ts";

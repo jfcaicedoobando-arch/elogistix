@@ -1,4 +1,4 @@
-import type { SupabaseClient } from "npm:@supabase/supabase-js@2.118.0";
+import type { SupabaseClient } from "npm:@supabase/supabase-js@2.119.0";
 /**
  * P0-A — Timbrado PENDIENTE de la nota de crédito (CFDI E).
  *

@@ -20,7 +20,7 @@
  *   }
  */
 // deno-lint-ignore-file no-explicit-any
-import { createClient, type SupabaseClient } from "npm:@supabase/supabase-js@2.118.0";
+import { createClient, type SupabaseClient } from "npm:@supabase/supabase-js@2.119.0";
 
 type Level = "info" | "warn" | "error";
 

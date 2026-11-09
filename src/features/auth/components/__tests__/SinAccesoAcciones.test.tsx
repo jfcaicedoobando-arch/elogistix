@@ -13,14 +13,17 @@ vi.mock("react-router", async () => {
 });
 
 const signOut = vi.fn().mockResolvedValue(undefined);
-vi.mock("@/lib/auth/signOut", () => ({ signOutCurrentSession: () => signOut() }));
+vi.mock("@/lib/contexts/AuthContext", () => ({ useAuth: () => ({ signOut }) }));
+const toastError = vi.fn();
+vi.mock("@/lib/ui/appFeedback", () => ({ notifyError: (...args: unknown[]) => toastError(...args) }));
 
 import { SinAccesoAcciones } from "../SinAccesoContent";
 
 describe("SinAccesoAcciones · cerrar sesión", () => {
   beforeEach(() => {
     navigate.mockClear();
-    signOut.mockClear();
+    signOut.mockReset().mockResolvedValue(undefined);
+    toastError.mockClear();
   });
 
   it("redirige a /login después del signOut", async () => {
@@ -55,4 +58,30 @@ describe("SinAccesoAcciones · cerrar sesión", () => {
     fireEvent.click(screen.getByRole("button", { name: /Cerrar sesión/i }));
     await waitFor(() => expect(navigate).toHaveBeenCalledWith("/login", { replace: true }));
   });
+
+  it("no navega ni expone detalles cuando falla el cierre local y permite reintentar", async () => {
+  signOut.mockRejectedValueOnce(new Error("secret-token"));
+  render(<MemoryRouter><SinAccesoAcciones variant="sin-rol-org" effectiveRole={null} esAdministrador={false} onRetry={vi.fn()} retrying={false} /></MemoryRouter>);
+  fireEvent.click(screen.getByRole("button", { name: /Cerrar sesión/i }));
+  await waitFor(() => expect(toastError).toHaveBeenCalled());
+  expect(navigate).not.toHaveBeenCalled();
+  expect(JSON.stringify(toastError.mock.calls)).not.toContain("secret-token");
+  fireEvent.click(screen.getByRole("button", { name: /Cerrar sesión/i }));
+  await waitFor(() => expect(navigate).toHaveBeenCalledWith("/login", { replace: true }));
+});
+
+  it("evita cierres simultáneos y espera la confirmación antes de navegar", async () => {
+    let complete!: () => void;
+    signOut.mockReturnValueOnce(new Promise<void>((resolve) => { complete = resolve; }));
+    render(<MemoryRouter><SinAccesoAcciones variant="sin-rol-org" effectiveRole={null} esAdministrador={false} onRetry={vi.fn()} retrying={false} /></MemoryRouter>);
+    const button = screen.getByRole("button", { name: /Cerrar sesión/i });
+    fireEvent.click(button);
+    fireEvent.click(button);
+    expect(signOut).toHaveBeenCalledOnce();
+    expect(button).toBeDisabled();
+    expect(navigate).not.toHaveBeenCalled();
+    complete();
+    await waitFor(() => expect(navigate).toHaveBeenCalledWith("/login", { replace: true }));
+  });
+
 });

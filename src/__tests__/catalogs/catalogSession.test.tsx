@@ -26,8 +26,7 @@ vi.mock('@/lib/errors', () => ({getErrorMessage: (error: Error) => error.message
 vi.mock('@/services/bitacora', () => ({registrarActividad: vi.fn().mockResolvedValue(undefined)}));
 vi.mock('@/lib/auth/signOut', () => ({signOutCurrentSession: io.signOut}));
 vi.mock('@/lib/browserStorage', () => ({clearPersistedQueryCache: io.persistedClear}));
-vi.mock('@/features/cotizacion/hooks/wizard/cotizacionDraftStorage', () => ({clearAllDrafts: vi.fn()}));
-vi.mock('@/features/embarques/hooks/wizard/embarqueDraftStorage', () => ({clearAllEmbarqueDrafts: vi.fn()}));
+vi.mock('@/lib/auth/clearSessionDrafts', () => ({clearAllDrafts: vi.fn(), clearAllEmbarqueDrafts: vi.fn()}));
 vi.mock('@/integrations/supabase/client', () => ({supabase: new Proxy({}, {
   get: () => {throw new Error('Remote I/O is forbidden in this local audit');},
 })}));

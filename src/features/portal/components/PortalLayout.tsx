@@ -1,3 +1,5 @@
+import { notifyError } from "@/lib/ui/appFeedback";
+import { SIGN_OUT_FAILURE } from "@/lib/auth/signOut";
 import { Outlet, useLocation, useNavigate } from "react-router";
 import { useAuth } from "@/lib/contexts/AuthContext";
 import { useBreadcrumbLabels } from "@/lib/contexts/BreadcrumbContext";
@@ -35,8 +37,12 @@ export default function PortalLayout() {
   const activeSection = getActiveSectionLabel(location.pathname);
 
   const handleSignOut = async () => {
-    await signOut();
-    navigate(ROUTES.PORTAL_LOGIN);
+    try {
+      await signOut();
+      navigate(ROUTES.PORTAL_LOGIN);
+    } catch {
+      notifyError(undefined, { title: "No se pudo cerrar sesión", description: SIGN_OUT_FAILURE });
+    }
   };
 
   const initials = clienteName

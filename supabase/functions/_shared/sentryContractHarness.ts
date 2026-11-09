@@ -1,5 +1,5 @@
 import { assert, assertEquals, assertStrictEquals } from "https://deno.land/std@0.224.0/assert/mod.ts";
-import { createTransport } from "npm:@sentry/core@11.10.0";
+import { createTransport } from "npm:@sentry/core@11.11.0";
 import { context, propagation, trace } from "npm:@opentelemetry/api@1.10.0";
 import { loadSentryEdge } from "./sentryRuntime.ts";
 

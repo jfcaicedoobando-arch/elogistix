@@ -35,15 +35,17 @@ export async function getCurrentSession(): Promise<Session | null> {
   return data.session ?? null;
 }
 
+import { captureAuthOperationScope } from "@/lib/auth/authOperationScope";
 import { signOutCurrentSession as signOutSesionBase } from "@/lib/auth/signOut";
 
 /**
- * Cierra la sesión actual. Registra la bitácora ANTES de invocar
- * `supabase.auth.signOut()` para que exista un usuario autenticado
- * al momento de escribir el registro.
+ * Cierra la sesión actual. Inicia la bitácora sin bloquear la salida y con
+ * el ámbito original, para no atribuir una escritura tardía a otra sesión.
  */
 export async function signOutCurrentSession(): Promise<void> {
-  await registrarActividad({ modulo: "auth", accion: "Cerró sesión" });
+  void registrarActividad({ modulo: "auth", accion: "Solicitó cerrar sesión",
+    authScope: captureAuthOperationScope(),
+  }).catch(() => { /* La bitácora no bloquea la salida. */ });
   await signOutSesionBase();
 }
 

@@ -17,7 +17,7 @@
  * caller decide; la recomendación es CONTINUAR (fail-open) capturando a
  * Sentry: perder el mutex temporalmente es mejor que apagar el cron.
  */
-import type { SupabaseClient } from "npm:@supabase/supabase-js@2.118.0";
+import type { SupabaseClient } from "npm:@supabase/supabase-js@2.119.0";
 import { captureEdgeException } from "./sentry.ts";
 
 export type ResultadoCronLock = "tomado" | "ocupado" | "error";

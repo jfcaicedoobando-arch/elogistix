@@ -9,7 +9,7 @@
  * tras el `.update()`). Persistido ⇒ resultado incierto ya registrado (202);
  * no persistido ⇒ el caller responde 5xx porque nadie reconciliará la NC.
  */
-import { SupabaseClient } from "npm:@supabase/supabase-js@2.118.0";
+import { SupabaseClient } from "npm:@supabase/supabase-js@2.119.0";
 import { registrarBitacoraEdge } from "../_shared/bitacora.ts";
 
 /** Estados que garantizan que el cron de reconciliación adoptará la NC. */
