@@ -5,7 +5,6 @@
       "entry": [
         "index.html",
         "scripts/**/*.ts",
-        "scripts/db/test-proforma-fixture-lock-order.mjs",
         "docs/qa/tailwind-integration-20261017/integration.mjs",
         "src/**/*.test.{ts,tsx}",
         "src/**/__tests__/**/*.{ts,tsx}",
@@ -22,8 +21,9 @@
         ]
       },
       "ignoreDependencies": [
-        "drizzle-orm",
-        "@sentry/deno"
+        "@sentry/deno",
+        "@lovable.dev/vite-plugin-dev-server-bridge",
+        "@lovable.dev/vite-plugin-hmr-gate"
       ]
     },
     "scripts/ci/selector148": {

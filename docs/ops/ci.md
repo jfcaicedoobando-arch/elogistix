@@ -78,6 +78,23 @@ RLS, selección por áreas ni verificación de evidencia del agregador.
 Un merge de coverage tampoco sustituye la ejecución de tests. Ninguno de estos
 comandos activa coverage ni cambia los **14 shards** de PR/push del CI principal.
 
+### Dependencias de la vista previa de Lovable
+
+El commit `42d6b9e` conserva `@lovable.dev/vite-plugin-dev-server-bridge` y
+`@lovable.dev/vite-plugin-hmr-gate` para la vista previa administrada por
+Lovable. No son imports del frontend ni de `vite.config.ts` en este repositorio.
+Knip sólo exceptúa esos dos nombres exactos en el workspace raíz, sin quitar
+las dependencias del manifiesto/lock ni activar plugins en el build de producción.
+La prueba `knipPreviewDependencies.test.ts` ejecuta Knip con controles negativos,
+incluido otro paquete del mismo scope, para comprobar que las demás dependencias
+sin uso siguen fallando. Revisar estas excepciones si la plataforma deja de
+requerir los paquetes o si pasan a tener imports dentro del repositorio.
+
+El contrato de coordinador valida la entrada única e inmutable `0040`, su posición
+inmediatamente después de `0039` y el enlace entre snapshots. No congela la
+longitud total del journal: migraciones posteriores pueden agregarse sin
+reescribir ni duplicar esa corrección. Los guards ACL permanecen bloqueantes.
+
 ### Estado incremental de TypeScript
 
 El job `checks` ejecuta `bun run typecheck:ci` cuando hay frontend, incluso
