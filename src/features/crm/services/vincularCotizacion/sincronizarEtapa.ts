@@ -15,6 +15,13 @@ import { hoyMx } from "@/lib/date/mx";
 import { calcularValorReal, type CotizacionValor } from "./valorReal";
 
 type TipoEtapaDerivada = "ganada" | "abierta" | "perdida";
+interface CierreActual { tipo: string | null; fechaCierre: string | null; moneda: string | null }
+interface PatchCierre {
+  fecha_cierre_real?: string | null;
+  valor_real?: number | null;
+  moneda?: string;
+  motivo_perdida_id?: string | null;
+}
 
 /** Precedencia pura sobre los estados vivos de las cotizaciones. */
 export function derivarTipoEtapa(estados: string[]): TipoEtapaDerivada | null {
@@ -31,7 +38,7 @@ export function derivarTipoEtapa(estados: string[]): TipoEtapaDerivada | null {
  */
 async function fetchCierreActual(
   oportunidadId: string,
-): Promise<{ tipo: string | null; fechaCierre: string | null; moneda: string | null } | null> {
+): Promise<CierreActual | null> {
   const { data, error } = await supabase
     .from("crm_oportunidades")
     .select("id, fecha_cierre_real, moneda, crm_etapas_pipeline(tipo)")
@@ -47,6 +54,32 @@ async function fetchCierreActual(
     crm_etapas_pipeline?: { tipo?: string | null } | null;
   };
   return { tipo: row.crm_etapas_pipeline?.tipo ?? null, fechaCierre: row.fecha_cierre_real ?? null, moneda: row.moneda ?? null };
+}
+
+/** Datos de cierre de la transición, separados de las consultas y del update. */
+function crearPatchCierre(
+  tipo: TipoEtapaDerivada,
+  actual: CierreActual,
+  cotizaciones: CotizacionValor[],
+): PatchCierre {
+  // Reabrir limpia todo el cierre, aunque haya una fecha histórica.
+  if (tipo === "abierta") {
+    return { fecha_cierre_real: null, valor_real: null, motivo_perdida_id: null };
+  }
+  const patch: PatchCierre = {};
+  const yaCerradaEnMismoTipo = actual.tipo === tipo && actual.fechaCierre != null;
+  // Sin transición real conservamos fecha y valor de cierre originales.
+  if (!yaCerradaEnMismoTipo) patch.fecha_cierre_real = hoyMx();
+  // Ganada limpia el motivo de pérdida; perdida conserva el suyo.
+  if (tipo === "ganada") patch.motivo_perdida_id = null;
+  if (tipo === "ganada" && !yaCerradaEnMismoTipo) {
+    const vr = calcularValorReal(cotizaciones, actual.moneda);
+    if (vr) {
+      patch.valor_real = vr.valor;
+      if (vr.moneda) patch.moneda = vr.moneda;
+    }
+  }
+  return patch;
 }
 
 /**
@@ -91,45 +124,13 @@ export async function sincronizarEtapaPorEstadoCotizacion(input: {
   // cierre a hoy. Sólo se fija `fecha_cierre_real` cuando hay transición real.
   const actual = await fetchCierreActual(input.oportunidadId);
   if (!actual) return;
-  const yaCerradaEnMismoTipo = actual.tipo === tipo && actual.fechaCierre != null;
-
-
-  // P1-B (13.823.70): al volver a "abierta" hay que limpiar los datos de cierre;
-  // antes quedaban `fecha_cierre_real`/`motivo_perdida_id` históricos y la
-  // oportunidad se veía perdida/ganada dentro de una etapa abierta. Se aplica en
-  // el MISMO update (atómico) siguiendo la regla de `resolverLimpiezaCierre`.
-  const patch: {
-    etapa_id: string;
-    probabilidad: number;
-    fecha_cierre_real?: string | null;
-    valor_real?: number | null;
-    moneda?: string;
-    motivo_perdida_id?: string | null;
-  } = {
+  // El cierre y la etapa se persisten juntos en el mismo update.
+  const patch = {
     etapa_id: etapa.id,
     probabilidad: etapa.probabilidad_default ?? 0,
+    // SAFE-CAST: select explícito de columnas de cotización.
+    ...crearPatchCierre(tipo, actual, (cotizaciones ?? []) as unknown as CotizacionValor[]),
   };
-  if (tipo === "abierta") {
-    patch.fecha_cierre_real = null;
-    patch.valor_real = null;
-    patch.motivo_perdida_id = null;
-  } else {
-    // Sin transición real conservamos fecha y valor de cierre originales.
-    if (!yaCerradaEnMismoTipo) patch.fecha_cierre_real = hoyMx();
-    // "ganada" no conserva motivo de pérdida; "perdida" mantiene el suyo.
-    if (tipo === "ganada") patch.motivo_perdida_id = null;
-    // Valor real = cotización(es) aceptada(s); sin transición se respeta el actual.
-    if (tipo === "ganada" && !yaCerradaEnMismoTipo) {
-      // SAFE-CAST: select explícito de columnas de cotización.
-      const vr = calcularValorReal((cotizaciones ?? []) as unknown as CotizacionValor[], actual.moneda);
-      if (vr) {
-        patch.valor_real = vr.valor;
-        if (vr.moneda) patch.moneda = vr.moneda;
-      }
-    }
-  }
-
-
 
   const { data, error } = await supabase
     .from("crm_oportunidades")
