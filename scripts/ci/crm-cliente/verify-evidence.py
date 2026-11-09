@@ -23,7 +23,7 @@ def verify(stage, sha):
         assert result['source_commit'] == sha and result['status'] == 'pass' and result['both_committed'] is True
         assert result['cases'] == EXPECTED_CASES, 'Missing, extra or reordered identity cases'
     if stage == 'final':
-        assert record['stage'] == 'final-0034-verify-only'
+        assert record['stage'] == 'final-0041-verify-only'
         assert all('whole_migration_replay' not in item for item in runs)
 
 if __name__ == '__main__':
