@@ -44,3 +44,6 @@ reports/
 
 # Caché de ESLint (aislada de node_modules; ver .github/workflows/ci.yml job lint)
 .cache/
+
+# Vitest 5 generated blobs, attachments and traces
+.vitest/
