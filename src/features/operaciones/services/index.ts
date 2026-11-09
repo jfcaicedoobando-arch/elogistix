@@ -14,5 +14,4 @@ export {
   fetchCoordinadorCliente,
   fetchCoordinadores,
   reasignarCoordinadorHandover,
-  type CoordinadorOption,
 } from "./coordinador";

@@ -51,15 +51,17 @@ updates:
         patterns: ["react-router", "react-router-dom"]
         update-types: ["major"]
       vitest-minor-patch:
-        patterns: ["vitest", "@vitest/*"]
+        patterns: ["vitest", "@vitest/coverage-v8", "@vitest/*"]
         update-types: ["minor", "patch"]
       vitest-major:
-        patterns: ["vitest", "@vitest/*"]
+        patterns: ["vitest", "@vitest/coverage-v8", "@vitest/*"]
         update-types: ["major"]
       # Sólo version-updates (default). No cambia los grupos de seguridad.
       # Agrupar no fuerza versiones ausentes ni certifica compatibilidad;
       # las migraciones mayores requieren revisar/adaptar la familia completa.
       bun-minor-patch:
+        # Las familias con peers exactos nunca deben caer en el grupo general.
+        exclude-patterns: ["vitest", "@vitest/*"]
         update-types:
           - "minor"
           - "patch"

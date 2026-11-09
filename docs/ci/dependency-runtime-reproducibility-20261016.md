@@ -17,7 +17,7 @@ y el SHA final se reportan en el PR, sin atribuirles validaciones anteriores.
 | Instalación de dependencias | Lockfile congelado y `--ignore-scripts`, sin cambios de política de caché |
 | `test:ci` | Ejecutar tests normales sin coverage y permitir filtros/shards |
 | `ci:local` | Lint sin warnings → typecheck → Knip → tests normales → build |
-| `test:coverage:merge` | Consumir blobs previos de `.vitest-reports`; no producirlos ni ejecutar tests desde cero |
+| `test:coverage:merge` | Consumir blobs previos de `.vitest/blob`; no producirlos ni ejecutar tests desde cero |
 
 El setup compartido ya fijaba Node `24.22.0`. El detector fijaba `24.19.0`
 después de ejecutar el plan de shards y el catálogo con el Node del runner;

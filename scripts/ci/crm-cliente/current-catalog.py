@@ -7,6 +7,8 @@ import re
 ROOT = Path(__file__).resolve().parents[3]
 HISTORY = 'drizzle/migrations/0034_prospecto_solo_borrador.sql'
 SHA256 = 'b4daeecf283e43b5e85ab0fc1dec0f1c322c4a0150549c5d4bbb23b48210e0b5'
+HOUSEKEEPING_HISTORY = 'drizzle/migrations/0041_prospecto_housekeeping_historicos.sql'
+HOUSEKEEPING_SHA256 = '4bc3ec9e2f34c10bd7091e8f1b9eb5e3458dce2b3f6d7664d8eec129fd27fd53'
 SIGNATURES = {
     '_crm_empresa_para_conversion': 'uuid,uuid,uuid',
     '_crm_empresa_validar_lead': '', '_crm_empresa_desde_cliente': '',
@@ -33,7 +35,18 @@ def expected_catalog():
     final = definitions(current.decode())
     if set(final) != {'convertir_prospecto_a_cliente_rpc', '_cotizaciones_validar_prospecto'}:
         raise RuntimeError('Complete final 0034 definitions required')
+    # 0041 evolves only the quotation trigger; the conversion RPC remains 0034.
+    housekeeping = (ROOT / HOUSEKEEPING_HISTORY).read_bytes()
+    if hashlib.sha256(housekeeping).hexdigest() != HOUSEKEEPING_SHA256:
+        raise RuntimeError('Final 0041 source changed without contract review')
+    mirror = ROOT / 'scripts/ci/drizzle-history/0041_prospecto_housekeeping_historicos.sql'
+    if mirror.read_bytes() != housekeeping:
+        raise RuntimeError('Final 0041 isolated mirror differs')
+    evolved = definitions(housekeeping.decode())
+    if set(evolved) != {'_cotizaciones_validar_prospecto'}:
+        raise RuntimeError('Complete final 0041 trigger definition required')
     old.update(final)
+    old.update(evolved)
     if set(old) != set(SIGNATURES):
         raise RuntimeError('Complete final CRM identity catalog required')
     result = {}

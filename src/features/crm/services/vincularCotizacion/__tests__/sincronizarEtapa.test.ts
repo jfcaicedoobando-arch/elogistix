@@ -196,3 +196,33 @@ describe("preserva fecha de cierre cuando no hay transición real", () => {
     ).toBe(false);
   });
 });
+
+
+describe("cierre y valor real en el mismo update", () => {
+  it.each([
+    { previa: "abierta", fecha: null, moneda: "MXN", esperado: { valor_real: 300.3, moneda: "MXN" } },
+    { previa: "abierta", fecha: null, moneda: "EUR", esperado: { valor_real: 50, moneda: "USD" } },
+    { previa: "ganada", fecha: "2026-08-31", moneda: "MXN", esperado: {} },
+  ])("conserva la política monetaria al pasar de $previa ($moneda, $fecha)", async ({ previa, fecha, moneda, esperado }) => {
+    mock.setTableResult("cotizaciones", { error: null, data: [
+      { id: "c1", estado: "Aceptada", subtotal: 100.1, moneda: "MXN", updated_at: "2026-11-01" },
+      { id: "c2", estado: "En operación", subtotal: 200.2, moneda: "MXN", updated_at: "2026-11-02" },
+      { id: "c3", estado: "Aceptada", subtotal: 50, moneda: "USD", updated_at: "2026-11-03" },
+      { id: "c4", estado: "Rechazada", subtotal: 999, moneda: "MXN", updated_at: "2026-11-04" },
+    ] });
+    mock.setTableResult("crm_oportunidades", { error: null, data: {
+      id: "op-money", moneda, fecha_cierre_real: fecha, crm_etapas_pipeline: { tipo: previa },
+    } });
+    await sincronizarEtapaPorEstadoCotizacion({ oportunidadId: "op-money", estadoCotizacion: "Aceptada" });
+    const updates = mock.tableCalls.filter((c) => c.table === "crm_oportunidades" && c.ops.includes("update"));
+    expect(updates).toHaveLength(1);
+    const update = updates[0];
+    const patch = update.opArgs[update.ops.indexOf("update")][0] as Record<string, unknown>;
+    expect(patch).toEqual({
+      etapa_id: "e-ganada", probabilidad: 100, motivo_perdida_id: null,
+      ...(fecha ? {} : { fecha_cierre_real: expect.any(String) }), ...esperado,
+    });
+    expect(update.opArgs).toContainEqual(["id", "op-money"]);
+    expect(update.opArgs).toContainEqual(["deleted_at", null]);
+  });
+});

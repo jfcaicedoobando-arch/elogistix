@@ -66,7 +66,7 @@ def main():
     require(not out.exists(), 'Fresh evidence directory required')
     out.mkdir(parents=True)
     record = {'status': 'running', 'container_id': container, 'service_image': PIN,
-              'stage': 'final-0034-verify-only',
+              'stage': 'final-0041-verify-only',
               'source_preserved': False, 'runtime_tested': False, 'clone_runs': []}
 
     def save():
