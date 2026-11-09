@@ -12,6 +12,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { fetchEtapasPipelineActivas } from "@/features/crm/services/etapas";
 import { registrarActividad } from "@/services/bitacora/registrar";
 import { hoyMx } from "@/lib/date/mx";
+import { calcularValorReal, type CotizacionValor } from "./valorReal";
 
 type TipoEtapaDerivada = "ganada" | "abierta" | "perdida";
 
@@ -30,10 +31,10 @@ export function derivarTipoEtapa(estados: string[]): TipoEtapaDerivada | null {
  */
 async function fetchCierreActual(
   oportunidadId: string,
-): Promise<{ tipo: string | null; fechaCierre: string | null } | null> {
+): Promise<{ tipo: string | null; fechaCierre: string | null; moneda: string | null } | null> {
   const { data, error } = await supabase
     .from("crm_oportunidades")
-    .select("id, fecha_cierre_real, crm_etapas_pipeline(tipo)")
+    .select("id, fecha_cierre_real, moneda, crm_etapas_pipeline(tipo)")
     .eq("id", oportunidadId)
     .is("deleted_at", null)
     .maybeSingle();
@@ -42,9 +43,10 @@ async function fetchCierreActual(
   // SAFE-CAST: select explícito con join de etapa (una sola fila).
   const row = data as unknown as {
     fecha_cierre_real: string | null;
+    moneda: string | null;
     crm_etapas_pipeline?: { tipo?: string | null } | null;
   };
-  return { tipo: row.crm_etapas_pipeline?.tipo ?? null, fechaCierre: row.fecha_cierre_real ?? null };
+  return { tipo: row.crm_etapas_pipeline?.tipo ?? null, fechaCierre: row.fecha_cierre_real ?? null, moneda: row.moneda ?? null };
 }
 
 /**
@@ -57,7 +59,7 @@ export async function sincronizarEtapaPorEstadoCotizacion(input: {
 }): Promise<void> {
   const { data: cotizaciones, error: errCot } = await supabase
     .from("cotizaciones")
-    .select("id, estado")
+    .select("id, estado, subtotal, moneda, updated_at")
     .eq("oportunidad_id", input.oportunidadId)
     .is("deleted_at", null);
   if (errCot) throw errCot;
@@ -101,6 +103,7 @@ export async function sincronizarEtapaPorEstadoCotizacion(input: {
     probabilidad: number;
     fecha_cierre_real?: string | null;
     valor_real?: number | null;
+    moneda?: string;
     motivo_perdida_id?: string | null;
   } = {
     etapa_id: etapa.id,
@@ -115,6 +118,15 @@ export async function sincronizarEtapaPorEstadoCotizacion(input: {
     if (!yaCerradaEnMismoTipo) patch.fecha_cierre_real = hoyMx();
     // "ganada" no conserva motivo de pérdida; "perdida" mantiene el suyo.
     if (tipo === "ganada") patch.motivo_perdida_id = null;
+    // Valor real = cotización(es) aceptada(s); sin transición se respeta el actual.
+    if (tipo === "ganada" && !yaCerradaEnMismoTipo) {
+      // SAFE-CAST: select explícito de columnas de cotización.
+      const vr = calcularValorReal((cotizaciones ?? []) as unknown as CotizacionValor[], actual.moneda);
+      if (vr) {
+        patch.valor_real = vr.valor;
+        if (vr.moneda) patch.moneda = vr.moneda;
+      }
+    }
   }
 
 
