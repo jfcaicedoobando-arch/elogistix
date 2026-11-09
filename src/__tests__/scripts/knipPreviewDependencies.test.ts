@@ -49,7 +49,8 @@ describe("Lovable preview dependency inventory", () => {
         const issues: KnipIssue[] = JSON.parse(result.stdout).issues;
         const unused = issues.flatMap((issue) =>
           [...(issue.dependencies ?? []), ...(issue.devDependencies ?? [])].map(({ name }) => name));
-        expect(unused.sort()).toEqual((accountForPreview ? controls : [...previewPackages, ...controls]).toSorted());
+        const expectedUnused = accountForPreview ? [...controls] : [...previewPackages, ...controls];
+        expect(unused.sort()).toEqual(expectedUnused.sort());
       }
     } finally {
       rmSync(directory, { recursive: true, force: true });
