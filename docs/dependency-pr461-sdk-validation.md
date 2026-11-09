@@ -66,3 +66,15 @@ suite and all fourteen Vitest shards must pass on the actual remote commit.
 No test selection, coverage threshold, operational gate or historical source
 provenance check was removed or weakened. No migration, real authentication
 operation, deployment or production data change is included.
+
+## First remote CI attempt
+
+Commit `829c8c5b` validated TypeScript, production build, bundle/sourcemap gates,
+all 49 deployable Edge adapters, 1263 Deno tests (41 steps), ESLint, dependency
+review, Gitleaks, demo-disabled validation and all five isolated UI audits.
+Eleven Vitest shards passed. Three shards found two architecture violations:
+the agent layout exceeded 200 lines, and logout error toasts lacked a safe
+error object. Follow-up extraction centralizes the feedback boundary and
+preserves a sanitized diagnostic without raw Auth/storage message, stack or
+cause. The three original guards remain unchanged and pass locally. The full
+CI must run again on the follow-up commit before integration.

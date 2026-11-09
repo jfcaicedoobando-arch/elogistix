@@ -1,6 +1,10 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { createClient } from "@supabase/supabase-js";
 
+const notifyError = vi.hoisted(() => vi.fn());
+vi.mock("@/lib/ui/appFeedback", () => ({ notifyError }));
+import { signOutWithFeedback } from "../signOutWithFeedback";
+
 const auth = vi.hoisted(() => ({ signOut: vi.fn(), getSession: vi.fn() }));
 vi.mock("@/integrations/supabase/client", () => ({ supabase: { auth } }));
 import { signOutCurrentSession, SIGN_OUT_FAILURE } from "../signOut";
@@ -75,5 +79,38 @@ describe("SDK real con transporte aislado", () => {
     expect(fetcher).toHaveBeenCalled();
     await client.auth.stopAutoRefresh();
     await reloaded.auth.stopAutoRefresh();
+  });
+});
+
+
+describe("signOutWithFeedback", () => {
+  it("sólo continúa después de confirmar la salida", async () => {
+    let finish!: () => void;
+    const signOut = vi.fn(() => new Promise<void>((resolve) => { finish = resolve; }));
+    const navigate = vi.fn();
+    const pending = signOutWithFeedback(signOut, navigate);
+    expect(navigate).not.toHaveBeenCalled();
+    finish();
+    await pending;
+    expect(navigate).toHaveBeenCalledOnce();
+  });
+  it("captura rechazos sin navegar ni exponer detalles privados", async () => {
+    const navigate = vi.fn();
+    const signOut = vi.fn().mockRejectedValue(new Error("secret-token"));
+    await expect(signOutWithFeedback(signOut, navigate)).resolves.toBeUndefined();
+    expect(navigate).not.toHaveBeenCalled();
+    expect(notifyError).toHaveBeenCalledWith(undefined, {
+      title: "No se pudo cerrar sesión", description: SIGN_OUT_FAILURE,
+      error: expect.objectContaining({ message: SIGN_OUT_FAILURE }),
+    });
+    expect(JSON.stringify(notifyError.mock.calls)).not.toContain("secret-token");
+    const diagnostic = notifyError.mock.lastCall?.[1].error as Error;
+    expect(diagnostic.stack).not.toContain("secret-token");
+    expect(diagnostic.cause).toBeUndefined();
+  });
+  it("permite cerrar sin navegación (sidebar)", async () => {
+    const signOut = vi.fn().mockResolvedValue(undefined);
+    await signOutWithFeedback(signOut);
+    expect(signOut).toHaveBeenCalledOnce();
   });
 });

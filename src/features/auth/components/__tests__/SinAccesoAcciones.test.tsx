@@ -66,6 +66,10 @@ describe("SinAccesoAcciones · cerrar sesión", () => {
   await waitFor(() => expect(toastError).toHaveBeenCalled());
   expect(navigate).not.toHaveBeenCalled();
   expect(JSON.stringify(toastError.mock.calls)).not.toContain("secret-token");
+  const diagnostic = toastError.mock.lastCall?.[1].error as Error;
+  expect(diagnostic).toBeInstanceOf(Error);
+  expect(diagnostic.stack).not.toContain("secret-token");
+  expect(diagnostic.cause).toBeUndefined();
   fireEvent.click(screen.getByRole("button", { name: /Cerrar sesión/i }));
   await waitFor(() => expect(navigate).toHaveBeenCalledWith("/login", { replace: true }));
 });

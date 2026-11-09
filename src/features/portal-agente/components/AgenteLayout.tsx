@@ -1,5 +1,4 @@
-import { notifyError } from "@/lib/ui/appFeedback";
-import { SIGN_OUT_FAILURE } from "@/lib/auth/signOut";
+import { signOutWithFeedback } from "@/lib/auth/signOutWithFeedback";
 /**
  * Layout del Portal del Agente de Carga.
  * v13.226.0 (Lote 6 · D-02, D-12): paridad con `PortalLayout` — breadcrumbs bar,
@@ -82,14 +81,7 @@ export default function AgenteLayout() {
   const labels = useBreadcrumbLabels();
   const breadcrumbs = useAgenteBreadcrumbs(location.pathname, labels);
 
-  const handleSignOut = async () => {
-    try {
-      await signOut();
-      navigate("/login");
-    } catch {
-      notifyError(undefined, { title: "No se pudo cerrar sesión", description: SIGN_OUT_FAILURE });
-    }
-  };
+  const handleSignOut = () => signOutWithFeedback(signOut, () => navigate("/login"));
 
   const nombreParaIniciales = ctx?.agenteNombre ?? user?.email ?? "";
   const initials = computeInitials(nombreParaIniciales);

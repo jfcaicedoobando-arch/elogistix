@@ -69,7 +69,11 @@ export function SinAccesoAcciones({ variant, esAdministrador, onRetry, retrying 
       await signOut();
       navigate("/login", { replace: true });
     } catch {
-      notifyError(undefined, { title: "No se pudo cerrar sesión", description: SIGN_OUT_FAILURE });
+      // Conserva diagnóstico sin adjuntar respuestas privadas de Auth/storage.
+      notifyError(undefined, {
+        title: "No se pudo cerrar sesión", description: SIGN_OUT_FAILURE,
+        error: new Error(SIGN_OUT_FAILURE),
+      });
     } finally {
       pending.current = false;
       setSigningOut(false);

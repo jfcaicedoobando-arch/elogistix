@@ -1,5 +1,4 @@
-import { notifyError } from "@/lib/ui/appFeedback";
-import { SIGN_OUT_FAILURE } from "@/lib/auth/signOut";
+import { signOutWithFeedback } from "@/lib/auth/signOutWithFeedback";
 import { memo, forwardRef } from "react";
 import { useTheme } from "@/lib/contexts/ThemeContext";
 import { BrandLockup } from "@/components/layout/BrandLockup";
@@ -142,11 +141,7 @@ const AppSidebarBase = forwardRef<HTMLDivElement>(function AppSidebarBase(_props
             collapsed={collapsed}
             theme={theme}
             onToggleTheme={toggleTheme}
-            onSignOut={() => {
-              void signOut().catch(() => notifyError(undefined, {
-                title: "No se pudo cerrar sesión", description: SIGN_OUT_FAILURE,
-              }));
-            }}
+            onSignOut={() => { void signOutWithFeedback(signOut); }}
           />
         )}
         {!collapsed && (
