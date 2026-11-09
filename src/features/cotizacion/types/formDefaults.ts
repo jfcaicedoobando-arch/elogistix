@@ -64,6 +64,7 @@ export const COTIZACION_FORM_DEFAULTS: CotizacionFormValues = {
   modalidadEquipo: "",
   puntoIntermedio: "",
   tarifaId: null,
+  monedaTarifa: null,
   tarifaOverride: {},
   sinDesgloseCostos: false,
   lclFleteManual: DEFAULT_LCL_FLETE_MANUAL,

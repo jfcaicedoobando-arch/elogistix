@@ -42,6 +42,17 @@ beforeEach(() => {
 });
 
 describe("GUI69: la invalidación usa la misma identidad de contenedor", () => {
+  it.each(["USD", "MXN"])("recupera moneda %s de la tarifa real al reabrir", moneda => {
+    leerTarifa.mockReturnValue({ data: { id: "t1", moneda, tipo_contenedor_id: LEGACY } });
+    const { result } = setup(HC);
+    expect(result.current.getValues("monedaTarifa")).toBe(moneda);
+    expect(result.current.getValues("monedaCrm")).toBe("");
+  });
+  it("no aplica moneda de una tarifa anterior", () => {
+    leerTarifa.mockReturnValue({ data: { id: "otra", moneda: "MXN", tipo_contenedor_id: LEGACY } });
+    const { result } = setup(HC);
+    expect(result.current.getValues("monedaTarifa")).toBeNull();
+  });
   it.each([HC, LEGACY, "40' High Cube", "40HC"])("mantiene tarifa equivalente a %s", (tipo) => {
     const { result, setCostos } = setup(tipo);
     expect(result.current.getValues("tarifaId")).toBe("t1");

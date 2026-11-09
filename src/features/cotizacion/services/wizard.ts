@@ -149,6 +149,7 @@ export async function savePaso3(opts: {
   tipoCambioUsd?: number | null;
   /** Pricing confirmado no puede cambiar la moneda del vínculo. */
   conservarMoneda?: boolean;
+  monedaTarifa?: string | null;
   mutations: Pick<Mutations, "updateCotizacion">;
 }): Promise<void> {
   const data = buildVentaCotizacionPayload(opts);

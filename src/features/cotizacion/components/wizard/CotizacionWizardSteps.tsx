@@ -19,7 +19,7 @@ import PasoDatosGenerales from "@/features/cotizacion/components/wizard/PasoDato
 import Paso1ProgressSidebar from "@/features/cotizacion/components/wizard/Paso1ProgressSidebar";
 import { SinDesgloseBanner } from "@/features/cotizacion/components/SinDesgloseBanner";
 import { TipoCambioCotizacionCard } from "@/features/cotizacion/components/wizard/TipoCambioCotizacionCard";
-import { requiereTipoCambioCotizacion } from "@/features/cotizacion/domain/mezclaMonedas";
+import { monedaObjetivoCotizacion, requiereTipoCambioCotizacion } from "@/features/cotizacion/domain/mezclaMonedas";
 
 type WizardForm = ReturnType<typeof import("@/features/cotizacion/hooks").useCotizacionWizardForm>;
 
@@ -49,8 +49,11 @@ export function CotizacionWizardSteps({ w, clientes, esMaritimo, sinDesgloseFlag
 
   const pricingSolicitudId = useWatch({ control, name: "pricingSolicitudId" });
   const monedaCrm = useWatch({ control, name: "monedaCrm" });
-  const monedaCanonica = pricingSolicitudId ? monedaCrm : null;
-  const requiereTipoCambio = requiereTipoCambioCotizacion(w.conceptosUSD, w.conceptosMXN, monedaCanonica);
+  const tarifaId = useWatch({ control, name: "tarifaId" });
+  const monedaElegida = useWatch({ control, name: "monedaTarifa" });
+  const monedaTarifa = tarifaId ? monedaElegida : null;
+  const monedaCanonica = monedaObjetivoCotizacion(tarifaId, monedaElegida, pricingSolicitudId, monedaCrm);
+  const requiereTipoCambio = requiereTipoCambioCotizacion(w.conceptosUSD, w.conceptosMXN, monedaCanonica, monedaTarifa);
 
   if (w.currentStep === 1) {
     return (

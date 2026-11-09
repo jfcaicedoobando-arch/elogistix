@@ -48,6 +48,7 @@ export function aplicarTarifaAlForm(
   /** Validez actual del form para recortar si excede la vigencia de la tarifa. */
   validezActual?: Date | null | undefined,
 ): void {
+  setValue("monedaTarifa", row.moneda === "USD" || row.moneda === "MXN" ? row.moneda : null, OPTS);
   aplicarCamposBase(setValue, row);
   aplicarValidezPropuesta(setValue, row, validezActual);
   void trigger([
@@ -59,6 +60,7 @@ export function aplicarTarifaAlForm(
     "diasAlmacenaje",
     "validezPropuesta",
     "rutaTexto",
+    "monedaTarifa",
   ]);
   autoCargarCostos(setValue, row, options);
 }

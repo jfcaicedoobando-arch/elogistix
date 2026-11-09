@@ -59,6 +59,7 @@ describe("aplicarTarifaAlForm", () => {
       "diasAlmacenaje",
       "validezPropuesta",
       "rutaTexto",
+      "monedaTarifa",
     ]);
   });
 

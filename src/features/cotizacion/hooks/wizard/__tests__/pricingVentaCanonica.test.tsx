@@ -26,6 +26,16 @@ function montar(pricing = true, tc: number | null = null) {
 }
 beforeEach(() => vi.clearAllMocks());
 describe("wizard Pricing paso 3 y final", () => {
+  it("opción USD avanza y finaliza sin TC aun con CRM en MXN", async () => {
+    const h = montar();
+    act(() => h.result.current.form.setValue("monedaTarifa", "USD"));
+    await act(async () => h.result.current.handleSiguiente());
+    expect(h.setStep).toHaveBeenCalledWith(4);
+    expect(h.update).toHaveBeenCalledWith({ id: "quote-A", data: { conceptos_venta: [usd], subtotal: 1.41, moneda: "USD", tipo_cambio_usd: null } });
+    await act(async () => h.result.current.handleGuardar());
+    expect(h.update).toHaveBeenCalledTimes(2);
+    expect(h.update.mock.calls[1]).toEqual(h.update.mock.calls[0]);
+  });
   it("sin TC no avanza; captura TC y reintenta el mismo ID conservando origen", async () => {
     const h = montar(); const original = { ...h.result.current.form.getValues() };
     await act(async () => h.result.current.handleSiguiente());

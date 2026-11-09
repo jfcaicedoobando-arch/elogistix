@@ -21,3 +21,4 @@
 
 - Edge sin `deno.json` propio: todo `npm:` usado en `supabase/functions/_shared` debe existir en `package.json` (devDependency con la misma versión exacta). Why: el chequeo de Deno resuelve contra `node_modules` y falla si el paquete falta.
 - Cambios antiguos no aplicados: `supabase/migrations/*` es historia inmutable; lo que nunca llegó a producción se aplica como migración Drizzle nueva partiendo de la definición viva (0042–0048), nunca reaplicando el archivo viejo. Why: los archivos de 2026-07/09 quedaron desactualizados y revertirían correcciones posteriores.
+- Keep selected tariff currency in quotation form state separately from CRM currency and use it in step 3 and final sale payloads; never change step-1 CRM linkage or silently add unlike currencies. Why: selected-option denomination without weakening existing linkage and conversion guards.

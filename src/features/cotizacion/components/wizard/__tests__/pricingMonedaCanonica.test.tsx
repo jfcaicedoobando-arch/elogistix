@@ -44,5 +44,9 @@ describe("TC visible en una sola divisa extranjera de Pricing", () => {
     expect(screen.queryByTestId("tc-cotizacion-card")).not.toBeInTheDocument();
     act(() => form.reset({ ...form.getValues(), monedaCrm: "MXN" }));
     expect(screen.getByTestId("tc-cotizacion-card")).toHaveTextContent("MXN");
+    act(() => { form.setValue("tarifaId", "tariff-A"); form.setValue("monedaTarifa", "USD"); });
+    expect(screen.queryByTestId("tc-cotizacion-card")).not.toBeInTheDocument();
+    act(() => form.setValue("monedaTarifa", "MXN"));
+    expect(screen.getByTestId("tc-cotizacion-card")).toHaveTextContent("MXN");
   });
 });

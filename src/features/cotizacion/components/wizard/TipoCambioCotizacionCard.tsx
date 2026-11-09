@@ -66,7 +66,7 @@ export function TipoCambioCotizacionCard({ value, onChange, monedaCanonica }: Pr
           <AlertTriangle className="size-4 mt-0.5 shrink-0" />
           <span>
             {monedaCanonica
-              ? `La moneda de Pricing es ${monedaCanonica}. Captura el tipo de cambio para calcular el subtotal del encabezado en esa moneda.`
+              ? `La moneda de la opción elegida es ${monedaCanonica}. Captura el tipo de cambio DOF de hoy. Sólo se convertirán los importes en otra moneda para el subtotal.`
               : "Esta cotización tiene conceptos en USD y en MXN. Captura el tipo de cambio para calcular el total del encabezado en una sola moneda."}
             {" "}Los importes de cada concepto se conservan en su moneda original.
           </span>

@@ -1,5 +1,7 @@
 # Roadmap: flujo de cotización + Handover
 
+- [x] Usar la moneda de la tarifa elegida: USD sin TC por moneda previa de CRM; MXN pide DOF de hoy, conservando validación de conversiones.
+
 - [x] Conservar el borrador automático y «Aceptada» hasta confirmar el embarque; corregir Kuartz y validar la transición.
 
 - [x] Mostrar la ficha de handover en el detalle de cotización para Administración y Vendedor/KAM; conservar acceso de Operaciones y aislamiento por empresa.

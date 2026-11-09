@@ -53,6 +53,15 @@ export function useInvalidarTarifaAutomatica({ form, setCostosInternos }: Args):
   // Evita repetir el aviso mientras React vuelve a renderear con el mismo estado.
   const avisadoRef = useRef<string | null>(null);
 
+  // Rehidrata desde la tarifa real, nunca desde la moneda previa del CRM.
+  useEffect(() => {
+    if (!tarifaId || tarifa?.id !== tarifaId) return;
+    if (tarifa.moneda !== "USD" && tarifa.moneda !== "MXN") return;
+    if (form.getValues("monedaTarifa") === tarifa.moneda) return;
+    form.setValue("monedaTarifa", tarifa.moneda, { shouldDirty: false, shouldValidate: true });
+    void form.trigger("monedaTarifa");
+  }, [tarifaId, tarifa, form]);
+
   useEffect(() => {
     if (!tarifaId) {
       avisadoRef.current = null;

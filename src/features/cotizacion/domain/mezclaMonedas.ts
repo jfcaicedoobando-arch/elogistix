@@ -13,6 +13,11 @@ export interface ConceptoConTotal {
   total?: number | null;
 }
 
+export function monedaObjetivoCotizacion(tarifaId: string | null | undefined, monedaTarifa: string | null | undefined, solicitudId: string | null | undefined, monedaCrm: string | null | undefined): string | null {
+  if (tarifaId && (monedaTarifa === "USD" || monedaTarifa === "MXN")) return monedaTarifa;
+  return solicitudId ? monedaCrm ?? null : null;
+}
+
 function sumaPositiva(conceptos: ReadonlyArray<ConceptoConTotal>): number {
   return conceptos.reduce((s, c) => s + (Number(c?.total) || 0), 0);
 }
@@ -30,7 +35,10 @@ export function requiereTipoCambioCotizacion(
   conceptosUSD: ReadonlyArray<ConceptoConTotal>,
   conceptosMXN: ReadonlyArray<ConceptoConTotal>,
   monedaCanonica?: string | null,
+  monedaTarifa?: string | null,
 ): boolean {
+  if (monedaTarifa === "MXN") return true;
+  if (monedaTarifa === "USD") return conceptosMXN.some((c) => importeVentaSinIva(c) > 0);
   if (monedaCanonica === "MXN") return conceptosUSD.some((c) => importeVentaSinIva(c) > 0);
   if (monedaCanonica === "USD") return conceptosMXN.some((c) => importeVentaSinIva(c) > 0);
   return hayMezclaDeMonedas(conceptosUSD, conceptosMXN);

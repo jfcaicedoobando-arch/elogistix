@@ -99,6 +99,8 @@ export interface CotizacionFormValues {
   puntoIntermedio: string;
   /** Tarifa marítima del módulo Costeo vinculada (fuente de verdad). */
   tarifaId: string | null;
+  /** Moneda de la opción elegida; distinta de la moneda previa del CRM. */
+  monedaTarifa?: "USD" | "MXN" | null;
   /** Campos editados manualmente tras elegir tarifa (para auditoría). */
   tarifaOverride: Record<string, boolean>;
   /** Atajo: cotización creada sin desglose interno de costos (Paso 2 omitido). */
