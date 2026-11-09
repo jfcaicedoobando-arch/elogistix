@@ -57,6 +57,43 @@ class StageContracts(unittest.TestCase):
         self.assertEqual(len(expected),8)
         self.assertIn("v_estado NOT IN ('Borrador', 'Aceptada')",expected['convertir_prospecto_a_cliente_rpc(uuid,jsonb)']['body'])
         self.assertIn('LC_COT_PROSPECTO_SOLO_BORRADOR',expected['_cotizaciones_validar_prospecto()']['body'])
+    def test_final_trigger_uses_0041_and_rejects_stale_0034_body(self):
+        catalog=adapter.module('crm_final_evolved_test', HERE/'current-catalog.py')
+        expected=catalog.expected_catalog()
+        old=catalog.definitions((ROOT/catalog.HISTORY).read_text())
+        evolved=catalog.definitions((ROOT/catalog.HOUSEKEEPING_HISTORY).read_text())
+        signature='_cotizaciones_validar_prospecto()'
+        contract=expected[signature]
+        self.assertEqual(contract['body'],evolved['_cotizaciones_validar_prospecto'][1])
+        self.assertEqual(expected['convertir_prospecto_a_cliente_rpc(uuid,jsonb)']['body'],
+                         old['convertir_prospecto_a_cliente_rpc'][1])
+        self.assertIn("NEW.estado NOT IN ('Borrador', 'Vencida')",contract['body'])
+        row=dict(body=old['_cotizaciones_validar_prospecto'][1],owner='postgres',
+                 definer=False,config=['search_path=public'],language='plpgsql',
+                 returns='trigger',acl=contract['acl'])
+        with self.assertRaises(RuntimeError):
+            catalog.verify_row(signature,row,contract)
+    def test_final_0041_source_mirror_and_definition_drift_fail_closed(self):
+        catalog=adapter.module('crm_final_drift_test', HERE/'current-catalog.py')
+        source=ROOT/catalog.HOUSEKEEPING_HISTORY
+        mirror=ROOT/'scripts/ci/drizzle-history/0041_prospecto_housekeeping_historicos.sql'
+        original_read=Path.read_bytes
+        for target in (source,mirror):
+            def altered_read(path):
+                value=original_read(path)
+                return value+b'\n-- drift' if path==target else value
+            with self.subTest(target=str(target)),patch.object(Path,'read_bytes',altered_read):
+                with self.assertRaises(RuntimeError):
+                    catalog.expected_catalog()
+        original_definitions=catalog.definitions
+        def altered_definitions(sql):
+            value=original_definitions(sql)
+            if sql==source.read_text():
+                value['unexpected_function']=next(iter(value.values()))
+            return value
+        with patch.object(catalog,'definitions',altered_definitions):
+            with self.assertRaises(RuntimeError):
+                catalog.expected_catalog()
     def test_final_identity_metadata_rejects_each_drift(self):
         catalog=adapter.module('crm_final_metadata_test', HERE/'current-catalog.py')
         for signature,contract in catalog.expected_catalog().items():
@@ -74,7 +111,7 @@ class StageContracts(unittest.TestCase):
         self.assertNotIn('skip_replay',text)
         for fragment in ("quote_stage='Borrador'", 'Final catalog verification changed catalog',
                          'Final clone catalog/security changed during cases', 'm.owned_clone_present',
-                         'for iteration in (1, 2)', "'stage': 'final-0034-verify-only'"):
+                         'for iteration in (1, 2)', "'stage': 'final-0041-verify-only'"):
             self.assertIn(fragment,text)
         self.assertIn('query(name, migration', (HERE.parent/'crm-prospecto-kam/run-actions.py').read_text())
     def test_historical_checkpoint_is_fail_closed_before_first_evolved_history(self):
@@ -103,7 +140,7 @@ class EvidenceContracts(unittest.TestCase):
                         run=base/f'run-{i}';run.mkdir(parents=True)
                         (run/'result.json').write_text(json.dumps(dict(source_commit='sha',status='pass',both_committed=True,cases=verifier.EXPECTED_CASES)))
                         runs.append(dict(iteration=i,database=f'clone-{i}',created=True,dropped=True,status='pass',**{key:'pass'}))
-                    record=dict(source_commit='sha',status='pass',source_preserved=True,runtime_tested=True,clone_runs=runs,stage='final-0034-verify-only')
+                    record=dict(source_commit='sha',status='pass',source_preserved=True,runtime_tested=True,clone_runs=runs,stage='final-0041-verify-only')
                     path=base/'actions-result.json';path.write_text(json.dumps(record))
                     verifier.verify(stage,'sha')
                     with self.assertRaises(AssertionError): verifier.verify(stage,'other-sha')

@@ -68,7 +68,10 @@ complete migration replay, two owned clones and exact source fingerprints.
 
 `run-final-actions.py` is a dedicated current-catalog verifier, not a replay.
 It does not execute the historical migration or replace any function. It pins
-0034 bytes and its isolated mirror, compares all eight effective identity
+0034 and 0041 bytes and their isolated mirrors. The conversion RPC stays at
+0034; only the quotation trigger advances to 0041, permitting historical
+housekeeping while preserving the prospect commercial-transition guard. It
+compares all eight effective identity
 function bodies plus owner/security/search_path/ACL, and retains the exact KAM
 contract. Its two owned clones run the same 19 identity/concurrency cases using
 Borrador fixtures. Blocking barriers and all identity/row assertions are shared;
@@ -88,3 +91,13 @@ Current source bodies/ACL matched 0034. This is local SQL evidence, not a claim
 that the Actions container adapter ran locally; the complete pinned-container
 workflow still requires its remote run. No application data, product migration,
 margin setting or real/project database was modified.
+
+### Current contract correction (0041)
+
+The final replay applies 0041 after 0034. The verifier now independently pins
+that trigger definition without executing SQL or relaxing metadata checks.
+Offline regressions reject the stale 0034 trigger, altered 0041 source/mirror,
+unexpected definitions and each existing security/ACL drift. The earlier local
+0034 runtime evidence above is historical, not validation of this correction.
+The updated runtime stage is `final-0041-verify-only`; its fresh Actions run
+is required before claiming current runtime success. No migration is changed.

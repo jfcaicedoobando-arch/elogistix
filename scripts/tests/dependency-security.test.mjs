@@ -45,6 +45,14 @@ const minimatch = dependency(eslint.require, "minimatch");
 const jsdom = dependency(require, "jsdom");
 const legacyTailwind = dependency(dependency(require, "lovable-tagger").require, "tailwindcss");
 const nested = dependency(legacyTailwind.require, "postcss-nested");
+// jsdom 31 embeds its CSS implementation and no longer consumes css-tree.
+// Keep source-map-js checks on the live PostCSS and magicast dependency edges,
+// including legacy Tailwind's copy rather than trusting a safe hoisted copy.
+const sourceMapConsumers = [
+  dependency(require, "postcss"),
+  dependency(legacyTailwind.require, "postcss"),
+  dependency(require, "magicast"),
+];
 
 test("security patches resolve through consumers within their declared families", () => {
   const checks = [
@@ -56,8 +64,7 @@ test("security patches resolve through consumers within their declared families"
     [jsdom.require, "undici", "8.12.2", "8"],
     [minimatch.require, "brace-expansion", "5.0.12", "5"],
     [nested.require, "postcss-selector-parser", "6.1.5", "6"],
-    [dependency(jsdom.require, "css-tree").require, "source-map-js", "1.2.2", "1"],
-    [dependency(require, "magicast").require, "source-map-js", "1.2.2", "1"],
+    ...sourceMapConsumers.map(consumer => [consumer.require, "source-map-js", "1.2.2", "1"]),
   ];
   for (const [consumer, name, minimum, major] of checks) {
     const version = dependency(consumer, name).manifest.version;
@@ -170,8 +177,11 @@ test("legacy Tailwind's PostCSS consumer preserves nested selectors and escapes"
   assert.equal(ast.first.nodes.filter((node) => node.type === "pseudo").length, 2);
 });
 
-test("css-tree and magicast consume patched synchronous source maps", () => {
-  for (const consumer of [dependency(jsdom.require, "css-tree"), dependency(require, "magicast")]) {
+test("PostCSS and magicast consume patched synchronous source maps", () => {
+  for (const consumer of sourceMapConsumers) {
+    const declared = consumer.manifest.dependencies["source-map-js"];
+    assert.ok(declared, `${consumer.manifest.name} must directly consume source-map-js`);
+    assert.ok(semver.satisfies(dependency(consumer.require, "source-map-js").manifest.version, declared));
     const { SourceMapGenerator, SourceMapConsumer } = consumer.require("source-map-js");
     const map = new SourceMapGenerator({ file: "invoice.js" });
     map.addMapping({ generated: { line: 1, column: 0 }, original: { line: 7, column: 2 }, source: "invoice.ts", name: "total" });
@@ -180,6 +190,70 @@ test("css-tree and magicast consume patched synchronous source maps", () => {
     assert.deepEqual(decoded.originalPositionFor({ line: 1, column: 0 }),
       { source: "invoice.ts", line: 7, column: 2, name: "total" });
     assert.equal(decoded.sourceContentFor("invoice.ts"), "const total: number = 42;");
+  }
+});
+
+test("jsdom 31 uses integrated CSS and the new optional canvas peer", () => {
+  assert.equal(jsdom.manifest.version.split(".")[0], "31");
+  for (const name of ["css-tree", "@asamuzakjp/dom-selector", "@asamuzakjp/css-color"]) {
+    assert.equal(jsdom.manifest.dependencies[name], undefined, `${name}: retired CSS edge must stay explicit`);
+  }
+  assert.equal(jsdom.manifest.peerDependencies.canvas, undefined);
+  assert.ok(semver.satisfies("1.0.13", jsdom.manifest.peerDependencies["@napi-rs/canvas"]));
+  assert.equal(jsdom.manifest.peerDependenciesMeta["@napi-rs/canvas"].optional, true);
+});
+
+test("jsdom finishes a blocked document before DOM reads and fires page load on window", { timeout: 5000 }, async () => {
+  const { JSDOM, VirtualConsole, requestInterceptor } = require("jsdom");
+  const errors = [];
+  const requests = [];
+  const virtualConsole = new VirtualConsole();
+  virtualConsole.on("jsdomError", error => errors.push(error));
+  let release;
+  const scriptReady = new Promise(resolve => { release = resolve; });
+  // All resource requests receive synthetic responses. Never contact a server.
+  const dom = new JSDOM(`<script src="/fixture.js"></script><main id="invoice">Ready</main>`, {
+    url: "https://jsdom-fixture.invalid/",
+    runScripts: "dangerously",
+    virtualConsole,
+    resources: { interceptors: [requestInterceptor(async request => {
+      requests.push(request.url);
+      assert.equal(request.url, "https://jsdom-fixture.invalid/fixture.js");
+      await scriptReady;
+      return new Response('document.documentElement.dataset.scriptReady = "yes";', {
+        headers: { "Content-Type": "application/javascript" },
+      });
+    })] },
+  });
+  const { window } = dom;
+  const { document } = window;
+  const events = [];
+  document.addEventListener("DOMContentLoaded", () => events.push("dom-ready"));
+  document.addEventListener("load", () => events.push("document-load"));
+  window.addEventListener("load", () => events.push("window-load"));
+  const waitForReady = () => document.readyState !== "loading" ? Promise.resolve()
+    : new Promise(resolve => document.addEventListener("DOMContentLoaded", resolve, { once: true }));
+  const waitForLoad = () => document.readyState === "complete" ? Promise.resolve()
+    : new Promise(resolve => window.addEventListener("load", resolve, { once: true }));
+  try {
+    assert.equal(document.readyState, "loading");
+    assert.equal(document.getElementById("invoice"), null, "blocking script leaves an unfinished tree");
+    const ready = waitForReady();
+    const loaded = waitForLoad();
+    release();
+    await ready;
+    assert.equal(document.getElementById("invoice").textContent, "Ready");
+    assert.equal(document.documentElement.dataset.scriptReady, "yes");
+    await loaded;
+    // The readyState fast paths must also work after the events already fired.
+    await waitForReady();
+    await waitForLoad();
+    assert.deepEqual(events, ["dom-ready", "window-load"]);
+    assert.deepEqual(requests, ["https://jsdom-fixture.invalid/fixture.js"]);
+    assert.deepEqual(errors, []);
+  } finally {
+    release();
+    window.close();
   }
 });
 

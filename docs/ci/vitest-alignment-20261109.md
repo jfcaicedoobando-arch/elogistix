@@ -60,3 +60,16 @@ final con los otros cambios de dependencias.
   El contrato de catálogo omitido y la base anterior bloquearon el agregador.
 - RLS anterior sigue investigándose por un contrato de identidad CRM ajeno
   a estos cambios; no se omite el job ni se declara verde por inferencia.
+
+## Árbol combinado con jsdom y contrato RLS
+
+- Base final incorporada: `d44d2e0871e8fd172f53d456227dd15edddd8784`,
+  que contiene #455 (jsdom 31) y #459 (contrato final CRM 0041).
+- El PR #459 aprobó CI y RLS completos antes de incorporarse; no ejecuta una
+  migración nueva ni cambia permisos: actualiza el verificador del historial.
+- Instalación congelada del lock combinado, 31 contratos de dependencias,
+  101 pruebas focalizadas (incluido jsdom 31), cuatro contratos de scripts y
+  13 contratos CRM offline: PASS.
+- CI anterior de Vitest (`fa3835d`) aprobó los 14 shards y 18,186 casos sin
+  omisiones. El árbol combinado requiere su propia CI y RLS completos antes
+  de integrar; no se traslada la aprobación por similitud.
