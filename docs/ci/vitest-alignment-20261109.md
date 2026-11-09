@@ -49,3 +49,14 @@ La suite completa de 2,515 archivos Vitest, ESLint global, build y CI requerido
 siguen siendo condiciones de integración, no resultados de este pase local.
 No fusionar ni cerrar #452/#453 hasta tener una base sana y verificar el SHA
 final con los otros cambios de dependencias.
+
+## Actualización tras integrar #456
+
+- Base incorporada: `ca5181833f3fbf8ee165d0fddd9cf3d8e24b26a3`.
+- Corregida la lista explícita del contrato `ciTestEvidence.test.ts` para
+  reconocer el archivo nuevo, manteniendo el chequeo exacto de rutas.
+- Knip completo y los 38 tests de catálogo, coordinador e inventario: PASS.
+- CI anterior: typecheck/build/Deno, Dependency Review y UI aislada PASS.
+  El contrato de catálogo omitido y la base anterior bloquearon el agregador.
+- RLS anterior sigue investigándose por un contrato de identidad CRM ajeno
+  a estos cambios; no se omite el job ni se declara verde por inferencia.

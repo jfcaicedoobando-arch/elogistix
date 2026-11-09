@@ -1,13 +1,18 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
+interface JournalEntry { idx: number; tag: string; version: string; when: number; breakpoints: boolean }
 const read = (path: string) => readFileSync(path, "utf8");
 
 describe("coordinator permission boundary integration", () => {
-  it("chains only the forward correction after margin", () => {
-    const journal = JSON.parse(read("drizzle/migrations/meta/_journal.json")).entries;
+  it("keeps the unique forward correction immediately after margin as the journal grows", () => {
+    const journal: JournalEntry[] = JSON.parse(read("drizzle/migrations/meta/_journal.json")).entries;
     const previous = JSON.parse(read("drizzle/migrations/meta/0039_snapshot.json"));
     const current = JSON.parse(read("drizzle/migrations/meta/0040_snapshot.json"));
-    expect(journal).toHaveLength(41);
+    // Later migrations append to the journal; this boundary remains immutable.
+    expect(journal[39]).toEqual({ idx: 39, version: "7", when: 1794002479399,
+      tag: "0039_cotizacion_margen_moneda_homogenea", breakpoints: true });
+    expect(journal.filter(({ tag }) => tag === "0040_coordinador_permission_boundary"))
+      .toEqual([journal[40]]);
     expect(journal[40]).toEqual({ idx: 40, version: "7", when: 1794002479400,
       tag: "0040_coordinador_permission_boundary", breakpoints: true });
     expect(current.prevId).toBe(previous.id);

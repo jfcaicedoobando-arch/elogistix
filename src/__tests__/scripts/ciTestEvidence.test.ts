@@ -184,6 +184,7 @@ describe("CI catalog: effective discovery", () => {
       "scripts/tests/dependency-security.test.mjs",
       "scripts/tests/postgres-loader-contracts.test.mjs",
       "scripts/tests/supabase-sdk-contracts.test.mjs",
+      "scripts/tests/vitest-alignment.test.mjs",
     ].map(path => expect.objectContaining({
       path, mode: "automatic", sha256: hash(fs.readFileSync(path)),
     })));
