@@ -10,6 +10,7 @@ import { resolve, dirname } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import test from 'node:test';
 import postgres4 from 'postgres';
+import { currentPostgresDriverCandidate } from './helpers/postgres-driver-candidate.mjs';
 
 const enabled = process.env.POSTGRES_DRIVER_LOCAL === '1';
 const socket = process.env.POSTGRES_DRIVER_SOCKET;
@@ -25,7 +26,7 @@ test('real Postgres.js 3/4 compatibility on a disposable local socket', { skip: 
   assert.match(socket ?? '', /^\/tmp\/elogistix-postgres-driver-[a-zA-Z0-9_-]+$/);
   assert.ok(baselinePath?.startsWith('/tmp/'), 'Explicit temporary postgres 3.4.9 module required');
   assert.equal(versionOf(baselinePath), '3.4.9');
-  assert.equal(versionOf(require.resolve('postgres')), '4.0.0');
+  const candidateVersion = currentPostgresDriverCandidate();
   const { default: postgres3 } = await import(pathToFileURL(baselinePath).href);
   const config = {
     host: socket, port: 5432, database: 'driver_compat', user: 'postgres',
@@ -34,7 +35,7 @@ test('real Postgres.js 3/4 compatibility on a disposable local socket', { skip: 
   };
   const observations = {};
 
-  for (const [version, factory] of [['3.4.9', postgres3], ['4.0.0', postgres4]]) {
+  for (const [version, factory] of [['3.4.9', postgres3], [candidateVersion, postgres4]]) {
     await t.test(version, async (v) => {
       const sql = factory({ ...config, connection: { application_name: `driver_review_${version}` } });
       try {
