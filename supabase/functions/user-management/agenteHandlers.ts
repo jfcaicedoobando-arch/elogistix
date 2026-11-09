@@ -3,7 +3,7 @@
  * Espejo de `clientHandlers.ts` (portal cliente) adaptado a la tabla `agente_users`
  * y al rol `agente_carga`.
  */
-import { createClient, SupabaseClient } from "npm:@supabase/supabase-js@2.118.0";
+import { createClient, SupabaseClient } from "npm:@supabase/supabase-js@2.119.0";
 import { jsonResponse, errorResponse } from "../_shared/response.ts";
 import { validarReinvitacionPortal } from "./reinvitacion.ts";
 import type { HandlerCtx, AdminAccess } from "./handlers.ts";

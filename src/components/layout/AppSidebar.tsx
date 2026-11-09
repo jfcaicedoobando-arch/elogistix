@@ -1,3 +1,4 @@
+import { signOutWithFeedback } from "@/lib/auth/signOutWithFeedback";
 import { memo, forwardRef } from "react";
 import { useTheme } from "@/lib/contexts/ThemeContext";
 import { BrandLockup } from "@/components/layout/BrandLockup";
@@ -140,7 +141,7 @@ const AppSidebarBase = forwardRef<HTMLDivElement>(function AppSidebarBase(_props
             collapsed={collapsed}
             theme={theme}
             onToggleTheme={toggleTheme}
-            onSignOut={signOut}
+            onSignOut={() => { void signOutWithFeedback(signOut); }}
           />
         )}
         {!collapsed && (

@@ -50,7 +50,7 @@ describe("services/auth/session", () => {
   });
 
   it("signOutCurrentSession llama supabase.auth.signOut", async () => {
-    getSession.mockResolvedValue({ data: { session: { user: { id: "u1" } } } });
+    getSession.mockResolvedValue({ data: { session: null }, error: null });
     signOut.mockResolvedValue({ error: null });
     await signOutCurrentSession();
     expect(getSession).toHaveBeenCalled();

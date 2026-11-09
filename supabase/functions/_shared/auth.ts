@@ -1,4 +1,4 @@
-import { createClient, SupabaseClient } from "npm:@supabase/supabase-js@2.118.0";
+import { createClient, SupabaseClient } from "npm:@supabase/supabase-js@2.119.0";
 import type { Logger } from "./logger.ts";
 
 declare const Deno: { env: { get(key: string): string | undefined } };

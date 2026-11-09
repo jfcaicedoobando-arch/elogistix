@@ -4,10 +4,12 @@
  * la lógica de copy (fácil de auditar/traducir) de la maquetación general.
  */
 import { Link, useNavigate } from "react-router";
-import { useCallback } from "react";
+import { useCallback, useRef, useState } from "react";
 import { Home, LifeBuoy, LogOut, RefreshCcw } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { signOutCurrentSession } from "@/lib/auth/signOut";
+import { useAuth } from "@/lib/contexts/AuthContext";
+import { SIGN_OUT_FAILURE } from "@/lib/auth/signOut";
+import { notifyError } from "@/lib/ui/appFeedback";
 import { obtenerEtiquetaRol } from "@/lib/ui/uiMappings";
 import type { AppRole } from "@/types/appRole";
 import type { SinAccesoVariant } from "@/features/auth/utils/resolveSinAccesoVariant";
@@ -51,15 +53,32 @@ export function SinAccesoMensaje(props: Omit<SinAccesoContentProps, "onRetry" | 
 
 export function SinAccesoAcciones({ variant, esAdministrador, onRetry, retrying }: SinAccesoContentProps) {
   const navigate = useNavigate();
+  const { signOut } = useAuth();
+  const pending = useRef(false);
+  const [signingOut, setSigningOut] = useState(false);
   /**
    * v13.819.1 — Antes el signOut limpiaba la sesión pero la pantalla se quedaba
    * en `/sin-acceso` con el mensaje genérico hasta navegar a mano. Ahora la
    * salida es determinista: cerrar sesión aterriza en `/login`.
    */
   const cerrarSesion = useCallback(async () => {
-    await signOutCurrentSession();
-    navigate("/login", { replace: true });
-  }, [navigate]);
+    if (pending.current) return;
+    pending.current = true;
+    setSigningOut(true);
+    try {
+      await signOut();
+      navigate("/login", { replace: true });
+    } catch {
+      // Conserva diagnóstico sin adjuntar respuestas privadas de Auth/storage.
+      notifyError(undefined, {
+        title: "No se pudo cerrar sesión", description: SIGN_OUT_FAILURE,
+        error: new Error(SIGN_OUT_FAILURE),
+      });
+    } finally {
+      pending.current = false;
+      setSigningOut(false);
+    }
+  }, [navigate, signOut]);
 
   if (variant === "error-carga") {
     return (
@@ -73,7 +92,7 @@ export function SinAccesoAcciones({ variant, esAdministrador, onRetry, retrying 
             <LifeBuoy className="mr-2 h-4 w-4" aria-hidden /> Ver ayuda
           </Link>
         </Button>
-        <Button variant="outline" onClick={() => void cerrarSesion()}>
+        <Button variant="outline" disabled={signingOut} onClick={() => void cerrarSesion()}>
           <LogOut className="mr-2 h-4 w-4" aria-hidden /> Cerrar sesión
         </Button>
       </div>
@@ -103,7 +122,7 @@ export function SinAccesoAcciones({ variant, esAdministrador, onRetry, retrying 
       </Button>
       <Button
         variant={variant === "permiso-modulo" || esAdministrador ? "outline" : "default"}
-        onClick={() => void cerrarSesion()}
+        disabled={signingOut} onClick={() => void cerrarSesion()}
       >
         <LogOut className="mr-2 h-4 w-4" aria-hidden /> Cerrar sesión
       </Button>

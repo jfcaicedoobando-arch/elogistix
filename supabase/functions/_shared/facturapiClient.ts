@@ -41,7 +41,7 @@
 // @ts-ignore -- typings del paquete no resolubles desde el especificador `npm:` en Deno.
 import FacturapiDefault from "npm:facturapi@5.2.0";
 import { resolveFacturapiKey, facturapiResolverClient, type FacturapiResolveResult } from "./facturapiAuth.ts";
-import type { SupabaseClient } from "npm:@supabase/supabase-js@2.118.0";
+import type { SupabaseClient } from "npm:@supabase/supabase-js@2.119.0";
 import { normalizarErrorFacturapi } from "./facturapiErrorNormalizado.ts";
 
 export type FacturapiClient = object;

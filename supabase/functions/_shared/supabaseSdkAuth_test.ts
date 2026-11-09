@@ -2,7 +2,16 @@
 import { assertEquals, assertRejects } from "https://deno.land/std@0.224.0/assert/mod.ts";
 import {
   FACTOR_ID, jsonResponse, offlineTest, SDK_KEY, sdkFixture, USER_ID,
+  type SdkRequest,
 } from "./supabaseSdkContract.ts";
+
+function assertAdminRequest(request: SdkRequest, id: string): void {
+  assertEquals(request.url.origin, "https://sdk-contract.invalid");
+  assertEquals(request.url.pathname, `/auth/v1/admin/users/${id}`);
+  assertEquals(request.url.search, "");
+  assertEquals(request.headers.get("apikey"), SDK_KEY);
+  assertEquals(request.headers.get("Authorization"), `Bearer ${SDK_KEY}`);
+}
 
 const INVALID_IDS = [
   "", "../logout", "../../admin/users", "%2e%2e%2flogout", "not-a-uuid",
@@ -42,18 +51,51 @@ for (const id of [USER_ID, USER_ID.toUpperCase()]) {
         : await client.auth.admin.deleteUser(id);
       assertEquals(result.error, null);
       assertEquals(result.data.user?.id, id);
-      assertEquals(requests.length, 1);
-      const [request] = requests;
-      assertEquals(request.url.origin, "https://sdk-contract.invalid");
-      assertEquals(request.url.pathname, `/auth/v1/admin/users/${id}`);
-      assertEquals(request.url.search, "");
-      assertEquals(request.method, { get: "GET", update: "PUT", delete: "DELETE" }[operation]);
-      assertEquals(request.headers.get("apikey"), SDK_KEY);
-      assertEquals(request.headers.get("Authorization"), `Bearer ${SDK_KEY}`);
+      assertEquals(requests.map(({ method }) => method), operation === "delete"
+        ? ["GET", "DELETE"] : [operation === "get" ? "GET" : "PUT"]);
+      for (const request of requests) assertAdminRequest(request, id);
+      const request = requests.at(-1)!;
       if (operation === "update") assertEquals(JSON.parse(request.body), { ban_duration: "none" });
       if (operation === "delete") assertEquals(JSON.parse(request.body), { should_soft_delete: false });
     });
   }
+}
+
+for (const response of ["empty", "object", "different-user"] as const) {
+  offlineTest(`Supabase SDK: delete preserves preflight identity with ${response} success`, async () => {
+    const user = { id: USER_ID, user_metadata: { fixture: "preflight" },
+      app_metadata: {}, aud: "authenticated", created_at: "2026-11-09T00:00:00Z" };
+    const { client, requests } = sdkFixture(({ method }) => method === "GET"
+      ? jsonResponse({ user })
+      : response === "empty" ? new Response(null, { status: 204 })
+      : jsonResponse(response === "object" ? {} : { user: { id: FACTOR_ID } }));
+    const result = await client.auth.admin.deleteUser(USER_ID, true);
+    assertEquals(result.error, null);
+    assertEquals(result.data.user, user);
+    assertEquals(requests.map(({ method }) => method), ["GET", "DELETE"]);
+    for (const request of requests) assertAdminRequest(request, USER_ID);
+    assertEquals(requests[0].body, "");
+    assertEquals(JSON.parse(requests[1].body), { should_soft_delete: true });
+  });
+}
+
+for (const failedMethod of ["GET", "DELETE"] as const) {
+  offlineTest(`Supabase SDK: delete preserves ${failedMethod} failure without extra requests`, async () => {
+    const { client, requests } = sdkFixture(({ method }) => {
+      if (method !== failedMethod) return jsonResponse({ user: { id: USER_ID } });
+      return new Response(JSON.stringify({ message: "fixture permission denied", code: "not_admin" }), {
+        status: 403,
+        headers: { "Content-Type": "application/json", "X-Supabase-Api-Version": "2024-01-01" },
+      });
+    });
+    const result = await client.auth.admin.deleteUser(USER_ID, true);
+    assertEquals(result.data.user, null);
+    assertEquals(result.error?.status, 403);
+    assertEquals(result.error?.code, "not_admin");
+    assertEquals(result.error?.message, "fixture permission denied");
+    assertEquals(requests.map(({ method }) => method), failedMethod === "GET" ? ["GET"] : ["GET", "DELETE"]);
+    for (const request of requests) assertAdminRequest(request, USER_ID);
+  });
 }
 
 offlineTest("Supabase SDK: MFA accepts uppercase user/factor UUIDs on the intended path", async () => {

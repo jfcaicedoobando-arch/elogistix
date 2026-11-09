@@ -3,7 +3,7 @@
  * 'Cancelada' si el SAT dejó la cancelación pendiente o el receptor la
  * rechazó en su Buzón Tributario.
  */
-import type { SupabaseClient } from "npm:@supabase/supabase-js@2.118.0";
+import type { SupabaseClient } from "npm:@supabase/supabase-js@2.119.0";
 import { registrarBitacoraEdge } from "../_shared/bitacora.ts";
 import { jsonResponse } from "../_shared/response.ts";
 

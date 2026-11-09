@@ -1,4 +1,4 @@
-import { createClient, SupabaseClient } from 'npm:@supabase/supabase-js@2.118.0';
+import { createClient, SupabaseClient } from 'npm:@supabase/supabase-js@2.119.0';
 import { BodySchema, type EstadoCuentaInput } from './bodySchema.ts';
 import { cxcValidationError } from '../_shared/cxcInputValidation.ts';
 import { buildCors, handlePreflightStrict } from '../_shared/cors.ts';

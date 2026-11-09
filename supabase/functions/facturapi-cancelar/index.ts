@@ -8,7 +8,7 @@
  *   03 = No se llevó a cabo la operación
  *   04 = Operación nominativa relacionada en una factura global
  */
-import { createClient } from "npm:@supabase/supabase-js@2.118.0";
+import { createClient } from "npm:@supabase/supabase-js@2.119.0";
 import { buildCors, handlePreflightStrict } from "../_shared/cors.ts";
 import { wrapEdgeHandler } from "../_shared/sentry.ts";
 

@@ -1,5 +1,5 @@
 /** Test-only transport: the real SDK never receives the network fetch function. */
-import { createClient } from "npm:@supabase/supabase-js@2.118.0";
+import { createClient } from "npm:@supabase/supabase-js@2.119.0";
 export { createClient };
 
 export const SDK_URL = "https://sdk-contract.invalid";

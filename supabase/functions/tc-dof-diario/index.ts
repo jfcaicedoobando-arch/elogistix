@@ -10,7 +10,7 @@
  * Nunca guarda valores estimados: si Banxico no responde el TC USD, ese día
  * simplemente no se registra y el error queda en logs/Sentry.
  */
-import { createClient } from "npm:@supabase/supabase-js@2.118.0";
+import { createClient } from "npm:@supabase/supabase-js@2.119.0";
 import { timingSafeEqual } from "../_shared/timingSafe.ts";
 import { buildCors, handlePreflightStrict } from "../_shared/cors.ts";
 import { createLogger } from "../_shared/logger.ts";

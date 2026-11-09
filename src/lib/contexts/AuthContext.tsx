@@ -1,5 +1,7 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useSyncExternalStore, ReactNode } from "react";
 import { useQueryClient } from "@tanstack/react-query";
+import { notifyWarning } from "@/lib/ui/appFeedback";
+import { captureAuthOperationScope } from "@/lib/auth/authOperationScope";
 import type { User } from "@supabase/supabase-js";
 
 import type { AppRole } from "@/types/appRole";
@@ -9,6 +11,7 @@ import { useLoginAudit } from "./auth/useLoginAudit";
 import { AuthSessionProvider } from "./auth/AuthSessionContext";
 import { signOutCurrentSession } from "@/lib/auth/signOut";
 import { purgeSessionCache, debePurgarPorCambioDeUsuario } from "@/lib/auth/purgeSessionCache";
+import { clearAllDrafts, clearAllEmbarqueDrafts } from "@/lib/auth/clearSessionDrafts";
 import { clearPersistedQueryCache } from "@/lib/browserStorage";
 import { getSessionCacheGeneration, subscribeSessionCacheGeneration } from "@/lib/auth/sessionCacheRegistry";
 import { removeStaleCatalogQueries } from "@/lib/query/catalogScope";
@@ -132,23 +135,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const userId = user?.id;
   const signOut = useCallback(async () => {
+    // La bitácora no debe bloquear la salida si el servidor está inaccesible.
+    void registrarActividad({ modulo: "auth", accion: "Solicitó cerrar sesión",
+      authScope: captureAuthOperationScope(),
+    }).catch(() => { /* La bitácora no bloquea la salida. */ });
+    const result = await signOutCurrentSession();
     clearLoginAudit(userId);
-    await registrarActividad({ modulo: "auth", accion: "Cerró sesión" });
-    await signOutCurrentSession();
     resetProfile();
     // EC-01: no dejar datos del tenant saliente para el siguiente usuario.
     purgeSessionCache(queryClient);
-    // FIX-R3 (frontend_hunter P3): el borrador del wizard de cotización
-    // persiste 24 h en localStorage con precios/costos/márgenes (P&L) del
-    // tenant — no debe sobrevivir al logout. Import dinámico (mismo patrón
-    // que los preloads de abajo) para no acoplar lib/contexts → features.
-    const { clearAllDrafts } = await import("@/features/cotizacion/hooks/wizard/cotizacionDraftStorage");
+    // Sin import() ni red: los borradores privados se limpian también offline.
     clearAllDrafts();
-    // M-13 (v14-2): misma política para el borrador del wizard de embarque.
-    const { clearAllEmbarqueDrafts } = await import("@/features/embarques/hooks/wizard/embarqueDraftStorage");
     clearAllEmbarqueDrafts();
     // La copia persistida del query cache (lc-query-cache-v1) tampoco queda.
     clearPersistedQueryCache();
+    if (result && !result.globalRequestSucceeded) {
+      notifyWarning(undefined, { title: "Sesión cerrada en este dispositivo", description: "No se pudo confirmar el cierre en otros dispositivos." });
+    }
   }, [userId, clearLoginAudit, resetProfile, queryClient]);
 
 

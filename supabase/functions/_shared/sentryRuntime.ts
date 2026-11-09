@@ -1,6 +1,6 @@
 import { scrubTelemetryData, scrubTelemetryText } from "./scrubTelemetryData.ts";
 
-export type SentryEdgeSDK = typeof import("npm:@sentry/deno@11.10.0");
+export type SentryEdgeSDK = typeof import("npm:@sentry/deno@11.11.0");
 type EdgeOptions = NonNullable<Parameters<SentryEdgeSDK["init"]>[0]>;
 let ready: Promise<SentryEdgeSDK | null> | null = null;
 
@@ -23,7 +23,7 @@ function scrubContexts<T extends Record<string, unknown> | undefined>(contexts: 
 export function loadSentryEdge(transport?: EdgeOptions["transport"]): Promise<SentryEdgeSDK | null> {
   if (!Deno.env.get("SENTRY_DSN_EDGE")) return Promise.resolve(null);
   if (!ready) {
-    ready = import("npm:@sentry/deno@11.10.0").then((sdk) => {
+    ready = import("npm:@sentry/deno@11.11.0").then((sdk) => {
       const build = Deno.env.get("SENTRY_RELEASE_EDGE") ?? Deno.env.get("DENO_DEPLOYMENT_ID") ?? "unversioned";
       sdk.init({
         dsn: Deno.env.get("SENTRY_DSN_EDGE"),

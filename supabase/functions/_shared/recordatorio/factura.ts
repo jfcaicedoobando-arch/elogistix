@@ -1,4 +1,4 @@
-import type { SupabaseClient } from 'npm:@supabase/supabase-js@2.118.0';
+import type { SupabaseClient } from 'npm:@supabase/supabase-js@2.119.0';
 
 function formatCurrency(value: number, moneda: string): string {
   return `${value.toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ${moneda}`;

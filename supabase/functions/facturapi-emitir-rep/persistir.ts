@@ -6,7 +6,7 @@
 import { FACTURAPI_BASE } from "../_shared/facturapiAuth.ts";
 import { respaldarXmlTimbrado } from "../_shared/respaldarXmlTimbrado.ts";
 import { registrarBitacoraEdge } from "../_shared/bitacora.ts";
-import type { SupabaseClient } from "npm:@supabase/supabase-js@2.118.0";
+import type { SupabaseClient } from "npm:@supabase/supabase-js@2.119.0";
 
 interface FapiInvoice {
   id: string;

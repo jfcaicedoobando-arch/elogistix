@@ -53,11 +53,11 @@ function sdkSpecifiers(source, filename = "edge.ts") {
 }
 
 function assertEdgePin(specifier, file) {
-  assert.match(specifier, /^npm:@supabase\/supabase-js@2\.118\.0(?:\/cors)?$/, file);
+  assert.match(specifier, /^npm:@supabase\/supabase-js@2\.119\.0(?:\/cors)?$/, file);
 }
 
 test("Edge pin inventory detects alternate CDN imports and dynamic import types", () => {
-  const allowed = "npm:@supabase/supabase-js@2.118.0";
+  const allowed = "npm:@supabase/supabase-js@2.119.0";
   assert.deepEqual(sdkSpecifiers(`import {createClient} from '${allowed}';
     export type {SupabaseClient} from '${allowed}';
     type Client = import('${allowed}').SupabaseClient;
@@ -65,8 +65,8 @@ test("Edge pin inventory detects alternate CDN imports and dynamic import types"
   for (const specifier of [
     "https://esm.sh/v135/@supabase/supabase-js@2.45.0",
     "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.0/+esm",
-    "https://esm.sh/@supabase/supabase-js@2.118.0",
-    "npm:@supabase/supabase-js@^2.118.0",
+    "https://esm.sh/@supabase/supabase-js@2.119.0",
+    "npm:@supabase/supabase-js@^2.119.0",
   ]) {
     assert.deepEqual(sdkSpecifiers(`import {createClient} from '${specifier}';`), [specifier]);
     assert.throws(() => assertEdgePin(specifier, "negative-control.ts"), { name: "AssertionError" });
@@ -127,9 +127,9 @@ function assertHeaders(request) {
   assert.equal(request.headers.get("authorization"), `Bearer ${token}`);
 }
 
-test("Supabase and its five installed consumers stay aligned with stable 2.118.0 and Node 26", () => {
+test("Supabase and its five installed consumers stay aligned with stable 2.119.0 and Node 26", () => {
   const sdk = installedManifest(require, "@supabase/supabase-js");
-  assert.equal(sdk.version, "2.118.0");
+  assert.equal(sdk.version, "2.119.0");
   const sdkRequire = createRequire(require.resolve("@supabase/supabase-js"));
   const pinnedNode = readFileSync(path.join(root, ".node-version"), "utf8").trim();
   assert.match(pinnedNode, /^26\.\d+\.\d+$/);
@@ -137,8 +137,8 @@ test("Supabase and its five installed consumers stay aligned with stable 2.118.0
   for (const name of ["auth-js", "functions-js", "postgrest-js", "realtime-js", "storage-js"]) {
     const dependency = `@supabase/${name}`;
     const installed = installedManifest(sdkRequire, dependency);
-    assert.equal(sdk.dependencies[dependency], "2.118.0", dependency);
-    assert.equal(installed.version, "2.118.0", dependency);
+    assert.equal(sdk.dependencies[dependency], "2.119.0", dependency);
+    assert.equal(installed.version, "2.119.0", dependency);
     assert.equal(installed.engines.node, ">=22.0.0", dependency);
   }
 });
@@ -154,8 +154,19 @@ test("Auth Admin preserves UUID case, routes, methods and headers through the re
       ["GET", "/factors", () => client.auth.admin.mfa.listFactors({ userId: id })],
       ["DELETE", `/factors/${factorId}`, () => client.auth.admin.mfa.deleteFactor({ userId: id, id: factorId })],
     ]) {
+      const before = requests.length;
       const result = await execute();
       assert.equal(result.error, null);
+      // 2.119 fetches the user before DELETE to preserve the v2 return value
+      // when Auth responds with an empty body. Account for each request, not
+      // merely a larger aggregate count that could hide unrelated traffic.
+      const deletingUser = method === "DELETE" && !suffix;
+      const operation = requests.slice(before);
+      assert.deepEqual(operation.map(({ method, url }) => [method, url.pathname]),
+        deletingUser ? [["GET", `/auth/v1/admin/users/${id}`], [method, `/auth/v1/admin/users/${id}`]]
+          : [[method, `/auth/v1/admin/users/${id}${suffix}`]]);
+      for (const request of operation) assertHeaders(request);
+      if (deletingUser) assert.equal(result.data.user.id, id);
       const request = requests.at(-1);
       assert.equal(request.method, method);
       assert.equal(request.url.pathname, `/auth/v1/admin/users/${id}${suffix}`);
@@ -164,7 +175,43 @@ test("Auth Admin preserves UUID case, routes, methods and headers through the re
       if (method === "DELETE" && !suffix) assert.deepEqual(JSON.parse(request.body), { should_soft_delete: true });
     }
   }
-  assert.equal(requests.length, 10, "Positive control must exercise the transport");
+  assert.equal(requests.length, 12, "Ten operations include two verified pre-delete reads");
+});
+
+for (const response of ["empty", "object", "different-user"]) {
+  test(`Auth Admin delete returns the preflight user for ${response} successful response`, async () => {
+    const user = { id: userId, user_metadata: { fixture: "preflight" } };
+    const { client, requests } = fixture(({ method }) => method === "GET"
+      ? json({ user }) : response === "empty" ? new Response(null, { status: 204 })
+      : json(response === "object" ? {} : { user: { id: factorId } }));
+    const result = await client.auth.admin.deleteUser(userId);
+    assert.equal(result.error, null);
+    assert.deepEqual(result.data.user, user);
+    assert.deepEqual(requests.map(({ method, url }) => [method, url.pathname]), [
+      ["GET", `/auth/v1/admin/users/${userId}`], ["DELETE", `/auth/v1/admin/users/${userId}`],
+    ]);
+    assert.equal(requests[0].body, undefined);
+    assert.deepEqual(JSON.parse(requests[1].body), { should_soft_delete: false });
+    for (const request of requests) assertHeaders(request);
+  });
+}
+
+test("Auth Admin delete stops after a failed preflight and preserves delete errors", async () => {
+  for (const failedMethod of ["GET", "DELETE"]) {
+    const { client, requests } = fixture(({ method }) => method === failedMethod
+      ? json({ message: "fixture permission denied", code: "not_admin" }, 403, { "X-Supabase-Api-Version": "2024-01-01" })
+      : json({ user: { id: userId } }));
+    const result = await client.auth.admin.deleteUser(userId, true);
+    assert.equal(result.data.user, null);
+    assert.equal(result.error.status, 403);
+    assert.equal(result.error.code, "not_admin");
+    assert.equal(result.error.message, "fixture permission denied");
+    assert.deepEqual(requests.map(({ method }) => method), failedMethod === "GET" ? ["GET"] : ["GET", "DELETE"]);
+    for (const request of requests) {
+      assert.equal(request.url.pathname, `/auth/v1/admin/users/${userId}`);
+      assertHeaders(request);
+    }
+  }
 });
 
 test("all five GHSA-8r88-6cj9-9fh5 Auth Admin paths reject malformed identifiers before transport", async () => {

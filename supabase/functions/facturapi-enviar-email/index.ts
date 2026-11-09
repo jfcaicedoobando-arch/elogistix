@@ -7,7 +7,7 @@
  *
  * Salida: { ok: true, enviado_a: string } o error normalizado.
  */
-import { createClient, type SupabaseClient } from "npm:@supabase/supabase-js@2.118.0";
+import { createClient, type SupabaseClient } from "npm:@supabase/supabase-js@2.119.0";
 import { buildCors, handlePreflightStrict } from "../_shared/cors.ts";
 import { wrapEdgeHandler } from "../_shared/sentry.ts";
 import { resolveFacturapiKey, facturapiResolverClient, FACTURAPI_BASE, basicAuthHeader } from "../_shared/facturapiAuth.ts";

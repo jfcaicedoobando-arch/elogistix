@@ -2,7 +2,7 @@
  * Helpers de consulta/reconciliación para `facturapi-consultar`.
  * Separado del handler para respetar el límite de líneas por archivo.
  */
-import type { SupabaseClient } from "npm:@supabase/supabase-js@2.118.0";
+import type { SupabaseClient } from "npm:@supabase/supabase-js@2.119.0";
 import { getFacturapiClient } from "../_shared/facturapiClient.ts";
 import { registrarBitacoraEdge } from "../_shared/bitacora.ts";
 import { jsonResponse } from "../_shared/response.ts";

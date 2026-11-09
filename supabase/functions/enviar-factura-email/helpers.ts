@@ -2,7 +2,7 @@
  * Helpers para `enviar-factura-email`. Extraído del handler principal para
  * respetar el límite `max-lines` del linter y facilitar tests unitarios.
  */
-import { createClient, type SupabaseClient } from 'npm:@supabase/supabase-js@2.118.0';
+import { createClient, type SupabaseClient } from 'npm:@supabase/supabase-js@2.119.0';
 import { captureEdgeException } from "../_shared/sentry.ts";
 import { enviarEmailPlantilla } from "../_shared/enviarEmailPlantilla.ts";
 import { jsonResponse as _jsonResponse } from "../_shared/response.ts";
