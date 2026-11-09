@@ -52,7 +52,7 @@ describe("package script execution contracts", () => {
     const result = runScript("test:coverage:merge");
     assert.equal(result.status, 0, result.stderr);
     assert.deepEqual(result.calls, [{
-      tool: "vitest", args: ["run", "--merge-reports=.vitest-reports", "--coverage"],
+      tool: "vitest", args: ["run", "--merge-reports=.vitest/blob", "--coverage"],
     }]);
   });
 
