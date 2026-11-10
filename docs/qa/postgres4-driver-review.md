@@ -5,6 +5,21 @@ Runtime: Node 26.13.0, Bun 1.4.4, TypeScript 6.0.3.
 Only the root JavaScript driver changes, from 3.4.9 to exact 4.0.0.
 The PostgreSQL server version and all other dependency resolutions are unchanged.
 
+## Follow-up after dependency PR #463
+
+The root driver pin is now 4.1.0. The historical 4.0.0 results below are not a
+claim that the disposable database comparison has been repeated with 4.1.0.
+The manual comparison now reads its exact v4 candidate from `package.json`,
+checks that the installed driver matches, and labels observations with that
+version. This fixes the obsolete 4.0.0 assertion that prevented the 4.1.0
+comparison from starting. The fixed 3.4.9 baseline and all isolation gates
+remain unchanged. Ranges, prereleases, stale installations and another major
+are rejected by an automatic offline contract in the existing loader suite.
+
+Frozen installation and offline loader/security contracts pass with 4.1.0.
+The real database comparison remains opt-in and was not rerun for this
+follow-up; no database migrations or remote database calls were performed.
+
 ## Consumers
 
 | Consumer | Loading and API | Assessment |

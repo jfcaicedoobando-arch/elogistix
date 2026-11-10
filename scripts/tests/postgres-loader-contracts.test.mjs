@@ -3,12 +3,27 @@ import { createRequire } from "node:module";
 import net from "node:net";
 import test from "node:test";
 import postgres from "postgres";
+import { currentPostgresDriverCandidate, validatePostgresDriverCandidate } from "./helpers/postgres-driver-candidate.mjs";
 
 const require = createRequire(import.meta.url);
 const config = {
   host: "127.0.0.1", port: 1, database: "synthetic", user: "synthetic",
   password: "", ssl: false, max: 1, fetch_types: false,
 };
+
+test("the manual driver comparison follows the installed exact v4 pin", () => {
+  assert.match(currentPostgresDriverCandidate(), /^4\.\d+\.\d+$/);
+  for (const version of ["4.0.0", "4.1.0", "4.2.3"]) {
+    assert.equal(validatePostgresDriverCandidate(version, version), version);
+  }
+  for (const [declared, installed] of [
+    ["4.1.0", "4.0.0"], ["4.0.0", "4.1.0"],
+    ["^4.1.0", "4.1.0"], ["4.1.0-beta.1", "4.1.0-beta.1"],
+    ["5.0.0", "5.0.0"], [undefined, "4.1.0"],
+  ]) {
+    assert.throws(() => validatePostgresDriverCandidate(declared, installed));
+  }
+});
 
 // Loader and construction contracts only: no query, migration or database.
 test("Postgres loaders and Drizzle clients construct without opening sockets", async (t) => {
