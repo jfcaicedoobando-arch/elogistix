@@ -1,0 +1,583 @@
+name: E2E (Playwright)
+
+# Suite Playwright contra staging, de ejecución MANUAL (no automática).
+#
+# Trigger (CI simplificado): SÓLO workflow_dispatch (manual, con opción de
+# override de E2E_BASE_URL). Sin schedule diario y sin automatización de issues.
+#
+# Estrategia:
+#   - `internal-shard` (matrix 1..3): specs read-only del project `chromium-internal`
+#     en paralelo con `--shard`.
+#   - `mutators`: 08-12, 25, 28 y 30; workers: 1 (single job).
+#   - `portal`: specs del project `chromium-portal`.
+#   - `merge-reports`: junta los blob reports y publica el HTML unificado.
+#
+# Fail on regression: cada bunx playwright test devuelve exit != 0 → job falla →
+# `merge-reports.needs` marca el workflow como failed.
+
+on:
+  workflow_dispatch:
+    inputs:
+      base_url:
+        description: "Override de E2E_BASE_URL (opcional; default = secret)"
+        required: false
+        type: string
+      strict_fixtures:
+        description: "Si '1', exige también todas las fixtures opcionales. Los flujos solicitados siempre son obligatorios."
+        required: false
+        default: "0"
+        type: string
+      required_flows:
+        description: "Flujos mutadores que DEBEN completarse; IDs separados por coma."
+        required: true
+        default: "08,11,12,25"
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  # Todas las ramas comparten credenciales/fixtures; incluye provisioning.
+  group: e2e-shared-fixtures
+  cancel-in-progress: false
+
+env:
+  E2E_BASE_URL: ${{ github.event.inputs.base_url || secrets.E2E_BASE_URL }}
+  E2E_EMAIL: ${{ secrets.E2E_EMAIL }}
+  E2E_PASSWORD: ${{ secrets.E2E_PASSWORD }}
+  E2E_PORTAL_EMAIL: ${{ secrets.E2E_PORTAL_EMAIL }}
+  E2E_PORTAL_PASSWORD: ${{ secrets.E2E_PORTAL_PASSWORD }}
+  E2E_CROSS_ORG_EMBARQUE_ID: ${{ secrets.E2E_CROSS_ORG_EMBARQUE_ID }}
+  E2E_CROSS_ORG_FACTURA_ID: ${{ secrets.E2E_CROSS_ORG_FACTURA_ID }}
+  E2E_CROSS_ORG_COTIZACION_ID: ${{ secrets.E2E_CROSS_ORG_COTIZACION_ID }}
+  E2E_PROVISION_SECRET: ${{ secrets.E2E_PROVISION_SECRET }}
+  VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+  VITE_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.VITE_SUPABASE_PUBLISHABLE_KEY }}
+  E2E_BLOB: "1"
+  # v13.312.15 — Exponemos las variables gating de specs 07–12/25 y multi-tenant
+  # (26) para que, si el proyecto de staging registra los secrets, los specs
+  # dejen de saltarse silenciosamente. Si el secret está vacío el spec skipea
+  # con el motivo original (test.skip(!X, "…")). Ninguna se marca `required`
+  # aquí para no romper el workflow cuando el tenant todavía no los tiene.
+  E2E_HAS_SEED: ${{ secrets.E2E_HAS_SEED }}
+  E2E_FISCAL: ${{ secrets.E2E_FISCAL }}
+  E2E_PROFORMA_NUMERO: ${{ secrets.E2E_PROFORMA_NUMERO }}
+  E2E_HAS_AUDIT_DATA: ${{ secrets.E2E_HAS_AUDIT_DATA }}
+  E2E_ADMIN_ORG: ${{ secrets.E2E_ADMIN_ORG }}
+  E2E_EMBARQUE_CHECKLIST_INCOMPLETO_ID: ${{ secrets.E2E_EMBARQUE_CHECKLIST_INCOMPLETO_ID }}
+  E2E_COTIZACION_ACEPTADA_ID: ${{ secrets.E2E_COTIZACION_ACEPTADA_ID }}
+  E2E_PROVEEDOR_ID: ${{ secrets.E2E_PROVEEDOR_ID }}
+  E2E_EMBARQUE_PARA_CXP_ID: ${{ secrets.E2E_EMBARQUE_PARA_CXP_ID }}
+  E2E_CONCEPTO_CXP_ID: ${{ secrets.E2E_CONCEPTO_CXP_ID }}
+  E2E_CATEGORIA_CXP_ID: ${{ secrets.E2E_CATEGORIA_CXP_ID }}
+  E2E_SUSTITUCION_FACTURA_UUID: ${{ secrets.E2E_SUSTITUCION_FACTURA_UUID }}
+  E2E_FACTURA_BORRADOR_ID: ${{ secrets.E2E_FACTURA_BORRADOR_ID }}
+  E2E_EMBARQUE_EDITAR_ID: ${{ secrets.E2E_EMBARQUE_EDITAR_ID }}
+  E2E_REQUIRED_FLOWS: ${{ inputs.required_flows || '08,11,12,25' }}
+  # Multi-tenant (spec 26 — corre en el job `multi-tenant`).
+  E2E_MT_A_EMAIL: ${{ secrets.E2E_MT_A_EMAIL }}
+  E2E_MT_A_PASSWORD: ${{ secrets.E2E_MT_A_PASSWORD }}
+  E2E_MT_B_EMAIL: ${{ secrets.E2E_MT_B_EMAIL }}
+  E2E_MT_B_PASSWORD: ${{ secrets.E2E_MT_B_PASSWORD }}
+  # Cuando E2E_STRICT_FIXTURES=1, `requireFixture()` de testBase promueve los
+  # skips por fixture ausente a fallo (ver `e2e/fixtures/requireFixture.ts`).
+  # Opt-in para fixtures opcionales; el gate por flujo solicitado siempre es obligatorio.
+  E2E_STRICT_FIXTURES: ${{ inputs.strict_fixtures || '0' }}
+
+jobs:
+  guard-secrets:
+    name: Guard (E2E secrets)
+    runs-on: ubuntu-24.04
+    # El workflow sólo corre por dispatch manual (ramas internas), así que los
+    # secrets del environment e2e-staging nunca se exponen a forks.
+    # v13.x (GHA-audit A6) — los secrets E2E viven en el environment
+    # e2e-staging: sólo los jobs que ejecutan tests/guards los reciben.
+    environment: e2e-staging
+    timeout-minutes: 2
+    outputs:
+      ok: ${{ steps.check.outputs.ok }}
+      mt_ok: ${{ steps.check.outputs.mt_ok }}
+    steps:
+      - id: check
+        # El workflow es 100% manual. Credenciales CORE (login interno + portal
+        # + provisioning): si faltan, FALLA — un verde vacío está prohibido.
+        # Credenciales MULTI-TENANT (E2E_MT_*): OPCIONALES por decisión de
+        # proyecto. El aislamiento multi-tenant también está cubierto por la
+        # suite RLS (rls-tests.yml) y por tests de arquitectura, así que su
+        # ausencia NO debe bloquear core/portal/mutators. Sólo apaga el job 26
+        # vía `mt_ok=false`, y `merge-reports` acepta ese skip intencional.
+        run: |
+          set -u
+          core_missing=""
+          for v in E2E_BASE_URL E2E_EMAIL E2E_PASSWORD \
+                   E2E_PORTAL_EMAIL E2E_PORTAL_PASSWORD \
+                   E2E_PROVISION_SECRET \
+                   VITE_SUPABASE_URL VITE_SUPABASE_PUBLISHABLE_KEY; do
+            eval "val=\${$v:-}"
+            [ -z "$val" ] && core_missing="$core_missing $v"
+          done
+          mt_missing=""
+          for v in E2E_MT_A_EMAIL E2E_MT_A_PASSWORD E2E_MT_B_EMAIL E2E_MT_B_PASSWORD; do
+            eval "val=\${$v:-}"
+            [ -z "$val" ] && mt_missing="$mt_missing $v"
+          done
+          if [ -n "$core_missing" ]; then
+            echo "::error::E2E secrets CORE ausentes:$core_missing — la suite NO puede correr (verde vacío prohibido)."
+            exit 1
+          fi
+          echo "ok=true" >> "$GITHUB_OUTPUT"
+          if [ -n "$mt_missing" ]; then
+            echo "::warning::E2E_MT_* ausentes:$mt_missing — el job multi-tenant (spec 26) se omite. Core/portal siguen corriendo."
+            echo "mt_ok=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "mt_ok=true" >> "$GITHUB_OUTPUT"
+          fi
+
+
+  provision-users:
+    name: Provisionar usuarios E2E
+    needs: [guard-secrets]
+    if: needs.guard-secrets.outputs.ok == 'true'
+    runs-on: ubuntu-24.04
+    # v13.x (GHA-audit A6) — los secrets E2E viven en el environment
+    # e2e-staging: sólo los jobs que ejecutan tests/guards los reciben.
+    environment: e2e-staging
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          # v13.322.1 (GHA-audit H4) — no se hace push/fetch autenticado.
+          persist-credentials: false
+      - uses: ./.github/actions/setup-bun
+      - name: Guard (provisioning secret)
+        id: check
+        run: |
+          if [ -z "${E2E_PROVISION_SECRET}" ] || [ -z "${VITE_SUPABASE_URL}" ]; then
+            echo "::error::E2E_PROVISION_SECRET o VITE_SUPABASE_URL ausente — no se puede provisionar."
+            exit 1
+          fi
+          echo "skip=false" >> "$GITHUB_OUTPUT"
+      - name: Provisionar admin + portal
+        if: steps.check.outputs.skip == 'false'
+        run: bun run e2e:provision
+
+  internal-shard:
+    name: Internal · shard ${{ matrix.shard }}/3
+    needs: [guard-secrets, provision-users]
+    if: needs.guard-secrets.outputs.ok == 'true'
+    runs-on: ubuntu-24.04
+    # v13.x (GHA-audit A6) — los secrets E2E viven en el environment
+    # e2e-staging: sólo los jobs que ejecutan tests/guards los reciben.
+    environment: e2e-staging
+    timeout-minutes: 25
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [1, 2, 3]
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          # v13.322.1 (GHA-audit H4) — no se hace push/fetch autenticado.
+          persist-credentials: false
+
+      - uses: ./.github/actions/setup-bun
+
+      - name: Cache Playwright browsers
+        id: pw-cache
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ~/.cache/ms-playwright
+          key: ${{ runner.os }}-playwright-${{ hashFiles('bun.lock', 'package.json') }}
+          restore-keys: |
+            ${{ runner.os }}-playwright-
+
+      - name: Install Playwright browser (chromium)
+        if: steps.pw-cache.outputs.cache-hit != 'true'
+        run: bunx playwright install chromium
+
+      - name: Install Playwright system deps
+        run: bunx playwright install-deps chromium
+
+      - name: Run internal specs (shard ${{ matrix.shard }}/3)
+        run: PLAYWRIGHT_JSON_OUTPUT_NAME=internal-${{ matrix.shard }}-report.json bunx playwright test --project=chromium-internal --shard=${{ matrix.shard }}/3 --reporter=blob,json
+
+      - name: Gate anti-skip — internal-shard debe ejecutar tests reales
+        # v13.x (GHA-audit A1) — mismo criterio que mutators: si los specs
+        # skippearon en silencio (fixtures/env ausentes) el job quedaba verde
+        # con 0 tests. Ahora falla.
+        if: always()
+        run: |
+          # shellcheck disable=SC2016
+          node -e '
+            const fs = require("fs");
+            const f = "internal-${{ matrix.shard }}-report.json";
+            if (!fs.existsSync(f)) {
+              console.error(`::error::${f} no existe — el run de Playwright no produjo reporte.`);
+              process.exit(1);
+            }
+            const r = JSON.parse(fs.readFileSync(f, "utf8"));
+            const s = r.stats || {};
+            const executed = (s.expected||0) + (s.unexpected||0) + (s.flaky||0);
+            console.log(`internal shard: executed=${executed} skipped=${s.skipped||0}`);
+            if (executed === 0) {
+              console.error("::error::0 tests ejecutados en internal-shard — los specs skippearon en silencio.");
+              process.exit(1);
+            }'
+
+      - name: Upload blob report
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: blob-internal-${{ matrix.shard }}
+          path: blob-report/
+          retention-days: 3
+          if-no-files-found: ignore
+
+      - name: Upload traces & videos on failure
+        if: failure()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: traces-internal-${{ matrix.shard }}
+          path: test-results/
+          retention-days: 14
+
+  mutators:
+    name: Mutators (flujos solicitados, serial)
+    needs: [guard-secrets, provision-users]
+    if: needs.guard-secrets.outputs.ok == 'true'
+    runs-on: ubuntu-24.04
+    # v13.x (GHA-audit A6) — los secrets E2E viven en el environment
+    # e2e-staging: sólo los jobs que ejecutan tests/guards los reciben.
+    environment: e2e-staging
+    timeout-minutes: 20
+    # NUNCA correr mutators en paralelo con otro run mutador contra el mismo
+    # tenant staging — los flujos solicitados requieren fixtures propias y estables.
+    concurrency:
+      group: e2e-mutators
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          # v13.322.1 (GHA-audit H4) — no se hace push/fetch autenticado.
+          persist-credentials: false
+      - uses: ./.github/actions/setup-bun
+
+      - name: Cache Playwright browsers
+        id: pw-cache
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ~/.cache/ms-playwright
+          key: ${{ runner.os }}-playwright-${{ hashFiles('bun.lock', 'package.json') }}
+          restore-keys: |
+            ${{ runner.os }}-playwright-
+
+      - name: Install Playwright browser (chromium)
+        if: steps.pw-cache.outputs.cache-hit != 'true'
+        run: bunx playwright install chromium
+      - name: Install Playwright system deps
+        run: bunx playwright install-deps chromium
+
+      - name: Run mutators
+        run: PLAYWRIGHT_JSON_OUTPUT_NAME=mutators-report.json bunx playwright test --project=chromium-mutators --reporter=blob,json
+
+      - name: Flujos críticos completos (ningún paso omitido)
+        if: always()
+        run: bun scripts/e2e/assert-required-flows.ts mutators-report.json
+
+      - name: Gate anti-skip — mutators debe ejecutar tests reales
+        # Auditoría de tests 2026-07-24 (H2): los specs 09-12 y 25 hacen
+        # test.skip cuando faltan los env IDs/flags que e2e.yml nunca
+        # exporta (E2E_FISCAL, E2E_EMBARQUE_*_ID, …) → el job quedaba
+        # verde ejecutando 0 tests reales. Si vuelve a pasar, falla.
+        if: always()
+        run: |
+          # shellcheck disable=SC2016
+          # Las expresiones ${...} viven dentro del string de node -e y las
+          # expande Node, no bash. Silenciamos SC2016 a propósito.
+          node -e '
+            const fs = require("fs");
+            if (!fs.existsSync("mutators-report.json")) {
+              console.error("::error::mutators-report.json no existe — el run de Playwright no produjo reporte.");
+              process.exit(1);
+            }
+            const r = JSON.parse(fs.readFileSync("mutators-report.json", "utf8"));
+            const s = r.stats || {};
+            const executed = (s.expected||0) + (s.unexpected||0) + (s.flaky||0);
+            console.log(`mutators: executed=${executed} skipped=${s.skipped||0}`);
+            if (executed === 0) {
+              console.error("::error::0 tests ejecutados en mutators — los specs skippearon en silencio (faltan env IDs/seed de staging).");
+              process.exit(1);
+            }'
+
+      - name: Upload blob report
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: blob-mutators
+          path: blob-report/
+          retention-days: 3
+          if-no-files-found: ignore
+
+      - name: Upload traces on failure
+        if: failure()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: traces-mutators
+          path: test-results/
+          retention-days: 14
+
+  portal:
+    name: Portal
+    needs: [guard-secrets, provision-users]
+    if: needs.guard-secrets.outputs.ok == 'true'
+    runs-on: ubuntu-24.04
+    # v13.x (GHA-audit A6) — los secrets E2E viven en el environment
+    # e2e-staging: sólo los jobs que ejecutan tests/guards los reciben.
+    environment: e2e-staging
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          # v13.322.1 (GHA-audit H4) — no se hace push/fetch autenticado.
+          persist-credentials: false
+      - uses: ./.github/actions/setup-bun
+
+      - name: Cache Playwright browsers
+        id: pw-cache
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ~/.cache/ms-playwright
+          key: ${{ runner.os }}-playwright-${{ hashFiles('bun.lock', 'package.json') }}
+          restore-keys: |
+            ${{ runner.os }}-playwright-
+
+      - name: Install Playwright browser (chromium)
+        if: steps.pw-cache.outputs.cache-hit != 'true'
+        run: bunx playwright install chromium
+      - name: Install Playwright system deps
+        run: bunx playwright install-deps chromium
+
+      - name: Run portal specs
+        run: PLAYWRIGHT_JSON_OUTPUT_NAME=portal-report.json bunx playwright test --project=chromium-portal --reporter=blob,json
+
+      - name: Gate anti-skip — portal debe ejecutar tests reales
+        # v13.x (GHA-audit A1) — evita el "verde vacío" con 0 tests reales.
+        if: always()
+        run: |
+          # shellcheck disable=SC2016
+          node -e '
+            const fs = require("fs");
+            const f = "portal-report.json";
+            if (!fs.existsSync(f)) {
+              console.error(`::error::${f} no existe — el run de Playwright no produjo reporte.`);
+              process.exit(1);
+            }
+            const r = JSON.parse(fs.readFileSync(f, "utf8"));
+            const s = r.stats || {};
+            const executed = (s.expected||0) + (s.unexpected||0) + (s.flaky||0);
+            console.log(`portal: executed=${executed} skipped=${s.skipped||0}`);
+            if (executed === 0) {
+              console.error("::error::0 tests ejecutados en portal — los specs skippearon en silencio.");
+              process.exit(1);
+            }'
+
+      - name: Upload blob report
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: blob-portal
+          path: blob-report/
+          retention-days: 3
+          if-no-files-found: ignore
+
+      - name: Upload traces on failure
+        if: failure()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: traces-portal
+          path: test-results/
+          retention-days: 14
+
+  multi-tenant:
+    name: Multi-tenant isolation (26)
+    needs: [guard-secrets, provision-users]
+    # MT es OPCIONAL: sólo corre si el tenant de staging tiene los E2E_MT_*.
+    if: needs.guard-secrets.outputs.ok == 'true' && needs.guard-secrets.outputs.mt_ok == 'true'
+
+    runs-on: ubuntu-24.04
+    # v13.x (GHA-audit A6) — los secrets E2E viven en el environment
+    # e2e-staging: sólo los jobs que ejecutan tests/guards los reciben.
+    environment: e2e-staging
+    timeout-minutes: 15
+    # Serial: usa dos orgs dedicadas y no debe intercalarse con otras corridas.
+    concurrency:
+      group: e2e-multi-tenant
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          # v13.322.1 (GHA-audit H4) — no se hace push/fetch autenticado.
+          persist-credentials: false
+      - uses: ./.github/actions/setup-bun
+
+      - name: Guard (multi-tenant secrets)
+        id: mt_check
+        # Falla en vez de skipear: un multi-tenant que no corre no puede
+        # reportarse verde.
+        run: |
+          if [ -z "${E2E_MT_A_EMAIL}" ] || [ -z "${E2E_MT_A_PASSWORD}" ] || \
+             [ -z "${E2E_MT_B_EMAIL}" ] || [ -z "${E2E_MT_B_PASSWORD}" ]; then
+            echo "::error::E2E_MT_* secrets ausentes — el job multi-tenant NO puede correr."
+            exit 1
+          fi
+          echo "skip=false" >> "$GITHUB_OUTPUT"
+
+      - name: Cache Playwright browsers
+        if: steps.mt_check.outputs.skip == 'false'
+        id: pw-cache
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ~/.cache/ms-playwright
+          key: ${{ runner.os }}-playwright-${{ hashFiles('bun.lock', 'package.json') }}
+          restore-keys: |
+            ${{ runner.os }}-playwright-
+
+      - name: Install Playwright browser (chromium)
+        if: steps.mt_check.outputs.skip == 'false' && steps.pw-cache.outputs.cache-hit != 'true'
+        run: bunx playwright install chromium
+      - name: Install Playwright system deps
+        if: steps.mt_check.outputs.skip == 'false'
+        run: bunx playwright install-deps chromium
+
+      - name: Provisionar orgs A/B + fixture e2e/.tmp/multi-tenant.json
+        if: steps.mt_check.outputs.skip == 'false'
+        run: bun run e2e:provision-multi-tenant
+
+      - name: Run multi-tenant specs
+        if: steps.mt_check.outputs.skip == 'false'
+        run: bunx playwright test --project=chromium-multi-tenant
+
+      - name: Upload blob report
+        if: always() && steps.mt_check.outputs.skip == 'false'
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: blob-multi-tenant
+          path: blob-report/
+          retention-days: 3
+          if-no-files-found: ignore
+
+      - name: Upload traces on failure
+        if: failure() && steps.mt_check.outputs.skip == 'false'
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: traces-multi-tenant
+          path: test-results/
+          retention-days: 14
+
+  merge-reports:
+    name: Merge HTML report
+    needs: [guard-secrets, internal-shard, mutators, portal, multi-tenant]
+    if: ${{ !cancelled() }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          # v13.322.1 (GHA-audit H4) — no se hace push/fetch autenticado.
+          persist-credentials: false
+      - uses: ./.github/actions/setup-bun
+
+      - name: Gate global anti-skip
+        # `guard-secrets` DEBE terminar en success: si falla o queda skipped,
+        # todos los demás jobs se omiten y el merge vería "todo skipped" como
+        # verde vacío. Los jobs CORE tampoco pueden quedar `skipped`.
+        # `multi-tenant` es la única excepción y sólo cuando el guard declaró
+        # explícitamente `mt_ok=false` (secrets E2E_MT_* ausentes).
+        env:
+          R_GUARD: ${{ needs.guard-secrets.result }}
+          R_INTERNAL: ${{ needs.internal-shard.result }}
+          R_MUTATORS: ${{ needs.mutators.result }}
+          R_PORTAL: ${{ needs.portal.result }}
+          R_MT: ${{ needs.multi-tenant.result }}
+          MT_OK: ${{ needs.guard-secrets.outputs.mt_ok }}
+        run: |
+          fail=0
+          echo "guard-secrets: $R_GUARD"
+          if [ "$R_GUARD" != "success" ]; then
+            echo "::error::guard-secrets no terminó en success ($R_GUARD) — sin credenciales CORE no hay verde posible."
+            fail=1
+          fi
+          for pair in "internal-shard:$R_INTERNAL" "mutators:$R_MUTATORS" "portal:$R_PORTAL"; do
+            job="${pair%%:*}"; res="${pair#*:}"
+            echo "$job: $res"
+            if [ "$res" = "skipped" ]; then
+              echo "::error::$job quedó SKIPPED — verde vacío prohibido."
+              fail=1
+            fi
+          done
+          echo "multi-tenant: $R_MT (mt_ok=$MT_OK)"
+          if [ "$R_MT" = "skipped" ] && [ "$MT_OK" = "true" ]; then
+            echo "::error::multi-tenant quedó SKIPPED aunque los secrets E2E_MT_* existen."
+            fail=1
+          fi
+          [ "$fail" = "0" ]
+
+      - name: Download all blob reports
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          pattern: blob-*
+          path: all-blob-reports
+          merge-multiple: true
+
+      - name: Merge into HTML
+        # Ya NO se oculta el fallo con `|| echo`. Si hay blobs, el merge DEBE
+        # funcionar; si no hay ninguno, sólo se acepta cuando `guard-secrets`
+        # terminó en success Y todos los jobs de tests fueron omitidos
+        # intencionalmente. Cualquier otro caso es error.
+        env:
+          R_GUARD: ${{ needs.guard-secrets.result }}
+          R_INTERNAL: ${{ needs.internal-shard.result }}
+          R_MUTATORS: ${{ needs.mutators.result }}
+          R_PORTAL: ${{ needs.portal.result }}
+          R_MT: ${{ needs.multi-tenant.result }}
+        run: |
+          set -euo pipefail
+          blobs=$(find all-blob-reports -type f -name '*.zip' 2>/dev/null | wc -l)
+          echo "blobs encontrados: $blobs"
+          if [ "$blobs" -gt 0 ]; then
+            bunx playwright merge-reports --reporter=html ./all-blob-reports
+            exit 0
+          fi
+          if [ "$R_GUARD" != "success" ]; then
+            echo "::error::Sin blob reports y guard-secrets=$R_GUARD — no es una omisión intencional."
+            exit 1
+          fi
+          for res in "$R_INTERNAL" "$R_MUTATORS" "$R_PORTAL" "$R_MT"; do
+            if [ "$res" != "skipped" ]; then
+              echo "::error::No hay blob reports pero algún job de tests corrió (internal=$R_INTERNAL mutators=$R_MUTATORS portal=$R_PORTAL mt=$R_MT)."
+              exit 1
+            fi
+          done
+          echo "::notice::Sin blob reports: todos los jobs de tests fueron omitidos intencionalmente."
+
+
+      - name: Upload merged HTML report
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: playwright-report
+          path: playwright-report/
+          retention-days: 14
+          if-no-files-found: ignore
+
+      - name: Fail if any test job failed
+        # Explicit gate: si algún shard falló, este job también falla para que
+        # el workflow quede rojo (regresión).
+        if: ${{ needs.internal-shard.result == 'failure' || needs.mutators.result == 'failure' || needs.portal.result == 'failure' || needs.multi-tenant.result == 'failure' }}
+        run: |
+          echo "::error::Se detectaron regresiones en E2E."
+          echo "internal-shard=${{ needs.internal-shard.result }}"
+          echo "mutators=${{ needs.mutators.result }}"
+          echo "portal=${{ needs.portal.result }}"
+          echo "multi-tenant=${{ needs.multi-tenant.result }}"
+          exit 1

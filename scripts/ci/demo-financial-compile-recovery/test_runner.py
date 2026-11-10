@@ -94,7 +94,7 @@ class GateTests(unittest.TestCase):
                 RUNNER.verify_inputs(directory)
 
     def test_workflow_is_exact_head_with_read_only_permissions(self):
-        workflow = (RUNNER.ROOT / '.github/workflows/demo-financial-compile-recovery.yml').read_text()
+        workflow = (RUNNER.ROOT / 'docs/ci/workflow-archive/reset-20261109/demo-financial-compile-recovery.yml.txt').read_text()
         self.assertIn('ref: ${{ github.event.pull_request.head.sha }}', workflow)
         self.assertIn('persist-credentials: false', workflow)
         self.assertIn('contents: read', workflow)

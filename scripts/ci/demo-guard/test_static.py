@@ -97,7 +97,7 @@ class Contracts(unittest.TestCase):
   self.assertIn('result = m.run_concurrency(',historical)
   self.assertIn("for iteration in (1,2)",historical)
   self.assertIn("checkpoint['executions'] = 1",historical)
-  workflow=(HERE.parents[2]/'.github/workflows/rls-tests.yml').read_text()
+  workflow=(HERE.parents[2]/'docs/ci/workflow-archive/reset-20261109/rls-tests.yml.txt').read_text()
   self.assertIn("DEMO_PREFREEZE_CI: '1'",workflow)
   self.assertIn('DEMO_GUARD_POSTGRES_SERVICE_ID: ${{ job.services.postgres.id }}',workflow)
   self.assertIn('python3 scripts/ci/demo-guard/test_persisted.py',workflow)

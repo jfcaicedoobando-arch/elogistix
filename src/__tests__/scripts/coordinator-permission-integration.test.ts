@@ -23,7 +23,7 @@ describe("coordinator permission boundary integration", () => {
     for (const path of ["scripts/ci/rls-prepare-db.sh", "scripts/db/local-verify.sh"]) {
       expect(read(path)).toContain("_ci_check_coordinador_acl.sql");
     }
-    for (const path of ["scripts/db/local-verify.sh", ".github/workflows/rls-tests.yml"]) {
+    for (const path of ["scripts/db/local-verify.sh", "docs/ci/workflow-archive/reset-20261109/rls-tests.yml.txt"]) {
       const text = read(path);
       expect(text.indexOf("_ci_preserve_coordinador_acl.sql")).toBeGreaterThan(text.indexOf("_ci_post_migrate.sql"));
     }

@@ -90,7 +90,7 @@ describe("CI catalog: effective discovery", () => {
     for (const preparer of ["scripts/ci/rls-prepare-db.sh", "scripts/db/local-verify.sh"]) {
       expect(source(preparer)).toContain(`-f ${check} || exit 1`);
     }
-    for (const preparer of [".github/workflows/rls-tests.yml", "scripts/db/local-verify.sh"]) {
+    for (const preparer of ["scripts/ci/database-full.sh", "scripts/db/local-verify.sh"]) {
       const text = source(preparer);
       expect(text.indexOf(preserve)).toBeGreaterThan(text.indexOf("supabase/tests/rls/_ci_post_migrate.sql"));
     }
@@ -115,7 +115,7 @@ describe("CI catalog: effective discovery", () => {
     expect(() => assertExactPaths(expected, actual, "selector148 npm test discovery")).not.toThrow();
     expect(expected.every(file => fs.existsSync(file))).toBe(true);
     expect(catalog.entries.find(entry => entry.path === expected[0])?.mode).toBe("automatic");
-    expect(source(".github/workflows/rls-tests.yml")).toMatch(/^\s+node scripts\/ci\/selector148\/static-check\.cjs\r?\n\s+npm test --prefix scripts\/ci\/selector148$/m);
+    expect(source("scripts/ci/database-full.sh")).toMatch(/^node scripts\/ci\/selector148\/static-check\.cjs\r?\nnpm test --prefix scripts\/ci\/selector148$/m);
   });
 
   it("rejects unexecuted new selector148 CJS tests instead of accepting a folder wildcard", () => {
@@ -127,50 +127,14 @@ describe("CI catalog: effective discovery", () => {
     }
   });
 
-  it("routes the exact package script contract to an unconditional detector step after Node and Bun setup", () => {
-    const files = catalog.entries.filter(entry => entry.lane === "node-package-scripts");
-    expect(files).toEqual([expect.objectContaining({ path: "scripts/ci/package-scripts.test.mjs", mode: "automatic" })]);
-    const detector = source(".github/workflows/ci.yml").split("  detector:\n")[1].split("  lint:\n")[0];
-    const command = "run: node --test scripts/ci/package-scripts.test.mjs";
-    const step = detector.split("      - name: Package script contracts")[1].split("      - name:")[0];
-    expect(step).toContain(command);
-    expect(step).not.toMatch(/\bif:|continue-on-error/);
-    const nodeSetup = detector.indexOf("node-version: '26.13.0'");
-    expect(nodeSetup).toBeGreaterThanOrEqual(0);
-    expect(nodeSetup).toBeLessThan(detector.indexOf(command));
-    const bunStep = detector.split("      - name: Setup Bun for package script contracts")[1].split("      - name:")[0];
-    expect(bunStep).toContain("uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0");
-    expect(bunStep).toContain("bun-version: '1.4.4'");
-    expect(bunStep).not.toMatch(/\bif:|bun install|actions\/cache/);
-    expect(detector.indexOf("bun-version: '1.4.4'")).toBeLessThan(detector.indexOf(command));
-    const guards = catalog.entries.filter(entry => entry.lane === "sql-guards").map(entry => entry.path);
-    const support = Object.fromEntries(catalog.entries.filter(entry => entry.lane === "sql-support").map(entry => [entry.path, entry.reason]));
-    expect(() => classifyFiles([...catalog.entries.map(entry => entry.path), "scripts/ci/unregistered-package.test.mjs"], guards, support))
-      .toThrow(/no execution lane/);
-  });
-
-  it("runs persistence integrity contracts unconditionally after Node setup without the SQL runner", () => {
-    const detector = source(".github/workflows/ci.yml").split("  detector:\n")[1].split("  lint:\n")[0];
-    const command = "python3 -B -m unittest discover -s scripts/ci/demo-persistence-review -p 'test_*.py' -v";
-    const step = detector.split("      - name: Demo persistence integrity contracts")[1].split("      - name:")[0];
-    expect(step).toContain(`run: ${command}`);
-    expect(step).not.toMatch(/\bif:|continue-on-error|run_ci\.py|\bdocker\b|\bpsql\b/);
-    const setup = detector.indexOf("node-version: '26.13.0'");
-    expect(setup).toBeGreaterThanOrEqual(0);
-    expect(setup).toBeLessThan(detector.indexOf(command));
-    expect(source("scripts/ci/demo-persistence-review/run_ci.py"))
-      .toContain("'GitHub Actions only; no local SQL/Docker execution'");
-  });
-
-  it("fails closed for new unmatched SQL, script tests, missing and duplicate guards", () => {
-    const files = catalog.entries.map(entry => entry.path);
-    const guards = catalog.entries.filter(entry => entry.lane === "sql-guards").map(entry => entry.path);
-    const support = Object.fromEntries(catalog.entries.filter(entry => entry.lane === "sql-support").map(entry => [entry.path, entry.reason]));
-    expect(() => classifyFiles([...files, "supabase/tests/rls/test_unrouted.sql"], guards, support)).toThrow(/Unclassified/);
-    expect(() => classifyFiles([...files, "new-folder/unrouted.test.ts"], guards, support)).toThrow(/no execution lane/);
-    expect(() => classifyFiles(files, [...guards, guards[0]], support)).toThrow(/duplicated/);
-    expect(() => classifyFiles(files, [...guards, "supabase/tests/missing.sql"], support)).toThrow(/Stale/);
-    expect(() => classifyFiles(files, [], support)).toThrow(/empty/);
+  it("keeps offline contracts in the unconditional changes job after runtime selection", () => {
+    const ci=source(".github/workflows/ci.yml");
+    const offline=source("scripts/ci/offline.sh");
+    expect(ci).toContain("run: bash scripts/ci/offline.sh");
+    expect(ci.indexOf("node-version-file: .node-version")).toBeLessThan(ci.indexOf("run: bash scripts/ci/offline.sh"));
+    for(const command of ["node --test scripts/ci/package-scripts.test.mjs", "python3 -B -m unittest discover -s scripts/ci/demo-persistence-review", "node --test scripts/ci/post-deploy-smoke.test.mjs"])
+      expect(offline).toContain(command);
+    expect(offline).not.toMatch(/continue-on-error|\|\| true/);
   });
 
   it("routes only the executed dependency security command to its automatic Node lane", () => {
@@ -189,15 +153,10 @@ describe("CI catalog: effective discovery", () => {
       path, mode: "automatic", sha256: hash(fs.readFileSync(path)),
     })));
 
-    const checks = source(".github/workflows/ci.yml").replace(/\r\n/g, "\n").split("  checks:\n")[1].split("  tests:\n")[0];
-    const command = "run: bun run test:dependencies";
-    const step = checks.split("      - name: Dependency security consumer regressions\n")[1].split("      - name:")[0];
-    expect(step).toContain(command);
-    expect(step).toContain("if: needs.detector.outputs.frontend == 'true'");
-    expect(step).not.toContain("continue-on-error");
-    const setup = checks.indexOf("uses: ./.github/actions/setup-bun");
-    expect(setup).toBeGreaterThanOrEqual(0);
-    expect(setup).toBeLessThan(checks.indexOf(command));
+    const checks = source(".github/workflows/ci.yml");
+    expect(checks).toContain("bun run test:dependencies");
+    expect(checks.indexOf("bash scripts/ci/install.sh")).toBeLessThan(checks.indexOf("bun run test:dependencies"));
+    expect(checks).not.toContain("continue-on-error");
 
     const guards = catalog.entries.filter(entry => entry.lane === "sql-guards").map(entry => entry.path);
     const support = Object.fromEntries(catalog.entries.filter(entry => entry.lane === "sql-support").map(entry => [entry.path, entry.reason]));

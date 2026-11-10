@@ -47,7 +47,7 @@ describe("suites SQL referenciadas en CI", () => {
     const yaml = readdirSync(DIR_WORKFLOWS)
       .filter((f) => f.endsWith(".yml") || f.endsWith(".yaml"))
       .map((f) => readFileSync(`${DIR_WORKFLOWS}/${f}`, "utf8"))
-      .join("\n");
+      .join("\n") + readFileSync("scripts/ci/database-full.sh", "utf8");
 
     const huerfanas = suites.filter(
       (s) => !referencias.includes(s) && !yaml.includes(s),

@@ -1,0 +1,46 @@
+name: setup-pg-client
+description: >-
+  Instala el cliente de PostgreSQL (psql/pg_dump/pg_restore) desde el
+  repositorio oficial PGDG. El runner ubuntu-24.04 trae el cliente 16, que
+  aborta con "server version mismatch" contra el Postgres 17.9 pinneado del CI.
+
+inputs:
+  version:
+    description: >-
+      Versión mayor del cliente a instalar. Debe ser >= a la mayor de la imagen
+      Postgres pinneada en el workflow (POSTGRES_IMAGE, hoy 17.9).
+    required: false
+    default: "17"
+
+runs:
+  using: composite
+  steps:
+    - name: Instalar postgresql-client-${{ inputs.version }} (PGDG)
+      shell: bash
+      run: |
+        set -euo pipefail
+        ver="${{ inputs.version }}"
+        if command -v pg_dump >/dev/null 2>&1 \
+          && pg_dump --version | grep -qE "^pg_dump \(PostgreSQL\) ${ver}\."; then
+          echo "✓ pg_dump ${ver} ya presente: $(pg_dump --version)"
+        else
+          sudo install -d -m 0755 /usr/share/keyrings
+          curl -fsSL https://www.postgresql.org/media/keys/ACCC4CF8.asc \
+            | sudo gpg --dearmor -o /usr/share/keyrings/pgdg.gpg
+          codename="$(. /etc/os-release && echo "$VERSION_CODENAME")"
+          echo "deb [signed-by=/usr/share/keyrings/pgdg.gpg] https://apt.postgresql.org/pub/repos/apt ${codename}-pgdg main" \
+            | sudo tee /etc/apt/sources.list.d/pgdg.list >/dev/null
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq "postgresql-client-${ver}"
+        fi
+        # PGDG instala en /usr/lib/postgresql/<ver>/bin; lo ponemos primero
+        # para ganarle al cliente 16 preinstalado del runner.
+        echo "/usr/lib/postgresql/${ver}/bin" >> "$GITHUB_PATH"
+
+    - name: Verificar versiones del cliente
+      shell: bash
+      run: |
+        set -euo pipefail
+        psql --version
+        pg_dump --version
+        pg_restore --version

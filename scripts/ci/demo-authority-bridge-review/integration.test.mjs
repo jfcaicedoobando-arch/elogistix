@@ -162,11 +162,11 @@ test('exact test census rejects missing, duplicate, extra, manual, drift and unr
 });
 
 test('CI runs the exact bridge lane automatically after inventory with pinned Node, preserving previous lanes', () => {
-  const ci = read('.github/workflows/ci.yml');
-  const start = ci.indexOf('      - name: Demo authority bridge offline');
-  const end = ci.indexOf('      - name: Post-deploy smoke contract', start);
+  const ci = read('.github/workflows/ci.yml') + '\n' + read('scripts/ci/offline.sh');
+  const start = ci.indexOf('# Demo authority bridge offline');
+  const end = ci.indexOf('# Post-deploy smoke contract', start);
   assert.ok(start > ci.indexOf('test-catalog.mjs --output reports/test-inventory.json'));
-  const nodeSetup = ci.indexOf("node-version: '26.13.0'");
+  const nodeSetup = ci.indexOf("node-version-file: .node-version");
   assert.ok(nodeSetup >= 0 && nodeSetup < start);
   assert.ok(end > start);
   const step = ci.slice(start, end);

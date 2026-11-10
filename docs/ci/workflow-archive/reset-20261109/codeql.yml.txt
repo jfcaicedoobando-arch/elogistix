@@ -1,0 +1,61 @@
+name: CodeQL
+
+# Análisis estático de seguridad con CodeQL para JS/TS.
+# Corre semanalmente los lunes 06:00 UTC (o manualmente): se quitaron los
+# triggers de push/PR para simplificar el CI.
+
+on:
+  schedule:
+    - cron: "0 6 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: codeql-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  analyze:
+    name: Analyze (javascript-typescript)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    permissions:
+      security-events: write
+      contents: read
+      actions: read
+    env:
+      # 13.320.20 — Workaround para bug de CodeQL Action donde el fetch shallow
+      # de `main` falla ("fatal: error processing shallow info: 4") y genera un
+      # pr-diff-range.yml con filas "undefined" que aborta el análisis.
+      # Desactivar diff-informed queries fuerza el escaneo completo del PR.
+      CODEQL_ACTION_DIFF_INFORMED_QUERIES: "false"
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@33d7b85da1a04171e211befe2c739303b9a4c066 # v4.39.3
+        with:
+          languages: javascript-typescript
+          queries: security-and-quality
+          # 13.162.0 — Excluir tests, e2e y SQL helpers de RLS para reducir
+          # findings ruidosos que no aplican a código de producción.
+          config: |
+            paths-ignore:
+              - '**/__tests__/**'
+              - '**/*.test.ts'
+              - '**/*.test.tsx'
+              - 'e2e/**'
+              - 'supabase/tests/**'
+              - 'scripts/**'
+
+      - name: Perform CodeQL Analysis
+        uses: github/codeql-action/analyze@33d7b85da1a04171e211befe2c739303b9a4c066 # v4.39.3
+        with:
+          category: "/language:javascript-typescript"

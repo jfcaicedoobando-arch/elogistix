@@ -57,11 +57,11 @@ test('missing, extra, duplicate and manual owner entries reject before execution
 });
 
 test('CI executes the owner lane through the catalog after inventory and Node setup', () => {
-  const ci = fs.readFileSync(new URL('../../../.github/workflows/ci.yml', import.meta.url), 'utf8');
-  const start = ci.indexOf('      - name: Demo durable owner offline lane');
-  const end = ci.indexOf('      - name: Post-deploy smoke contract', start);
+  const ci = fs.readFileSync(new URL('../../../.github/workflows/ci.yml', import.meta.url), 'utf8') + '\n' + fs.readFileSync(new URL('../offline.sh', import.meta.url), 'utf8');
+  const start = ci.indexOf('# Demo durable owner offline lane');
+  const end = ci.indexOf('# Post-deploy smoke contract', start);
   assert.ok(start > ci.indexOf('test-catalog.mjs --output reports/test-inventory.json'));
-  const nodeSetup = ci.indexOf("node-version: '26.13.0'");
+  const nodeSetup = ci.indexOf("node-version-file: .node-version");
   assert.ok(nodeSetup >= 0 && nodeSetup < start);
   assert.ok(end > start);
   const step = ci.slice(start, end);

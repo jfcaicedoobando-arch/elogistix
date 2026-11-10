@@ -186,11 +186,11 @@ test('catalog: exactly these three tests execute automatically with the measured
 });
 
 test('CI: authority contracts run unconditionally after the complete inventory and pinned Node', () => {
-  const ci = read('.github/workflows/ci.yml');
-  const start = ci.indexOf('      - name: Demo authority composition contracts offline');
-  const end = ci.indexOf('      - name: Post-deploy smoke contract', start);
+  const ci = read('.github/workflows/ci.yml') + '\n' + read('scripts/ci/offline.sh');
+  const start = ci.indexOf('# Demo authority composition contracts offline');
+  const end = ci.indexOf('# Post-deploy smoke contract', start);
   assert.ok(start > ci.indexOf('test-catalog.mjs --output reports/test-inventory.json'));
-  const nodeSetup = ci.indexOf("node-version: '26.13.0'");
+  const nodeSetup = ci.indexOf("node-version-file: .node-version");
   assert.ok(nodeSetup >= 0 && nodeSetup < start);
   assert.ok(end > start);
   const step = ci.slice(start, end);

@@ -1,0 +1,300 @@
+# Benchmark: docs/ci/reset-20261109.md
+name: CI
+on:
+  pull_request:
+    branches:
+      - main
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+    inputs:
+      shards:
+        description: Native test shards for measurement
+        type: choice
+        options:
+          - "8"
+          - "10"
+          - "14"
+        default: "14"
+permissions:
+  contents: read
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+env:
+  CI: "true"
+  ANALYZE: "false"
+  CI_REPORT_COMPRESSED_SIZE: "false"
+jobs:
+  changes:
+    name: Changes and offline contracts
+    runs-on: ubuntu-24.04
+    timeout-minutes: 4
+    outputs:
+      edge: ${{ steps.areas.outputs.edge }}
+      database: ${{ steps.areas.outputs.database }}
+      shards: ${{ steps.shards.outputs.total }}
+      matrix: ${{ steps.shards.outputs.matrix }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+      - name: Node
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1
+        with:
+          node-version-file: .node-version
+          package-manager-cache: false
+      - name: Bun
+        uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6
+        with:
+          bun-version-file: .bun-version
+      - name: Areas
+        id: areas
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          BEFORE_SHA: ${{ github.event.before }}
+          HEAD_SHA: ${{ github.sha }}
+        run: bash scripts/ci/detect-areas.sh
+      - name: Shard matrix
+        id: shards
+        env:
+          COUNT: ${{ inputs.shards || '14' }}
+        run: |-
+          node --input-type=module <<'NODE'
+          import {appendFileSync} from 'node:fs';
+          const total=Number(process.env.COUNT);
+          if (![8,10,14].includes(total)) throw new Error('Invalid shard count');
+          appendFileSync(process.env.GITHUB_OUTPUT, 'total='+total+'\n'+'matrix='+JSON.stringify(Array.from({length:total},(_,i)=>i+1))+'\n');
+          NODE
+      - name: Offline contracts
+        run: bash scripts/ci/offline.sh
+      - name: Workflow syntax
+        run: bash scripts/ci/lint-workflows.sh
+  quality:
+    name: Lint, types and build
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - name: Node
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1
+        with:
+          node-version-file: .node-version
+          package-manager-cache: false
+      - name: Bun
+        uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6
+        with:
+          bun-version-file: .bun-version
+      - name: Dependencies
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9
+        with:
+          path: |-
+            node_modules
+            ~/.bun/install/cache
+          key: ${{ runner.os }}-${{ runner.arch }}-deps-${{ hashFiles('.node-version','.bun-version','package.json','bun.lock') }}
+        id: deps
+      - name: Install
+        run: bash scripts/ci/install.sh
+      - name: ESLint incremental cache
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9
+        with:
+          path: .cache/eslint
+          key: ${{ runner.os }}-eslint-${{ hashFiles('.node-version','.bun-version','bun.lock','eslint.config.js') }}-${{ github.run_id }}
+          restore-keys: ${{ runner.os }}-eslint-${{ hashFiles('.node-version','.bun-version','bun.lock','eslint.config.js') }}-
+      - name: Static validation
+        run: |-
+          bun run lint -- --max-warnings 0
+          bun run typecheck
+          bun run lint:unused
+          bun run test:dependencies
+      - name: Build and output guards
+        run: |-
+          bun run build
+          bash scripts/check-bundle-size.sh
+          bash scripts/check-sourcemaps.sh
+      - name: Real PDF regressions
+        run: bun run test:pdf -- tests/pdf/carteraPagination.test.tsx
+  tests:
+    name: Unit tests ${{ matrix.shard }}/${{ needs.changes.outputs.shards }}
+    needs: changes
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    strategy:
+      fail-fast: false
+      max-parallel: 14
+      matrix:
+        shard: ${{ fromJSON(needs.changes.outputs.matrix) }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - name: Node
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1
+        with:
+          node-version-file: .node-version
+          package-manager-cache: false
+      - name: Bun
+        uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6
+        with:
+          bun-version-file: .bun-version
+      - name: Dependencies
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9
+        with:
+          path: |-
+            node_modules
+            ~/.bun/install/cache
+          key: ${{ runner.os }}-${{ runner.arch }}-deps-${{ hashFiles('.node-version','.bun-version','package.json','bun.lock') }}
+        id: deps
+      - name: Install
+        run: bash scripts/ci/install.sh
+      - name: Complete unit suite
+        env:
+          CI_EVIDENCE_DIR: reports/ci-evidence
+          CI_TEST_SHARD: ${{ matrix.shard }}/${{ needs.changes.outputs.shards }}
+          CI_TEST_MAX_PARALLEL: ${{ needs.changes.outputs.shards }}
+          CI_CACHE_HIT: ${{ steps.deps.outputs.cache-hit == 'true' }}
+        run: bun run test -- --shard=${{ matrix.shard }}/${{ needs.changes.outputs.shards }}
+      - name: Test evidence
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        with:
+          name: vitest-evidence-${{ matrix.shard }}-attempt-${{ github.run_attempt }}
+          path: reports/ci-evidence/*.json
+          if-no-files-found: error
+          retention-days: 7
+  database:
+    name: SQL and RLS
+    needs: changes
+    if: needs.changes.outputs.database == 'true'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+      - name: Node
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1
+        with:
+          node-version-file: .node-version
+          package-manager-cache: false
+      - name: Bun
+        uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6
+        with:
+          bun-version-file: .bun-version
+      - name: Dependencies
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9
+        with:
+          path: |-
+            node_modules
+            ~/.bun/install/cache
+          key: ${{ runner.os }}-${{ runner.arch }}-deps-${{ hashFiles('.node-version','.bun-version','package.json','bun.lock') }}
+        id: deps
+      - name: Install
+        run: bash scripts/ci/install.sh
+      - name: PostgreSQL client
+        run: bash scripts/ci/setup-pg.sh
+      - name: Static schema guards
+        run: |-
+          bun run audit:manifest
+          bun run audit:schema
+          bun run audit:schema-functions
+          bun run audit:migrations
+          bun run audit:replay-mirror
+          bun run audit:rpc-sync
+      - name: Disposable database and RLS
+        run: bash scripts/db/local-verify.sh --no-behavioral
+  edge:
+    name: Edge types and tests
+    needs: changes
+    if: needs.changes.outputs.edge == 'true'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - name: Node
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1
+        with:
+          node-version-file: .node-version
+          package-manager-cache: false
+      - name: Bun
+        uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6
+        with:
+          bun-version-file: .bun-version
+      - name: Dependencies
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9
+        with:
+          path: |-
+            node_modules
+            ~/.bun/install/cache
+          key: ${{ runner.os }}-${{ runner.arch }}-deps-${{ hashFiles('.node-version','.bun-version','package.json','bun.lock') }}
+        id: deps
+      - name: Install
+        run: bash scripts/ci/install.sh
+      - name: Deno
+        uses: denoland/setup-deno@22d081ff2d3a40755e97629de92e3bcbfa7cf2ed
+        with:
+          deno-version: v2.9.8
+      - name: Validate adapters and tests
+        run: bash scripts/ci/edge.sh
+  secrets:
+    name: Secret scan
+    runs-on: ubuntu-24.04
+    timeout-minutes: 4
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+      - name: Gitleaks
+        uses: gitleaks/gitleaks-action@e0c47f4f8be36e29cdc102c57e68cb5cbf0e8d1e
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          GITLEAKS_VERSION: 8.24.3
+          GITLEAKS_CONFIG: .gitleaks.toml
+          GITLEAKS_ENABLE_COMMENTS: "false"
+          GITLEAKS_ENABLE_UPLOAD_ARTIFACT: "false"
+      - name: Final changed content
+        run: python3 scripts/ci/gitleaks_snapshot.py
+  result:
+    name: CI
+    needs:
+      - changes
+      - quality
+      - tests
+      - database
+      - edge
+      - secrets
+    if: always()
+    runs-on: ubuntu-24.04
+    timeout-minutes: 2
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - name: Node
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1
+        with:
+          node-version-file: .node-version
+          package-manager-cache: false
+      - name: Require expected jobs
+        env:
+          RESULTS: ${{ toJSON(needs) }}
+        run: node scripts/ci/result.mjs
+      - name: Download unit evidence
+        if: needs.tests.result == 'success'
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333
+        with:
+          pattern: vitest-evidence-*
+          path: reports/ci-evidence
+          merge-multiple: true
+      - name: Verify every test file and case
+        if: needs.tests.result == 'success'
+        run: node scripts/ci/verify-test-evidence.mjs reports/ci-evidence ${{ needs.changes.outputs.shards }}

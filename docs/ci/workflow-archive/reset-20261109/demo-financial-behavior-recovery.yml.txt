@@ -1,0 +1,40 @@
+name: Demo financial synthetic behavior recovery
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+    branches: [main]
+    paths:
+      - 'scripts/ci/demo-financial-behavior-recovery/**'
+      - 'scripts/ci/demo-financial-integrated-base-review/**'
+      - '.github/workflows/demo-financial-behavior-recovery.yml'
+permissions:
+  contents: read
+concurrency:
+  group: demo-financial-behavior-recovery-${{ github.event.pull_request.number }}
+  cancel-in-progress: false
+jobs:
+  synthetic-behavior:
+    if: github.repository == 'jfcaicedoobando-arch/elogistix' && github.event.pull_request.draft == true && github.event.pull_request.head.repo.full_name == github.repository && github.event.pull_request.head.ref == 'codex/demo-financial-behavior-recovery-20261015' && github.event.pull_request.base.sha == '326d981b9d98cae405c42158b66a3960cfe75bd3'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          persist-credentials: false
+          fetch-depth: 0
+      - name: Offline frozen-source and behavior harness tests
+        run: |
+          python3 -B -I -m unittest discover -s scripts/ci/demo-financial-compile-recovery -p 'test_*.py' -v
+          python3 -B -I -m unittest discover -s scripts/ci/demo-financial-behavior-recovery -p 'test_*.py' -v
+          python3 -B -I -m unittest discover -s scripts/ci/demo-financial-integrated-base-review -p 'test_*.py' -v
+      - name: Proposed retry correction, authentic happy path and rollback/security probes
+        run: python3 -B -I scripts/ci/demo-financial-integrated-base-review/run_ci.py --lane author --output "$RUNNER_TEMP/demo-financial-behavior-recovery"
+      - name: Preserve bounded behavior evidence including failures
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: demo-financial-integrated-author-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/demo-financial-behavior-recovery/public/**
+          if-no-files-found: warn
+          retention-days: 14

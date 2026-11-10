@@ -1,0 +1,64 @@
+name: Acceptance candidate SQL review
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+    branches: [main]
+    paths:
+      - '.github/workflows/acceptance-candidate-review.yml'
+      - 'scripts/ci/acceptance-candidate-review/**'
+      - 'scripts/ci/aceptacion-prospectos/**'
+      - 'supabase/migrations/20261012160000_aceptacion_prospectos_crm.sql'
+      - 'supabase/schema/cotizaciones/aceptar_cotizacion_version.sql'
+      - 'supabase/schema/baseline.sql'
+      - 'supabase/tests/cotizacion_aceptar_cliente_candado.sql'
+      - 'supabase/releases/migration-manifest.json'
+      - 'src/features/cotizacion/**'
+permissions:
+  contents: read
+concurrency:
+  group: acceptance-candidate-${{ github.event.pull_request.number }}-${{ github.event.pull_request.head.sha }}
+  cancel-in-progress: false
+jobs:
+  isolated:
+    if: >-
+      github.repository == 'jfcaicedoobando-arch/elogistix' &&
+      github.event.pull_request.base.repo.full_name == 'jfcaicedoobando-arch/elogistix' &&
+      github.event.pull_request.head.repo.full_name == 'jfcaicedoobando-arch/elogistix' &&
+      github.event.pull_request.base.ref == 'main' &&
+      github.event.pull_request.head.ref == 'fix/acceptance-canonical-prospect-20261012' &&
+      github.event.pull_request.base.sha == 'b355e978bd2fa8adda3195218d32cc61bfbfcc98'
+    name: Acceptance candidate PG${{ matrix.postgres }} (${{ matrix.purpose }})
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - postgres: '17.9'
+            purpose: strict gate and baseline
+          - postgres: '17.6'
+            purpose: diagnostic
+    env:
+      REVIEW_COMMIT: ${{ github.event.pull_request.head.sha }}
+      POSTGRES_VERSION: ${{ matrix.postgres }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          repository: jfcaicedoobando-arch/elogistix
+          ref: ${{ github.event.pull_request.head.sha }}
+          fetch-depth: 1
+          persist-credentials: false
+      - name: Static harness controls
+        run: |
+          python3 scripts/ci/acceptance-candidate-review/run.py --static-only
+          python3 scripts/ci/acceptance-candidate-review/test_runner.py
+      - name: Exact candidate with real functions and two-session assertions
+        run: python3 scripts/ci/acceptance-candidate-review/run.py --postgres "$POSTGRES_VERSION"
+      - name: Preserve exact source, baseline and behavior evidence
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: acceptance-candidate-pg${{ matrix.postgres }}-${{ github.event.pull_request.head.sha }}-${{ github.run_attempt }}
+          path: reports/acceptance-candidate-review/
+          if-no-files-found: error
+          retention-days: 14

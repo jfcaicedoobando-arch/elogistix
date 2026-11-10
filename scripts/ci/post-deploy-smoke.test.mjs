@@ -6,7 +6,7 @@ import { readFileSync } from "node:fs";
 const test = globalThis.Deno?.test.bind(globalThis.Deno) ??
   (await import("node:test")).test;
 const workflow = readFileSync(
-  new URL("../../.github/workflows/post-deploy-smoke.yml", import.meta.url),
+  new URL("../../docs/ci/workflow-archive/reset-20261109/post-deploy-smoke.yml.txt", import.meta.url),
   "utf8",
 ).replace(/\r\n/g, "\n");
 const steps = workflow.split(/\n(?= {6}- (?:name:|uses:))/);

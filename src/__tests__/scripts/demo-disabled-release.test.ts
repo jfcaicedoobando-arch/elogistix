@@ -67,7 +67,7 @@ describe("disabled demo release: atomic four-route forward", () => {
 });
 
 it("canonical adapter validation uses fresh Deno 2.9.8 and original imports without suppression", () => {
-  const workflow = read(".github/workflows/demo-disabled-validation.yml");
+  const workflow = read(".github/workflows/ci.yml") + read("scripts/ci/edge.sh");
   expect(workflow).toContain("deno-version: v2.9.8");
   expect(workflow).toContain("deno cache --node-modules-dir=none supabase/functions/demo-access/index.ts");
   expect(workflow).toContain("deno check --node-modules-dir=none supabase/functions/demo-access/index.ts");
@@ -87,10 +87,9 @@ it("routes only the approved offline smoke file to its automatic Node lane", () 
 
 it("runs the offline smoke contract unconditionally in ordinary CI after discovery", () => {
   const ci = read(".github/workflows/ci.yml");
-  const detector = ci.split("  detector:")[1].split("\n  lint:")[0];
-  const step = detector.split("      - name: Post-deploy smoke contract (offline, no credentials)\n")[1].split(/\n\s+- name:/)[0];
-  expect(step).toContain("run: node --test scripts/ci/post-deploy-smoke.test.mjs");
-  expect(step).not.toMatch(/\bif:|continue-on-error|secrets\.|--allow-net/);
-  expect(detector.indexOf("--output reports/test-inventory.json"))
-    .toBeLessThan(detector.indexOf("node --test scripts/ci/post-deploy-smoke.test.mjs"));
+  const offline = read("scripts/ci/offline.sh");
+  expect(ci).toContain("run: bash scripts/ci/offline.sh");
+  expect(offline).toContain("node --test scripts/ci/post-deploy-smoke.test.mjs");
+  expect(offline.indexOf("--output reports/test-inventory.json"))
+    .toBeLessThan(offline.indexOf("node --test scripts/ci/post-deploy-smoke.test.mjs"));
 });

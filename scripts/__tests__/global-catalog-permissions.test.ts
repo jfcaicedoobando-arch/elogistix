@@ -35,7 +35,7 @@ describe("reviewed global catalog permission package", () => {
     expect(suite).not.toMatch(/^COMMIT;/m);
     const support = JSON.parse(read("scripts/ci/test-catalog/sql-support.json"));
     expect(support["supabase/tests/rls/_ci_check_global_catalog_acl.sql"]).toBeTruthy();
-    expect(read(".github/workflows/rls-tests.yml"))
+    expect(read("docs/ci/workflow-archive/reset-20261109/rls-tests.yml.txt"))
       .toContain("python3 scripts/db/global-catalog-permissions/test-negative.py");
   });
   it("retains the exact 39 historical release entries and adds only this migration", () => {

@@ -121,7 +121,7 @@ class StageContracts(unittest.TestCase):
         self.assertIn('python3 scripts/ci/crm-cliente/verify-evidence.py historical || exit 1',script)
         self.assertIn('Missing CRM identity historical checkpoint',script)
         self.assertLess(script.index('python3 scripts/ci/crm-cliente/run-actions.py'),script.index('echo "▶ Isolated Drizzle history: $f"'))
-        workflow=(ROOT/'.github/workflows/rls-tests.yml').read_text()
+        workflow=(ROOT/'docs/ci/workflow-archive/reset-20261109/rls-tests.yml.txt').read_text()
         self.assertIn("CRM_IDENTITY_CI: '1'",workflow)
         self.assertIn('python3 scripts/ci/crm-cliente/run-final-actions.py',workflow)
         self.assertIn('python3 scripts/ci/crm-cliente/verify-evidence.py both',workflow)
