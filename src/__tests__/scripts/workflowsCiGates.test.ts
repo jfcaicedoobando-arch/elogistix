@@ -1,200 +1,50 @@
-/**
- * Guards de los workflows de GitHub Actions (P1 auditoría de CI).
- *
- * Analogía: son las alarmas del tablero. No manejan el coche, sólo avisan si
- * alguien desconecta un sensor (el gate de tamaño del bundle, la opcionalidad
- * de multi-tenant o el fallo del merge de reportes).
- */
-import { describe, it, expect } from "vitest";
-import fs from "node:fs";
-import path from "node:path";
-
-const raiz = process.cwd();
-const leer = (rel: string): string =>
-  fs.readFileSync(path.join(raiz, rel), "utf8").replace(/\r\n/g, "\n");
-
-const ci = leer(".github/workflows/ci.yml");
-const e2e = leer(".github/workflows/e2e.yml");
-
-describe("ci.yml - reporte comprimido informativo de Vite", () => {
-  it("lo desactiva sólo en el paso Build y conserva ANALYZE=false", () => {
-    const build = ci.match(
-      / {6}- name: Build \(sin ANALYZE\)\n([\s\S]*?)(?=\n {6}- name:)/,
-    )?.[1] ?? "";
-    expect(build).toContain("if: needs.detector.outputs.frontend == 'true'");
-    expect(build).toMatch(
-      /env:\n {10}ANALYZE: "false"\n {10}CI_REPORT_COMPRESSED_SIZE: "false"\n {8}run: bun run build/,
-    );
-    expect(ci.match(/CI_REPORT_COMPRESSED_SIZE/g)).toHaveLength(1);
+// @vitest-environment node
+import { describe, expect, it } from "vitest";
+import { readFileSync, readdirSync, existsSync } from "node:fs";
+import { spawnSync } from "node:child_process";
+const ci=readFileSync(".github/workflows/ci.yml","utf8");
+const required={changes:{result:"success",outputs:{database:"false",edge:"false"}},quality:{result:"success"},lint:{result:"success"},tests:{result:"success"},secrets:{result:"success"},database:{result:"skipped"},edge:{result:"skipped"}};
+const gate=(jobs:unknown)=>spawnSync(process.execPath,["scripts/ci/result.mjs"],{env:{...process.env,RESULTS:JSON.stringify(jobs)},encoding:"utf8"});
+describe("single CI workflow",()=> {
+  it("retires every previous wrapper and local action",()=> {
+    expect(readdirSync(".github/workflows").filter(name=>/\.ya?ml$/.test(name))).toEqual(["ci.yml"]);
+    for(const name of ["setup-bun","setup-pg-client"]) expect(existsSync(`.github/actions/${name}/action.yml`)).toBe(false);
   });
-
-  it("Vite conserva el reporte por defecto y sólo false explícito lo desactiva", () => {
-    expect(leer("vite.config.ts")).toMatch(
-      /reportCompressedSize:\s*process\.env\.CI_REPORT_COMPRESSED_SIZE !== "false"/,
-    );
+  it("uses read-only credentials and immutable external action references",()=> {
+    expect(ci).toContain("contents: read");
+    expect(ci).not.toMatch(/(?:contents|actions|pull-requests): write|pull_request_target|secrets\./);
+    for(const line of ci.split("\n").filter(line=>line.includes("uses:"))) expect(line).toMatch(/uses: [\w/-]+@[a-f0-9]{40}\s*$/);
+    expect(ci).toContain("persist-credentials: false");
+    expect(ci).toContain("cancel-in-progress: true");
   });
-});
-
-describe("ci.yml · bundle size gate", () => {
-  it("ejecuta scripts/check-bundle-size.sh", () => {
-    expect(ci).toContain("bash scripts/check-bundle-size.sh");
-  });
-
-  it("lo ejecuta después del build", () => {
-    expect(ci.indexOf("bash scripts/check-bundle-size.sh")).toBeGreaterThan(
-      ci.indexOf("run: bun run build"),
-    );
-  });
-
-  it("el script existe y es ejecutable por bash", () => {
-    expect(fs.existsSync(path.join(raiz, "scripts/check-bundle-size.sh"))).toBe(true);
-  });
-
-  it("conserva el budget original del entry (365 KB) y el comentario coincide", () => {
-    const script = leer("scripts/check-bundle-size.sh");
-    expect(script).toContain('BUDGET_KB="${BUNDLE_BUDGET_KB:-365}"');
-    expect(ci).toContain("entry 365 KB gz");
-  });
-});
-
-describe("e2e.yml · guard-secrets no puede dar falso verde", () => {
-  it("el gate anti-skip valida el resultado de guard-secrets", () => {
-    expect(e2e).toContain("R_GUARD: ${{ needs.guard-secrets.result }}");
-    expect(e2e).toMatch(/guard-secrets no terminó en success/);
-  });
-
-  it("el merge sin blobs exige guard-secrets=success", () => {
-    expect(e2e).toMatch(/Sin blob reports y guard-secrets=\$R_GUARD/);
-  });
-
-  it("la excepción de omisión sólo cubre multi-tenant", () => {
-    expect(e2e).toMatch(/\[ "\$R_MT" = "skipped" \] && \[ "\$MT_OK" = "true" \]/);
-  });
-});
-
-describe("e2e.yml · multi-tenant opcional", () => {
-  it("el guard expone mt_ok sin fallar cuando faltan E2E_MT_*", () => {
-    expect(e2e).toContain('echo "mt_ok=false" >> "$GITHUB_OUTPUT"');
-    expect(e2e).toContain('echo "mt_ok=true" >> "$GITHUB_OUTPUT"');
-  });
-
-  it("el job multi-tenant está condicionado a mt_ok", () => {
-    expect(e2e).toContain("needs.guard-secrets.outputs.mt_ok == 'true'");
-  });
-
-  it("los secrets CORE siguen siendo obligatorios", () => {
-    expect(e2e).toMatch(/E2E secrets CORE ausentes[\s\S]{0,200}exit 1/);
-  });
-});
-
-describe("e2e.yml · merge-reports", () => {
-  it("no oculta el fallo del merge con || echo", () => {
-    expect(e2e).not.toContain('merge-reports --reporter=html ./all-blob-reports || echo');
-  });
-
-  it("ejecuta el merge sin enmascarar el código de salida", () => {
-    expect(e2e).toContain("bunx playwright merge-reports --reporter=html ./all-blob-reports\n");
-  });
-
-  it("falla si no hay blobs y algún job de tests sí corrió", () => {
-    expect(e2e).toContain("No hay blob reports pero algún job de tests corrió");
-  });
-});
-
-describe("docs de shards", () => {
-  it("existe el procedimiento de medición y el script", () => {
-    expect(fs.existsSync(path.join(raiz, "docs/ci-vitest-shards.md"))).toBe(true);
-    expect(fs.existsSync(path.join(raiz, "scripts/bench-vitest-shards.sh"))).toBe(true);
-    expect(ci).toContain("docs/ci-vitest-shards.md");
-  });
-
-  it("conecta una única matriz validada a todos los consumidores sin coverage ni blobs", () => {
-    expect(ci).toContain("node scripts/ci/vitest-shard-plan.mjs");
-    expect(ci).toContain("shard_count: ${{ steps.shards.outputs.shard_count }}");
-    expect(ci).toContain("shard_max_parallel: ${{ steps.shards.outputs.shard_max_parallel }}");
-    expect(ci).toContain("shard_matrix: ${{ steps.shards.outputs.shard_matrix }}");
-    expect(ci).toContain("max-parallel: ${{ fromJSON(needs.detector.outputs.shard_max_parallel) }}");
-    expect(ci).toContain("matrix: ${{ fromJSON(needs.detector.outputs.shard_matrix) }}");
-    expect(ci).toContain("Vitest shard ${{ matrix.shard }}/${{ needs.detector.outputs.shard_count }}");
-    expect(ci).toContain("--shard=${{ matrix.shard }}/${{ needs.detector.outputs.shard_count }}");
-    expect(ci).toContain("CI_TEST_SHARD: ${{ matrix.shard }}/${{ needs.detector.outputs.shard_count }}");
-    expect(ci).toContain("CI_TEST_MAX_PARALLEL: ${{ needs.detector.outputs.shard_max_parallel }}");
-    expect(ci).toContain("-of-${{ needs.detector.outputs.shard_count }}");
-    expect(ci).toContain("verify-test-evidence.mjs reports/ci-evidence ${{ needs.detector.outputs.shard_count }}");
-    expect(ci).not.toContain("${{ matrix.shard }}/5");
-    expect(ci).not.toContain("-of-5");
+  it("requires full unit execution with an exact evidence union",()=> {
+    expect(ci).toContain("bun run test -- --shard=${{ matrix.shard }}/${{ needs.changes.outputs.shards }}");
     expect(ci).toContain("fail-fast: false");
-    expect(ci).toContain("Sin coverage, sin blobs/merge");
-    expect(ci).toContain("name: CI Success (aggregator)");
-    expect(ci).toContain("needs: [detector, lint, checks, tests]");
-    expect(ci).toContain("if: always()");
+    expect(ci).toContain("if-no-files-found: error");
+    expect(ci).toContain("node scripts/ci/verify-test-evidence.mjs reports/ci-evidence");
+    expect(ci).not.toMatch(/continue-on-error|--retry|--passWithNoTests/);
   });
-
-  it("usa catorce shards por defecto y conserva dos workers con aislamiento", () => {
-    const input = ci.match(/ {6}vitest_shards:\n([\s\S]*?)(?=\n {6}vitest_max_parallel:)/)?.[1] ?? "";
-    expect(input).toContain('options: ["5", "8", "10", "14"]');
-    expect(input).toContain('default: "14"');
-    expect(leer("scripts/ci/vitest-shard-plan.mjs")).toContain("DEFAULT_SHARD_COUNT = 14");
-    const shared = leer("vitest.shared.ts");
-    expect(shared).toContain("MAX_WORKERS = process.env.CI ? 2 : LOCAL_FORKS");
-    expect(shared).toContain('pool: "forks"');
-    expect(shared).toContain("isolate: true");
-    expect(ci).toContain("run: bun run test -- --shard=");
+  it("retains output guards and conditional backend validation",()=> {
+    for(const command of ["bun run lint -- --max-warnings 0","bun run typecheck","bun run test:dependencies","bun run build","bash scripts/check-bundle-size.sh","bash scripts/check-sourcemaps.sh","bun run test:pdf -- tests/pdf/carteraPagination.test.tsx","bash scripts/db/local-verify.sh --no-behavioral","bash scripts/ci/edge.sh"]) expect(ci).toContain(command);
+    expect(ci.indexOf("bun run build")).toBeLessThan(ci.indexOf("bash scripts/check-bundle-size.sh"));
+    expect(ci).toContain("if: needs.changes.outputs.database == 'true'");
+    expect(ci).toContain("if: needs.changes.outputs.edge == 'true'");
+    expect(ci).toContain('CI_REPORT_COMPRESSED_SIZE: "false"');
   });
-
-  it("documenta la medición real de 5 shards con caché caliente", () => {
-    const doc = leer("docs/ci-vitest-shards.md");
-    expect(doc).toContain("35466468012");
-    expect(doc).toContain("35464373548");
-    expect(doc).toContain("35462835847");
-    expect(doc).not.toMatch(/sin\s+\*\*medición nueva\*\*/);
-    expect(doc).toMatch(/ESLint[^\n]*ya no es el cuello de botella/);
+});
+describe("final required check fails closed",()=> {
+  it("accepts successful checks and explicitly irrelevant backend jobs",()=>expect(gate(required).status).toBe(0));
+  it.each(["changes","quality","lint","tests","secrets"])("rejects a failed, cancelled, missing or skipped %s",name=> {
+    for(const result of ["failure","cancelled","skipped",undefined]) expect(gate({...required,[name]:{result}}).status).not.toBe(0);
+  });
+  it.each(["database","edge"])("requires %s when selected",name=> {
+    const selected={...required,changes:{result:"success",outputs:{...required.changes.outputs,[name]:"true"}}};
+    expect(gate(selected).status).not.toBe(0);
+    expect(gate({...selected,[name]:{result:"success"}}).status).toBe(0);
+    expect(gate({...selected,[name]:{result:"cancelled"}}).status).not.toBe(0);
+  });
+  it("rejects missing or malformed area decisions",()=> {
+    for(const value of ["",undefined,"False","unknown"]) expect(gate({...required,changes:{result:"success",outputs:{database:value,edge:"false"}}}).status).not.toBe(0);
   });
 });
 
-describe("ci.yml · caché de ESLint aislada", () => {
-  it("la caché de lint no vive dentro de node_modules", () => {
-    const pkg = leer("package.json");
-    expect(pkg).toContain("--cache-location .cache/eslint/");
-    expect(pkg).not.toContain("node_modules/.cache/eslint");
-  });
-
-  it("conserva --cache-strategy content y max-warnings 0", () => {
-    expect(leer("package.json")).toContain("--cache-strategy content");
-    expect(ci).toContain("bun run lint -- --max-warnings 0");
-  });
-
-  it("el job lint tiene su propia actions/cache para .cache/eslint", () => {
-    expect(ci).toContain("path: .cache/eslint");
-    expect(ci).toContain("${{ runner.os }}-${{ runner.arch }}-eslint-node${{ steps.setup.outputs.node-version }}-bun1.4.4-");
-    // El comentario histórico del workflow sí menciona la ruta antigua; el
-    // guard contra la regresión real vive en la aserción de package.json.
-
-  });
-
-  it("documenta la validación de caché caliente y la comparativa fría", () => {
-    const doc = leer("docs/ci-vitest-shards.md");
-    // La guía conserva el resultado observado, no exige dos variantes del log del proveedor.
-    expect(doc).toMatch(/caché se\s+restauró por `Cache hit for restore-key`/);
-    expect(doc).toContain("Cache hit for restore-key");
-    expect(doc).toContain("1 m 55 s");
-    expect(doc).toContain("2 m 41 s");
-    expect(doc).toMatch(/corrida caliente \(caché de ESLint activa\)/);
-  });
-
-  it("usa clave propia por corrida más restore-keys (sin bloqueo del primer escritor)", () => {
-    expect(ci).toMatch(/-eslint-[^\n]*github\.run_id/);
-    expect(ci).toContain("restore-keys:");
-  });
-
-  it("el composite action sigue cacheando node_modules con su propia clave", () => {
-    const action = leer(".github/actions/setup-bun/action.yml");
-    expect(action).toContain("path: node_modules");
-    expect(action).toMatch(/node-modules-bun/);
-    expect(action).not.toContain("eslint");
-  });
-
-  it("la caché de lint está fuera del control de versiones", () => {
-    expect(leer(".gitignore")).toMatch(/^\.cache\/$/m);
-  });
-});

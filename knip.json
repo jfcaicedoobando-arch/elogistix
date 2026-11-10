@@ -29,6 +29,8 @@
     "scripts/ci/selector148": {
       "entry": [
         "concurrency.cjs",
+        "run.cjs",
+        "static-check.cjs",
         "tests/**/*.test.cjs"
       ],
       "project": [

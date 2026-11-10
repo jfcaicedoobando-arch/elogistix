@@ -11,7 +11,7 @@ PUBLIC_PATHS = (
     'scripts/ci/demo-persistence-review',
     'docs/review/demo-durable-owner-adapter-20261015',
     'docs/review/demo-authority-provider-entry-20261016',
-    '.github/workflows/demo-persistence-prerequisites.yml',
+    'docs/ci/workflow-archive/reset-20261109/demo-persistence-prerequisites.yml.txt',
 )
 PRIVATE_ID_PREFIX = 'lib' + 'file' + '_'
 PROFILE_PATH = re.compile(r'(?i)(?:[a-z]:[\\/]+users[\\/]+|/(?:users|home)/)')

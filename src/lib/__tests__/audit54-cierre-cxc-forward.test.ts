@@ -135,15 +135,14 @@ describe("AUD54 shipment CxC forward composition", () => {
     expect(forward).not.toMatch(/^\s*(?:GRANT|REVOKE)\s+(?:authenticated|postgres|service_role)\s+(?:TO|FROM)/mi);
   });
 
-  it("requires the checkpoint contract inside the existing SQL aggregate before applying the forward", () => {
+  it("preserves the checkpoint contract in the extended SQL recipe before applying the forward", () => {
     const runner = read("scripts/ci/rls-prepare-db.sh");
-    const workflow = read(".github/workflows/rls-tests.yml");
+    const workflow = read("scripts/ci/database-full.sh");
     const harness = read("scripts/ci/audit54-cxc-forward-runtime.sh");
     expect(fs.existsSync(path.join(root, ".github/workflows/audit54-cxc-forward-runtime.yml"))).toBe(false);
-    expect(workflow).toContain("name: RLS tests result");
-    expect(workflow).toContain("run: bash scripts/ci/rls-prepare-db.sh");
-    expect(workflow).toContain("ISOLATED_QA_DB: '1'");
-    expect(workflow).toContain("AUD54_CI: '1'");
+    expect(workflow).toContain("bash scripts/ci/rls-prepare-db.sh");
+    expect(workflow).toContain("export ISOLATED_QA_DB='1'");
+    expect(workflow).toContain("export AUD54_CI='1'");
     expect(runner).toContain('if [[ "${AUD54_CI:-}" == 1 && "$base" == "$AUD54_FORWARD" ]]; then');
     expect(runner).toContain('if [[ "${AUD54_CI:-}" == 1 && "$audit54_runtime_checked" != 1 ]]; then');
     expect(workflow).not.toMatch(/continue-on-error/);

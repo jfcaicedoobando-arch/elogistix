@@ -1,0 +1,457 @@
+name: CI
+
+# DEFAULT 14 SHARDS por decisión explícita (2026-10-11); opciones manuales 5/8/10/14 disponibles.
+# El detector valida la matriz, su max-parallel y todos sus consumidores.
+# Benchmark comparable y presupuesto compartido: docs/ci-shard-benchmark.md
+#
+# Son 5 definiciones de job en YAML que se expanden a 18 jobs reales por defecto (N + 4), con pico estructural de 16 (N + 2):
+#   1. detector        → sólo checkout + diff robusto; expone frontend/edge/database.
+#   2. lint            → ESLint (0 warnings). Corre EN PARALELO con checks y shards.
+#   3. checks          → typecheck, guards DB condicionales, build, Deno condicional.
+#   4. tests (matrix)  → Vitest shards 1..14 (sin coverage, retries ni blobs).
+#   5. ci-success      → agregador "CI Success (aggregator)", nombre conservado por
+#                        compatibilidad con los checks previos (este repo no tiene
+#                        branch protection ni rulesets configurados).
+#
+# Shards/workers: 14 shards × maxWorkers=2. Se conserva forks/aislamiento.
+# Cambio solicitado, sin estabilidad ni mejora sostenida validadas ni promesa de ahorro o velocidad.
+# No activa el piloto de memoria ni sondas OS. Procedimiento e historial:
+# docs/ci-vitest-shards.md (herramienta: scripts/bench-vitest-shards.sh).
+
+#
+# El workflow SIEMPRE arranca (sin paths-ignore) para que el check agregador
+# nunca quede pending; los pasos irrelevantes se omiten explícitamente.
+
+on:
+  pull_request:
+    branches: ["**"]
+  push:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      vitest_shards:
+        description: "Native shards; automatic PR/push uses 14; manual 5/8/10/14 available"
+        type: choice
+        options: ["5", "8", "10", "14"]
+        default: "14"
+      vitest_max_parallel:
+        description: "Per-matrix concurrency (blank = shard count; 3 = shared-load experiment)"
+        type: string
+        default: ""
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  detector:
+    name: Detectar áreas
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    outputs:
+      frontend: ${{ steps.areas.outputs.frontend }}
+      edge: ${{ steps.areas.outputs.edge }}
+      database: ${{ steps.areas.outputs.database }}
+      shard_count: ${{ steps.shards.outputs.shard_count }}
+      shard_max_parallel: ${{ steps.shards.outputs.shard_max_parallel }}
+      shard_matrix: ${{ steps.shards.outputs.shard_matrix }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      # Lógica en `scripts/ci/detect-areas.sh` (probada en
+      # src/__tests__/scripts/ci-detect-areas.test.ts).
+      - name: Detectar áreas cambiadas
+        id: areas
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          BEFORE_SHA: ${{ github.event.before }}
+          HEAD_SHA: ${{ github.sha }}
+        run: bash scripts/ci/detect-areas.sh
+
+      - name: Setup Node for detector and offline contracts
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: '26.13.0'
+          package-manager-cache: false
+
+      - name: Validate native shard plan
+        id: shards
+        env:
+          VITEST_SHARD_COUNT: ${{ inputs.vitest_shards }}
+          VITEST_MAX_PARALLEL: ${{ inputs.vitest_max_parallel }}
+        run: node scripts/ci/vitest-shard-plan.mjs
+
+      - name: Catálogo completo de pruebas (sin ejecutar carriles manuales)
+        run: node scripts/ci/test-catalog.mjs --output reports/test-inventory.json
+
+      - name: Demo review offline lane (no SQL, backend or credentials)
+        run: node scripts/ci/demo-review-offline.mjs reports/test-inventory.json
+
+      - name: Demo durable owner offline lane (no SQL, backend or credentials)
+        run: node scripts/ci/test-catalog.mjs --run node-demo-durable-owner reports/test-inventory.json
+
+      - name: Demo persistence integrity contracts (offline, no SQL or Docker)
+        run: python3 -B -m unittest discover -s scripts/ci/demo-persistence-review -p 'test_*.py' -v
+
+      - name: Demo physical wire state machine offline lane (no database or external network)
+        run: node scripts/ci/test-catalog.mjs --run node-demo-wire-lab reports/test-inventory.json
+
+      - name: Node native runtime staging and archive contracts (no Docker or database)
+        run: |
+          python3 -B -m unittest discover -s scripts/ci/demo-wire-lab -p 'test_*.py' -v
+          python3 -B scripts/ci/demo-wire-lab/stage.py --verify-native-runtime --output "$RUNNER_TEMP/node26-native-runtime" --node "$(command -v node)"
+
+      - name: Demo authority composition contracts offline (no database or external authentication)
+        run: node scripts/ci/test-catalog.mjs --run node-demo-authority-contract reports/test-inventory.json
+
+      - name: Demo authority bridge offline (declared snapshots only, no authorization)
+        run: node scripts/ci/test-catalog.mjs --run node-demo-authority-bridge reports/test-inventory.json
+
+      - name: Post-deploy smoke contract (offline, no credentials)
+        run: node --test scripts/ci/post-deploy-smoke.test.mjs
+
+      - name: Setup Bun for package script contracts
+        uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
+        with:
+          bun-version: '1.4.4'
+
+      - name: Package script contracts (offline, stubbed commands)
+        run: node --test scripts/ci/package-scripts.test.mjs
+
+      - name: Validate workflows (actionlint)
+        if: steps.areas.outputs.workflows == 'true'
+        run: bash scripts/ci/lint-workflows.sh
+
+
+  lint:
+    name: ESLint
+    needs: detector
+    if: needs.detector.outputs.frontend == 'true'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 1
+          persist-credentials: false
+
+      - name: Setup Bun + install
+        id: setup
+        uses: ./.github/actions/setup-bun
+
+      - name: Knip (unused code inventory)
+        run: bun run lint:unused
+
+      # Caché de ESLint AISLADA del cache de `node_modules` del composite action.
+      # Antes vivía en `node_modules/.cache/eslint/`, cuya clave es compartida por
+      # lint/checks/tests: el primer job que guardaba ese cache lo escribía sin
+      # estado de ESLint y el de lint nunca persistía.
+      # Clave: SO/arquitectura + Node instalado + Bun + configuración y lockfile. NO
+      # incluye el contenido de `src/`, para que la caché se reutilice de forma
+      # incremental entre commits (`--cache-strategy content` decide por archivo).
+      # `github.run_id` en la clave principal garantiza escritura propia por
+      # corrida (nunca hay colisión con otro job paralelo) y `restore-keys`
+      # recupera la más reciente compatible.
+      - name: Cache ESLint
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: .cache/eslint
+          key: ${{ runner.os }}-${{ runner.arch }}-eslint-node${{ steps.setup.outputs.node-version }}-bun1.4.4-${{ hashFiles('eslint.config.js', 'package.json', 'bun.lock') }}-${{ github.run_id }}
+          restore-keys: |
+            ${{ runner.os }}-${{ runner.arch }}-eslint-node${{ steps.setup.outputs.node-version }}-bun1.4.4-${{ hashFiles('eslint.config.js', 'package.json', 'bun.lock') }}-
+            ${{ runner.os }}-${{ runner.arch }}-eslint-node${{ steps.setup.outputs.node-version }}-bun1.4.4-
+
+      # `react-compiler` cuenta warnings como errores: fail-fast real.
+      - name: ESLint (max-warnings 0)
+        run: bun run lint -- --max-warnings 0
+
+  checks:
+    name: Typecheck · guards DB · build · Deno
+    needs: detector
+    if: >-
+      needs.detector.outputs.frontend == 'true' ||
+      needs.detector.outputs.edge == 'true' ||
+      needs.detector.outputs.database == 'true'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 1
+          persist-credentials: false
+
+      - name: Setup Bun + install
+        id: setup
+        uses: ./.github/actions/setup-bun
+
+      - name: Dependency security consumer regressions
+        if: needs.detector.outputs.frontend == 'true'
+        run: bun run test:dependencies
+
+      - name: Installed TypeScript version
+        id: typescript
+        if: needs.detector.outputs.frontend == 'true'
+        run: node --input-type=commonjs -e 'require("node:fs").appendFileSync(process.env.GITHUB_OUTPUT, "version=" + require("typescript/package.json").version + "\n")'
+
+      # TypeScript owns this mutable state independently of node_modules.
+      # Only checks restores/saves it; compiler/config/lock changes cannot use a
+      # broader fallback. Source changes are checked by the incremental compiler.
+      - name: Restore TypeScript incremental cache
+        id: ts-cache
+        if: needs.detector.outputs.frontend == 'true'
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: .cache/tsc
+          key: ${{ runner.os }}-${{ runner.arch }}-tsc-v1-node${{ steps.setup.outputs.node-version }}-bun1.4.4-ts${{ steps.typescript.outputs.version }}-${{ hashFiles('tsconfig*.json', 'package.json', 'bun.lock', 'scripts/ci/typecheck-incremental.mjs') }}-${{ github.run_id }}-${{ github.run_attempt }}
+          restore-keys: |
+            ${{ runner.os }}-${{ runner.arch }}-tsc-v1-node${{ steps.setup.outputs.node-version }}-bun1.4.4-ts${{ steps.typescript.outputs.version }}-${{ hashFiles('tsconfig*.json', 'package.json', 'bun.lock', 'scripts/ci/typecheck-incremental.mjs') }}-
+
+      - name: TypeScript typecheck
+        id: typecheck
+        if: needs.detector.outputs.frontend == 'true'
+        run: bun run typecheck:ci
+
+      # Guard estático de BD: sólo cuando el diff toca migraciones/schema/tests/
+      # releases, los scripts de auditoría, appVersion, dependencias o este CI.
+      # Bloqueante; sin audit:all, sin reports, sin duplicar audits de frontend
+      # (ésos ya corren dentro de Vitest).
+      - name: Auditorías estáticas de BD (bloqueantes)
+        if: needs.detector.outputs.database == 'true'
+        run: |
+          bun run audit:manifest
+          bun run audit:schema
+          bun run audit:schema-functions
+          bun run audit:migrations
+          bun run audit:replay-mirror
+          bun run audit:rpc-sync
+
+      # Cartera pagination must use the real renderer: normal shards use a PDF stub.
+      # Synthetic fixtures only; no backend, credentials, or full PDF-suite replay.
+      - name: Cartera PDF real (2 pagination regressions)
+        if: needs.detector.outputs.frontend == 'true'
+        timeout-minutes: 5
+        run: |
+          set -euo pipefail
+          if ! command -v pdfinfo >/dev/null || ! command -v pdftotext >/dev/null; then
+            sudo apt-get update -qq
+            sudo apt-get install -y --no-install-recommends poppler-utils
+          fi
+          bun run test:pdf -- tests/pdf/carteraPagination.test.tsx
+
+      - name: Build (sin ANALYZE)
+        if: needs.detector.outputs.frontend == 'true'
+        env:
+          ANALYZE: "false"
+          CI_REPORT_COMPRESSED_SIZE: "false"
+        run: bun run build
+
+      # Bundle-size gate (P1 auditoría): el script ya existía pero NINGÚN
+      # workflow lo ejecutaba, así que una regresión de peso pasaba sin aviso.
+      # Corre justo después del build, sobre `dist/assets`, con los budgets del
+      # propio script (entry 365 KB gz, lazy 250, vendor 500, react-pdf 600).
+      # Los budgets NO se suben para pintar el job de verde: si el entry excede
+      # 365 KB, el check queda rojo hasta reducirlo con lazy/split real.
+      - name: Bundle size gate
+        if: needs.detector.outputs.frontend == 'true'
+        run: bash scripts/check-bundle-size.sh
+
+      # P2 auditoría stack: ningún `.map` ni referencia `sourceMappingURL` puede
+      # quedar en el `dist` que sirve el hosting. Sin SENTRY_AUTH_TOKEN el build
+      # no los genera; con token, el plugin de Sentry los sube y los borra.
+      - name: Sourcemaps gate
+        if: needs.detector.outputs.frontend == 'true'
+        run: bash scripts/check-sourcemaps.sh
+
+
+
+      # Edge Functions: sólo si cambia supabase/functions, deno.* o este workflow.
+      - name: Setup Deno
+        if: needs.detector.outputs.edge == 'true'
+        uses: denoland/setup-deno@22d081ff2d3a40755e97629de92e3bcbfa7cf2ed # v2.0.5
+        with:
+          # CLI estable fijado; compatible con Sentry 11 (Deno >=2.8.3).
+          # Supabase/Lovable administra el runtime desplegado por separado.
+          deno-version: v2.9.8
+
+      - name: Check all deployable Edge adapters
+        if: needs.detector.outputs.edge == 'true'
+        run: bash scripts/check-edge-entrypoints.sh
+
+      - name: Deno tests (con typecheck, excluye smoke)
+        if: needs.detector.outputs.edge == 'true'
+        # No mezclar React 19 del frontend con React 18 de plantillas Edge.
+        env:
+          DENO_NO_PACKAGE_JSON: "1"
+        # SIN `--no-check`: `deno test` valida también los tipos de las edges.
+        # Deno >=2.8 cambió defaults: mantener detección de fugas explícita.
+        run: |
+          set -uo pipefail
+          readarray -t tests < <(find supabase/functions -name '*_test.ts' ! -name 'smoke_test.ts')
+          if [ "${#tests[@]}" -eq 0 ]; then
+            echo "::error::No se encontró ningún test Deno (patrón *_test.ts)."
+            exit 1
+          fi
+          deno test \
+            --sanitize-ops \
+            --sanitize-resources \
+            --node-modules-dir=none \
+            --allow-env \
+            --allow-net \
+            --allow-read \
+            "${tests[@]}"
+
+      # Save only after every checks step succeeds. A fresh key avoids keeping
+      # the first source snapshot forever; restore and save use the same key.
+      - name: Save TypeScript incremental cache
+        if: success() && needs.detector.outputs.frontend == 'true' && steps.typecheck.outcome == 'success' && steps.ts-cache.outputs.cache-hit != 'true'
+        uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: .cache/tsc
+          key: ${{ steps.ts-cache.outputs.cache-primary-key }}
+
+  tests:
+    name: Vitest shard ${{ matrix.shard }}/${{ needs.detector.outputs.shard_count }}
+    needs: detector
+    # Los tests de contrato también inspeccionan SQL/Edge, aunque no haya UI.
+    if: needs.detector.outputs.frontend == 'true' || needs.detector.outputs.database == 'true' || needs.detector.outputs.edge == 'true'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      # Per-matrix only; other workflows/PRs share the account budget of 20.
+      max-parallel: ${{ fromJSON(needs.detector.outputs.shard_max_parallel) }}
+      matrix: ${{ fromJSON(needs.detector.outputs.shard_matrix) }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 1
+          persist-credentials: false
+
+      - name: Setup Bun + install
+        id: setup
+        uses: ./.github/actions/setup-bun
+
+      # Sin coverage, sin blobs/merge, sin retries globales; evidencia compacta obligatoria.
+      - name: Vitest (shard ${{ matrix.shard }}/${{ needs.detector.outputs.shard_count }})
+        env:
+          CI_EVIDENCE_DIR: reports/ci-evidence
+          CI_TEST_SHARD: ${{ matrix.shard }}/${{ needs.detector.outputs.shard_count }}
+          CI_TEST_MAX_PARALLEL: ${{ needs.detector.outputs.shard_max_parallel }}
+          CI_CACHE_HIT: ${{ steps.setup.outputs.cache-hit }}
+        run: bun run test -- --shard=${{ matrix.shard }}/${{ needs.detector.outputs.shard_count }}
+
+      - name: Evidencia Vitest por shard
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: vitest-evidence-${{ matrix.shard }}-of-${{ needs.detector.outputs.shard_count }}-attempt-${{ github.run_attempt }}
+          path: reports/ci-evidence/*.json
+          if-no-files-found: error
+          retention-days: 7
+
+  ci-success:
+    # Nombre visible conservado por compatibilidad con los checks previos
+    # (este repo no tiene branch protection ni rulesets configurados).
+    name: CI Success (aggregator)
+    needs: [detector, lint, checks, tests]
+    if: always()
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - name: Verificar resultados
+        env:
+          DETECTOR_RESULT: ${{ needs.detector.result }}
+          LINT_RESULT: ${{ needs.lint.result }}
+          CHECKS_RESULT: ${{ needs.checks.result }}
+          TESTS_RESULT: ${{ needs.tests.result }}
+          FRONTEND: ${{ needs.detector.outputs.frontend }}
+          EDGE: ${{ needs.detector.outputs.edge }}
+          DATABASE: ${{ needs.detector.outputs.database }}
+        run: |
+          set -uo pipefail
+          echo "detector=$DETECTOR_RESULT lint=$LINT_RESULT checks=$CHECKS_RESULT tests=$TESTS_RESULT"
+          echo "frontend=$FRONTEND edge=$EDGE database=$DATABASE"
+          fail=0
+
+          if [ "$DETECTOR_RESULT" != "success" ]; then
+            echo "::error::El detector de áreas no terminó en success ($DETECTOR_RESULT)."
+            exit 1
+          fi
+          for v in "$FRONTEND" "$EDGE" "$DATABASE"; do
+            case "$v" in
+              true|false) ;;
+              *) echo "::error::Flag de área inválida: '$v'."; exit 1 ;;
+            esac
+          done
+
+          if [ "$FRONTEND" = "true" ]; then
+            if [ "$LINT_RESULT" != "success" ]; then
+              echo "::error::lint debía terminar en success con frontend=true ($LINT_RESULT)."
+              fail=1
+            fi
+          elif [ "$LINT_RESULT" != "skipped" ]; then
+            echo "::error::lint debía omitirse sin frontend ($LINT_RESULT)."
+            fail=1
+          fi
+
+          if [ "$FRONTEND" = "true" ] || [ "$EDGE" = "true" ] || [ "$DATABASE" = "true" ]; then
+            if [ "$CHECKS_RESULT" != "success" ]; then
+              echo "::error::checks debía terminar en success ($CHECKS_RESULT)."
+              fail=1
+            fi
+          elif [ "$CHECKS_RESULT" != "skipped" ]; then
+            echo "::error::checks debía omitirse sin áreas activas ($CHECKS_RESULT)."
+            fail=1
+          fi
+
+          if [ "$FRONTEND" = "true" ] || [ "$EDGE" = "true" ] || [ "$DATABASE" = "true" ]; then
+            if [ "$TESTS_RESULT" != "success" ]; then
+              echo "::error::todos los shards de Vitest debían terminar en success ($TESTS_RESULT)."
+              fail=1
+            fi
+          elif [ "$TESTS_RESULT" != "skipped" ]; then
+            echo "::error::tests debía omitirse sin áreas activas ($TESTS_RESULT)."
+            fail=1
+          fi
+
+          if [ "$fail" -ne 0 ]; then
+            exit 1
+          fi
+          echo "CI OK."
+
+      - name: Checkout para verificar evidencia
+        if: needs.tests.result == 'success'
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Descargar evidencia de todos los shards
+        if: needs.tests.result == 'success'
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          pattern: vitest-evidence-*-of-${{ needs.detector.outputs.shard_count }}-attempt-*
+          path: reports/ci-evidence
+          merge-multiple: false
+
+      - name: Setup Node for shard evidence verification
+        if: needs.tests.result == 'success'
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: '26.13.0'
+          package-manager-cache: false
+
+      - name: Verificar unión exacta de archivos y casos
+        if: needs.tests.result == 'success'
+        run: node scripts/ci/verify-test-evidence.mjs reports/ci-evidence ${{ needs.detector.outputs.shard_count }}
+

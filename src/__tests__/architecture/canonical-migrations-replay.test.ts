@@ -54,14 +54,12 @@ describe("canonical migration reconstruction", () => {
     expect(migrations.some((file) => /^20261005180[0-5]00_audit/.test(file))).toBe(false);
   });
 
-  it("keeps the audit110 two-session idempotency check in isolated CI", () => {
-    const workflow = readFileSync(".github/workflows/rls-tests.yml", "utf8");
-    expect(workflow).toMatch(/name: Concurrencia de dos sesiones — factura manual idempotente\s+env:\s+ISOLATED_QA_DB: '1'\s+run: bash scripts\/ci\/concurrencia-factura-manual\.sh/);
-    expect(workflow.match(/"scripts\/ci\/concurrencia-factura-manual\.sh"/g)).toHaveLength(2);
-    // Toda la carpeta incluye factura manual, cobros y fixtures de cierre.
-    // Ambas entradas (PR y push) deben conservar esa cobertura.
-    expect(workflow.match(/"scripts\/ci\/fixtures\/\*\*"/g)).toHaveLength(2);
-    expect(workflow.match(/"scripts\/ci\/concurrencia-cobro\.sh"/g)).toHaveLength(2);
+  it("preserves extended concurrency as an explicit local recipe", () => {
+    const recipe=readFileSync("scripts/ci/database-full.sh","utf8");
+    expect(recipe).toContain("bash scripts/ci/concurrencia-factura-manual.sh");
+    expect(recipe).toContain("bash scripts/ci/concurrencia-cobro.sh");
+    expect(recipe).toContain("export ISOLATED_QA_DB='1'");
+    expect(readFileSync(".github/workflows/ci.yml","utf8")).toContain("bash scripts/db/local-verify.sh --no-behavioral");
   });
 
   it("refuses a non-loopback CI replay target before connecting", () => {

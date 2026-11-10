@@ -19,7 +19,7 @@ describe("dependency audit execution lane", () => {
   it("registers the exact demo spec for automatic isolated execution", () => {
     const entries = classifyFiles([...files, demo], guards, support);
     expect(entries.find(entry => entry.path === demo)).toEqual({
-      path: demo, lane: "playwright-isolated", mode: "automatic",
+      path: demo, lane: "playwright-isolated", mode: "manual",
     });
   });
 

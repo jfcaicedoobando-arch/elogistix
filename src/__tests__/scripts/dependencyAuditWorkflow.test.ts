@@ -6,14 +6,10 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 
 const read = (file: string) => readFileSync(file, "utf8").replace(/\r\n/g, "\n");
-const workflow = read(".github/workflows/isolated-ui-audit.yml");
-const job = workflow.split("\n  dependency-audit:\n")[1]?.split(/\n {2}[a-z][a-z-]*:\n/)[0] ?? "";
-const config = read("e2e/visual/dependency-audit/playwright.config.ts");
-const guardStep = job.split("      - name: Require all 4 dependency cases without skips or retries\n")[1]
-  ?.split("      - name:")[0] ?? "";
-const guard = guardStep.match(/node --input-type=module <<'JS'\n([\s\S]*?)\n {10}JS\n/)?.[1]
-  .replace(/^ {10}/gm, "") ?? "";
-
+const workflow=read("scripts/ci/dependency-audit-manual.sh");
+const job=workflow;
+const config=read("e2e/visual/dependency-audit/playwright.config.ts");
+const guard=read("scripts/ci/dependency-audit-report.mjs");
 const passingReport = {
   stats: { expected: 4, unexpected: 0, skipped: 0, flaky: 0 },
   errors: [],
@@ -36,10 +32,6 @@ function runGuard(report: unknown, raw = false) {
 
 describe("dependency audit isolated browser execution", () => {
   it("runs the exact demo with the existing setup and lockfile Chromium in a PR job", () => {
-    expect(workflow).toContain("      - 'e2e/visual/**'");
-    expect(job).toContain("uses: ./.github/actions/setup-bun");
-    expect(job).toContain("persist-credentials: false");
-    expect(job).toContain("ref: ${{ github.event.pull_request.head.sha || github.sha }}");
     expect(job).toContain("node node_modules/@playwright/test/cli.js install --with-deps chromium");
     expect(job).toContain("node node_modules/typescript/bin/tsc -p e2e/visual/dependency-audit/tsconfig.json");
     expect(job).toContain("node node_modules/eslint/bin/eslint.js --no-cache e2e/visual/dependency-audit");
@@ -61,15 +53,9 @@ describe("dependency audit isolated browser execution", () => {
     expect(read("e2e/visual/dependency-audit/specs/demo.spec.ts")).toContain('context.routeWebSocket(/.*/');
   });
 
-  it("runs the report guard and uploads isolated synthetic evidence even after failure", () => {
-    expect(guardStep).toContain("if: always()");
+  it("runs the exact report validator after browser completion",()=> {
+    expect(job).toContain("node scripts/ci/dependency-audit-report.mjs");
     expect(guard).toContain('readFileSync("reports/dependency-audit/browser.json", "utf8")');
-    const upload = job.split("      - name: Upload only synthetic dependency audit evidence\n")[1] ?? "";
-    expect(upload).toContain("if: always()");
-    expect(upload).toContain("name: isolated-ui-dependency-audit");
-    expect(upload).toContain("test-results/dependency-audit/");
-    expect(upload).toContain("reports/dependency-audit/");
-    expect(upload).toContain("retention-days: 3");
   });
 
   it("accepts the complete four-case report", () => {

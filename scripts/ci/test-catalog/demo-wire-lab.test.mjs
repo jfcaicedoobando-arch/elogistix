@@ -16,16 +16,16 @@ test('physical wire files have an automatic exact catalog lane and unchanged byt
 });
 
 test('general CI runs offline wire tests unconditionally after the complete inventory', () => {
-  const ci = fs.readFileSync(new URL('../../../.github/workflows/ci.yml', import.meta.url), 'utf8');
-  const start = ci.indexOf('      - name: Demo physical wire state machine offline lane');
-  const end = ci.indexOf('      - name: Post-deploy smoke contract', start);
+  const ci = fs.readFileSync(new URL('../../../.github/workflows/ci.yml', import.meta.url), 'utf8') + '\n' + fs.readFileSync(new URL('../offline.sh', import.meta.url), 'utf8');
+  const start = ci.indexOf('# Demo physical wire state machine offline lane');
+  const end = ci.indexOf('# Post-deploy smoke contract', start);
   assert.ok(start > ci.indexOf('test-catalog.mjs --output reports/test-inventory.json'));
-  const nodeSetup = ci.indexOf("node-version: '26.13.0'");
+  const nodeSetup = ci.indexOf("node-version-file: .node-version");
   assert.ok(nodeSetup >= 0 && nodeSetup < start);
   assert.ok(end > start);
   assert.match(ci.slice(start, end), /--run node-demo-wire-lab reports\/test-inventory.json/);
   assert.doesNotMatch(ci.slice(start, end), /\bif:|continue-on-error/);
-  const lab = fs.readFileSync(new URL('../../../.github/workflows/demo-wire-lab.yml', import.meta.url), 'utf8');
+  const lab = fs.readFileSync(new URL('../../../docs/ci/workflow-archive/reset-20261109/demo-wire-lab.yml.txt', import.meta.url), 'utf8');
   assert.match(lab, /ref: \$\{\{ github\.event\.pull_request\.head\.sha \}\}/);
   assert.match(lab, /LAB_HEAD_SHA: \$\{\{ github\.event\.pull_request\.head\.sha \}\}/);
   assert.match(lab, /env GITHUB_SHA="\$LAB_HEAD_SHA" node scripts\/ci\/test-catalog\.mjs --output/);

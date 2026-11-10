@@ -42,11 +42,11 @@ test('missing, extra, duplicate and manual review entries fail before execution'
     assert.throws(()=>validateReviewLane({...catalog,entries},root));
 });
 test('CI runs the review lane automatically after catalog generation', () => {
-  const ci=fs.readFileSync(new URL('../../.github/workflows/ci.yml',import.meta.url),'utf8');
-  const section=ci.slice(ci.indexOf('      - name: Demo review offline lane'),ci.indexOf('      - name: Post-deploy smoke contract'));
+  const ci=fs.readFileSync(new URL('../../.github/workflows/ci.yml',import.meta.url),'utf8')+'\n'+fs.readFileSync(new URL('./offline.sh',import.meta.url),'utf8');
+  const section=ci.slice(ci.indexOf('# Demo review offline lane'),ci.indexOf('# Post-deploy smoke contract'));
   assert.match(section,/node scripts\/ci\/demo-review-offline\.mjs reports\/test-inventory\.json/);
   assert.doesNotMatch(section,/\bif:|continue-on-error/);
   assert.ok(ci.indexOf('test-catalog.mjs --output')<ci.indexOf('Demo review offline lane'));
-  const nodeSetup=ci.indexOf("node-version: '26.13.0'");
+  const nodeSetup=ci.indexOf("node-version-file: .node-version");
   assert.ok(nodeSetup>=0 && nodeSetup<ci.indexOf('Demo review offline lane'));
 });

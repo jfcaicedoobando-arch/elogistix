@@ -3,8 +3,8 @@
  *
  * La auditoría de v13.743.0 encontró 12 archivos `.sql` que existían en el repo
  * pero no los ejecutaba ningún workflow: cobertura ficticia. Este test exige que
- * cada suite esté en el manifiesto bloqueante, o
- * referenciada explícitamente en algún workflow de `.github/workflows/`.
+ * cada suite tenga una ejecución declarada o una clasificación explícita como
+ * soporte del runner serial. Las recetas extensas se ejecutan bajo demanda.
  */
 import { readFileSync, readdirSync, statSync } from "node:fs";
 import { describe, expect, it } from "vitest";
@@ -47,11 +47,13 @@ describe("suites SQL referenciadas en CI", () => {
     const yaml = readdirSync(DIR_WORKFLOWS)
       .filter((f) => f.endsWith(".yml") || f.endsWith(".yaml"))
       .map((f) => readFileSync(`${DIR_WORKFLOWS}/${f}`, "utf8"))
-      .join("\n");
+      .join("\n") + readFileSync("scripts/ci/database-full.sh", "utf8");
 
+    const soporte = JSON.parse(readFileSync("scripts/ci/test-catalog/sql-support.json", "utf8"));
     const huerfanas = suites.filter(
-      (s) => !referencias.includes(s) && !yaml.includes(s),
+      (s) => !referencias.includes(s) && !yaml.includes(s) && !Object.hasOwn(soporte, s),
     );
+    expect(yaml).toContain("node scripts/ci/selector148/run.cjs");
 
     expect(
       huerfanas,
