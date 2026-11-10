@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest";
 import { readFileSync, readdirSync, existsSync } from "node:fs";
 import { spawnSync } from "node:child_process";
 const ci=readFileSync(".github/workflows/ci.yml","utf8");
-const required={changes:{result:"success",outputs:{database:"false",edge:"false"}},quality:{result:"success"},tests:{result:"success"},secrets:{result:"success"},database:{result:"skipped"},edge:{result:"skipped"}};
+const required={changes:{result:"success",outputs:{database:"false",edge:"false"}},quality:{result:"success"},lint:{result:"success"},tests:{result:"success"},secrets:{result:"success"},database:{result:"skipped"},edge:{result:"skipped"}};
 const gate=(jobs:unknown)=>spawnSync(process.execPath,["scripts/ci/result.mjs"],{env:{...process.env,RESULTS:JSON.stringify(jobs)},encoding:"utf8"});
 describe("single CI workflow",()=> {
   it("retires every previous wrapper and local action",()=> {
@@ -34,7 +34,7 @@ describe("single CI workflow",()=> {
 });
 describe("final required check fails closed",()=> {
   it("accepts successful checks and explicitly irrelevant backend jobs",()=>expect(gate(required).status).toBe(0));
-  it.each(["changes","quality","tests","secrets"])("rejects a failed, cancelled, missing or skipped %s",name=> {
+  it.each(["changes","quality","lint","tests","secrets"])("rejects a failed, cancelled, missing or skipped %s",name=> {
     for(const result of ["failure","cancelled","skipped",undefined]) expect(gate({...required,[name]:{result}}).status).not.toBe(0);
   });
   it.each(["database","edge"])("requires %s when selected",name=> {
@@ -47,3 +47,4 @@ describe("final required check fails closed",()=> {
     for(const value of ["",undefined,"False","unknown"]) expect(gate({...required,changes:{result:"success",outputs:{database:value,edge:"false"}}}).status).not.toBe(0);
   });
 });
+

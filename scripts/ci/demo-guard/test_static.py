@@ -97,9 +97,9 @@ class Contracts(unittest.TestCase):
   self.assertIn('result = m.run_concurrency(',historical)
   self.assertIn("for iteration in (1,2)",historical)
   self.assertIn("checkpoint['executions'] = 1",historical)
-  workflow=(HERE.parents[2]/'docs/ci/workflow-archive/reset-20261109/rls-tests.yml.txt').read_text()
-  self.assertIn("DEMO_PREFREEZE_CI: '1'",workflow)
-  self.assertIn('DEMO_GUARD_POSTGRES_SERVICE_ID: ${{ job.services.postgres.id }}',workflow)
+  workflow=(HERE.parents[2]/'scripts/ci/database-full.sh').read_text()
+  self.assertIn("export DEMO_PREFREEZE_CI='1'",workflow)
+  self.assertIn('export DEMO_GUARD_POSTGRES_SERVICE_ID="${POSTGRES_SERVICE_ID:',workflow)
   self.assertIn('python3 scripts/ci/demo-guard/test_persisted.py',workflow)
  def test_graph_catalog_discovery(self):
   sql=(HERE/'graph.sql').read_text()
@@ -141,3 +141,4 @@ class Contracts(unittest.TestCase):
    self.assertIn(token,m.FINGERPRINT_SQL)
 
 if __name__=='__main__':unittest.main()
+

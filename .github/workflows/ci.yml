@@ -74,7 +74,7 @@ jobs:
       - name: Workflow syntax
         run: bash scripts/ci/lint-workflows.sh
   quality:
-    name: Lint, types and build
+    name: Types, build and PDF
     runs-on: ubuntu-24.04
     timeout-minutes: 5
     steps:
@@ -100,18 +100,10 @@ jobs:
         id: deps
       - name: Install
         run: bash scripts/ci/install.sh
-      - name: ESLint incremental cache
-        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9
-        with:
-          path: .cache/eslint
-          key: ${{ runner.os }}-eslint-${{ hashFiles('.node-version','.bun-version','bun.lock','eslint.config.js') }}-${{ github.run_id }}
-          restore-keys: ${{ runner.os }}-eslint-${{ hashFiles('.node-version','.bun-version','bun.lock','eslint.config.js') }}-
-      - name: Static validation
-        run: |-
-          bun run lint -- --max-warnings 0
-          bun run typecheck
-          bun run lint:unused
-          bun run test:dependencies
+      - name: TypeScript
+        run: bun run typecheck
+      - name: Dependency contracts
+        run: bun run test:dependencies
       - name: Build and output guards
         run: |-
           bun run build
@@ -268,6 +260,7 @@ jobs:
     needs:
       - changes
       - quality
+      - lint
       - tests
       - database
       - edge
@@ -298,3 +291,41 @@ jobs:
       - name: Verify every test file and case
         if: needs.tests.result == 'success'
         run: node scripts/ci/verify-test-evidence.mjs reports/ci-evidence ${{ needs.changes.outputs.shards }}
+  lint:
+    name: ESLint and unused code
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - name: Node
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1
+        with:
+          node-version-file: .node-version
+          package-manager-cache: false
+      - name: Bun
+        uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6
+        with:
+          bun-version-file: .bun-version
+      - name: Dependencies
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9
+        with:
+          path: |-
+            node_modules
+            ~/.bun/install/cache
+          key: ${{ runner.os }}-${{ runner.arch }}-deps-${{ hashFiles('.node-version','.bun-version','package.json','bun.lock') }}
+        id: deps
+      - name: Install
+        run: bash scripts/ci/install.sh
+      - name: ESLint incremental cache
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9
+        with:
+          path: .cache/eslint
+          key: ${{ runner.os }}-eslint-${{ hashFiles('.node-version','.bun-version','bun.lock','eslint.config.js') }}-${{ github.run_id }}
+          restore-keys: ${{ runner.os }}-eslint-${{ hashFiles('.node-version','.bun-version','bun.lock','eslint.config.js') }}-
+      - name: ESLint (zero warnings)
+        run: bun run lint -- --max-warnings 0
+      - name: Unused code
+        run: bun run lint:unused
+

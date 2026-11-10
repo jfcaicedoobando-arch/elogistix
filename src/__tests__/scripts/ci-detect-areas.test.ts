@@ -176,7 +176,14 @@ describe.skipIf(!BASH_DISPONIBLE)("scripts/ci/detect-areas.sh", () => {
     ["supabase/schema/function.sql", "false", "false", "true", "false"],
     ["supabase/tests/check.sql", "false", "false", "true", "false"],
     ["supabase/functions/new/index.ts", "true", "true", "false", "false"],
-    ["package.json", "true", "false", "true", "false"],
+    ["package.json", "true", "true", "true", "false"],
+    ["bun.lock", "true", "true", "true", "false"],
+    [".node-version", "true", "true", "true", "false"],
+    [".bun-version", "true", "true", "true", "false"],
+    [".nvmrc", "true", "true", "true", "false"],
+    ["scripts/ci/install.sh", "true", "true", "true", "false"],
+    ["scripts/ci/edge.sh", "true", "true", "false", "false"],
+    ["scripts/ci/setup-pg.sh", "true", "false", "true", "false"],
     ["unknown/new.config", "true", "false", "false", "false"],
     [".github/workflows/e2e.yml", "true", "false", "false", "true"],
     ["scripts/ci/lint-workflows.sh", "true", "false", "false", "true"],
@@ -276,3 +283,4 @@ describe.skipIf(!BASH_DISPONIBLE)("scripts/ci/detect-areas.sh", () => {
       .toEqual({ ...EMPTY_DIFF, frontend: "true" });
   });
 });
+

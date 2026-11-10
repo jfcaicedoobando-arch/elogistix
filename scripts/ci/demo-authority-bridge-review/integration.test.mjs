@@ -143,7 +143,7 @@ test('exact test census rejects missing, duplicate, extra, manual, drift and unr
     'e2e/visual/virtualization/specs/keyboard-sorting.spec.ts'];
   const entries = classifyFiles(paths, guards, support);
   assert.deepEqual(entries.find(entry => entry.path === 'e2e/visual/virtualization/specs/keyboard-sorting.spec.ts'), {
-    path: 'e2e/visual/virtualization/specs/keyboard-sorting.spec.ts', lane: 'playwright-isolated', mode: 'automatic',
+    path: 'e2e/visual/virtualization/specs/keyboard-sorting.spec.ts', lane: 'playwright-isolated', mode: 'manual',
   });
   assert.throws(() => classifyFiles([...paths, 'e2e/visual/virtualization/specs/unregistered.spec.ts'], guards, support), /no execution lane/);
   const classified = entries.filter(entry => entry.lane === 'node-demo-authority-bridge');
@@ -185,3 +185,4 @@ test('internally coherent synthetic claims passing the mapper are explicitly not
   assert.equal(pins.scope, 'OFFLINE_DECLARED_SNAPSHOTS_ONLY');
   assert.equal(pins.evidenceProvider, 'UNBOUND');
 });
+

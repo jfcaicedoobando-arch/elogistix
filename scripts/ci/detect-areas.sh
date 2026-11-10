@@ -75,6 +75,15 @@ while IFS= read -r -d '' path; do
   if [[ "$path" =~ ^scripts/ci/drizzle-history/|^scripts/db/|^supabase/(migrations|schema|tests|releases)/|^drizzle/|^drizzle\.config\.ts$|^scripts/audit-|^scripts/lib/|^scripts/ci/detect-areas\.sh$|^src/constants/appVersion\.ts$|^package\.json$|^bun\.lock$|^\.github/workflows/ci\.yml$|^\.github/actions/setup-bun/ ]]; then
     database=true
   fi
+  # Shared runtime/dependency changes affect both backend execution paths.
+  if [[ "$path" =~ ^(\.node-version|\.bun-version|\.nvmrc|package\.json|bun\.lock|scripts/ci/install\.sh)$ ]]; then
+    edge=true
+    database=true
+  fi
+  [[ "$path" == scripts/ci/edge.sh ]] && edge=true
+  if [[ "$path" == scripts/ci/setup-pg.sh || "$path" == scripts/ci/database-full.sh ]]; then
+    database=true
+  fi
 done < "$diff_file"
 if [ ! -s "$diff_file" ]; then
   echo "Diff válido vacío: no hay áreas que comprobar."
@@ -85,3 +94,4 @@ fi
   echo "database=$database"
   echo "workflows=$workflows"
 } >> "$out"
+

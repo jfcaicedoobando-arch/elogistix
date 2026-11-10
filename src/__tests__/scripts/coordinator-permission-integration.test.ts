@@ -23,7 +23,7 @@ describe("coordinator permission boundary integration", () => {
     for (const path of ["scripts/ci/rls-prepare-db.sh", "scripts/db/local-verify.sh"]) {
       expect(read(path)).toContain("_ci_check_coordinador_acl.sql");
     }
-    for (const path of ["scripts/db/local-verify.sh", "docs/ci/workflow-archive/reset-20261109/rls-tests.yml.txt"]) {
+    for (const path of ["scripts/db/local-verify.sh", "scripts/ci/database-full.sh"]) {
       const text = read(path);
       expect(text.indexOf("_ci_preserve_coordinador_acl.sql")).toBeGreaterThan(text.indexOf("_ci_post_migrate.sql"));
     }
@@ -36,3 +36,4 @@ describe("coordinator permission boundary integration", () => {
     expect(check).toContain("v_proc.prosecdef IS DISTINCT FROM (v_name='public._cotizacion_crear_handover()')");
   });
 });
+
