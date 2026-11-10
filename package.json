@@ -167,6 +167,7 @@
     "eslint-plugin-react-compiler": "19.1.0-rc.2",
     "eslint-plugin-react-hooks": "^7.1.1",
     "eslint-plugin-react-refresh": "^0.5.6",
+    "facturapi": "6.0.0",
     "fast-glob": "^3.3.3",
     "globals": "17.14.0",
     "jsdom": "^31.0.0",
