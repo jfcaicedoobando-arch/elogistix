@@ -4,3 +4,8 @@ docs/review/demo-durable-owner-adapter-20261015/** -text
 docs/review/demo-authority-provider-entry-20261016/** -text
 # Keep the new retired-workflow evidence identical under core.autocrlf=true.
 docs/ci/workflow-archive/closed-labs-20261016/*.yml.txt -text
+
+# Executed CI scripts and workflow definitions must also work from Windows checkouts.
+/scripts/ci/*.sh text eol=lf
+/.github/workflows/*.yml text eol=lf
+
