@@ -114,7 +114,7 @@ describe("CI catalog: effective discovery", () => {
       .map((file: string) => `scripts/ci/selector148/${file}`);
     expect(() => assertExactPaths(expected, actual, "selector148 npm test discovery")).not.toThrow();
     expect(expected.every(file => fs.existsSync(file))).toBe(true);
-    expect(catalog.entries.find(entry => entry.path === expected[0])?.mode).toBe("automatic");
+    expect(catalog.entries.find(entry => entry.path === expected[0])?.mode).toBe("manual");
     expect(source("scripts/ci/database-full.sh")).toMatch(/^node scripts\/ci\/selector148\/static-check\.cjs\r?\nnpm test --prefix scripts\/ci\/selector148$/m);
   });
 

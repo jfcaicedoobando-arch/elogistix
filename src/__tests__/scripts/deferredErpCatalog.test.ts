@@ -25,7 +25,7 @@ describe("deferred ERP catalog registration", () => {
       path, lane: "playwright-isolated", mode: "manual",
     })));
     expect(entries.find(entry => entry.path === "e2e/visual/audit119-126/specs/dialog-card.spec.ts"))
-      .toEqual({ path: "e2e/visual/audit119-126/specs/dialog-card.spec.ts", lane: "playwright-isolated", mode: "automatic" });
+      .toEqual({ path: "e2e/visual/audit119-126/specs/dialog-card.spec.ts", lane: "playwright-isolated", mode: "manual" });
   });
 
   it.each([

@@ -56,7 +56,7 @@ sin subir secretos. Localhost puede apuntar a datos remotos: no equivale a stagi
 | --- | --- |
 | `bun run typecheck` | TypeScript (`tsc -b`) |
 | `bun run lint` | ESLint con caché |
-| `bun run lint:unused` | Diagnóstico Knip, no gate automático actual |
+| `bun run lint:unused` | Knip, comprobación bloqueante en CI |
 | `bun run test -- <archivo>` | Regresión Vitest focal |
 | `bun run test:watch` | Desarrollo de pruebas |
 | `bun run test:ci` | Suite normal sin coverage; admite filtros y `--shard=i/N` |

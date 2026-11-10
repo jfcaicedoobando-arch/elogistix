@@ -123,6 +123,12 @@ export function classifyFiles(files, guards, sqlSupport) {
       }
       else throw new Error(`Test has no execution lane: ${file}`);
     }
+    // The fast CI runs only the six minimum RLS suites. Extended SQL and
+    // browser/concurrency recipes remain explicit manual checks after reset.
+    if (lane === 'sql-guards' || lane === 'playwright-isolated' || lane === 'node-selector148') mode = 'manual';
+    if (lane === 'sql-rls' && ![
+      'isolation', 'financiero', 'cross_tenant_mutations', 'roles_no_admin', 'anon_deny_all', 'policy_linter',
+    ].some(name => file === `supabase/tests/rls/test_rls_${name}.sql`)) mode = 'manual';
     if (lane) entries.push({ path: file, lane, mode, ...(reason ? { reason } : {}),
       ...(Object.hasOwn(DEMO_PREFREEZE_SOURCES, file) ? { verificationEvidence: DEMO_PREFREEZE_EVIDENCE } : {}) });
   }

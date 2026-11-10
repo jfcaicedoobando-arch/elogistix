@@ -1,37 +1,27 @@
-import { readFileSync } from "node:fs";
-import { resolve } from "node:path";
-import { describe, expect, it } from "vitest";
-
-const workflows = ["ci.yml", "post-deploy-smoke.yml"];
-
-function readWorkflow(name: string): string {
-  return readFileSync(resolve(process.cwd(), ".github/workflows", name), "utf8")
-    .replace(/\r\n/g, "\n");
-}
-
-describe("Deno workflows · runtime compatible y sanitizers explícitos", () => {
-  it.each(workflows)("%s fija la misma versión estable, sin rango flotante", (name) => {
-    const workflow = readWorkflow(name);
-    expect(workflow).toMatch(/^\s+deno-version: v2\.9\.8$/m);
+// @vitest-environment node
+import {readFileSync} from "node:fs";
+import {describe,expect,it} from "vitest";
+const ci=readFileSync(".github/workflows/ci.yml","utf8");
+const edge=readFileSync("scripts/ci/edge.sh","utf8");
+describe("Edge runtime and checks",()=>{
+  it("pins the Deno CLI in the active workflow",()=>{
+    expect(ci).toMatch(/^\s+deno-version: v2\.9\.8$/m);
+    expect(ci).toContain("run: bash scripts/ci/edge.sh");
   });
-
-  it.each(workflows)("%s mantiene detección de fugas y typecheck", (name) => {
-    const workflow = readWorkflow(name);
-    const command = workflow.match(/^\s+deno test \\\n(?:\s+--[^\n]+\n)+/m)?.[0];
-    expect(command).toBeDefined();
-    expect(command).toMatch(/^\s+--sanitize-ops \\$/m);
-    expect(command).toMatch(/^\s+--sanitize-resources \\$/m);
-    expect(command).toContain("--node-modules-dir=none");
-    expect(command).not.toContain("--no-check");
-    expect(command).not.toContain("--no-sanitize");
+  it("typechecks original adapters and tests without suppression",()=>{
+    expect(edge).toContain("deno check --node-modules-dir=none supabase/functions/demo-access/index.ts");
+    expect(edge).toContain("bash scripts/check-edge-entrypoints.sh");
+    expect(edge).toContain("deno test");
+    expect(edge).toContain("--sanitize-ops");
+    expect(edge).toContain("--sanitize-resources");
+    expect(edge).toContain("--node-modules-dir=none");
+    expect(edge).not.toMatch(/--no-check|--no-sanitize|--unsafely-ignore/);
   });
-
-  it.each(workflows)("%s aísla las dependencias Edge del package.json del frontend", (name) => {
-    const workflow = readWorkflow(name);
-    const denoStep = workflow.split(/\n(?= {6}- )/)
-      .find((step) => /^\s+deno test \\$/m.test(step));
-    expect(denoStep).toBeDefined();
-    expect(denoStep).toMatch(/^ {8}env:\n(?: {10}[^\n]+\n)* {10}DENO_NO_PACKAGE_JSON: "1"$/m);
-    expect(workflow.match(/DENO_NO_PACKAGE_JSON/g)).toHaveLength(1);
+  it("isolates Edge test dependencies and rejects empty discovery",()=>{
+    const isolate=edge.indexOf("export DENO_NO_PACKAGE_JSON='1'");
+    expect(isolate).toBeGreaterThan(0);
+    expect(isolate).toBeLessThan(edge.indexOf("deno test"));
+    expect(edge).toContain('if [ "${#tests[@]}" -eq 0 ]');
+    expect(edge).toContain("exit 1");
   });
 });

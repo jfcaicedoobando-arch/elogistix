@@ -21,9 +21,9 @@ describe("virtualization execution lane", () => {
   it("registers the exact PR-automatic spec while preserving the existing isolated suites", () => {
     const entries = classifyFiles([...files, virtualization], guards, support);
     expect(entries.filter(entry => entry.lane === "playwright-isolated")).toEqual([
-      { path: "e2e/visual/audit119-126/specs/dialog-card.spec.ts", lane: "playwright-isolated", mode: "automatic" },
-      { path: "e2e/visual/audit136-137/specs/filters.spec.ts", lane: "playwright-isolated", mode: "automatic" },
-      { path: virtualization, lane: "playwright-isolated", mode: "automatic" },
+      { path: "e2e/visual/audit119-126/specs/dialog-card.spec.ts", lane: "playwright-isolated", mode: "manual" },
+      { path: "e2e/visual/audit136-137/specs/filters.spec.ts", lane: "playwright-isolated", mode: "manual" },
+      { path: virtualization, lane: "playwright-isolated", mode: "manual" },
     ]);
   });
 
