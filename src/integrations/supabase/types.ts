@@ -12217,6 +12217,42 @@ export type Database = {
           total_count: number
         }[]
       }
+      facturas_clientes_listado: {
+        Args: { p_org_id?: string; p_offset?: number; p_limit?: number }
+        Returns: { cliente_nombre: string }[]
+      }
+      facturas_listado_v2: {
+        Args: {
+          p_estado?: string
+          p_fecha_desde?: string
+          p_fecha_hasta?: string
+          p_limit?: number
+          p_offset?: number
+          p_org_id?: string
+          p_cliente_nombre?: string
+          p_search?: string
+        }
+        Returns: {
+          acuse_cancelacion_status: string
+          ambiente: Database["public"]["Enums"]["ambiente_facturapi"]
+          cancellation_status: string
+          cliente_nombre: string
+          enviada_cliente_at: string
+          estado: Database["public"]["Enums"]["estado_factura"]
+          expediente: string
+          factura_pdf_url: string
+          factura_xml_url: string
+          fecha_emision: string
+          fecha_vencimiento: string
+          id: string
+          moneda: Database["public"]["Enums"]["moneda"]
+          numero: string
+          proforma_id: string
+          proforma_numero: string
+          total: number
+          total_count: number
+        }[]
+      }
       fecha_negocio_mx: { Args: never; Returns: string }
       finalizar_evento_facturapi_webhook: {
         Args: {

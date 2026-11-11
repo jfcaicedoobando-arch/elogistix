@@ -8,7 +8,8 @@
  * administrativo" (Por liquidar). Las definiciones de tarjeta viven en
  * `constants/alertasTiles.ts`.
  */
-import { AlertTriangle } from "lucide-react";
+import { useId, useState } from "react";
+import { AlertTriangle, ChevronDown, ChevronUp } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -24,31 +25,42 @@ interface Props {
 }
 
 export function EmbarquesAlertasPanel({ resumen, activeAlerta, onSelect }: Props) {
-  if (resumen.total === 0) return null;
+  const [expanded, setExpanded] = useState(false);
+  const panelId = useId();
+  const alertaActiva = ALERTAS_TILES.find((tile) => tile.key === activeAlerta);
+  if (resumen.total === 0 && activeAlerta === "todos") return null;
 
   return (
-    <Card className="p-4 border-warning/40 bg-warning/10 dark:bg-warning/5">
-      <div className="flex items-center justify-between gap-2 mb-3">
-        <div className="flex items-center gap-2">
+    <Card className="px-4 py-2 border-warning/40 bg-warning/10 dark:bg-warning/5">
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           <AlertTriangle className="h-4 w-4 text-warning" aria-hidden />
           <SectionHeading>Alertas activas</SectionHeading>
           <Badge variant="warning" size="xs">
             {resumen.total}
           </Badge>
+          {alertaActiva && <span className="text-body-sm">Filtro: {alertaActiva.titulo}</span>}
         </div>
+        <div className="flex items-center gap-2">
         {activeAlerta !== "todos" && (
           <Button
             variant="ghost"
             size="sm"
-            className="h-7 text-body-sm"
+            className="h-9 text-body-sm"
             onClick={() => onSelect("todos")}
           >
             Ver todas
           </Button>
         )}
+          <Button variant="ghost" size="sm" aria-expanded={expanded} aria-controls={panelId} onClick={() => setExpanded((value) => !value)}>
+            {expanded ? "Ocultar alertas" : "Ver alertas"}
+            {expanded ? <ChevronUp className="ml-1 h-4 w-4" /> : <ChevronDown className="ml-1 h-4 w-4" />}
+          </Button>
+        </div>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2">
+      <div id={panelId} hidden={!expanded}>
+      <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2">
         {ALERTAS_TILES.map(({ key, titulo, descripcion, Icon, color }) => {
 
           const count = resumen[key];
@@ -80,6 +92,7 @@ export function EmbarquesAlertasPanel({ resumen, activeAlerta, onSelect }: Props
             </button>
           );
         })}
+      </div>
       </div>
     </Card>
   );

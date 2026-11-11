@@ -19,6 +19,7 @@ import { EmbarqueDetalleTabs } from "@/features/embarques/components/EmbarqueDet
 import { EnlaceTrackingCopiadoDialog } from "@/features/embarques/components/tracking/EnlaceTrackingCopiadoDialog";
 import { LoadingState, NotFoundState } from "./EmbarqueDetalleStates";
 import { useRegisterBreadcrumbLabel } from "@/lib/contexts/BreadcrumbContext";
+import { useBorradorNotaEmbarque } from "@/features/embarques/hooks/useBorradorNotaEmbarque";
 
 // v13.66.15: reordenadas por flujo (operación → finanzas → cierre → bitácora)
 // y fusionadas (P&L+P&L Contenedor, Garantías+Demoras).
@@ -49,6 +50,7 @@ export default function EmbarqueDetalle() {
   const { activeTab, setActiveTab } = useTabsParam(TABS_VALIDOS, "resumen", "tab", TABS_LEGACY);
 
   const { embarque, isLoading, error, refetch } = useEmbarqueResumen(id);
+  const borradorNota = useBorradorNotaEmbarque(id, embarque?.expediente);
   useRegisterBreadcrumbLabel(id, embarque?.expediente);
   // UIA-12: la pestaña se distingue por folio (antes quedaba el título del landing).
   useDocumentTitle(embarque?.expediente ? `Embarque ${embarque.expediente}` : "Embarque");
@@ -69,6 +71,7 @@ export default function EmbarqueDetalle() {
 
   return (
     <PageContainer>
+      {borradorNota.guardDialog}
       <EnlaceTrackingCopiadoDialog aviso={avisoEnlace} onClose={cerrarAvisoEnlace} />
       <CargaGuard
         isLoading={isLoading}
@@ -91,9 +94,10 @@ export default function EmbarqueDetalle() {
               tieneLinkActivo={tieneLinkActivo}
               onCompartirTracking={handleCompartirTracking}
               onRevocarTracking={handleRevocarTracking}
-              onAbrirEliminar={() => setDialogEliminarAbierto(true)}
-              onAbrirDuplicar={() => setDialogDuplicarAbierto(true)}
+              onAbrirEliminar={() => borradorNota.confirmarSalida(() => setDialogEliminarAbierto(true))}
+              onAbrirDuplicar={() => borradorNota.confirmarSalida(() => setDialogDuplicarAbierto(true))}
               onNavigateTab={(tab) => setActiveTab(tab)}
+              confirmarSalida={borradorNota.confirmarSalida}
             />
 
             <DialogEliminarEmbarque embarque={embarque} open={dialogEliminarAbierto} onOpenChange={setDialogEliminarAbierto} />
@@ -106,6 +110,10 @@ export default function EmbarqueDetalle() {
               setActiveTab={setActiveTab}
               estadoVisual={estadoVisual}
               canEdit={canEdit}
+              notaBorrador={borradorNota.texto}
+              onNotaBorradorChange={borradorNota.setTexto}
+              notaEnviando={borradorNota.enviando}
+              onEnviarNota={borradorNota.enviarNota}
             />
           </>
         )}

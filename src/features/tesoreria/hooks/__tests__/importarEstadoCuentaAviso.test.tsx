@@ -96,4 +96,15 @@ describe("Importación: revisar antes de persistir", () => {
     expect(mocks.mutateAsync).not.toHaveBeenCalled();
     expect(feedback.notifyError.mock.calls[0][1].title).toContain("fila 4");
   });
+  it("salir de la cuenta durante la revalidación no inicia una importación tardía", async () => {
+    const { result, unmount } = renderHook(() => useImportarEstadoCuenta("cta-1"));
+    await act(async () => { await result.current.handleFile(evento()); });
+    let resolver!: (r: RevisionImportacion) => void;
+    mocks.revisar.mockReturnValueOnce(new Promise<RevisionImportacion>(resolve => { resolver = resolve; }));
+    let confirmar!: Promise<void>;
+    act(() => { confirmar = result.current.confirmarRevision(); });
+    unmount();
+    await act(async () => { resolver(lectura()); await confirmar; });
+    expect(mocks.mutateAsync).not.toHaveBeenCalled();
+  });
 });

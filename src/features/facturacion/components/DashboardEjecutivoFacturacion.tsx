@@ -165,10 +165,11 @@ export function DashboardEjecutivoFacturacion() {
       {tendencia.some((t) => t.facturado_mxn !== 0 || t.cobrado_mxn !== 0) && (
         <Card>
           <CardContent className="p-3">
-            <p className="text-overline mb-2">
+            <details>
+            <summary className="text-body-sm font-medium cursor-pointer focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring rounded-sm">
               Tendencia · Últimos 6 meses (MXN)
-            </p>
-            <div className="flex items-start gap-6">
+            </summary>
+            <div className="mt-3 flex flex-col sm:flex-row items-start gap-6">
               <MiniSerie
                 titulo="Facturado"
                 data={facturadoArr}
@@ -182,6 +183,7 @@ export function DashboardEjecutivoFacturacion() {
                 colorClass="bg-success/70"
               />
             </div>
+            </details>
           </CardContent>
         </Card>
       )}

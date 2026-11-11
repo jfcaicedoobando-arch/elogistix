@@ -5,7 +5,6 @@
  */
 import { ClipboardList, Edit, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Hint } from "@/components/shared/Hint";
 
 interface Props {
   crearCotizacion: () => void;
@@ -34,21 +33,16 @@ export function OportunidadDetalleAcciones({
   return (
     <div className="flex flex-wrap gap-2">
       {canCotizar && (
-        <Hint label={puedeCotizar ? undefined : motivo}>
-          <Button
-            size="sm"
-            onClick={crearCotizacion}
-            disabled={crearCotPending || !puedeCotizar}
-            loading={crearCotPending}
-            aria-describedby={puedeCotizar ? undefined : "oportunidad-cotizar-motivo"}
-          >
-            {!crearCotPending && <ClipboardList className="h-4 w-4 mr-1" />}
-            Nueva cotización
-          </Button>
-        </Hint>
-      )}
-      {canCotizar && !puedeCotizar && (
-        <span id="oportunidad-cotizar-motivo" className="sr-only">{motivo}</span>
+        <Button
+          size="sm"
+          onClick={crearCotizacion}
+          disabled={crearCotPending || !puedeCotizar}
+          loading={crearCotPending}
+          aria-describedby={puedeCotizar ? undefined : "oportunidad-cotizar-motivo"}
+        >
+          {!crearCotPending && <ClipboardList className="h-4 w-4 mr-1" />}
+          Nueva cotización
+        </Button>
       )}
       {canGestionar && (
         <>
@@ -66,6 +60,9 @@ export function OportunidadDetalleAcciones({
             <Trash2 className="h-4 w-4 mr-1" /> Eliminar
           </Button>
         </>
+      )}
+      {canCotizar && !puedeCotizar && (
+        <p id="oportunidad-cotizar-motivo" className="basis-full text-body-sm text-muted-foreground">{motivo}</p>
       )}
     </div>
   );

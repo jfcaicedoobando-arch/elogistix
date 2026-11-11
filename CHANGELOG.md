@@ -1,5 +1,15 @@
 # Changelog
 
+## [13.824.88] - Unreleased
+
+### Correcciones de la auditoría visual y de flujos del ERP
+
+- Reinicia selecciones y diálogos de conciliación al cambiar de cuenta; conserva la moneda del movimiento y cancela revisiones de importación que quedaron atrás.
+- Filtra facturas por cliente y fechas antes de paginar, ofrece el catálogo completo y exporta todos los resultados filtrados. Requiere aplicar la migración Drizzle 0058 antes de publicar el consumidor; conserva los RPC anteriores.
+- Conserva borradores de notas al consultar otras pestañas, protege la salida, recupera páginas fuera de rango y distingue los errores de validación de cierre.
+- Recupera errores al cargar costos de cotización, conserva puertos desde CRM y corrige enlaces de consulta, explicaciones de bloqueo y uso del Kanban con teclado.
+- Adapta acciones de facturación a móvil, localiza el período en Emitidas, incorpora orden móvil y etiquetas de fecha, compacta alertas y adelanta Estado/ETA en Embarques.
+
 ## [13.824.87] - Unreleased
 
 ### Protección de la historia financiera al dar de baja embarques

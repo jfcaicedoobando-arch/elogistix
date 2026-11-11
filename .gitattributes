@@ -9,3 +9,9 @@ docs/ci/workflow-archive/closed-labs-20261016/*.yml.txt -text
 /scripts/ci/*.sh text eol=lf
 /.github/workflows/*.yml text eol=lf
 
+# Migration/replay integrity hashes use the committed LF bytes on every OS.
+/drizzle/migrations/*.sql text eol=lf
+/scripts/ci/drizzle-history/*.sql text eol=lf
+/supabase/schema/**/*.sql text eol=lf
+/supabase/tests/_guards_manifest.txt text eol=lf
+

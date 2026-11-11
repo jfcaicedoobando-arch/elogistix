@@ -407,6 +407,13 @@
       "when": 1794419439099,
       "tag": "0057_pricing_vinculo_huella_rls_initplan",
       "breakpoints": true
+    },
+    {
+      "idx": 58,
+      "version": "7",
+      "when": 1794421797739,
+      "tag": "0058_facturas_filtros_completos",
+      "breakpoints": true
     }
   ]
 }

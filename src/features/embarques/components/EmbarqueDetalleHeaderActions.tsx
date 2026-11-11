@@ -62,6 +62,7 @@ interface Props {
   estado: AccionesEmbarqueEstado;
   cierre: AccionesEmbarqueCierre;
   acciones: AccionesEmbarqueCallbacks;
+  confirmarSalida?: (accion: () => void) => void;
 }
 
 // v13.820.3: la UI se alinea al guard del RPC `eliminar_embarque`: sólo
@@ -80,7 +81,7 @@ function derivarEstadoAcciones(estadoVisual: string) {
 
 
 export function EmbarqueDetalleHeaderActions({
-  contexto, estado, cierre, acciones,
+  contexto, estado, cierre, acciones, confirmarSalida,
 }: Props) {
   const { expediente, estadoVisual, siguienteEstado, canEdit, embarqueId, etd } = contexto;
   const {
@@ -100,7 +101,11 @@ export function EmbarqueDetalleHeaderActions({
   const puedeEliminar = !esTerminal && !tieneDeudaPendiente && canEliminarEmbarque;
   const [cancelarOpen, setCancelarOpen] = useState(false);
   const navigate = useNavigate();
-  const goEditar = () => navigate(`/embarques/${embarqueId}/editar`);
+  const goEditar = () => {
+    const salir = () => navigate(`/embarques/${embarqueId}/editar`);
+    if (confirmarSalida) confirmarSalida(salir);
+    else salir();
+  };
 
   const ocultarAvance = cierreEsSiguiente && !rolPuedeCerrar;
   const cierreBloqueadoPorChecklist =

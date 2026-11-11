@@ -1,9 +1,5 @@
-import { useMemo, useState } from "react";
-import { Download, ChevronDown, Receipt } from "lucide-react";
-import { DialogDescargarZipMes } from "@/features/facturacion/components/DialogDescargarZipMes";
-import {
-  DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+import { useMemo } from "react";
+import { Receipt } from "lucide-react";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
@@ -11,6 +7,9 @@ import { DatePickerMx } from "@/components/ui/date-picker-mx";
 import { FILTRO_ANCHO } from "@/lib/ui/filterWidths";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
+import { PeriodoFiscalSelector } from "./PeriodoFiscalSelector";
+import { FacturasExportMenu } from "./FacturasExportMenu";
 import { ResponsiveDataTable } from "@/components/shared/dataTable/ResponsiveDataTable";
 import { useRowSelection } from "@/components/shared/dataTable/useRowSelection";
 import { buildSelectionColumn } from "@/components/shared/dataTable/buildSelectionColumn";
@@ -44,7 +43,6 @@ interface Props {
 export function TabFacturasEmitidas({ filtros: f, tabla: t, acciones: a }: Props) {
   const { canEmitirFactura } = usePermissions();
   const selection = useRowSelection();
-  const [zipMesOpen, setZipMesOpen] = useState(false);
   const columnsConSeleccion = useMemo(
     () => [buildSelectionColumn<Factura>(), ...t.columns],
     [t.columns],
@@ -74,9 +72,9 @@ export function TabFacturasEmitidas({ filtros: f, tabla: t, acciones: a }: Props
           {ESTADOS_FACTURA.map((e) => <SelectItem key={e} value={e}>{e}</SelectItem>)}
         </SelectContent>
       </Select>
-      <Select value={f.filterCliente} onValueChange={(v) => f.setFilter("cliente", v)}>
+      <Select value={f.filterCliente} onValueChange={(v) => f.setFilter("cliente", v)} disabled={f.loadingClientes || f.errorClientes}>
         <SelectTrigger className={FILTRO_ANCHO.lgAuto} aria-label="Cliente">
-          <SelectValue placeholder="Cliente" />
+          <SelectValue placeholder={f.loadingClientes ? "Cargando clientes…" : "Cliente"} />
         </SelectTrigger>
         <SelectContent>
           <SelectItem value="todos">Todos los clientes</SelectItem>
@@ -89,8 +87,8 @@ export function TabFacturasEmitidas({ filtros: f, tabla: t, acciones: a }: Props
   );
   const rangoFecha = (etiqueta: "desde" | "hasta", value: string, onChange: (v: string) => void) => (
     <div className="space-y-1.5">
-      <label className="text-body-sm font-medium text-muted-foreground">{rangoLabel("Emisión", etiqueta)}</label>
-      <DatePickerMx value={value} onChange={onChange} className="w-full" />
+      <label htmlFor={`facturas-emision-${etiqueta}`} className="text-body-sm font-medium text-muted-foreground">{rangoLabel("Emisión", etiqueta)}</label>
+      <DatePickerMx id={`facturas-emision-${etiqueta}`} value={value} onChange={onChange} className="w-full" />
     </div>
   );
   const secondarySlot = (
@@ -107,6 +105,16 @@ export function TabFacturasEmitidas({ filtros: f, tabla: t, acciones: a }: Props
           <p className="text-body-sm text-muted-foreground">
             Historial de facturas de todos los estados, incluidos borradores y por timbrar.
           </p>
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+            <p className="text-body-sm text-muted-foreground">Período por fecha de emisión · sólo esta bandeja</p>
+            <PeriodoFiscalSelector desdeIso={f.fechaDesde || null} hastaIso={f.fechaHasta || null} onChange={f.setPeriodo} />
+          </div>
+          {f.rangoInvalido && <p role="alert" className="text-body-sm text-destructive">Emisión desde debe ser anterior o igual a Emisión hasta.</p>}
+          {f.errorClientes && (
+            <div role="alert" className="text-body-sm">
+              No se pudo cargar el filtro de clientes. <Button variant="link" size="sm" onClick={f.refetchClientes}>Reintentar clientes</Button>
+            </div>
+          )}
           <div className="flex flex-wrap gap-3 items-start">
             <div className="flex-1 min-w-[240px]">
               <UnifiedFiltersBar
@@ -120,30 +128,12 @@ export function TabFacturasEmitidas({ filtros: f, tabla: t, acciones: a }: Props
                 onClearAll={f.onClear}
               />
             </div>
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="outline" className="shrink-0 gap-2">
-                  <Download className="h-4 w-4" />
-                  <span>Exportar</span>
-                  <ChevronDown className="h-4 w-4 opacity-60" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-56">
-                <DropdownMenuItem onClick={a.exportarFacturasCsv}>CSV de facturas</DropdownMenuItem>
-                <DropdownMenuItem onClick={a.exportarLayoutContable} title="Layout contable con RFC, subtotal, IVA y total">
-                  Layout contable
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => setZipMesOpen(true)} title="Paquete PDF+XML de todos los CFDI del mes, generado por el PAC">
-                  ZIP del mes (PAC)
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
+            <FacturasExportMenu acciones={a} />
           </div>
           <div className="text-body-sm text-muted-foreground">
-            {/* El listado es server-side: lo visible es la página (menos los
-                filtros cliente/fecha, que sólo aplican a esa página). */}
-            <strong className="text-foreground">{t.facturasFiltradas.length}</strong> filas visibles
-            {" · "}{t.totalFacturas} facturas en total (servidor)
+            <strong className="text-foreground">{t.facturasFiltradas.length}</strong> en esta página
+            {" · "}{t.totalFacturas} facturas con los filtros aplicados
+            <p>CSV y layout contable incluyen todos los resultados filtrados. El ZIP del mes usa el mes elegido al descargar.</p>
           </div>
         </CardContent>
       </Card>
@@ -166,9 +156,9 @@ export function TabFacturasEmitidas({ filtros: f, tabla: t, acciones: a }: Props
             emptyState={
               <EmptyState
                 icon={Receipt}
-                title={f.search ? "No se encontraron facturas" : "Aún no hay facturas emitidas"}
-                description={f.search ? "Ajusta los filtros o busca con otro término." : "Las facturas emitidas desde embarques o proformas aparecerán aquí."}
-                primaryAction={!f.search && canEmitirFactura && a.onCreateNew ? { label: "Nueva factura", onClick: a.onCreateNew } : undefined}
+                title={f.search || chips.length ? "No se encontraron facturas" : "Aún no hay facturas emitidas"}
+                description={f.search || chips.length ? "Ajusta los filtros o busca con otro término." : "Las facturas emitidas desde embarques o proformas aparecerán aquí."}
+                primaryAction={!f.search && !chips.length && canEmitirFactura && a.onCreateNew ? { label: "Nueva factura", onClick: a.onCreateNew } : undefined}
               />
             }
             rowKey={(f) => f.id}
@@ -185,14 +175,18 @@ export function TabFacturasEmitidas({ filtros: f, tabla: t, acciones: a }: Props
               pageSizeOptions: [50, 100, 200, 500],
               pageSizeLabels: { 500: "500" }, total: t.totalFacturas,
             }}
-            mobileCard={(f) => <FacturaEmitidaMobileCard factura={f} />}
+            mobileCard={(factura) => (
+              <div className="flex items-start gap-2">
+                <Checkbox className="mt-1 shrink-0" checked={selection.isSelected(factura.id)} onCheckedChange={() => selection.toggle(factura.id)} aria-label={`Seleccionar factura ${factura.numero}`} />
+                <div className="min-w-0 flex-1"><FacturaEmitidaMobileCard factura={factura} /></div>
+              </div>
+            )}
           />
         </CardContent>
       </Card>
 
       <FacturasEmitidasFooter facturas={t.facturasFiltradas} />
 
-      <DialogDescargarZipMes open={zipMesOpen} onOpenChange={setZipMesOpen} />
     </>
   );
 }

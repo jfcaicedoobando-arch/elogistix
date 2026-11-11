@@ -118,7 +118,7 @@ export function OportunidadLineageCard({ oportunidadId, leadId }: OpLineageProps
             {cots.map((c) => (
               <DrilldownRow
                 key={c.id}
-                href={`/cotizaciones/${c.id}/editar`}
+                href={`/cotizaciones/${c.id}`}
                 ariaLabel={`Ver cotización ${c.folio}`}
                 className="flex items-center justify-between gap-2 p-2 rounded border hover:bg-muted/50"
               >

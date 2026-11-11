@@ -14,6 +14,7 @@ export function useCreateNotaEmbarque() {
       insertarNotaEmbarque(embarqueId, contenido, usuario),
     onSuccess: (_resultado, vars) => {
       queryClient.invalidateQueries({ queryKey: queryKeys.embarques.notas(vars.embarqueId) });
+      queryClient.invalidateQueries({ queryKey: queryKeys.embarques.actividad(vars.embarqueId) });
       notifySuccess(undefined, { title: "Nota agregada" });
     },
     onError: (error: Error) => {

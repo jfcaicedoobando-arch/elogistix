@@ -25,6 +25,11 @@ export interface FacturasEmitidasFiltros {
   fechaHasta: string;
   setFechaHasta: (v: string) => void;
   clientes: ClienteOption[];
+  loadingClientes?: boolean;
+  errorClientes?: boolean;
+  refetchClientes?: () => void;
+  rangoInvalido?: boolean;
+  setPeriodo: (rango: { desde: Date | null; hasta: Date | null }) => void;
   onClear: () => void;
 }
 
@@ -49,4 +54,6 @@ export interface FacturasEmitidasAcciones {
   exportarFacturasCsv: () => void;
   exportarLayoutContable: () => void;
   onCreateNew?: () => void;
+  exportando?: boolean;
+  exportDisabled?: boolean;
 }

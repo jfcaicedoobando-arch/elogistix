@@ -26,6 +26,7 @@ export interface FacturasListadoFilters {
   organizationId: string | null;
   search?: string;
   estado?: string;
+  clienteNombre?: string;
   fechaDesde?: string;
   fechaHasta?: string;
   page?: number;
@@ -41,10 +42,11 @@ export async function fetchFacturasListado(f: FacturasListadoFilters): Promise<F
   const page = f.page ?? 0;
   const pageSize = f.pageSize ?? 50;
   const data = await unwrap(
-    supabase.rpc("facturas_listado", {
-      p_organization_id: f.organizationId ?? undefined,
+    supabase.rpc("facturas_listado_v2", {
+      p_org_id: f.organizationId ?? undefined,
       p_search: f.search || undefined,
       p_estado: f.estado && f.estado !== "todos" ? f.estado : undefined,
+      p_cliente_nombre: f.clienteNombre && f.clienteNombre !== "todos" ? f.clienteNombre : undefined,
       p_fecha_desde: f.fechaDesde || undefined,
       p_fecha_hasta: f.fechaHasta || undefined,
       p_offset: page * pageSize,
@@ -86,14 +88,55 @@ export async function fetchFacturasListado(f: FacturasListadoFilters): Promise<F
   return { data: items, count };
 }
 
+/** Sólo se usa al exportar: recorre todas las páginas del mismo filtro. */
+export async function fetchFacturasParaExportar(
+  filters: Omit<FacturasListadoFilters, "page" | "pageSize">,
+): Promise<FacturaListItem[]> {
+  const pageSize = 500;
+  const items: FacturaListItem[] = [];
+  const seen = new Set<string>();
+  let expectedCount: number | undefined;
+  for (let page = 0; ; page += 1) {
+    const result = await fetchFacturasListado({ ...filters, page, pageSize });
+    expectedCount ??= result.count;
+    // Una respuesta truncada o un listado que cambia nunca produce un CSV parcial.
+    if (result.count !== expectedCount || result.data.some((row) => seen.has(row.id))) {
+      throw new Error("Las facturas cambiaron durante la exportación. Vuelve a intentarlo.");
+    }
+    for (const row of result.data) seen.add(row.id);
+    items.push(...result.data);
+    if (items.length === expectedCount) return items;
+    if (items.length > expectedCount || result.data.length < pageSize) {
+      throw new Error("No se pudieron cargar todas las facturas para exportar. Vuelve a intentarlo.");
+    }
+  }
+}
+
+/** Opciones completas de la organización, independientes de filtros y página. */
+export async function fetchFacturasClientes(organizationId: string | null) {
+  const pageSize = 500;
+  const clientes: Array<{ id: string; nombre: string }> = [];
+  for (let offset = 0; ; offset += pageSize) {
+    const data = await unwrap(supabase.rpc("facturas_clientes_listado", {
+      p_org_id: organizationId ?? undefined,
+      p_offset: offset,
+      p_limit: pageSize,
+    }));
+    const rows = data ?? [];
+    clientes.push(...rows.map((row: { cliente_nombre: string }) => ({
+      id: row.cliente_nombre,
+      nombre: row.cliente_nombre,
+    })));
+    if (rows.length < pageSize) return clientes;
+  }
+}
+
 /**
  * Mantiene la API histórica (devolver todas las facturas filtradas por org).
- * Internamente ahora pasa por `facturas_listado` con un límite alto para
- * preservar el comportamiento de los consumidores que paginan client-side.
+ * Recorre páginas para no truncar resultados por el límite del servidor.
  */
 export async function fetchFacturas(organizationId: string | null): Promise<FacturaListItem[]> {
-  const { data } = await fetchFacturasListado({ organizationId, page: 0, pageSize: 5000 });
-  return data;
+  return fetchFacturasParaExportar({ organizationId });
 }
 
 

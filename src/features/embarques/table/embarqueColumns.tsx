@@ -109,6 +109,15 @@ export function buildEmbarqueColumns({
         );
       },
     },
+    clientColumn<EmbarqueRow>({
+      accessor: (e) => e.cliente_nombre,
+      ...(({ meta: { width: COL_W.texto, className: "max-w-[240px] truncate" } }) as object),
+    }),
+    statusColumn<EmbarqueRow>({
+      domain: "embarque",
+      accessor: (e) => calcularEstadoEmbarque(e.modo, e.tipo, e.etd, e.eta, e.estado, e.fecha_llegada_real),
+    }),
+    dateColumn<EmbarqueRow>({ id: "eta", header: "ETA", accessor: (e) => e.eta ?? null }),
     {
       id: "bl",
       header: "BL Master",
@@ -128,11 +137,6 @@ export function buildEmbarqueColumns({
         />
       ),
     },
-    // — Builder: clientColumn —
-    clientColumn<EmbarqueRow>({
-      accessor: (e) => e.cliente_nombre,
-      ...(({ meta: { width: COL_W.texto, className: "max-w-[240px] truncate" } }) as object),
-    }),
     {
       id: "modo",
       header: "Modo",
@@ -168,16 +172,5 @@ export function buildEmbarqueColumns({
       ...dateColumn<EmbarqueRow>({ id: "etd", header: "ETD", accessor: (e) => e.etd ?? null }),
       meta: { width: COL_W.fecha, className: "hidden 2xl:table-cell", headerClassName: "hidden 2xl:table-cell" },
     },
-    // — Builder: dateColumn ETA —
-    dateColumn<EmbarqueRow>({
-      id: "eta",
-      header: "ETA",
-      accessor: (e) => e.eta ?? null,
-    }),
-    // — Builder: statusColumn (Oleada 1) —
-    statusColumn<EmbarqueRow>({
-      domain: "embarque",
-      accessor: (e) => calcularEstadoEmbarque(e.modo, e.tipo, e.etd, e.eta, e.estado, e.fecha_llegada_real),
-    }),
   ]);
 }
