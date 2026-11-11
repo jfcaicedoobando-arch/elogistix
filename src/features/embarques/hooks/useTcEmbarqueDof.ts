@@ -46,6 +46,7 @@ export function useAlinearTcEmbarqueDof(embarqueId: string | undefined) {
       queryClient.invalidateQueries({ queryKey: queryKeys.embarques.pnlFinanciero(embarqueId) }),
       queryClient.invalidateQueries({ queryKey: queryKeys.embarques.single(embarqueId) }),
       queryClient.invalidateQueries({ queryKey: queryKeys.embarques.full(embarqueId) }),
+      ...(embarqueId ? [queryClient.invalidateQueries({ queryKey: queryKeys.embarques.detail(embarqueId) })] : []),
     ]),
   });
 }

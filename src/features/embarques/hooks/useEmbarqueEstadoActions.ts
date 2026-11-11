@@ -40,13 +40,13 @@ export function useEmbarqueEstadoActions(embarque: EmbarqueRow | undefined, id: 
   const registrarActividad = useRegistrarActividad();
   const avanzarEstado = useAvanzarEstadoEmbarque();
   const reqIdAvance = useStableRequestId();
-  const conceptosQuery = useEmbarqueConceptosVenta(id);
+  const siguienteEstado = embarque ? getSiguienteEstado(embarque.estado) : null;
+  const conceptosQuery = useEmbarqueConceptosVenta(siguienteEstado === "Cerrado" ? id : undefined);
   const conceptosVenta = conceptosQuery.data ?? [];
-  const { data: contenedores = [] } = useContenedoresEmbarque(id);
+  const { data: contenedores = [] } = useContenedoresEmbarque(siguienteEstado === "Confirmado" ? id : undefined);
   const { isAdmin, canEditOperations, isSuperAdmin } = usePermissions();
   const puedeSincronizarEstado = isAdmin || isSuperAdmin || canEditOperations;
 
-  const siguienteEstado = embarque ? getSiguienteEstado(embarque.estado) : null;
   const { faltantes: docsFaltantes, bloqueante: docsBloqueantes } =
     useDocsFaltantesParaEstado(id, siguienteEstado);
 

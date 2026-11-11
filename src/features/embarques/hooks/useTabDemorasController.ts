@@ -35,8 +35,6 @@ export function useTabDemorasController(embarqueId: string) {
         return next;
       });
       qc.invalidateQueries({ queryKey: queryKeys.embarques.contenedores(embarqueId) });
-      qc.invalidateQueries({ queryKey: queryKeys.embarques.conceptosCosto(embarqueId) });
-      qc.invalidateQueries({ queryKey: queryKeys.embarques.conceptosVenta(embarqueId) });
     },
     // The trigger updates costs and full-detail budget totals, even before a
     // transport error. Refresh the submitted shipment after navigation too.
@@ -44,6 +42,8 @@ export function useTabDemorasController(embarqueId: string) {
       if (context?.embarqueId) {
         return Promise.all([
           qc.invalidateQueries({ queryKey: queryKeys.embarques.full(context.embarqueId), exact: true }),
+          qc.invalidateQueries({ queryKey: queryKeys.embarques.conceptosCosto(context.embarqueId) }),
+          qc.invalidateQueries({ queryKey: queryKeys.embarques.conceptosVenta(context.embarqueId) }),
           qc.invalidateQueries({ queryKey: queryKeys.embarques.pnlFinanciero(context.embarqueId), exact: true }),
         ]);
       }

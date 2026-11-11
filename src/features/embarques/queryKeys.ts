@@ -2,6 +2,8 @@ export const embarques = {
   all: ['embarques'] as const,
   list: (filters: Record<string, unknown>) => ['embarques', 'list', filters] as const,
   detail: (id: string) => ['embarques', id] as const,
+  detallePorExpediente: (expediente: string, organizationId: string | null) =>
+    ['embarques', 'detalle-por-expediente', organizationId, expediente] as const,
   fullRoot: ['embarques', 'full'] as const,
   full: (id?: string) => ['embarques', 'full', id] as const,
   expedientesCliente: (clienteId?: string | null, organizationId?: string | null) =>
@@ -9,6 +11,8 @@ export const embarques = {
   /** Sin `id` devuelve el prefijo raíz (invalidación de todos los embarques). */
   conceptosVenta: (id?: string) => ['conceptos_venta', ...(id ? [id] : [])] as const,
   conceptosCosto: (id?: string) => ['conceptos_costo', ...(id ? [id] : [])] as const,
+  conceptosVentaDetalle: (id: string) => ['conceptos_venta', id, 'detalle'] as const,
+  conceptosCostoDetalle: (id: string) => ['conceptos_costo', id, 'detalle'] as const,
   /**
    * P2-4 — Existencia de conceptos `demoras_auto` persistidos. Cuelga del
    * prefijo `conceptos_costo/<id>` para que las mutaciones de demoras (que ya

@@ -4,6 +4,7 @@ import { useOrgFilter } from '@/hooks/shared/useOrgFilter';
 import { queryKeys } from '@/lib/query';
 import { embarqueQueries } from '@/features/embarques/queries';
 import type { EmbarquesPaginadosFilters } from '@/features/embarques/services';
+import { EMBARQUE_ID_UUID, fetchEmbarqueIdPorExpediente } from '@/features/embarques/services/queries/detalle';
 
 
 interface UseEmbarquesPaginadosParams {
@@ -56,6 +57,25 @@ export function useEmbarque(id: string | undefined) {
   });
 }
 
+export function useEmbarqueResumen(idOrExpediente: string | undefined) {
+  const { organizationId, orgListo } = useOrgFilter();
+  const expediente = idOrExpediente && !EMBARQUE_ID_UUID.test(idOrExpediente) ? idOrExpediente : "";
+  const lookup = useQuery({
+    queryKey: queryKeys.embarques.detallePorExpediente(expediente, organizationId),
+    queryFn: () => fetchEmbarqueIdPorExpediente(expediente),
+    enabled: orgListo && !!expediente,
+    staleTime: 30_000,
+  });
+  const id = expediente ? lookup.data ?? undefined : idOrExpediente;
+  const detalle = useEmbarque(orgListo ? id : undefined);
+  return {
+    embarque: detalle.data ?? null,
+    isLoading: !orgListo || lookup.isLoading || detalle.isLoading,
+    error: lookup.error ?? detalle.error,
+    refetch: lookup.error ? lookup.refetch : detalle.refetch,
+  };
+}
+
 /** Hook para prefetch en hover (lista → detalle) */
 export function usePrefetchEmbarque() {
   const queryClient = useQueryClient();
@@ -63,11 +83,9 @@ export function usePrefetchEmbarque() {
   useEffect(() => () => clearTimeout(timer.current), []);
   return useCallback((id: string) => {
     clearTimeout(timer.current);
-    // Coalesce a sweep across rows and avoid concurrent full-detail requests.
+    // Una pasada rápida sobre las filas sólo anticipa el resumen de la última.
     timer.current = setTimeout(() => {
-      if (queryClient.isFetching({ queryKey: queryKeys.embarques.fullRoot }) === 0) {
-        void queryClient.prefetchQuery(embarqueQueries.full(id));
-      }
+      void queryClient.prefetchQuery(embarqueQueries.detail(id));
     }, 200);
   }, [queryClient]);
 }

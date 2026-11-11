@@ -10,7 +10,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { KpiGridSkeleton } from "@/components/shared/skeletons";
 import { ChartSkeleton } from "@/components/shared/ChartSkeleton";
 import { useContenedoresEmbarque } from "@/features/embarques/hooks/useContenedoresEmbarque";
-import { useEmbarqueDetalleData } from "@/features/embarques/hooks/useEmbarqueDetalleData";
+import type { ConceptoCostoRow, ConceptoVentaRow } from "@/features/embarques/types/embarque";
 import { calcularPnlPorContenedor } from "@/features/embarques/services/pnlPorContenedor";
 import { TablaPorMoneda } from "./_sections/TablaPnlPorMoneda";
 import { Badge } from "@/components/ui/badge";
@@ -18,11 +18,11 @@ import { Badge } from "@/components/ui/badge";
 interface Props {
   embarqueId: string;
   expediente: string;
+  conceptosVenta: ConceptoVentaRow[];
+  conceptosCosto: ConceptoCostoRow[];
 }
 
-export function TabPnlContenedor({ embarqueId, expediente }: Props) {
-  const { conceptosVenta, conceptosCosto, isLoading: loadingConceptos } =
-    useEmbarqueDetalleData(embarqueId);
+export function TabPnlContenedor({ embarqueId, expediente, conceptosVenta, conceptosCosto }: Props) {
   const { data: contenedores = [], isLoading: loadingContenedores } =
     useContenedoresEmbarque(embarqueId);
 
@@ -31,15 +31,15 @@ export function TabPnlContenedor({ embarqueId, expediente }: Props) {
       calcularPnlPorContenedor({
         expediente,
         contenedores,
-        conceptosVenta: conceptosVenta ?? [],
-        conceptosCosto: conceptosCosto ?? [],
+        conceptosVenta,
+        conceptosCosto,
       }),
     [expediente, contenedores, conceptosVenta, conceptosCosto],
   );
 
   const monedas = Object.keys(porMoneda).sort();
 
-  if (loadingConceptos || loadingContenedores) {
+  if (loadingContenedores) {
     return (
       <div className="space-y-4">
         <KpiGridSkeleton count={4} heightClass="h-24" />
