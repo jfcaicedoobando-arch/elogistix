@@ -11,6 +11,13 @@
 --   psql "$SUPABASE_DB_URL" -f supabase/tests/cerrar_cancelacion_factura_facturapi_idempotente.sql
 BEGIN;
 
+CREATE FUNCTION pg_temp.rechazar_liberacion_proforma() RETURNS trigger
+LANGUAGE plpgsql AS $$
+BEGIN
+  RAISE EXCEPTION 'Fallo de prueba al liberar proforma' USING ERRCODE = 'LC001';
+END;
+$$;
+
 DO $$
 DECLARE
   v_org uuid;
@@ -72,6 +79,31 @@ BEGIN
   UPDATE public.proformas SET factura_id = v_f1 WHERE id = v_pf;
 
   PERFORM set_config('request.jwt.claims', jsonb_build_object('sub', v_uid)::text, true);
+
+  CREATE TRIGGER qa_rechazar_liberacion_proforma
+    BEFORE UPDATE OF factura_id ON public.proformas
+    FOR EACH ROW WHEN (OLD.factura_id IS NOT NULL AND NEW.factura_id IS NULL)
+    EXECUTE FUNCTION pg_temp.rechazar_liberacion_proforma();
+
+  BEGIN
+    PERFORM public.cerrar_cancelacion_factura_facturapi(v_f1, NULL, '02');
+    RAISE EXCEPTION 'TEST FAIL: esperaba un fallo de persistencia de la proforma';
+  EXCEPTION WHEN SQLSTATE 'LC001' THEN
+    NULL;
+  END;
+
+  DROP TRIGGER qa_rechazar_liberacion_proforma ON public.proformas;
+
+  IF NOT EXISTS (
+    SELECT 1 FROM public.facturas
+     WHERE id = v_f1 AND estado = 'Emitida' AND cancellation_status = 'pending' AND cancelado_en IS NULL
+  ) OR NOT EXISTS (
+    SELECT 1 FROM public.factura_embarques WHERE factura_id = v_f1 AND activa
+  ) OR NOT EXISTS (
+    SELECT 1 FROM public.proformas WHERE id = v_pf AND factura_id = v_f1
+  ) THEN
+    RAISE EXCEPTION 'TEST FAIL: el fallo de proforma debe revertir el estado y los vínculos';
+  END IF;
 
   -- CASO 1: cierre puro (sin sustituta) -> Cancelada.
   v_res := public.cerrar_cancelacion_factura_facturapi(v_f1, NULL, '02');
