@@ -40,33 +40,31 @@ export function useDashboardController() {
   const showScopeToggle = isOperador || role === "vendedor";
   const [scope, setScope] = useState<DashboardScope>(showScopeToggle ? "mios" : "todos");
 
-  const data = useDashboardData();
+  const {
+    alertasDemora, proximosArribos, profitArribosEsteMes, embarquesMesSiguiente,
+    embarquesEir, conteoPorEstado, totalActivos, arribosEsteMes, resumenMesSiguiente,
+    isLoading, isError, refetch, cargasPorCliente, cargasActivasTotal,
+  } = useDashboardData();
   const operadorEmail = user?.email ?? "";
 
   const scoped = useMemo(() => {
     if (scope === "todos") {
       return {
-        alertasDemora: data.alertasDemora,
-        proximosArribos: data.proximosArribos,
-        profitArribosEsteMes: data.profitArribosEsteMes,
-        embarquesMesSiguiente: data.embarquesMesSiguiente,
-        conteoPorEstado: data.conteoPorEstado,
-        totalActivos: data.totalActivos,
-        arribosEsteMes: data.arribosEsteMes,
-        resumenMesSiguiente: data.resumenMesSiguiente,
+        alertasDemora, proximosArribos, profitArribosEsteMes, embarquesMesSiguiente,
+        conteoPorEstado, totalActivos, arribosEsteMes, resumenMesSiguiente,
       };
     }
-    const mine = (op: string | null | undefined) =>
-      (op ?? "").toLowerCase() === operadorEmail.toLowerCase();
+    const email = operadorEmail.toLowerCase();
+    const mine = (op: string | null | undefined) => (op ?? "").toLowerCase() === email;
 
-    const ad = data.alertasDemora.filter((e) => mine(e.operador));
-    const pa = data.proximosArribos.filter((e) => mine(e.operador));
-    const pf = data.profitArribosEsteMes.filter((e) => mine(e.operador));
-    const em = data.embarquesMesSiguiente.filter((e) => mine(e.operador));
+    const ad = alertasDemora.filter((e) => mine(e.operador));
+    const pa = proximosArribos.filter((e) => mine(e.operador));
+    const pf = profitArribosEsteMes.filter((e) => mine(e.operador));
+    const em = embarquesMesSiguiente.filter((e) => mine(e.operador));
     // v13.303.13 · EIR se excluye del CTE `activos` del RPC, por eso viene
     // en su propia lista `embarquesEir`. Sumamos al conteo (no al total activos).
     // v13.380.1 · La lista también trae los embarques en "Por liquidar".
-    const eir = data.embarquesEir.filter((e) => mine(e.operador));
+    const eir = embarquesEir.filter((e) => mine(e.operador));
 
     const activos = [...ad, ...pa, ...pf, ...em];
     const seen = new Set<string>();
@@ -86,16 +84,17 @@ export function useDashboardController() {
 
 
     // AUD-UTIL-MES: los importes también se acotan a los embarques propios.
+    const yaLlegaron = pf.filter((e) => (ESTADOS_LLEGADO as readonly string[]).includes(e.estadoReal)).length;
     const arribosScoped = {
-      ...data.arribosEsteMes,
+      ...arribosEsteMes,
       ...sumarArribosPropios(pf),
       total: pf.length,
-      yaLlegaron: pf.filter((e) => (ESTADOS_LLEGADO as readonly string[]).includes(e.estadoReal)).length,
-      enCamino: pf.filter((e) => !(ESTADOS_LLEGADO as readonly string[]).includes(e.estadoReal)).length,
+      yaLlegaron,
+      enCamino: pf.length - yaLlegaron,
     };
 
     const resumenScoped = {
-      ...data.resumenMesSiguiente,
+      ...resumenMesSiguiente,
       totalEmbarques: em.length,
       facturados: em.filter((e) => e.facturado).length,
     };
@@ -105,12 +104,15 @@ export function useDashboardController() {
       proximosArribos: pa,
       profitArribosEsteMes: pf,
       embarquesMesSiguiente: em,
-      conteoPorEstado: conteo as typeof data.conteoPorEstado,
+      conteoPorEstado: conteo as typeof conteoPorEstado,
       totalActivos: seen.size,
       arribosEsteMes: arribosScoped,
       resumenMesSiguiente: resumenScoped,
     };
-  }, [scope, operadorEmail, data]);
+  }, [
+    scope, operadorEmail, alertasDemora, proximosArribos, profitArribosEsteMes, embarquesMesSiguiente,
+    embarquesEir, conteoPorEstado, totalActivos, arribosEsteMes, resumenMesSiguiente,
+  ]);
 
   const nombre = firstName(user?.email);
   const { saludo, hoyStr } = useMemo(
@@ -126,11 +128,7 @@ export function useDashboardController() {
     isOperador,
     canViewFinancials,
     hideFinancials: !canViewFinancials,
-    isLoading: data.isLoading,
-    isError: data.isError,
-    refetch: data.refetch,
-    cargasPorCliente: data.cargasPorCliente,
-    cargasActivasTotal: data.cargasActivasTotal,
+    isLoading, isError, refetch, cargasPorCliente, cargasActivasTotal,
     scoped,
     saludo,
     hoyStr,

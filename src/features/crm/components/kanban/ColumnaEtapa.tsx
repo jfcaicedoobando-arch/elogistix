@@ -5,7 +5,7 @@
  * para que una etapa con cientos de oportunidades no congele el tablero; el
  * aviso de truncamiento reemplaza al render silencioso de todo el historial.
  */
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useDroppable } from "@dnd-kit/core";
 import { Briefcase } from "lucide-react";
 import { EmptyStateInline } from "@/components/empty/EmptyStateInline";
@@ -44,7 +44,7 @@ interface Props {
 export default function ColumnaEtapa({ etapa, ops, onClickCard, proximasMap, estadoProximas = "listo", avanceMap, onNuevo, puedeArrastrar }: Props) {
   const { setNodeRef, isOver } = useDroppable({ id: etapa.id });
   const [visibles, setVisibles] = useState(LIMITE_ETAPA_INICIAL);
-  const totales = totalesEtapa(ops);
+  const totales = useMemo(() => totalesEtapa(ops), [ops]);
   const esCerrada = etapa.tipo === "ganada" || etapa.tipo === "perdida";
   const opsVisibles = ops.slice(0, visibles);
   const ocultas = ops.length - opsVisibles.length;

@@ -52,6 +52,16 @@ const baseData = {
 };
 
 describe("useDashboardController · EIR en scope mios", () => {
+  it("conserva el cálculo de Míos si sólo cambia el estado de la consulta", () => {
+    mockUseData.mockImplementation(() => ({ ...baseData }));
+    const { result, rerender } = renderHook(() => useDashboardController(), { wrapper: createWrapper() });
+    const anterior = result.current.scoped;
+    mockUseData.mockImplementation(() => ({ ...baseData, isLoading: true }));
+    rerender();
+    expect(result.current.isLoading).toBe(true);
+    expect(result.current.scoped).toBe(anterior);
+  });
+
   it("cuenta los EIR del operador (case-insensitive, dedupe por id)", () => {
     mockUseData.mockReturnValue(baseData);
     const { result } = renderHook(() => useDashboardController(), { wrapper: createWrapper() });
