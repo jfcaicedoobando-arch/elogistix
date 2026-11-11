@@ -18,8 +18,8 @@ const stubs = vi.hoisted(() => ({
   fetchEstadoResultadosDevengadoAnual: vi.fn(),
   fetchEstadoResultadosMes: vi.fn(),
   fetchSaldosCuentas: vi.fn(),
-  fetchResumenTesoreria: vi.fn(),
-  fetchFlujoProyectado: vi.fn(),
+  calcularResumenTesoreria: vi.fn(),
+  calcularFlujoProyectado: vi.fn(),
   fetchPresupuestoVsReal: vi.fn(),
   fetchExchangeRates: vi.fn(),
   calcularAlertas: vi.fn(),
@@ -33,10 +33,9 @@ vi.mock("@/features/profit/services/estadoResultadosDevengado", () => ({
 vi.mock("@/features/profit/services/estadoResultados", () => ({
   fetchEstadoResultadosMes: stubs.fetchEstadoResultadosMes,
 }));
-vi.mock("@/features/tesoreria/services", () => ({
-  fetchSaldosCuentas: stubs.fetchSaldosCuentas,
-  fetchResumenTesoreria: stubs.fetchResumenTesoreria,
-  fetchFlujoProyectado: stubs.fetchFlujoProyectado,
+vi.mock("@/features/tesoreria/domain", () => ({
+  calcularResumenTesoreria: stubs.calcularResumenTesoreria,
+  calcularFlujoProyectado: stubs.calcularFlujoProyectado,
 }));
 vi.mock("@/features/presupuesto/services", () => ({
   fetchPresupuestoVsReal: stubs.fetchPresupuestoVsReal,
@@ -49,7 +48,11 @@ vi.mock("../alertas", () => ({
   calcularKPIsEjecutivos: stubs.calcularKPIsEjecutivos,
 }));
 
-import { fetchDashboardEjecutivo } from "../agregador";
+import { probarSnapshotEjecutivo, type SnapshotFixtureParams } from "./snapshotFixture";
+
+function fetchDashboardEjecutivo(params: SnapshotFixtureParams) {
+  return probarSnapshotEjecutivo(params, stubs.fetchSaldosCuentas());
+}
 
 const EERR_ZERO = {
   totalIngresos: { total: 0 },
@@ -66,10 +69,10 @@ describe("agregador — selección de fuente EERR", () => {
     stubs.fetchEstadoResultadosDevengadoAnual.mockResolvedValue([]);
     stubs.fetchEstadoResultadosMes.mockResolvedValue(EERR_ZERO);
     stubs.fetchSaldosCuentas.mockResolvedValue([]);
-    stubs.fetchResumenTesoreria.mockResolvedValue({
+    stubs.calcularResumenTesoreria.mockReturnValue({
       cuentas: [], top_deudores: [], top_acreedores: [],
     });
-    stubs.fetchFlujoProyectado.mockResolvedValue({});
+    stubs.calcularFlujoProyectado.mockReturnValue({});
     stubs.fetchPresupuestoVsReal.mockResolvedValue({});
     stubs.fetchExchangeRates.mockResolvedValue({ usdMxn: 17.5, eurMxn: 18 });
     stubs.calcularAlertas.mockReturnValue([]);

@@ -14,6 +14,8 @@
 export {
   fetchFacturasPorTimbrar,
   fetchPagosRepPendientes,
+  REP_PENDIENTES_SORT_KEYS,
+  type RepPendientesFilters,
   fetchRepsHistorico,
   type FilaPorTimbrar,
   type FilaRepPendiente,

@@ -1,22 +1,28 @@
-import { useMemo } from 'react';
+import { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { queryKeys } from "@/lib/query";
 import { useOrganization } from "@/lib/contexts/OrganizationContext";
-import { fetchDashboardEjecutivo } from "@/features/dashboardEjecutivo/services";
+import { queryKeys } from "@/lib/query";
+import { useDiaNegocio } from "@/hooks/shared/useDiaNegocio";
 import { useCobranza } from "@/features/facturacion/hooks";
 import { useFacturasCxP } from "@/features/cxp/hooks";
 import { useFuenteEerr } from "@/features/profit/hooks/useFuenteEerr";
+import { fetchLiquidacionesPendientes, fetchSaldosCuentas } from "@/features/tesoreria/services";
+import {
+  construirSnapshotEjecutivo,
+  fetchFuentesDashboardEjecutivo,
+  type FuentesDashboardEjecutivo,
+} from "@/features/dashboardEjecutivo/services";
+import { buildFinancialAnalysis } from "../services/financialAnalysis";
 
-import { buildFinancialAnalysis, type FinancialAnalysis } from '../services/financialAnalysis';
-import { fetchSaldosCuentas } from '@/features/tesoreria/services';
-import { useDiaNegocio } from '@/hooks/shared/useDiaNegocio';
-
-function canReadSnapshot(organizationId: string | null, cxc: unknown, cxp: unknown, periodo: string) {
-  return Boolean(organizationId && cxc && cxp && periodo);
-}
-function financialScopeError(analysis: FinancialAnalysis | undefined, organizationId: string | null, periodo: string) {
-  return analysis && (analysis.organizationId !== organizationId || analysis.selectedMonth !== periodo)
-    ? new Error("La respuesta financiera no corresponde a la organización y periodo actuales.") : null;
+function errorDeAmbito(
+  fuentes: FuentesDashboardEjecutivo | undefined,
+  organizationId: string | null,
+  periodo: string,
+  fuente: FuentesDashboardEjecutivo["fuente"],
+): Error | null {
+  if (!fuentes) return null;
+  const coincide = fuentes.organizationId === organizationId && fuentes.periodo === periodo && fuentes.fuente === fuente;
+  return coincide ? null : new Error("La respuesta financiera no corresponde a la organización y periodo actuales.");
 }
 
 export function useDashboardEjecutivo(periodo: string) {
@@ -25,70 +31,65 @@ export function useDashboardEjecutivo(periodo: string) {
   const cobranzaQ = useCobranza({});
   const cxpQ = useFacturasCxP({});
   const currentBalanceReference = useDiaNegocio();
-  // Own existing bank reader/cache: an EERR failure cannot hide diagnostic coverage.
   const cuentasQ = useQuery({
     queryKey: queryKeys.tesoreria.saldosCuentasPorOrg(organizationId),
     queryFn: () => fetchSaldosCuentas(organizationId),
     enabled: Boolean(organizationId),
-    staleTime: 60_000,
   });
-  const ready = canReadSnapshot(organizationId, cobranzaQ.data, cxpQ.data, periodo) && Boolean(cuentasQ.data);
+  const { data: cobranza } = cobranzaQ;
+  const { data: cxp } = cxpQ;
+  const { data: cuentas } = cuentasQ;
+  const balanceQueries = [cobranzaQ, cxpQ, cuentasQ];
+  const balanceError = balanceQueries.find(({ error }) => error)?.error ?? null;
+  const ready = Boolean(organizationId && periodo && cobranza && cxp && cuentas && !balanceError);
+  const financialAnalysis = useMemo(() => ready
+    ? buildFinancialAnalysis({
+      organizationId, selectedMonth: periodo, currentBalanceReference,
+      currencyRows: [...cobranza!, ...cxp!, ...cuentas!],
+    })
+    : undefined, [ready, organizationId, periodo, currentBalanceReference, cobranza, cxp, cuentas]);
 
-  // Si CxC o CxP fallan, el snapshot queda deshabilitado para siempre: en React
-  // Query v5 una query deshabilitada reporta `pending` sin `error` ni carga, y
-  // la pantalla quedaba en blanco (sin data, sin error, sin skeleton). Por eso
-  // el error de la dependencia se propaga como error del dashboard.
-  const dependencies = [cobranzaQ, cxpQ, cuentasQ];
-  const depsError = (dependencies.find(dependency => dependency.error)?.error ?? null) as Error | null;
-  const depsLoading = dependencies.some(dependency => dependency.isLoading);
-  const financialAnalysis = useMemo(() => ready && !depsError
-    ? buildFinancialAnalysis({ organizationId, selectedMonth: periodo, currentBalanceReference,
-      currencyRows: [...cobranzaQ.data!, ...cxpQ.data!, ...cuentasQ.data!] })
-    : undefined, [ready, depsError, organizationId, periodo, currentBalanceReference,
-      cobranzaQ.data, cxpQ.data, cuentasQ.data]);
-
-  const query = useQuery({
-    queryKey: queryKeys.dashboardEjecutivo.snapshot(organizationId, periodo, fuente),
-    queryFn: () =>
-      fetchDashboardEjecutivo({
-        organizationId,
-        periodo,
-        fuente,
-        cobranza: cobranzaQ.data!,
-        cxp: cxpQ.data!,
-        cuentas: cuentasQ.data!,
-      }),
-    staleTime: 60_000,
-    gcTime: 300_000,
-    enabled: ready && !depsError,
+  const fuentesQ = useQuery({
+    queryKey: queryKeys.dashboardEjecutivo.fuentes(organizationId, periodo, fuente),
+    queryFn: () => fetchFuentesDashboardEjecutivo({ organizationId, periodo, fuente }),
+    enabled: ready,
   });
+  const liquidacionesQ = useQuery({
+    queryKey: queryKeys.comisiones.liquidacionesPendientesTesoreria(organizationId),
+    queryFn: () => fetchLiquidacionesPendientes(organizationId),
+    enabled: ready,
+  });
+  const { data: fuentes } = fuentesQ;
+  const { data: liquidaciones } = liquidacionesQ;
+  const queries = [...balanceQueries, fuentesQ, liquidacionesQ];
+  const queryError = queries.find(({ error }) => error)?.error ?? null;
+  const error = queryError ?? errorDeAmbito(fuentes, organizationId, periodo, fuente);
+
+  // La tabla y el PDF reciben el mismo snapshot, derivado de las fuentes vigentes.
+  const data = useMemo(() => !error && financialAnalysis && fuentes && liquidaciones
+    ? construirSnapshotEjecutivo({
+      fuentes, cuentas: cuentas!, cobranza: cobranza!, cxp: cxp!, liquidaciones,
+      financialAnalysis, generadoEn: new Date().toISOString(),
+    })
+    : undefined, [error, financialAnalysis, fuentes, liquidaciones, cuentas, cobranza, cxp]);
 
   const refetch = () => {
-    // Reintenta primero las fuentes fallidas; sólo un snapshot habilitado puede leerlas.
-    if (cobranzaQ.error) void cobranzaQ.refetch();
-    if (cxpQ.error) void cxpQ.refetch();
-    if (cuentasQ.error) void cuentasQ.refetch();
-    // Retrying a disabled snapshot would read with unresolved dependencies.
-    if (depsError) return Promise.resolve();
-    return query.refetch();
+    const failed = queries.filter(({ error }) => error);
+    // Una fuente derivada se habilita al recuperar las lecturas de saldo.
+    const targets = failed.length ? failed : ready ? queries : balanceQueries;
+    return Promise.all(targets.map((query) => query.refetch()));
   };
 
-  const snapshotError = depsError ?? query.error ?? financialScopeError(query.data?.financialAnalysis, organizationId, periodo);
   return {
-    ...query,
-    financialAnalysis,
-    financialAnalysisError: depsError,
-    financialAnalysisLoading: !depsError && depsLoading,
-    // Exactamente una rama: error de dependencia gana y no expone data vieja.
-    data: snapshotError ? undefined : query.data,
-    error: snapshotError,
-    isError: Boolean(snapshotError),
-    isSuccess: !snapshotError && query.isSuccess,
-    // `query.isLoading` ya es false cuando la query está deshabilitada (v5),
-    // así que sumamos la carga real de las dependencias sin confundir
-    // "pending deshabilitado" con "cargando".
-    isLoading: !snapshotError && (depsLoading || query.isLoading),
-    isFetching: query.isFetching || dependencies.some(dependency => dependency.isFetching),
+    data,
+    error,
+    isError: Boolean(error),
+    isSuccess: Boolean(data),
+    isLoading: !error && queries.some(({ isLoading }) => isLoading),
+    isFetching: queries.some(({ isFetching }) => isFetching),
     refetch,
+    financialAnalysis,
+    financialAnalysisError: balanceError,
+    financialAnalysisLoading: !balanceError && balanceQueries.some(({ isLoading }) => isLoading),
   };
 }

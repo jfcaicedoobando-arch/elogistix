@@ -9,7 +9,7 @@ const { mockFetch, mockCobranza, mockCxp } = vi.hoisted(() => ({
 }));
 
 vi.mock('@/features/dashboardEjecutivo/services', () => ({
-  fetchDashboardEjecutivo: mockFetch,
+  fetchFuentesDashboardEjecutivo: mockFetch, construirSnapshotEjecutivo: ({ fuentes, financialAnalysis }: Parameters<typeof import("../../services/snapshot").construirSnapshotEjecutivo>[0]) => ({ periodo: fuentes.periodo, financialAnalysis })
 }));
 
 vi.mock('@/lib/contexts/OrganizationContext', () => ({
@@ -17,13 +17,14 @@ vi.mock('@/lib/contexts/OrganizationContext', () => ({
 }));
 
 vi.mock('@/features/facturacion/hooks', () => ({ useCobranza: mockCobranza }));
+vi.mock('@/features/profit/hooks/useFuenteEerr', () => ({useFuenteEerr: () => ({ fuente: 'embarques' })}));
 vi.mock('@/features/cxp/hooks', () => ({ useFacturasCxP: mockCxp }));
 
 import { useDashboardEjecutivo } from '../useDashboardEjecutivo';
 
 describe('useDashboardEjecutivo Hook', () => {
   it('fetches data for given period', async () => {
-    mockFetch.mockResolvedValueOnce({ snapshots: [] });
+    mockFetch.mockResolvedValueOnce({ organizationId: "org-1", periodo: "mes", fuente: "embarques" });
     const { result } = renderHook(() => useDashboardEjecutivo('mes'), { wrapper: createWrapper() });
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
     expect(mockFetch).toHaveBeenCalledWith(
@@ -38,5 +39,5 @@ describe('useDashboardEjecutivo Hook', () => {
   });
 });
 
-vi.mock('@/features/tesoreria/services', () => ({fetchSaldosCuentas: vi.fn(async () => [])}));
+vi.mock('@/features/tesoreria/services', () => ({fetchSaldosCuentas: vi.fn(async () => []), fetchLiquidacionesPendientes: vi.fn(async () => [])}));
 vi.mock('@/hooks/shared/useDiaNegocio', () => ({useDiaNegocio: () => '2026-10-13'}));

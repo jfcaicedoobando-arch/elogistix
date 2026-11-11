@@ -8,6 +8,7 @@ import { ReceiptText, X } from "lucide-react";
 interface Props {
   seleccionados: number;
   enProceso: boolean;
+  deshabilitado: boolean;
   progreso: { hechos: number; total: number } | null;
   onTimbrar: () => void;
   onLimpiar: () => void;
@@ -23,7 +24,7 @@ export function BandejaRepAcciones(p: Props) {
         {p.progreso ? ` · timbrando ${p.progreso.hechos} de ${p.progreso.total}…` : ""}
       </p>
       <div className="flex items-center gap-2">
-        <Button size="sm" onClick={p.onTimbrar} disabled={p.enProceso} loading={p.enProceso}>
+        <Button size="sm" onClick={p.onTimbrar} disabled={p.enProceso || p.deshabilitado} loading={p.enProceso}>
           {!p.enProceso && <ReceiptText className="mr-2 h-4 w-4" />}
           Timbrar REP seleccionados
         </Button>

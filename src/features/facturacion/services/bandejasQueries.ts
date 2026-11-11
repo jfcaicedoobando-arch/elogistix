@@ -10,6 +10,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { FECHA_INICIO_TIMBRADO_SISTEMA } from "@/features/facturacion/domain/facturaFlags";
 import { warnIfTruncated } from "@/lib/supabase/assertNotTruncated";
 import { CAP_LISTA } from "@/constants/queryCaps";
+import { orIlike } from "@/lib/search/ilike";
 
 const LIMITE_POR_TIMBRAR = 500;
 
@@ -51,25 +52,60 @@ export async function fetchFacturasPorTimbrar(orgId: string): Promise<FilaPorTim
 }
 
 
-export async function fetchPagosRepPendientes(orgId: string): Promise<FilaRepPendiente[]> {
-  const { data, error } = await supabase
+const SORT_REP_PENDIENTES = {
+  factura: "facturas(numero)",
+  cliente: "facturas(cliente_nombre)",
+  fecha_pago: "fecha_pago",
+  monto: "monto",
+  estado: "estado_rep",
+} as const;
+
+export const REP_PENDIENTES_SORT_KEYS = Object.keys(SORT_REP_PENDIENTES);
+
+export interface RepPendientesFilters extends Record<string, string> {
+  estado: string;
+}
+
+interface RepPendientesPageParams {
+  search: string;
+  filters: RepPendientesFilters;
+  dateFrom: string;
+  dateTo: string;
+  sortKey: string | null;
+  sortDir: "asc" | "desc";
+  range: { from: number; to: number };
+}
+
+export async function fetchPagosRepPendientes(
+  orgId: string,
+  { search, filters, dateFrom, dateTo, sortKey, sortDir, range }: RepPendientesPageParams,
+): Promise<{ rows: FilaRepPendiente[]; count: number }> {
+  let query = supabase
     .from("pagos_factura")
-    .select(
-      "id, factura_id, fecha_pago, monto, moneda, estado_rep, facturas!inner(numero, cliente_nombre)",
-    )
+    .select("id, factura_id, fecha_pago, monto, moneda, estado_rep, facturas!inner(numero, cliente_nombre)", { count: "exact" })
     .eq("organization_id", orgId)
     .in("estado_rep", ["Pendiente", "Error"])
-    // A6: los pagos eliminados no deben aparecer en la bandeja de REP.
-    .is("deleted_at", null)
-    .order("fecha_pago", { ascending: false })
-    .limit(CAP_LISTA);
+    .is("deleted_at", null);
+
+  if (filters.estado === "Pendiente" || filters.estado === "Error") query = query.eq("estado_rep", filters.estado);
+  if (search.trim()) query = query.or(orIlike(["numero", "cliente_nombre"], search), { referencedTable: "facturas" });
+  if (dateFrom) query = query.gte("fecha_pago", dateFrom);
+  if (dateTo) query = query.lte("fecha_pago", dateTo);
+  const column = sortKey && Object.hasOwn(SORT_REP_PENDIENTES, sortKey)
+    ? SORT_REP_PENDIENTES[sortKey as keyof typeof SORT_REP_PENDIENTES]
+    : SORT_REP_PENDIENTES.fecha_pago;
+  const { data, count, error } = await query
+    .order(column, { ascending: sortDir === "asc" })
+    .order("id", { ascending: true })
+    .range(range.from, range.to);
   if (error) throw error;
+  if (count === null) throw new Error("La bandeja REP no recibió el total filtrado.");
   type Row = {
     id: string; factura_id: string; fecha_pago: string;
     monto: number; moneda: string; estado_rep: string;
     facturas: { numero: string; cliente_nombre: string } | null;
   };
-  return ((data ?? []) as Row[]).map((r) => ({
+  const rows = ((data ?? []) as Row[]).map((r) => ({
     id: r.id,
     factura_id: r.factura_id,
     factura_numero: r.facturas?.numero ?? "—",
@@ -79,6 +115,7 @@ export async function fetchPagosRepPendientes(orgId: string): Promise<FilaRepPen
     moneda: r.moneda,
     estado_rep: r.estado_rep,
   }));
+  return { rows, count };
 }
 
 export interface FilaRepHistorico {
