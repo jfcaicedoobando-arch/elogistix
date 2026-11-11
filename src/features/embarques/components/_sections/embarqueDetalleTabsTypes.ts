@@ -24,6 +24,10 @@ export interface EmbarqueDetalleTabsProps {
   setActiveTab: (t: string) => void;
   estadoVisual: string;
   canEdit: boolean;
+  notaBorrador: string;
+  onNotaBorradorChange: (texto: string) => void;
+  notaEnviando: boolean;
+  onEnviarNota: () => Promise<void>;
 }
 
 export type PnlView = "global" | "contenedor";

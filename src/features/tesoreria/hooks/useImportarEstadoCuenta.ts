@@ -1,5 +1,5 @@
 /** La selección prepara una revisión. Sólo la confirmación persiste el archivo. */
-import { useEffect, useRef, useState, type ChangeEvent } from "react";
+import { useCallback, useEffect, useRef, useState, type ChangeEvent } from "react";
 import { notifyError, notifyInfo, notifySuccess, notifyWarning } from "@/lib/ui/appFeedback";
 import { reportCaughtError } from "@/lib/observability/reportCaughtError";
 import { getErrorMessage } from "@/lib/errors";
@@ -43,12 +43,14 @@ export function useImportarEstadoCuenta(cuentaId: string) {
   const [procesando, setProcesando] = useState(false);
   const [revision, setRevision] = useState<ImportacionPendiente | null>(null);
   const [confirmando, setConfirmando] = useState(false);
+  const invalidarSolicitud = useCallback(() => { solicitudRef.current++; }, []);
 
   useEffect(() => {
-    solicitudRef.current++;
+    invalidarSolicitud();
     setRevision(null);
     setProcesando(false);
-  }, [cuentaId]);
+    return invalidarSolicitud;
+  }, [cuentaId, invalidarSolicitud]);
 
   const cancelarRevision = () => {
     if (confirmandoRef.current) return;

@@ -16,6 +16,7 @@ import type { CostoCotizacion } from "@/features/cotizacion/hooks";
 import { useRegisterBreadcrumbLabel } from "@/lib/contexts/BreadcrumbContext";
 import { motivoBloqueoEdicionCotizacion } from "@/features/cotizacion/domain/estadosEditables";
 import { ErrorState } from "@/components/shared/states/ErrorState";
+import { ErrorStateInline } from "@/components/empty/ErrorStateInline";
 import EmptyState from "@/components/empty/EmptyState";
 import { Lock } from "lucide-react";
 
@@ -32,7 +33,7 @@ export default function EditarCotizacion() {
   const { data: clientes = [] } = useClientesForSelect();
   const { data: cotizacion, isLoading, isError, refetch } = useCotizacion(id);
   useRegisterBreadcrumbLabel(id, cotizacion?.folio);
-  const { data: costos, isLoading: costosLoading } = useCotizacionCostos(id);
+  const { data: costos, isLoading: costosLoading, isError: costosError, isFetching: costosFetching, refetch: refetchCostos } = useCotizacionCostos(id);
 
   if (isLoading || costosLoading) {
     return <PageContainer><DetailSkeleton sections={1} /></PageContainer>;
@@ -42,6 +43,18 @@ export default function EditarCotizacion() {
     return (
       <PageContainer>
         <ErrorState onRetry={() => void refetch()} />
+      </PageContainer>
+    );
+  }
+
+  if (costosError && !costos) {
+    return (
+      <PageContainer>
+        <ErrorState
+          title="No se pudieron cargar los costos"
+          description="Reintenta para abrir la cotización con todos sus costos. No se ha modificado ningún dato."
+          onRetry={() => void refetchCostos()}
+        />
       </PageContainer>
     );
   }
@@ -68,14 +81,24 @@ export default function EditarCotizacion() {
 
 
   return (
-    <EditarCotizacionForm
-      cotizacion={cotizacion}
-      costos={costos ?? []}
-      clientes={clientes}
-      navigate={navigate}
-      toast={toast}
-      userEmail={user?.email ?? ""}
-    />
+    <>
+      {costosError && (
+        <ErrorStateInline
+          title="No se pudieron actualizar los costos"
+          message="Tu captura se conserva. Reintenta para comprobar la información disponible."
+          onRetry={() => void refetchCostos()}
+          retrying={costosFetching}
+        />
+      )}
+      <EditarCotizacionForm
+        cotizacion={cotizacion}
+        costos={costos ?? []}
+        clientes={clientes}
+        navigate={navigate}
+        toast={toast}
+        userEmail={user?.email ?? ""}
+      />
+    </>
   );
 }
 

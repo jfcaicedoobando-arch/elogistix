@@ -32,6 +32,7 @@ import { eliminarEmbarqueRpc } from "@/features/embarques/services";
 import { useCreateEmbarque } from "../useCreateEmbarque";
 import { useUpdateEmbarque } from "../useUpdateEmbarque";
 import { useEliminarEmbarque } from "../useDeleteEmbarque";
+import { useCreateNotaEmbarque } from "../useNotaEmbarque";
 import { queryKeys } from "@/lib/query";
 
 // v13.137.41: registramos cada QueryClient creado para limpiarlo en
@@ -61,6 +62,18 @@ function makeWrapper() {
     React.createElement(QueryClientProvider, { client: qc, children });
   return { qc, wrapper, spy };
 }
+
+describe("useCreateNotaEmbarque", () => {
+  it("marca para recarga la actividad del embarque aunque Notas esté desmontada", async () => {
+    const { qc, wrapper } = makeWrapper();
+    qc.setQueryData(queryKeys.embarques.actividad("emb-1"), []);
+    qc.setQueryData(queryKeys.embarques.actividad("emb-2"), []);
+    const { result } = renderHook(() => useCreateNotaEmbarque(), { wrapper });
+    await result.current.mutateAsync({ embarqueId: "emb-1", contenido: "Cita confirmada", usuario: "op@example.com" });
+    expect(qc.getQueryState(queryKeys.embarques.actividad("emb-1"))?.isInvalidated).toBe(true);
+    expect(qc.getQueryState(queryKeys.embarques.actividad("emb-2"))?.isInvalidated).toBe(false);
+  });
+});
 
 describe("useCreateEmbarque", () => {
   it("crea el embarque y NO llama crearMuchos cuando no hay contenedores", async () => {

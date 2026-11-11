@@ -5,7 +5,7 @@
  * Mes pasado, Este trimestre, Ejercicio, Todo) y aplica el rango sobre
  * `useFacturacionDateRange` (que ya sincroniza con la URL).
  *
- * NO bloquea captura ni valida cierre contable — es sólo filtro visual.
+ * Filtra por fecha de emisión exclusivamente el historial de Emitidas.
  * El cierre "duro" de período fiscal quedó fuera de alcance por
  * decisión de producto.
  */
@@ -87,10 +87,10 @@ export function PeriodoFiscalSelector({ desdeIso, hastaIso, onChange }: Props) {
   };
 
   return (
-    <div className="flex items-center gap-2">
+    <div className="flex min-w-0 items-center gap-2">
       <Calendar className="h-4 w-4 text-muted-foreground" aria-hidden />
       <Select value={preset} onValueChange={handleChange}>
-        <SelectTrigger className="h-8 w-[190px] text-body">
+        <SelectTrigger className="h-9 w-full sm:w-[220px] text-body" aria-label="Período de emisión de facturas">
           <SelectValue />
         </SelectTrigger>
         <SelectContent>

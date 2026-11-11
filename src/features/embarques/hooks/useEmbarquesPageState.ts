@@ -1,4 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
+import { useEffect } from "react";
 import { SORT_KEY_TO_COLUMN } from "@/features/embarques/services/queries";
 import { useOrgFilter } from "@/hooks/shared";
 import { useEmbarquesFilters } from "@/features/embarques/hooks/useEmbarquesFilters";
@@ -26,7 +27,7 @@ export function useEmbarquesPageState() {
 
   const { data: alertasResumen, isError: alertasError, refetch: refetchAlertas } =
     useEmbarquesAlertasResumen();
-  const { data, isLoading, isError, refetch } = useQuery({
+  const { data, isLoading, isError, isSuccess, isPlaceholderData, refetch } = useQuery({
     ...embarqueQueries.list({
       organizationId, search: debouncedSearch, filterModo, filterEstado, filterCliente,
       filterOperador, filterAlerta, fechaDesde, fechaHasta, page, pageSize,
@@ -37,6 +38,11 @@ export function useEmbarquesPageState() {
 
   const embarques = data?.data ?? SIN_FILAS;
   const totalCount = data?.count ?? 0;
+  const totalPages = Math.max(1, Math.ceil(totalCount / pageSize));
+  const paginaFueraDeRango = isSuccess && !isPlaceholderData && page >= totalPages;
+  useEffect(() => {
+    if (paginaFueraDeRango) void setPageRaw(totalPages === 1 ? null : totalPages - 1);
+  }, [paginaFueraDeRango, totalPages, setPageRaw]);
   const sinFiltros = computeSinFiltros({
     debouncedSearch, filterModo, filterEstado, filterCliente, filterOperador,
     filterAlerta, fechaDesde, fechaHasta,
@@ -50,8 +56,8 @@ export function useEmbarquesPageState() {
     fechaDesde, fechaHasta, page, pageSize, debouncedSearch, sortKey, sortDir, setSearch,
     ...actions,
     embarques, filtered: embarques, totalCount, expedientesCount: totalCount,
-    totalPages: Math.max(1, Math.ceil(totalCount / pageSize)),
-    isLoading: !orgListo || isLoading,
+    totalPages,
+    isLoading: !orgListo || isLoading || paginaFueraDeRango,
     isError, refetch,
     isEmptyState: !!data && !isError && totalCount === 0 && sinFiltros,
     contenedoresPorExpediente: data?.filasPorExpediente ?? SIN_EXPEDIENTES,

@@ -23,13 +23,13 @@ describe("fetchLayoutContableData", () => {
   it("consulta facturas + clientes y arma map de RFC por cliente_id", async () => {
     mock.setTableResult("facturas", {
       data: [
-        { numero: "F1", fecha_emision: "2026-01-01", subtotal: 100, iva: 16, total: 116,
+        { id: "f1", numero: "F1", fecha_emision: "2026-01-01", subtotal: 100, iva: 16, total: 116,
           moneda: "MXN", tipo_cambio: null, expediente: "E1", referencia_bl: null,
           estado: "Emitida", cliente_id: "cl1", cliente_nombre: "A" },
-        { numero: "F2", fecha_emision: "2026-01-02", subtotal: 200, iva: 32, total: 232,
+        { id: "f2", numero: "F2", fecha_emision: "2026-01-02", subtotal: 200, iva: 32, total: 232,
           moneda: "MXN", tipo_cambio: null, expediente: "E2", referencia_bl: null,
           estado: "Emitida", cliente_id: "cl1", cliente_nombre: "A" },
-        { numero: "F3", fecha_emision: "2026-01-03", subtotal: 50, iva: 8, total: 58,
+        { id: "f3", numero: "F3", fecha_emision: "2026-01-03", subtotal: 50, iva: 8, total: 58,
           moneda: "USD", tipo_cambio: 17, expediente: "E3", referencia_bl: "BL",
           estado: "Emitida", cliente_id: null, cliente_nombre: "—" },
       ],
@@ -47,7 +47,7 @@ describe("fetchLayoutContableData", () => {
 
   it("omite clientes con rfc nulo en el map", async () => {
     mock.setTableResult("facturas", {
-      data: [{ numero: "F", fecha_emision: "x", subtotal: 0, iva: 0, total: 0,
+      data: [{ id: "f1", numero: "F", fecha_emision: "x", subtotal: 0, iva: 0, total: 0,
         moneda: "MXN", tipo_cambio: null, expediente: "", referencia_bl: null,
         estado: "Emitida", cliente_id: "cl1", cliente_nombre: "" }],
       error: null,
@@ -62,7 +62,7 @@ describe("fetchLayoutContableData", () => {
 
   it("no consulta clientes si todas las facturas tienen cliente_id null", async () => {
     mock.setTableResult("facturas", {
-      data: [{ numero: "F", fecha_emision: "x", subtotal: 0, iva: 0, total: 0,
+      data: [{ id: "f1", numero: "F", fecha_emision: "x", subtotal: 0, iva: 0, total: 0,
         moneda: "USD", tipo_cambio: 17, expediente: "", referencia_bl: null,
         estado: "Emitida", cliente_id: null, cliente_nombre: "" }],
       error: null,
@@ -80,7 +80,7 @@ describe("fetchLayoutContableData", () => {
 
   it("propaga errores de clientes", async () => {
     mock.setTableResult("facturas", {
-      data: [{ numero: "F", fecha_emision: "x", subtotal: 0, iva: 0, total: 0,
+      data: [{ id: "f1", numero: "F", fecha_emision: "x", subtotal: 0, iva: 0, total: 0,
         moneda: "MXN", tipo_cambio: null, expediente: "", referencia_bl: null,
         estado: "Emitida", cliente_id: "cl1", cliente_nombre: "" }],
       error: null,
@@ -88,13 +88,34 @@ describe("fetchLayoutContableData", () => {
     mock.setTableResult("clientes", { data: null, error: new Error("cli") });
     await expect(fetchLayoutContableData(["f1"])).rejects.toThrow("cli");
   });
+
+  it("hidrata más de 1000 facturas en lotes y conserva el orden solicitado", async () => {
+    const ids = Array.from({ length: 1001 }, (_, i) => `f${i}`);
+    for (let offset = 0; offset < ids.length; offset += 250) {
+      mock.setTableResultOnce("facturas", {
+        data: ids.slice(offset, offset + 250).reverse().map((id) => ({ id, numero: id, cliente_id: null, moneda: "USD", total: 123.45 })),
+        error: null,
+      });
+    }
+    const result = await fetchLayoutContableData(ids);
+    expect(result.facturas.map((f) => f.numero)).toEqual(ids);
+    expect(result.facturas[1000]).toMatchObject({ total: 123.45, moneda: "USD" });
+    const calls = mock.tableCalls.filter((c) => c.table === "facturas");
+    expect(calls).toHaveLength(5);
+    expect(calls.every((c) => (c.opArgs[c.ops.indexOf("in")][1] as string[]).length <= 250)).toBe(true);
+  });
+
+  it("rechaza datos incompletos en vez de generar un layout parcial", async () => {
+    mock.setTableResult("facturas", { data: [{ id: "f1", numero: "F1", cliente_id: null }], error: null });
+    await expect(fetchLayoutContableData(["f1", "f2"])).rejects.toThrow("todas las facturas del layout");
+  });
 });
 
 describe("fetchEstadoCuentaFacturas", () => {
   it("filtra por cliente_id + estados vivos, calcula saldo y ordena asc por fecha_emision", async () => {
     mock.setTableResult("facturas", {
       data: [
-        { numero: "F1", fecha_emision: "2026-01-01", fecha_vencimiento: "2026-02-01",
+        { id: "f1", numero: "F1", fecha_emision: "2026-01-01", fecha_vencimiento: "2026-02-01",
           total: 100, moneda: "MXN", estado: "Emitida", expediente: "E1" },
       ],
       error: null,

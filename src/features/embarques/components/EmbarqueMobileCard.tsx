@@ -42,8 +42,8 @@ export function EmbarqueMobileCard({ embarque: e }: { embarque: EmbarqueMobileCa
         </div>
         <div className="text-label text-muted-foreground truncate mt-0.5">
           {shortName(getOrigen(e))} → {shortName(getDestino(e))}
-          {e.eta ? ` · ETA ${formatDate(e.eta)}` : ""}
         </div>
+        <div className="mt-1 text-body-sm">ETA: {e.eta ? formatDate(e.eta) : "Por definir"}</div>
       </div>
       <StatusBadge domain="embarque" status={estado} className="text-2xs" />
     </div>

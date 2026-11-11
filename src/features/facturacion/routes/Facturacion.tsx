@@ -23,7 +23,6 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { PageContainer } from "@/components/shared/PageContainer";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { DashboardEjecutivoFacturacion } from "@/features/facturacion/components/DashboardEjecutivoFacturacion";
-import { PeriodoFiscalSelector } from "@/features/facturacion/components/PeriodoFiscalSelector";
 import { FacturacionDialogs } from "@/features/facturacion/components/FacturacionDialogs";
 import { FacturacionBandejasTabs } from "@/features/facturacion/components/bandejas/FacturacionBandejasTabs";
 import type { BandejaId } from "@/features/facturacion/components/bandejas/BandejaTabs";
@@ -60,7 +59,7 @@ export default function Facturacion() {
   const { canEmitirFactura } = usePermissions();
   const [openFacturaManual, setOpenFacturaManual] = useState(false);
 
-  const { setRango, limpiar, isInRange, desdeIso, hastaIso } = useFacturacionDateRange();
+  const { setRango, limpiar, desdeIso, hastaIso } = useFacturacionDateRange();
 
   const bandejaUrlRaw = searchParams.get("bandeja");
   const bandejaAliased = bandejaUrlRaw && BANDEJA_ALIASES[bandejaUrlRaw]
@@ -81,8 +80,7 @@ export default function Facturacion() {
     const d = new Date(`${iso}T00:00:00`);
     return Number.isNaN(d.getTime()) ? null : d;
   };
-  // Los filtros de fecha son client-side sobre la página cargada: al cambiarlos
-  // hay que volver a la página 0 o el usuario queda en una página fuera de rango.
+  // Cambiar el universo filtrado vuelve siempre a su primera página.
   const setFechaDesde = (v: string) => { setRango({ desde: v ? parseIso(v) : null }); setPage(0); };
   const setFechaHasta = (v: string) => { setRango({ hasta: v ? parseIso(v) : null }); setPage(0); };
 
@@ -95,8 +93,10 @@ export default function Facturacion() {
     errorFacturas,
     refetchFacturas,
     clientesDisponibles,
+    loadingClientes, errorClientes, refetchClientes, rangoInvalido,
+    exportando, exportDisabled,
     exportarFacturasCsv, exportarLayoutContable,
-  } = useFacturacionPageController({ isInRange, activeTab: activeBandeja });
+  } = useFacturacionPageController({ fechaDesde: desdeIso, fechaHasta: hastaIso, activeTab: activeBandeja });
 
   const clearFiltros = () => {
     setSearch(""); setFilter("estado", "todos"); setFilter("cliente", "todos"); limpiar(); setPage(0);
@@ -114,15 +114,9 @@ export default function Facturacion() {
             title="Facturación"
             description="Panel fiscal: CFDI, complemento de pagos (REP) y cartera de clientes"
           />
-          <div className="flex items-center gap-2 shrink-0">
-            <PeriodoFiscalSelector
-              desdeIso={desdeIso} hastaIso={hastaIso}
-              // Igual que los inputs manuales: un preset cambia el universo,
-              // así que hay que volver a la página 0 o el usuario cae en vacío.
-              onChange={(r) => { setRango(r); setPage(0); }}
-            />
+          <div className="flex w-full flex-wrap items-center gap-2 sm:w-auto">
             {canEmitirFactura && (
-              <Button onClick={() => setOpenFacturaManual(true)}>
+              <Button className="w-full sm:w-auto" onClick={() => setOpenFacturaManual(true)}>
                 <FilePlus2 className="h-4 w-4 mr-2" /> Nueva factura manual
               </Button>
             )}
@@ -144,6 +138,8 @@ export default function Facturacion() {
                 fechaDesde: desdeIso ?? "", setFechaDesde,
                 fechaHasta: hastaIso ?? "", setFechaHasta,
                 clientes: clientesDisponibles,
+                loadingClientes, errorClientes, refetchClientes, rangoInvalido,
+                setPeriodo: (r) => { setRango(r); setPage(0); },
                 onClear: clearFiltros,
               },
               tabla: {
@@ -160,6 +156,7 @@ export default function Facturacion() {
               acciones: {
                 exportarFacturasCsv,
                 exportarLayoutContable,
+                exportando, exportDisabled,
                 onCreateNew: () => setOpenFacturaManual(true),
               },
             }}

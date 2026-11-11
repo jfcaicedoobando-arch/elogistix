@@ -5,8 +5,16 @@ import {
   fetchFacturas,
   fetchFacturasListado,
 } from "@/features/facturacion/services";
+import { fetchFacturasClientes } from "../services/facturasCrud";
 
-;
+export function useFacturasClientes(enabled: boolean) {
+  const { organizationId } = useOrgFilter();
+  return useQuery({
+    queryKey: queryKeys.facturas.clientesListado(organizationId),
+    queryFn: () => fetchFacturasClientes(organizationId ?? null),
+    enabled,
+  });
+}
 
 export function useFacturas(opts: { enabled?: boolean } = {}) {
   const { organizationId } = useOrgFilter();
@@ -20,7 +28,7 @@ export function useFacturas(opts: { enabled?: boolean } = {}) {
 
 /**
  * P7 (v13.317.3) — Paginación server-side de la bandeja de Facturación.
- * Trae ≤`pageSize` filas por página vía RPC `facturas_listado`, con `count`
+ * Trae ≤`pageSize` filas por página vía RPC `facturas_listado_v2`, con `count`
  * total para calcular `totalPages` sin descargar todo.
  */
 export function useFacturasListado(opts: {
@@ -28,6 +36,9 @@ export function useFacturasListado(opts: {
   pageSize: number;
   search?: string;
   estado?: string;
+  clienteNombre?: string;
+  fechaDesde?: string;
+  fechaHasta?: string;
   enabled?: boolean;
 }) {
   const { organizationId } = useOrgFilter();
@@ -35,6 +46,9 @@ export function useFacturasListado(opts: {
     organizationId,
     search: opts.search ?? "",
     estado: opts.estado ?? "todos",
+    clienteNombre: opts.clienteNombre ?? "todos",
+    fechaDesde: opts.fechaDesde ?? "",
+    fechaHasta: opts.fechaHasta ?? "",
     page: opts.page,
     pageSize: opts.pageSize,
   };
@@ -45,11 +59,13 @@ export function useFacturasListado(opts: {
         organizationId: organizationId ?? null,
         search: opts.search,
         estado: opts.estado,
+        clienteNombre: opts.clienteNombre,
+        fechaDesde: opts.fechaDesde,
+        fechaHasta: opts.fechaHasta,
         page: opts.page,
         pageSize: opts.pageSize,
       }),
     enabled: opts.enabled ?? true,
-    placeholderData: keepPreviousData,
   });
 }
 

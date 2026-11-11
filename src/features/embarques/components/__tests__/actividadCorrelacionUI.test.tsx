@@ -4,15 +4,17 @@ import { TabNotas } from '../TabNotas';
 import { TrackingNuevoEventoForm } from '../tracking/TrackingNuevoEventoForm';
 import { ActividadItem } from '../ActividadItem';
 import { createWrapper } from '@/test/utils/queryWrapper';
+import { MemoryRouter } from 'react-router';
+import { useBorradorNotaEmbarque } from '../../hooks/useBorradorNotaEmbarque';
 
 const m = vi.hoisted(() => ({ nota: vi.fn(), audit: vi.fn(), rpc: vi.fn(), close: vi.fn() }));
 vi.mock('@/integrations/supabase/client', () => ({ supabase: { rpc: m.rpc } }));
 vi.mock('@/hooks/shared', () => ({ usePermissions: () => ({ canEdit: true }), useRegistrarActividad: () => ({ mutate: m.audit }) }));
 vi.mock('@/lib/contexts/AuthContext', () => ({ useAuth: () => ({ user: { email: 'coordinador@example.com' } }) }));
 vi.mock('@/features/embarques/hooks', () => ({
-  useCreateNotaEmbarque: () => ({ mutateAsync: m.nota, isPending: false }),
   useActividadEmbarque: () => ({ grupos: [], conteos: {}, categoria: 'todos', setCategoria: vi.fn(), items: [], isLoading: false, isError: false, refetch: vi.fn() }),
 }));
+vi.mock('../../hooks/mutations/useNotaEmbarque', () => ({ useCreateNotaEmbarque: () => ({ mutateAsync: m.nota }) }));
 vi.mock('../tracking/ActualizarEtaForm', () => ({ ActualizarEtaForm: ({ onSubmit }: { onSubmit: (v: { fecha: string; fuente: string }) => Promise<void> }) => <button onClick={() => void onSubmit({ fecha: '2026-11-20', fuente: 'Agente Ningbo' })}>Guardar ETA mock</button> }));
 vi.mock('@/lib/ui/appFeedback', () => ({ notifyError: vi.fn(), notifySuccess: vi.fn() }));
 
@@ -24,7 +26,11 @@ beforeEach(() => {
 });
 describe('correlación desde los callers reales', () => {
   it('la bitácora de UI usa el ID confirmado de la nota', async () => {
-    render(<TabNotas notas={[]} embarqueId="e1" expediente="ELIMP00011" />);
+    function Nota() {
+      const borrador = useBorradorNotaEmbarque('e1', 'ELIMP00011');
+      return <TabNotas notas={[]} embarqueId="e1" texto={borrador.texto} onTextoChange={borrador.setTexto} enviando={borrador.enviando} onEnviar={borrador.enviarNota} />;
+    }
+    render(<MemoryRouter><Nota /></MemoryRouter>);
     fireEvent.change(screen.getByPlaceholderText('Escribe una nota…'), { target: { value: 'Cita de entrega en Apodaca' } });
     await act(async () => { fireEvent.click(screen.getByRole('button', { name: 'Enviar nota' })); });
     await vi.waitFor(() => expect(m.audit).toHaveBeenCalledWith(expect.objectContaining({ detalles: { nota: 'Cita de entrega en Apodaca', notaId: id } })));

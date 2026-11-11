@@ -5,6 +5,7 @@
 import { createHash } from "node:crypto";
 import { huellaDefinicion, type indexarMigraciones } from "./replayMirror";
 import { normalizeSql } from "./replayMirrorSql";
+import { PATCH_0057, PATCH_0057_SHA256 } from "./replayMirrorDrizzle0057";
 
 export const PATCH_0035 = "0035_cotizacion_aceptada_hasta_confirmar_embarque.sql";
 const SOURCE_HASH = "9565c53c94e45d33bdf96242937dbaa0036dd7b122f0b7018739b0fe5128c277";
@@ -76,7 +77,10 @@ const REVIEWED_FORWARD_FIXES: ReadonlyArray<readonly [string, string]> = [
   ["0053_provision_membresia_atomica.sql", "4b519d836748bf04174aae1353f1ab160996904ff6d180b001e587c4b492231e"],
   ["0054_conteos_sidebar.sql", "3a3ffebc64c70e50b1619e24a2b7746975ff677477360d5b9fffe2ddee0ce1f8"],
   ["0055_embarques_paginacion_filtros.sql", "5cfc15700522c72741948cd7de594b9e573a1d0dbbd30a43cb67411be62ba9d1"],
-  ["0056_facturacion_bandejas_ligeras.sql", "454907329cdf6a2b40f3937ebc9b0b3980af07bb1c9326e88e39d7d5493bad62"]
+  ["0056_facturacion_bandejas_ligeras.sql", "454907329cdf6a2b40f3937ebc9b0b3980af07bb1c9326e88e39d7d5493bad62"],
+  // 0057 only changes the CRM policy literal; its separate bounded model runs later.
+  [PATCH_0057, PATCH_0057_SHA256],
+  ["0058_facturas_filtros_completos.sql", "9a584f1ea36f917ff14e39d0326ad3651776af845c5c6e1502120e5425cec360"]
 ];
 
 function verificarOrdenJournal(sources: ReadonlyMap<string, string>, journal: JournalEntry[]): void {

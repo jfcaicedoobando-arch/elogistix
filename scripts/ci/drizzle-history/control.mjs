@@ -47,6 +47,8 @@ export const HISTORY = [
   { file: '0054_conteos_sidebar.sql', sha256: '3a3ffebc64c70e50b1619e24a2b7746975ff677477360d5b9fffe2ddee0ce1f8', eligibleName: '20261111153000_conteos_sidebar.sql' },
   { file: '0055_embarques_paginacion_filtros.sql', sha256: '5cfc15700522c72741948cd7de594b9e573a1d0dbbd30a43cb67411be62ba9d1', eligibleName: '20261111160000_embarques_paginacion_filtros.sql' },
   { file: '0056_facturacion_bandejas_ligeras.sql', sha256: '454907329cdf6a2b40f3937ebc9b0b3980af07bb1c9326e88e39d7d5493bad62', eligibleName: '20261111162000_facturacion_bandejas_ligeras.sql' },
+  { file: '0057_pricing_vinculo_huella_rls_initplan.sql', sha256: '418eb056e2e30a488be88bf711259f462216fd1f16cb29feb1392237d5e5a7fd', eligibleName: '20261111181000_pricing_vinculo_huella_rls_initplan.sql' },
+  { file: '0058_facturas_filtros_completos.sql', sha256: '9a584f1ea36f917ff14e39d0326ad3651776af845c5c6e1502120e5425cec360', eligibleName: '20261111200000_facturas_filtros_completos.sql' },
 ];
 const ARCHIVED_METADATA = [
   [`${ARCHIVE}/meta/0022_snapshot.json`, '002a1cff39197fe3431f23193a4229e1c845cbcd0ab5eaa074efded812b0081d'],

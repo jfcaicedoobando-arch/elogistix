@@ -5,7 +5,7 @@
  */
 import { useMemo } from "react";
 import {
-  DndContext, PointerSensor, useSensor, useSensors, type DragEndEvent,
+  DndContext, KeyboardSensor, PointerSensor, useSensor, useSensors, type DragEndEvent,
 } from "@dnd-kit/core";
 import { AlertCircle } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
@@ -14,6 +14,7 @@ import { useProximasActividades, type ProximaActividad } from "@/features/crm/ho
 import { useAvanceCriterios } from "@/features/crm/hooks/useCriteriosEtapa";
 import ColumnaEtapa from "./kanban/ColumnaEtapa";
 import PipelineResumen from "./kanban/PipelineResumen";
+import { anunciosKanban, coordenadasEtapaTeclado, instruccionesKanban } from "./kanban/kanbanTeclado";
 import type { CrmOportunidadRow, CrmEtapaRow } from "@/features/crm/hooks";
 
 /**
@@ -57,7 +58,10 @@ interface Props {
 
 export default function OportunidadKanban({ etapas, oportunidades, onMover, onClickCard, onNuevo, puedeMover }: Props) {
   const puedeMoverOp = (op: CrmOportunidadRow) => (puedeMover ? puedeMover(op) : true);
-  const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 6 } }));
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 6 } }),
+    useSensor(KeyboardSensor, { coordinateGetter: coordenadasEtapaTeclado }),
+  );
   const ids = useMemo(() => oportunidades.map((o) => o.id), [oportunidades]);
   const { data: proximasMap, isPending, isFetching, isError, isPlaceholderData, refetch } = useProximasActividades("oportunidad", ids);
   const estadoProximas = isError ? "error" : isPending || isFetching || isPlaceholderData ? "cargando" : "listo";
@@ -127,7 +131,7 @@ export default function OportunidadKanban({ etapas, oportunidades, onMover, onCl
         <p className="sr-only" role="note">
           Desliza horizontalmente para ver más etapas
         </p>
-        <DndContext sensors={sensors} onDragEnd={handleDragEnd}>
+        <DndContext sensors={sensors} onDragEnd={handleDragEnd} accessibility={{ announcements: anunciosKanban, screenReaderInstructions: instruccionesKanban }}>
           <div
             className="kanban-scroll flex gap-3 overflow-x-auto overflow-y-visible pb-3 items-start snap-x"
             role="group"

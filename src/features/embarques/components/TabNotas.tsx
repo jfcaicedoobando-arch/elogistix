@@ -1,16 +1,11 @@
-import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { RefreshCw, Send } from "lucide-react";
 
-import { useAuth } from "@/lib/contexts/AuthContext";
 import { usePermissions } from "@/hooks/shared";
-import { useCreateNotaEmbarque, useActividadEmbarque } from "@/features/embarques/hooks";
-import { useRegistrarActividad } from "@/hooks/shared";
-import { getErrorMessage } from "@/lib/errors";
+import { useActividadEmbarque } from "@/features/embarques/hooks";
 import type { NotaEmbarqueRow } from "@/features/embarques/hooks";
-import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
 import { ActividadFeedTimeline } from "@/features/embarques/components/ActividadFeedTimeline";
 import { ActividadFiltros } from "@/features/embarques/components/ActividadFiltros";
 import { EmptyStateInline } from "@/components/empty/EmptyStateInline";
@@ -18,6 +13,10 @@ import { ErrorStateInline } from "@/components/empty/ErrorStateInline";
 import { MessageSquare } from "lucide-react";
 
 interface Props {
+  texto: string;
+  onTextoChange: (texto: string) => void;
+  enviando: boolean;
+  onEnviar: () => Promise<void>;
   notas: NotaEmbarqueRow[];
   embarqueId?: string;
   expediente?: string | null;
@@ -25,43 +24,11 @@ interface Props {
   creadoEn?: string | null;
 }
 
-export function TabNotas({ embarqueId, expediente }: Props) {
-  const [texto, setTexto] = useState("");
-  const { user } = useAuth();
+export function TabNotas({ embarqueId, texto, onTextoChange: setTexto, enviando, onEnviar }: Props) {
   const { canEdit } = usePermissions();
-  const crearNota = useCreateNotaEmbarque();
-  const registrarActividad = useRegistrarActividad();
 
   const { grupos, conteos, categoria, setCategoria, items, isLoading, isError, refetch } =
     useActividadEmbarque(embarqueId);
-
-  const handleSubmit = async () => {
-    if (!texto.trim() || !embarqueId) return;
-    try {
-      const notaId = await crearNota.mutateAsync({
-        embarqueId,
-        contenido: texto.trim(),
-        usuario: user?.email ?? "",
-      });
-      registrarActividad.mutate({
-        accion: "agregar_nota",
-        modulo: "embarques",
-        entidad_id: embarqueId,
-        entidad_nombre: expediente ?? "",
-        detalles: { nota: texto.trim(), notaId },
-      });
-      setTexto("");
-      refetch();
-      notifySuccess(undefined, { title: "Nota agregada" });
-    } catch (err: unknown) {
-      notifyError(undefined, {
-        title: "Error al agregar nota",
-        description: getErrorMessage(err),
-        error: err,
-        method: "HANDLE_SUBMIT",
-      });
-    }
-  };
 
   return (
     <Card>
@@ -76,6 +43,8 @@ export function TabNotas({ embarqueId, expediente }: Props) {
           <div className="flex gap-2">
             <Textarea
               placeholder="Escribe una nota…"
+              aria-label="Nueva nota del embarque"
+              disabled={enviando}
               value={texto}
               onChange={(e) => setTexto(e.target.value)}
               className="min-h-16"
@@ -83,12 +52,12 @@ export function TabNotas({ embarqueId, expediente }: Props) {
             <Button
               size="icon"
               className="shrink-0 self-end"
-              onClick={handleSubmit}
+              onClick={() => void onEnviar()}
               aria-label="Enviar nota"
-              disabled={!texto.trim() || crearNota.isPending}
-              loading={crearNota.isPending}
+              disabled={!texto.trim() || enviando}
+              loading={enviando}
             >
-              {!crearNota.isPending && <Send className="h-4 w-4" />}
+              {!enviando && <Send className="h-4 w-4" />}
             </Button>
           </div>
         )}

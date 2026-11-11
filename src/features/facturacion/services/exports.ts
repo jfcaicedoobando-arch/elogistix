@@ -32,32 +32,40 @@ export interface LayoutContableData {
 }
 
 /**
- * Carga las facturas indicadas + el RFC de sus clientes en una sola operación.
+ * Carga las facturas indicadas + el RFC de sus clientes en lotes acotados.
  * Devuelve un DTO listo para que el generador CSV mapee filas sin hacer I/O.
  */
 export async function fetchLayoutContableData(facturaIds: string[]): Promise<LayoutContableData> {
   if (facturaIds.length === 0) return { facturas: [], rfcByClienteId: new Map() };
 
-  const { data: rows, error } = await supabase
-    .from("facturas")
-    .select(
-      "numero, fecha_emision, subtotal, iva, total, moneda, tipo_cambio, expediente, referencia_bl, estado, cliente_id, cliente_nombre",
-    )
-    .in("id", facturaIds)
-    .is("deleted_at", null);
-  if (error) throw error;
-
-  const facturas = (rows ?? []) as LayoutContableRow[];
+  const ids = [...new Set(facturaIds)];
+  const facturas: LayoutContableRow[] = [];
+  const batchSize = 250;
+  for (let offset = 0; offset < ids.length; offset += batchSize) {
+    const batch = ids.slice(offset, offset + batchSize);
+    const { data: rows, error } = await supabase
+      .from("facturas")
+      .select("id, numero, fecha_emision, subtotal, iva, total, moneda, tipo_cambio, expediente, referencia_bl, estado, cliente_id, cliente_nombre")
+      .in("id", batch)
+      .is("deleted_at", null);
+    if (error) throw error;
+    const byId = new Map((rows ?? []).map((row) => [row.id, row]));
+    if (batch.some((id) => !byId.has(id))) {
+      throw new Error("No se pudieron cargar todas las facturas del layout. Actualiza el listado e inténtalo de nuevo.");
+    }
+    // Mantiene el mismo orden que el listado, independientemente del orden del IN.
+    facturas.push(...batch.map((id) => byId.get(id)!));
+  }
   const clienteIds = Array.from(
     new Set(facturas.map((r) => r.cliente_id).filter((x): x is string => !!x)),
   );
 
   const rfcByClienteId = new Map<string, string>();
-  if (clienteIds.length > 0) {
+  for (let offset = 0; offset < clienteIds.length; offset += batchSize) {
     const { data: clientes, error: cErr } = await supabase
       .from("clientes")
       .select("id, rfc")
-      .in("id", clienteIds)
+      .in("id", clienteIds.slice(offset, offset + batchSize))
       .is("deleted_at", null);
     if (cErr) throw cErr;
     for (const c of clientes ?? []) {

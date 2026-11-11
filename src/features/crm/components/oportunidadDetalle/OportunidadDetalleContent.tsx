@@ -51,6 +51,8 @@ export function OportunidadDetalleContent({ op, etapas }: Props) {
       cliente_nombre: op.cliente_nombre,
       origen: op.origen,
       destino: op.destino,
+      puerto_origen_id: op.puerto_origen_id,
+      puerto_destino_id: op.puerto_destino_id,
       etapa_id: op.etapa_id,
       modo: op.modo ?? "",
     },

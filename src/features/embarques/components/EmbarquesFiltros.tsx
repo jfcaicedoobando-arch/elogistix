@@ -86,11 +86,12 @@ export default function EmbarquesFiltros(props: Props) {
     onFechaDesdeChange(f.desde); onFechaHastaChange(f.hasta);
   };
 
-  const clearAll = () => {
+  const clearSecondary = () => {
     onFilterModoChange("todos"); onFilterEstadoChange("todos");
     onFilterClienteChange("todos"); onFilterOperadorChange("todos");
     onFechaDesdeChange(""); onFechaHastaChange("");
   };
+  const clearAll = () => { onSearchChange(""); clearSecondary(); };
 
   return (
     <UnifiedFiltersBar
@@ -100,6 +101,7 @@ export default function EmbarquesFiltros(props: Props) {
       chips={chips}
       activeCount={secondaryCount}
       onClearAll={clearAll}
+      onSheetClearAll={clearSecondary}
       snapshot={snapshot}
       restore={restore}
       primary={
@@ -158,11 +160,11 @@ export default function EmbarquesFiltros(props: Props) {
               </SelectContent>
             </Select>
           </FieldGroup>
-          <FieldGroup label={rangoLabel("ETD", "desde")}>
-            <DatePickerMx value={fechaDesde} onChange={onFechaDesdeChange} className="w-full" />
+          <FieldGroup label={rangoLabel("ETD", "desde")} htmlFor="embarques-etd-desde">
+            <DatePickerMx id="embarques-etd-desde" value={fechaDesde} onChange={onFechaDesdeChange} className="w-full" />
           </FieldGroup>
-          <FieldGroup label={rangoLabel("ETA", "hasta")}>
-            <DatePickerMx value={fechaHasta} onChange={onFechaHastaChange} className="w-full" />
+          <FieldGroup label={rangoLabel("ETA", "hasta")} htmlFor="embarques-eta-hasta">
+            <DatePickerMx id="embarques-eta-hasta" value={fechaHasta} onChange={onFechaHastaChange} className="w-full" />
           </FieldGroup>
         </div>
       }
@@ -170,10 +172,10 @@ export default function EmbarquesFiltros(props: Props) {
   );
 }
 
-function FieldGroup({ label, children }: { label: string; children: React.ReactNode }) {
+function FieldGroup({ label, htmlFor, children }: { label: string; htmlFor?: string; children: React.ReactNode }) {
   return (
     <div className="space-y-1.5">
-      <label className="text-body-sm font-medium text-muted-foreground">{label}</label>
+      <label htmlFor={htmlFor} className="text-body-sm font-medium text-muted-foreground">{label}</label>
       {children}
     </div>
   );

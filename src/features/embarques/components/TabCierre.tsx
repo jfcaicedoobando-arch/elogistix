@@ -22,6 +22,8 @@ import { CierreChecklistCard } from "./cierre/CierreChecklistCard";
 import { CierreHistorialCard } from "./cierre/CierreHistorialCard";
 import { CerrarEmbarqueDialog, ReabrirEmbarqueDialog } from "./cierre/CierreDialogs";
 import { CIERRE_PERMISO_COPY } from "./cierre/cierrePermisoCopy";
+import { ErrorStateInline } from "@/components/empty/ErrorStateInline";
+import { EmptyStateInline } from "@/components/empty/EmptyStateInline";
 
 // v13.89.2 — Etiquetas y mapeos ahora viven en `utils/cierreCheckMeta.ts`.
 
@@ -46,8 +48,8 @@ interface Props {
 
 // eslint-disable-next-line complexity
 export function TabCierre({ embarqueId, estatus, modo, expediente, docsRequeridos }: Props) {
-  const { data: validacion, isLoading } = useValidacionCierre(embarqueId);
-  const { data: log = [] } = useCierreLog(embarqueId);
+  const { data: validacion, isLoading, isError, isFetching, refetch } = useValidacionCierre(embarqueId);
+  const { data: log = [], isLoading: logLoading, isError: logError, refetch: refetchLog } = useCierreLog(embarqueId);
   const cerrarMut = useCerrarEmbarque(embarqueId);
   const reabrirMut = useReabrirEmbarque(embarqueId);
   const { canCerrarEmbarque, isAdmin, isSuperAdmin } = usePermissions();
@@ -62,7 +64,7 @@ export function TabCierre({ embarqueId, estatus, modo, expediente, docsRequerido
 
   const esCerrado = estatusNormalizado === "cerrado";
   const checks = validacion?.checks ?? [];
-  const todoOk = validacion?.puede_cerrar === true;
+  const todoOk = !isError && !isLoading && !isFetching && validacion?.puede_cerrar === true;
 
   return (
     <div className="space-y-6">
@@ -89,7 +91,11 @@ export function TabCierre({ embarqueId, estatus, modo, expediente, docsRequerido
         </Alert>
       ) : null}
 
-      <CierreChecklistCard isLoading={isLoading} checks={checks} embarqueId={embarqueId} expediente={expediente} informativo={esCerrado} sinComision={comisionEstado?.efectivo ?? false} sinRequisitosDocumentales={docsRequeridos === 0} />
+      {isError ? (
+        <ErrorStateInline message="No pudimos validar los requisitos de cierre. Reintenta para comprobar los pendientes." onRetry={() => void refetch()} />
+      ) : (
+        <CierreChecklistCard isLoading={isLoading} checks={checks} embarqueId={embarqueId} expediente={expediente} informativo={esCerrado} sinComision={comisionEstado?.efectivo ?? false} sinRequisitosDocumentales={docsRequeridos === 0} />
+      )}
 
       <div className="flex flex-wrap items-center gap-2">
         {!esCerrado && canCerrarEmbarque && (() => {
@@ -135,16 +141,20 @@ export function TabCierre({ embarqueId, estatus, modo, expediente, docsRequerido
         )}
       </div>
 
-      <CierreHistorialCard log={log} />
+      {logError ? (
+        <ErrorStateInline message="No pudimos cargar el historial de cierres." onRetry={() => void refetchLog()} />
+      ) : logLoading ? (
+        <EmptyStateInline loading message="Cargando historial de cierres…" />
+      ) : <CierreHistorialCard log={log} />}
 
       <CerrarEmbarqueDialog
         open={dlg.openCerrar}
         onOpenChange={dlg.setOpenCerrar}
         confirmText={dlg.confirmText}
         onConfirmTextChange={dlg.setConfirmText}
-        puedeConfirmar={dlg.puedeConfirmarCerrar}
+        puedeConfirmar={dlg.puedeConfirmarCerrar && todoOk && puedeCerrar}
         isPending={cerrarMut.isPending}
-        onConfirm={() => cerrarMut.mutate(undefined, { onSuccess: dlg.resetCerrar })}
+        onConfirm={() => { if (todoOk && puedeCerrar) cerrarMut.mutate(undefined, { onSuccess: dlg.resetCerrar }); }}
       />
 
       <ReabrirEmbarqueDialog

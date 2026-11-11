@@ -40,8 +40,9 @@ export function DialogAceptarCotizacion({
           <AlertDialogTitle>¿Aceptar esta cotización?</AlertDialogTitle>
           <AlertDialogDescription>
             {tieneOportunidad
-              ? "La cotización quedará como Aceptada y la oportunidad se cerrará como Ganada, con el monto de esta cotización y la fecha de hoy."
-              : "La cotización quedará como Aceptada y podrás crear el embarque desde aquí."}
+              ? "La cotización quedará como Aceptada y la oportunidad se cerrará como Ganada, con el monto de esta cotización y la fecha de hoy. Se preparará un embarque en borrador para revisión de Operaciones."
+              : "La cotización quedará como Aceptada y se preparará un embarque en borrador para revisión de Operaciones."}
+            {" La operación comenzará cuando se confirme el embarque. Si no se puede preparar el borrador automáticamente, podrás crearlo desde esta cotización."}
           </AlertDialogDescription>
         </AlertDialogHeader>
 

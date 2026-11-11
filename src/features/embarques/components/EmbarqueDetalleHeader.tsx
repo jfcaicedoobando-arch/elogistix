@@ -36,6 +36,7 @@ interface Props {
   onAbrirEliminar: () => void;
   onAbrirDuplicar: () => void;
   onNavigateTab: (tab: "documentos" | "tracking" | "cierre") => void;
+  confirmarSalida?: (accion: () => void) => void;
 }
 
 
@@ -43,7 +44,7 @@ export function EmbarqueDetalleHeader({
   embarque, embarqueId, estadoVisual, siguienteEstado, canEdit,
   trackingPending, tieneLinkActivo, onCompartirTracking, onRevocarTracking,
   onAbrirEliminar, onAbrirDuplicar,
-  onNavigateTab,
+  onNavigateTab, confirmarSalida,
 }: Props) {
 
   const volver = useVolver("/embarques");
@@ -72,7 +73,7 @@ export function EmbarqueDetalleHeader({
   return (
     <>
       <DetailHeader
-        backTo={volver}
+        backTo={() => confirmarSalida ? confirmarSalida(volver) : volver()}
         backLabel="Volver a Embarques"
         title={labelExpediente(embarque.expediente, embarque.id, embarque.estado)}
         badge={
@@ -113,6 +114,7 @@ export function EmbarqueDetalleHeader({
         }
         trailing={
           <EmbarqueDetalleHeaderActions
+            confirmarSalida={confirmarSalida}
             contexto={{
               expediente: labelExpediente(embarque.expediente, embarque.id, embarque.estado),
               estadoVisual, siguienteEstado, canEdit, embarqueId, etd: embarque.etd,

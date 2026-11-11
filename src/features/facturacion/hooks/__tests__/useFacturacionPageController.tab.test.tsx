@@ -10,6 +10,7 @@ const { useFacturasListadoMock } = vi.hoisted(() => ({ useFacturasListadoMock: v
 
 vi.mock("@/features/facturacion/hooks/useFacturas", () => ({
   useFacturasListado: (args: unknown) => useFacturasListadoMock(args),
+  useFacturasClientes: () => ({ data: [] }),
 }));
 vi.mock("@/hooks/shared", () => ({
   useListPageState: () => ({
@@ -20,6 +21,7 @@ vi.mock("@/hooks/shared", () => ({
   useRegistrarActividad: () => ({ mutate: vi.fn() }),
   useToast: () => ({ toast: vi.fn() }),
   usePermissions: () => ({ canEdit: true }),
+  useOrgFilter: () => ({ organizationId: "org" }),
 }));
 
 import { useFacturacionPageController } from "../useFacturacionPageController";
@@ -30,7 +32,7 @@ beforeEach(() => {
 });
 
 const run = (activeTab: string) =>
-  renderHook(() => useFacturacionPageController({ isInRange: () => true, activeTab }), {
+  renderHook(() => useFacturacionPageController({ activeTab }), {
     wrapper: createWrapper(),
   });
 
