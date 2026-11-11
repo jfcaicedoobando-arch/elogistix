@@ -4,6 +4,7 @@
  *
  * v13.629.1 — Las sub-filas viven en `OportunidadCard.parts.tsx`.
  */
+import { memo } from "react";
 import { useDraggable } from "@dnd-kit/core";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -76,13 +77,6 @@ export default function OportunidadCard({ op, onClick, proxima, estadoProximas =
     opacity: isDragging ? 0.4 : 1,
     cursor: arrastrable ? "grab" : "pointer",
   };
-  const { vencida, montoEstimado, montoMeta, semaforo, meta } = derivarDatosTarjeta(
-    op,
-    proxima,
-    avance,
-    esCerrada,
-  );
-
   return (
     <Card
       ref={setNodeRef}
@@ -96,43 +90,53 @@ export default function OportunidadCard({ op, onClick, proxima, estadoProximas =
       }}
       className="bg-card border border-border hover:border-primary/50 transition-colors"
     >
-      <CardContent className="p-3 space-y-1">
-        {/* E-14: nombre y cliente se truncan en tarjetas angostas; el texto
-            completo queda disponible en un tooltip accesible. */}
-        <Hint label={op.nombre}>
-          <div className="font-medium text-body line-clamp-2">{op.nombre}</div>
-        </Hint>
-        <EtiquetaEmpresaEliminada oportunidadId={op.id} />
-        <EtiquetaSolicitudRespondida oportunidadId={op.id} />
-        {op.cliente_nombre ? (
-          <Hint label={op.cliente_nombre}>
-            <div className="text-body-sm text-muted-foreground line-clamp-1">{op.cliente_nombre}</div>
-          </Hint>
-        ) : null}
-        <div className="flex items-center justify-between pt-1">
-          <span className="text-body-sm font-semibold">{formatCurrencyCompact(montoEstimado, op.moneda)}</span>
-          <Badge variant="secondary" className="text-label h-5 px-1.5">{op.probabilidad}%</Badge>
-        </div>
-
-        {semaforo !== "sin_criterios" && avance ? (
-          <CriteriosRow avance={avance} completo={semaforo === "completo"} />
-        ) : null}
-
-        {meta.tieneMeta ? (
-          <MetaRow
-            vencida={Boolean(meta.metaVencida)}
-            fechaMeta={op.fecha_meta_cierre ?? null}
-            avance={meta.avance ?? null}
-            montoMeta={montoMeta}
-            moneda={op.moneda}
-          />
-        ) : null}
-
-        <ProximaRow
-          texto={formatProx(proxima, estadoProximas)}
-          vencida={vencida}
-        />
-      </CardContent>
+      <ContenidoTarjeta op={op} proxima={proxima} estadoProximas={estadoProximas} avance={avance} esCerrada={esCerrada} />
     </Card>
   );
 }
+
+const ContenidoTarjeta = memo(function ContenidoTarjeta({
+  op, proxima, estadoProximas = "listo", avance, esCerrada,
+}: Pick<Props, "op" | "proxima" | "estadoProximas" | "avance" | "esCerrada">) {
+  const { vencida, montoEstimado, montoMeta, semaforo, meta } =
+    derivarDatosTarjeta(op, proxima, avance, esCerrada);
+  return (
+    <CardContent className="p-3 space-y-1">
+      {/* E-14: nombre y cliente se truncan en tarjetas angostas; el texto
+          completo queda disponible en un tooltip accesible. */}
+      <Hint label={op.nombre}>
+        <div className="font-medium text-body line-clamp-2">{op.nombre}</div>
+      </Hint>
+      <EtiquetaEmpresaEliminada oportunidadId={op.id} />
+      <EtiquetaSolicitudRespondida oportunidadId={op.id} />
+      {op.cliente_nombre ? (
+        <Hint label={op.cliente_nombre}>
+          <div className="text-body-sm text-muted-foreground line-clamp-1">{op.cliente_nombre}</div>
+        </Hint>
+      ) : null}
+      <div className="flex items-center justify-between pt-1">
+        <span className="text-body-sm font-semibold">{formatCurrencyCompact(montoEstimado, op.moneda)}</span>
+        <Badge variant="secondary" className="text-label h-5 px-1.5">{op.probabilidad}%</Badge>
+      </div>
+
+      {semaforo !== "sin_criterios" && avance ? (
+        <CriteriosRow avance={avance} completo={semaforo === "completo"} />
+      ) : null}
+
+      {meta.tieneMeta ? (
+        <MetaRow
+          vencida={Boolean(meta.metaVencida)}
+          fechaMeta={op.fecha_meta_cierre ?? null}
+          avance={meta.avance ?? null}
+          montoMeta={montoMeta}
+          moneda={op.moneda}
+        />
+      ) : null}
+
+      <ProximaRow
+        texto={formatProx(proxima, estadoProximas)}
+        vencida={vencida}
+      />
+    </CardContent>
+  );
+});
