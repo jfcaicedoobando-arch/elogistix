@@ -36,7 +36,7 @@ export async function fetchBandejaConteos(orgId: string): Promise<BandejaConteos
     supabase.rpc("cobranza_conteo_vencidas", { p_organization_id: orgId }),
     supabase
       .from("pagos_factura")
-      .select("id", { count: "exact", head: true })
+      .select("id, facturas!inner(id)", { count: "exact", head: true })
       .eq("organization_id", orgId)
       .in("estado_rep", ["Pendiente", "Error"])
       .is("deleted_at", null),

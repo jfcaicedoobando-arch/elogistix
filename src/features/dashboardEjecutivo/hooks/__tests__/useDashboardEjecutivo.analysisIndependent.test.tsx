@@ -8,8 +8,8 @@ vi.mock('@/features/profit/hooks/useFuenteEerr', () => ({ useFuenteEerr: () => (
 vi.mock('@/features/facturacion/hooks', () => ({ useCobranza: () => ({ data: [{ moneda: 'MXN' }], isLoading: false,
   isFetching: false, error: state.dependencyError, refetch: vi.fn() }) }));
 vi.mock('@/features/cxp/hooks', () => ({ useFacturasCxP: () => ({ data: [], isLoading: false, isFetching: false, error: null, refetch: vi.fn() }) }));
-vi.mock('@/features/dashboardEjecutivo/services', () => ({ fetchDashboardEjecutivo: state.fetch }));
-vi.mock('@/features/tesoreria/services', () => ({ fetchSaldosCuentas: state.bank }));
+vi.mock('@/features/dashboardEjecutivo/services', () => ({ fetchFuentesDashboardEjecutivo: state.fetch, construirSnapshotEjecutivo: ({ fuentes, financialAnalysis }: Parameters<typeof import("../../services/snapshot").construirSnapshotEjecutivo>[0]) => ({ periodo: fuentes.periodo, financialAnalysis }) }));
+vi.mock('@/features/tesoreria/services', () => ({ fetchSaldosCuentas: state.bank, fetchLiquidacionesPendientes: vi.fn(async () => []) }));
 vi.mock('@/hooks/shared/useDiaNegocio', () => ({ useDiaNegocio: () => '2026-10-13' }));
 import { useDashboardEjecutivo } from '../useDashboardEjecutivo';
 const bankRows = [{ id: 'mock-bank', alias: 'mock', banco: 'mock', moneda: 'USD', saldo: 100 }];
@@ -26,12 +26,12 @@ describe('independent review · analysis availability is independent of EERR', (
     expect(result.current.financialAnalysis?.comparisonPeriods).toHaveLength(3);
     expect(result.current.financialAnalysisError).toBeNull();
   });
-  it('does not wait for a pending EERR and reuses the bank read in the snapshot', async () => {
+  it('does not wait for a pending EERR or pass the balance into its query', async () => {
     state.fetch.mockImplementation(() => new Promise(() => {}));
     const { result } = renderHook(() => useDashboardEjecutivo('2026-09'), { wrapper: createWrapper() });
     await waitFor(() => expect(result.current.financialAnalysis?.numericEligible).toBe(false));
     expect(result.current.isLoading).toBe(true);
-    expect(state.fetch).toHaveBeenCalledWith(expect.objectContaining({ cuentas: bankRows }));
+    expect(state.fetch).toHaveBeenCalledWith({ organizationId: 'mock-a', periodo: '2026-09', fuente: 'facturas' });
     expect(state.bank).toHaveBeenCalledTimes(1);
   });
   it('source changes do not refetch banks, alter diagnostics or restore legacy values', async () => {
@@ -63,7 +63,7 @@ describe('independent review · analysis availability is independent of EERR', (
     await waitFor(() => expect(result.current.financialAnalysis?.organizationId).toBe('mock-b'));
     expect(result.current.financialAnalysis?.currencies.map(row => row.currency)).toEqual(['EUR', 'MXN']);
   });
-  it('retries a failed bank source without running a snapshot with missing accounts', async () => {
+  it('retries a failed bank source before loading the EERR sources', async () => {
     state.bank.mockRejectedValueOnce(new Error('bank unavailable')).mockResolvedValue(bankRows);
     const { result } = renderHook(() => useDashboardEjecutivo('2026-09'), { wrapper: createWrapper() });
     await waitFor(() => expect(result.current.financialAnalysisError).not.toBeNull());
@@ -72,7 +72,7 @@ describe('independent review · analysis availability is independent of EERR', (
     await waitFor(() => expect(result.current.financialAnalysis?.numericEligible).toBe(false));
     expect(state.bank).toHaveBeenCalledTimes(2);
     expect(state.fetch).toHaveBeenCalledTimes(1);
-    expect(state.fetch).toHaveBeenCalledWith(expect.objectContaining({ cuentas: bankRows }));
+    expect(state.fetch).toHaveBeenCalledWith({ organizationId: 'mock-a', periodo: '2026-09', fuente: 'facturas' });
   });
 
 });

@@ -64,8 +64,7 @@ export function useCancelarRepController(
   const invalidarQueries = useCallback(() => {
     qc.invalidateQueries({ queryKey: queryKeys.facturas.all });
     qc.invalidateQueries({ queryKey: queryKeys.facturas.pagos(facturaId) });
-    qc.invalidateQueries({ queryKey: queryKeys.facturacion.bandejaRepsHistorico() });
-    qc.invalidateQueries({ queryKey: queryKeys.facturacion.bandejaRepPendientes() });
+    qc.invalidateQueries({ queryKey: queryKeys.facturacion.bandejaPrefix() });
   }, [qc, facturaId]);
 
   const confirmar = useCallback(async (): Promise<ResultadoCancelacionRep> => {

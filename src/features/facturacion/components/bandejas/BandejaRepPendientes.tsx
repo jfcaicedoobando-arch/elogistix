@@ -9,7 +9,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { ReceiptText } from "lucide-react";
 import { ResponsiveDataTable } from "@/components/shared/dataTable/ResponsiveDataTable";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { useClientPagedList } from "@/hooks/shared/useClientPagedList";
+import { useOrgFilter } from "@/hooks/shared";
 import { useRowSelection } from "@/components/shared/dataTable/useRowSelection";
 import { buildSelectionColumn } from "@/components/shared/dataTable/buildSelectionColumn";
 import { usePagosRepPendientes, type FilaRepPendiente } from "@/features/facturacion/hooks/useBandejas";
@@ -22,11 +22,13 @@ import { formatCurrency, formatDate, toTitleCase } from "@/lib/formatters";
 import { ReceiptText as ReceiptIcon } from "lucide-react";
 import { buildRepPendientesColumns } from "./bandejaRepColumns";
 
-interface Filters extends Record<string, string> { estado: string }
-const DEFAULTS: Filters = { estado: "todos" };
-
 export function BandejaRepPendientes() {
-  const { data, isLoading, isError, refetch } = usePagosRepPendientes();
+  const { organizationId } = useOrgFilter();
+  return <BandejaRepPendientesContenido key={organizationId} organizationId={organizationId} />;
+}
+
+function BandejaRepPendientesContenido({ organizationId }: { organizationId: string | null }) {
+  const paged = usePagosRepPendientes(organizationId);
   const selection = useRowSelection();
   const { timbrar, enProceso, progreso } = useTimbrarRepsLote();
   const [pagoEnProceso, setPagoEnProceso] = useState<string | null>(null);
@@ -42,7 +44,7 @@ export function BandejaRepPendientes() {
 
   const timbrarSeleccion = async () => {
     const ids = [...selection.selectedIds];
-    if (ids.length === 0) return;
+    if (ids.length === 0 || paged.isStaleView) return;
     await timbrar(ids);
     selection.clear();
   };
@@ -59,28 +61,10 @@ export function BandejaRepPendientes() {
     [pagoEnProceso, enProceso, timbrarUno],
   );
 
-  const paged = useClientPagedList<FilaRepPendiente, Filters>({
-    data,
-    isLoading,
-    defaultFilters: DEFAULTS,
-    filterLabels: { estado: "Estado REP" },
-    defaultSort: { key: "fecha_pago", dir: "desc" },
-    searchAccessor: (r) => `${r.factura_numero} ${r.cliente_nombre}`,
-    filterPredicate: (r, ff) => ff.estado === "todos" || r.estado_rep === ff.estado,
-    sorters: {
-      factura: (a, b) => a.factura_numero.localeCompare(b.factura_numero),
-      cliente: (a, b) => a.cliente_nombre.localeCompare(b.cliente_nombre),
-      fecha_pago: (a, b) => a.fecha_pago.localeCompare(b.fecha_pago),
-      monto: (a, b) => a.monto - b.monto,
-      estado: (a, b) => a.estado_rep.localeCompare(b.estado_rep),
-    },
-  });
-  const totalCount = data?.length ?? 0;
-
   return (
     <BandejaShell
-      isError={isError}
-      onRetry={() => refetch()}
+      isError={Boolean(paged.error)}
+      onRetry={() => paged.refetch()}
       search={paged.search}
       onSearchChange={paged.setSearch}
       searchPlaceholder="Buscar factura o cliente…"
@@ -99,11 +83,14 @@ export function BandejaRepPendientes() {
           </SelectContent>
         </Select>
       }
-      counter={<>Mostrando <strong className="text-foreground">{paged.filteredCount}</strong> de {totalCount} complementos pendientes</>}
+      counter={paged.isStaleView ? "Actualizando…" : !paged.isLoading && !paged.error && (
+        <>Mostrando <strong className="text-foreground">{paged.rows.length}</strong> de {paged.count} complementos pendientes</>
+      )}
     >
       <BandejaRepAcciones
         seleccionados={selection.selectedCount}
         enProceso={enProceso}
+        deshabilitado={paged.isStaleView}
         progreso={progreso}
         onTimbrar={() => void timbrarSeleccion()}
         onLimpiar={selection.clear}
@@ -112,8 +99,8 @@ export function BandejaRepPendientes() {
         <CardContent className="p-0">
           <ResponsiveDataTable
             columns={columns}
-            data={paged.rows}
-            isLoading={paged.isLoading}
+            data={paged.isStaleView ? [] : paged.rows}
+            isLoading={paged.isLoading || paged.isStaleView}
             emptyState={
               <div className="flex flex-col items-center justify-center gap-2 py-12 text-center text-body text-muted-foreground px-4">
                 <ReceiptText className="h-8 w-8 opacity-40" strokeWidth={1.5} />
@@ -127,7 +114,7 @@ export function BandejaRepPendientes() {
             onRowSelectionChange={selection.onRowSelectionChange}
             sortMode="server"
             controlledSort={paged.controlledSort}
-            onSortChange={paged.setSort}
+            onSortChange={(key, dir) => { paged.setPage(0); paged.setSort(key, dir); }}
             pagination={paged.pagination}
             mobileCard={(r) => (
               <div className="flex items-start justify-between gap-2">

@@ -2,6 +2,8 @@ export const comisiones = {
   all: ["comisiones"] as const,
   devengadas: (filtros?: unknown) => ["comisiones", "devengadas", filtros ?? null] as const,
   liquidaciones: (filtros?: unknown) => ["comisiones", "liquidaciones", filtros ?? null] as const,
+  liquidacionesPendientesTesoreria: (organizationId: string | null) =>
+    [...comisiones.liquidaciones(), "pendientes-tesoreria", organizationId] as const,
   liquidacion: (id: string) => ["comisiones", "liquidacion", id] as const,
   vendedorasConfig: (scope?: unknown) => ["comisiones", "vendedoras-config", ...(scope ? [scope] : [])] as const,
   embarquesSinVendedora: () => ["comisiones", "embarques-sin-vendedora"] as const,

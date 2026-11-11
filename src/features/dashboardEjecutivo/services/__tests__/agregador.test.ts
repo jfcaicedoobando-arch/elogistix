@@ -3,7 +3,7 @@
  *
  * Mockeamos todos los servicios upstream para verificar:
  * - que se invocan con los parámetros correctos (periodo actual, anterior, 12 meses),
- * - que `flujo` se resuelve DESPUÉS de `cuentas` (segunda fase),
+ * - que `flujo` se calcula con las cuentas y carteras provistas,
  * - que el snapshot final incluye kpis/alertas/top deudores/acreedores.
  */
 import { describe, it, expect, vi, beforeEach } from "vitest";
@@ -17,8 +17,8 @@ const fetchEstadoResultadosDevengado = vi.fn();
 const fetchEstadoResultadosDevengadoAnual = vi.fn();
 const fetchEstadoResultadosMes = vi.fn();
 const fetchSaldosCuentas = vi.fn();
-const fetchResumenTesoreria = vi.fn();
-const fetchFlujoProyectado = vi.fn();
+const calcularResumenTesoreria = vi.fn();
+const calcularFlujoProyectado = vi.fn();
 const fetchPresupuestoVsReal = vi.fn();
 const fetchExchangeRates = vi.fn();
 
@@ -31,10 +31,9 @@ vi.mock("@/features/profit/services/estadoResultadosDevengado", () => ({
 vi.mock("@/features/profit/services/estadoResultados", () => ({
   fetchEstadoResultadosMes: (...args: unknown[]) => fetchEstadoResultadosMes(...args),
 }));
-vi.mock("@/features/tesoreria/services", () => ({
-  fetchSaldosCuentas: (...args: unknown[]) => fetchSaldosCuentas(...args),
-  fetchResumenTesoreria: (...args: unknown[]) => fetchResumenTesoreria(...args),
-  fetchFlujoProyectado: (...args: unknown[]) => fetchFlujoProyectado(...args),
+vi.mock("@/features/tesoreria/domain", () => ({
+  calcularResumenTesoreria: (...args: unknown[]) => calcularResumenTesoreria(...args),
+  calcularFlujoProyectado: (...args: unknown[]) => calcularFlujoProyectado(...args),
 }));
 vi.mock("@/features/presupuesto/services", () => ({
   fetchPresupuestoVsReal: (...args: unknown[]) => fetchPresupuestoVsReal(...args),
@@ -56,7 +55,11 @@ vi.mock("../alertas", () => ({
   calcularKPIsEjecutivos: (...args: unknown[]) => calcularKPIsEjecutivosMock(args[0], args[1]),
 }));
 
-import { fetchDashboardEjecutivo } from "../agregador";
+import { probarSnapshotEjecutivo, type SnapshotFixtureParams } from "./snapshotFixture";
+
+function fetchDashboardEjecutivo(params: SnapshotFixtureParams) {
+  return probarSnapshotEjecutivo(params, fetchSaldosCuentas());
+}
 
 function eerr(total: number) {
   return {
@@ -74,11 +77,11 @@ describe("dashboardEjecutivo/agregador", () => {
     fetchEstadoResultadosDevengadoAnual.mockResolvedValue([]);
     fetchEstadoResultadosMes.mockResolvedValue(eerr(100));
     fetchSaldosCuentas.mockResolvedValue([{ id: "c1", saldo: 500 }]);
-    fetchResumenTesoreria.mockResolvedValue({
+    calcularResumenTesoreria.mockReturnValue({
       top_deudores: [{ cliente: "X", monto: 1 }],
       top_acreedores: [{ proveedor: "Y", monto: 2 }],
     });
-    fetchFlujoProyectado.mockResolvedValue({ semanas: [] });
+    calcularFlujoProyectado.mockReturnValue({ semanas: [] });
     fetchPresupuestoVsReal.mockResolvedValue({ filas: [] });
     fetchExchangeRates.mockResolvedValue({ usdMxn: 17.5, eurMxn: 18 });
   });
@@ -123,7 +126,7 @@ describe("dashboardEjecutivo/agregador", () => {
     expect(calls).toContainEqual({ organizationId: null, year: 2024, month: 12 });
   });
 
-  it("resuelve flujo DESPUÉS de cuentas pasándole el resultado", async () => {
+  it("compone flujo con las cuentas y la cartera provistas", async () => {
     await fetchDashboardEjecutivo({
       organizationId: "org-1",
       periodo: "2025-06",
@@ -131,13 +134,14 @@ describe("dashboardEjecutivo/agregador", () => {
       cxp: [],
       fuente: "facturas",
     });
-    expect(fetchFlujoProyectado).toHaveBeenCalledTimes(1);
-    expect(fetchFlujoProyectado).toHaveBeenCalledWith({
+    expect(calcularFlujoProyectado).toHaveBeenCalledTimes(1);
+    expect(calcularFlujoProyectado).toHaveBeenCalledWith({
       cuentas: [{ id: "c1", saldo: 500 }],
       cobranza: [{ id: "c" }],
       cxp: [],
       dias: 28,
-      organizationId: "org-1",
+      liquidaciones: [],
+      hoy: expect.any(Date),
       tipoCambioUsd: 17.5,
       // v13.823.5: el TC EUR (y su fecha) viajan junto al USD.
       tipoCambioEur: 18,

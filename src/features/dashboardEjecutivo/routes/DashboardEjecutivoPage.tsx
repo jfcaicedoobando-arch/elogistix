@@ -6,7 +6,7 @@
  * para romper el ciclo de dependencias entre ambos features. Ahora la
  * dirección es única: dashboardEjecutivo → profit.
  */
-import { useState, useMemo } from "react";
+import { useCallback, useState } from "react";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { Button } from "@/components/ui/button";
 import { KpiGridSkeleton } from "@/components/shared/skeletons";
@@ -45,8 +45,8 @@ export default function DashboardEjecutivoPage() {
   const { data, isLoading, error, refetch, isFetching, financialAnalysis,
     financialAnalysisError, financialAnalysisLoading } = useDashboardEjecutivo(periodo);
 
-  const exportar = useMemo(() => async () => {
-    if (!data || generandoPdf) return;
+  const exportar = useCallback(async () => {
+    if (!data || isFetching || generandoPdf) return;
     const scope = captureAuthOperationScope();
     setGenerandoPdf(true);
     try {
@@ -65,7 +65,7 @@ export default function DashboardEjecutivoPage() {
     } finally {
       setGenerandoPdf(false);
     }
-  }, [data, generandoPdf]);
+  }, [data, isFetching, generandoPdf]);
 
   return (
     <PageContainer>
@@ -88,7 +88,7 @@ export default function DashboardEjecutivoPage() {
           />
           <div className="flex-1" />
           <FuenteEerrToggle />
-          <Button variant="outline" size="sm" onClick={exportar} disabled={!data || generandoPdf}>
+          <Button variant="outline" size="sm" onClick={exportar} disabled={!data || isFetching || generandoPdf}>
             <Download className="h-4 w-4 mr-1" /> {generandoPdf ? "Generando…" : "PDF"}
           </Button>
         </CardContent>
