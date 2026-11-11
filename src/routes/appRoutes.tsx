@@ -10,9 +10,8 @@
  *     `/cxp/por-pagar`, `/proveedores`, `/proveedores/:id`.
  *   - `ComprasTabStrip` eliminado. Navegación 100% por sidebar.
  */
-import type { ReactNode } from "react";
+import { lazy, type ReactNode } from "react";
 import { Route, Navigate } from "react-router";
-import { Layout } from "@/components/layout/Layout";
 import { ProtectedRoute } from "@/features/auth/components/ProtectedRoute";
 import { RedirectPreserveSearch } from "@/routes/RedirectPreserveSearch";
 import {
@@ -33,6 +32,8 @@ import {
 } from "./appRoutes.lazy";
 import { crmChildRoutes } from "./crmRoutes";
 import { getRouteRoles, type RouteAccessKey } from "@/lib/access/roleRouteMatrix";
+
+const Layout = lazy(() => import("@/components/layout/Layout").then(({ Layout }) => ({ default: Layout })));
 
 /**
  * Paso 13 — El guard NO decide roles: recibe la clave canónica de ruta y la

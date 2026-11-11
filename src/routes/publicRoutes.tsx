@@ -4,8 +4,10 @@
  */
 import { lazy } from "react";
 import { Route, Navigate } from "react-router";
-import { AyudaPublicShell } from "@/features/dashboard/components/AyudaPublicShell";
 
+const AyudaPublicShell = lazy(() => import("@/features/dashboard/components/AyudaPublicShell").then(
+  ({ AyudaPublicShell }) => ({ default: AyudaPublicShell }),
+));
 const Login = lazy(() => import("@/features/auth/routes/Login"));
 const ResetPassword = lazy(() => import("@/features/auth/routes/ResetPassword"));
 const NotFound = lazy(() => import("@/features/auth/routes/NotFound"));

@@ -1,123 +1,59 @@
-/**
- * Cobertura del wrapper `syncSentryUser` / `syncSentryActiveOrg`.
- *
- * Plan E (13.63.0): blindar el flujo de logout — sin esta prueba un refactor
- * podría romper `Sentry.setUser(null)` y dejar el usuario "pegado" entre
- * sesiones, contaminando eventos posteriores con el ID del usuario anterior.
- */
-import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
-// `vi.hoisted` corre ANTES que cualquier import (igual que vi.mock), por lo
-// que evita el TDZ sobre los spies cuando el factory del mock se ejecuta.
-const sentryMocks = vi.hoisted(() => {
-  const setUser = vi.fn();
-  const setTags = vi.fn();
-  const setTag = vi.fn();
-  const getCurrentScope = vi.fn(() => ({ setTag }));
-  return { setUser, setTags, setTag, getCurrentScope, setAttribute: vi.fn(), setAttributes: vi.fn() };
-});
-
-vi.mock("@sentry/react", () => ({
-  isEnabled: () => true,
-  setUser: sentryMocks.setUser,
-  setTags: sentryMocks.setTags,
-  setTag: sentryMocks.setTag,
-  setAttribute: sentryMocks.setAttribute,
-  setAttributes: sentryMocks.setAttributes,
-  getCurrentScope: sentryMocks.getCurrentScope,
-}));
-
-// Scope synchronization is independent of DSN/production init; core has its own contracts.
-vi.mock("../core", () => ({ initSentry: vi.fn(), isSentryReady: () => true }));
-
-beforeEach(() => {
-  sentryMocks.setUser.mockClear();
-  sentryMocks.setTags.mockClear();
-  sentryMocks.setTag.mockClear();
-  sentryMocks.getCurrentScope.mockClear();
-  sentryMocks.setAttribute.mockClear();
-  sentryMocks.setAttributes.mockClear();
-});
-
-afterEach(() => {
-  vi.clearAllMocks();
-});
-
-async function flushImport() {
-  // Esperar a que microtasks + macrotask drenen (dynamic import + .then chain).
-  // El SDK se carga con `import()` dinámico: bajo carga puede tardar más de un
-  // macrotask, así que esperamos hasta ver la primera interacción con Sentry.
-  const visto = () =>
-    sentryMocks.setUser.mock.calls.length > 0 ||
-    sentryMocks.setTag.mock.calls.length > 0;
-  for (let i = 0; i < 200 && !visto(); i++) {
-    await new Promise<void>((r) => setTimeout(r, 5));
-  }
-  for (let i = 0; i < 4; i++) await Promise.resolve();
+function fixtureSdk() {
+  return {
+    isEnabled: () => true,
+    setUser: vi.fn(),
+    setTags: vi.fn(),
+    setAttributes: vi.fn(),
+    setTag: vi.fn(),
+    setAttribute: vi.fn(),
+  };
 }
 
-describe("syncSentryUser", () => {
-  it("propaga id, tenant y rol sin transmitir email", async () => {
-    const { syncSentryUser } = await import("../user");
-    syncSentryUser({
-      userId: "u-123",
-      email: "test@librecarga.com",
-      organizationId: "org-1",
-      effectiveRole: "admin_org",
-    });
-    await flushImport();
-    expect(sentryMocks.setUser).toHaveBeenCalledWith({
-      id: "u-123",
-    });
-    expect(sentryMocks.setTags).toHaveBeenCalledWith({
-      organization_id: "org-1",
-      effective_role: "admin_org",
-      auth_status: "authenticated",
-      active_organization_id: "none",
-    });
+const usuario = { userId: "u-1", email: "test@librecarga.com", organizationId: "org-1", effectiveRole: "admin_org" };
+
+beforeEach(() => vi.resetModules());
+
+describe("contexto de Sentry", () => {
+  it("aplica el último usuario y tenant al iniciar el SDK sin transmitir correo", async () => {
+    const { connectSentryScope, syncSentryUser, syncSentryActiveOrg } = await import("../user");
+    const sdk = fixtureSdk();
+    syncSentryUser({ ...usuario, userId: "anterior" });
+    syncSentryUser(usuario);
+    syncSentryActiveOrg("org-activa");
+    connectSentryScope(sdk);
+    expect(sdk.setUser).toHaveBeenCalledExactlyOnceWith({ id: "u-1" });
+    const tags = {
+      organization_id: "org-1", effective_role: "admin_org",
+      active_organization_id: "org-activa", auth_status: "authenticated",
+    };
+    expect(sdk.setTags).toHaveBeenCalledExactlyOnceWith(tags);
+    expect(sdk.setAttributes).toHaveBeenCalledExactlyOnceWith(tags);
   });
 
-  it("limpia el usuario al pasar userId=null (logout)", async () => {
-    const { syncSentryUser } = await import("../user");
-    syncSentryUser({
-      userId: null,
-      email: null,
-      organizationId: null,
-      effectiveRole: null,
-    });
-    await flushImport();
-    expect(sentryMocks.setUser).toHaveBeenCalledWith(null);
-    const cleared = { organization_id: "none", effective_role: "none",
+  it("limpia el usuario y sus atributos al cerrar sesión", async () => {
+    const { connectSentryScope, syncSentryUser, syncSentryActiveOrg } = await import("../user");
+    const sdk = fixtureSdk();
+    connectSentryScope(sdk);
+    syncSentryUser(usuario);
+    syncSentryActiveOrg("org-activa");
+    syncSentryUser({ userId: null, email: null, organizationId: null, effectiveRole: null });
+    expect(sdk.setUser).toHaveBeenLastCalledWith(null);
+    const tags = { organization_id: "none", effective_role: "none",
       active_organization_id: "none", auth_status: "anonymous" };
-    expect(sentryMocks.setTags).toHaveBeenCalledWith(cleared);
-    expect(sentryMocks.setAttributes).toHaveBeenCalledWith(cleared);
+    expect(sdk.setTags).toHaveBeenLastCalledWith(tags);
+    expect(sdk.setAttributes).toHaveBeenLastCalledWith(tags);
   });
 
-  it("ante llamadas concurrentes el último valor es el que termina aplicado", async () => {
-    const { syncSentryUser } = await import("../user");
-    syncSentryUser({ userId: "u-1", email: "a@x.com", organizationId: "o-1", effectiveRole: "user" });
-    syncSentryUser({ userId: "u-2", email: "b@x.com", organizationId: "o-2", effectiveRole: "admin" });
-    await flushImport();
-    // Garantía importante: el último setUser refleja el usuario actual.
-    // (El SDK puede recibir 1-2 llamadas porque ambos .then se encolan; el
-    // contrato del wrapper es "latest-wins sobre el valor", no "1 sola llamada").
-    const lastCall = sentryMocks.setUser.mock.calls[sentryMocks.setUser.mock.calls.length - 1];
-    expect(lastCall?.[0]).toEqual({ id: "u-2" });
-  });
-});
-
-describe("syncSentryActiveOrg", () => {
-  it("actualiza el tag `active_organization_id` en el scope global", async () => {
-    const { syncSentryActiveOrg } = await import("../user");
+  it("refleja el cambio de organización después del arranque", async () => {
+    const { connectSentryScope, syncSentryActiveOrg } = await import("../user");
+    const sdk = fixtureSdk();
+    connectSentryScope(sdk);
     syncSentryActiveOrg("org-42");
-    await flushImport();
-    expect(sentryMocks.setTag).toHaveBeenCalledWith("active_organization_id", "org-42");
-  });
-
-  it("normaliza null a 'none' para evitar tags vacíos en Sentry", async () => {
-    const { syncSentryActiveOrg } = await import("../user");
     syncSentryActiveOrg(null);
-    await flushImport();
-    expect(sentryMocks.setTag).toHaveBeenCalledWith("active_organization_id", "none");
+    expect(sdk.setTag).toHaveBeenNthCalledWith(1, "active_organization_id", "org-42");
+    expect(sdk.setTag).toHaveBeenNthCalledWith(2, "active_organization_id", "none");
+    expect(sdk.setAttribute).toHaveBeenLastCalledWith("active_organization_id", "none");
   });
 });

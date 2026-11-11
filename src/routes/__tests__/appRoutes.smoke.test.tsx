@@ -5,10 +5,12 @@
  * y las rutas legacy (`/cxp`, `/cxp/por-*`, `/proveedores`) redirigen preservando
  * querystring vía `<RedirectPreserveSearch />`.
  */
-import { describe, it, expect } from "vitest";
+import { render, screen } from "@testing-library/react";
+import { describe, it, expect, vi } from "vitest";
 import {
   Children,
   isValidElement,
+  Suspense,
   type ReactElement,
   type ReactNode,
 } from "react";
@@ -17,7 +19,6 @@ import { appRoutes } from "../appRoutes";
 import { LeadDetalle } from "../appRoutes.lazy";
 import { ProtectedRoute } from "@/features/auth/components/ProtectedRoute";
 import { RedirectPreserveSearch } from "@/routes/RedirectPreserveSearch";
-import { Layout } from "@/components/layout/Layout";
 import type { AppRole } from "@/types/appRole";
 import {
   COMPRAS_READ_ROLES,
@@ -26,6 +27,10 @@ import {
   PROFIT_READ_ROLES,
   AUDITORIA_ROLES,
 } from "@/lib/access/roleRouteMatrix";
+
+vi.mock("@/components/layout/Layout", () => ({
+  Layout: () => <main data-testid="operational-layout" />,
+}));
 
 interface RouteProps {
   path?: string;
@@ -66,14 +71,16 @@ const records = collectRoutes(appRoutes);
 // duplicarlos aquí (el duplicado se desincronizó en el orden de los roles).
 
 describe("routes/appRoutes — envoltura raíz", () => {
-  it("la raíz envuelve Layout con ProtectedRoute", () => {
+  it("la raíz envuelve el layout diferido con ProtectedRoute", async () => {
     const root = appRoutes as ReactElement;
     expect(isValidElement(root)).toBe(true);
     const wrapper = (root.props as RouteProps).element as ReactElement;
     expect(wrapper.type).toBe(ProtectedRoute);
     const inner = (wrapper.props as { children: ReactElement }).children;
-    expect(inner.type).toBe(Layout);
     expect((wrapper.props as { allowedRoles?: AppRole[] }).allowedRoles).toBeUndefined();
+    render(<Suspense fallback={<span data-testid="layout-pendiente" />}>{inner}</Suspense>);
+    expect(screen.getByTestId("layout-pendiente")).toBeInTheDocument();
+    expect(await screen.findByTestId("operational-layout")).toBeInTheDocument();
   });
 });
 

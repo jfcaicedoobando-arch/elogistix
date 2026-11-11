@@ -1,4 +1,4 @@
-import { act, cleanup, fireEvent, render, screen } from "@testing-library/react";
+import { act, cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, expect, it, vi } from "vitest";
 import { MemoryRouter } from "react-router";
 import * as Sentry from "@sentry/react";
@@ -41,6 +41,10 @@ it("SDK 11 instruments actual AppRoutes after async init without losing an in-pr
     }),
   });
   await act(async () => markSentryReady());
+  await waitFor(() => {
+    const span = Sentry.getActiveSpan();
+    expect(span && Sentry.spanToJSON(span).name).toBe("/facturacion/:id");
+  });
   expect(screen.getByLabelText("mock draft")).toHaveValue("Monterrey importación");
   Sentry.getActiveSpan()?.end();
   Sentry.startSpan({ name: "mock contract", op: "test",

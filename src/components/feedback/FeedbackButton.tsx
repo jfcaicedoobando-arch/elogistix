@@ -2,6 +2,7 @@ import { MessageSquarePlus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { useAuth } from "@/lib/contexts/AuthContext";
+import { loadInitializedSentry } from "@/lib/observability/sentry/runtime";
 
 import { notifyError } from "@/lib/ui/appFeedback";
 interface Props {
@@ -18,10 +19,8 @@ export function FeedbackButton({ variant = "ghost", className }: Props) {
   if (!user) return null;
 
   const handleClick = async () => {
-    // Import dinámico: `@sentry/react` + `@sentry/feedback` (~73 KB gz) no
-    // deben entrar al bundle inicial (Layout es parte del entry chunk).
-    const Sentry = await import("@sentry/react");
-    const feedback = Sentry.getFeedback();
+    const Sentry = await loadInitializedSentry();
+    const feedback = Sentry?.getFeedback();
     if (!feedback) {
       notifyError(undefined, { title: "Reporte no disponible",
         description: "El sistema de feedback no se inicializó correctamente.", method: "COMPONENTS_FEEDBACK_FEEDBACKBUTTON_1" });

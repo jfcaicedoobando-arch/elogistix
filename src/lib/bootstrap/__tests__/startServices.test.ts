@@ -6,38 +6,36 @@ import { startServices, scheduleIdle } from "../startServices";
 const cliente = {} as QueryClient;
 
 describe("startServices", () => {
-  it("inicia Sentry de inmediato (sin esperar el idle)", async () => {
+  it("difiere la descarga de ambos servicios hasta el idle", async () => {
     const initSentry = vi.fn();
     const bootstrapQueryPersister = vi.fn();
     const pendientes: Array<() => void> = [];
 
-    startServices(cliente, {
-      loadSentry: () => Promise.resolve({ initSentry }),
-      loadPersister: () => Promise.resolve({ bootstrapQueryPersister }),
+    const loadSentry = vi.fn(async () => ({ initSentry }));
+    const loadPersister = vi.fn(async () => ({ bootstrapQueryPersister }));
+    const ready = startServices(cliente, {
+      loadSentry,
+      loadPersister,
       schedule: (cb) => pendientes.push(cb),
     });
 
-    await Promise.resolve();
-    await Promise.resolve();
-    expect(initSentry).toHaveBeenCalledTimes(1);
-    expect(bootstrapQueryPersister).not.toHaveBeenCalled();
+    expect(loadSentry).not.toHaveBeenCalled();
+    expect(loadPersister).not.toHaveBeenCalled();
 
     pendientes.forEach((cb) => cb());
-    await Promise.resolve();
-    await Promise.resolve();
-    expect(bootstrapQueryPersister).toHaveBeenCalledWith(cliente);
+    await ready;
+    expect(initSentry).toHaveBeenCalledTimes(1);
+    await vi.waitFor(() => expect(bootstrapQueryPersister).toHaveBeenCalledWith(cliente));
   });
 
   it("no propaga fallos de carga de Sentry ni del persister", async () => {
-    expect(() =>
+    await expect(
       startServices(cliente, {
         loadSentry: () => Promise.reject(new Error("sin chunk")),
         loadPersister: () => Promise.reject(new Error("sin chunk")),
         schedule: (cb) => cb(),
       }),
-    ).not.toThrow();
-    await Promise.resolve();
-    await Promise.resolve();
+    ).resolves.toBeUndefined();
   });
 });
 

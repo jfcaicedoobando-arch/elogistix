@@ -106,14 +106,25 @@ jobs:
         run: bun run test:dependencies
       - name: Build and output guards
         run: |-
-          bun run build
+          bun run build --manifest
           bash scripts/check-bundle-size.sh
+          node scripts/check-login-bundle-size.mjs
           bash scripts/check-sourcemaps.sh
       - name: Real PDF regressions
         run: |-
           if ! command -v pdfinfo >/dev/null || ! command -v pdftotext >/dev/null; then
-            sudo apt-get update -qq
-            sudo apt-get install -y --no-install-recommends poppler-utils
+            # Los mirrors de Ubuntu pueden quedar fuera de la red del runner.
+            poppler_bin="$RUNNER_TEMP/poppler"
+            mkdir -p "$poppler_bin"
+            curl --fail --silent --show-error --location --max-time 30 \
+              https://github.com/unpins/poppler-utils/releases/download/v26.06.0-1/poppler-utils-26.06.0-1-x86_64-linux.zst \
+              --output "$poppler_bin/poppler-utils.zst"
+            printf '%s  %s\n' 2764246c1e70669942883bbc2fbf32408ffde786304f9904b1be65efbba3ce2c "$poppler_bin/poppler-utils.zst" | sha256sum --check
+            node -e 'const fs = require("node:fs"); const zlib = require("node:zlib"); fs.writeFileSync(process.argv[2], zlib.zstdDecompressSync(fs.readFileSync(process.argv[1])), { mode: 0o755 });' \
+              "$poppler_bin/poppler-utils.zst" "$poppler_bin/poppler-utils"
+            ln -s poppler-utils "$poppler_bin/pdfinfo"
+            ln -s poppler-utils "$poppler_bin/pdftotext"
+            export PATH="$poppler_bin:$PATH"
           fi
           bun run test:pdf -- tests/pdf/carteraPagination.test.tsx
   tests:
