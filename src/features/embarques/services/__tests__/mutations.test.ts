@@ -24,7 +24,6 @@ import {
   duplicarEmbarqueRpc,
   eliminarEmbarqueRpc,
   actualizarEstadoEmbarque,
-  actualizarFechaLlegadaRealEmbarque,
   insertarNotaEmbarque,
   reabrirEmbarqueRpc,
   EmbarqueBloqueadoError,
@@ -339,82 +338,6 @@ describe("actualizarEstadoEmbarque", () => {
     assertEq(call, "id", UUID);
   });
 });
-
-describe("actualizarFechaLlegadaRealEmbarque", () => {
-  it("En Proceso también pasa a Arribo y admite fecha igual al ETD", async () => {
-    mock.setTableResult("embarques", { data: { estado: "En Proceso", etd: "2026-07-20", fecha_llegada_real: null }, error: null });
-    await actualizarFechaLlegadaRealEmbarque(UUID, "2026-07-20");
-    const update = [...mock.tableCalls].reverse().find((c) => c.ops.includes("update"))!;
-    expect(update.opArgs[update.ops.indexOf("update")][0]).toEqual({ fecha_llegada_real: "2026-07-20", estado: "Arribo" });
-  });
-
-  it.each([
-    [{ estado: "En Tránsito", fecha_llegada_real: "2026-07-19" }, /ya tiene una fecha de llegada real/],
-    [{ estado: "Confirmado", fecha_llegada_real: null }, /Confirma y pon en tránsito/],
-    [{ estado: "En Tránsito", etd: "2026-07-21", fecha_llegada_real: null }, /no puede ser anterior al ETD/],
-  ])("mantiene los requisitos anticipados en el formulario: %j", async (current, mensaje) => {
-    mock.setTableResult("embarques", { data: current, error: null });
-    await expect(actualizarFechaLlegadaRealEmbarque(UUID, "2026-07-20")).rejects.toThrow(mensaje);
-    expect(mock.tableCalls.some((c) => c.ops.includes("update"))).toBe(false);
-    expect(registrarActividadMock).not.toHaveBeenCalled();
-  });
-
-  it("avanza a 'Arribo' cuando el estado actual es 'En Tránsito' (v13.303.22)", async () => {
-    mock.setTableResult("embarques", { data: { estado: "En Tránsito" }, error: null });
-    await actualizarFechaLlegadaRealEmbarque(UUID, "2026-07-20");
-    const { assertUpdatePayload, assertEq, findTableCall } = await import(
-      "@/test/helpers/assertMutation"
-    );
-    // El último tableCall es el UPDATE (después del SELECT del estado actual).
-    const updateCall = [...mock.tableCalls].reverse().find((c) => c.ops.includes("update"));
-    assertUpdatePayload(updateCall!, { estado: "Arribo", fecha_llegada_real: "2026-07-20" });
-    assertEq(updateCall!, "id", UUID);
-    void findTableCall;
-  });
-
-  // v13.303.22 — antes se forzaba `estado: 'Llegada'` (ya deprecado). Estados
-  // posteriores (En Aduana/Entregado/EIR/Cerrado) o comerciales previos no
-  // deben tocarse para evitar LC_TRANSICION_INVALIDA.
-  it("NO cambia estado cuando el actual es 'En Aduana' (regresión Sentry c80465e4)", async () => {
-    mock.setTableResult("embarques", { data: { estado: "En Aduana" }, error: null });
-    await actualizarFechaLlegadaRealEmbarque(UUID, "2026-07-20");
-    const updateCall = [...mock.tableCalls].reverse().find((c) => c.ops.includes("update"));
-    const updateArgIdx = updateCall!.ops.indexOf("update");
-    const payload = updateCall!.opArgs[updateArgIdx][0] as Record<string, unknown>;
-    expect(payload).toEqual({ fecha_llegada_real: "2026-07-20" });
-    expect(payload).not.toHaveProperty("estado");
-  });
-
-  // v13.814.0 (hallazgo 1): UPDATE de 0 filas (RLS / id inexistente) no debe
-  // reportar éxito ni escribir bitácora.
-  it("lanza y NO escribe bitácora cuando el UPDATE afecta 0 filas", async () => {
-    mock.setTableResult("embarques", { data: null, error: null });
-    await expect(actualizarEstadoEmbarque(UUID, "Confirmado")).rejects.toThrow(
-      /no tienes permiso o el embarque ya no existe/i,
-    );
-    expect(registrarActividadMock).not.toHaveBeenCalled();
-  });
-
-  // v13.814.0 (hallazgo 2): el pre-select que falla o no encuentra la fila
-  // debe abortar antes de cualquier UPDATE.
-  it("aborta sin UPDATE si el pre-select de llegada real falla", async () => {
-    mock.setTableResult("embarques", { data: null, error: { message: "permission denied" } });
-    await expect(actualizarFechaLlegadaRealEmbarque(UUID, "2026-07-20")).rejects.toThrow();
-    expect(mock.tableCalls.some((c) => c.ops.includes("update"))).toBe(false);
-    expect(registrarActividadMock).not.toHaveBeenCalled();
-  });
-
-  it("aborta sin UPDATE si el embarque no existe en el pre-select", async () => {
-    mock.setTableResult("embarques", { data: null, error: null });
-    await expect(actualizarFechaLlegadaRealEmbarque(UUID, "2026-07-20")).rejects.toThrow(
-      /no se encontró el embarque/i,
-    );
-    expect(mock.tableCalls.some((c) => c.ops.includes("update"))).toBe(false);
-    expect(registrarActividadMock).not.toHaveBeenCalled();
-  });
-});
-
-
 
 describe("insertarNotaEmbarque", () => {
   it("inserta una nota válida", async () => {

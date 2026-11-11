@@ -1,9 +1,4 @@
 import { supabase } from '@/integrations/supabase/client';
-import type { Enums } from '@/integrations/supabase/types';
-import { registrarBitacoraEmbarque } from './bitacoraEmbarques';
-import { eventoTrackingSchema } from '@/lib/validation/mutationSchemas.otros';
-import { parseOrThrow } from '@/lib/validation/mutationSchemas';
-import { uuidSchema } from '@/lib/validation/mutationSchemas.shared';
 
 export interface EventoEmbarqueRow {
   id: string;
@@ -34,43 +29,4 @@ export async function fetchEventosEmbarque(embarqueId: string): Promise<EventoEm
     .limit(EVENTOS_LIMIT);
   if (error) throw error;
   return (data ?? []) as EventoEmbarqueRow[];
-}
-
-export async function insertEventoEmbarque(input: {
-  eventoId?: string;
-  embarqueId: string;
-  tipo: string;
-  descripcion: string;
-  ubicacion: string;
-  fecha: string;
-  usuario: string;
-}): Promise<void> {
-  // B-24: boundary de validación — el schema rechaza tipos vacíos y fechas con
-  // formato distinto de `AAAA-MM-DD`.
-  // R-06 (QA r2): se inserta el output transformado por el schema (trim/
-  // normalización), no el input crudo.
-  const parsed = parseOrThrow(eventoTrackingSchema, {
-    tipo: input.tipo,
-    fecha: input.fecha,
-    ubicacion: input.ubicacion,
-    descripcion: input.descripcion,
-  }, 'Evento de tracking');
-  const eventoId = input.eventoId === undefined ? crypto.randomUUID() : parseOrThrow(uuidSchema, input.eventoId, 'Evento de tracking');
-  const { error } = await supabase.from('eventos_embarque').insert([
-    {
-      id: eventoId,
-      embarque_id: input.embarqueId,
-      tipo: parsed.tipo as Enums<'tipo_evento_tracking'>,
-      descripcion: parsed.descripcion,
-      ubicacion: parsed.ubicacion,
-      fecha: parsed.fecha,
-      usuario: input.usuario,
-    },
-  ]);
-  if (error) throw error;
-  await registrarBitacoraEmbarque({
-    accion: "Registró evento de tracking en embarque",
-    entidadId: input.embarqueId,
-    detalles: { tipo: parsed.tipo, ubicacion: parsed.ubicacion, fecha: parsed.fecha, eventoId },
-  });
 }

@@ -181,8 +181,6 @@ export async function eliminarEmbarqueRpc(embarqueId: string, expectedScope?: Re
 // mantener compatibilidad con imports existentes.
 export {
   actualizarEstadoEmbarque,
-  actualizarFechaLlegadaRealEmbarque,
-  actualizarEtaEmbarque,
   insertarNotaEmbarque,
   actualizarTipoCambioUsdEmbarque,
 } from "./embarqueDirectMutations";

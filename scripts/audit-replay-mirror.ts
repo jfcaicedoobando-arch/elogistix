@@ -48,6 +48,9 @@ try {
   const isolated = readIsolatedDrizzleReplay(ROOT);
   const journal = JSON.parse(fs.readFileSync(path.join(ROOT, "drizzle/migrations/meta/_journal.json"), "utf8")).entries;
   const index = aplicarDrizzle0035(indexarMigraciones(migraciones), isolated, journal);
+  // Las definiciones forward nuevas se aplican después del historial de Supabase.
+  const forward = new Map([...isolated].filter(([file]) => Number(file.slice(0, 4)) >= 50));
+  for (const [signature, definition] of indexarMigraciones(forward)) index.set(signature, definition);
   const result = auditarIndiceReplayMirror(espejos, index, baseline);
   if (result.violaciones.length) {
     console.error("❌ audit:replay-mirror — divergencia o excepción fuera de su huella exacta:");

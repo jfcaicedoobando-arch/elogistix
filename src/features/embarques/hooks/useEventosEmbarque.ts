@@ -1,11 +1,6 @@
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { queryKeys } from "@/lib/query";
-import {
-  fetchEventosEmbarque,
-  insertEventoEmbarque,
-} from "@/features/embarques/services";
-import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
-import { getErrorMessage } from "@/lib/errors";
+import { fetchEventosEmbarque } from "@/features/embarques/services";
 
 export interface EventoEmbarque {
   id: string;
@@ -17,44 +12,10 @@ export interface EventoEmbarque {
   usuario: string;
   created_at: string;
 }
-
-
 export function useEventosEmbarque(embarqueId: string | undefined) {
   return useQuery({
     queryKey: queryKeys.embarques.eventos(embarqueId!),
     queryFn: () => fetchEventosEmbarque(embarqueId!),
     enabled: !!embarqueId,
-  });
-}
-
-interface CreateEventoInput {
-  eventoId?: string;
-  embarqueId: string;
-  tipo: string;
-  descripcion: string;
-  ubicacion: string;
-  fecha: string;
-  usuario: string;
-}
-
-interface CreateEventoOptions {
-  /** Si es true, no dispara toasts internos (éxito ni error). El caller es responsable de notificar. */
-  silent?: boolean;
-}
-
-export function useCreateEventoEmbarque(options: CreateEventoOptions = {}) {
-  const { silent = false } = options;
-  const qc = useQueryClient();
-  return useMutation({
-    mutationFn: (input: CreateEventoInput) => insertEventoEmbarque(input),
-    onSuccess: (_r, vars) => {
-      qc.invalidateQueries({ queryKey: queryKeys.embarques.eventos(vars.embarqueId) });
-      qc.invalidateQueries({ queryKey: queryKeys.embarques.actividad(vars.embarqueId) });
-      if (!silent) notifySuccess(undefined, { title: "Evento agregado" });
-    },
-    onError: (error: Error) => {
-      if (silent) return;
-      notifyError(undefined, { title: "No se pudo agregar evento", description: getErrorMessage(error), error, method: "CREATE_EVENTO_EMBARQUE" });
-    },
   });
 }
