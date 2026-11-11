@@ -35,8 +35,10 @@ describe("Lovable preview dependency inventory", () => {
       for (const accountForPreview of [false, true]) {
         writeFileSync(path.join(directory, "knip.json"), JSON.stringify({
           entry: ["index.js"], project: ["index.js"], rules: config.rules,
-          ignoreDependencies: [...config.ignoreDependencies,
-            ...ignored.filter((name) => accountForPreview || !previewPackages.includes(name))],
+          ignoreDependencies: [
+            ...(config.ignoreDependencies ?? []),
+            ...ignored.filter((name) => accountForPreview || !previewPackages.includes(name)),
+          ],
         }));
         const result = spawnSync(process.execPath, [binary, "--directory", directory,
           "--include", "dependencies", "--no-progress", "--reporter", "json"], {

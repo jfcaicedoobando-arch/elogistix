@@ -368,6 +368,30 @@ test("Knip scopes Node test entrypoints while retaining reachable import errors"
   }
 });
 
+test("the Facturapi checker dependency matches the static Edge SDK import", () => {
+  const edgePackage = "facturapi";
+  const edgeSpecifier = `npm:${edgePackage}@`;
+  const manifest = JSON.parse(readFileSync(new URL("../../package.json", import.meta.url), "utf8"));
+  const config = JSON.parse(readFileSync(new URL("../../knip.json", import.meta.url), "utf8"));
+  // Inspect the Edge source and package manifest as data outside Node's import graph.
+  const edgeClient = path.join(import.meta.dirname, "..", "..", "supabase", "functions", "_shared", "facturapiClient.ts");
+  const source = readFileSync(edgeClient, "utf8");
+  const ts = require("typescript");
+  const file = ts.createSourceFile("facturapiClient.ts", source, ts.ScriptTarget.Latest, true);
+  const imports = file.statements
+    .filter(statement => ts.isImportDeclaration(statement) && !statement.importClause?.isTypeOnly)
+    .map(statement => statement.moduleSpecifier.text)
+    .filter(specifier => specifier?.startsWith(edgeSpecifier));
+  const version = manifest.devDependencies[edgePackage];
+
+  assert.match(version, /^\d+\.\d+\.\d+$/, "The Edge SDK uses an exact version");
+  assert.deepEqual(imports, [`${edgeSpecifier}${version}`]);
+  const installed = JSON.parse(readFileSync(require.resolve(`${edgePackage}/package.json`), "utf8"));
+  assert.equal(installed.version, version);
+  assert.ok(config.workspaces["."].ignoreDependencies.includes(edgePackage));
+  assert.equal(config.rules.dependencies, "error");
+});
+
 test("the Edge Sentry checker dependency matches its real import and keeps Knip's unused-dependency gate", { timeout: 30000 }, () => {
   // Lovable's checker resolves this versioned npm: import through root
   // node_modules. Knip analyzes Node/frontend entrypoints and cannot account

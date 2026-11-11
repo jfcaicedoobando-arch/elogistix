@@ -20,7 +20,7 @@ export const DEBOUNCE_MS = 800;
  * borrador capturado en la organización anterior (fuga cross-tenant).
  */
 import { DRAFT_KEY_PREFIX } from "@/lib/auth/clearSessionDrafts";
-export { DRAFT_KEY_PREFIX, clearAllDrafts } from "@/lib/auth/clearSessionDrafts";
+export { clearAllDrafts } from "@/lib/auth/clearSessionDrafts";
 export const draftKey = (userId: string, organizationId?: string | null): string =>
   `${DRAFT_KEY_PREFIX}${organizationId || "sin-org"}:${userId || "anon"}`;
 

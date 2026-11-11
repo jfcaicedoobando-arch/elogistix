@@ -17,7 +17,7 @@ const CLOCK_SKEW_MS = 5 * 60 * 1000;
 export const EMBARQUE_DRAFT_DEBOUNCE_MS = 800;
 
 import { EMBARQUE_DRAFT_KEY_PREFIX } from "@/lib/auth/clearSessionDrafts";
-export { EMBARQUE_DRAFT_KEY_PREFIX, clearAllEmbarqueDrafts } from "@/lib/auth/clearSessionDrafts";
+export { clearAllEmbarqueDrafts } from "@/lib/auth/clearSessionDrafts";
 export const embarqueDraftKey = (userId: string, organizationId?: string | null): string =>
   `${EMBARQUE_DRAFT_KEY_PREFIX}${organizationId || "sin-org"}:${userId || "anon"}`;
 

@@ -1,9 +1,7 @@
 import { useEffect } from "react";
 
 /**
- * Reemplazo ligero de react-helmet-async para evitar el conflicto de
- * múltiples copias de React que rompe la app (ThemeProvider crash).
- * Maneja imperativamente <title>, <meta> y <link rel="canonical"> y un
+ * Actualiza <title>, <meta> y <link rel="canonical"> y admite un
  * bloque opcional de JSON-LD.
  */
 interface SeoProps {

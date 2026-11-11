@@ -22,6 +22,7 @@
       },
       "ignoreDependencies": [
         "@sentry/deno",
+        "facturapi",
         "@lovable.dev/vite-plugin-dev-server-bridge",
         "@lovable.dev/vite-plugin-hmr-gate"
       ]
@@ -42,9 +43,6 @@
     "src/integrations/supabase/types.ts",
     "src/components/ui/**",
     "src/test/**"
-  ],
-  "ignoreDependencies": [
-    "react-helmet-async"
   ],
   "ignoreExportsUsedInFile": true,
   "rules": {
