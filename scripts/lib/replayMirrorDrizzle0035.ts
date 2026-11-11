@@ -60,6 +60,7 @@ function verificarFuentePosterior(sources: ReadonlyMap<string, string>): void {
   }
 }
 
+const FORWARD_0051_SHA256 = "0dd5e001a5a86dbb87e8f5c200fe2226ae2b948aebcc23ec9e795365de64e938";
 const REVIEWED_FORWARD_FIXES: ReadonlyArray<readonly [string, string]> = [
   ["0042_periodo_cerrado_campos_derivados.sql", "f342ee211925de673df88f4bcc6343e0ca0a33c2cab34659fe0972b49d929d65"],
   ["0043_bitacora_no_falsificable.sql", "54de7ba7ff1cee2d1850a3db1557e991780b963351e0724d5729549eea8964ac"],
@@ -69,7 +70,8 @@ const REVIEWED_FORWARD_FIXES: ReadonlyArray<readonly [string, string]> = [
   ["0047_rls_auth_uid_initplan_backport.sql", "49f067b89ca5bdbc31299d621e05279639862799d0892d71cbce3cb8ea09d22a"],
   ["0048_limpieza_indices_duplicados.sql", "9e135244f1f96d2b03e2abc35c3deb1efa3d44f3ee85162f52cf16eecfba7645"],
   ["0049_liquidaciones_lectura_finanzas_gerentes.sql", "7ba8e14da36f37a6559f05cf427a7d1e1e9dc495fed332b9f387f75c5d589d64"],
-  ["0050_registrar_evento_tracking_embarque.sql", "da871c7f6eb9dfd3811302783470944a3c397167b09341efd7d617bb33db6753"]
+  ["0050_registrar_evento_tracking_embarque.sql", "da871c7f6eb9dfd3811302783470944a3c397167b09341efd7d617bb33db6753"],
+  ["0051_procesamiento_facturapi_webhook.sql", FORWARD_0051_SHA256]
 ];
 
 function verificarOrdenJournal(sources: ReadonlyMap<string, string>, journal: JournalEntry[]): void {

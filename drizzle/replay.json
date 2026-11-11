@@ -392,5 +392,13 @@
       "0050_registrar_evento_tracking_embarque.sql"
     ],
     "scope": "isolated-ci"
+  },
+  {
+    "file": "0051_procesamiento_facturapi_webhook.sql",
+    "sha256": "0dd5e001a5a86dbb87e8f5c200fe2226ae2b948aebcc23ec9e795365de64e938",
+    "replays": [
+      "0051_procesamiento_facturapi_webhook.sql"
+    ],
+    "scope": "isolated-ci"
   }
 ]

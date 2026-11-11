@@ -22,6 +22,7 @@ import { reconcileOneNc } from "./ncs.ts";
 import { planificarTareas } from "./plan.ts";
 import { crearPresupuesto, CRON_RETRIEVE_TIMEOUT_MS } from "./presupuesto.ts";
 import { cerrarFacturaConAcuse } from "./cierreFactura.ts";
+import { reprocesarWebhooksPendientes } from "../facturapi-webhook/reprocesar.ts";
 import { ejecutarPlan, type ReconcileCtx, type ClienteResuelto, type RetrieveClient } from "./ejecutar.ts";
 import {
   descargarAcuse,
@@ -146,6 +147,11 @@ Deno.serve(wrapEdgeHandler("facturapi-reconciliar-cancelaciones", async (req) =>
   if (lock === "ocupado") return jsonResponse({ ok: true, skipped: "locked" });
 
   try {
+    try {
+      await reprocesarWebhooksPendientes(supabase);
+    } catch (error) {
+      await captureEdgeException(error, { fn: "facturapi-reconciliar-cancelaciones", extra: { tarea: "webhooks" } });
+    }
     const pendientes = await cargarPendientes(supabase);
     if (!pendientes.ok) return pendientes.res;
 
