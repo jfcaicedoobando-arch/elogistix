@@ -1,6 +1,5 @@
 /**
  * Copy de contadores de /crm/oportunidades con singular/plural mexicano.
- * Agrupado con `prospectosContadorCopy` (antes: "1 oportunidades abiertas").
  */
 
 /** "1 de 1 oportunidad" · "2 de 5 oportunidades" · "0 de 0 oportunidades" */

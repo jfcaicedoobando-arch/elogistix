@@ -16,7 +16,6 @@ const ROOT = resolve(__dirname, "../../..");
 const MIGRADOS = [
   "src/features/facturacion/components/CfdiEstadoBadge.tsx",
   "src/features/facturacion/components/proformasColumns.tsx",
-  "src/features/crm/routes/leadsColumns.tsx",
   "src/features/tesoreria/components/PanelConciliacionEstados.tsx",
   // Ola 2 · RN-3 — badges de costeo, CxP y tesorería.
   "src/features/costeo/components/TarifaEstadoUnificado.tsx",

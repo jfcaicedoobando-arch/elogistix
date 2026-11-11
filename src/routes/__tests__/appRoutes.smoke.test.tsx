@@ -12,7 +12,9 @@ import {
   type ReactElement,
   type ReactNode,
 } from "react";
+import { Navigate } from "react-router";
 import { appRoutes } from "../appRoutes";
+import { LeadDetalle } from "../appRoutes.lazy";
 import { ProtectedRoute } from "@/features/auth/components/ProtectedRoute";
 import { RedirectPreserveSearch } from "@/routes/RedirectPreserveSearch";
 import { Layout } from "@/components/layout/Layout";
@@ -173,5 +175,20 @@ describe("routes/appRoutes — redirecciones", () => {
     expect(rec!.element!.type).toBe(RedirectPreserveSearch);
     const props = rec!.element!.props as { to?: string };
     expect(props.to).toBe(to);
+  });
+});
+
+describe("routes/appRoutes — compatibilidad CRM", () => {
+  it.each([
+    ["leads", "/crm/empresas?estado=Lead"],
+    ["prospectos", "/crm/empresas?estado=Prospecto"],
+  ])("redirige /crm/%s a %s", (path, to) => {
+    const rec = records.find((r) => r.path === path);
+    expect(rec?.element?.type).toBe(Navigate);
+    expect(rec?.element?.props).toMatchObject({ to, replace: true });
+  });
+
+  it("conserva la ficha /crm/leads/:id", () => {
+    expect(records.find((r) => r.path === "leads/:id")?.element?.type).toBe(LeadDetalle);
   });
 });

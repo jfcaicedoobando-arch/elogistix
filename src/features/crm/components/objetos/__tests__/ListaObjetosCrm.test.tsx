@@ -49,11 +49,11 @@ describe("ListaObjetosCrm · tabla canónica", () => {
     show();
     expect(screen.getByText("Sin resultados.")).toBeInTheDocument();
   });
-  it("pasa el estado compartido en la URL a la consulta de empresas", () => {
+  it.each(["Lead", "Prospecto"])("pasa el estado %s de la URL a la consulta de empresas", (estado) => {
     query.mockReturnValue({ isLoading: false, isError: false, data: { filas: [], total: 0 } });
-    show("empresa", "?estado=Prospecto");
-    expect(query).toHaveBeenLastCalledWith("empresa", "", 0, "todas", "Prospecto");
-    expect(screen.getByRole("combobox", { name: "Filtrar por estado" })).toHaveTextContent("Prospecto");
+    show("empresa", `?estado=${estado}`);
+    expect(query).toHaveBeenLastCalledWith("empresa", "", 0, "todas", estado);
+    expect(screen.getByRole("combobox", { name: "Filtrar por estado" })).toHaveTextContent(estado);
   });
   it("no aplica el filtro de empresas al listado de contactos", () => {
     query.mockReturnValue({ isLoading: false, isError: false, data: { filas: [], total: 0 } });

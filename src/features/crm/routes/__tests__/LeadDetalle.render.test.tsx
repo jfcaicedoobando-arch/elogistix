@@ -5,7 +5,7 @@
  */
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen } from "@testing-library/react";
-import { MemoryRouter } from "react-router";
+import { MemoryRouter, Route, Routes } from "react-router";
 
 const useLeadMock = vi.fn();
 
@@ -128,7 +128,9 @@ const renderLead = (estado: string) => {
   });
   return render(
     <MemoryRouter initialEntries={[`/crm/leads/${leadBase.id}`]}>
-      <LeadDetalle />
+      <Routes>
+        <Route path="/crm/leads/:id" element={<LeadDetalle />} />
+      </Routes>
     </MemoryRouter>,
   );
 };
@@ -146,6 +148,7 @@ describe("LeadDetalle · renderizado condicional de oportunidades", () => {
 
   it("para un Lead no prospecto muestra LeadLineageCard y no OportunidadesDelProspecto", () => {
     renderLead("Nuevo");
+    expect(useLeadMock).toHaveBeenCalledWith(leadBase.id);
     expect(screen.getByTestId("lineage-l1")).toBeInTheDocument();
     expect(screen.queryByTestId("oportunidades-l1")).not.toBeInTheDocument();
   });
