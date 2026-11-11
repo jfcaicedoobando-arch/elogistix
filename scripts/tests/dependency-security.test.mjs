@@ -369,21 +369,26 @@ test("Knip scopes Node test entrypoints while retaining reachable import errors"
 });
 
 test("the Facturapi checker dependency matches the static Edge SDK import", () => {
+  const edgePackage = "facturapi";
+  const edgeSpecifier = `npm:${edgePackage}@`;
   const manifest = JSON.parse(readFileSync(new URL("../../package.json", import.meta.url), "utf8"));
   const config = JSON.parse(readFileSync(new URL("../../knip.json", import.meta.url), "utf8"));
-  const source = readFileSync(new URL("../../supabase/functions/_shared/facturapiClient.ts", import.meta.url), "utf8");
+  // Inspect the Edge source and package manifest as data outside Node's import graph.
+  const edgeClient = path.join(import.meta.dirname, "..", "..", "supabase", "functions", "_shared", "facturapiClient.ts");
+  const source = readFileSync(edgeClient, "utf8");
   const ts = require("typescript");
   const file = ts.createSourceFile("facturapiClient.ts", source, ts.ScriptTarget.Latest, true);
   const imports = file.statements
     .filter(statement => ts.isImportDeclaration(statement) && !statement.importClause?.isTypeOnly)
     .map(statement => statement.moduleSpecifier.text)
-    .filter(specifier => specifier?.startsWith("npm:facturapi@"));
-  const version = manifest.devDependencies.facturapi;
+    .filter(specifier => specifier?.startsWith(edgeSpecifier));
+  const version = manifest.devDependencies[edgePackage];
 
   assert.match(version, /^\d+\.\d+\.\d+$/, "The Edge SDK uses an exact version");
-  assert.deepEqual(imports, [`npm:facturapi@${version}`]);
-  assert.equal(require("facturapi/package.json").version, version);
-  assert.ok(config.workspaces["."].ignoreDependencies.includes("facturapi"));
+  assert.deepEqual(imports, [`${edgeSpecifier}${version}`]);
+  const installed = JSON.parse(readFileSync(require.resolve(`${edgePackage}/package.json`), "utf8"));
+  assert.equal(installed.version, version);
+  assert.ok(config.workspaces["."].ignoreDependencies.includes(edgePackage));
   assert.equal(config.rules.dependencies, "error");
 });
 
