@@ -1,15 +1,5 @@
-/**
- * Storage de CFDI para CxP — sube XML/PDF y actualiza URLs en proveedor_facturas
- * y proveedor_notas_credito.
- * v13.307.5: agrega adjuntar/quitar por tipo desde el detalle (post-creación).
- * N50 (Ola 4): valida el contenido real del archivo y prefija el path con el
- * slot (xml-/pdf-) para que XML y PDF nunca compartan path.
- */
 import { supabase } from "@/integrations/supabase/client";
 import { extractFacturaPath } from "@/services/storage/facturas";
-export { subirArchivosNcProveedor } from "@/features/cxp/services/cfdiStorageNc";
-
-export type { TipoAdjuntoCfdi } from "@/features/cxp/services/cfdiValidation";
 import { resolverOrganizationId } from "@/features/cxp/services/cfdiOrg";
 import {
   contentTypeFor,
@@ -18,141 +8,194 @@ import {
   type TipoAdjuntoCfdi,
 } from "@/features/cxp/services/cfdiValidation";
 
-interface SubirArchivosParams {
-  facturaId: string;
+export type { TipoAdjuntoCfdi } from "@/features/cxp/services/cfdiValidation";
+
+const columnasPorTipo = { XML: "archivo_xml_url", PDF: "archivo_pdf_url" } as const;
+type ColumnaAdjunto = (typeof columnasPorTipo)[TipoAdjuntoCfdi];
+type Adjuntos = Record<ColumnaAdjunto, string | null>;
+
+interface DocumentoCfdi {
+  tabla: "proveedor_facturas" | "proveedor_notas_credito";
+  id: string;
+  organizationId: string;
+}
+
+interface ArchivosCfdi {
   organizationId: string | null | undefined;
   xmlFile: File | null;
   pdfFile: File | null;
 }
 
-interface AdjuntarArchivoParams {
+function rutaDocumento(documento: DocumentoCfdi) {
+  const carpeta = documento.tabla === "proveedor_facturas" ? "cfdi" : "nc";
+  return `${documento.organizationId}/${carpeta}/${documento.id}`;
+}
+
+function errorDocumentoAusente(documento: DocumentoCfdi) {
+  const nombre = documento.tabla === "proveedor_facturas" ? "factura de proveedor" : "nota de crédito";
+  return new Error(`La ${nombre} no existe o fue eliminada.`);
+}
+
+async function leerAdjuntos({ tabla, id, organizationId }: DocumentoCfdi) {
+  const { data, error } = await supabase.from(tabla)
+    .select("archivo_xml_url, archivo_pdf_url")
+    .eq("id", id)
+    .eq("organization_id", organizationId)
+    .is("deleted_at", null)
+    .maybeSingle();
+  if (error) throw error;
+  return data;
+}
+
+async function borrarObjetos(paths: string[]) {
+  if (paths.length > 0) {
+    await supabase.storage.from("facturas").remove(paths).catch(() => undefined);
+  }
+}
+
+async function limpiarAdjuntosSustituidos(
+  documento: DocumentoCfdi, anteriores: Adjuntos, cambio: Partial<Adjuntos>,
+) {
+  const vigentes = Object.values({ ...anteriores, ...cambio })
+    .flatMap((path) => path ? [extractFacturaPath(path)] : []);
+  // Los datos históricos pueden referenciar el mismo objeto desde ambos campos.
+  const reemplazados = Object.values(anteriores).flatMap((valor) => {
+    if (!valor) return [];
+    const path = extractFacturaPath(valor);
+    return path.startsWith(`${rutaDocumento(documento)}/`) && !vigentes.includes(path) ? [path] : [];
+  });
+  await borrarObjetos([...new Set(reemplazados)]);
+}
+
+async function guardarVinculos(
+  { tabla, id, organizationId }: DocumentoCfdi,
+  anteriores: Adjuntos,
+  cambio: Partial<Adjuntos>,
+) {
+  const consulta = supabase.from(tabla).update(cambio)
+    .eq("id", id)
+    .eq("organization_id", organizationId)
+    .is("deleted_at", null);
+  for (const columna of Object.values(columnasPorTipo)) {
+    if (!(columna in cambio)) continue;
+    const anterior = anteriores[columna];
+    if (anterior === null) consulta.is(columna, null);
+    else consulta.eq(columna, anterior);
+  }
+  return consulta.select("id").maybeSingle();
+}
+
+async function confirmarVinculos(
+  documento: DocumentoCfdi, anteriores: Adjuntos, nuevos: Partial<Adjuntos>, paths: string[],
+) {
+  const respuesta = await guardarVinculos(documento, anteriores, nuevos)
+    .catch((error: unknown) => ({
+      data: null,
+      error: error ?? new Error("No se pudo confirmar el cambio de adjuntos."),
+      status: 0,
+    }));
+  if (respuesta.data) return;
+
+  const { error, status } = respuesta;
+  if (error === null) {
+    await borrarObjetos(paths);
+    throw new Error("El documento o sus adjuntos cambiaron. Actualiza la vista e inténtalo de nuevo.");
+  }
+
+  // Un SQLSTATE de rechazo confirma que la escritura no se aplicó.
+  if (status >= 400 && status < 500 && typeof error === "object" && "code" in error
+    && typeof error.code === "string" && /^[0-9A-Z]{5}$/.test(error.code)) {
+    await borrarObjetos(paths);
+    throw error;
+  }
+
+  // Una lectura inmediata puede adelantarse a una escritura aún en curso.
+  // Ante una respuesta incierta, conserva las subidas hasta confirmar el vínculo.
+  const actuales = await leerAdjuntos(documento).catch(() => null);
+  if (actuales && Object.values(columnasPorTipo).every(
+    (columna) => !(columna in nuevos) || nuevos[columna] === actuales[columna],
+  )) return;
+  throw error;
+}
+
+async function subirAdjuntos(
+  documento: DocumentoCfdi,
+  archivos: { tipo: TipoAdjuntoCfdi; file: File }[],
+): Promise<string[]> {
+  for (const { tipo, file } of archivos) await validarContenidoCfdi(tipo, file);
+  const anteriores = await leerAdjuntos(documento);
+  if (!anteriores) throw errorDocumentoAusente(documento);
+
+  const nuevos: Partial<Adjuntos> = {};
+  const paths: string[] = [];
+  try {
+    for (const { tipo, file } of archivos) {
+      const path = pathCfdi(rutaDocumento(documento), tipo, file.name);
+      const { error } = await supabase.storage.from("facturas").upload(path, file, {
+        contentType: contentTypeFor(tipo),
+        upsert: false,
+      });
+      if (error) throw error;
+      paths.push(path);
+      nuevos[columnasPorTipo[tipo]] = path;
+    }
+  } catch (error) {
+    await borrarObjetos(paths);
+    throw error;
+  }
+
+  await confirmarVinculos(documento, anteriores, nuevos, paths);
+  await limpiarAdjuntosSustituidos(documento, anteriores, nuevos);
+  return paths;
+}
+
+async function subirArchivos(tabla: DocumentoCfdi["tabla"], id: string, params: ArchivosCfdi) {
+  const archivos: { tipo: TipoAdjuntoCfdi; file: File }[] = [];
+  if (params.xmlFile) archivos.push({ tipo: "XML", file: params.xmlFile });
+  if (params.pdfFile) archivos.push({ tipo: "PDF", file: params.pdfFile });
+  if (!archivos.length) return;
+  const organizationId = await resolverOrganizationId(params.organizationId);
+  await subirAdjuntos({ tabla, id, organizationId }, archivos);
+}
+
+export async function subirArchivosCfdiFactura(params: ArchivosCfdi & { facturaId: string }): Promise<void> {
+  await subirArchivos("proveedor_facturas", params.facturaId, params);
+}
+
+export async function subirArchivosNcProveedor(params: ArchivosCfdi & { ncId: string }): Promise<void> {
+  await subirArchivos("proveedor_notas_credito", params.ncId, params);
+}
+
+export async function adjuntarArchivoCfdiFactura(params: {
   facturaId: string;
   organizationId: string | null | undefined;
   tipo: TipoAdjuntoCfdi;
   file: File;
-}
-
-interface QuitarArchivoParams {
-  facturaId: string;
-  path: string;
-  tipo: TipoAdjuntoCfdi;
-}
-
-export async function subirArchivosCfdiFactura(params: SubirArchivosParams): Promise<void> {
-  // 13.114.14: el primer segmento DEBE ser el organization_id para satisfacer
-  // la política RLS del bucket `facturas` (`foldername(name)[1] = org_id`).
-  const base = `${await resolverOrganizationId(params.organizationId)}/cfdi/${params.facturaId}`;
-  const update: { archivo_xml_url?: string | null; archivo_pdf_url?: string | null } = {};
-  const subidos: string[] = [];
-
-  try {
-    if (params.xmlFile) {
-      await validarContenidoCfdi("XML", params.xmlFile);
-      const xmlPath = pathCfdi(base, "XML", params.xmlFile.name);
-      const xmlUp = await supabase.storage.from("facturas").upload(xmlPath, params.xmlFile, {
-        contentType: "application/xml", upsert: true,
-      });
-      if (xmlUp.error) throw xmlUp.error;
-      subidos.push(xmlPath);
-      update.archivo_xml_url = xmlPath;
-    }
-
-    if (params.pdfFile) {
-      await validarContenidoCfdi("PDF", params.pdfFile);
-      const pdfPath = pathCfdi(base, "PDF", params.pdfFile.name);
-      const pdfUp = await supabase.storage.from("facturas").upload(pdfPath, params.pdfFile, {
-        contentType: "application/pdf", upsert: true,
-      });
-      if (pdfUp.error) throw pdfUp.error;
-      subidos.push(pdfPath);
-      update.archivo_pdf_url = pdfPath;
-    }
-
-    if (Object.keys(update).length === 0) return;
-
-    // Tanda 2 · hallazgo 3: exige factura viva y verifica que el UPDATE
-    // realmente afectó una fila (soft-delete o id inexistente → fallo, no
-    // éxito silencioso con archivos huérfanos en el bucket).
-    const { data: fila, error } = await supabase
-      .from("proveedor_facturas")
-      .update(update)
-      .eq("id", params.facturaId)
-      .is("deleted_at", null)
-      .select("id")
-      .maybeSingle();
-    if (error) throw error;
-    if (!fila) throw new Error("La factura de proveedor no existe o fue eliminada: no se adjuntó el archivo.");
-  } catch (e) {
-    // N50 (Ola 4): cleanup — archivos subidos sin renglón que los referencie
-    // quedaban huérfanos si fallaba el segundo upload o el UPDATE.
-    if (subidos.length > 0) {
-      await supabase.storage.from("facturas").remove(subidos).catch(() => undefined);
-    }
-    throw e;
-  }
-}
-
-/**
- * v13.307.5 — Adjunta o reemplaza un XML/PDF en una factura de proveedor ya
- * creada. Mantiene el prefijo `{organization_id}/cfdi/{facturaId}/…` para
- * cumplir la RLS del bucket `facturas`. `upsert: true` permite reemplazar
- * el archivo existente sin colisionar.
- */
-export async function adjuntarArchivoCfdiFactura(params: AdjuntarArchivoParams): Promise<string> {
-  // N50 (Ola 4): validar tipo real por slot antes de subir.
-  await validarContenidoCfdi(params.tipo, params.file);
-  const base = `${await resolverOrganizationId(params.organizationId)}/cfdi/${params.facturaId}`;
-  // N50 (Ola 4): prefijo de slot en el path — XML y PDF nunca se pisan.
-  const path = pathCfdi(base, params.tipo, params.file.name);
-  const up = await supabase.storage.from("facturas").upload(path, params.file, {
-    contentType: contentTypeFor(params.tipo),
-    upsert: true,
-  });
-  if (up.error) throw up.error;
-
-  const patch = params.tipo === "XML"
-    ? { archivo_xml_url: path }
-    : { archivo_pdf_url: path };
-  const { data: fila, error } = await supabase
-    .from("proveedor_facturas")
-    .update(patch)
-    .eq("id", params.facturaId)
-    .is("deleted_at", null)
-    .select("id")
-    .maybeSingle();
-  if (error || !fila) {
-    // N50 (Ola 4) + tanda 2 · hallazgo 3: cleanup del objeto recién subido si
-    // el UPDATE falla O no afectó fila (factura eliminada/ausente).
-    await supabase.storage.from("facturas").remove([path]).catch(() => undefined);
-    throw error ?? new Error("La factura de proveedor no existe o fue eliminada: no se adjuntó el archivo.");
-  }
-
+}): Promise<string> {
+  const organizationId = await resolverOrganizationId(params.organizationId);
+  const [path] = await subirAdjuntos(
+    { tabla: "proveedor_facturas", id: params.facturaId, organizationId },
+    [{ tipo: params.tipo, file: params.file }],
+  );
   return path;
 }
 
-/**
- * v13.307.5 — Elimina el objeto del bucket (best-effort) y limpia la columna
- * `archivo_xml_url` o `archivo_pdf_url` de la factura. Si el archivo ya no
- * existía físicamente igualmente se limpia la referencia en BD.
- */
-export async function quitarArchivoCfdiFactura(params: QuitarArchivoParams): Promise<void> {
-  const cleanPath = extractFacturaPath(params.path);
-  const patch = params.tipo === "XML"
-    ? { archivo_xml_url: null }
-    : { archivo_pdf_url: null };
-  // Tanda 2 · hallazgo 3: primero se limpia la referencia en BD (exigiendo
-  // factura viva y fila afectada) y sólo después se borra el objeto. Así un
-  // fallo en BD no deja una referencia apuntando a un archivo ya borrado.
-  const { data: fila, error } = await supabase
-    .from("proveedor_facturas")
-    .update(patch)
-    .eq("id", params.facturaId)
-    .is("deleted_at", null)
-    .select("id")
-    .maybeSingle();
-  if (error) throw error;
-  if (!fila) throw new Error("La factura de proveedor no existe o fue eliminada: no se quitó el archivo.");
-
-  // No revertimos si el remove falla: el archivo puede estar ya borrado.
-  await supabase.storage.from("facturas").remove([cleanPath]).catch(() => undefined);
+export async function quitarArchivoCfdiFactura(params: {
+  facturaId: string;
+  organizationId?: string | null;
+  path: string;
+  tipo: TipoAdjuntoCfdi;
+}): Promise<void> {
+  const organizationId = await resolverOrganizationId(params.organizationId);
+  const documento: DocumentoCfdi = { tabla: "proveedor_facturas", id: params.facturaId, organizationId };
+  const anteriores = await leerAdjuntos(documento);
+  if (!anteriores) throw errorDocumentoAusente(documento);
+  const columna = columnasPorTipo[params.tipo];
+  const vigente = anteriores[columna];
+  if (!vigente || extractFacturaPath(vigente) !== extractFacturaPath(params.path)) {
+    throw new Error("El adjunto cambió. Actualiza la vista e inténtalo de nuevo.");
+  }
+  const cambio = { [columna]: null };
+  await confirmarVinculos(documento, anteriores, cambio, []);
+  await limpiarAdjuntosSustituidos(documento, anteriores, cambio);
 }

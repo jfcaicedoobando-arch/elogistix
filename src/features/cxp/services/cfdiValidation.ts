@@ -3,6 +3,7 @@
  * con prefijo de slot. Extraído de cfdiStorage.ts para mantener ≤200 líneas.
  */
 import { sanitizeFileName } from "@/lib/storage";
+import { newRequestId } from "@/lib/idempotency";
 
 export type TipoAdjuntoCfdi = "XML" | "PDF";
 
@@ -40,11 +41,9 @@ export async function validarContenidoCfdi(tipo: TipoAdjuntoCfdi, file: File): P
 }
 
 /**
- * N50 (Ola 4): el nombre en el path lleva el prefijo del slot para que XML y
- * PDF nunca colisionen aunque traigan el mismo nombre de archivo (antes
- * pdfPath === xmlPath y el segundo upload pisaba el primero con upsert:true).
+ * Cada subida usa una ruta nueva, incluso al reemplazar un archivo del mismo nombre.
  */
 export function pathCfdi(base: string, tipo: TipoAdjuntoCfdi, nombreArchivo: string): string {
-  return `${base}/${tipo.toLowerCase()}-${sanitizeFileName(nombreArchivo)}`;
+  return `${base}/${tipo.toLowerCase()}-${newRequestId()}-${sanitizeFileName(nombreArchivo)}`;
 }
 

@@ -34,7 +34,7 @@ export function DocumentosProveedorSection({ factura: f, canEdit = false }: Prop
   const handleUpload = (file: File, tipo: TipoAdjuntoCfdi) =>
     adjuntar.mutate({ facturaId: f.id, organizationId, tipo, file });
   const handleRemove = (path: string, tipo: TipoAdjuntoCfdi) =>
-    quitar.mutate({ facturaId: f.id, path, tipo });
+    quitar.mutate({ facturaId: f.id, organizationId, path, tipo });
   const busyTipo = adjuntar.isPending
     ? adjuntar.variables?.tipo
     : quitar.isPending ? quitar.variables?.tipo : undefined;
