@@ -6565,6 +6565,12 @@ export type Database = {
           id: string
           organization_id: string
           payload: Json | null
+          procesamiento_disponible_en: string | null
+          procesamiento_estado: string
+          procesamiento_finalizado_en: string | null
+          procesamiento_intentos: number
+          procesamiento_motivo: string | null
+          procesamiento_token: string | null
           received_at: string
         }
         Insert: {
@@ -6573,6 +6579,12 @@ export type Database = {
           id?: string
           organization_id: string
           payload?: Json | null
+          procesamiento_disponible_en?: string | null
+          procesamiento_estado?: string
+          procesamiento_finalizado_en?: string | null
+          procesamiento_intentos?: number
+          procesamiento_motivo?: string | null
+          procesamiento_token?: string | null
           received_at?: string
         }
         Update: {
@@ -6581,6 +6593,12 @@ export type Database = {
           id?: string
           organization_id?: string
           payload?: Json | null
+          procesamiento_disponible_en?: string | null
+          procesamiento_estado?: string
+          procesamiento_finalizado_en?: string | null
+          procesamiento_intentos?: number
+          procesamiento_motivo?: string | null
+          procesamiento_token?: string | null
           received_at?: string
         }
         Relationships: []
@@ -7898,6 +7916,54 @@ export type Database = {
           },
           {
             foreignKeyName: "proforma_conceptos_consolidados_proforma_id_fkey"
+            columns: ["proforma_id"]
+            isOneToOne: false
+            referencedRelation: "v_proforma_factura_link"
+            referencedColumns: ["proforma_id"]
+          },
+        ]
+      }
+      proforma_email_intentos: {
+        Row: {
+          contenido: Json
+          id: string
+          proforma_id: string
+          reserva: string | null
+          reserva_hasta: string | null
+          resultado: Json | null
+          solicitud: Json
+          usuario_id: string
+        }
+        Insert: {
+          contenido: Json
+          id: string
+          proforma_id: string
+          reserva?: string | null
+          reserva_hasta?: string | null
+          resultado?: Json | null
+          solicitud: Json
+          usuario_id: string
+        }
+        Update: {
+          contenido?: Json
+          id?: string
+          proforma_id?: string
+          reserva?: string | null
+          reserva_hasta?: string | null
+          resultado?: Json | null
+          solicitud?: Json
+          usuario_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "proforma_email_intentos_proforma_id_fkey"
+            columns: ["proforma_id"]
+            isOneToOne: false
+            referencedRelation: "proformas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "proforma_email_intentos_proforma_id_fkey"
             columns: ["proforma_id"]
             isOneToOne: false
             referencedRelation: "v_proforma_factura_link"
@@ -12080,6 +12146,25 @@ export type Database = {
         }[]
       }
       fecha_negocio_mx: { Args: never; Returns: string }
+      finalizar_evento_facturapi_webhook: {
+        Args: {
+          p_accion?: string
+          p_claim?: string
+          p_documento_id?: string
+          p_evento_id: string
+          p_motivo?: string
+          p_patch?: Json
+          p_resultado: string
+          p_tabla?: string
+          p_token: string
+          p_version?: string
+        }
+        Returns: Json
+      }
+      finalizar_proforma_email: {
+        Args: { p_intento: string; p_reserva: string; p_usuario_id: string }
+        Returns: Json
+      }
       fn_admin_org_activity: {
         Args: never
         Returns: {
@@ -12970,6 +13055,17 @@ export type Database = {
         }
         Returns: undefined
       }
+      registrar_evento_tracking_embarque: {
+        Args: {
+          p_accion: string
+          p_embarque_id: string
+          p_fecha: string
+          p_organization_id?: string
+          p_request_id: string
+          p_ubicacion: string
+        }
+        Returns: string
+      }
       registrar_pago_cliente_lote: { Args: { p_payload: Json }; Returns: Json }
       registrar_pago_factura_atomico: {
         Args: {
@@ -13077,12 +13173,31 @@ export type Database = {
         Args: { p_org_id: string }
         Returns: Json
       }
+      reservar_evento_facturapi_webhook: {
+        Args: {
+          p_event_id: string
+          p_organization_id: string
+          p_payload?: Json
+        }
+        Returns: Json
+      }
       reservar_folio_factura: {
         Args: { _serie_id: string }
         Returns: {
           folio: number
           numero: string
         }[]
+      }
+      reservar_proforma_email: {
+        Args: {
+          p_intento: string
+          p_portal_base: string
+          p_proforma_id: string
+          p_reserva: string
+          p_solicitud: Json
+          p_usuario_id: string
+        }
+        Returns: Json
       }
       resolver_clave_sat: {
         Args: { p_descripcion: string; p_org: string }
