@@ -1,8 +1,8 @@
 import { useRef, useState } from "react";
 import { useGuardarValorCrm, type GuardarValorInput } from "./usePropiedadesCrm";
-import { filaValor, type ValorCrm } from "../services/valoresCrm";
+import { ConflictoValorCrm, type ValorCrm } from "../services/valoresCrm";
 
-export type EstadoAutoguardado = "editando" | "guardando" | "guardado" | "error";
+export type EstadoAutoguardado = "editando" | "guardando" | "guardado" | "error" | "conflicto";
 
 /** Feedback por campo; la persistencia e invalidaciones siguen en el hook existente. */
 export function useAutoguardadoPropiedadesCrm(registroId: string) {
@@ -31,21 +31,22 @@ export function useAutoguardadoPropiedadesCrm(registroId: string) {
     const id = input.propiedadId;
     const revision = siguienteRevision(id);
     setEstados((prev) => ({ ...prev, [id]: "guardando" }));
-    const terminar = (estado: EstadoAutoguardado) => {
+    const terminar = (estado: EstadoAutoguardado, confirmado?: ValorCrm) => {
       // Una respuesta anterior no confirma una captura o petición posterior.
       if (revisiones.current.get(id) === revision) {
-        if (estado === "guardado") {
-          setConfirmados((prev) => ({ ...prev, [id]: { propiedad_id: id, ...filaValor(input.tipo, input.valor) } }));
+        if (confirmado) {
+          setConfirmados((prev) => ({ ...prev, [id]: confirmado }));
         }
         setEstados((prev) => ({ ...prev, [id]: estado }));
       }
     };
     try {
-      await guardar.mutateAsync(input);
-      terminar("guardado");
-    } catch {
-      // El hook existente conserva el error detallado; la captura puede reintentarse.
-      terminar("error");
+      const confirmado = await guardar.mutateAsync(input);
+      terminar("guardado", confirmado);
+      return true;
+    } catch (error) {
+      terminar(error instanceof ConflictoValorCrm ? "conflicto" : "error");
+      return false;
     }
   };
 

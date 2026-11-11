@@ -3,6 +3,8 @@
  * una fila por (propiedad, registro). RLS los aísla por organización.
  */
 import { supabase } from "@/integrations/supabase/client";
+import { captureAuthOperationScope } from "@/lib/auth/authOperationScope";
+import { ReglaNegocioError } from "@/lib/errors/reglaNegocio";
 import type { TipoPropiedad } from "./propiedadesCrm";
 
 export interface ValorCrm {
@@ -14,10 +16,19 @@ export interface ValorCrm {
 }
 
 export type ValorEntrada = string | number | string[] | null;
+export type ValorCrmPersistido = ValorCrm & { updated_at: string };
 
-export async function fetchValores(registroId: string): Promise<ValorCrm[]> {
+const COLS_VALOR = "propiedad_id, valor_texto, valor_numero, valor_fecha, opcion_ids, updated_at";
+
+export class ConflictoValorCrm extends ReglaNegocioError {
+  constructor() {
+    super("El valor cambió mientras editabas. Revisa el valor actual antes de volver a guardar.");
+  }
+}
+
+export async function fetchValores(registroId: string): Promise<ValorCrmPersistido[]> {
   const { data, error } = await supabase.from("crm_valores")
-    .select("propiedad_id, valor_texto, valor_numero, valor_fecha, opcion_ids")
+    .select(COLS_VALOR)
     .eq("registro_id", registroId).limit(200);
   if (error) throw error;
   return data ?? [];
@@ -41,9 +52,19 @@ export function filaValor(tipo: TipoPropiedad, valor: ValorEntrada): Omit<ValorC
 }
 
 export async function guardarValor(
-  propiedadId: string, registroId: string, tipo: TipoPropiedad, valor: ValorEntrada,
-): Promise<void> {
-  const fila = { propiedad_id: propiedadId, registro_id: registroId, ...filaValor(tipo, valor), updated_at: new Date().toISOString() };
-  const { error } = await supabase.from("crm_valores").upsert(fila, { onConflict: "propiedad_id,registro_id" });
+  propiedadId: string, registroId: string, tipo: TipoPropiedad, valor: ValorEntrada, version: string | null,
+): Promise<ValorCrmPersistido> {
+  const scope = captureAuthOperationScope();
+  const fecha = version === null ? Date.now() : Math.max(Date.now(), Date.parse(version) + 1);
+  const fila = { ...filaValor(tipo, valor), updated_at: new Date(fecha).toISOString() };
+  const tabla = supabase.from("crm_valores");
+  const query = version === null
+    ? tabla.insert({ ...fila, propiedad_id: propiedadId, registro_id: registroId })
+    : tabla.update(fila).eq("propiedad_id", propiedadId).eq("registro_id", registroId).eq("updated_at", version);
+  const { data, error } = await query.select(COLS_VALOR).maybeSingle();
+  scope.assertCurrent();
+  if (version === null && error?.code === "23505") throw new ConflictoValorCrm();
   if (error) throw error;
+  if (!data) throw new ConflictoValorCrm();
+  return data;
 }
