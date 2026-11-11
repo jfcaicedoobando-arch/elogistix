@@ -5,7 +5,7 @@ const mock = await vi.hoisted(async () => {
 });
 vi.mock("@/integrations/supabase/client", () => ({ supabase: mock.supabase }));
 
-import { listarPagosProveedor, registrarPagoProveedor, eliminarPagoProveedor, PagoRequiereAprobacionError } from "../pagosProveedor";
+import { listarPagosProveedor, registrarPagoProveedor, eliminarPagoProveedor, PagoRequiereAprobacionError, PagoProveedorResultadoIncierto } from "../pagosProveedor";
 
 describe("pagosProveedor service", () => {
   beforeEach(() => {
@@ -68,7 +68,7 @@ describe("pagosProveedor service", () => {
     } as Parameters<typeof registrarPagoProveedor>[0];
 
     const res = await registrarPagoProveedor(input, "u1");
-    expect(res.id).toBe("p1");
+    expect(res).toMatchObject({ estado: "registrado", pago: { id: "p1" } });
 
     // Ya no hay INSERT directo desde el cliente: todo va por la RPC.
     expect(mock.getMutationPayload("pagos_proveedor", "insert")).toBeFalsy();
@@ -143,6 +143,18 @@ describe("pagosProveedor service", () => {
     await expect(
       registrarPagoProveedor({ proveedor_factura_id: "f1" } as Parameters<typeof registrarPagoProveedor>[0], "u1"),
     ).rejects.toThrow("insert failed");
+  });
+
+  it("un fallo de transporte del RPC conserva el intento como incierto", async () => {
+    mock.setTableResult("proveedor_facturas", { data: { organization_id: "org-1", estado_aprobacion: "aprobada" }, error: null });
+    mock.setRpcResult("current_user_org_id", { data: "org-1", error: null });
+    const respuesta = { data: null, error: { code: "", message: "FetchError" }, status: 0 };
+    mock.setRpcResult("registrar_pago_proveedor_atomico", respuesta);
+    await expect(registrarPagoProveedor({
+      proveedor_factura_id: "f1", fecha_pago: "2026-11-10", monto: 100, moneda: "MXN",
+      tipo_cambio_usd: null, metodo_pago: "Transferencia", client_request_id: "llave",
+    }, "u1")).rejects.toBeInstanceOf(PagoProveedorResultadoIncierto);
+    expect(mock.tableCalls.map((call) => call.table)).toEqual(["proveedor_facturas"]);
   });
 
   it("Ola 15 · eliminarPagoProveedor delega todo en la RPC atómica", async () => {

@@ -12,8 +12,6 @@ import type {
   RegistrarPagoProveedorInput,
 } from "./pagosProveedorTypes";
 
-// Fase N: el estado se recalcula por trigger BD. `decidirEstadoFactura` sigue viviendo en `./estadoFacturaProveedor` para uso puro en UI.
-
 export type { PagoProveedor, PagoProveedorConMov, RegistrarPagoProveedorInput };
 
 // v13.56.1 — Columnas explícitas (auditoría: evita SELECT * en tablas financieras).
@@ -75,8 +73,6 @@ async function resolverOrgFactura(facturaId: string): Promise<string> {
   }
   return fact.organization_id;
 }
-
-
 /**
  * MNY: la RPC deduplica por `p_client_request_id` sin comparar contenido. Si la
  * llave ya correspondía a OTRO pago, cerrar el diálogo como éxito ocultaría que
@@ -101,6 +97,33 @@ function assertPagoCorresponde(
 export const MSG_PAGO_LLAVE_REUSADA =
   "Ese intento ya se guardó con datos distintos. Revisa los pagos de la factura antes de reintentar: este pago no se registró.";
 
+export class PagoProveedorResultadoIncierto extends Error {
+  constructor(cause?: unknown) {
+    super("El resultado del pago aún es incierto. Reintenta confirmar el mismo intento.", { cause });
+    this.name = "PagoProveedorResultadoIncierto";
+  }
+}
+
+type ResultadoRegistroPago =
+  | { estado: "registrado"; pago: PagoProveedor }
+  | { estado: "detalle_pendiente"; pagoId: string };
+
+async function leerPagoRegistrado(pagoId: string, organizationId: string) {
+  try {
+    return await supabase
+      .from("pagos_proveedor")
+      .select(
+        "id, organization_id, proveedor_factura_id, fecha_pago, monto, moneda, tipo_cambio_usd, diferencia_cambiaria_mxn, metodo_pago, referencia, cuenta_bancaria_id, notas, created_by, created_at, updated_at, deleted_at, deleted_by",
+      )
+      .eq("id", pagoId)
+      .eq("organization_id", organizationId)
+      .is("deleted_at", null)
+      .maybeSingle();
+  } catch (error) {
+    return { data: null, error };
+  }
+}
+
 /**
  * v13.823.32: el pago y su movimiento bancario se graban en UNA transacción
  * (`registrar_pago_proveedor_atomico`). Antes se insertaba el pago y después el
@@ -109,16 +132,10 @@ export const MSG_PAGO_LLAVE_REUSADA =
  * fracaso. La RPC es idempotente: con la misma llave devuelve el pago ya creado
  * y le asegura (repara) su movimiento.
  */
-export async function registrarPagoProveedor(
-  input: RegistrarPagoProveedorInput,
-  _userId: string | null,
-): Promise<PagoProveedor> {
-  // Resolvemos la organización del padre para validar pertenencia/aprobación
-  // antes de escribir. Ver Sentry JAVASCRIPT-REACT-W.
-  await resolverOrgFactura(input.proveedor_factura_id);
+async function confirmarRegistroPago(input: RegistrarPagoProveedorInput) {
   const tc = input.tipo_cambio_usd && input.tipo_cambio_usd > 0 ? input.tipo_cambio_usd : null;
 
-  const { data: res, error } = await supabase.rpc("registrar_pago_proveedor_atomico", {
+  const respuesta = await supabase.rpc("registrar_pago_proveedor_atomico", {
     p_factura_id: input.proveedor_factura_id,
     p_fecha_pago: input.fecha_pago,
     p_monto: input.monto,
@@ -130,25 +147,30 @@ export async function registrarPagoProveedor(
     p_tipo_cambio_usd: tc ?? undefined,
     p_diferencia_cambiaria_mxn: input.diferencia_cambiaria_mxn ?? undefined,
     p_client_request_id: input.client_request_id ?? undefined,
+  }).then((result) => result, (cause: unknown) => {
+    throw new PagoProveedorResultadoIncierto(cause);
   });
+  const { data: res, error, status } = respuesta;
   if (error) {
     if (esErrorPagoSinAprobacion(error)) throw new PagoRequiereAprobacionError();
+    if (status === 0 || (status >= 500 && !/^[A-Z0-9]{5}$/.test(error.code))) {
+      throw new PagoProveedorResultadoIncierto(error);
+    }
     throw error;
   }
   const resultado = (res ?? {}) as { pago_id?: string; movimiento_id?: string | null };
-  if (!resultado.pago_id) {
-    throw new Error("No se pudo registrar el pago: la base de datos no devolvió el pago creado.");
-  }
+  if (!resultado.pago_id) throw new PagoProveedorResultadoIncierto();
+  return { pagoId: resultado.pago_id, movimientoCreado: Boolean(resultado.movimiento_id) };
+}
 
-  const { data: pago, error: errPago } = await supabase
-    .from("pagos_proveedor")
-    .select(
-      "id, organization_id, proveedor_factura_id, fecha_pago, monto, moneda, tipo_cambio_usd, diferencia_cambiaria_mxn, metodo_pago, referencia, cuenta_bancaria_id, notas, created_by, created_at, updated_at, deleted_at, deleted_by",
-    )
-    .eq("id", resultado.pago_id)
-    .is("deleted_at", null)
-    .single();
-  if (errPago) throw errPago;
+export async function registrarPagoProveedor(
+  input: RegistrarPagoProveedorInput,
+  _userId: string | null,
+): Promise<ResultadoRegistroPago> {
+  const organizationId = await resolverOrgFactura(input.proveedor_factura_id);
+  const { pagoId, movimientoCreado } = await confirmarRegistroPago(input);
+  const { data: pago, error: errPago } = await leerPagoRegistrado(pagoId, organizationId);
+  if (errPago) return { estado: "detalle_pendiente", pagoId };
   assertPagoCorresponde(pago, input);
 
   await registrarActividad({
@@ -156,20 +178,18 @@ export async function registrarPagoProveedor(
     accion: "pagar",
     entidadId: input.proveedor_factura_id,
     detalles: detallesPagoRegistrado({
-      pagoId: resultado.pago_id,
+      pagoId,
       monto: input.monto,
       moneda: input.moneda,
       metodoPago: input.metodo_pago,
       referencia: input.referencia,
       cuentaBancariaId: input.cuenta_bancaria_id ?? null,
       tipoCambioUsd: input.tipo_cambio_usd,
-      movimientoCreado: Boolean(resultado.movimiento_id),
+      movimientoCreado,
     }),
   });
-  return pago as PagoProveedor;
+  return { estado: "registrado", pago: pago as PagoProveedor };
 }
-
-
 export { eliminarPagoProveedor } from "./pagoProveedorEliminar";
 
 

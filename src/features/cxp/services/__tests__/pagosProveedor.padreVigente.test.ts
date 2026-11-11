@@ -72,7 +72,7 @@ describe("registrarPagoProveedor · vigencia del padre antes del alta", () => {
   });
 
   it.each(["eliminada", "ausente"])("un reintento tras quedar %s no crea registro ni actividad adicionales", async (estado) => {
-    await expect(registrar()).resolves.toEqual(PAGO);
+    await expect(registrar()).resolves.toEqual({ estado: "registrado", pago: PAGO });
     factura = estado === "ausente" ? null : { ...factura!, deleted_at: "2026-10-13T00:00:00Z" };
     await expect(registrar()).rejects.toMatchObject({ code: "NOT_FOUND" });
     expect(mock.rpcCalls.filter((call) => call.fn === "registrar_pago_proveedor_atomico")).toHaveLength(1);
@@ -90,7 +90,7 @@ describe("registrarPagoProveedor · vigencia del padre antes del alta", () => {
     mock.setRpcResult("registrar_pago_proveedor_atomico", {
       data: { pago_id: PAGO.id, movimiento_id: "mov-fixture", reintento }, error: null,
     });
-    await expect(registrar()).resolves.toEqual(PAGO);
+    await expect(registrar()).resolves.toEqual({ estado: "registrado", pago: PAGO });
     expect(mock.tableCalls[0]).toEqual({
       table: "proveedor_facturas", ops: ["select", "eq", "is"],
       opArgs: [["organization_id, estado_aprobacion"], ["id", INPUT.proveedor_factura_id], ["deleted_at", null]],

@@ -43,6 +43,13 @@ describe("movimientos CxP refrescan P&L sin modificar su aritmética", () => {
     expect(svc.crearPago).toHaveBeenCalledWith(pago, "operador");
     expectInvalidada();
   });
+  it("refresca las vistas cuando la RPC confirma el pago y la lectura del detalle falla", async () => {
+    const confirmacion = { estado: "detalle_pendiente", pagoId: "pago-registrado" };
+    svc.crearPago.mockResolvedValueOnce(confirmacion);
+    const { result } = renderHook(useOperaciones, { wrapper });
+    await act(async () => { await expect(result.current.crearPago.mutateAsync(pago)).resolves.toEqual(confirmacion); });
+    expectInvalidada();
+  });
   it("edición de pago conserva versión e importe", async () => {
     const { result } = renderHook(useOperaciones, { wrapper });
     const input = { ...pago, id: "pago-a", expectedUpdatedAt: "version-a" };
