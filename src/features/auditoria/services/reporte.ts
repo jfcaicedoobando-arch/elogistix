@@ -28,3 +28,11 @@ export async function fetchReporteAuditoria(): Promise<ReporteAuditoria> {
   }
   return fromDb<ReporteAuditoria>(data);
 }
+
+export async function fetchAuditoriaPendientesCount(): Promise<number> {
+  const { data, error } = await supabase.rpc("auditoria_pendientes_count" as never);
+  if (error?.code === "42501") return 0;
+  if (error) throw error;
+  if (typeof data !== "number") throw new Error("El conteo de auditoría no devolvió un número.");
+  return data;
+}

@@ -416,5 +416,13 @@
       "0053_provision_membresia_atomica.sql"
     ],
     "scope": "isolated-ci"
+  },
+  {
+    "file": "0054_conteos_sidebar.sql",
+    "sha256": "3a3ffebc64c70e50b1619e24a2b7746975ff677477360d5b9fffe2ddee0ce1f8",
+    "replays": [
+      "0054_conteos_sidebar.sql"
+    ],
+    "scope": "isolated-ci"
   }
 ]
