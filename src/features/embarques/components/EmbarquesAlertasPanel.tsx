@@ -51,7 +51,7 @@ export function EmbarquesAlertasPanel({ resumen, activeAlerta, onSelect }: Props
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2">
         {ALERTAS_TILES.map(({ key, titulo, descripcion, Icon, color }) => {
 
-          const count = resumen[key].size;
+          const count = resumen[key];
           const active = activeAlerta === key;
           // v13.223.0 · Capa 3 Tranche A · 2.2: ocultar tiles con count = 0
           // salvo cuando el usuario los eligió activamente (para no dejar la

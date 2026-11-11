@@ -109,4 +109,34 @@ describe("fetchEmbarquesPaginados", () => {
 
     expect(mock.rpcCalls[0].args).toMatchObject({ p_search: "100\\%\\_a" });
   });
+
+  it("pide una sola página filtrada con sus totales y extras", async () => {
+    mock.setRpcResult("embarques_listado_pagina", {
+      data: {
+        count: 2500, filas_total: 2500,
+        rows: [{
+          id: "e1", expediente: "ELSHP2450", filas_expediente: 1,
+          fecha_llegada_real: "2026-11-01",
+          costos_total: 0, costos_pagados: 0, docs_total: 2, docs_pendientes: 1,
+        }],
+      },
+      error: null,
+    });
+    const result = await fetchEmbarquesPaginados({
+      organizationId: "org-1", search: "", filterModo: "todos", filterCliente: "todos",
+      filterOperador: "todos", filterEstado: "Arribo", filterAlerta: "demora",
+      page: 1, pageSize: 50, agruparExpedientes: true,
+    });
+
+    expect(mock.rpcCalls).toHaveLength(1);
+    expect(mock.rpcCalls[0].args).toMatchObject({
+      p_offset: 50, p_limit: 50, p_estado: "Arribo", p_alerta: "demora", p_agrupar: true,
+    });
+    expect(result).toMatchObject({
+      count: 2500, filasTotal: 2500, filasPorExpediente: { ELSHP2450: 1 },
+      data: [{ id: "e1", fecha_llegada_real: "2026-11-01" }],
+      extras: { docs: { e1: { total: 2, pendientes: 1 } } },
+    });
+    expect(result.data[0]).not.toHaveProperty("filas_expediente");
+  });
 });

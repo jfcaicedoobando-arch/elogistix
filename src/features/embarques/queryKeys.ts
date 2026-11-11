@@ -4,9 +4,6 @@ export const embarques = {
   detail: (id: string) => ['embarques', id] as const,
   fullRoot: ['embarques', 'full'] as const,
   full: (id?: string) => ['embarques', 'full', id] as const,
-  fullForEstadoFilter: (filters: Record<string, unknown>) =>
-    ['embarques', 'full-for-estado-filter', filters] as const,
-  extrasBranchB: (visibleIds: string[]) => ['embarques', 'extras-branch-b', visibleIds] as const,
   expedientesCliente: (clienteId?: string | null, organizationId?: string | null) =>
     ['embarques', 'expedientes-cliente', clienteId, organizationId] as const,
   /** Sin `id` devuelve el prefijo raíz (invalidación de todos los embarques). */
@@ -57,7 +54,7 @@ export const embarques = {
   tarifaInfo: (embarqueId?: string, scope: readonly unknown[] = []) => ['embarques', 'tarifa-info', embarqueId, ...scope] as const,
   /** Columnas internas (sólo staff) leídas vía `embarques_interno_v`. */
   interno: (embarqueId?: string, scope: readonly unknown[] = []) => ['embarques', 'interno', embarqueId, ...scope] as const,
-  alertasResumen: () => ['embarques', 'alertas-ids'] as const,
+  alertasResumen: (organizationId: string | null) => ['embarques', 'alertas-conteos', organizationId] as const,
   garantias: (embarqueId?: string) => ['garantias-embarque', embarqueId] as const,
   pnlFinanciero: (embarqueId?: string) => ['embarque', embarqueId, 'pnl-financiero'] as const,
   /** v13.553.0 — Contexto DOF del tipo de cambio guardado en el embarque. */

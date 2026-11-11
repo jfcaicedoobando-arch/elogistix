@@ -61,7 +61,6 @@ const BASELINE = new Set<string>([
   "src/features/cotizacion/services/versiones.ts::duplicar_cotizacion",
   "src/features/cotizacion/services/versiones.ts::cotizacion_versiones",
   "src/features/embarques/components/_sections/tabDemorasColumns.tsx::fecha_descarga",
-  "src/features/embarques/services/alertas.ts::embarques_alertas_ids",
   "src/features/embarques/services/contenedores/demoras.ts::embarque_contenedores",
   // v13.342.0: `reabrir_embarque` ya está tipado en types.ts y el cast se eliminó.
   // v13.624.7: `estado_cliente` ya está tipado; el cast de AccionesProforma

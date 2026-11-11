@@ -11986,6 +11986,7 @@ export type Database = {
         Returns: boolean
       }
       embarques_admin_pendientes_count: { Args: never; Returns: number }
+      embarques_alertas_conteos: { Args: never; Returns: Json }
       embarques_alertas_ids: {
         Args: never
         Returns: {
@@ -12013,6 +12014,26 @@ export type Database = {
           docs_total: number
           embarque_id: string
         }[]
+      }
+      embarques_listado_pagina: {
+        Args: {
+          p_agrupar?: boolean
+          p_alerta?: string
+          p_cliente_id?: string
+          p_estado?: string
+          p_fecha_desde?: string
+          p_fecha_hasta?: string
+          p_limit?: number
+          p_modo?: string
+          p_offset?: number
+          p_operador?: string
+          p_organization_id?: string
+          p_proforma?: string
+          p_search?: string
+          p_sort_by?: string
+          p_sort_dir?: string
+        }
+        Returns: Json
       }
       embarques_listado: {
         Args: {

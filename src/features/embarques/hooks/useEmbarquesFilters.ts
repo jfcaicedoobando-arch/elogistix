@@ -44,11 +44,13 @@ export function useEmbarquesFilters() {
     fechaHasta: parseAsString.withDefault(""),
   });
   const [alerta, setAlertaRaw] = useQueryState("alerta", ALERTA_PARSER);
-  const [page, setPageRaw] = useQueryState("page", parseAsInteger.withDefault(0));
-  const [pageSize, setPageSizeRaw] = useQueryState(
+  const [pageFromUrl, setPageRaw] = useQueryState("page", parseAsInteger.withDefault(0));
+  const [pageSizeFromUrl, setPageSizeRaw] = useQueryState(
     "ps",
     parseAsInteger.withDefault(DEFAULT_PAGE_SIZE),
   );
+  const pageSize = Math.min(500, Math.max(1, pageSizeFromUrl));
+  const page = Math.min(Math.floor(2_147_483_647 / pageSize), Math.max(0, pageFromUrl));
   const [sortKey, setSortKeyRaw] = useQueryState("sort", parseAsString.withDefault("expediente"));
   const [sortDir, setSortDirRaw] = useQueryState("dir", SORT_DIR_PARSER);
 

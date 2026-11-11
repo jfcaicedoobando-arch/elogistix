@@ -1,6 +1,8 @@
+import { z } from "zod";
 import { supabase } from "@/integrations/supabase/client";
-import type { Tables } from "@/integrations/supabase/types";
+import type { Database, Tables } from "@/integrations/supabase/types";
 import { escapeIlike } from "@/lib/search/ilike";
+import { fromDbChecked } from "@/lib/supabase/cast";
 
 type EmbarqueRow = Tables<"embarques">;
 
@@ -36,6 +38,9 @@ export interface EmbarquesPaginadosFilters {
   filterCliente: string;
   filterOperador: string;
   filterProforma?: string;
+  filterEstado?: string;
+  filterAlerta?: string;
+  agruparExpedientes?: boolean;
   fechaDesde?: string;
   fechaHasta?: string;
   page: number;
@@ -48,6 +53,58 @@ export interface EmbarquesPaginadosResult {
   data: EmbarqueRow[];
   count: number;
   extras: EmbarqueListExtras;
+  filasTotal?: number;
+  filasPorExpediente?: Record<string, number>;
+}
+
+type FilaConExtras = EmbarqueRow & {
+  costos_total: number | string;
+  costos_pagados: number | string;
+  docs_total: number | string;
+  docs_pendientes: number | string;
+  total_count?: number | string;
+  filas_expediente?: number | string;
+};
+
+interface PaginaRpc {
+  rows: FilaConExtras[];
+  count: number;
+  filas_total: number;
+}
+
+const conteoSchema = z.number().int().nonnegative();
+const paginaRpcSchema = z.object({
+  rows: z.array(z.object({
+    id: z.string(),
+    costos_total: conteoSchema,
+    costos_pagados: conteoSchema,
+    docs_total: conteoSchema,
+    docs_pendientes: conteoSchema,
+    filas_expediente: conteoSchema,
+  })),
+  count: conteoSchema,
+  filas_total: conteoSchema,
+});
+
+async function consultarPagina(
+  f: EmbarquesPaginadosFilters,
+  args: Database["public"]["Functions"]["embarques_listado"]["Args"],
+) {
+  if (f.agruparExpedientes === undefined) {
+    const { data, error } = await supabase.rpc("embarques_listado", args);
+    if (error) throw error;
+    return { rows: (data ?? []) as Array<FilaConExtras> };
+  }
+
+  const { data, error } = await supabase.rpc("embarques_listado_pagina", {
+    ...args,
+    p_estado: f.filterEstado === "todos" ? undefined : f.filterEstado,
+    p_alerta: f.filterAlerta === "todos" ? undefined : f.filterAlerta,
+    p_agrupar: f.agruparExpedientes,
+  });
+  if (error) throw error;
+  // La migración devuelve un objeto incluso en una página sin filas.
+  return fromDbChecked<PaginaRpc>(data, paginaRpcSchema);
 }
 
 export async function fetchEmbarquesPaginados(
@@ -58,7 +115,7 @@ export async function fetchEmbarquesPaginados(
     : "expediente_num";
   const from = f.page * f.pageSize;
 
-  const { data, error } = await supabase.rpc("embarques_listado", {
+  const args = {
     p_organization_id: f.organizationId ?? undefined,
     // A-4: `embarques_listado` arma el patrón `%texto%` para ILIKE; sin
     // escapar, un `%` o `_` tecleado por el usuario actúa como comodín.
@@ -74,21 +131,20 @@ export async function fetchEmbarquesPaginados(
     p_sort_dir: f.sortDir ?? "desc",
     p_offset: from,
     p_limit: f.pageSize,
-  });
-  if (error) throw error;
+  };
+  return parsePagina(await consultarPagina(f, args));
+}
 
-  const rows = (data ?? []) as Array<EmbarqueRow & {
-    costos_total: number | string;
-    costos_pagados: number | string;
-    docs_total: number | string;
-    docs_pendientes: number | string;
-    total_count: number | string;
-  }>;
-
-  const count = rows.length > 0 ? Number(rows[0].total_count) : 0;
+function parsePagina(pagina: PaginaRpc | { rows: FilaConExtras[] }): EmbarquesPaginadosResult {
+  const { rows } = pagina;
+  const count = "count" in pagina ? pagina.count : Number(rows[0]?.total_count ?? 0);
   const liquidacion: EmbarqueListExtras["liquidacion"] = {};
   const docs: EmbarqueListExtras["docs"] = {};
+  const filasPorExpediente: Record<string, number> = {};
   const data_clean: EmbarqueRow[] = rows.map((r) => {
+    if (r.expediente && r.filas_expediente !== undefined) {
+      filasPorExpediente[r.expediente] = Number(r.filas_expediente);
+    }
     liquidacion[r.id] = {
       total: Number(r.costos_total),
       pagados: Number(r.costos_pagados),
@@ -100,11 +156,14 @@ export async function fetchEmbarquesPaginados(
     const {
       costos_total: _ct, costos_pagados: _cp,
       docs_total: _dt, docs_pendientes: _dp,
-      total_count: _tc,
+      total_count: _tc, filas_expediente: _fe,
       ...clean
     } = r;
     return clean as EmbarqueRow;
   });
 
-  return { data: data_clean, count, extras: { liquidacion, docs } };
+  return {
+    data: data_clean, count, extras: { liquidacion, docs },
+    ...("filas_total" in pagina && { filasTotal: pagina.filas_total, filasPorExpediente }),
+  };
 }
