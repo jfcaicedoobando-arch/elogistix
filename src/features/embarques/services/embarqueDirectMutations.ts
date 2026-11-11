@@ -4,14 +4,10 @@
  * límite Power-of-10 de 200 líneas. Barrel de services las re-exporta.
  */
 import { supabase } from '@/integrations/supabase/client';
-import { captureAuthOperationScope } from '@/lib/auth/authOperationScope';
-import { registrarActividad } from '@/services/bitacora/registrar';
 import type { TablesInsert } from '@/integrations/supabase/types';
 import { notaSchema, parseOrThrow } from "@/lib/validation/mutationSchemas";
 import { run } from "@/lib/supabase/response";
 import { registrarBitacoraEmbarque } from "./bitacoraEmbarques";
-import { ReglaNegocioError } from "@/lib/errors/reglaNegocio";
-import { uuidSchema } from "@/lib/validation/mutationSchemas.shared";
 
 type EmbarqueInsert = TablesInsert<'embarques'>;
 
@@ -48,97 +44,6 @@ export async function actualizarEstadoEmbarque(embarqueId: string, estado: strin
     accion: "Actualizó estado de embarque",
     entidadId: embarqueId,
     detalles: { estadoNuevo: estado },
-  });
-}
-
-/**
- * Actualiza la fecha de llegada real del embarque y avanza el estado a
- * "Arribo" cuando el estado actual lo permite según la máquina de estados de
- * BD (v13.303.22: `En Tránsito → Arribo`, `En Proceso → Arribo`). En estados
- * ya avanzados (`En Aduana`/`Entregado`/`EIR`/`Cerrado`) o comerciales
- * previos, sólo se actualiza `fecha_llegada_real` para evitar
- * `LC_TRANSICION_INVALIDA`. v13.303.22 (antes: avanzaba a `Llegada`, ya
- * deprecado).
- */
-const ESTADOS_QUE_AVANZAN_A_ARRIBO = new Set(["En Tránsito", "En Proceso"]);
-const ESTADOS_QUE_ADMITEN_LLEGADA = new Set([
-  "En Tránsito", "En Proceso", "Arribo", "En Aduana", "Entregado", "EIR",
-  "Por liquidar", "Cerrado",
-]);
-
-/**
- * v13.320.36 (B-017) — Guardas de negocio para marcar llegada real:
- *   1. No permite fechas anteriores al ETD (arribar antes de zarpar).
- *   2. No permite re-marcar una llegada real ya capturada.
- *   3. Sólo estados en tránsito o posteriores admiten llegada.
- */
-export async function actualizarFechaLlegadaRealEmbarque(
-  embarqueId: string,
-  fechaIso: string,
-): Promise<void> {
-  const scope = captureAuthOperationScope();
-  // v13.814.0 (hallazgo 2): si el pre-select falla o el embarque no existe,
-  // antes se ignoraba el error y todas las guardas de negocio se saltaban.
-  let read = supabase
-    .from('embarques')
-    .select('estado, etd, fecha_llegada_real')
-    .eq('id', embarqueId).is('deleted_at', null);
-  if (scope.organizationId) read = read.eq('organization_id', scope.organizationId);
-  const { data: current, error: errorCurrent } = await read.maybeSingle();
-  scope.assertCurrent();
-  if (errorCurrent) throw errorCurrent;
-  if (!current) {
-    throw new Error(
-      "No se encontró el embarque para marcar la llegada real: no tienes permiso o ya no existe.",
-    );
-  }
-  // Sentry JAVASCRIPT-REACT-6P: estas tres son guardas de negocio que la UI ya
-  // explica en un toast; `ReglaNegocioError` evita que se reporten como bugs.
-  if (current.fecha_llegada_real) {
-    throw new ReglaNegocioError("Este embarque ya tiene una fecha de llegada real capturada.");
-  }
-  if (current.estado && !ESTADOS_QUE_ADMITEN_LLEGADA.has(current.estado)) {
-    throw new ReglaNegocioError(
-      `No se puede marcar llegada real en estado "${current.estado}". Confirma y pon en tránsito el embarque primero.`,
-    );
-  }
-  if (current.etd && fechaIso < current.etd) {
-    throw new ReglaNegocioError(
-      `La fecha de llegada real (${fechaIso}) no puede ser anterior al ETD (${current.etd}).`,
-    );
-  }
-  const debeAvanzar = current.estado
-    ? ESTADOS_QUE_AVANZAN_A_ARRIBO.has(current.estado)
-    : false;
-  const patch: Partial<EmbarqueInsert> = { fecha_llegada_real: fechaIso };
-  if (debeAvanzar) patch.estado = 'Arribo' as EmbarqueInsert['estado'];
-  await actualizarEmbarqueVerificado(embarqueId, patch, scope.organizationId);
-  if (!scope.isCurrent()) return;
-  await registrarActividad({
-    modulo: 'embarques', authScope: scope,
-    ...(scope.organizationId ? { organizationId: scope.organizationId } : {}),
-    accion: "Actualizó fecha de llegada real de embarque",
-    entidadId: embarqueId,
-    detalles: { fechaLlegadaReal: fechaIso, estadoAnterior: current.estado, avanzoAArribo: debeAvanzar },
-  });
-}
-
-
-/**
- * Actualiza el ETA vigente del embarque. El `eta_original` queda congelado
- * por trigger de BD y no se modifica. v13.214.0.
- */
-export async function actualizarEtaEmbarque(
-  embarqueId: string,
-  nuevaEta: string,
-  eventoId?: string,
-): Promise<void> {
-  if (eventoId !== undefined) parseOrThrow(uuidSchema, eventoId, "Evento de tracking");
-  await actualizarEmbarqueVerificado(embarqueId, { eta: nuevaEta });
-  await registrarBitacoraEmbarque({
-    accion: "Actualizó ETA de embarque",
-    entidadId: embarqueId,
-    detalles: { etaNueva: nuevaEta, ...(eventoId ? { eventoId } : {}) },
   });
 }
 

@@ -384,5 +384,13 @@
       "0049_liquidaciones_lectura_finanzas_gerentes.sql"
     ],
     "scope": "isolated-ci"
+  },
+  {
+    "file": "0050_registrar_evento_tracking_embarque.sql",
+    "sha256": "da871c7f6eb9dfd3811302783470944a3c397167b09341efd7d617bb33db6753",
+    "replays": [
+      "0050_registrar_evento_tracking_embarque.sql"
+    ],
+    "scope": "isolated-ci"
   }
 ]

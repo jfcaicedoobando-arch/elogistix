@@ -351,6 +351,13 @@
       "when": 1794167691803,
       "tag": "0049_liquidaciones_lectura_finanzas_gerentes",
       "breakpoints": true
+    },
+    {
+      "idx": 50,
+      "version": "7",
+      "when": 1794371723977,
+      "tag": "0050_registrar_evento_tracking_embarque",
+      "breakpoints": true
     }
   ]
 }

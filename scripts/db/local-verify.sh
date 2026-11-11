@@ -48,7 +48,7 @@ BACKEND="auto"          # auto | docker | local
 
 
 # Suite mínima: cubre aislamiento multi-tenant, dinero, roles y anon.
-SUITES_MIN=(isolation financiero cross_tenant_mutations roles_no_admin anon_deny_all policy_linter)
+SUITES_MIN=(isolation financiero cross_tenant_mutations roles_no_admin anon_deny_all policy_linter flujos_atomicos)
 
 while [ $# -gt 0 ]; do
   case "$1" in
