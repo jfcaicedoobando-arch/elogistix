@@ -43,8 +43,8 @@ export const sidebar = {
 export const direccion = {
   /** Defecto 6 (v13.823.43) — prefijo para invalidar todo el tablero de Dirección. */
   all: ['dashboard', 'direccion'] as const,
-  kpis: (organizationId?: string | null, fallbackUsd?: number, fallbackEur?: number) =>
-    ['dashboard', 'direccion', organizationId, fallbackUsd ?? null, fallbackEur ?? null] as const,
+  kpis: (organizationId: string | null | undefined, desdeIso: string) =>
+    ['dashboard', 'direccion', organizationId, desdeIso] as const,
   /** FIX C3c: totales por moneda agregados en el servidor. */
   totales: (organizationId?: string | null, desdeIso?: string) =>
     ['dashboard', 'direccion', 'totales', organizationId, desdeIso ?? null] as const,

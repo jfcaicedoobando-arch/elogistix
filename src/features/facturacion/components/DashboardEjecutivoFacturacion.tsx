@@ -91,8 +91,9 @@ export function DashboardEjecutivoFacturacion() {
   const dashError = dash.isError;
   const cobError = cobranza.kpisIsError;
 
-  const facturadoMes = montoMxn(dash.data?.facturado_mes_mxn ?? 0, dashError);
-  const cobradoMes = montoMxn(dash.data?.cobrado_mes_mxn ?? 0, dashError);
+  const dashSinMonto = dashError || !dash.data;
+  const facturadoMes = montoMxn(dash.data?.facturado_mes_mxn ?? 0, dashSinMonto);
+  const cobradoMes = montoMxn(dash.data?.cobrado_mes_mxn ?? 0, dashSinMonto);
   const porCobrar = montoMxn(cob.total_mxn, cobError);
   const vencido = montoMxn(cob.vencido_mxn, cobError);
   const subUsdPorCobrar = subUsdSeguro(cob.total_usd, cobError);
