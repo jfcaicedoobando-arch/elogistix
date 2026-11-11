@@ -46,7 +46,8 @@ describe("TC visible en una sola divisa extranjera de Pricing", () => {
     act(() => form.reset({ ...form.getValues(), monedaCrm: "MXN" }));
     expect(screen.getByTestId("tc-cotizacion-card")).toHaveTextContent("MXN");
     act(() => { form.setValue("tarifaId", "tariff-A"); form.setValue("monedaTarifa", "USD"); });
-    expect(screen.queryByTestId("tc-cotizacion-card")).not.toBeInTheDocument();
+    // Pricing MXN confirmado: la tarifa USD no cambia la moneda; se pide TC.
+    expect(screen.getByTestId("tc-cotizacion-card")).toHaveTextContent("MXN");
     act(() => form.setValue("monedaTarifa", "MXN"));
     expect(screen.getByTestId("tc-cotizacion-card")).toHaveTextContent("MXN");
   });

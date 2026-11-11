@@ -14,8 +14,10 @@ export interface ConceptoConTotal {
 }
 
 export function monedaObjetivoCotizacion(tarifaId: string | null | undefined, monedaTarifa: string | null | undefined, solicitudId: string | null | undefined, monedaCrm: string | null | undefined): string | null {
+  // Pricing confirmado fija la moneda del vínculo aunque la tarifa sea otra.
+  if (solicitudId) return monedaCrm ?? null;
   if (tarifaId && (monedaTarifa === "USD" || monedaTarifa === "MXN")) return monedaTarifa;
-  return solicitudId ? monedaCrm ?? null : null;
+  return null;
 }
 
 function sumaPositiva(conceptos: ReadonlyArray<ConceptoConTotal>): number {

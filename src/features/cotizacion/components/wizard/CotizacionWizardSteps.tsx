@@ -58,7 +58,7 @@ export function CotizacionWizardSteps({ w, clientes, esMaritimo, sinDesgloseFlag
   const monedaCrm = useWatch({ control, name: "monedaCrm" });
   const tarifaId = useWatch({ control, name: "tarifaId" });
   const monedaElegida = useWatch({ control, name: "monedaTarifa" });
-  const monedaTarifa = tarifaId ? monedaElegida : null;
+  const monedaTarifa = tarifaId && !pricingSolicitudId ? monedaElegida : null;
   const monedaCanonica = monedaObjetivoCotizacion(tarifaId, monedaElegida, pricingSolicitudId, monedaCrm);
   const requiereTipoCambio = requiereTipoCambioCotizacion(w.conceptosUSD, w.conceptosMXN, monedaCanonica, monedaTarifa);
 

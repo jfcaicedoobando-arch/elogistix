@@ -13,9 +13,9 @@ describe("moneda de la opción elegida", () => {
     expect(setValue).toHaveBeenCalledWith("monedaTarifa", moneda, { shouldDirty: true, shouldValidate: true });
     expect(setValue.mock.calls.some(([campo]) => campo === "monedaCrm")).toBe(false);
   });
-  it("tarifa USD 6,300 no pide TC aunque la oportunidad esté en MXN", () => {
-    expect(requiereTipoCambioCotizacion([{ total: 6300 }], [], "MXN", "USD")).toBe(false);
-    expect(buildVentaCotizacionPayload({ conceptosVenta: [{ moneda: "USD", cantidad: 1, precio_unitario: 6300 }], monedaFallback: "MXN", conservarMoneda: true, monedaTarifa: "USD", tipoCambioUsd: null }))
+  it("tarifa USD sin Pricing no pide TC aunque la oportunidad esté en MXN", () => {
+    expect(requiereTipoCambioCotizacion([{ total: 6300 }], [], "USD", "USD")).toBe(false);
+    expect(buildVentaCotizacionPayload({ conceptosVenta: [{ moneda: "USD", cantidad: 1, precio_unitario: 6300 }], monedaFallback: "MXN", monedaTarifa: "USD", tipoCambioUsd: null }))
       .toMatchObject({ moneda: "USD", subtotal: 6300, tipo_cambio_usd: null });
   });
   it("tarifa MXN pide TC aunque todos los conceptos estén en pesos", () => {

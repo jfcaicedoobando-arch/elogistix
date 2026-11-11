@@ -10,7 +10,9 @@ export interface VentaCotizacionPayloadInput {
   conservarMoneda?: boolean;
   monedaTarifa?: string | null;
 }
-export function buildVentaCotizacionPayload({ conceptosVenta, monedaFallback, tipoCambioUsd, conservarMoneda = false, monedaTarifa }: VentaCotizacionPayloadInput): Record<string, unknown> {
+export function buildVentaCotizacionPayload({ conceptosVenta, monedaFallback, tipoCambioUsd, conservarMoneda = false, monedaTarifa: monedaTarifaIn }: VentaCotizacionPayloadInput): Record<string, unknown> {
+  // Pricing confirmado: la moneda del vínculo manda (la base rechaza cambiarla).
+  const monedaTarifa = conservarMoneda ? null : monedaTarifaIn;
   if (monedaTarifa === "MXN" && !tcValido(tipoCambioUsd)) {
     throw new ReglaNegocioError("Captura el tipo de cambio DOF de hoy en el paso 3 para la tarifa en MXN.");
   }
