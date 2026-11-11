@@ -2,27 +2,25 @@
  * Orchestrator de rutas. Compone los grupos por guarda + layout.
  */
 import { Routes } from "react-router";
-import { useSyncExternalStore } from "react";
+import { lazy, Suspense, useSyncExternalStore } from "react";
 import { getSentryReady, subscribeSentryReady } from "@/lib/observability/sentry/runtimeState";
-import { wrapReactRouterRouting } from "@sentry/react/react-router";
 import { publicRoutes } from "./routes/publicRoutes";
 import { portalRoutes } from "./routes/portalRoutes";
 import { adminRoutes } from "./routes/adminRoutes";
 import { appRoutes } from "./routes/appRoutes";
 import { agenteRoutes } from "./routes/agenteRoutes";
 
-const SentryRoutes = wrapReactRouterRouting(Routes);
+const SentryRouteReporter = lazy(() => import("@/lib/observability/sentry/RouteReporter"));
+const routeElements = <>{portalRoutes}{agenteRoutes}{adminRoutes}{appRoutes}{publicRoutes}</>;
 
-export const AppRoutes = () => {
-  // SDK loads after paint. Re-render the wrapper without remounting route state.
-  useSyncExternalStore(subscribeSentryReady, getSentryReady, () => false);
-  return (
-  <SentryRoutes>
-    {portalRoutes}
-    {agenteRoutes}
-    {adminRoutes}
-    {appRoutes}
-    {publicRoutes}
-  </SentryRoutes>
-  );
-};
+function RouteTelemetry() {
+  const ready = useSyncExternalStore(subscribeSentryReady, getSentryReady, () => false);
+  return ready ? <SentryRouteReporter>{routeElements}</SentryRouteReporter> : null;
+}
+
+export const AppRoutes = () => (
+  <>
+    <Routes>{routeElements}</Routes>
+    <Suspense fallback={null}><RouteTelemetry /></Suspense>
+  </>
+);

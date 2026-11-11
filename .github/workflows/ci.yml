@@ -106,8 +106,9 @@ jobs:
         run: bun run test:dependencies
       - name: Build and output guards
         run: |-
-          bun run build
+          bun run build --manifest
           bash scripts/check-bundle-size.sh
+          node scripts/check-login-bundle-size.mjs
           bash scripts/check-sourcemaps.sh
       - name: Real PDF regressions
         run: |-

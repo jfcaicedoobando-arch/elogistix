@@ -5,8 +5,8 @@
 import { lazy } from "react";
 import { Route } from "react-router";
 import { PortalProtectedRoute } from "@/features/auth/components/PortalProtectedRoute";
-import PortalLayout from "@/features/portal/components/PortalLayout";
 
+const PortalLayout = lazy(() => import("@/features/portal/components/PortalLayout"));
 const PortalDashboard = lazy(() => import("@/features/portal/routes/PortalDashboard"));
 const PortalEmbarques = lazy(() => import("@/features/portal/routes/PortalEmbarques"));
 const PortalEmbarqueDetalle = lazy(() => import("@/features/portal/routes/PortalEmbarqueDetalle"));
