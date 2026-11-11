@@ -4,6 +4,7 @@
  */
 import { useState, type ReactNode } from "react";
 import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { idVigente, type PropiedadCrm } from "@/features/crm/services/propiedadesCrm";
@@ -13,9 +14,11 @@ const NINGUNA = "ninguna";
 
 interface Props {
   prop: PropiedadCrm;
-  valor?: ValorCrm;
+  valor?: ValorCrm & { updated_at?: string };
   disabled: boolean;
-  onGuardar: (v: ValorEntrada) => void;
+  conflicto?: boolean;
+  consultando?: boolean;
+  onGuardar: (v: ValorEntrada, version: string | null) => void | Promise<boolean>;
   onEditar?: (tieneCambios: boolean) => void;
   descripcionId?: string;
   renderEstado?: (valorVisible: ValorEntrada) => ReactNode;
@@ -28,8 +31,9 @@ function inicialTexto(prop: PropiedadCrm, v?: ValorCrm): string {
   return v.valor_texto ?? "";
 }
 
-export function CampoPropiedad({ prop, valor, disabled, onGuardar, onEditar, descripcionId, renderEstado }: Props) {
-  const [texto, setTexto] = useState(() => inicialTexto(prop, valor));
+export function CampoPropiedad(props: Props) {
+  const { prop, valor, disabled, onGuardar, descripcionId, renderEstado } = props;
+  const version = valor?.updated_at ?? null;
   const seleccionados = (valor?.opcion_ids ?? []).map((id) => idVigente(prop.opciones, id));
   const activas = prop.opciones.filter((o) => !o.archivada || seleccionados.includes(o.id));
   const id = `prop-${prop.id}`;
@@ -38,7 +42,7 @@ export function CampoPropiedad({ prop, valor, disabled, onGuardar, onEditar, des
     return (
       <>
       <Select value={seleccionados[0] ?? NINGUNA} disabled={disabled}
-        onValueChange={(v) => onGuardar(v === NINGUNA ? null : v)}>
+        onValueChange={(v) => { void onGuardar(v === NINGUNA ? null : v, version); }}>
         <SelectTrigger id={id} aria-label={prop.etiqueta} aria-describedby={descripcionId}><SelectValue /></SelectTrigger>
         <SelectContent>
           <SelectItem value={NINGUNA}>Sin definir</SelectItem>
@@ -52,7 +56,7 @@ export function CampoPropiedad({ prop, valor, disabled, onGuardar, onEditar, des
 
   if (prop.tipo === "multiseleccion") {
     const alternar = (opId: string, on: boolean) =>
-      onGuardar(on ? [...seleccionados, opId] : seleccionados.filter((s) => s !== opId));
+      onGuardar(on ? [...seleccionados, opId] : seleccionados.filter((s) => s !== opId), version);
     return (
       <>
       <div className="flex flex-wrap gap-3" role="group" aria-label={prop.etiqueta} aria-describedby={descripcionId}>
@@ -69,16 +73,51 @@ export function CampoPropiedad({ prop, valor, disabled, onGuardar, onEditar, des
     );
   }
 
+  return <CampoCaptura {...props} />;
+}
+
+function CampoCaptura({ prop, valor, disabled, conflicto, consultando, onGuardar, onEditar, descripcionId, renderEstado }: Props) {
+  const [borrador, setBorrador] = useState<{ texto: string; version: string | null } | null>(null);
+  const actual = inicialTexto(prop, valor);
+  const version = valor?.updated_at ?? null;
+  const texto = borrador?.texto ?? actual;
+  const hayConflicto = borrador !== null && (borrador.version !== version || conflicto);
+
+  function editar(textoNuevo: string) {
+    const tieneCambios = textoNuevo !== actual;
+    setBorrador(tieneCambios ? { texto: textoNuevo, version: borrador ? borrador.version : version } : null);
+    onEditar?.(tieneCambios);
+  }
+
+  async function guardar(versionObservada: string | null) {
+    if (!borrador || disabled) return;
+    const confirmado = await onGuardar(borrador.texto || null, versionObservada);
+    if (confirmado !== false) setBorrador((previo) => previo === borrador ? null : previo);
+  }
+
   const tipoInput = prop.tipo === "numero" ? "number" : prop.tipo === "fecha" ? "date" : "text";
   return (
     <>
     <Input
-      id={id} type={tipoInput} value={texto} disabled={disabled} aria-label={prop.etiqueta}
-      onChange={(e) => { setTexto(e.target.value); onEditar?.(e.target.value !== inicialTexto(prop, valor)); }}
-      onBlur={() => { if (texto !== inicialTexto(prop, valor)) onGuardar(texto || null); }}
+      id={`prop-${prop.id}`} type={tipoInput} value={texto} disabled={disabled} aria-label={prop.etiqueta}
+      onChange={(e) => editar(e.target.value)}
+      onBlur={() => { if (borrador && !hayConflicto) void guardar(borrador.version); }}
       aria-describedby={descripcionId}
       maxLength={prop.tipo === "texto" ? 500 : undefined}
     />
+    {hayConflicto && (
+      <div className="space-y-2 text-body-sm">
+        <p role="status">Valor actual: {actual || "Sin definir"}</p>
+        <div className="flex flex-wrap gap-2">
+          <Button type="button" variant="outline" size="sm" disabled={disabled} onClick={() => editar(actual)}>
+            Usar valor actual
+          </Button>
+          <Button type="button" size="sm" disabled={disabled || consultando} onClick={() => { void guardar(version); }}>
+            Guardar mi cambio
+          </Button>
+        </div>
+      </div>
+    )}
     {renderEstado?.(texto)}
     </>
   );

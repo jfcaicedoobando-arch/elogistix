@@ -35,12 +35,13 @@ function EstadoCampo({ id, estado, coincide, consultando }: {
     guardando: "Guardando…",
     guardado: "Guardado",
     error: "No se pudo guardar. Vuelve a intentarlo al salir del campo o al elegir una opción.",
+    conflicto: "El valor cambió mientras editabas. Revisa el valor actual antes de volver a guardar.",
   };
   const confirmado = consultando
     ? "Cambio guardado. Actualizando el campo…"
     : "El cambio se guardó, pero el campo muestra otro valor. Revisa la captura antes de continuar.";
   return (
-    <p id={id} role={estado === "error" ? "alert" : "status"}
+    <p id={id} role={estado === "error" || estado === "conflicto" ? "alert" : "status"}
       className={`min-h-4 text-body-sm ${estado === "error" ? "text-destructive" : "text-muted-foreground"}`}>
       {estado === "guardado" && !coincide ? confirmado : estado ? textos[estado] : ""}
     </p>
@@ -82,9 +83,11 @@ function PropiedadesContenido({ objeto, registroId, canEdit }: Props) {
                   prop={p}
                   valor={valores.data?.find((v) => v.propiedad_id === p.id)}
                   disabled={!canEdit || guardar.isPending}
+                  conflicto={guardar.estados[p.id] === "conflicto"}
+                  consultando={valores.isFetching}
                   onEditar={(tieneCambios) => guardar.editar(p.id, tieneCambios)}
                   descripcionId={`estado-prop-${p.id}`}
-                  onGuardar={(valor) => void guardar.guardarCampo({ propiedadId: p.id, tipo: p.tipo, valor })}
+                  onGuardar={(valor, version) => guardar.guardarCampo({ propiedadId: p.id, tipo: p.tipo, valor, version })}
                   renderEstado={(visible) => <EstadoCampo id={`estado-prop-${p.id}`} estado={guardar.estados[p.id]}
                     coincide={mismoValor(guardar.confirmados[p.id], visible, p.tipo)} consultando={valores.isFetching} />}
                 />

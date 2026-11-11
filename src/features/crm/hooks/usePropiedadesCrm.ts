@@ -8,7 +8,7 @@ import {
   actualizarPropiedad, archivarOpcion, crearOpcion, crearPropiedad, fetchPropiedades, renombrarOpcion,
   type CambioPropiedad, type NuevaPropiedad, type ObjetoCrm, type OpcionCrm,
 } from "@/features/crm/services/propiedadesCrm";
-import { fetchValores, guardarValor, type ValorEntrada } from "@/features/crm/services/valoresCrm";
+import { ConflictoValorCrm, fetchValores, guardarValor, type ValorCrmPersistido, type ValorEntrada } from "@/features/crm/services/valoresCrm";
 import type { TipoPropiedad } from "@/features/crm/services/propiedadesCrm";
 
 const BASE = crm.propiedades.all;
@@ -52,11 +52,27 @@ export function useOpcionPropiedad() {
   }, "");
 }
 
-export interface GuardarValorInput { propiedadId: string; tipo: TipoPropiedad; valor: ValorEntrada }
+export interface GuardarValorInput { propiedadId: string; tipo: TipoPropiedad; valor: ValorEntrada; version: string | null }
 
 export function useGuardarValorCrm(registroId: string) {
-  return useMutacion(
-    ({ propiedadId, tipo, valor }: GuardarValorInput) => guardarValor(propiedadId, registroId, tipo, valor),
-    "",
-  );
+  const qc = useQueryClient();
+  const valoresKey = crm.propiedades.valores(registroId);
+  return useMutation({
+    mutationFn: ({ propiedadId, tipo, valor, version }: GuardarValorInput) => guardarValor(propiedadId, registroId, tipo, valor, version),
+    onSuccess: (confirmado, { propiedadId, version }) => {
+      qc.setQueryData<ValorCrmPersistido[]>(valoresKey, (anteriores) => {
+        if (!anteriores) return anteriores;
+        const previo = anteriores.find((v) => v.propiedad_id === propiedadId);
+        if ((previo?.updated_at ?? null) !== version) return anteriores;
+        return [...anteriores.filter((v) => v.propiedad_id !== propiedadId), confirmado];
+      });
+      void qc.invalidateQueries({ queryKey: BASE });
+      void qc.invalidateQueries({ queryKey: crm.scoring.all });
+    },
+    onError: (error: Error) => {
+      if (error instanceof ConflictoValorCrm) void qc.invalidateQueries({ queryKey: valoresKey });
+      notifyError(undefined, { title: "No se pudo guardar la propiedad", description: error.message,
+        error, method: "CRM_PROPIEDADES_MUTACION" });
+    },
+  });
 }
