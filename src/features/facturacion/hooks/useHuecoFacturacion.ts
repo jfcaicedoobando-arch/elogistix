@@ -8,6 +8,7 @@ import { useOrgFilter } from "@/hooks/shared";
 import {
   fetchHuecoFacturacion,
 } from "@/features/facturacion/services";
+import { fetchHuecoFacturacionCount } from "@/features/facturacion/services/huecoFacturacion/fetchSources";
 import { exportToCsv } from "@/generators/exportCsv";
 import { queryKeys } from "@/lib/query";
 import {
@@ -16,7 +17,15 @@ import {
   buildHuecoCsvRows,
 } from "@/features/facturacion/domain/huecoCsv";
 
-;
+export function useHuecoFacturacionCount() {
+  const { organizationId, orgListo } = useOrgFilter();
+  return useQuery({
+    queryKey: queryKeys.facturacion.huecoConteo(organizationId),
+    queryFn: () => fetchHuecoFacturacionCount(organizationId),
+    enabled: orgListo,
+    staleTime: 60_000,
+  });
+}
 
 export function useHuecoFacturacion() {
   const { organizationId } = useOrgFilter();

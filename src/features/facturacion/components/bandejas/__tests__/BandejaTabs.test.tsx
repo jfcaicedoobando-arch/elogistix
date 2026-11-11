@@ -6,7 +6,7 @@ import { Tabs } from "@/components/ui/tabs";
 import { BandejaTabs, type BandejaId } from "../BandejaTabs";
 
 vi.mock("@/features/facturacion/hooks", () => ({
-  useHuecoFacturacion: () => ({ totalEmbarques: 0 }),
+  useHuecoFacturacionCount: () => ({ data: 0 }),
 }));
 vi.mock("@/features/facturacion/hooks/useBandejas", () => ({
   useBandejaConteos: () => ({ data: {} }),

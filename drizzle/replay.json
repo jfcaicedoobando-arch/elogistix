@@ -432,5 +432,13 @@
       "0055_embarques_paginacion_filtros.sql"
     ],
     "scope": "isolated-ci"
+  },
+  {
+    "file": "0056_facturacion_bandejas_ligeras.sql",
+    "sha256": "454907329cdf6a2b40f3937ebc9b0b3980af07bb1c9326e88e39d7d5493bad62",
+    "replays": [
+      "0056_facturacion_bandejas_ligeras.sql"
+    ],
+    "scope": "isolated-ci"
   }
 ]

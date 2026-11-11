@@ -27,20 +27,19 @@ const state = vi.hoisted(() => ({
   },
 }));
 vi.mock("@/features/facturacion/hooks", () => ({
-  useHuecoFacturacion: () => ({ totalEmbarques: 0 }),
+  useHuecoFacturacionCount: () => ({ data: 0 }),
 }));
 vi.mock("@/features/facturacion/hooks/useBandejas", () => ({
   useBandejaConteos: () => state.counts,
 }));
 vi.mock("@/features/facturacion/hooks/useCobranza", () => ({
-  useCobranza: () => ({
+  useCobranzaFilas: () => ({
     data: state.rows,
-    kpis: state.kpis,
-    kpisIsError: false,
     isLoading: false,
     isError: false,
     refetch: vi.fn(),
   }),
+  useCobranzaKpis: () => ({ data: state.kpis, isError: false, refetch: vi.fn() }),
 }));
 vi.mock(
   "@/features/facturacion/hooks/useDashboardEjecutivoFacturacion",

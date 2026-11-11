@@ -8,8 +8,8 @@ import { Card, CardContent } from "@/components/ui/card";
 import { FileCheck2, FileDown, FileCode } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ResponsiveDataTable } from "@/components/shared/dataTable/ResponsiveDataTable";
-import { useClientPagedList } from "@/hooks/shared/useClientPagedList";
-import { useRepsHistorico, type FilaRepHistorico } from "@/features/facturacion/hooks/useBandejas";
+import { useOrgFilter } from "@/hooks/shared";
+import { useRepsHistorico } from "@/features/facturacion/hooks/useBandejas";
 import { descargarCfdiFacturapi } from "@/features/facturacion/services/descargarCfdiFacturapi";
 import { useConsultarRep } from "@/features/facturacion/hooks/useConsultarRep";
 
@@ -22,7 +22,12 @@ import { AuthOperationChangedError, captureAuthOperationScope } from "@/lib/auth
 import { mensajeDescargaCfdi } from "@/features/facturacion/domain/descargaCfdiError";
 
 export function BandejaRepsHistorico() {
-  const { data, isLoading, isError, refetch } = useRepsHistorico();
+  const { organizationId } = useOrgFilter();
+  return <BandejaRepsHistoricoContenido key={organizationId} organizationId={organizationId} />;
+}
+
+function BandejaRepsHistoricoContenido({ organizationId }: { organizationId: string | null }) {
+  const paged = useRepsHistorico(organizationId);
   const consultar = useConsultarRep();
   const [descargando, setDescargando] = useState<string | null>(null);
 
@@ -57,42 +62,24 @@ export function BandejaRepsHistorico() {
   );
 
 
-  const paged = useClientPagedList<FilaRepHistorico>({
-    data,
-    isLoading,
-    defaultFilters: {},
-    defaultSort: { key: "timbrado", dir: "desc" },
-    searchAccessor: (r) => `${r.folio_rep} ${r.factura_numero} ${r.cliente_nombre} ${r.uuid_rep ?? ""}`,
-    sorters: {
-      folio_rep: (a, b) => a.folio_rep.localeCompare(b.folio_rep),
-      factura: (a, b) => a.factura_numero.localeCompare(b.factura_numero),
-      cliente: (a, b) => a.cliente_nombre.localeCompare(b.cliente_nombre),
-      fecha_pago: (a, b) => a.fecha_pago.localeCompare(b.fecha_pago),
-      monto: (a, b) => a.monto - b.monto,
-      timbrado: (a, b) => (a.timbrado_rep_en ?? "").localeCompare(b.timbrado_rep_en ?? ""),
-      estado: (a, b) => estadoRepHistorico(a).localeCompare(estadoRepHistorico(b)),
-    },
-  });
-  const totalCount = data?.length ?? 0;
-
   return (
     <BandejaShell
-      isError={isError}
-      onRetry={() => refetch()}
+      isError={Boolean(paged.error)}
+      onRetry={() => paged.refetch()}
       search={paged.search}
       onSearchChange={paged.setSearch}
       searchPlaceholder="Buscar por folio, factura, cliente o UUID…"
       chips={paged.activeChips}
       activeCount={paged.activeCount}
       onClearAll={paged.resetAll}
-      counter={<>Mostrando <strong className="text-foreground">{paged.filteredCount}</strong> de {totalCount} REPs timbrados</>}
+      counter={paged.isStaleView || paged.isLoading ? "Consultando REPs…" : <><strong className="text-foreground">{paged.count}</strong> REPs timbrados</>}
     >
       <Card>
         <CardContent className="p-0">
           <ResponsiveDataTable
             columns={columns}
-            data={paged.rows}
-            isLoading={paged.isLoading}
+            data={paged.isStaleView ? [] : paged.rows}
+            isLoading={paged.isLoading || paged.isStaleView}
             emptyState={
               <div className="flex flex-col items-center justify-center gap-2 py-12 text-center text-body text-muted-foreground px-4">
                 <FileCheck2 className="h-8 w-8 opacity-40" strokeWidth={1.5} />

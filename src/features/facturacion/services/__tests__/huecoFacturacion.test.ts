@@ -6,6 +6,7 @@ const mock = await vi.hoisted(async () => {
 vi.mock("@/integrations/supabase/client", () => ({ supabase: mock.supabase }));
 
 import { fetchHuecoFacturacion } from "@/features/facturacion/services/huecoFacturacion";
+import { fetchHuecoFacturacionCount } from "@/features/facturacion/services/huecoFacturacion/fetchSources";
 import { FACTURA_ESTADOS_VIVOS_HUECO } from "@/features/facturacion/services/huecoFacturacion/constants";
 
 const HOY = new Date("2026-06-15T12:00:00Z");
@@ -21,9 +22,18 @@ function emb(id: string, overrides: Record<string, unknown> = {}) {
 
 beforeEach(() => {
   mock.tableCalls.length = 0;
+  mock.rpcCalls.length = 0;
 });
 
 describe("fetchHuecoFacturacion", () => {
+  it("sirve el contador sin descargar ninguna fila del hueco", async () => {
+    mock.setRpcResult("hueco_facturacion_count", { data: 6, error: null });
+    await expect(fetchHuecoFacturacionCount("org-1")).resolves.toBe(6);
+    expect(mock.rpcCalls).toHaveLength(1);
+    expect(mock.rpcCalls[0].args).toEqual({ p_organization_id: "org-1" });
+    expect(mock.tableCalls).toHaveLength(0);
+  });
+
   it("devuelve resultado vacío cuando no hay embarques que superen el umbral", async () => {
     mock.setTableResult("embarques", { data: [], error: null });
     const r = await fetchHuecoFacturacion({ organizationId: "org-1", hoy: HOY });
@@ -124,6 +134,7 @@ describe("fetchHuecoFacturacion", () => {
     expect(r.totalEmbarques).toBe(1);
     expect(r.totalMxn).toBeCloseTo(10 * 20 + 100, 2); // USD→MXN + MXN
     expect(r.totalUsd).toBeCloseTo(10 + 100 / 20, 2);
+    expect(mock.tableCalls.filter((c) => c.table === "conceptos_venta")).toHaveLength(1);
   });
 
   it("ordena filas por diasDesdeEta descendente", async () => {

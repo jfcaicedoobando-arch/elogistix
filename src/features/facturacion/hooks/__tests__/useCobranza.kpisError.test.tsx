@@ -8,6 +8,7 @@ import { renderHook, waitFor } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import React from "react";
 
+vi.mock("@/hooks/shared", () => ({ useOrgFilter: () => ({ organizationId: "org-prueba", orgListo: true }) }));
 vi.mock("@/features/facturacion/services", () => ({
   fetchCobranza: vi.fn(),
   fetchCobranzaKpis: vi.fn(),
@@ -18,7 +19,7 @@ vi.mock("@/features/facturacion/services", () => ({
 }));
 
 import { fetchCobranza, fetchCobranzaKpis } from "@/features/facturacion/services";
-import { useCobranza } from "../useCobranza";
+import { useCobranza, useCobranzaKpis } from "../useCobranza";
 
 const mockLista = vi.mocked(fetchCobranza);
 const mockKpis = vi.mocked(fetchCobranzaKpis);
@@ -31,6 +32,14 @@ function wrapper({ children }: { children: React.ReactNode }) {
 beforeEach(() => { vi.clearAllMocks(); });
 
 describe("useCobranza · KPIs remotos", () => {
+  it("puede cargar KPIs sin pedir las filas de cartera", async () => {
+    mockKpis.mockResolvedValue({ total_mxn: 999 } as never);
+    const { result } = renderHook(() => useCobranzaKpis(), { wrapper });
+    await waitFor(() => expect(result.current.data?.total_mxn).toBe(999));
+    expect(mockKpis).toHaveBeenCalledTimes(1);
+    expect(mockLista).not.toHaveBeenCalled();
+  });
+
   it("marca kpisIsError cuando la RPC falla y conserva la tabla", async () => {
     mockLista.mockResolvedValue([{ id: "f1" } as never]);
     mockKpis.mockRejectedValue(new Error("rpc caída"));

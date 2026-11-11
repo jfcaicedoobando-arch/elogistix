@@ -46,6 +46,7 @@ export const HISTORY = [
   { file: '0053_provision_membresia_atomica.sql', sha256: '4b519d836748bf04174aae1353f1ab160996904ff6d180b001e587c4b492231e', eligibleName: '20261111054500_provision_membresia_atomica.sql' },
   { file: '0054_conteos_sidebar.sql', sha256: '3a3ffebc64c70e50b1619e24a2b7746975ff677477360d5b9fffe2ddee0ce1f8', eligibleName: '20261111153000_conteos_sidebar.sql' },
   { file: '0055_embarques_paginacion_filtros.sql', sha256: '5cfc15700522c72741948cd7de594b9e573a1d0dbbd30a43cb67411be62ba9d1', eligibleName: '20261111160000_embarques_paginacion_filtros.sql' },
+  { file: '0056_facturacion_bandejas_ligeras.sql', sha256: '454907329cdf6a2b40f3937ebc9b0b3980af07bb1c9326e88e39d7d5493bad62', eligibleName: '20261111162000_facturacion_bandejas_ligeras.sql' },
 ];
 const ARCHIVED_METADATA = [
   [`${ARCHIVE}/meta/0022_snapshot.json`, '002a1cff39197fe3431f23193a4229e1c845cbcd0ab5eaa074efded812b0081d'],

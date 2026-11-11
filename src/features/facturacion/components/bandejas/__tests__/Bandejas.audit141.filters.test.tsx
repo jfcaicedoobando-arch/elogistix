@@ -15,7 +15,7 @@ const fixtures = vi.hoisted(() => ({
       moneda: "EUR", estatus_cobranza: "Sin saldo", fecha_vencimiento: "2026-10-07", dias_vencido: 0 },
   ]),
 }));
-vi.mock("@/features/facturacion/hooks/useCobranza", () => ({ useCobranza: () => ({ data: fixtures.rows, isLoading: false, isError: false, refetch: vi.fn() }) }));
+vi.mock("@/features/facturacion/hooks/useCobranza", () => ({ useCobranzaFilas: () => ({ data: fixtures.rows, isLoading: false, isError: false, refetch: vi.fn() }) }));
 vi.mock("../BandejaShell", () => ({ BandejaShell: ({ children, counter, search, onSearchChange }: {
   children: ReactNode; counter: ReactNode; search: string; onSearchChange: (value: string) => void;
 }) => <><div data-testid="counter">{counter}</div><input aria-label="Buscar" value={search} onChange={(e) => onSearchChange(e.target.value)} />{children}</> }));
