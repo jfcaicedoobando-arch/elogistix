@@ -41,26 +41,27 @@ export interface EmbarqueFullData {
   facturas: Tables<"facturas">[];
 }
 
-const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+export const EMBARQUE_ID_UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+/** Resuelve los enlaces históricos por folio conservando el caso ambiguo. */
+export async function fetchEmbarqueIdPorExpediente(expediente: string): Promise<string | null> {
+  const { data, error } = await supabase
+    .from("embarques")
+    .select("id")
+    .eq("expediente", expediente)
+    .is("deleted_at", null)
+    .limit(2);
+  if (error) throw error;
+  const vivos = data ?? [];
+  if (vivos.length > 1) throw new ReglaNegocioError(LC_CODE_MESSAGES.LC_EXPEDIENTE_AMBIGUO);
+  return vivos[0]?.id ?? null;
+}
 
 export async function fetchEmbarqueFull(idOrExpediente: string): Promise<EmbarqueFullData | null> {
-  let id = idOrExpediente;
-  // Si no es UUID, asumimos que es expediente (folio human-readable). Resolvemos a id.
-  if (!UUID_RE.test(idOrExpediente)) {
-    // R221: se ignoran los eliminados y, si aún quedan varios folios vivos
-    // (ELIMP00006 duplicado), se avisa en lugar de fallar con error genérico.
-    const { data: rows, error: lookupErr } = await supabase
-      .from("embarques")
-      .select("id")
-      .eq("expediente", idOrExpediente)
-      .is("deleted_at", null)
-      .limit(2);
-    if (lookupErr) throw lookupErr;
-    const vivos = rows ?? [];
-    if (vivos.length === 0) return null;
-    if (vivos.length > 1) throw new ReglaNegocioError(LC_CODE_MESSAGES.LC_EXPEDIENTE_AMBIGUO);
-    id = vivos[0].id;
-  }
+  const id = EMBARQUE_ID_UUID.test(idOrExpediente)
+    ? idOrExpediente
+    : await fetchEmbarqueIdPorExpediente(idOrExpediente);
+  if (!id) return null;
   const { data, error } = await supabase.rpc("get_embarque_full", { p_embarque_id: id });
   if (error) throw error;
   if (!data) return null;

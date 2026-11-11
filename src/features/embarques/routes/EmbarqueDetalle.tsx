@@ -6,9 +6,9 @@ import { usePermissions, useTabsParam, useDocumentTitle } from "@/hooks/shared";
 import {
   calcularEstadoEmbarque,
   getSiguienteEstado,
-  useEmbarqueDetalleData,
   useEmbarqueDetalleTracking,
 } from "@/features/embarques/hooks";
+import { useEmbarqueResumen } from "@/features/embarques/hooks/useEmbarqueQueries";
 
 
 import { CargaGuard } from "@/components/shared/states/CargaGuard";
@@ -48,7 +48,7 @@ export default function EmbarqueDetalle() {
   const { canEdit } = usePermissions();
   const { activeTab, setActiveTab } = useTabsParam(TABS_VALIDOS, "resumen", "tab", TABS_LEGACY);
 
-  const { embarque, isLoading, error, refetch } = useEmbarqueDetalleData(id);
+  const { embarque, isLoading, error, refetch } = useEmbarqueResumen(id);
   useRegisterBreadcrumbLabel(id, embarque?.expediente);
   // UIA-12: la pestaña se distingue por folio (antes quedaba el título del landing).
   useDocumentTitle(embarque?.expediente ? `Embarque ${embarque.expediente}` : "Embarque");
@@ -58,7 +58,7 @@ export default function EmbarqueDetalle() {
   const [dialogDuplicarAbierto, setDialogDuplicarAbierto] = useState(false);
 
   const { handleCompartirTracking, handleRevocarTracking, tieneLinkActivo, avisoEnlace,
-    cerrarAvisoEnlace, isPending: trackingPending } = useEmbarqueDetalleTracking(id);
+    cerrarAvisoEnlace, isPending: trackingPending } = useEmbarqueDetalleTracking(embarque?.id);
 
   if (!isLoading && !error && !embarque) return <NotFoundState />;
 
@@ -83,7 +83,7 @@ export default function EmbarqueDetalle() {
           <>
             <EmbarqueDetalleHeader
               embarque={embarque}
-              embarqueId={id!}
+              embarqueId={embarque.id}
               estadoVisual={estadoVisual}
               siguienteEstado={siguienteEstado}
               canEdit={canEdit}
@@ -101,7 +101,7 @@ export default function EmbarqueDetalle() {
 
             <EmbarqueDetalleTabs
               embarque={embarque}
-              embarqueId={id!}
+              embarqueId={embarque.id}
               activeTab={activeTab}
               setActiveTab={setActiveTab}
               estadoVisual={estadoVisual}

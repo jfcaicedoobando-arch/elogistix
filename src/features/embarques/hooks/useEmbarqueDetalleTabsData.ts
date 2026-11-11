@@ -1,57 +1,37 @@
-/**
- * `useEmbarqueDetalleTabsData` — Data-fetching + acciones consumidas por
- * `EmbarqueDetalleTabs`, extraído del contenedor de ruta.
- *
- * v13.309.24 · Cierra el Ítem 3.5 de la auditoría de arquitectura 3:
- *   > Data-fetching aún en el padre. Mover a `useEmbarqueDetalleTabsData(embarqueId)`.
- *
- * Compone tres hooks especializados que antes vivían en la ruta:
- *   - `useEmbarqueDetalleData`     → embarque + colecciones (documentos, conceptos, facturas, notas)
- *   - `useEmbarqueFinancials`      → total venta/costo/utilidad/margen convertidos a MXN
- *   - `useEmbarqueDocumentosActions` → mutations + handlers de upload/delete/download/no-aplica
- *
- * Devuelve además el bundle `docHandlers` ya derivado (uploadingDocId, deletingDocId,
- * togglingNoAplicaDocId) para que los tabs no dupliquen el cálculo de `.isPending`.
- *
- * La ruta sigue llamando a `useEmbarqueDetalleData(id)` para obtener `embarque` + `isLoading`
- * (early return del layout). React Query comparte el caché entre ambas suscripciones,
- * de modo que no hay fetch duplicado; sólo hay dos instancias de `useMutation` para
- * documentos — una en el header (bloqueos de avance) y otra en los tabs (upload real).
- */
+import type { EmbarqueRow } from "@/features/embarques/types/embarque";
+import { useEmbarqueFinancials } from "./useEmbarqueFinancials";
 import {
-  useEmbarqueDetalleData,
-  useEmbarqueFinancials,
-  useEmbarqueDocumentosActions,
-} from "@/features/embarques/hooks";
-import type { EmbarqueRow } from "@/features/embarques/hooks/useEmbarques";
+  useEmbarqueConceptosDetalle,
+  useEmbarqueDocumentosDetalle,
+  useEmbarqueFacturasDetalle,
+  useEmbarqueNotasDetalle,
+} from "./useEmbarqueDetalleSecciones";
 
-export function useEmbarqueDetalleTabsData(
-  embarqueId: string | undefined,
-  embarque: EmbarqueRow | undefined,
-) {
-  const {
-    conceptosVenta, conceptosCosto, documentos, notas, facturas,
-    tipoCambioUSD, tipoCambioEUR,
-  } = useEmbarqueDetalleData(embarqueId);
+const SIN_FILAS: never[] = [];
 
+export function useEmbarqueDetalleTabsData(embarque: EmbarqueRow, activeTab: string) {
+  const necesitaConceptos = activeTab === "costos" || activeTab === "pnl";
+  const necesitaDocumentos = activeTab === "documentos" || activeTab === "cierre";
+  const conceptos = useEmbarqueConceptosDetalle(embarque.id, necesitaConceptos);
+  const documentos = useEmbarqueDocumentosDetalle(embarque.id, necesitaDocumentos);
+  const facturas = useEmbarqueFacturasDetalle(embarque.id, activeTab === "facturacion");
+  const notas = useEmbarqueNotasDetalle(embarque.id, activeTab === "notas");
+  const conceptosVenta = conceptos.conceptosVenta ?? SIN_FILAS;
+  const conceptosCosto = conceptos.conceptosCosto ?? SIN_FILAS;
   const financials = useEmbarqueFinancials({
-    conceptosVenta, conceptosCosto, tipoCambioUSD, tipoCambioEUR,
+    conceptosVenta, conceptosCosto,
+    tipoCambioUSD: embarque.tipo_cambio_usd ?? 1,
+    tipoCambioEUR: embarque.tipo_cambio_eur ?? 1,
   });
-
-  const docs = useEmbarqueDocumentosActions(embarque, embarqueId);
-
-  const docHandlers = {
-    uploadingDocId: docs.uploadDoc.isPending ? (docs.uploadDoc.variables?.docId ?? null) : null,
-    downloadingDocId: docs.downloadingDocId,
-    deletingDocId: docs.deleteDoc.isPending ? (docs.deleteDoc.variables?.docId ?? null) : null,
-    togglingNoAplicaDocId: docs.setNoAplica.isPending ? (docs.setNoAplica.variables?.docId ?? null) : null,
-    onUpload: docs.handleUpload,
-    onDownload: docs.handleDownload,
-    onDelete: docs.handleDeleteDoc,
-    onToggleNoAplica: docs.handleToggleNoAplica,
-    rechazandoDocId: docs.rechazarDoc.isPending ? (docs.rechazarDoc.variables?.docId ?? null) : null,
-    onRechazar: docs.handleRechazarDoc,
+  const activeQuery = {
+    costos: conceptos, pnl: conceptos,
+    documentos, cierre: documentos, facturacion: facturas, notas,
   };
-
-  return { conceptosVenta, conceptosCosto, documentos, notas, facturas, financials, docHandlers };
+  return {
+    conceptosVenta, conceptosCosto, financials,
+    documentos: documentos.data ?? SIN_FILAS,
+    facturas: facturas.data ?? SIN_FILAS,
+    notas: notas.data ?? SIN_FILAS,
+    query: activeQuery[activeTab as keyof typeof activeQuery],
+  };
 }
