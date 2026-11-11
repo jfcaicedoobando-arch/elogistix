@@ -30,6 +30,7 @@ import {
 import { sha1 } from "./bbva.parsers";
 import { clasificarFila, type ColIdx, type FilaDescartada, type MovimientoParseado } from "./bbva.filas";
 import { leerArchivoTexto } from "@/lib/io/readFileText";
+import { readWorkbook } from "@/lib/xlsx/readWorkbook";
 import Papa from "papaparse";
 import { logger } from "@/lib/observability/logger";
 
@@ -146,12 +147,7 @@ export async function parseEstadoCuentaBBVA(file: File): Promise<ResultadoParseo
     return filasAMovimientos(data);
   }
   const buf = await file.arrayBuffer();
-  // Dynamic import: xlsx (~400 KB) sólo se carga al importar un .xlsx real,
-  // evitando arrastrar la lib en el bundle inicial de Tesorería.
-  const XLSX = await import("xlsx");
-  const wb = XLSX.read(buf, { type: "array", cellDates: true });
-  const sheet = wb.Sheets[wb.SheetNames[0]];
-  // SAFE-CAST: XLSX retorna unknown[][]; sólo lo usamos como strings en filasAMovimientos.
-  const rows = XLSX.utils.sheet_to_json<unknown[]>(sheet, { header: 1, defval: "", raw: true }) as unknown as string[][];
+  // Las fechas, importes y celdas vacías conservan el tipo leído de Excel.
+  const rows = await readWorkbook(buf, { layout: "rows" }) as string[][];
   return filasAMovimientos(rows);
 }

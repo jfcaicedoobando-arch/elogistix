@@ -10,9 +10,9 @@ function fontSource(url: URL): string {
     : url.href;
 }
 
-const regular = fontSource(new URL("../assets/Inter-Regular.ttf", import.meta.url));
-const semibold = fontSource(new URL("../assets/Inter-SemiBold.ttf", import.meta.url));
-const italic = fontSource(new URL("../assets/Inter-Italic.ttf", import.meta.url));
+const regular = fontSource(new URL("../assets/Inter-Regular.woff", import.meta.url));
+const semibold = fontSource(new URL("../assets/Inter-SemiBold.woff", import.meta.url));
+const italic = fontSource(new URL("../assets/Inter-Italic.woff", import.meta.url));
 
 let registered = false;
 

@@ -9,14 +9,12 @@ import { fetchCosteoAgentes } from "@/features/costeo/services/agentes";
 import { fetchCosteoRutas, insertCosteoRuta } from "@/features/costeo/services/rutas";
 import { insertTarifaConRecargos } from "@/features/costeo/services/tarifas";
 import { prepararImportacion, type ResultadoImport } from "./importarTarifas";
+import { readWorkbook } from "@/lib/xlsx/readWorkbook";
 
 interface Props { open: boolean; onOpenChange: (v: boolean) => void; onDone: () => void }
 
 async function leerArchivo(file: File): Promise<Record<string, unknown>[]> {
-  const XLSX = await import("xlsx");
-  const wb = XLSX.read(await file.arrayBuffer(), { type: "array", cellDates: true });
-  const hoja = wb.Sheets[wb.SheetNames[0]];
-  return hoja ? XLSX.utils.sheet_to_json<Record<string, unknown>>(hoja, { defval: "" }) : [];
+  return readWorkbook(await file.arrayBuffer(), { layout: "objects" });
 }
 
 const msg = (e: unknown) => (e instanceof Error ? e.message : String((e as { message?: string })?.message ?? e));

@@ -10,7 +10,7 @@ import { FONTS } from "../../src/pdf/theme/tokens";
 
 const sourceUrl = new URL("../../src/pdf/theme/fonts.ts", import.meta.url);
 const source = readFileSync(sourceUrl, "utf8");
-const filenames = ["Inter-Regular.ttf", "Inter-SemiBold.ttf", "Inter-Italic.ttf"];
+const filenames = ["Inter-Regular.woff", "Inter-SemiBold.woff", "Inter-Italic.woff"];
 
 // Execute the actual module with an explicit import.meta.url and runtime globals.
 // Only registration is captured; URL decoding always uses Node's native converter.
@@ -106,7 +106,7 @@ describe("PDF font URL contracts", () => {
       .toThrow(/host/i);
   });
 
-  it("keeps the three original TTF assets in a process-free Vite browser bundle", async () => {
+  it("keeps the three WOFF assets in a process-free Vite browser bundle", async () => {
     const result = await build({
       root: fileURLToPath(new URL("../..", import.meta.url)),
       configFile: false, logLevel: "silent",

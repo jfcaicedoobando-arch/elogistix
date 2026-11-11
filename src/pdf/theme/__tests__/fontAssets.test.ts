@@ -9,7 +9,7 @@ describe("PDF brand contract", () => {
     const app = readFileSync(resolve("tailwind.config.ts"), "utf8");
     expect(app).toContain('sans: ["Inter", "sans-serif"]');
     expect(FONTS.regular).toBe("Inter");
-    for (const file of ["Inter-Regular.ttf", "Inter-SemiBold.ttf", "Inter-Italic.ttf", "Inter-OFL.txt"]) {
+    for (const file of ["Inter-Regular.woff", "Inter-SemiBold.woff", "Inter-Italic.woff", "Inter-OFL.txt"]) {
       expect(existsSync(resolve("src/pdf/assets", file))).toBe(true);
     }
     expect(readFileSync(resolve("src/pdf/assets/Inter-OFL.txt"), "utf8")).toContain("SIL OPEN FONT LICENSE");
