@@ -3,3 +3,4 @@
 \ir ../pago_proveedor_contador_lock_cuenta.sql
 \ir ../registrar_evento_tracking_embarque.sql
 \ir ../facturapi_webhook_procesamiento.sql
+\ir ../proforma_email_recuperable.sql

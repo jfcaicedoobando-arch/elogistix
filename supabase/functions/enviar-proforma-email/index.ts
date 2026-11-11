@@ -1,303 +1,203 @@
-// supabase/functions/enviar-proforma-email/index.ts
-// Envía una proforma al cliente por email con enlace al portal público.
-// Genera un token si no existe, envía el correo por la entrega administrada
-// y registra el envío en `proforma_envios`.
 import { createClient, type SupabaseClient } from 'npm:@supabase/supabase-js@2.119.0';
 import { wrapEdgeHandler, captureEdgeException } from '../_shared/sentry.ts';
 import { buildCors, handlePreflightStrict } from '../_shared/cors.ts';
 import { enviarEmailPlantilla } from '../_shared/enviarEmailPlantilla.ts';
-import { jsonResponse as _jsonResponse } from "../_shared/response.ts";
-
-// Alias local con firma (cors, data, status) para conservar los callsites de este handler.
-const jsonResponse = (cors: Record<string, string>, data: unknown, status = 200) =>
-  _jsonResponse(data, status, cors);
+import { jsonResponse } from '../_shared/response.ts';
 
 const APP_URL = Deno.env.get('APP_PUBLIC_URL') ?? 'https://elogistix.lovable.app';
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 interface Destinatario { email: string; nombre?: string }
+interface Recipient extends Destinatario { tipo: 'to' | 'cc' }
 
-function isEmail(v: unknown): v is string {
-  return typeof v === 'string' && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v);
+function normalizarEmail(valor: unknown): string | null {
+  const email = typeof valor === 'string' ? valor.trim().toLowerCase() : '';
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) ? email : null;
 }
 
-function formatoFechaMx(iso: string | null | undefined): string {
-  if (!iso) return '';
-  try {
-    return new Intl.DateTimeFormat('es-MX', { day: '2-digit', month: '2-digit', year: 'numeric' }).format(new Date(iso));
-  } catch { return ''; }
+function texto(valor: unknown): string {
+  return typeof valor === 'string' ? valor : '';
 }
 
-function formatoMoneda(v: number | null | undefined, moneda: string): string {
-  if (v == null) return '';
-  try {
-    return new Intl.NumberFormat('es-MX', { style: 'currency', currency: moneda || 'MXN' }).format(Number(v));
-  } catch { return `${v} ${moneda}`; }
-}
-
-interface Recipient { email: string; nombre?: string; tipo: 'to' | 'cc' }
-interface EnvioResultado { email: string; tipo: string; ok: boolean; error?: string }
-
-async function asegurarToken(
-  admin: SupabaseClient,
-  proformaId: string,
-  tokenActual: string | null,
-  expiraActual: string | null,
-  diasVigencia: number,
-): Promise<{ token: string; expira: string } | { error: string }> {
-  const ahora = Date.now();
-  const vigente = tokenActual && expiraActual && new Date(expiraActual).getTime() >= ahora;
-  if (vigente) return { token: tokenActual!, expira: expiraActual! };
-  const nuevoToken = crypto.randomUUID();
-  const nuevaExp = new Date(ahora + diasVigencia * 24 * 60 * 60 * 1000).toISOString();
-  const { data, error } = await admin
-    .from('proformas')
-    .update({ token_publico: nuevoToken, token_expira_at: nuevaExp })
-    .eq('id', proformaId).is('deleted_at', null).neq('estado_proforma', 'cancelada')
-    .select('id').maybeSingle();
-  if (error) {
-    await captureEdgeException(error, { fn: 'enviar-proforma-email', extra: { phase: 'token' } });
-    return { error: error.message };
+function solicitud(body: Record<string, unknown>) {
+  const recipients = new Map<string, Recipient>();
+  for (const d of Array.isArray(body.destinatarios) ? body.destinatarios : []) {
+    const email = normalizarEmail(d?.email);
+    if (email && !recipients.has(email)) {
+      const nombre = texto(d.nombre).trim();
+      recipients.set(email, { email, tipo: 'to', ...(nombre ? { nombre } : {}) });
+    }
   }
-  if (!data) return { error: 'LC_PROFORMA_CANCELADA: proforma no disponible para envío' };
-  return { token: nuevoToken, expira: nuevaExp };
-}
+  const destinatarios = [...recipients.values()].map(({ email, nombre }) => ({ email, nombre }));
+  if (!destinatarios.length) return null;
 
-interface EnvioContexto {
-  url: string;
-  service: string;
-  proformaId: string;
-  timestamp: number;
-  templateData: Record<string, unknown>;
-}
-
-async function enviarDestinatario(ctx: EnvioContexto, r: Recipient): Promise<EnvioResultado> {
-  const idem = `proforma-${ctx.proformaId}-${ctx.timestamp}-${r.email}`;
-  const admin = createClient(ctx.url, ctx.service);
-  const prof = await cargarProforma(admin, ctx.proformaId);
-  if (!prof || prof.estado_proforma === 'cancelada') {
-    return { email: r.email, tipo: r.tipo, ok: false, error: 'LC_PROFORMA_CANCELADA: proforma no disponible para envío' };
+  const cc: string[] = [];
+  for (const valor of Array.isArray(body.cc) ? body.cc : []) {
+    const email = normalizarEmail(valor);
+    if (!email || recipients.has(email)) continue;
+    cc.push(email);
+    recipients.set(email, { email, tipo: 'cc' });
   }
-  const envio = await enviarEmailPlantilla(admin, {
-    templateName: 'proforma-enviada',
-    recipientEmail: r.email,
-    idempotencyKey: idem,
-    templateData: { ...ctx.templateData, contacto: r.nombre },
-  });
-  if (!envio.ok && !envio.suprimido) {
-    await captureEdgeException(new Error(envio.error ?? 'Error al enviar correo'), {
-      fn: 'enviar-proforma-email',
-      extra: { phase: 'send', recipient_type: r.tipo },
-    });
-  }
-  return { email: r.email, tipo: r.tipo, ok: envio.ok, error: envio.ok ? undefined : envio.error };
-}
 
-interface EntornoEdge { url: string; anon: string; service: string }
-
-function leerEntorno(): EntornoEdge | null {
-  const url = Deno.env.get('SUPABASE_URL');
-  const anon = Deno.env.get('SUPABASE_ANON_KEY');
-  const service = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
-  if (!url || !anon || !service) return null;
-  return { url, anon, service };
-}
-
-async function autenticarUsuario(env: EntornoEdge, authHeader: string) {
-  const userClient = createClient(env.url, env.anon, {
-    global: { headers: { Authorization: authHeader } },
-    auth: { persistSession: false },
-  });
-  const { data, error } = await userClient.auth.getUser();
-  if (error || !data?.user) return null;
-  return { id: data.user.id, email: data.user.email ?? '' };
-}
-
-interface EntradaValidada {
-  proformaId: string;
-  validos: Destinatario[];
-  ccEmails: string[];
-  asunto: string;
-  mensaje: string;
-  diasVigencia: number;
-}
-
-function validarEntrada(body: Record<string, unknown>): EntradaValidada | { error: string } {
-  const proformaId = String(body.proforma_id ?? '');
-  if (!proformaId) return { error: 'proforma_id requerido' };
-  const destinatarios = Array.isArray(body.destinatarios) ? (body.destinatarios as Destinatario[]) : [];
-  const validos = destinatarios.filter((d) => d && isEmail(d.email));
-  if (validos.length === 0) return { error: 'Al menos un destinatario válido es requerido' };
-  const ccEmails = Array.isArray(body.cc) ? (body.cc as string[]).filter(isEmail) : [];
   return {
-    proformaId,
-    validos,
-    ccEmails,
-    asunto: typeof body.asunto === 'string' ? body.asunto : '',
-    mensaje: typeof body.mensaje === 'string' ? body.mensaje : '',
-    diasVigencia: Number.isFinite(body.dias_vigencia) ? Number(body.dias_vigencia) : 30,
+    destinatarios, cc, recipients: [...recipients.values()],
+    asunto: texto(body.asunto).replace(/[\r\n]+/g, ' ').trim(),
+    mensaje: texto(body.mensaje),
+    dias_vigencia: Number.isInteger(body.dias_vigencia) && Number(body.dias_vigencia) > 0
+      ? Number(body.dias_vigencia) : 30,
   };
 }
 
-/**
- * `proformas` es bimoneda: guarda `total_usd` y `total_mxn` (NO existen
- * `moneda` ni `total`; pedirlas rompía el envío con error 400 de PostgREST).
- * `moneda`/`total` se derivan aquí sólo para el texto del correo.
- */
-interface ProformaRow {
-  id: string; numero: string | null; cliente_nombre: string | null; expediente: string | null;
-  total_usd: number | null; total_mxn: number | null; organization_id: string;
-  token_publico: string | null; token_expira_at: string | null;
-  estado_proforma: string;
+interface Contenido {
+  token: string;
+  expira: string;
+  enlace: string;
+  numero: string | null;
+  cliente: string | null;
+  expediente: string | null;
+  total_mxn: number | null;
+  total_usd: number | null;
 }
 
-/** Moneda a mostrar: USD si la proforma trae importe en USD; si no, MXN. */
-function monedaMostrada(prof: ProformaRow): { moneda: string; total: number } {
-  const usd = Number(prof.total_usd ?? 0);
-  if (usd > 0) return { moneda: 'USD', total: usd };
-  return { moneda: 'MXN', total: Number(prof.total_mxn ?? 0) };
+type Reserva =
+  | { estado: 'reservado'; contenido: Contenido }
+  | { estado: 'confirmado'; resultado: Record<string, unknown> }
+  | { estado: 'en_proceso' }
+  | { estado: keyof typeof erroresReserva };
+
+const erroresReserva = {
+  sin_acceso: { status: 403, message: 'No tienes acceso a esta proforma' },
+  no_encontrada: { status: 404, message: 'Proforma no encontrada' },
+  cancelada: { status: 409, message: 'LC_PROFORMA_CANCELADA: crea una nueva proforma para enviar al cliente.' },
+  intento_distinto: { status: 409, message: 'El intento corresponde a otro envío.' },
+};
+
+function datosPlantilla(contenido: Contenido, entrada: NonNullable<ReturnType<typeof solicitud>>) {
+  const usd = Number(contenido.total_usd ?? 0);
+  const moneda = usd > 0 ? 'USD' : 'MXN';
+  const total = new Intl.NumberFormat('es-MX', { style: 'currency', currency: moneda })
+    .format(usd > 0 ? usd : Number(contenido.total_mxn ?? 0));
+  const vigencia = new Intl.DateTimeFormat('es-MX', { day: '2-digit', month: '2-digit', year: 'numeric' })
+    .format(new Date(contenido.expira));
+
+  return {
+    numero: contenido.numero, cliente: contenido.cliente, expediente: contenido.expediente,
+    total, moneda, asunto: entrada.asunto, mensaje: entrada.mensaje, vigencia, enlacePortal: contenido.enlace,
+  };
 }
 
-interface RegistrarEnvioParams {
-  proformaId: string; prof: ProformaRow; userId: string; userEmail: string;
-  validos: Destinatario[]; ccEmails: string[]; asunto: string; mensaje: string;
-  enlacePortal: string; estado: string; anyOk: boolean; anyFail: boolean;
-  resultados: EnvioResultado[];
+async function entregar(
+  admin: SupabaseClient,
+  intento: string,
+  proformaId: string,
+  contenido: Contenido,
+  entrada: NonNullable<ReturnType<typeof solicitud>>,
+): Promise<void> {
+  const claves = entrada.recipients.map((_, indice) => 'proforma:' + intento + ':' + (indice + 1));
+  const { data, error } = await admin.from('email_send_log')
+    .select('message_id').in('message_id', claves).in('status', ['sent', 'suppressed']);
+  if (error) throw error;
+
+  const resueltos = new Set((data ?? []).map((registro) => registro.message_id));
+  const templateData = datosPlantilla(contenido, entrada);
+  for (const [indice, recipient] of entrada.recipients.entries()) {
+    const clave = claves[indice];
+    if (resueltos.has(clave)) continue;
+    const { data: vigente, error: errorVigencia } = await admin.from('proformas')
+      .select('id').eq('id', proformaId).eq('token_publico', contenido.token)
+      .is('deleted_at', null).neq('estado_proforma', 'cancelada')
+      .gt('token_expira_at', new Date().toISOString()).maybeSingle();
+    if (errorVigencia) throw errorVigencia;
+    if (!vigente) return;
+
+    const resultado = await enviarEmailPlantilla(admin, {
+      templateName: 'proforma-enviada',
+      recipientEmail: recipient.email,
+      idempotencyKey: clave,
+      messageId: clave,
+      templateData: { ...templateData, contacto: recipient.nombre },
+    });
+    if (!resultado.ok && !resultado.suprimido) {
+      await captureEdgeException(new Error('Entrega de proforma sin confirmación'), {
+        fn: 'enviar-proforma-email', extra: { phase: 'send', recipient_type: recipient.tipo },
+      });
+    }
+  }
 }
 
-async function registrarEnvio(admin: SupabaseClient, params: RegistrarEnvioParams) {
-  const { data: envio, error: envioErr } = await admin
-    .from('proforma_envios')
-    .insert({
-      proforma_id: params.proformaId,
-      organization_id: params.prof.organization_id,
-      enviado_por: params.userId,
-      destinatarios: params.validos,
-      cc: params.ccEmails,
-      asunto: params.asunto,
-      mensaje: params.mensaje,
-      pdf_link_publico: params.enlacePortal,
-      estado: params.estado,
-      error: params.anyFail ? JSON.stringify(params.resultados.filter((r) => !r.ok)) : null,
-    })
-    .select('id')
-    .single();
-  if (envioErr) console.error('proforma_envios insert failed', envioErr);
+async function leerSolicitud(req: Request) {
+  const body = await req.json().catch(() => null);
+  if (!body || typeof body !== 'object' || Array.isArray(body)) return { error: 'Invalid JSON' };
+  const proformaId = body.proforma_id;
+  if (typeof proformaId !== 'string' || !UUID.test(proformaId)) return { error: 'proforma_id inválido' };
+  const intento = body.intento_id ?? crypto.randomUUID();
+  if (typeof intento !== 'string' || !UUID.test(intento)) return { error: 'intento_id inválido' };
+  const entrada = solicitud(body);
+  if (!entrada) return { error: 'Al menos un destinatario válido es requerido' };
+  return { proformaId, intento, entrada };
+}
 
-  if (params.anyOk) {
-    await admin.from('proformas')
-      .update({ enviada_at: new Date().toISOString(), enviada_por: params.userId, ultimo_envio_email: params.validos[0]?.email ?? null })
-      .eq('id', params.proformaId);
+async function procesar(
+  req: Request,
+  admin: SupabaseClient,
+  usuarioId: string,
+  responder: (body: unknown, status?: number) => Response,
+): Promise<Response> {
+  const validada = await leerSolicitud(req);
+  if (!validada.entrada) return responder({ error: validada.error }, 400);
+
+  const { proformaId, intento, entrada } = validada;
+  const reserva = crypto.randomUUID();
+  const { data, error } = await admin.rpc('reservar_proforma_email', {
+    p_proforma_id: proformaId, p_usuario_id: usuarioId, p_intento: intento, p_reserva: reserva,
+    p_solicitud: entrada, p_portal_base: APP_URL,
+  });
+  if (error) throw error;
+
+  const reservada = data as Reserva;
+  if (reservada.estado === 'confirmado') return responder(reservada.resultado);
+  if (reservada.estado !== 'reservado' && reservada.estado !== 'en_proceso') {
+    const rechazo = erroresReserva[reservada.estado];
+    return responder({ error: rechazo.message }, rechazo.status);
   }
 
-  await admin.from('bitacora_actividad').insert({
-    organization_id: params.prof.organization_id, usuario_id: params.userId, usuario_email: params.userEmail,
-    modulo: 'proformas',
-    accion: params.anyOk ? 'proforma_enviada_email' : 'proforma_envio_email_fallido',
-    entidad_id: params.proformaId, entidad_nombre: params.prof.numero ?? '',
-    detalles: { envio_id: envio?.id ?? null, destinatarios: params.validos.map((d) => d.email), cc: params.ccEmails, resultados: params.resultados, enlace_portal: params.enlacePortal },
-  }).then(() => null, () => null);
-
-  return envio?.id ?? null;
-}
-
-async function cargarProforma(admin: SupabaseClient, proformaId: string): Promise<ProformaRow | null> {
-  const { data, error } = await admin
-    .from('proformas')
-    .select('id, numero, cliente_nombre, expediente, total_usd, total_mxn, organization_id, token_publico, token_expira_at, estado_proforma')
-    .eq('id', proformaId).is('deleted_at', null).maybeSingle();
-  if (error || !data) return null;
-  return data as unknown as ProformaRow;
-}
-
-async function usuarioTieneAcceso(admin: SupabaseClient, orgId: string, userId: string): Promise<boolean> {
-  const { data } = await admin
-    .from('organization_members')
-    .select('id')
-    .eq('organization_id', orgId).eq('user_id', userId).maybeSingle();
-  return !!data;
-}
-
-async function despacharCorreos(
-  ctx: EnvioContexto, recipients: Recipient[],
-): Promise<{ resultados: EnvioResultado[]; estado: string; anyOk: boolean; anyFail: boolean }> {
-  const resultados: EnvioResultado[] = [];
-  for (const r of recipients) {
-    resultados.push(await enviarDestinatario(ctx, r));
+  const adquirido = reservada.estado === 'reservado';
+  if (adquirido) {
+    try {
+      await entregar(admin, intento, proformaId, reservada.contenido, entrada);
+    } catch (e) {
+      await captureEdgeException(e, { fn: 'enviar-proforma-email', extra: { phase: 'send' } });
+    }
   }
-  const anyOk = resultados.some((r) => r.ok);
-  const anyFail = resultados.some((r) => !r.ok);
-  const estado = anyOk && anyFail ? 'parcial' : anyOk ? 'enviado' : 'fallido';
-  return { resultados, estado, anyOk, anyFail };
+
+  const { data: resultado, error: errorFinal } = await admin.rpc('finalizar_proforma_email', {
+    p_intento: intento, p_usuario_id: usuarioId, p_reserva: adquirido ? reserva : null,
+  });
+  if (errorFinal) throw errorFinal;
+  if (resultado.estado === 'sin_acceso') return responder({ error: 'No tienes acceso a esta proforma' }, 403);
+  return responder(resultado);
 }
 
 Deno.serve(wrapEdgeHandler('enviar-proforma-email', async (req) => {
   const preflight = handlePreflightStrict(req);
   if (preflight) return preflight;
-
   const cors = buildCors(req);
-  if (req.method !== 'POST') return jsonResponse(cors, { error: 'Method not allowed' }, 405);
+  const responder = (body: unknown, status = 200) => jsonResponse(body, status, cors);
+  if (req.method !== 'POST') return responder({ error: 'Method not allowed' }, 405);
 
-  const env = leerEntorno();
-  if (!env) return jsonResponse(cors, { error: 'Server configuration error' }, 500);
+  const url = Deno.env.get('SUPABASE_URL');
+  const anon = Deno.env.get('SUPABASE_ANON_KEY');
+  const service = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+  if (!url || !anon || !service) return responder({ error: 'Server configuration error' }, 500);
 
   const authHeader = req.headers.get('Authorization') ?? '';
-  if (!authHeader.toLowerCase().startsWith('bearer ')) {
-    return jsonResponse(cors, { error: 'Missing authorization' }, 401);
-  }
-  const user = await autenticarUsuario(env, authHeader);
-  if (!user) return jsonResponse(cors, { error: 'Unauthorized' }, 401);
-
-  const admin = createClient(env.url, env.service, { auth: { persistSession: false } });
-
-  let body: Record<string, unknown>;
-  try { body = await req.json(); } catch { return jsonResponse(cors, { error: 'Invalid JSON' }, 400); }
-
-  const entrada = validarEntrada(body);
-  if ('error' in entrada) return jsonResponse(cors, { error: entrada.error }, 400);
-
-  const prof = await cargarProforma(admin, entrada.proformaId);
-  if (!prof) return jsonResponse(cors, { error: 'Proforma no encontrada' }, 404);
-
-  if (!(await usuarioTieneAcceso(admin, prof.organization_id, user.id))) {
-    return jsonResponse(cors, { error: 'No tienes acceso a esta proforma' }, 403);
-  }
-
-  if (prof.estado_proforma === 'cancelada') {
-    return jsonResponse(cors, { error: 'LC_PROFORMA_CANCELADA: crea una nueva proforma para enviar al cliente.' }, 409);
-  }
-
-  const tokenResult = await asegurarToken(admin, entrada.proformaId, prof.token_publico, prof.token_expira_at, entrada.diasVigencia);
-  if ('error' in tokenResult) return jsonResponse(cors, { error: tokenResult.error }, tokenResult.error.startsWith('LC_PROFORMA_CANCELADA') ? 409 : 500);
-  const { token, expira: tokenExpira } = tokenResult;
-
-  const enlacePortal = `${APP_URL}/portal/proformas/${token}`;
-  const recipients: Recipient[] = [
-    ...entrada.validos.map((d) => ({ email: d.email, nombre: d.nombre, tipo: 'to' as const })),
-    ...entrada.ccEmails.map((e) => ({ email: e, tipo: 'cc' as const })),
-  ];
-
-  const { moneda, total } = monedaMostrada(prof);
-  const templateData = {
-    numero: prof.numero, cliente: prof.cliente_nombre, expediente: prof.expediente, moneda,
-    total: formatoMoneda(total, moneda),
-    mensaje: entrada.mensaje, vigencia: formatoFechaMx(tokenExpira), enlacePortal,
-  };
-
-  const ctx: EnvioContexto = { url: env.url, service: env.service, proformaId: entrada.proformaId, timestamp: Date.now(), templateData };
-  const { resultados, estado, anyOk, anyFail } = await despacharCorreos(ctx, recipients);
-
-
-  const envioId = await registrarEnvio(admin, {
-    proformaId: entrada.proformaId, prof, userId: user.id, userEmail: user.email,
-    validos: entrada.validos, ccEmails: entrada.ccEmails, asunto: entrada.asunto, mensaje: entrada.mensaje,
-    enlacePortal, estado, anyOk, anyFail, resultados,
+  if (!authHeader.toLowerCase().startsWith('bearer ')) return responder({ error: 'Missing authorization' }, 401);
+  const userClient = createClient(url, anon, {
+    global: { headers: { Authorization: authHeader } }, auth: { persistSession: false },
   });
+  const { data: { user }, error } = await userClient.auth.getUser();
+  if (error || !user) return responder({ error: 'Unauthorized' }, 401);
 
-  return jsonResponse(cors, {
-    success: anyOk,
-    estado,
-    envio_id: envioId,
-    enlace_portal: enlacePortal,
-    token_expira_at: tokenExpira, resultados,
-  });
+  const admin = createClient(url, service, { auth: { persistSession: false } });
+  return procesar(req, admin, user.id, responder);
 }));

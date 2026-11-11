@@ -67,7 +67,8 @@ export const template = {
   component: ProformaEnviadaEmail,
   subject: (data: Record<string, unknown>) => {
     const numero = (data?.numero as string) ?? '';
-    return `Proforma ${numero} — Requiere tu aprobación`;
+    const asunto = typeof data.asunto === 'string' ? data.asunto.trim() : '';
+    return asunto || `Proforma ${numero} — Requiere tu aprobación`;
   },
   displayName: 'Envío de proforma al cliente',
   previewData: {
