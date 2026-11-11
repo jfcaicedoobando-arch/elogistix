@@ -45,7 +45,8 @@ describe("recuperación de pago tras RPC: sólo fila viva", () => {
   });
   it("dos reintentos vivos conservan id, contenido y llave sin insert directo", async () => {
     for (let i = 0; i < 2; i++) {
-      prepararRegistro(pago); expect(await registrarPagoProveedor(input, "actor")).toEqual(pago);
+      prepararRegistro(pago);
+      expect(await registrarPagoProveedor(input, "actor")).toEqual({ estado: "registrado", pago });
     }
     const calls = mock.rpcCalls.filter(c => c.fn === "registrar_pago_proveedor_atomico"); expect(calls).toHaveLength(2);
     for (const call of calls) expect(call.args).toMatchObject({ p_client_request_id: input.client_request_id, p_monto: input.monto });
@@ -73,8 +74,12 @@ describe("recuperación de pago tras RPC: sólo fila viva", () => {
     mock.setRpcResult("registrar_pago_proveedor_atomico", { data: null, error });
     await expect(registrarPagoProveedor(input, "actor")).rejects.toBe(error); expect(mock.tableCalls).toHaveLength(1); expect(actividad).not.toHaveBeenCalled();
   });
-  it("error del lookup de pago se propaga antes de actividad", async () => {
+  it("una lectura fallida conserva la confirmación sin registrar actividad con datos sin validar", async () => {
     const error = new Error("lectura-pago"); prepararRegistro(null, error);
-    await expect(registrarPagoProveedor(input, "actor")).rejects.toBe(error); expect(actividad).not.toHaveBeenCalled();
+    await expect(registrarPagoProveedor(input, "actor")).resolves.toEqual({
+      estado: "detalle_pendiente", pagoId: "pago1",
+    });
+    expect(mock.rpcCalls.filter(c => c.fn === "registrar_pago_proveedor_atomico")).toHaveLength(1);
+    expect(actividad).not.toHaveBeenCalled();
   });
 });

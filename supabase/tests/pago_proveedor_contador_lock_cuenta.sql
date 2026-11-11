@@ -74,14 +74,26 @@ DECLARE
   v_ok   uuid := 'c7777777-7777-7777-7777-77777777000a';
   v_off  uuid := 'c7777777-7777-7777-7777-77777777000b';
   v_aj   uuid := 'c7777777-7777-7777-7777-77777777000c';
+  v_intento uuid := gen_random_uuid();
   v_res  jsonb;
+  v_reintento jsonb;
   v_msg  text;
 BEGIN
   -- ── CASO 1 · el contador SÍ puede registrar el pago.
   v_res := public.registrar_pago_proveedor_atomico(
-    v_pf, public.fecha_negocio_mx(), 100, 'MXN', 'Transferencia', 'MNY-CTD-C1', v_ok);
-  IF (v_res->>'pago_id') IS NULL THEN
-    RAISE EXCEPTION 'CASO 1 FALLÓ: el contador no pudo registrar el pago con cuenta activa';
+    v_pf, public.fecha_negocio_mx(), 100, 'MXN', 'Transferencia', 'MNY-CTD-C1', v_ok,
+    p_client_request_id => v_intento);
+  v_reintento := public.registrar_pago_proveedor_atomico(
+    v_pf, public.fecha_negocio_mx(), 100, 'MXN', 'Transferencia', 'MNY-CTD-C1', v_ok,
+    p_client_request_id => v_intento);
+  IF (v_res->>'pago_id') IS NULL OR (v_res->>'movimiento_id') IS NULL
+    OR (v_reintento->>'reintento')::boolean IS DISTINCT FROM true
+    OR (v_res->>'pago_id') IS DISTINCT FROM (v_reintento->>'pago_id')
+    OR (v_res->>'movimiento_id') IS DISTINCT FROM (v_reintento->>'movimiento_id')
+    OR (SELECT count(*) FROM public.pagos_proveedor WHERE proveedor_factura_id = v_pf) <> 1
+    OR (SELECT count(*) FROM public.bbva_movimientos WHERE pago_proveedor_id = (v_res->>'pago_id')::uuid) <> 1
+  THEN
+    RAISE EXCEPTION 'CASO 1 FALLÓ: el mismo intento debe conservar un pago y un movimiento';
   END IF;
   RAISE NOTICE 'CASO 1 OK: el contador registró el pago con su cuenta activa';
 

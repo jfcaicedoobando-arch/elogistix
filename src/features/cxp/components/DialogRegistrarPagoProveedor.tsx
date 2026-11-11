@@ -6,24 +6,24 @@
  * cuando el usuario acaba de aprobar/pagar en otra pestaña.
  */
 import { useEffect } from "react";
+import { captureAuthOperationScope } from "@/lib/auth/authOperationScope";
 import { useQueryClient } from "@tanstack/react-query";
 import { queryKeys } from "@/lib/query";
-import { notifySuccess } from "@/lib/ui/appFeedback";
+import { notifyError, notifySuccess, notifyWarning } from "@/lib/ui/appFeedback";
 import { ArrowUpFromLine } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Hint } from "@/components/shared/Hint";
 import { FormDialogShell } from "@/components/shared/FormDialogShell";
 import { FormDialogCancelarBoton } from "@/components/shared/FormDialogCancelarBoton";
-import { useRegistrarPagoProveedor, useFacturaProveedor } from "@/features/cxp/hooks";
-import type { FacturaCxP } from "@/features/cxp/services";
+import { useFacturaProveedor } from "@/features/cxp/hooks";
+import { PagoProveedorResultadoIncierto, type FacturaCxP } from "@/features/cxp/services";
 import { PagoFacturaHeaderInfo } from "./PagoProveedorBits";
 import { usePagoProveedorForm } from "@/features/cxp/hooks/usePagoProveedorForm";
+import { useIntentoPagoProveedor } from "@/features/cxp/hooks/useIntentoPagoProveedor";
 import { pagoProveedorCreadoSucio } from "@/features/cxp/hooks/usePagoProveedorForm.editar";
 
 import { PagoProveedorFormBody } from "./PagoProveedorFormBody";
-import { notifyError } from "@/lib/ui/appFeedback";
 import { traducirErrorPagoProveedor } from "@/features/cxp/services/pagosProveedorErrors";
-import { usePayloadRequestId, scopeDePayload } from "@/lib/idempotency";
 
 interface Props {
   open: boolean;
@@ -49,34 +49,20 @@ export function DialogRegistrarPagoProveedor({ open, onOpenChange, factura: fact
   );
   const factura = facturaFresca ?? facturaInput;
 
-  // BL-14 + MNY: la llave se liga al CONTENIDO del submit. Reintentar el mismo
-  // pago reusa la llave y el UNIQUE parcial de `pagos_proveedor` absorbe el
-  // duplicado; si el usuario edita monto/fecha/cuenta y reintenta, la llave
-  // cambia y la RPC no puede devolver el pago anterior como si fuera el nuevo.
-  const clientRequestId = usePayloadRequestId();
-  useEffect(() => {
-    if (!open) clientRequestId.reset();
-  }, [open, clientRequestId]);
-
-  const registrar = useRegistrarPagoProveedor();
+  const { intento, confirmar, disponible, guardando } = useIntentoPagoProveedor(facturaId);
   const f = usePagoProveedorForm(factura, open);
   const noAprobada = !!factura && factura.estado_aprobacion !== "aprobada";
 
-  const faltaCuenta = f.requiereCuenta && !f.cuentaId;
-
-  // R6-N2: la validación de montos/IVA/totales vive en el hook (módulo puro).
-  const validarPago = () => f.validacion.error;
-
-
   const submit = async () => {
     if (!factura) return;
-    const errorMsg = validarPago();
+    const errorMsg = intento ? null : f.validacion.error;
     if (errorMsg) {
       notifyError(undefined, { title: errorMsg, method: "FEATURES_CXP_COMPONENTS_DIALOGREGISTRARPAGOPROVEEDOR_VALIDAR" });
       return;
     }
+    const scope = captureAuthOperationScope();
     try {
-      await registrar.mutateAsync({
+      const resultado = await confirmar(intento ? undefined : {
         proveedor_factura_id: factura.id,
         fecha_pago: f.fecha,
         monto: f.montoNum,
@@ -91,31 +77,30 @@ export function DialogRegistrarPagoProveedor({ open, onOpenChange, factura: fact
         // MNY: en efectivo va `null` para que la base no derive salida de banco.
         cuenta_bancaria_id: f.cuentaBancariaIdEnvio,
         diferencia_cambiaria_mxn: f.diferenciaCambiariaEnvio,
-
-        client_request_id: clientRequestId.get(
-          scopeDePayload([
-            factura.id, f.fecha, f.montoNum, f.moneda,
-            Number(f.tc) > 0 ? Number(f.tc) : null,
-            f.metodo, f.referencia, f.notas,
-            f.cuentaBancariaIdEnvio, f.diferenciaCambiariaEnvio,
-          ]),
-        ),
       });
-      clientRequestId.reset();
-      notifySuccess(undefined, { title: "Pago registrado" });
+      if (!resultado || !scope.isCurrent()) return;
+      if (resultado.estado === "detalle_pendiente") {
+        notifyWarning(undefined, { title: "Pago registrado, detalle pendiente" });
+      } else {
+        notifySuccess(undefined, { title: "Pago registrado" });
+      }
       onOpenChange(false);
     } catch (e) {
-      notifyError(undefined, { title: traducirErrorPagoProveedor(e), error: e, method: "FEATURES_CXP_COMPONENTS_DIALOGREGISTRARPAGOPROVEEDOR_3" });
+      if (!scope.isCurrent()) return;
+      if (e instanceof PagoProveedorResultadoIncierto) {
+        notifyWarning(undefined, { title: e.message });
+      } else {
+        notifyError(undefined, { title: traducirErrorPagoProveedor(e), error: e, method: "FEATURES_CXP_COMPONENTS_DIALOGREGISTRARPAGOPROVEEDOR_3" });
+      }
     }
   };
 
-  const submitDisabled = registrar.isPending || validarPago() !== null;
-  const submitTitle = computeSubmitTitle(noAprobada, f.bloqueadoPorTc, faltaCuenta);
+  const boton = estadoBotonRegistro(f, noAprobada, Boolean(intento), guardando);
 
   // YG-04 / MNY: hay captura real del usuario que se perdería al cerrar. El
   // monto, el T/C, la diferencia y la cuenta vienen prellenados: sólo cuentan
   // como captura cuando el usuario los tocó (`f.tocados`).
-  const isDirty = pagoProveedorCreadoSucio(
+  const isDirty = !intento && pagoProveedorCreadoSucio(
     {
       referencia: f.referencia, notas: f.notas, metodo: f.metodo, moneda: f.moneda,
       monto: f.monto, fecha: f.fecha, tc: f.tc, diffMxn: f.diffMxn, cuentaId: f.cuentaId,
@@ -131,10 +116,10 @@ export function DialogRegistrarPagoProveedor({ open, onOpenChange, factura: fact
     <>
       {/* v13.821.7 — Cancelar pasa por el cierre guardado del shell: con
           captura en curso pide confirmación en vez de descartar directo. */}
-      <FormDialogCancelarBoton onCancelar={() => onOpenChange(false)} disabled={registrar.isPending} />
-      <Hint label={submitTitle}>
-        <Button onClick={submit} disabled={submitDisabled} loading={registrar.isPending}>
-          {registrar.isPending ? "Guardando…" : "Registrar pago"}
+      <FormDialogCancelarBoton onCancelar={() => onOpenChange(false)} disabled={guardando} />
+      <Hint label={boton.title}>
+        <Button onClick={submit} disabled={boton.disabled || !disponible} loading={guardando}>
+          {boton.label}
         </Button>
       </Hint>
     </>
@@ -159,18 +144,27 @@ export function DialogRegistrarPagoProveedor({ open, onOpenChange, factura: fact
         </div>
       )}
 
-      <PagoProveedorFormBody factura={factura} {...f} />
+      {intento ? (
+        <p role="status" className="text-body-sm text-muted-foreground">
+          Intento de {intento.input.monto} {intento.input.moneda} del {intento.input.fecha_pago}.
+          Puedes confirmar este intento con los mismos datos.
+        </p>
+      ) : <PagoProveedorFormBody factura={factura} {...f} />}
     </FormDialogShell>
   );
 }
 
-function computeSubmitTitle(
+function estadoBotonRegistro(
+  form: ReturnType<typeof usePagoProveedorForm>,
   noAprobada: boolean,
-  bloqueadoPorTc: boolean,
-  faltaCuenta: boolean,
-): string | undefined {
-  if (noAprobada) return "Requiere aprobación";
-  if (bloqueadoPorTc) return "Captura el TC";
-  if (faltaCuenta) return "Selecciona la cuenta bancaria";
-  return undefined;
+  reintento: boolean,
+  guardando: boolean,
+): { label: string; disabled: boolean; title?: string } {
+  if (guardando) return { label: "Guardando…", disabled: true };
+  if (reintento) return { label: "Confirmar intento anterior", disabled: false };
+  const title = noAprobada ? "Requiere aprobación"
+    : form.bloqueadoPorTc ? "Captura el TC"
+    : form.requiereCuenta && !form.cuentaId ? "Selecciona la cuenta bancaria"
+    : undefined;
+  return { label: "Registrar pago", disabled: form.validacion.error !== null, title };
 }
