@@ -12,7 +12,7 @@
  * un claim `PENDING:%`, y la escritura usa CAS sobre ese claim para no pisar
  * una recaptura concurrente.
  */
-import { uuidFiscalValido } from "../_shared/timbradoPendiente.ts";
+import { uuidFiscalValido } from "../timbradoPendiente.ts";
 import type { SupabaseClient } from "npm:@supabase/supabase-js@2.119.0";
 import type { FacturapiWebhookEvent } from "./helpers.ts";
 

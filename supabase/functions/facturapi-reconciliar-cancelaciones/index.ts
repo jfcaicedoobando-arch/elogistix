@@ -22,7 +22,7 @@ import { reconcileOneNc } from "./ncs.ts";
 import { planificarTareas } from "./plan.ts";
 import { crearPresupuesto, CRON_RETRIEVE_TIMEOUT_MS } from "./presupuesto.ts";
 import { cerrarFacturaConAcuse } from "./cierreFactura.ts";
-import { reprocesarWebhooksPendientes } from "../facturapi-webhook/reprocesar.ts";
+import { reprocesarWebhooksPendientes } from "../_shared/facturapi-webhook/reprocesar.ts";
 import { ejecutarPlan, type ReconcileCtx, type ClienteResuelto, type RetrieveClient } from "./ejecutar.ts";
 import {
   descargarAcuse,

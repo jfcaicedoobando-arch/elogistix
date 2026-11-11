@@ -10,7 +10,7 @@ import {
   externalIdDeEvento,
   localizarFila,
   patchAdopcionPendiente,
-} from "./pendiente.ts";
+} from "../_shared/facturapi-webhook/pendiente.ts";
 
 const UUID = "5f9c1c2a-3b4d-4e5f-8a9b-0c1d2e3f4a5b";
 

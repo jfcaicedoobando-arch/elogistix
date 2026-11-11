@@ -1,7 +1,7 @@
 import { assertEquals, assertRejects } from "https://deno.land/std@0.224.0/assert/mod.ts";
 import type { SupabaseClient } from "npm:@supabase/supabase-js@2.119.0";
-import { procesarEventoWebhook } from "./procesamiento.ts";
-import type { FacturapiWebhookEvent } from "./helpers.ts";
+import { procesarEventoWebhook } from "../_shared/facturapi-webhook/procesamiento.ts";
+import type { FacturapiWebhookEvent } from "../_shared/facturapi-webhook/helpers.ts";
 
 const invoice = { type: "invoice.canceled", data: { object: { id: "remoto" } } };
 const receipt = { type: "receipt.canceled", data: invoice.data };

@@ -75,7 +75,7 @@ Deno.test("handler mantiene guard contexto antes de claim y PAC; no se aplica a 
     assertEquals(next > position, true, step);
     position = next;
   }
-  for (const path of ["../facturapi-recuperar-claim/promoverFactura.ts", "../facturapi-webhook/facturaPatch.ts"]) {
+  for (const path of ["../facturapi-recuperar-claim/promoverFactura.ts", "../_shared/facturapi-webhook/facturaPatch.ts"]) {
     const recovery = await Deno.readTextFile(new URL(path, import.meta.url));
     assertEquals(recovery.includes("validarUsoCfdiIngreso"), false);
   }

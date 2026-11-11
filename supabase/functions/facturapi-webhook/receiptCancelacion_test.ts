@@ -4,7 +4,7 @@
  * no lo revierten.
  */
 import { assertEquals } from "https://deno.land/std@0.224.0/assert/mod.ts";
-import { mapEventToReceiptPatch, type FacturapiWebhookEvent } from "./helpers.ts";
+import { mapEventToReceiptPatch, type FacturapiWebhookEvent } from "../_shared/facturapi-webhook/helpers.ts";
 
 function ev(type: string, obj: Record<string, unknown>): FacturapiWebhookEvent {
   return { type, data: { object: { id: "rep_1", ...obj } } };

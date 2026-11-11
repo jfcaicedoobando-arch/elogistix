@@ -8,7 +8,7 @@ import {
   computeSignatureBytes,
   leerCuerpoAcotado,
   MAX_WEBHOOK_BYTES,
-} from "./helpers.ts";
+} from "../_shared/facturapi-webhook/helpers.ts";
 
 function reqConBody(body: BodyInit | null, headers: Record<string, string> = {}): Request {
   return new Request("https://x.test/webhook", { method: "POST", body, headers });

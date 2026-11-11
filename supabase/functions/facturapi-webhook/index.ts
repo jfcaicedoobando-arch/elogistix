@@ -9,10 +9,10 @@
 import { createClient, type SupabaseClient } from "npm:@supabase/supabase-js@2.119.0";
 import { corsHeaders } from "../_shared/cors.ts";
 import { wrapEdgeHandler, captureEdgeException, captureEdgeMessage } from "../_shared/sentry.ts";
-import { computeEventKey, leerCuerpoAcotado, MAX_WEBHOOK_BYTES, type FacturapiWebhookEvent } from "./helpers.ts";
+import { computeEventKey, leerCuerpoAcotado, MAX_WEBHOOK_BYTES, type FacturapiWebhookEvent } from "../_shared/facturapi-webhook/helpers.ts";
 import { jsonResponse } from "../_shared/response.ts";
 import { ambienteDeUrl, COLS_WEBHOOK_CRED, secretosDeCredencial, validarEvento } from "./secretos.ts";
-import { procesarEventoWebhook } from "./procesamiento.ts";
+import { procesarEventoWebhook } from "../_shared/facturapi-webhook/procesamiento.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;

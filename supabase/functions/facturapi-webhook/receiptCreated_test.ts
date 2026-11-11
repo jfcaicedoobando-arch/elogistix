@@ -3,8 +3,8 @@
  * puede marcar el REP como timbrado ni autorizar la adopción del claim.
  */
 import { assert, assertEquals } from "https://deno.land/std@0.224.0/assert/mod.ts";
-import { mapEventToReceiptPatch } from "./helpers.ts";
-import { COLS_REP, patchAdopcionPendiente } from "./pendiente.ts";
+import { mapEventToReceiptPatch } from "../_shared/facturapi-webhook/helpers.ts";
+import { COLS_REP, patchAdopcionPendiente } from "../_shared/facturapi-webhook/pendiente.ts";
 
 const UUID_OK = "3f2b8a10-1c4d-4e7f-9a2b-0c1d2e3f4a5b";
 

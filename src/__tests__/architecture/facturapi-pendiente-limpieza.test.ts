@@ -6,7 +6,8 @@
  */
 import { describe, expect, it } from "vitest";
 import { readFileSync, readdirSync } from "node:fs";
-import { join } from "node:path";
+import { dirname, join, resolve, sep } from "node:path";
+import { preProcessFile } from "typescript";
 
 const FN = "supabase/functions";
 const MIGR = "supabase/migrations";
@@ -67,7 +68,7 @@ describe("limpieza de timbrado pendiente", () => {
   });
 
   it("el webhook escribe con CAS sobre la columna de claim", () => {
-    const proceso = leer(`${FN}/facturapi-webhook/procesamiento.ts`);
+    const proceso = leer(`${FN}/_shared/facturapi-webhook/procesamiento.ts`);
     const sql = leer("drizzle/migrations/0051_procesamiento_facturapi_webhook.sql");
     expect(proceso).toContain('rpc("finalizar_evento_facturapi_webhook"');
     expect(proceso).toContain("p_claim: resultado.claim");
@@ -78,6 +79,28 @@ describe("limpieza de timbrado pendiente", () => {
     expect(sql.indexOf("public.cerrar_cancelacion_factura_facturapi(p_documento_id)")).toBeGreaterThan(guard);
     expect(sql.indexOf("UPDATE public.%I SET %s WHERE id = $2")).toBeGreaterThan(guard);
   });
+
+  it.each(["facturapi-reconciliar-cancelaciones", "facturapi-webhook"])(
+    "el paquete de %s resuelve sus dependencias sin otra función Edge",
+    (nombre) => {
+      const directorio = resolve(FN, nombre);
+      const compartido = resolve(FN, "_shared");
+      const pendientes = [join(directorio, "index.ts")];
+      const visitados = new Set<string>();
+      while (pendientes.length > 0) {
+        const archivo = pendientes.pop()!;
+        if (visitados.has(archivo)) continue;
+        visitados.add(archivo);
+        for (const { fileName } of preProcessFile(leer(archivo)).importedFiles) {
+          if (!fileName.startsWith(".")) continue;
+          const destino = resolve(dirname(archivo), fileName);
+          expect(destino.startsWith(directorio + sep) || destino.startsWith(compartido + sep),
+            `${archivo} importa ${fileName} fuera del paquete`).toBe(true);
+          pendientes.push(destino);
+        }
+      }
+    },
+  );
 
   it("si no se puede guardar el pendiente se responde 500 recuperable", () => {
     for (const f of [
