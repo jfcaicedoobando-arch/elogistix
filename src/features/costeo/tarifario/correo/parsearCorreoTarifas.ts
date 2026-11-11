@@ -9,6 +9,7 @@ import { parsearLongsail } from "./parsearLongsail";
 import { parsearRainbow } from "./parsearRainbow";
 import { anioDelCorreo, type FilaCorreo } from "./comun";
 import { NOMBRE_PROVEEDOR, type ProveedorCorreo } from "./proveedoresCorreo";
+import { readWorkbook } from "@/lib/xlsx/readWorkbook";
 
 export interface CorreoDescargado {
   proveedor: string;
@@ -29,12 +30,9 @@ const esProveedor = (v: string): v is ProveedorCorreo => v in NOMBRE_PROVEEDOR;
 
 /** Lee la hoja CHINA del Excel de Rainbow como arreglo de renglones. */
 async function leerHojaChina(xlsxBase64: string): Promise<unknown[][]> {
-  const XLSX = await import("xlsx");
   const bin = atob(xlsxBase64.replace(/-/g, "+").replace(/_/g, "/"));
   const bytes = Uint8Array.from(bin, (c) => c.charCodeAt(0));
-  const wb = XLSX.read(bytes, { type: "array", cellDates: true });
-  const hoja = wb.Sheets["CHINA"] ?? wb.Sheets[wb.SheetNames[0]];
-  return hoja ? XLSX.utils.sheet_to_json<unknown[]>(hoja, { header: 1, defval: "" }) : [];
+  return readWorkbook(bytes.buffer, { layout: "rows", sheet: "CHINA" });
 }
 
 export async function parsearCorreoProveedor(correo: CorreoDescargado, hoyIso: string): Promise<ResultadoCorreo> {
