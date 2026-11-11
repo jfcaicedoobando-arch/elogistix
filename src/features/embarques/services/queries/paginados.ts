@@ -1,6 +1,8 @@
+import { z } from "zod";
 import { supabase } from "@/integrations/supabase/client";
 import type { Database, Tables } from "@/integrations/supabase/types";
 import { escapeIlike } from "@/lib/search/ilike";
+import { fromDbChecked } from "@/lib/supabase/cast";
 
 type EmbarqueRow = Tables<"embarques">;
 
@@ -70,6 +72,20 @@ interface PaginaRpc {
   filas_total: number;
 }
 
+const conteoSchema = z.number().int().nonnegative();
+const paginaRpcSchema = z.object({
+  rows: z.array(z.object({
+    id: z.string(),
+    costos_total: conteoSchema,
+    costos_pagados: conteoSchema,
+    docs_total: conteoSchema,
+    docs_pendientes: conteoSchema,
+    filas_expediente: conteoSchema,
+  })),
+  count: conteoSchema,
+  filas_total: conteoSchema,
+});
+
 async function consultarPagina(
   f: EmbarquesPaginadosFilters,
   args: Database["public"]["Functions"]["embarques_listado"]["Args"],
@@ -77,7 +93,7 @@ async function consultarPagina(
   if (f.agruparExpedientes === undefined) {
     const { data, error } = await supabase.rpc("embarques_listado", args);
     if (error) throw error;
-    return { rows: (data ?? []) as unknown as FilaConExtras[] };
+    return { rows: (data ?? []) as Array<FilaConExtras> };
   }
 
   const { data, error } = await supabase.rpc("embarques_listado_pagina", {
@@ -88,7 +104,7 @@ async function consultarPagina(
   });
   if (error) throw error;
   // La migración devuelve un objeto incluso en una página sin filas.
-  return data as unknown as PaginaRpc;
+  return fromDbChecked<PaginaRpc>(data, paginaRpcSchema);
 }
 
 export async function fetchEmbarquesPaginados(
