@@ -6,7 +6,7 @@
  * (Power of 10). Funciones puras: no tocan la base ni el DOM.
  */
 import { errorCobroPuePrevio } from "../domain/pueCobroPrevio";
-import { round2 } from "@/features/cxp/services";
+import { roundMoney as round2 } from "@/lib/financial/financialUtils";
 import { ordenarFifo } from "@/lib/domain/fifoVencimiento";
 import type { FacturaCobroCandidata, RenglonCobro } from "./pagoClienteLote";
 

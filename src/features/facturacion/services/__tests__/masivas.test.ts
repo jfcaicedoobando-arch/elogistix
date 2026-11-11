@@ -5,11 +5,21 @@ const mock = await vi.hoisted(async () => {
   return createSupabaseMock();
 });
 vi.mock("@/integrations/supabase/client", () => ({ supabase: mock.supabase }));
+vi.mock("@/services/bitacora/registrar", () => ({ registrarActividad: vi.fn() }));
+vi.mock("../enviarCfdiEmail", () => ({ enviarCfdiFactura: vi.fn() }));
 
-import { fetchFacturasParaZip, marcarFacturasComoEnviadas } from "../masivas";
+import { fetchFacturasParaZip, marcarFacturasComoEnviadas, reenviarFacturasMasivas } from "../masivas";
+import { registrarActividad } from "@/services/bitacora/registrar";
+import { enviarCfdiFactura } from "../enviarCfdiEmail";
+import { AuthOperationChangedError } from "@/lib/auth/authOperationScope";
+
+const scope = { organizationId: "org-1", isCurrent: () => true, assertCurrent: () => {} };
 
 describe("masivas service", () => {
-  beforeEach(() => { mock.tableCalls.length = 0; });
+  beforeEach(() => {
+    mock.tableCalls.length = 0;
+    vi.clearAllMocks();
+  });
 
   it("fetchFacturasParaZip cortocircuita con array vacío", async () => {
     const res = await fetchFacturasParaZip([]);
@@ -37,17 +47,67 @@ describe("masivas service", () => {
     expect(mock.tableCalls).toHaveLength(0);
   });
 
-  it("marcarFacturasComoEnviadas hace update con enviada_cliente_at y los IDs", async () => {
-    mock.setTableResult("facturas", { data: null, error: null });
-    await marcarFacturasComoEnviadas(["a", "b"]);
+  it("marca filas visibles y registra únicamente los IDs confirmados, como marcado manual", async () => {
+    mock.setTableResult("facturas", { data: [{ id: "a" }], error: null });
+    const resultados = await marcarFacturasComoEnviadas(["a", "b"], scope);
+    expect(resultados).toEqual([
+      { facturaId: "a", ok: true },
+      { facturaId: "b", ok: false, error: "No se confirmó el marcado" },
+    ]);
     const call = mock.tableCalls[0];
     const updateArgs = call.opArgs[call.ops.indexOf("update")];
     expect(updateArgs?.[0]).toHaveProperty("enviada_cliente_at");
     expect(call.opArgs[call.ops.indexOf("in")]).toEqual(["id", ["a", "b"]]);
+    expect(call.opArgs[call.ops.indexOf("is")]).toEqual(["deleted_at", null]);
+    expect(call.opArgs[call.ops.indexOf("eq")]).toEqual(["organization_id", "org-1"]);
+    expect(call.opArgs[call.ops.indexOf("select")]).toEqual(["id"]);
+    expect(registrarActividad).toHaveBeenCalledExactlyOnceWith(expect.objectContaining({
+      accion: "Marcó facturas como enviadas manualmente",
+      detalles: { facturaIds: ["a"] },
+      organizationId: "org-1",
+    }));
+    expect(enviarCfdiFactura).not.toHaveBeenCalled();
+  });
+
+  it("no registra éxito si el update no confirma ninguna factura", async () => {
+    mock.setTableResult("facturas", { data: [], error: null });
+    await expect(marcarFacturasComoEnviadas(["a"], scope))
+      .resolves.toEqual([{ facturaId: "a", ok: false, error: "No se confirmó el marcado" }]);
+    expect(registrarActividad).not.toHaveBeenCalled();
   });
 
   it("marcarFacturasComoEnviadas propaga error", async () => {
     mock.setTableResult("facturas", { data: null, error: new Error("bad") });
     await expect(marcarFacturasComoEnviadas(["a"])).rejects.toThrow("bad");
+  });
+
+  it("reporta reenvíos parciales por factura y no registra marcado manual", async () => {
+    vi.mocked(enviarCfdiFactura)
+      .mockResolvedValueOnce({ ok: true, enviado_a: "cliente@example.invalid" })
+      .mockRejectedValueOnce(new Error("Sin contacto"));
+    const onProgress = vi.fn();
+    const resultados = await reenviarFacturasMasivas(["b", "a"], { scope, onProgress });
+    expect(resultados).toEqual([
+      { facturaId: "b", ok: true },
+      { facturaId: "a", ok: false, error: "Sin contacto" },
+    ]);
+    expect(onProgress).toHaveBeenLastCalledWith(2, 2);
+    expect(registrarActividad).not.toHaveBeenCalled();
+  });
+
+  it("omite envíos pendientes si cambia la sesión durante el lote", async () => {
+    let actual = true;
+    vi.mocked(enviarCfdiFactura).mockImplementation(async () => {
+      actual = false;
+      return { ok: true, enviado_a: "cliente@example.invalid" };
+    });
+    const scoped = {
+      ...scope,
+      isCurrent: () => actual,
+      assertCurrent: () => { if (!actual) throw new AuthOperationChangedError(); },
+    };
+    await expect(reenviarFacturasMasivas(["a", "b", "c", "d", "e"], { scope: scoped }))
+      .rejects.toBeInstanceOf(AuthOperationChangedError);
+    expect(enviarCfdiFactura).toHaveBeenCalledExactlyOnceWith("a");
   });
 });

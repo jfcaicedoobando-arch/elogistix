@@ -9,11 +9,12 @@
  */
 import { ERROR_FORMA_COBRO, formaPagoCobroValida } from "../domain/formaPagoCobro";
 import { supabase } from "@/integrations/supabase/client";
-import { round2 } from "@/features/cxp/services";
+import { roundMoney as round2 } from "@/lib/financial/financialUtils";
+import { validarFechaPago } from "@/lib/financial/validarFechaPago";
+import { todayLocalISO } from "@/lib/date/today";
 import {
   errorCuadre,
   errorFacturaDuplicada,
-  errorFechaLote,
   errorMonedaCuenta,
   errorRenglonExcedeSaldo,
   errorRenglonPue,
@@ -101,7 +102,7 @@ export function validarCobroLote(
     return { error: "Selecciona al menos dos facturas para un cobro en lote.", totalRepartido };
   }
   // Ola 11 · RFE-02: la fecha del cobro no puede ser futura (espejo FE-03).
-  const errorFecha = errorFechaLote(opts.fecha);
+  const errorFecha = validarFechaPago(opts.fecha, todayLocalISO());
   if (errorFecha) {
     return { error: errorFecha, totalRepartido };
   }

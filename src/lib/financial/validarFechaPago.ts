@@ -1,7 +1,6 @@
 /**
- * FE-03 / UIA-06: misma regla y mensajes que `validarFechas` de CxP.
- * Extraído de `DialogRegistrarPago.tsx` (regla react-refresh: un archivo de
- * componentes no debe exportar utilidades).
+ * Regla de fecha para pagos y cobros. En los lotes se omite la fecha de
+ * emisión porque el servidor la verifica por cada factura.
  */
 export function validarFechaPago(
   fecha: string,

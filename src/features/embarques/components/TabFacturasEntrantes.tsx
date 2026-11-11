@@ -34,7 +34,7 @@ import {
 
 import { abrirFacturaEntrante, type FacturaEntranteRow } from "@/features/cxp/services";
 import { SubirFacturaEntranteDialog } from "@/features/embarques/components/SubirFacturaEntranteDialog";
-import { CorregirDatosEntranteDialog } from "@/features/embarques/components/entrantes/CorregirDatosEntranteDialog";
+import { CorregirDatosEntranteDialog } from "@/features/cxp";
 import { FacturaEntranteItem } from "@/features/embarques/components/entrantes/FacturaEntranteItem";
 import { useFocusSection } from "@/features/embarques/hooks/useFocusSection";
 

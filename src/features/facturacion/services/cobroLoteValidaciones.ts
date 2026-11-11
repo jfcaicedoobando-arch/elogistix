@@ -6,11 +6,9 @@
  */
 import { errorCobroPuePrevio } from "../domain/pueCobroPrevio";
 import { TC_MXN_MIN, TC_MXN_MAX } from "@/lib/financial/tcBanda";
-import { round2 } from "@/features/cxp/services";
+import { roundMoney as round2 } from "@/lib/financial/financialUtils";
 import { TOLERANCIA_SOBREPAGO, tieneSaldoMonetario } from "@/lib/financial/toleranciaPago";
 import type { FacturaCobroCandidata, RenglonCobro } from "./pagoClienteLote";
-import { validarFechaPago } from "@/features/facturacion/domain/validarFechaPago";
-import { todayLocalISO } from "@/lib/date/today";
 
 /**
  * Tolerancia de centavos usada en las comparaciones contra SALDO (cálculo
@@ -25,15 +23,6 @@ import { todayLocalISO } from "@/lib/date/today";
  */
 export const TOLERANCIA_CENTAVOS = TOLERANCIA_SOBREPAGO;
 
-
-/**
- * Ola 11 · RFE-02/RNF-03: misma regla de fecha que el cobro individual
- * (FE-03 / `validarFechaPago`): no futura. La regla "no anterior a la
- * emisión" se valida por factura en la RPC.
- */
-export function errorFechaLote(fecha: string): string | null {
-  return validarFechaPago(fecha, todayLocalISO());
-}
 
 /**
  * Ola 11 · RFE-03 (patrón FE-01): un lote en USD/EUR sin TC disponible se

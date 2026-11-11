@@ -32,7 +32,7 @@
 import { KeyboardEvent, ReactNode, useCallback, useRef } from "react";
 import { ArrowLeft, ChevronLeft, ChevronRight, Save } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { StepIndicator } from "@/features/embarques/components/StepIndicator";
+import { StepIndicator } from "./StepIndicator";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { cn } from "@/lib/utils";
 

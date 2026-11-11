@@ -3,6 +3,7 @@
  * v13.366.0 — El buzón (`bandejas`) captura la factura con este diálogo.
  */
 export { DialogNuevaFacturaProveedor } from "./components/DialogNuevaFacturaProveedor";
+export { CorregirDatosEntranteDialog } from "./components/recepcion/CorregirDatosEntranteDialog";
 export { DialogPagoLoteProveedor } from "./components/DialogPagoLoteProveedor";
 export type { OrigenProveedor } from "./components/pagoProveedorHelpers";
 export * from "./components/ProveedorCombobox";
