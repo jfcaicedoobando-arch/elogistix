@@ -16,6 +16,7 @@ import { shouldDropSentryEvent, resolveSentryEnvironment } from "./dropPredicate
 import { FEEDBACK_INTEGRATION_OPTIONS } from "./feedbackConfig";
 import { scrubSpanPii } from "./spanPrivacy";
 import { markSentryReady } from "./runtimeState";
+import { connectSentryScope } from "./user";
 import {
   readRate,
   resolveTunnelUrl,
@@ -130,7 +131,10 @@ export function initSentry(): void {
     ],
   });
   initialized = Sentry.isEnabled();
-  if (initialized) markSentryReady();
+  if (initialized) {
+    connectSentryScope(Sentry);
+    markSentryReady();
+  }
 }
 
 /** A client object/event ID alone does not prove transport is enabled. */

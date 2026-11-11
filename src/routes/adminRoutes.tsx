@@ -5,8 +5,8 @@
 import { lazy } from "react";
 import { Route } from "react-router";
 import { ProtectedRoute } from "@/features/auth/components/ProtectedRoute";
-import { AdminLayout } from "@/features/admin/components/AdminLayout";
 
+const AdminLayout = lazy(() => import("@/features/admin/components/AdminLayout").then(({ AdminLayout }) => ({ default: AdminLayout })));
 const AdminDashboard = lazy(() => import("@/features/admin/routes/AdminDashboard"));
 const AdminOrganizaciones = lazy(() => import("@/features/admin/routes/AdminOrganizaciones"));
 const AdminOrgDetalle = lazy(() => import("@/features/admin/routes/AdminOrgDetalle"));

@@ -1,11 +1,8 @@
 /**
  * Arranque de servicios auxiliares fuera del critical path.
  *
- * La configuración e integraciones de Sentry se cargan INMEDIATAMENTE por
- * import dinámico. El adaptador de rutas sí se importa estáticamente para
- * conservar el estado React. La promesa compartida permite encolar
- * capturas del primer render hasta que el SDK esté listo. El persister de
- * TanStack Query sí espera al idle porque hidratar el cache no es crítico.
+ * Sentry y el persister esperan un turno ocioso. Si el primer render falla,
+ * la captura de errores puede cargar Sentry de inmediato por la misma promesa.
  */
 import type { QueryClient } from "@tanstack/react-query";
 import { loadInitializedSentry } from "@/lib/observability/sentry/runtime";
@@ -33,21 +30,22 @@ export interface StartServicesDeps {
   schedule?: (cb: () => void) => void;
 }
 
-/** Inicia Sentry (inmediato) y el persister (diferido al idle). */
+/** Devuelve la finalización del intento de arranque de Sentry. */
 export function startServices(client: QueryClient, deps: StartServicesDeps = {}): Promise<void> {
   const loadPersister = deps.loadPersister ?? (() => import("@/lib/query/persistBootstrap"));
   const schedule = deps.schedule ?? scheduleIdle;
 
-  const sentryPromise = deps.loadSentry
-    ? deps.loadSentry().then((m) => m.initSentry()).catch(() => undefined)
-    : loadInitializedSentry().then(() => undefined);
-  // Attach rejection handling now, not after the idle callback.
-  const persisterPromise = loadPersister().catch(() => null);
+  const loadSentry = async () => {
+    if (deps.loadSentry) (await deps.loadSentry()).initSentry();
+    else await loadInitializedSentry();
+  };
 
-  schedule(() => {
-    void Promise.resolve(persisterPromise)
-      .then((m) => m?.bootstrapQueryPersister(client))
-      .catch(() => undefined);
+  return new Promise((resolve) => {
+    schedule(() => {
+      void loadSentry().then(() => resolve(), () => resolve());
+      void Promise.resolve().then(loadPersister)
+        .then((m) => m.bootstrapQueryPersister(client))
+        .catch(() => undefined);
+    });
   });
-  return sentryPromise;
 }

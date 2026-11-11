@@ -20,10 +20,8 @@ const ALLOWLIST = new Set<string>([
   // Núcleo de observabilidad — único punto donde se inicializa el SDK.
   "src/lib/observability/sentry/core.ts",
   "src/lib/observability/sentry/helpers.ts",
-  "src/lib/observability/sentry/user.ts",
+  "src/lib/observability/sentry/RouteReporter.tsx",
   "src/lib/observability/sentry/dropPredicate.ts",
-  // Widget de feedback: usa Sentry.getFeedback() — la API requiere import síncrono.
-  "src/components/feedback/FeedbackButton.tsx",
   // Página interna de diagnóstico Sentry (sólo cargada bajo /admin/sentry).
   "src/features/admin/routes/SentryDiagnostico.tsx",
   // Hook de diagnóstico Sentry (sólo consumido por la página /admin/sentry).
