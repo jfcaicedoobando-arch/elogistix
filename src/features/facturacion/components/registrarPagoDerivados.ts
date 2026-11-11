@@ -4,7 +4,7 @@
  */
 import { formaPagoCobroValida } from "../domain/formaPagoCobro";
 import { tieneSaldoMonetario, TOLERANCIA_SOBREPAGO } from "@/lib/financial/toleranciaPago";
-import { validarFechaPago } from "@/features/facturacion/domain/validarFechaPago";
+import { validarFechaPago } from "@/lib/financial/validarFechaPago";
 
 export interface RatesTc {
   usdMxn: number;

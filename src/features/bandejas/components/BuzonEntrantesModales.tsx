@@ -5,8 +5,7 @@
 import { PreviaFacturaEntranteSheet } from "./PreviaFacturaEntranteSheet";
 import { MarcarCapturadaDialog } from "./MarcarCapturadaDialog";
 import { RechazarFacturaEntranteDialog } from "./RechazarFacturaEntranteDialog";
-import { DialogNuevaFacturaProveedor } from "@/features/cxp";
-import { CorregirDatosEntranteDialog } from "@/features/embarques/components/entrantes/CorregirDatosEntranteDialog";
+import { CorregirDatosEntranteDialog, DialogNuevaFacturaProveedor } from "@/features/cxp";
 import type { FacturaEntranteRow } from "@/features/cxp/services";
 import type { EntranteParaCaptura } from "@/features/cxp/types";
 

@@ -148,7 +148,11 @@ export function TabFacturasEmitidas({ filtros: f, tabla: t, acciones: a }: Props
         </CardContent>
       </Card>
 
-      <FacturasMasivasToolbar selectedIds={selection.selectedIds} onClear={selection.clear} />
+      <FacturasMasivasToolbar
+        selectedIds={selection.selectedIds}
+        onClear={selection.clear}
+        onMarked={selection.remove}
+      />
 
       <Card>
         <CardContent className="p-0">

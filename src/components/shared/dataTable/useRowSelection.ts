@@ -20,6 +20,7 @@ export interface RowSelectionApi {
   toggle: (id: string) => void;
   toggleAll: (ids: string[]) => void;
   clear: () => void;
+  remove: (ids: readonly string[]) => void;
   isSelected: (id: string) => boolean;
   selectedCount: number;
 }
@@ -70,6 +71,13 @@ export function useRowSelection(): RowSelectionApi {
   }, []);
 
   const clear = useCallback(() => setRowSelection({}), []);
+  const remove = useCallback((ids: readonly string[]) => {
+    setRowSelection((prev) => {
+      const next = { ...prev };
+      for (const id of ids) delete next[id];
+      return next;
+    });
+  }, []);
 
   const selectedIds = useMemo(() => toSet(rowSelection), [rowSelection]);
   const isSelected = useCallback((id: string) => Boolean(rowSelection[id]), [rowSelection]);
@@ -83,9 +91,10 @@ export function useRowSelection(): RowSelectionApi {
       toggle,
       toggleAll,
       clear,
+      remove,
       isSelected,
       selectedCount: selectedIds.size,
     }),
-    [rowSelection, onRowSelectionChange, selectedIds, onSelectionChange, toggle, toggleAll, clear, isSelected],
+    [rowSelection, onRowSelectionChange, selectedIds, onSelectionChange, toggle, toggleAll, clear, remove, isSelected],
   );
 }

@@ -8,9 +8,10 @@
  * más próxima a vencer y el remanente se aplica a las siguientes.
  */
 import { supabase } from "@/integrations/supabase/client";
-import { roundMoney } from "@/lib/financial/financialUtils";
+import { roundMoney as round2 } from "@/lib/financial/financialUtils";
+import { validarFechaPago } from "@/lib/financial/validarFechaPago";
+import { todayLocalISO } from "@/lib/date/today";
 import { ordenarFifo } from "@/lib/domain/fifoVencimiento";
-import { errorFechaLote } from "@/features/facturacion/services/cobroLoteValidaciones";
 import { verificarAprobacionLote } from "./pagoProveedorLotePreflight";
 
 
@@ -45,13 +46,7 @@ export interface RegistrarPagoLoteInput {
   renglones: RenglonLote[];
 }
 
-/**
- * Redondeo contable a 2 decimales (evita centavos fantasma en el reparto).
- * Ola 9 · B3: delega en `roundMoney` (fuente única de redondeo financiero).
- */
-export function round2(n: number): number {
-  return roundMoney(Number.isFinite(n) ? n : 0);
-}
+export { round2 };
 
 
 /**
@@ -136,7 +131,7 @@ export function validarLote(
     return { error: "Selecciona al menos dos facturas para un pago en lote.", totalRepartido };
   }
   // Ola 11 · RFE-02/RNF-03: la fecha del pago no puede ser futura.
-  const errorFecha = errorFechaLote(opts.fecha);
+  const errorFecha = validarFechaPago(opts.fecha, todayLocalISO());
   if (errorFecha) {
     return { error: errorFecha, totalRepartido };
   }

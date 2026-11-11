@@ -14,10 +14,12 @@ import {
   useConceptosProveedorEmbarque,
   useCostosProveedorEmbarque,
 } from "@/features/embarques/hooks/useEmbarqueQueries";
-import { ConceptosSugeridosEntrante } from "@/features/embarques/components/entrantes/ConceptosSugeridosEntrante";
-import { NotaContabilidadCampo } from "@/features/embarques/components/entrantes/NotaContabilidadCampo";
-import { SeccionProveedorEntrante } from "@/features/embarques/components/entrantes/SeccionProveedorEntrante";
-import { VerificacionMontoEntrante } from "@/features/embarques/components/entrantes/VerificacionMontoEntrante";
+import {
+  ConceptosSugeridosEntrante,
+  NotaContabilidadCampo,
+  SeccionProveedorEntrante,
+  VerificacionMontoEntrante,
+} from "@/features/embarques";
 import type { FacturaEntranteRow } from "@/features/cxp/services";
 
 interface Props {

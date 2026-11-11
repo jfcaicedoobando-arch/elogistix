@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { render, screen } from "@testing-library/react";
-import { StepIndicator } from "@/features/embarques/components/StepIndicator";
+import { StepIndicator } from "@/components/shared/StepIndicator";
 
 const STEPS = [
   { num: 1, title: "Datos Generales", shortTitle: "Generales" },
