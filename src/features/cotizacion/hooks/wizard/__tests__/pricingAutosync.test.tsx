@@ -1,21 +1,41 @@
-import { it,expect,vi,beforeEach } from 'vitest';
-import {renderHook,waitFor} from '@testing-library/react';
-import {useState} from 'react';
-const m=vi.hoisted(()=>({ filters:[] as any[], values:{} as any, row:{id:'tariff',flete_base:1000,vigente_hasta:'2026-10-20'}, build:vi.fn(), recargos:vi.fn(async()=>[]), notify:vi.fn()}));
-vi.mock('@/integrations/supabase/client',()=>({supabase:{from:()=>{const q:any={select:()=>q,is:(key:any,val:any)=>{m.filters.push([key,val]);return q},eq:()=>q,in:()=>q,limit:()=>q,then:(resolve:any)=>resolve({data: m.filters.some(([key,val])=>key==='cliente_id'&&val===null)?[]:[{id:'op',cliente_id:'existing-client'}],error:null})};return q}}}));
-vi.mock('@/lib/search/ilike',()=>({orIlike:()=>''}));
-vi.mock('@tanstack/react-query',()=>({useQuery:()=>({data:m.row,isFetched:true})}));
-vi.mock('react-hook-form',()=>({useFormContext:()=>({watch:(key:string)=>m.values[key],getValues:(key:string)=>m.values[key]})}));
-vi.mock('@/features/costeo/services/topTarifas',()=>({fetchRecargosDeTarifa:m.recargos,fetchTarifaVigentePorId:vi.fn()}));
-vi.mock('@/lib/ui/appFeedback',()=>({notifyError:m.notify}));
-vi.mock('@/features/costeo',()=>({etiquetaPuertoCompleta:()=>'',origenDe:()=>null,destinoDe:()=>null}));
-vi.mock('@/features/cotizacion/components/seccionRuta/buildCostosDesdeTarifa',()=>({buildCostosDesdeTarifa:m.build}));
-vi.mock('@/features/cotizacion/components/seccionRuta/buildCostosLCLManual',()=>({buildCostosLCLManual:()=>[]}));
-vi.mock('@/features/cotizacion/services/tarifaVinculada',()=>({fetchTarifaVinculada:async()=>m.row}));
-vi.mock('@/features/cotizacion/hooks/useTarifaVinculada',()=>({useTarifaVinculada:()=>({data:m.row})}));
-vi.mock('@/features/configuracion/hooks/useConfiguracion',()=>({useConfigValue:()=>0.2}));
-vi.mock('@/features/proveedor/hooks/useProveedores',()=>({useProveedoresLite:()=>({data:[]})}));
-vi.mock('@/features/cotizacion/domain/costosAutoGenerados',()=>({conservarComoManuales:vi.fn(),costosAutoDeOtraTarifa:()=>[],sinCostosAutoTarifa:vi.fn(),desajusteCantidadTarifa:()=>false,fleteLclDesactualizado:()=>false,reemplazarCostosAutoFleteLcl:vi.fn(),reemplazarCostosAutoTarifa:vi.fn()}));
-import {useCostosAutoSync} from '../useCostosAutoSync';
-beforeEach(()=>{m.values={};m.build.mockReset();m.recargos.mockClear();m.notify.mockClear();});
-it('Step 2 autosync does build costs without onAutocargaCostos callback',async()=>{m.values={tarifaId:'tariff',numContenedores:3,tipoEmbarque:'FCL'};m.build.mockReturnValue([{concepto:'Flete',cantidad:3}]);const {result}=renderHook(()=>{const [filas,setFilas]=useState<any[]>([]);useCostosAutoSync({filas,setFilas});return filas;});await waitFor(()=>expect(result.current).toHaveLength(1));expect(m.build).toHaveBeenCalledWith(expect.objectContaining({cantidad:3,markup:0.2,tipoEmbarque:'FCL'}));});
+import { render, screen, waitFor } from "@testing-library/react";
+import { useState } from "react";
+import { FormProvider, useForm } from "react-hook-form";
+import { expect, it, vi } from "vitest";
+import { COTIZACION_FORM_DEFAULTS, type CotizacionFormValues, type FilaCostoLocal } from "@/features/cotizacion/types";
+import { useCostosAutoSync } from "../useCostosAutoSync";
+
+const tarifa = { id: "tarifa", flete_base: 1000, naviera_nombre: "Naviera" };
+vi.mock("@/features/cotizacion/services/tarifaVinculada", () => ({ fetchTarifaVinculada: async () => tarifa }));
+vi.mock("@/features/cotizacion/hooks/useTarifaVinculada", () => ({ useTarifaVinculada: () => ({ data: tarifa }) }));
+vi.mock("@/features/costeo/services/topTarifas", () => ({ fetchRecargosDeTarifa: async () => [] }));
+vi.mock("@/features/configuracion/hooks/useConfiguracion", () => ({ useConfigValue: () => 0.2 }));
+vi.mock("@/features/proveedor/hooks/useProveedores", () => ({ useProveedoresLite: () => ({ data: [] }) }));
+vi.mock("@/lib/ui/appFeedback", () => ({ notifyError: vi.fn() }));
+
+function Costos() {
+  const [filas, setFilas] = useState<FilaCostoLocal[]>([]);
+  useCostosAutoSync({ filas, setFilas, precargar: true });
+  return <output aria-label="Costos">{JSON.stringify(filas)}</output>;
+}
+
+function Wizard() {
+  const form = useForm<CotizacionFormValues>({
+    defaultValues: {
+      ...COTIZACION_FORM_DEFAULTS,
+      tarifaId: tarifa.id,
+      modo: "Marítimo",
+      tipoEmbarque: "FCL",
+      incoterm: "FOB",
+      numContenedores: 3,
+    },
+  });
+  return <FormProvider {...form}><Costos /></FormProvider>;
+}
+
+it("precarga el paso 2 con la cantidad y el margen configurado aunque la tarifa venga de Pricing", async () => {
+  render(<Wizard />);
+  await waitFor(() => expect(JSON.parse(screen.getByLabelText("Costos").textContent ?? "[]")).toEqual([
+    expect.objectContaining({ cantidad: 3, costo_unitario: 1000, precio_venta: 1200, costeo_tarifa_id: tarifa.id }),
+  ]));
+});

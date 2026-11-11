@@ -13,6 +13,7 @@
 import type { FilaCostoLocal } from "@/features/cotizacion/types";
 import type { TopTarifaRow, CosteoTarifaRecargo } from "@/features/costeo/types";
 import { roundMoney } from "@/lib/financial/financialUtils";
+import { NOTA_AUTO_TARIFA } from "./costosAutoGenerados";
 
 export interface BuildCostosDesdeTarifaArgs {
   tarifa: Pick<
@@ -64,7 +65,7 @@ function filasDesdeRecargos({
       precio_venta: aplicarMarkup(monto, markup),
       unidad_medida: unidad,
       aplica_iva: false,
-      notas: "Auto-cargado desde tarifa marítima",
+      notas: NOTA_AUTO_TARIFA,
       // B-073: linkage tarifa + recargo (la RPC compara recargo por recargo).
       costeo_tarifa_id: tarifaId,
       costeo_tarifa_recargo_id: r.id ?? null,
@@ -107,7 +108,7 @@ export function buildCostosDesdeTarifa({
       precio_venta: aplicarMarkup(fleteBase, markup),
       unidad_medida: unidad,
       aplica_iva: false,
-      notas: "Auto-cargado desde tarifa marítima",
+      notas: NOTA_AUTO_TARIFA,
       // B-073: la fila de flete queda ligada a la tarifa para revalidar precio.
       costeo_tarifa_id: tarifa.id ?? null,
     });

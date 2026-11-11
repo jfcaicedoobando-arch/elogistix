@@ -26,7 +26,7 @@ vi.mock("@/features/costeo/components/BuscarTarifaDialog", () => ({ BuscarTarifa
 vi.mock("../TarifaResumenHeredado", () => ({ default: () => null }));
 vi.mock("../seccionRuta/SugerenciasTarifaInline", () => ({ default: () => null }));
 vi.mock("../seccionRuta/rutaPuertoHandlers", () => ({ desvincularTarifa: vi.fn() }));
-vi.mock("../seccionRuta/aplicarTarifa", () => ({ aplicarTarifaAlForm: vi.fn() }));
+vi.mock("@/features/cotizacion/hooks/wizard/aplicarTarifaAlForm", () => ({ aplicarTarifaAlForm: vi.fn() }));
 
 function Fixture({ valor }: { valor: string }) {
   const form = useForm<CotizacionFormValues>({ defaultValues: {

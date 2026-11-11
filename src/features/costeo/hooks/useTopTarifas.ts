@@ -32,24 +32,29 @@ export function isValidTopTarifasIds(p: Partial<TopTarifasParams>): boolean {
 
 export function useTopTarifas(p: Partial<TopTarifasParams>) {
   const { organizationId } = useOrganization();
-  const { data: tipos = [] } = useTiposContenedor();
+  const catalogo = useTiposContenedor();
+  const catalogoListo = catalogo.isSuccess === true;
   // Normalizar fecha: "" (input date vacío) debe tratarse como no proveída,
   // no propagarse al RPC como date inválido (Postgres 22007).
   const fecha = p.fecha && p.fecha.length > 0 ? p.fecha : undefined;
   const idsValidos = isValidTopTarifasIds(p);
   // P1: el tipo elegido puede ser un registro legacy equivalente; buscamos con
-  // todos los IDs del grupo y cacheamos por el ID canónico, para que elegir
-  // cualquiera de las opciones duplicadas dé el mismo resultado.
-  const tiposComerciales = agruparTiposContenedorComerciales(tipos);
+  // todos los IDs del grupo. El catálogo debe resolver antes de usar el
+  // fallback de ID exacto, reservado para UUID que no están en el catálogo.
+  const tiposComerciales = agruparTiposContenedorComerciales(catalogo.data ?? []);
   const tipoCanonico = resolverIdCanonicoTipo(tiposComerciales, p.tipoContenedorId);
-  const tipoContenedorIds = idsEquivalentesDeTipo(tiposComerciales, p.tipoContenedorId);
-  const enabled = !!organizationId && idsValidos;
+  const tipoContenedorIds = catalogoListo
+    ? idsEquivalentesDeTipo(tiposComerciales, p.tipoContenedorId)
+    : [];
+  const puedeConsultar = !!organizationId && idsValidos;
+  const enabled = puedeConsultar && catalogoListo;
   const query = useQuery({
     queryKey: queryKeys.costeo.tarifas.top({
       organizationId,
       puertoOrigenId: p.puertoOrigenId,
       puertoDestinoId: p.puertoDestinoId,
       tipoContenedorId: tipoCanonico,
+      tipoContenedorIds,
       fecha,
     }),
     queryFn: () =>
@@ -64,6 +69,17 @@ export function useTopTarifas(p: Partial<TopTarifasParams>) {
     enabled,
     staleTime: 60 * 1000,
   });
-  return { ...query, idsValidos, tipoContenedorIds };
+  const resultado = catalogoListo ? query : catalogo;
+  return {
+    data: enabled ? query.data : undefined,
+    error: puedeConsultar ? resultado.error : null,
+    isError: puedeConsultar && resultado.isError,
+    isSuccess: enabled && query.isSuccess,
+    isFetching: puedeConsultar && (resultado.isFetching || catalogo.isPending),
+    isRefetching: puedeConsultar && resultado.isRefetching,
+    refetch: resultado.refetch,
+    idsValidos,
+    tipoContenedorIds,
+  };
 }
 

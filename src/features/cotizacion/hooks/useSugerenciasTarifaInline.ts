@@ -7,7 +7,6 @@ import { useMemo, useState } from "react";
 import { useFormContext } from "react-hook-form";
 import { usePuertos, useTiposContenedor } from "@/features/catalogos/hooks";
 import { useTopTarifas } from "@/features/costeo/hooks/useTopTarifas";
-import { aplicarTarifaAlForm, type AplicarTarifaOptions } from "@/features/cotizacion/components/seccionRuta/aplicarTarifa";
 import { logTarifaSugeridaAplicada } from "@/features/cotizacion/services/bitacoraTarifa";
 import { resolverPuertoId, resolverTipoId } from "@/features/cotizacion/components/seccionRuta/resolverCatalogos";
 import type { CotizacionFormValues } from "@/features/cotizacion/types";
@@ -16,11 +15,11 @@ import { todayLocalISO } from "@/lib/date/today";
 
 interface UseSugerenciasTarifaInlineParams {
   cotizacionId?: string | null;
-  aplicarOptions: AplicarTarifaOptions;
+  onElegirTarifa: (tarifa: TopTarifaRow) => void;
 }
 
-export function useSugerenciasTarifaInline({ cotizacionId, aplicarOptions }: UseSugerenciasTarifaInlineParams) {
-  const { watch, setValue, trigger } = useFormContext<CotizacionFormValues>();
+export function useSugerenciasTarifaInline({ cotizacionId, onElegirTarifa }: UseSugerenciasTarifaInlineParams) {
+  const { watch } = useFormContext<CotizacionFormValues>();
   const { data: puertos = [] } = usePuertos();
   const { data: tipos = [] } = useTiposContenedor();
   const [openDialog, setOpenDialog] = useState(false);
@@ -30,7 +29,6 @@ export function useSugerenciasTarifaInline({ cotizacionId, aplicarOptions }: Use
   const puertoOrigenIdForm = watch("puertoOrigenId");
   const puertoDestinoIdForm = watch("puertoDestinoId");
   const tipoContenedor = watch("tipoContenedor");
-  const validez = watch("validezPropuesta");
 
   // Etapa 3: el ID capturado en el formulario manda. `resolverPuertoId` queda
   // sólo como compatibilidad con cotizaciones legacy que únicamente tienen texto.
@@ -54,11 +52,9 @@ export function useSugerenciasTarifaInline({ cotizacionId, aplicarOptions }: Use
 
   const handleElegir = (row: TopTarifaRow) => {
     const rank = (tarifas.findIndex((t) => t.id === row.id) + 1) as 1 | 2 | 3;
-    aplicarTarifaAlForm(setValue, trigger, row, aplicarOptions, validez);
+    onElegirTarifa(row);
     void logTarifaSugeridaAplicada({ tarifaId: row.id, ranking: rank, cotizacionId });
   };
-
-  const aplicarDialogElegir = (row: TopTarifaRow) => aplicarTarifaAlForm(setValue, trigger, row, aplicarOptions, validez);
 
   return {
     openDialog,
@@ -72,6 +68,5 @@ export function useSugerenciasTarifaInline({ cotizacionId, aplicarOptions }: Use
     refetch,
     isRefetching,
     handleElegir,
-    aplicarDialogElegir,
   };
 }

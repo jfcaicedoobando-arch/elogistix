@@ -19,8 +19,7 @@
 import { Sparkles, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { BuscarTarifaDialog } from "@/features/costeo/components/BuscarTarifaDialog";
-import type { AplicarTarifaOptions } from "./aplicarTarifa";
-import type { FilaCostoLocal } from "@/features/cotizacion/types";
+import type { TopTarifaRow } from "@/features/costeo/types";
 import { useSugerenciasTarifaInline } from "@/features/cotizacion/hooks/useSugerenciasTarifaInline";
 import { SugerenciasTarifaResultados } from "./SugerenciasTarifaResultados";
 import { SugerenciasTarifaSinIds } from "./SugerenciasTarifaSinIds";
@@ -28,26 +27,19 @@ import { SugerenciasTarifaSinIds } from "./SugerenciasTarifaSinIds";
 interface SugerenciasTarifaInlineProps {
   /** Si la cotización ya está persistida, se pasa para bitácora. */
   cotizacionId?: string | null;
-  /** Callback para auto-cargar costos al elegir una tarifa. */
-  onAutocargaCostos?: (filas: FilaCostoLocal[]) => void;
-  markup?: number;
-  cantidad?: number;
+  onElegirTarifa: (tarifa: TopTarifaRow) => void;
 }
 
 export default function SugerenciasTarifaInline({
   cotizacionId,
-  onAutocargaCostos,
-  markup,
-  cantidad,
+  onElegirTarifa,
 }: SugerenciasTarifaInlineProps) {
-  const aplicarOptions: AplicarTarifaOptions = { onAutocargaCostos, markup, cantidad };
-
   const {
     openDialog, setOpenDialog,
     puertoOrigenId, puertoDestinoId, tipoContenedorId,
     tarifas, isFetching, error, refetch, isRefetching,
-    handleElegir, aplicarDialogElegir,
-  } = useSugerenciasTarifaInline({ cotizacionId, aplicarOptions });
+    handleElegir,
+  } = useSugerenciasTarifaInline({ cotizacionId, onElegirTarifa });
 
   const sinIds = !puertoOrigenId || !puertoDestinoId || !tipoContenedorId;
 
@@ -56,7 +48,7 @@ export default function SugerenciasTarifaInline({
       <SugerenciasTarifaSinIds
         openDialog={openDialog}
         setOpenDialog={setOpenDialog}
-        onElegir={aplicarDialogElegir}
+        onElegir={onElegirTarifa}
         puertoOrigenId={puertoOrigenId}
         puertoDestinoId={puertoDestinoId}
         tipoContenedorId={tipoContenedorId}
@@ -93,7 +85,7 @@ export default function SugerenciasTarifaInline({
       <BuscarTarifaDialog
         open={openDialog}
         onOpenChange={setOpenDialog}
-        onElegir={aplicarDialogElegir}
+        onElegir={onElegirTarifa}
         selectLabel="Usar esta tarifa"
         initial={{ puertoOrigenId, puertoDestinoId, tipoContenedorId }}
       />

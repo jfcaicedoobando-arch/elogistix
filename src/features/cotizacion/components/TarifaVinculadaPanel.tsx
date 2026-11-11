@@ -21,9 +21,8 @@ import { formatNumber } from "@/lib/formatters/numbers";
 import { useTarifaVinculada } from "@/features/cotizacion/hooks/useTarifaVinculada";
 import SugerenciasTarifaInline from "./seccionRuta/SugerenciasTarifaInline";
 import { desvincularTarifa } from "./seccionRuta/rutaPuertoHandlers";
-import { aplicarTarifaAlForm, type AplicarTarifaOptions } from "./seccionRuta/aplicarTarifa";
+import { aplicarTarifaAlForm } from "@/features/cotizacion/hooks/wizard/aplicarTarifaAlForm";
 import type { CotizacionFormValues } from "@/features/cotizacion/types";
-import type { FilaCostoLocal } from "@/features/cotizacion/types";
 import type { TopTarifaRow } from "@/features/costeo/types";
 import { destinoDe, etiquetaRutaCompleta, origenDe } from "@/features/costeo";
 import { resolveTipoContenedorId, computeTarifaWarnings, faltaCatalogoParaValidarTipo } from "./tarifaVinculadaPanel.helpers";
@@ -34,14 +33,11 @@ import { TarifaVinculadaEstadoConsulta } from "./TarifaVinculadaEstadoConsulta";
 
 interface Props {
   complete?: boolean;
-  /** Si se provee, los recargos+flete de la tarifa elegida se inyectan como filas de costo. */
-  onAutocargaCostos?: (filas: FilaCostoLocal[]) => void;
-  markup?: number;
-  cantidad?: number;
+  onTarifaAplicada?: (tarifa: TopTarifaRow) => void;
 }
 
 export default function TarifaVinculadaPanel({
-  complete, onAutocargaCostos, markup, cantidad,
+  complete, onTarifaAplicada,
 }: Props = {}) {
   const form = useFormContext<CotizacionFormValues>();
   const { watch, setValue, trigger } = form;
@@ -64,14 +60,9 @@ export default function TarifaVinculadaPanel({
 
   if (modo !== "Marítimo") return null;
 
-  const aplicarOptions: AplicarTarifaOptions = {
-    onAutocargaCostos,
-    markup,
-    cantidad,
-  };
-
   const aplicarTarifa = (row: TopTarifaRow) => {
-    aplicarTarifaAlForm(setValue, trigger, row, aplicarOptions, validez);
+    aplicarTarifaAlForm(setValue, trigger, row, validez);
+    onTarifaAplicada?.(row);
   };
 
 
@@ -103,11 +94,7 @@ export default function TarifaVinculadaPanel({
                 </p>
               </div>
             </div>
-            <SugerenciasTarifaInline
-              onAutocargaCostos={onAutocargaCostos}
-              markup={markup}
-              cantidad={cantidad}
-            />
+            <SugerenciasTarifaInline onElegirTarifa={aplicarTarifa} />
           </div>
         )}
 

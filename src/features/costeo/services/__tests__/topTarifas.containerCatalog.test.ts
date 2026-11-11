@@ -22,7 +22,7 @@ const catalogo = () => dedupeTiposContenedor([
   { id: 'hc', code: '40HC', name: "40' High Cube", activo: true, created_at: '2026-01-01' },
   { id: 'dv', code: '20DV', name: "20' Dry (Standard)", activo: true, created_at: '2026-02-01' },
 ]);
-beforeEach(() => { queryMock.mockClear(); tiposMock.mockReturnValue({ data: catalogo() }); mock.rpcCalls.length = 0; mock.setRpcResult('get_top_tarifas', { data: [], error: null }); });
+beforeEach(() => { queryMock.mockClear(); tiposMock.mockReturnValue({ data: catalogo(), isSuccess: true }); mock.rpcCalls.length = 0; mock.setRpcResult('get_top_tarifas', { data: [], error: null }); });
 
 async function buscar(tipo: string) {
   await fetchTopTarifas({ puertoOrigenId: 'origen', puertoDestinoId: 'destino', tipoContenedorId: tipo, tipoContenedorIds: idsEquivalentesDeTipo(agruparTiposContenedorComerciales(catalogo()), tipo), organizationId: 'org-prueba', fecha: '2026-10-09' });
@@ -60,7 +60,9 @@ describe('useTopTarifas integra selección separada y búsqueda comercial', () =
     const { result } = renderHook(() => useTopTarifas(params));
     expect(result.current.tipoContenedorIds).toEqual(['dry', 'dv', 'gp', 'st']);
     const options = queryMock.mock.calls[0][0];
-    expect(options.queryKey).toEqual(['top', expect.objectContaining({ tipoContenedorId: 'dry' })]);
+    expect(options.queryKey).toEqual(['top', expect.objectContaining({
+      tipoContenedorId: 'dry', tipoContenedorIds: ['dry', 'dv', 'gp', 'st'],
+    })]);
     await options.queryFn();
     expect(mock.rpcCalls.map((call) => (call.args as { p_tipo_contenedor_id: string }).p_tipo_contenedor_id)).toEqual(['dry', 'dv', 'gp', 'st']);
     expect(params.tipoContenedorId).toBe(tipo);

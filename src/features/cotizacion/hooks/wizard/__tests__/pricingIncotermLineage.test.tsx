@@ -3,7 +3,7 @@ import { act, render, waitFor } from "@testing-library/react";
 import { useEffect, useState } from "react";
 import { FormProvider, useForm, type UseFormReturn } from "react-hook-form";
 import { COTIZACION_FORM_DEFAULTS, type CotizacionFormValues, type FilaCostoLocal } from "@/features/cotizacion/types";
-import type { TopTarifaRow } from "@/features/costeo/types";
+import type { CosteoTarifaRecargo, TopTarifaRow } from "@/features/costeo/types";
 import { firmaCapturaPricing } from "../guardarPaso1Pricing";
 import { setAuthSnapshot } from "@/lib/auth/authSnapshot";
 import { syncActiveOrganizationScope } from "@/lib/auth/authOperationScope";
@@ -22,12 +22,13 @@ vi.mock("@/features/cotizacion/services/tarifaVinculada", () => ({ fetchTarifaVi
 vi.mock("@/features/costeo/services/topTarifas", () => ({ fetchRecargosDeTarifa: m.recargos }));
 vi.mock("@/features/configuracion/hooks/useConfiguracion", () => ({ useConfigValue: () => 0.15 }));
 vi.mock("@/features/proveedor/hooks/useProveedores", () => ({ useProveedoresLite: () => ({ data: [] }) }));
-vi.mock("@/features/cotizacion/components/seccionRuta/buildCostosLCLManual", () => ({ buildCostosLCLManual: () => [] }));
+vi.mock("@/features/cotizacion/domain/buildCostosLCLManual", () => ({ buildCostosLCLManual: () => [] }));
 vi.mock("@/features/costeo", () => ({ etiquetaPuertoCompleta: () => "Puerto", origenDe: () => null, destinoDe: () => null }));
 import { usePaso1Handlers } from "../usePaso1Handlers";
 import { useInvalidarTarifaAutomatica } from "../useInvalidarTarifaAutomatica";
 import { useCostosAutoSync, type CostosAutoSync } from "../useCostosAutoSync";
 import { aplicarRespuestaPricing } from "../aplicarRespuestaPricing";
+import { aplicarTarifaAlForm } from "../aplicarTarifaAlForm";
 import { recordarIdentidadPricing } from "../identidadPricing";
 import { marcarEditadaAMano, NOTA_AUTO_TARIFA } from "@/features/cotizacion/domain/costosAutoGenerados";
 const tarifa = { id: "tarifa", flete_base: 1000, tipo_contenedor_id: "20", tipo_contenedor_nombre: "20DRY", naviera_nombre: "Naviera" } as TopTarifaRow;
@@ -36,17 +37,31 @@ const response = { oportunidad_id: "op", cliente_id: "cliente", solicitud_id: "s
 const automatico: FilaCostoLocal = { concepto: "Flete", cantidad: 1, costo_unitario: 1000, precio_venta: 1150, moneda: "USD", proveedor: "Naviera", unidad_medida: "contenedor", notas: NOTA_AUTO_TARIFA, costeo_tarifa_id: "tarifa" };
 const manual: FilaCostoLocal = { ...automatico, concepto: "Local manual", notas: "Manual", costeo_tarifa_id: null };
 let current: { form: UseFormReturn<CotizacionFormValues>; filas: FilaCostoLocal[]; handlers: ReturnType<typeof usePaso1Handlers>; sync: CostosAutoSync };
-function Costs({ filas, setFilas, form, handlers }: { filas: FilaCostoLocal[]; setFilas: React.Dispatch<React.SetStateAction<FilaCostoLocal[]>>; form: UseFormReturn<CotizacionFormValues>; handlers: ReturnType<typeof usePaso1Handlers> }) {
-  const sync = useCostosAutoSync({ filas, setFilas });
+function Costs({ filas, setFilas, form, handlers, precargar }: {
+  filas: FilaCostoLocal[];
+  setFilas: React.Dispatch<React.SetStateAction<FilaCostoLocal[]>>;
+  form: UseFormReturn<CotizacionFormValues>;
+  handlers: ReturnType<typeof usePaso1Handlers>;
+  precargar: boolean;
+}) {
+  const sync = useCostosAutoSync({ filas, setFilas, precargar });
   useEffect(() => { current = { form, filas, handlers, sync }; });
   return null;
 }
-function Wizard({ costos = [], values = initial }: { costos?: FilaCostoLocal[]; values?: CotizacionFormValues }) {
+function Wizard({ costos = [], values = initial, precargar = true }: {
+  costos?: FilaCostoLocal[];
+  values?: CotizacionFormValues;
+  precargar?: boolean;
+}) {
   const form = useForm<CotizacionFormValues>({ defaultValues: values });
   const [filas, setFilas] = useState(costos);
   useInvalidarTarifaAutomatica({ form, setCostosInternos: setFilas });
   const handlers = usePaso1Handlers({ form, cotizacionId: null, setCotizacionId: vi.fn(), setCurrentStep: m.next, msdsFile: null, buildPaso1Data: () => ({ tarifa_id: form.getValues("tarifaId") }), mutations: { crearCotizacion: { mutateAsync: vi.fn(), isPending: false }, updateCotizacion: { mutateAsync: vi.fn(), isPending: false, resincronizarSello: m.stamp }, registrarActividad: { mutate: vi.fn() } } });
-  return <FormProvider {...form}><Costs filas={filas} setFilas={setFilas} form={form} handlers={handlers} /></FormProvider>;
+  return (
+    <FormProvider {...form}>
+      <Costs filas={filas} setFilas={setFilas} form={form} handlers={handlers} precargar={precargar} />
+    </FormProvider>
+  );
 }
 function session(org = "org") {
   setAuthSnapshot({ userId: "user", organizationId: org, email: null, organizationName: null, role: "admin", effectiveRole: "admin" });
@@ -57,6 +72,20 @@ function apply(incoterm: string) {
     aplicarRespuestaPricing(current.form, tarifa, { incoterm, cantidad: 2, servicio: "Marítimo", tipo_carga: "20DRY" });
     recordarIdentidadPricing(current.form, "sol", "org");
   });
+}
+
+function elegir(tarifaElegida = tarifa) {
+  act(() => {
+    aplicarTarifaAlForm(current.form.setValue, current.form.trigger, tarifaElegida);
+    current.sync.cargarTarifaElegida(tarifaElegida);
+  });
+}
+
+function recargo(tarifaId: string, monto = 100): CosteoTarifaRecargo {
+  return {
+    id: `recargo-${tarifaId}`, tarifa_id: tarifaId, concepto: "BAF", lado: "origen",
+    monto, moneda: "USD", incluido_en_total: true,
+  };
 }
 beforeEach(() => {
   vi.clearAllMocks(); session();
@@ -170,6 +199,65 @@ describe("Pricing, invalidación y autosync montados juntos", () => {
     const avisos = m.notify.mock.calls.length;
     await act(async () => { reject(new Error("late response")); });
     expect(current.filas).toEqual([]); expect(m.notify).toHaveBeenCalledTimes(avisos);
+  });
+
+  it("conserva linaje y costos manuales al elegir tarifa y pasar a costos", async () => {
+    const conLinaje = { ...automatico, origen_venta_id: "venta-original" };
+    let resolver!: (value: CosteoTarifaRecargo[]) => void;
+    m.recargos.mockReturnValueOnce(new Promise(resolve => { resolver = resolve; }));
+    const view = render(<Wizard costos={[conLinaje, manual]} precargar={false} />);
+    elegir();
+    view.rerender(<Wizard costos={[conLinaje, manual]} />);
+    expect(m.recargos).toHaveBeenCalledExactlyOnceWith(tarifa.id);
+    await act(async () => { resolver([recargo(tarifa.id)]); });
+
+    expect(current.filas[0]).toEqual(manual);
+    expect(current.filas[1]).toMatchObject({ origen_venta_id: "venta-original", precio_venta: 1150 });
+    expect(current.filas[2]).toMatchObject({ concepto: "BAF (origen)", precio_venta: 115 });
+    expect(m.recargos).toHaveBeenCalledOnce();
+  });
+
+  it("una precarga fallida avisa y permite reintentar con la misma tarifa", async () => {
+    m.recargos.mockRejectedValueOnce(new Error("red"));
+    render(<Wizard />);
+    apply("FOB");
+    await waitFor(() => expect(current.sync.errorCargaTarifa).toBe(true));
+    expect(current.filas).toEqual([]);
+    expect(m.notify).toHaveBeenCalledOnce();
+    act(() => current.sync.reintentarCargaTarifa());
+    await waitFor(() => expect(current.filas).toHaveLength(1));
+    expect(current.sync.errorCargaTarifa).toBe(false);
+    expect(m.recargos).toHaveBeenCalledTimes(2);
+  });
+
+  it.each([false, true])("ignora una selección anterior del mismo ID (fallo: %s)", async (falla) => {
+    let resolver!: (value: CosteoTarifaRecargo[]) => void;
+    let rechazar!: (error: Error) => void;
+    m.recargos.mockReturnValueOnce(new Promise((resolve, reject) => { resolver = resolve; rechazar = reject; }));
+    m.recargos.mockResolvedValueOnce([recargo(tarifa.id, 200)]);
+    render(<Wizard costos={[manual]} precargar={false} />);
+    elegir();
+    elegir();
+    await waitFor(() => expect(current.filas).toHaveLength(3));
+    await act(async () => {
+      if (falla) rechazar(new Error("respuesta tardía"));
+      else resolver([recargo(tarifa.id, 100)]);
+    });
+    expect(current.filas[0]).toEqual(manual);
+    expect(current.filas[2]).toMatchObject({ costo_unitario: 200 });
+    expect(current.sync.errorCargaTarifa).toBe(false);
+    expect(m.notify).not.toHaveBeenCalled();
+  });
+
+  it("quitar la tarifa descarta una respuesta de recargos en vuelo", async () => {
+    let resolver!: (value: CosteoTarifaRecargo[]) => void;
+    m.recargos.mockReturnValueOnce(new Promise(resolve => { resolver = resolve; }));
+    render(<Wizard costos={[manual]} precargar={false} />);
+    elegir();
+    act(() => current.form.setValue("tarifaId", null));
+    await act(async () => { resolver([recargo(tarifa.id)]); });
+    expect(current.filas).toEqual([manual]);
+    expect(current.sync.recalculando).toBe(false);
   });
 
 });

@@ -11,26 +11,23 @@
  * reemplaza únicamente las filas auto-generadas; las capturadas a mano quedan
  * intactas. Mientras exista desajuste, el Paso 2 no deja avanzar.
  */
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { useFormContext } from "react-hook-form";
-import { captureAuthOperationScope } from "@/lib/auth/authOperationScope";
+import { useCallback, useEffect, useMemo, useRef } from "react";
+import { useFormContext, useWatch } from "react-hook-form";
 import { esIncotermSinFleteVenta } from "@/features/cotizacion/utils/incotermRules";
-import { fetchRecargosDeTarifa } from "@/features/costeo/services/topTarifas";
-import { fetchTarifaVinculada } from "@/features/cotizacion/services/tarifaVinculada";
 import { useTarifaVinculada } from "@/features/cotizacion/hooks/useTarifaVinculada";
 import { useConfigValue } from "@/features/configuracion/hooks/useConfiguracion";
-import { buildCostosDesdeTarifa } from "@/features/cotizacion/components/seccionRuta/buildCostosDesdeTarifa";
-import { buildCostosLCLManual } from "@/features/cotizacion/components/seccionRuta/buildCostosLCLManual";
+import { buildCostosLCLManual } from "@/features/cotizacion/domain/buildCostosLCLManual";
 import { useProveedoresLite } from "@/features/proveedor/hooks/useProveedores";
-import { notifyError } from "@/lib/ui/appFeedback";
+import type { TopTarifaRow } from "@/features/costeo/types";
+import { CAMPOS_COSTO_TARIFA, useCargaCostosTarifa } from "./useCargaCostosTarifa";
 import {
   conservarComoManuales,
   costosAutoDeOtraTarifa,
+  esCostoAutoFleteLcl,
   sinCostosAutoTarifa,
   desajusteCantidadTarifa,
   fleteLclDesactualizado,
   reemplazarCostosAutoFleteLcl,
-  reemplazarCostosAutoTarifa,
   type DesajusteCostos,
 } from "@/features/cotizacion/domain/costosAutoGenerados";
 import type { CotizacionFormValues, FilaCostoLocal } from "@/features/cotizacion/types";
@@ -38,6 +35,7 @@ import type { CotizacionFormValues, FilaCostoLocal } from "@/features/cotizacion
 interface Args {
   filas: FilaCostoLocal[];
   setFilas: React.Dispatch<React.SetStateAction<FilaCostoLocal[]>>;
+  precargar: boolean;
   /** Reporta el desajuste vigente al wizard (bloquea "Siguiente"). */
   onDesajusteChange?: (d: DesajusteCostos | null) => void;
 }
@@ -48,34 +46,33 @@ export interface CostosAutoSync {
   lclAutoCargado: boolean;
   desajuste: DesajusteCostos | null;
   recalculando: boolean;
+  errorCargaTarifa: boolean;
+  reintentarCargaTarifa: () => void;
+  cargarTarifaElegida: (tarifa: TopTarifaRow) => void;
   recalcular: () => void;
   /** P2-5: conserva como manuales los costos de una tarifa ya no vinculada. */
   conservarManuales: () => void;
 }
 
-export function useCostosAutoSync({ filas, setFilas, onDesajusteChange }: Args): CostosAutoSync {
-  const { watch, getValues } = useFormContext<CotizacionFormValues>();
-  const tarifaOrigenId = watch("tarifaId");
-  const sinFleteVenta = esIncotermSinFleteVenta(watch("incoterm"), watch("modo"));
+export function useCostosAutoSync({ filas, setFilas, precargar, onDesajusteChange }: Args): CostosAutoSync {
+  const { control, getValues } = useFormContext<CotizacionFormValues>();
+  const captura = useWatch({ control, name: CAMPOS_COSTO_TARIFA });
+  const [tarifaOrigenId, modo, incoterm, tipoEmbarque, numContenedores] = captura;
+  const sinFleteVenta = esIncotermSinFleteVenta(incoterm, modo);
   // Una tarifa retenida como origen Pricing no autoriza generar flete.
-  const tarifaId = sinFleteVenta ? null : tarifaOrigenId;
-  const numContenedores = watch("numContenedores") ?? 1;
-  const tipoEmbarque = watch("tipoEmbarque");
-  const lclFleteManual = watch("lclFleteManual");
-  const dimensionesLCL = watch("dimensionesLCL");
-  const pesoKg = watch("pesoKg");
+  const tarifaId = modo === "Marítimo" && !sinFleteVenta ? tarifaOrigenId : null;
+  const [lclFleteManual, dimensionesLCL, pesoKg] = useWatch({
+    control, name: ["lclFleteManual", "dimensionesLCL", "pesoKg"],
+  });
 
-  const { data: tarifa } = useTarifaVinculada(tarifaId);
-  const { data: proveedores = [] } = useProveedoresLite();
+  const { data: tarifa } = useTarifaVinculada(precargar ? tarifaId : null);
+  const { data: proveedores = [] } = useProveedoresLite(precargar && tipoEmbarque === "LCL");
   const markup = useConfigValue<number>("cotizaciones", "markup_default_maritimo", 0.15);
+  const { cargar, fase, firmaActual } = useCargaCostosTarifa({ getValues, captura, markup, setFilas });
 
   const cantidad = Math.max(1, Number(numContenedores) || 1);
-  const montado = useRef(false);
-  useEffect(() => { montado.current = true; return () => { montado.current = false; }; }, []);
   const precargadaRef = useRef<string | null>(null);
   const precargadaLclRef = useRef<boolean>(false);
-  const [lclAutoCargado, setLclAutoCargado] = useState(false);
-  const [recalculando, setRecalculando] = useState(false);
 
   // Desajuste tarifa (FCL) ↔ cotización (LCL): `costeo_tarifas` está modelada
   // para contenedor; una tarifa con `tipo_contenedor_nombre` en una cotización
@@ -95,50 +92,24 @@ export function useCostosAutoSync({ filas, setFilas, onDesajusteChange }: Args):
     });
   }, [sinFleteVenta, tipoEmbarque, tarifaId, proveedores, lclFleteManual, dimensionesLCL, pesoKg, markup]);
 
-  /** Filas de flete + recargos que hoy produciría la tarifa vinculada. */
-  const construirFilasTarifa = useCallback(async (): Promise<FilaCostoLocal[]> => {
-    if (!tarifaId) return [];
-    const scope = captureAuthOperationScope();
-    const vigente = () => montado.current && scope.isCurrent() && getValues("tarifaId") === tarifaId
-      && !esIncotermSinFleteVenta(getValues("incoterm"), getValues("modo"))
-      && getValues("tipoEmbarque") === tipoEmbarque
-      && Math.max(1, Number(getValues("numContenedores")) || 1) === cantidad;
-    try {
-      const row = await fetchTarifaVinculada(tarifaId);
-      if (!row || !vigente()) return [];
-      const recargos = await fetchRecargosDeTarifa(row.id);
-      if (!vigente()) return [];
-      return buildCostosDesdeTarifa({ tarifa: row, recargos, markup, cantidad, tipoEmbarque });
-    } catch (error) {
-      if (vigente()) throw error;
-      return [];
-    }
-  }, [tarifaId, markup, cantidad, tipoEmbarque, getValues]);
-
   // Precarga desde tarifa: sólo si la lista está vacía (no pisa nada capturado).
   useEffect(() => {
-    if (!tarifaId) { precargadaRef.current = null; return; }
-    if (precargadaRef.current === tarifaId) return;
-    if (filas.length > 0) { precargadaRef.current = tarifaId; return; }
-    let cancelado = false;
-    void construirFilasTarifa().then((nuevas) => {
-      if (cancelado || nuevas.length === 0) return;
-      setFilas((prev) => (prev.length > 0 ? prev : nuevas));
-      precargadaRef.current = tarifaId;
-    });
-    return () => { cancelado = true; };
-  }, [tarifaId, filas.length, setFilas, construirFilasTarifa]);
+    if (!precargar || !tarifaId) { precargadaRef.current = null; return; }
+    if (precargadaRef.current === firmaActual) return;
+    precargadaRef.current = firmaActual;
+    if (filas.length === 0) void cargar({ soloSiVacio: true });
+  }, [precargar, tarifaId, firmaActual, filas.length, cargar]);
 
   // Precarga del flete LCL manual (una sola vez, guard con ref).
   useEffect(() => {
+    if (!precargar) { precargadaLclRef.current = false; return; }
     if (sinFleteVenta || tipoEmbarque !== "LCL" || tarifaId) return;
     if (precargadaLclRef.current) return;
     if (filas.length > 0) { precargadaLclRef.current = true; return; }
     if (filasLclEsperadas.length === 0) return;
     setFilas((prev) => (prev.length > 0 ? prev : filasLclEsperadas));
     precargadaLclRef.current = true;
-    setLclAutoCargado(true);
-  }, [sinFleteVenta, tipoEmbarque, tarifaId, filas.length, filasLclEsperadas, setFilas]);
+  }, [precargar, sinFleteVenta, tipoEmbarque, tarifaId, filas.length, filasLclEsperadas, setFilas]);
 
   const desajuste: DesajusteCostos | null = useMemo(() => {
     // P1-3/P2-5: cada fila automática debe pertenecer a la tarifa vigente.
@@ -149,9 +120,9 @@ export function useCostosAutoSync({ filas, setFilas, onDesajusteChange }: Args):
   }, [tarifaId, filas, cantidad, filasLclEsperadas]);
 
   useEffect(() => {
-    onDesajusteChange?.(desajuste);
+    onDesajusteChange?.(precargar ? desajuste : null);
     return () => onDesajusteChange?.(null);
-  }, [desajuste, onDesajusteChange]);
+  }, [desajuste, onDesajusteChange, precargar]);
 
   const recalcular = useCallback(() => {
     if (desajuste === "flete_lcl") {
@@ -163,26 +134,20 @@ export function useCostosAutoSync({ filas, setFilas, onDesajusteChange }: Args):
       return;
     }
     if (desajuste !== "tarifa_cantidad" && desajuste !== "tarifa_distinta") return;
-    setRecalculando(true);
-    void construirFilasTarifa()
-      .then((nuevas) => {
-        if (nuevas.length > 0) setFilas((prev) => reemplazarCostosAutoTarifa(prev, nuevas));
-      })
-      .catch((error: unknown) =>
-        notifyError(undefined, {
-          title: "No se pudieron recalcular los costos de la tarifa",
-          description: "Intenta de nuevo en unos segundos. Tus costos capturados a mano se conservan.",
-          error,
-          method: "COTIZACION_RECALCULAR_COSTOS_TARIFA",
-        }),
-      )
-      .finally(() => setRecalculando(false));
-  }, [desajuste, tarifaId, filasLclEsperadas, construirFilasTarifa, setFilas]);
+    void cargar();
+  }, [desajuste, tarifaId, filasLclEsperadas, cargar, setFilas]);
 
   const conservarManuales = useCallback(
     () => setFilas((prev) => conservarComoManuales(prev, tarifaId)),
     [setFilas, tarifaId],
   );
 
-  return { tarifa, mostrarAvisoLclFcl, lclAutoCargado, desajuste, recalculando, recalcular, conservarManuales };
+  return {
+    tarifa, mostrarAvisoLclFcl, lclAutoCargado: filas.some(esCostoAutoFleteLcl), desajuste,
+    recalculando: fase === "cargando",
+    errorCargaTarifa: fase === "error",
+    reintentarCargaTarifa: () => { void cargar(); },
+    cargarTarifaElegida: (seleccionada) => { void cargar({ seleccionada }); },
+    recalcular, conservarManuales,
+  };
 }

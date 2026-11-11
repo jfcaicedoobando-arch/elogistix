@@ -2,7 +2,7 @@ import type { UseFormReturn } from "react-hook-form";
 import type { CotizacionFormValues } from "@/features/cotizacion/types";
 import type { TopTarifaRow } from "@/features/costeo/types";
 import { mapearSolicitudACotizacion } from "@/features/cotizacion/domain/mapeoSolicitudCotizacion";
-import { aplicarTarifaAlForm } from "@/features/cotizacion/components/seccionRuta/aplicarTarifa";
+import { aplicarTarifaAlForm } from "./aplicarTarifaAlForm";
 
 import type { MetadataRespuestaPricing } from "@/features/cotizacion/domain/respuestaPricing";
 import { cantidadContenedoresPricing, validarIncotermRespuestaPricing } from "@/features/cotizacion/domain/respuestaPricing";
@@ -23,5 +23,5 @@ export function aplicarRespuestaPricing(form: UseFormReturn<CotizacionFormValues
   }
   form.setValue("modo", "Marítimo", opts);
   // El autosync del Paso 2 es la única vía de generación de costos.
-  aplicarTarifaAlForm(form.setValue, form.trigger, tarifa, {}, form.getValues("validezPropuesta"));
+  aplicarTarifaAlForm(form.setValue, form.trigger, tarifa, form.getValues("validezPropuesta"));
 }

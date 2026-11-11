@@ -2,7 +2,7 @@ import type { ConceptoVentaCotizacion } from "@/features/cotizacion/hooks";
 import SeccionCostosInternosPLLocal from "./SeccionCostosInternosPLLocal";
 import SeccionCostosInternosPLDetalle from "./SeccionCostosInternosPLDetalle";
 import type { FilaCostoLocal } from "./costosPLTypes";
-import type { DesajusteCostos } from "@/features/cotizacion/domain/costosAutoGenerados";
+import type { CostosAutoSync } from "@/features/cotizacion/hooks/wizard/useCostosAutoSync";
 import type { EstadoCotizacion } from "@/features/cotizacion/services/mutations/estado";
 
 // Re-export para preservar la API pública (TablaCostosLocal importa este tipo desde aquí)
@@ -12,8 +12,7 @@ interface PropsLocal {
   tipo: "local";
   filas: FilaCostoLocal[];
   setFilas: React.Dispatch<React.SetStateAction<FilaCostoLocal[]>>;
-  /** Q2/Q6 (v13.823.396): reporta costos automáticos desactualizados al wizard. */
-  onDesajusteChange?: (d: DesajusteCostos | null) => void;
+  sincronizacion: CostosAutoSync;
 }
 
 interface PropsDetalle {
@@ -41,7 +40,7 @@ export default function SeccionCostosInternosPLUnificado(props: Props) {
       <SeccionCostosInternosPLLocal
         filas={props.filas}
         setFilas={props.setFilas}
-        onDesajusteChange={props.onDesajusteChange}
+        sincronizacion={props.sincronizacion}
       />
     );
   }

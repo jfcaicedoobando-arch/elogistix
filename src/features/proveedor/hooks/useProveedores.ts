@@ -115,11 +115,12 @@ export function useProveedor(id: string | undefined) {
   });
 }
 
-export function useProveedoresLite() {
+export function useProveedoresLite(enabled = true) {
   const { organizationId } = useOrgFilter();
   return useQuery({
     queryKey: queryKeys.proveedores.lite(organizationId),
     queryFn: () => fetchProveedoresLite(organizationId),
+    enabled,
     staleTime: 5 * 60_000,
   });
 }

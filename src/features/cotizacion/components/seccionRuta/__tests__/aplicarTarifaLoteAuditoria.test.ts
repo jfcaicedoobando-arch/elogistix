@@ -1,18 +1,10 @@
 /**
- * P1-1 / P1-2 / P1-3 / P2-6 — aplicar tarifa: puertos coherentes, carreras,
- * fallo de recargos y limpieza de heredados al cambiar de puerto.
+ * P1-1 / P2-6 — puertos coherentes y limpieza de heredados al cambiar de puerto.
  */
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { describe, it, expect, vi } from "vitest";
 
 vi.mock("@/integrations/supabase/client", () => ({ supabase: { auth: { getUser: vi.fn() }, from: vi.fn() } }));
-const fetchRecargosDeTarifa = vi.fn();
-vi.mock("@/features/costeo/services/topTarifas", () => ({
-  fetchRecargosDeTarifa: (...a: unknown[]) => fetchRecargosDeTarifa(...a),
-}));
-const notifyError = vi.fn();
-vi.mock("@/lib/ui/appFeedback", () => ({ notifyError: (...a: unknown[]) => notifyError(...a) }));
-
-import { aplicarTarifaAlForm, cancelarAutocargaTarifa } from "../aplicarTarifa";
+import { aplicarTarifaAlForm } from "@/features/cotizacion/hooks/wizard/aplicarTarifaAlForm";
 import { aplicarSeleccionPuerto } from "../rutaPuertoHandlers";
 import type { TopTarifaRow } from "@/features/costeo/types";
 
@@ -28,16 +20,6 @@ function formFake(inicial: Record<string, unknown> = {}) {
   const setValue = vi.fn((k: string, v: unknown) => { valores[k] = v; });
   return { valores, setValue, trigger: vi.fn().mockResolvedValue(true), getValues: (k: string) => valores[k] };
 }
-
-function diferido<T>() {
-  let resolve!: (v: T) => void; let reject!: (e: unknown) => void;
-  const promise = new Promise<T>((res, rej) => { resolve = res; reject = rej; });
-  return { promise, resolve, reject };
-}
-
-const recargo = (tarifaId: string) => [{ id: `r-${tarifaId}`, tarifa_id: tarifaId, concepto: "BAF", lado: "origen", monto: 100, moneda: "USD", incluido_en_total: true }];
-
-beforeEach(() => vi.clearAllMocks());
 
 describe("P1-1 · texto de puertos sale de la misma tarifa", () => {
   it("ruta previa diferente (Shanghai) queda en Ningbo con su ID", () => {
@@ -62,54 +44,6 @@ describe("P1-1 · texto de puertos sale de la misma tarifa", () => {
     }));
     expect(f.valores.destino).toBe("Manzanillo, Panamá (PAMIT)");
     expect(f.valores.puertoDestinoId).toBe("p-pam");
-  });
-});
-
-describe("P1-2 · carrera al cambiar tarifa", () => {
-  it("A tardía no pisa los costos de B", async () => {
-    const f = formFake();
-    const a = diferido<unknown>(); const b = diferido<unknown>();
-    fetchRecargosDeTarifa.mockImplementation((id: string) => (id === "A" ? a.promise : b.promise));
-    const cb = vi.fn();
-    aplicarTarifaAlForm(f.setValue as never, f.trigger as never, tarifa("A"), { onAutocargaCostos: cb });
-    aplicarTarifaAlForm(f.setValue as never, f.trigger as never, tarifa("B"), { onAutocargaCostos: cb });
-    b.resolve(recargo("B")); await b.promise;
-    a.resolve(recargo("A")); await a.promise; await Promise.resolve();
-    expect(cb).toHaveBeenCalledTimes(1);
-    expect(cb.mock.calls[0][0].every((x: { costeo_tarifa_id: string }) => x.costeo_tarifa_id === "B")).toBe(true);
-  });
-
-  it("quitar la tarifa descarta la respuesta en vuelo", async () => {
-    const f = formFake();
-    const a = diferido<unknown>();
-    fetchRecargosDeTarifa.mockReturnValue(a.promise);
-    const cb = vi.fn();
-    aplicarTarifaAlForm(f.setValue as never, f.trigger as never, tarifa("A"), { onAutocargaCostos: cb });
-    cancelarAutocargaTarifa(f.setValue);
-    a.resolve(recargo("A")); await a.promise; await Promise.resolve();
-    expect(cb).not.toHaveBeenCalled();
-  });
-});
-
-describe("P1-3 · fallo de recargos", () => {
-  it("avisa con error accionable y no llama a la autocarga", async () => {
-    const f = formFake();
-    fetchRecargosDeTarifa.mockRejectedValue(new Error("red"));
-    const cb = vi.fn();
-    aplicarTarifaAlForm(f.setValue as never, f.trigger as never, tarifa("A"), { onAutocargaCostos: cb });
-    await vi.waitFor(() => expect(notifyError).toHaveBeenCalledTimes(1));
-    expect(cb).not.toHaveBeenCalled();
-    expect(notifyError.mock.calls[0][1].title).toMatch(/No se pudieron cargar los costos/);
-  });
-
-  it("el fallo de una tarifa ya reemplazada no se muestra", async () => {
-    const f = formFake();
-    const a = diferido<unknown>();
-    fetchRecargosDeTarifa.mockImplementation((id: string) => (id === "A" ? a.promise : Promise.resolve(recargo("B"))));
-    aplicarTarifaAlForm(f.setValue as never, f.trigger as never, tarifa("A"), { onAutocargaCostos: vi.fn() });
-    aplicarTarifaAlForm(f.setValue as never, f.trigger as never, tarifa("B"), { onAutocargaCostos: vi.fn() });
-    a.reject(new Error("tarde")); await a.promise.catch(() => undefined); await Promise.resolve();
-    expect(notifyError).not.toHaveBeenCalled();
   });
 });
 

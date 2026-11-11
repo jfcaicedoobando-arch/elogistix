@@ -15,6 +15,7 @@ import {
 } from "@/features/cotizacion/utils/calcularWMLcl";
 import { roundMoney } from "@/lib/financial/financialUtils";
 import { formatUSD } from "@/lib/formatters";
+import { NOTA_AUTO_FLETE_LCL } from "./costosAutoGenerados";
 
 
 export interface BuildCostosLCLManualArgs {
@@ -29,10 +30,8 @@ export interface BuildCostosLCLManualArgs {
 
 /**
  * Devuelve una fila USD con el flete LCL, o `[]` si no hay datos suficientes.
- * - `cantidad` = W/M facturable.
- * - `costo_unitario` = tarifa W/M del paso 1.
- * - `precio_venta` = venta total (respetando mínimo) / W/M, para que
- *    `cantidad × precio_venta` reproduzca la venta ya mostrada en paso 1.
+ * La fila es un servicio único con el costo W/M y la venta total, incluido
+ * el mínimo cuando corresponda. La nota conserva el desglose del paso 1.
  */
 export function buildCostosLCLManual({
   lclFleteManual,
@@ -59,8 +58,8 @@ export function buildCostosLCLManual({
 
   const detalleWm = `W/M facturable ${wmFacturable} @ ${formatUSD(tarifaWM)}`;
   const nota = aplicaMinimo
-    ? `Auto-cargado desde Flete LCL manual — ${detalleWm} (aplica mínimo ${formatUSD(minimo)})`
-    : `Auto-cargado desde Flete LCL manual — ${detalleWm}`;
+    ? `${NOTA_AUTO_FLETE_LCL} — ${detalleWm} (aplica mínimo ${formatUSD(minimo)})`
+    : `${NOTA_AUTO_FLETE_LCL} — ${detalleWm}`;
 
 
   return [

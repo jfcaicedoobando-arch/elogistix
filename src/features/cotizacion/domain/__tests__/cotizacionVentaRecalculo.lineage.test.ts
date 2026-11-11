@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { buildCostosDesdeTarifa } from "../../components/seccionRuta/buildCostosDesdeTarifa";
+import { buildCostosDesdeTarifa } from "../buildCostosDesdeTarifa";
 import { NOTA_AUTO_FLETE_LCL, reemplazarCostosAutoFleteLcl, reemplazarCostosAutoTarifa } from "../costosAutoGenerados";
 import { prepararCostosConOrigen, sincronizarVentasConCostos } from "../sincronizarVentasConCostos";
 import { buildCotizacionInitialCostos } from "../mappers/cotizacionForm";

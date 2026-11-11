@@ -7,6 +7,7 @@ vi.mock("@/features/cotizacion/components/SeccionConceptosVentaCotizacion", () =
 vi.mock("@/features/cotizacion/components/SeccionCostosInternosPLUnificado", () => ({ default: () => null }));
 vi.mock("@/features/cotizacion/components/PasoResumenCotizacion", () => ({ default: () => null }));
 vi.mock("../PasoDatosGenerales", () => ({ default: () => null }));
+vi.mock("@/features/cotizacion/hooks/wizard/useCostosAutoSync", () => ({ useCostosAutoSync: () => ({}) }));
 vi.mock("../Paso1ProgressSidebar", () => ({ default: () => null }));
 vi.mock("../TipoCambioCotizacionCard", () => ({ TipoCambioCotizacionCard: ({ monedaCanonica }: { monedaCanonica?: string | null }) => <div data-testid="tc-cotizacion-card">{monedaCanonica ?? "mixta"}</div> }));
 import { CotizacionWizardSteps } from "../CotizacionWizardSteps";
