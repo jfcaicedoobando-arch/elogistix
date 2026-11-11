@@ -113,8 +113,17 @@ jobs:
       - name: Real PDF regressions
         run: |-
           if ! command -v pdfinfo >/dev/null || ! command -v pdftotext >/dev/null; then
-            sudo apt-get update -qq
-            sudo apt-get install -y --no-install-recommends poppler-utils
+            apt_network=(-o Acquire::Retries=0 -o Acquire::http::Timeout=10 -o Acquire::https::Timeout=10)
+            if ! sudo apt-get "${apt_network[@]}" install -y --no-install-recommends poppler-utils; then
+              # El mirror de Azure del runner puede fallar antes de iniciar la prueba.
+              source_list="$RUNNER_TEMP/poppler-ubuntu.list"
+              for suite in noble noble-updates noble-security; do
+                printf 'deb [signed-by=/usr/share/keyrings/ubuntu-archive-keyring.gpg] https://archive.ubuntu.com/ubuntu/ %s main\n' "$suite"
+              done > "$source_list"
+              apt_source=(-o "Dir::Etc::sourcelist=$source_list" -o Dir::Etc::sourceparts=-)
+              sudo apt-get "${apt_network[@]}" "${apt_source[@]}" -o APT::Update::Error-Mode=any update -qq
+              sudo apt-get "${apt_network[@]}" "${apt_source[@]}" install -y --no-install-recommends poppler-utils
+            fi
           fi
           bun run test:pdf -- tests/pdf/carteraPagination.test.tsx
   tests:
