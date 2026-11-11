@@ -4,3 +4,4 @@
 \ir ../registrar_evento_tracking_embarque.sql
 \ir ../facturapi_webhook_procesamiento.sql
 \ir ../proforma_email_recuperable.sql
+\ir ../sidebar_conteos.sql

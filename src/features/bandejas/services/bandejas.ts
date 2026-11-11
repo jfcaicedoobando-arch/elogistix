@@ -35,6 +35,12 @@ export async function fetchCxpPorPagar(): Promise<CxpPorPagarRow[]> {
   return (data ?? []) as CxpPorPagarRow[];
 }
 
+export async function fetchCxpPorPagarCount(): Promise<number> {
+  const { data, error } = await supabase.rpc("cxp_por_pagar_count" as never);
+  if (error) throw error;
+  if (typeof data !== "number") throw new Error("El conteo por pagar no devolvió un número.");
+  return data;
+}
 
 
 /** Tope de filas que devuelve la RPC `cartera_pendiente` (LIMIT 500). */

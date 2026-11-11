@@ -7,5 +7,7 @@ export const bandejas = {
   all: ["bandeja"] as const,
   cxpPorCapturar: ["bandeja", "cxp-por-capturar"] as const,
   cxpPorPagar: ["bandeja", "cxp-por-pagar"] as const,
+  cxpPorPagarCount: (organizationId: string | null) =>
+    ["bandeja", "cxp-por-pagar", "count", organizationId] as const,
   carteraPendiente: ["bandeja", "cartera-pendiente"] as const,
 } as const;

@@ -4,6 +4,7 @@ import { useAlertasPendingCount } from "@/features/admin/hooks";
 import { useActividadesVencidasCount } from "@/features/crm/hooks/useCrmDashboard";
 import { useSidebarAlerts } from "@/hooks/layout/useSidebarAlerts";
 import { useCxpPendientesAprobacion, useCxpPorPagarCount, useEntrantesPorCapturarCount } from "@/features/cxp/hooks";
+import { hasRouteAccess } from "@/lib/access/roleRouteMatrix";
 import {
   SIDEBAR_CRM_ITEMS,
   SIDEBAR_SISTEMA_ITEMS,
@@ -72,7 +73,9 @@ export function useAppSidebarSections(): SidebarSection[] {
   const { data: crmVencidas = 0 } = useActividadesVencidasCount();
   const { embarquesDemora, facturasVencidas, garantiasAtoradas, adminPendientes } = useSidebarAlerts();
   const { data: cxpPorAprobar = 0 } = useCxpPendientesAprobacion();
-  const { data: cxpPorPagar = 0 } = useCxpPorPagarCount();
+  const rolActivo = effectiveRole ?? role;
+  const canVerCxpPorPagar = hasRouteAccess(rolActivo, "/compras/por-pagar");
+  const { data: cxpPorPagar = 0 } = useCxpPorPagarCount({ enabled: canVerCxpPorPagar });
   const { data: buzonPorCapturar = 0 } = useEntrantesPorCapturarCount();
   const embarquesAlertas = embarquesDemora + garantiasAtoradas + adminPendientes;
   // VB-19: el badge NO cuenta los embarques activos del encabezado de la
@@ -109,6 +112,6 @@ export function useAppSidebarSections(): SidebarSection[] {
   const sections = builder ? builder(deps) : isAdmin ? buildAdmin(deps) : buildDefaultSections(deps);
   if (isAdmin) sections.push({ label: "Administración", items: SIDEBAR_ADMIN_ITEMS });
   if (role === "super_admin") sections.push({ label: "Super Admin", items: superAdminItems });
-  const accessible = filterSectionsByRole(sections, effectiveRole ?? role);
+  const accessible = filterSectionsByRole(sections, rolActivo);
   return patchSidebarBadges(accessible, badgeCounts).filter((sec) => sec.items.length > 0);
 }

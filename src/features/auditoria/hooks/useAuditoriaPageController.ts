@@ -15,6 +15,7 @@ import {
   revisionKey,
 } from "@/features/auditoria/hooks/useAuditoriaRevisiones";
 import type { SeveridadAuditoria } from "@/features/auditoria/types";
+import { auditoria } from "@/features/auditoria/queryKeys";
 import {
   agruparPorRegla,
   contarPorSeveridad,
@@ -68,6 +69,7 @@ export function useAuditoriaPageController() {
 
   const handleRecalcular = () => {
     queryClient.invalidateQueries({ queryKey: AUDITORIA_QUERY_KEY });
+    queryClient.invalidateQueries({ queryKey: auditoria.pendientesCountAll });
   };
 
   const generadoEn = data?.generated_at
