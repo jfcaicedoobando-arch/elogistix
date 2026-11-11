@@ -20,6 +20,7 @@ import Paso1ProgressSidebar from "@/features/cotizacion/components/wizard/Paso1P
 import { SinDesgloseBanner } from "@/features/cotizacion/components/SinDesgloseBanner";
 import { TipoCambioCotizacionCard } from "@/features/cotizacion/components/wizard/TipoCambioCotizacionCard";
 import { monedaObjetivoCotizacion, requiereTipoCambioCotizacion } from "@/features/cotizacion/domain/mezclaMonedas";
+import { useCostosAutoSync } from "@/features/cotizacion/hooks/wizard/useCostosAutoSync";
 
 type WizardForm = ReturnType<typeof import("@/features/cotizacion/hooks").useCotizacionWizardForm>;
 
@@ -33,6 +34,12 @@ interface Props {
 
 export function CotizacionWizardSteps({ w, clientes, esMaritimo, sinDesgloseFlag, irACargarCostos }: Props) {
   const { form } = w;
+  const costosAuto = useCostosAutoSync({
+    filas: w.costosInternos,
+    setFilas: w.setCostosInternos,
+    precargar: w.currentStep === 2,
+    onDesajusteChange: w.setCostosDesajuste,
+  });
   // Suscripciones puntuales: solo re-renderea el resumen cuando cambia ese campo.
   const control = form.control;
   const esProspecto = useWatch({ control, name: "esProspecto" });
@@ -60,7 +67,7 @@ export function CotizacionWizardSteps({ w, clientes, esMaritimo, sinDesgloseFlag
       <div className="grid grid-cols-1 lg:grid-cols-[14rem_1fr] gap-6">
         <Paso1ProgressSidebar esMaritimo={esMaritimo} />
         <div className="space-y-6 min-w-0">
-          <PasoDatosGenerales w={w} clientes={clientes} />
+          <PasoDatosGenerales w={w} clientes={clientes} onTarifaAplicada={costosAuto.cargarTarifaElegida} />
         </div>
       </div>
     );
@@ -78,7 +85,7 @@ export function CotizacionWizardSteps({ w, clientes, esMaritimo, sinDesgloseFlag
           tipo="local"
           filas={w.costosInternos}
           setFilas={w.setCostosInternos}
-          onDesajusteChange={w.setCostosDesajuste}
+          sincronizacion={costosAuto}
         />
       )}
 

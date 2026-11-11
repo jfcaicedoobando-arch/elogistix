@@ -17,7 +17,7 @@ vi.mock("@/features/catalogos", () => ({ claveIdentidadCatalogo: vi.fn() }));
 vi.mock("../TarifaResumenHeredado", () => ({ default: () => null }));
 vi.mock("../seccionRuta/SugerenciasTarifaInline", () => ({ default: () => <p>Elegir tarifa</p> }));
 vi.mock("../seccionRuta/rutaPuertoHandlers", () => ({ desvincularTarifa: vi.fn() }));
-vi.mock("../seccionRuta/aplicarTarifa", () => ({ aplicarTarifaAlForm: vi.fn() }));
+vi.mock("@/features/cotizacion/hooks/wizard/aplicarTarifaAlForm", () => ({ aplicarTarifaAlForm: vi.fn() }));
 
 const tarifa = { id: "tarifa-ficticia", naviera_nombre: "Naviera ficticia", agente_nombre: "Agente ficticio",
   tipo_contenedor_nombre: "40HC", flete_base: 100, recargos_total: 20, vigente_hasta: "2099-12-31" } as TopTarifaRow;

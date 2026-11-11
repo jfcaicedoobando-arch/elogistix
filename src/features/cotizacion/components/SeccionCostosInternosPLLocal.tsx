@@ -1,12 +1,13 @@
 import { useMemo } from "react";
 import { DollarSign, Banknote, Link2, AlertTriangle } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { ErrorStateInline } from "@/components/empty/ErrorStateInline";
 import TablaCostosLocal from "./TablaCostosLocal";
 import AvisoCostosDesactualizados from "./AvisoCostosDesactualizados";
 
 import { calcTotalsPL, type FilaCostoLocal } from "./costosPLTypes";
-import { useCostosAutoSync } from "@/features/cotizacion/hooks/wizard/useCostosAutoSync";
-import { esCostoAutoGenerado, marcarEditadaAMano, type DesajusteCostos } from "@/features/cotizacion/domain/costosAutoGenerados";
+import type { CostosAutoSync } from "@/features/cotizacion/hooks/wizard/useCostosAutoSync";
+import { esCostoAutoGenerado, esCostoAutoTarifa, marcarEditadaAMano } from "@/features/cotizacion/domain/costosAutoGenerados";
 import { destinoDe, etiquetaRutaCompleta, origenDe } from "@/features/costeo";
 
 /** Campos cuya edición manual desvincula la fila de su origen automático. */
@@ -18,8 +19,7 @@ const CAMPOS_DESVINCULAN = new Set<keyof FilaCostoLocal>([
 interface Props {
   filas: FilaCostoLocal[];
   setFilas: React.Dispatch<React.SetStateAction<FilaCostoLocal[]>>;
-  /** Q2/Q6 (v13.823.396): informa al wizard si los costos automáticos están al día. */
-  onDesajusteChange?: (d: DesajusteCostos | null) => void;
+  sincronizacion: CostosAutoSync;
 }
 
 /**
@@ -27,9 +27,11 @@ interface Props {
  * La precarga desde tarifa / flete LCL manual y la detección de costos
  * automáticos desactualizados viven en `useCostosAutoSync`.
  */
-export default function SeccionCostosInternosPLLocal({ filas, setFilas, onDesajusteChange }: Props) {
-  const { tarifa, mostrarAvisoLclFcl, lclAutoCargado, desajuste, recalculando, recalcular, conservarManuales } =
-    useCostosAutoSync({ filas, setFilas, onDesajusteChange });
+export default function SeccionCostosInternosPLLocal({ filas, setFilas, sincronizacion }: Props) {
+  const {
+    tarifa, mostrarAvisoLclFcl, lclAutoCargado, desajuste, recalculando, recalcular,
+    conservarManuales, errorCargaTarifa, reintentarCargaTarifa,
+  } = sincronizacion;
 
   const filasUSD = useMemo(() => filas.filter(f => f.moneda === "USD"), [filas]);
   const filasMXN = useMemo(() => filas.filter(f => f.moneda === "MXN"), [filas]);
@@ -68,6 +70,12 @@ export default function SeccionCostosInternosPLLocal({ filas, setFilas, onDesaju
 
   return (
     <div className="space-y-6">
+      {errorCargaTarifa && (
+        <ErrorStateInline
+          message="No se pudieron cargar los costos de la tarifa."
+          onRetry={reintentarCargaTarifa}
+        />
+      )}
       {desajuste && (
         <AvisoCostosDesactualizados
           desajuste={desajuste}
@@ -86,7 +94,7 @@ export default function SeccionCostosInternosPLLocal({ filas, setFilas, onDesaju
           </AlertDescription>
         </Alert>
       )}
-      {tarifa && (
+      {tarifa && filas.some(esCostoAutoTarifa) && (
         <Alert variant="info">
           <Link2 className="size-4" />
           <AlertDescription>

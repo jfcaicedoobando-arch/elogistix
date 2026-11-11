@@ -23,6 +23,7 @@ export const costeo = {
       puertoOrigenId: string | null | undefined;
       puertoDestinoId: string | null | undefined;
       tipoContenedorId: string | null | undefined;
+      tipoContenedorIds: readonly string[];
       fecha: string | null | undefined;
     }) =>
       [
@@ -32,6 +33,7 @@ export const costeo = {
         params.puertoOrigenId,
         params.puertoDestinoId,
         params.tipoContenedorId,
+        [...new Set(params.tipoContenedorIds)].sort(),
         params.fecha ?? null,
       ] as const,
   },

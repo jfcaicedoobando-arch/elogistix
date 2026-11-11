@@ -14,15 +14,15 @@ import SeccionFleteManualLCL from "@/features/cotizacion/components/SeccionFlete
 import SeccionCondicionesComerciales from "@/features/cotizacion/components/SeccionCondicionesComerciales";
 import AvisoIncotermCIF from "@/features/cotizacion/components/wizard/AvisoIncotermCIF";
 import { usePaso1SectionStatus } from "@/features/cotizacion/hooks/usePaso1SectionStatus";
-import { useConfigValue } from "@/features/configuracion/hooks/useConfiguracion";
 import { esIncotermSinFleteVenta } from "@/features/cotizacion/utils/incotermRules";
-import type { FilaCostoLocal } from "@/features/cotizacion/types";
+import type { CostosAutoSync } from "@/features/cotizacion/hooks/wizard/useCostosAutoSync";
 
 import type { useCotizacionWizardForm } from "@/features/cotizacion/hooks";
 
 interface Props {
   w: ReturnType<typeof useCotizacionWizardForm>;
   clientes: { id: string; nombre: string }[];
+  onTarifaAplicada: CostosAutoSync["cargarTarifaElegida"];
 }
 
 /**
@@ -38,26 +38,17 @@ interface Props {
  * Cada sección muestra un check verde cuando sus campos requeridos están
  * completos (`usePaso1SectionStatus`).
  */
-export default function PasoDatosGenerales({ w, clientes }: Props) {
+export default function PasoDatosGenerales({ w, clientes, onTarifaAplicada }: Props) {
   const { form } = w;
   const tipoEmbarque = form.watch("tipoEmbarque");
   const incoterm = form.watch("incoterm");
   const modo = form.watch("modo");
-  const numContenedores = form.watch("numContenedores") ?? 1;
   const status = usePaso1SectionStatus();
-  const markup = useConfigValue<number>("cotizaciones", "markup_default_maritimo", 0.15);
 
   // Bajo incoterms tipo C/D marítimos (CIF, CFR, CIP, DAP, DDP, ...) el
   // shipper en origen ya paga flete (y a veces seguro). Libre Carga sólo
   // cotiza gastos locales destino: ocultamos tarifa y condiciones.
   const sinFleteVenta = esIncotermSinFleteVenta(incoterm, modo);
-
-  const handleAutocargaCostos = (filas: FilaCostoLocal[]): void => {
-    w.setCostosInternos((prev) => {
-      const manuales = prev.filter((f) => f.notas !== "Auto-cargado desde tarifa marítima");
-      return [...manuales, ...filas];
-    });
-  };
 
   const mercanciaBlock = (
     <div id="seccion-mercancia" className="scroll-mt-4">
@@ -115,9 +106,7 @@ export default function PasoDatosGenerales({ w, clientes }: Props) {
       ) : (
         <TarifaVinculadaPanel
           complete={status.tarifa}
-          onAutocargaCostos={handleAutocargaCostos}
-          markup={markup}
-          cantidad={numContenedores}
+          onTarifaAplicada={onTarifaAplicada}
         />
       )}
     </div>

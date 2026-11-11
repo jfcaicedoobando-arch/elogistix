@@ -9,7 +9,7 @@ import { describe, it, expect, vi } from "vitest";
 import type { UseFormSetValue, UseFormTrigger } from "react-hook-form";
 import type { CotizacionFormValues } from "@/features/cotizacion/types";
 import type { TopTarifaRow } from "@/features/costeo/types";
-import { aplicarTarifaAlForm } from "../aplicarTarifa";
+import { aplicarTarifaAlForm } from "@/features/cotizacion/hooks/wizard/aplicarTarifaAlForm";
 import { resolverPuertoId } from "../resolverCatalogos";
 import { aplicarSeleccionPuerto, debeMostrarAvisoTarifa } from "../rutaPuertoHandlers";
 import type { Ctx } from "../overrideHelpers";

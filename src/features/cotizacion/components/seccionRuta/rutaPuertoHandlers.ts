@@ -11,7 +11,6 @@
  * tocan: el usuario decide qué hacer con ellos.
  */
 import { OPTS, type Ctx } from "./overrideHelpers";
-import { cancelarAutocargaTarifa } from "./aplicarTarifa";
 import type { CotizacionFormValues } from "@/features/cotizacion/types";
 
 /**
@@ -72,7 +71,6 @@ export function aplicarSeleccionPuerto(
  * la naviera derivados. Los costos NO se tocan: el Paso 2 pide decisión.
  */
 export function desvincularTarifa(ctx: Ctx): void {
-  cancelarAutocargaTarifa(ctx.setValue);
   limpiarHeredadosDeTarifa(ctx);
   ctx.setValue("tarifaId", null, OPTS);
   ctx.setValue("tarifaOverride", {}, OPTS);

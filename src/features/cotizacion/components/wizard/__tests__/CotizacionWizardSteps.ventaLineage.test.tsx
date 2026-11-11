@@ -17,6 +17,7 @@ vi.mock("@/features/cotizacion/components/SeccionCostosInternosPLUnificado", () 
 const renderResumen = vi.hoisted(() => vi.fn());
 vi.mock("@/features/cotizacion/components/PasoResumenCotizacion", () => ({ default: (props: unknown) => { renderResumen(props); return null; } }));
 vi.mock("../PasoDatosGenerales", () => ({ default: () => null }));
+vi.mock("@/features/cotizacion/hooks/wizard/useCostosAutoSync", () => ({ useCostosAutoSync: () => ({}) }));
 vi.mock("../Paso1ProgressSidebar", () => ({ default: () => null }));
 vi.mock("../TipoCambioCotizacionCard", () => ({ TipoCambioCotizacionCard: () => null }));
 vi.mock("@/features/cotizacion/components/SinDesgloseBanner", () => ({ SinDesgloseBanner: () => null }));

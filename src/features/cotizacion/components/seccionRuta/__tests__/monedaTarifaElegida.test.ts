@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
 vi.mock("@/features/costeo/services/topTarifas", () => ({ fetchRecargosDeTarifa: vi.fn() }));
 vi.mock("@/features/costeo", () => ({ etiquetaPuertoCompleta: vi.fn(), origenDe: vi.fn(), destinoDe: vi.fn() }));
-import { aplicarTarifaAlForm } from "../aplicarTarifa";
+import { aplicarTarifaAlForm } from "@/features/cotizacion/hooks/wizard/aplicarTarifaAlForm";
 import { requiereTipoCambioCotizacion } from "@/features/cotizacion/domain/mezclaMonedas";
 import { buildVentaCotizacionPayload } from "@/features/cotizacion/services/ventaPayload";
 import type { TopTarifaRow } from "@/features/costeo/types";
