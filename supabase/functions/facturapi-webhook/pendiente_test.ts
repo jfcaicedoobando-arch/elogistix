@@ -24,8 +24,10 @@ function fakeDb(match: { col: string; valor: string }, fila: unknown) {
           consultas.push([col, valor]);
           return {
             eq: () => ({
-              maybeSingle: () =>
-                Promise.resolve({ data: col === match.col && valor === match.valor ? fila : null }),
+              is: () => ({
+                maybeSingle: () =>
+                  Promise.resolve({ data: col === match.col && valor === match.valor ? fila : null }),
+              }),
             }),
           };
         },
@@ -36,7 +38,7 @@ function fakeDb(match: { col: string; valor: string }, fila: unknown) {
 }
 
 const base = {
-  tabla: "facturas",
+  tabla: "facturas" as const,
   select: "id",
   orgId: "org1",
   cols: COLS_FACTURA,

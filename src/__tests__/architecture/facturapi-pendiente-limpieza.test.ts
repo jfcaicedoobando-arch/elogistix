@@ -67,11 +67,16 @@ describe("limpieza de timbrado pendiente", () => {
   });
 
   it("el webhook escribe con CAS sobre la columna de claim", () => {
-    const idx = leer(`${FN}/facturapi-webhook/index.ts`);
-    expect(idx).toContain("aplicarPatchConCas");
-    expect(idx).not.toMatch(/\.update\(patch\)\s*\n\s*\.eq\("id"/);
-    expect(idx).toContain("facturapi_id");
-    expect(idx).toContain("facturapi_rep_id");
+    const proceso = leer(`${FN}/facturapi-webhook/procesamiento.ts`);
+    const sql = leer("drizzle/migrations/0051_procesamiento_facturapi_webhook.sql");
+    expect(proceso).toContain('rpc("finalizar_evento_facturapi_webhook"');
+    expect(proceso).toContain("p_claim: resultado.claim");
+    expect(sql).toContain("SELECT facturapi_id, updated_at INTO v_claim_actual");
+    expect(sql).toContain("SELECT facturapi_rep_id, updated_at INTO v_claim_actual");
+    const guard = sql.indexOf("v_claim_actual IS DISTINCT FROM p_claim");
+    expect(guard).toBeGreaterThan(0);
+    expect(sql.indexOf("public.cerrar_cancelacion_factura_facturapi(p_documento_id)")).toBeGreaterThan(guard);
+    expect(sql.indexOf("UPDATE public.%I SET %s WHERE id = $2")).toBeGreaterThan(guard);
   });
 
   it("si no se puede guardar el pendiente se responde 500 recuperable", () => {

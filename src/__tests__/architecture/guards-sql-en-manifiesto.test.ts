@@ -24,7 +24,7 @@ function rutasSinSuite(rutas: string[]): string[] {
   const existentes = new Set(
     readdirSync(DIR_TESTS, { encoding: "utf8", recursive: true })
       .filter((f) => f.endsWith(".sql"))
-      .map((f) => `${DIR_TESTS}/${f}`),
+      .map((f) => `${DIR_TESTS}/${f.replaceAll("\\", "/")}`),
   );
   return rutas.filter(
     (ruta) => !existentes.has(ruta) || !statSync(ruta, { throwIfNoEntry: false })?.isFile(),

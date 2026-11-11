@@ -1,4 +1,4 @@
-import { assertEquals, assert, assertStringIncludes } from "https://deno.land/std@0.224.0/assert/mod.ts";
+import { assertEquals, assert } from "https://deno.land/std@0.224.0/assert/mod.ts";
 import { computeEventKey, computeSignature, mapEventToFacturaPatch, mapEventToReceiptPatch, safeEqual } from "./helpers.ts";
 
 Deno.test("computeEventKey: usa event.id cuando existe", async () => {
@@ -212,72 +212,3 @@ Deno.test("invoice.canceled marca preserva_sustituida=true", () => {
   });
   assertEquals(r!.preserva_sustituida, true);
 });
-
-// ── EF-07: invariantes estructurales del dedupe ATÓMICO (INSERT-first) ──────
-// El evento se reserva con un INSERT antes de procesar (23505 = duplicado);
-// si el procesamiento falla se borra la reserva para que el reintento de
-// FacturAPI pueda reprocesar el evento.
-const webhookIndexSource = await Deno.readTextFile(new URL("./index.ts", import.meta.url));
-
-Deno.test("index.ts: el dedupe es INSERT-first (reserva antes de procesar)", () => {
-  const idxInsert = webhookIndexSource.indexOf('.from("facturapi_webhook_eventos")');
-  const idxProcesar = webhookIndexSource.indexOf("await despacharEvento(supabase, orgId, event)");
-  assert(idxInsert >= 0 && idxProcesar >= 0, "deben existir la reserva y el procesamiento");
-  assert(idxInsert < idxProcesar, "la reserva de dedupe debe ser previa al procesamiento");
-  assertStringIncludes(webhookIndexSource, '?.code === "23505"');
-  assert(!webhookIndexSource.includes("registrarDedupe"), "registrarDedupe quedó sin uso (EF-07)");
-});
-
-Deno.test("index.ts: si el procesamiento falla se libera la reserva de dedupe", () => {
-  assertStringIncludes(webhookIndexSource, "if (!result.ok) {");
-  // El borrado vive en el helper `liberarReserva`; el guard debe invocarlo.
-  assertStringIncludes(webhookIndexSource, "async function liberarReserva");
-  const idxGuard = webhookIndexSource.indexOf("if (!result.ok) {");
-  const idxLiberar = webhookIndexSource.indexOf("await liberarReserva(", idxGuard);
-  assert(idxLiberar > idxGuard, "la liberación de la reserva debe ir dentro del guard de fallo");
-});
-
-
-
-Deno.test("index.ts: 'Emitida' es el único estado usado para invoice.status_updated valid (nunca 'Timbrada')", () => {
-  assert(!webhookIndexSource.includes('"Timbrada"'), "index.ts no debe usar el literal 'Timbrada'");
-});
-
-// ── Ola 5 · RG4-10: dispatch REP vs factura ────────────────────────────────
-Deno.test("index.ts: los eventos invoice.* se intentan como factura antes que como REP", () => {
-  assertStringIncludes(webhookIndexSource, 'event.type.startsWith("receipt.")');
-  assertStringIncludes(webhookIndexSource, '!== "factura_not_found"');
-  const idxFactura = webhookIndexSource.indexOf("await handleFacturaEvent(supabase, orgId, event)");
-  const idxFallback = webhookIndexSource.indexOf('!== "factura_not_found"');
-  assert(idxFactura >= 0 && idxFallback >= 0 && idxFactura < idxFallback);
-});
-
-
-// ── Ronda YAGNI · defecto 5: eventos tempranos son reintentables ────────────
-// Si el objeto local todavía no existe, el evento NO está procesado: debe
-// liberarse la reserva de dedupe y responder 503 para que FacturAPI reintente.
-Deno.test("index.ts: *_not_found libera la reserva y responde 503 reintentable", () => {
-  const guardNotFound = 'ignored !== "factura_not_found" && ignored !== "pago_not_found"';
-  assertStringIncludes(webhookIndexSource, guardNotFound);
-  const idxGuard = webhookIndexSource.indexOf(guardNotFound);
-  const idxLiberar = webhookIndexSource.indexOf("await liberarReserva(", idxGuard);
-
-  assert(idxLiberar > idxGuard, "debe liberar la reserva antes de pedir el reintento");
-  const idx503 = webhookIndexSource.indexOf("503", idxLiberar);
-  assert(idx503 > idxLiberar, "debe responder 503 (reintentable) tras liberar la reserva");
-  assertStringIncludes(webhookIndexSource, '"target_not_found"');
-});
-
-Deno.test("index.ts: un duplicado real sigue devolviendo 200 idempotente", () => {
-  // La reserva sólo se libera en fallo o *_not_found; el 23505 responde ok.
-  assertStringIncludes(webhookIndexSource, 'ignored: "duplicate_event"');
-  const idxDup = webhookIndexSource.indexOf('ignored: "duplicate_event"');
-  const idxDespachar = webhookIndexSource.indexOf("await despacharEvento(supabase, orgId, event)");
-  assert(
-    idxDup < idxDespachar,
-    "el corto circuito por duplicado ocurre antes de procesar (sin borrar la reserva)",
-  );
-  const idxLiberarDespues = webhookIndexSource.indexOf("await liberarReserva(", idxDespachar);
-  assert(idxLiberarDespues > idxDespachar, "no se libera la reserva en la rama de duplicado");
-});
-

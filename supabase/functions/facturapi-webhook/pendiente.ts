@@ -13,6 +13,7 @@
  * una recaptura concurrente.
  */
 import { uuidFiscalValido } from "../_shared/timbradoPendiente.ts";
+import type { SupabaseClient } from "npm:@supabase/supabase-js@2.119.0";
 import type { FacturapiWebhookEvent } from "./helpers.ts";
 
 export interface ColsPendiente {
@@ -52,18 +53,6 @@ export function claimEsPendiente(valor: unknown): boolean {
   return typeof valor === "string" && valor.startsWith("PENDING:");
 }
 
-interface DbBusqueda {
-  from: (t: string) => {
-    select: (c: string) => {
-      eq: (c: string, v: string) => {
-        eq: (c: string, v: string) => PromiseLike<{ data: unknown }> & {
-          maybeSingle: () => PromiseLike<{ data: unknown }>;
-        };
-      };
-    };
-  };
-}
-
 export interface FilaLocalizada<T> {
   fila: T;
   /** "claim" = match directo por id; "pendiente" = intento pendiente. */
@@ -80,8 +69,8 @@ export interface FilaLocalizada<T> {
  * intento pendiente y por último por el claim (`external_id` del evento).
  */
 export async function localizarFila<T>(args: {
-  supabase: DbBusqueda;
-  tabla: string;
+  supabase: SupabaseClient;
+  tabla: "facturas" | "pagos_factura";
   select: string;
   orgId: string;
   cols: ColsPendiente;
@@ -89,12 +78,14 @@ export async function localizarFila<T>(args: {
   externalId: string | null;
 }): Promise<FilaLocalizada<T> | null> {
   const buscar = async (col: string, valor: string): Promise<T | null> => {
-    const { data } = await args.supabase
+    const { data, error } = await args.supabase
       .from(args.tabla)
       .select(args.select)
       .eq(col, valor)
       .eq("organization_id", args.orgId)
+      .is("deleted_at", null)
       .maybeSingle();
+    if (error) throw error;
     return (data as T | null) ?? null;
   };
   const claimDe = (fila: T): string | null => {
