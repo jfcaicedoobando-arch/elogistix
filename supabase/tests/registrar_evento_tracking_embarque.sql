@@ -34,8 +34,8 @@ BEGIN
   INSERT INTO auth.users (id, email) VALUES
     (operador, operador::text || '@test.local'), (lector, lector::text || '@test.local');
   INSERT INTO public.organization_members (organization_id, user_id, role)
-    VALUES (org, operador, 'operador'), (org, lector, 'viewer');
-  INSERT INTO public.user_roles (user_id, role) VALUES (operador, 'operador'), (lector, 'viewer')
+    VALUES (org, operador, 'coordinador_logistico'), (org, lector, 'customer_service');
+  INSERT INTO public.user_roles (user_id, role) VALUES (operador, 'coordinador_logistico'), (lector, 'customer_service')
     ON CONFLICT (user_id) DO UPDATE SET role = EXCLUDED.role;
   INSERT INTO public.clientes (id, organization_id, nombre, rfc, email)
     VALUES (cliente, org, 'Tracking CI', 'XAXX010101000', 'tracking-ci@test.local');
