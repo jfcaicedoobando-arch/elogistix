@@ -1191,6 +1191,13 @@ export type Database = {
             referencedRelation: "v_pagos_rep_pendientes"
             referencedColumns: ["pago_id"]
           },
+          {
+            foreignKeyName: "comisiones_devengadas_pago_factura_id_fkey"
+            columns: ["pago_factura_id"]
+            isOneToOne: true
+            referencedRelation: "v_reps_historico"
+            referencedColumns: ["id"]
+          },
         ]
       }
       comisiones_excepciones: {
@@ -1310,6 +1317,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "v_pagos_rep_pendientes"
             referencedColumns: ["pago_id"]
+          },
+          {
+            foreignKeyName: "comisiones_recalculo_pendiente_pago_factura_id_fkey"
+            columns: ["pago_factura_id"]
+            isOneToOne: false
+            referencedRelation: "v_reps_historico"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -9906,25 +9920,6 @@ export type Database = {
           },
         ]
       }
-      v_reps_historico: {
-        Row: {
-          busqueda: string | null
-          cliente_nombre: string | null
-          estado_visible: string | null
-          factura_id: string | null
-          factura_numero: string | null
-          fecha_pago: string | null
-          folio_rep: string | null
-          id: string | null
-          moneda: Database["public"]["Enums"]["moneda"] | null
-          monto: number | null
-          organization_id: string | null
-          rep_cancellation_status: string | null
-          timbrado_rep_en: string | null
-          uuid_rep: string | null
-        }
-        Relationships: []
-      }
       v_proforma_factura_link: {
         Row: {
           cliente_id: string | null
@@ -10000,6 +9995,40 @@ export type Database = {
           },
         ]
       }
+      v_reps_historico: {
+        Row: {
+          busqueda: string | null
+          cliente_nombre: string | null
+          estado_visible: string | null
+          factura_id: string | null
+          factura_numero: string | null
+          fecha_pago: string | null
+          folio_rep: string | null
+          id: string | null
+          moneda: Database["public"]["Enums"]["moneda"] | null
+          monto: number | null
+          organization_id: string | null
+          rep_cancellation_status: string | null
+          timbrado_rep_en: string | null
+          uuid_rep: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pagos_factura_factura_id_fkey"
+            columns: ["factura_id"]
+            isOneToOne: false
+            referencedRelation: "facturas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pagos_factura_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       v_saldos_cuentas_bancarias: {
         Row: {
           cuenta_bancaria_id: string | null
@@ -10018,10 +10047,6 @@ export type Database = {
       }
     }
     Functions: {
-      hueco_facturacion_count: {
-        Args: { p_limite_eta?: string; p_organization_id?: string }
-        Returns: number
-      }
       _asegurar_movimiento_pago_proveedor: {
         Args: { p_pago_id: string }
         Returns: string
@@ -10105,6 +10130,7 @@ export type Database = {
         Args: { p_organization_id: string }
         Returns: Json
       }
+      _auditoria_hallazgo_hash: { Args: { p_texto: string }; Returns: string }
       _calcular_demoras_montos_contenedor: {
         Args: {
           p_cond_id: string
@@ -10727,6 +10753,7 @@ export type Database = {
       auditoria_embarques_org:
         | { Args: never; Returns: Json }
         | { Args: { p_organization_id: string }; Returns: Json }
+      auditoria_pendientes_count: { Args: never; Returns: number }
       auditoria_pfc_huerfanos: {
         Args: never
         Returns: {
@@ -11853,6 +11880,7 @@ export type Database = {
           total: number
         }[]
       }
+      cxp_por_pagar_count: { Args: never; Returns: number }
       cxp_umbral_sin_vinculo: { Args: { p_org: string }; Returns: number }
       cxp_umbral_sin_vinculo_actual: { Args: never; Returns: number }
       dashboard_details: { Args: never; Returns: Json }
@@ -12038,26 +12066,6 @@ export type Database = {
           embarque_id: string
         }[]
       }
-      embarques_listado_pagina: {
-        Args: {
-          p_agrupar?: boolean
-          p_alerta?: string
-          p_cliente_id?: string
-          p_estado?: string
-          p_fecha_desde?: string
-          p_fecha_hasta?: string
-          p_limit?: number
-          p_modo?: string
-          p_offset?: number
-          p_operador?: string
-          p_organization_id?: string
-          p_proforma?: string
-          p_search?: string
-          p_sort_by?: string
-          p_sort_dir?: string
-        }
-        Returns: Json
-      }
       embarques_listado: {
         Args: {
           p_cliente_id?: string
@@ -12105,6 +12113,26 @@ export type Database = {
           tipo_contenedor: string
           total_count: number
         }[]
+      }
+      embarques_listado_pagina: {
+        Args: {
+          p_agrupar?: boolean
+          p_alerta?: string
+          p_cliente_id?: string
+          p_estado?: string
+          p_fecha_desde?: string
+          p_fecha_hasta?: string
+          p_limit?: number
+          p_modo?: string
+          p_offset?: number
+          p_operador?: string
+          p_organization_id?: string
+          p_proforma?: string
+          p_search?: string
+          p_sort_by?: string
+          p_sort_dir?: string
+        }
+        Returns: Json
       }
       enforce_cotizacion_vigente: {
         Args: { p_cotizacion_id: string }
@@ -12510,6 +12538,10 @@ export type Database = {
           tipo: string
           ts: string
         }[]
+      }
+      hueco_facturacion_count: {
+        Args: { p_limite_eta?: string; p_organization_id?: string }
+        Returns: number
       }
       idempotency_claim: { Args: { _fn: string; _key: string }; Returns: Json }
       idempotency_store: {
