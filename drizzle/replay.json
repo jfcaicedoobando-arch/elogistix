@@ -424,5 +424,13 @@
       "0054_conteos_sidebar.sql"
     ],
     "scope": "isolated-ci"
+  },
+  {
+    "file": "0055_embarques_paginacion_filtros.sql",
+    "sha256": "5cfc15700522c72741948cd7de594b9e573a1d0dbbd30a43cb67411be62ba9d1",
+    "replays": [
+      "0055_embarques_paginacion_filtros.sql"
+    ],
+    "scope": "isolated-ci"
   }
 ]

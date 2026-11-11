@@ -6,7 +6,8 @@ type EmbarqueRow = Tables<"embarques">;
 
 /**
  * Trae TODOS los embarques que cumplen los filtros (sin paginar), iterando
- * la RPC `embarques_listado` en chunks de 1000 vía `fetchEmbarquesPaginados`.
+ * el listado en chunks de 1000 vía `fetchEmbarquesPaginados`. El CSV de
+ * Embarques usa los mismos filtros de estado y alerta que la página.
  *
  * Refactor 12.16.5 — antes existía una implementación paralela con builders
  * PostgREST y `applyFilters` propio. Reusar `fetchEmbarquesPaginados` evita

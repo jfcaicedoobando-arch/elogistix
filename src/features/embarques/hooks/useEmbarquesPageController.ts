@@ -60,33 +60,26 @@ export function useEmbarquesPageController() {
     setExportandoCsv(true);
     try {
       // Trae TODOS los embarques que cumplen los filtros actuales (sin paginar).
-      const todos = await fetchEmbarquesParaExport({
+      const filtrados = await fetchEmbarquesParaExport({
         organizationId,
         search: state.debouncedSearch,
         filterModo: state.filterModo,
         filterCliente: state.filterCliente,
         filterOperador: state.filterOperador,
+        filterEstado: state.filterEstado,
+        filterAlerta: state.filterAlerta,
+        agruparExpedientes: false,
         fechaDesde: state.fechaDesde || undefined,
         fechaHasta: state.fechaHasta || undefined,
       });
 
 
-      // Filtro de estado se calcula client-side (no es columna directa de DB).
-      const filtradosPorEstado = state.filterEstado === "todos"
-        ? todos
-        : todos.filter((e) => calcularEstadoEmbarque(e.modo, e.tipo, e.etd, e.eta, e.estado, e.fecha_llegada_real) === state.filterEstado);
-
-      // Filtro de alerta también es client-side (se resuelve contra un set de IDs).
-      const filtradosFinal = state.filterAlerta === "todos" || !state.alertIdSet
-        ? filtradosPorEstado
-        : filtradosPorEstado.filter((e) => state.alertIdSet!.has(e.id));
-
-      if (filtradosFinal.length === 0) {
+      if (filtrados.length === 0) {
         notifyError(undefined, { title: "Sin datos para exportar", description: "Los filtros actuales no devuelven embarques.", method: "USE_EMBARQUES_PAGE_CONTROLLER", errorCode: ERROR_CODES.VALIDATION_FAILED });
         return;
       }
 
-      const contenedoresExport = await fetchContenedoresParaExport(filtradosFinal, organizationId);
+      const contenedoresExport = await fetchContenedoresParaExport(filtrados, organizationId);
 
       exportToCsv(
         `embarques_${todayLocalISO()}.csv`,
@@ -109,7 +102,7 @@ export function useEmbarquesPageController() {
           { key: "tipo_cambio_eur", label: "T/C EUR" },
           { key: "created_at", label: "Fecha Creación" },
         ],
-        filtradosFinal.map((e) => ({
+        filtrados.map((e) => ({
           expediente: e.expediente,
           bl_master: e.bl_master || "",
           cliente_nombre: e.cliente_nombre,
@@ -132,14 +125,14 @@ export function useEmbarquesPageController() {
 
       notifySuccess(undefined, {
         title: "CSV exportado",
-        description: `${pluralizar(filtradosFinal.length, "embarque")} exportado${filtradosFinal.length === 1 ? "" : "s"} con los filtros actuales.`,
+        description: `${pluralizar(filtrados.length, "embarque")} exportado${filtrados.length === 1 ? "" : "s"} con los filtros actuales.`,
       });
     } catch (err: unknown) {
       notifyError(undefined, { title: "Error al exportar", description: getErrorMessage(err), error: err, method: "USE_EMBARQUES_PAGE_CONTROLLER" });
     } finally {
       setExportandoCsv(false);
     }
-  }, [organizationId, state.debouncedSearch, state.filterModo, state.filterCliente, state.filterOperador, state.filterEstado, state.filterAlerta, state.alertIdSet, state.fechaDesde, state.fechaHasta]);
+  }, [organizationId, state.debouncedSearch, state.filterModo, state.filterCliente, state.filterOperador, state.filterEstado, state.filterAlerta, state.fechaDesde, state.fechaHasta]);
 
   return {
     state,

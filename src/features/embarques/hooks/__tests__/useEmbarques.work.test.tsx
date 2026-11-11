@@ -13,11 +13,11 @@ vi.mock("@/features/embarques/services", () => ({
   fetchEmbarquesParaExport: mock.export, fetchEmbarquesListExtras: mock.extras,
 }));
 vi.mock("@/features/embarques/services/queries", () => ({ SORT_KEY_TO_COLUMN: { expediente: "expediente_num" } }));
-vi.mock("@/hooks/shared", () => ({ useOrgFilter: () => ({ organizationId: "org-1" }) }));
+vi.mock("@/hooks/shared", () => ({ useOrgFilter: () => ({ organizationId: "org-1", orgListo: true }) }));
 vi.mock("@/hooks/shared/useOrgFilter", () => ({ useOrgFilter: () => ({ organizationId: "org-1" }) }));
 vi.mock("@/features/embarques/hooks/useEmbarques", async () => ({ useEmbarquesPaginados: (await import("../useEmbarqueQueries")).useEmbarquesPaginados }));
 vi.mock("../useEmbarquesFilters", () => ({ useEmbarquesFilters: () => mock.filters }));
-vi.mock("../useEmbarquesAlertasResumen", () => ({ useEmbarquesAlertasResumen: () => ({ data: { demora: new Set() }, isLoading: false, isError: false, refetch: vi.fn() }) }));
+vi.mock("../useEmbarquesAlertasResumen", () => ({ useEmbarquesAlertasResumen: () => ({ data: { demora: 10 }, isError: false, refetch: vi.fn() }) }));
 import { usePrefetchEmbarque } from "../useEmbarqueQueries";
 import { useEmbarqueFull } from "../useEmbarqueFullQuery";
 import { useEmbarquesPageState } from "../useEmbarquesPageState";
@@ -27,7 +27,7 @@ beforeEach(() => {
   client = new QueryClient({ defaultOptions: { queries: { retry: false, staleTime: 60000 } } });
   vi.clearAllMocks();
   mock.full.mockResolvedValue({ embarque: { id: "e2" } });
-  mock.list.mockResolvedValue({ data: [], totalCount: 0, extras: {} });
+  mock.list.mockResolvedValue({ data: [], count: 2500, extras: {} });
   mock.export.mockResolvedValue([]);
   mock.extras.mockResolvedValue({});
   mock.filters.filters.estado = "todos";
@@ -36,20 +36,23 @@ beforeEach(() => {
 });
 afterEach(() => { client.clear(); vi.useRealTimers(); });
 describe("shipment request work", () => {
-  it.each(["estado", "alerta"])("runs only the full-set branch for %s, including local page changes", async (filter) => {
-    if (filter === "estado") mock.filters.filters.estado = "En tránsito";
+  it.each(["estado", "alerta"])("pide una sola página al servidor con filtro de %s", async (filter) => {
+    if (filter === "estado") mock.filters.filters.estado = "En Tránsito";
     else mock.filters.alerta = "demora";
-    const { rerender } = renderHook(() => useEmbarquesPageState(), { wrapper });
-    await waitFor(() => expect(mock.export).toHaveBeenCalledTimes(1));
-    expect(mock.list).not.toHaveBeenCalled();
+    const { result, rerender } = renderHook(() => useEmbarquesPageState(), { wrapper });
+    await waitFor(() => expect(result.current.totalCount).toBe(2500));
+    const filtros = {
+      filterEstado: mock.filters.filters.estado, filterAlerta: mock.filters.alerta,
+      pageSize: 50, agruparExpedientes: true, organizationId: "org-1",
+    };
+    expect(mock.list).toHaveBeenCalledExactlyOnceWith(expect.objectContaining({ ...filtros, page: 0 }));
+    expect(result.current.totalPages).toBe(50);
     mock.filters.page = 1;
     rerender();
-    expect(mock.list).not.toHaveBeenCalled();
-    expect(mock.export).toHaveBeenCalledTimes(1);
-    mock.filters.filters.estado = "todos";
-    mock.filters.alerta = "todos";
-    rerender();
-    await waitFor(() => expect(mock.list).toHaveBeenCalledTimes(1));
+    await waitFor(() => expect(mock.list).toHaveBeenCalledTimes(2));
+    expect(mock.list).toHaveBeenLastCalledWith(expect.objectContaining({ ...filtros, page: 1 }));
+    expect(mock.export).not.toHaveBeenCalled();
+    expect(mock.extras).not.toHaveBeenCalled();
   });
   it("coalesces row sweeps and reuses the exact full-detail cache on navigation", async () => {
     vi.useFakeTimers();

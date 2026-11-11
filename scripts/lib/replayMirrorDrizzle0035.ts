@@ -74,7 +74,8 @@ const REVIEWED_FORWARD_FIXES: ReadonlyArray<readonly [string, string]> = [
   ["0051_procesamiento_facturapi_webhook.sql", FORWARD_0051_SHA256],
   ["0052_envios_proforma_recuperables.sql", "872fa26220264cf26cf2a85c0ae41b274e9361979540d76a8656502b0700faba"],
   ["0053_provision_membresia_atomica.sql", "4b519d836748bf04174aae1353f1ab160996904ff6d180b001e587c4b492231e"],
-  ["0054_conteos_sidebar.sql", "3a3ffebc64c70e50b1619e24a2b7746975ff677477360d5b9fffe2ddee0ce1f8"]
+  ["0054_conteos_sidebar.sql", "3a3ffebc64c70e50b1619e24a2b7746975ff677477360d5b9fffe2ddee0ce1f8"],
+  ["0055_embarques_paginacion_filtros.sql", "5cfc15700522c72741948cd7de594b9e573a1d0dbbd30a43cb67411be62ba9d1"]
 ];
 
 function verificarOrdenJournal(sources: ReadonlyMap<string, string>, journal: JournalEntry[]): void {

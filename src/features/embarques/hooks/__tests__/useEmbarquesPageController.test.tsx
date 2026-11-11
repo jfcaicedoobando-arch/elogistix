@@ -43,7 +43,7 @@ vi.mock("@/features/embarques/hooks/useEmbarquesPageState", () => ({
     contenedoresPorExpediente: {}, extras: { docs: {} },
     embarques: [{ id: "e1" }],
     debouncedSearch: "", filterModo: "todos", filterCliente: "todos",
-    filterOperador: "todos", filterEstado: "todos",
+    filterOperador: "todos", filterEstado: "Confirmado", filterAlerta: "demora",
     fechaDesde: "", fechaHasta: "",
   }),
 }));
@@ -89,6 +89,9 @@ describe("useEmbarquesPageController", () => {
     const { result } = renderHook(() => useEmbarquesPageController(), { wrapper: makeWrapper() });
     await act(async () => { await result.current.exportarCsv(); });
     expect(exportToCsv).toHaveBeenCalledTimes(1);
+    expect(fetchExport).toHaveBeenCalledWith(expect.objectContaining({
+      filterEstado: "Confirmado", filterAlerta: "demora", agruparExpedientes: false,
+    }));
     const [fileName, columns, rows] = exportToCsv.mock.calls[0];
     expect(fileName).toMatch(/^embarques_\d{4}-\d{2}-\d{2}\.csv$/);
     expect(columns.map((c: { key: string }) => c.key)).toContain("expediente");
