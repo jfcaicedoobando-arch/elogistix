@@ -3,6 +3,9 @@
  * Sin I/O directo excepto los deps inyectados; permite tests aislados.
  */
 import { FACTURAPI_BASE, basicAuthHeader } from "../_shared/facturapiAuth.ts";
+import type { FapiInvoiceStatus, ResolvedPatch } from "../_shared/facturapiReconciliarFactura.ts";
+
+export { resolveNextAction, type FapiInvoiceStatus, type ResolvedPatch } from "../_shared/facturapiReconciliarFactura.ts";
 
 export interface FacturaPendiente {
   id: string;
@@ -13,20 +16,9 @@ export interface FacturaPendiente {
   reconciliacion_checked_at?: string | null;
 }
 
-
-export interface FapiInvoiceStatus {
-  status?: string;
-  cancellation_status?: string;
-}
-
 export interface AcuseResult {
   xml: string | null;
   status: string;
-}
-
-export interface ResolvedPatch {
-  outcome: "accepted" | "rejected" | "expired" | "transition" | "no_change";
-  patch: Record<string, unknown>;
 }
 
 /** Descarga el acuse de cancelación desde FacturApi (o pending si aún no está). */
@@ -52,72 +44,6 @@ export async function descargarAcuse(
     // Reintentable: el acuse queda en null y la próxima corrida lo reintenta.
     return { xml: null, status: esTimeout ? "error_timeout" : "error_network" };
   }
-}
-
-/**
- * Decide qué hacer con la factura según el cancellation_status remoto vs. local.
- * Devuelve el patch a aplicar y el "outcome" (para actualizar el resumen).
- * NO ejecuta I/O: la actualización real (BD, acuse) queda para el llamador.
- */
-export function resolveNextAction(
-  remote: FapiInvoiceStatus,
-  local: FacturaPendiente,
-  nowIso: string,
-): ResolvedPatch {
-  const cs = (remote.cancellation_status ?? "").toLowerCase();
-
-  // Ola 4 · N18: el chequeo de "aceptada" va ANTES del guard de igualdad; si no,
-  // una factura con cs='accepted' en ambos lados pero estado='Emitida' nunca se
-  // reparaba (reconciliación ciega).
-  if (cs === "accepted" || remote.status === "canceled") {
-    const esSustitucion = !!local.sustituida_por;
-    return {
-      outcome: "accepted",
-      patch: {
-        estado: esSustitucion ? "Sustituida" : "Cancelada",
-        cancellation_status: "accepted",
-        cancelado_en: nowIso,
-      },
-    };
-  }
-
-  if (cs === local.cancellation_status) {
-    return { outcome: "no_change", patch: {} };
-  }
-
-  if (cs === "rejected") {
-    return {
-      outcome: "rejected",
-      patch: {
-        cancellation_status: cs,
-        cancelacion_solicitada_en: null,
-        cancelacion_vence_en: null,
-      },
-    };
-  }
-
-  if (cs === "expired") {
-    return {
-      outcome: "expired",
-      patch: {
-        cancellation_status: cs,
-        cancelacion_solicitada_en: null,
-        cancelacion_vence_en: null,
-      },
-    };
-  }
-
-  // NOTA: Si `cs` está vacío mientras local es "pending"/"verifying",
-  // NO limpiamos automáticamente. La fuente de verdad es FacturAPI y podría
-  // haber una consulta transitoria vacía. El operador puede usar la acción
-  // manual "Limpiar estado local (verificado)" desde el diálogo de consulta
-  // en vivo, que valida directamente con GET /invoices/{id} antes de tocar BD.
-
-  if (cs && cs !== local.cancellation_status) {
-    return { outcome: "transition", patch: { cancellation_status: cs } };
-  }
-
-  return { outcome: "no_change", patch: {} };
 }
 
 /** Agrupa las facturas pendientes por organization_id para reutilizar cliente. */

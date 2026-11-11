@@ -7,6 +7,7 @@ import { getFacturapiClient } from "../_shared/facturapiClient.ts";
 import { registrarBitacoraEdge } from "../_shared/bitacora.ts";
 import { jsonResponse } from "../_shared/response.ts";
 import { resolveFacturapiKey, facturapiResolverClient } from "../_shared/facturapiAuth.ts";
+import { resolveNextAction, type FapiInvoiceStatus } from "../_shared/facturapiReconciliarFactura.ts";
 import {
   divergenciasDocumentales,
   verificarReps,
@@ -14,19 +15,6 @@ import {
   type RepVerificado,
   type XmlVerificado,
 } from "./verificacion.ts";
-
-export interface FapiInvoiceStatus {
-  status?: string;
-  cancellation_status?: string;
-}
-interface FacturaPendiente {
-  cancellation_status: string;
-  sustituida_por: string | null;
-}
-interface ResolvedPatch {
-  outcome: "accepted" | "rejected" | "expired" | "transition" | "no_change";
-  patch: Record<string, unknown>;
-}
 
 export interface FapiInvoiceRemote extends FapiInvoiceStatus {
   id?: string;
@@ -54,41 +42,6 @@ export interface LocalFactura {
 }
 
 export type SBClient = SupabaseClient;
-
-/**
- * Copia local de la lógica de `facturapi-reconciliar-cancelaciones/reconcile.ts`.
- * Supabase bundle-only permite archivos del mismo folder, así que se duplica aquí
- * para no depender de un import cross-folder que rompería el deploy.
- */
-export function resolveNextAction(
-  remote: FapiInvoiceStatus,
-  local: FacturaPendiente,
-  nowIso: string,
-): ResolvedPatch {
-  const cs = (remote.cancellation_status ?? "").toLowerCase();
-  // Ola 4 · N18: "aceptada" se evalúa antes del guard de igualdad.
-  if (cs === "accepted" || remote.status === "canceled") {
-    return {
-      outcome: "accepted",
-      patch: {
-        estado: local.sustituida_por ? "Sustituida" : "Cancelada",
-        cancellation_status: "accepted",
-        cancelado_en: nowIso,
-      },
-    };
-  }
-  if (cs === local.cancellation_status) return { outcome: "no_change", patch: {} };
-  if (cs === "rejected" || cs === "expired") {
-    return {
-      outcome: cs,
-      patch: { cancellation_status: cs, cancelacion_solicitada_en: null, cancelacion_vence_en: null },
-    };
-  }
-  if (cs && cs !== local.cancellation_status) {
-    return { outcome: "transition", patch: { cancellation_status: cs } };
-  }
-  return { outcome: "no_change", patch: {} };
-}
 
 export async function loadFactura(supabase: SBClient, facturaId: string): Promise<
   { ok: true; factura: LocalFactura } | { ok: false; res: Response }
