@@ -9,7 +9,7 @@
  * `ejecutar.ts`. Los documentos que no alcanzan a iniciarse quedan intactos
  * (`resumen.diferidos`) y son los primeros de la corrida siguiente.
  */
-import { createClient, SupabaseClient } from "npm:@supabase/supabase-js@2.119.0";
+import { createClient, type SupabaseClient } from "npm:@supabase/supabase-js@2.119.0";
 import { wrapEdgeHandler, captureEdgeException } from "../_shared/sentry.ts";
 import { getFacturapiClient, withFacturapiTimeout } from "../_shared/facturapiClient.ts";
 import { registrarBitacoraEdge } from "../_shared/bitacora.ts";
@@ -21,6 +21,7 @@ import { reconcileOneRep } from "./reps.ts";
 import { reconcileOneNc } from "./ncs.ts";
 import { planificarTareas } from "./plan.ts";
 import { crearPresupuesto, CRON_RETRIEVE_TIMEOUT_MS } from "./presupuesto.ts";
+import { cerrarFacturaConAcuse } from "./cierreFactura.ts";
 import { ejecutarPlan, type ReconcileCtx, type ClienteResuelto, type RetrieveClient } from "./ejecutar.ts";
 import {
   descargarAcuse,
@@ -34,65 +35,23 @@ const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const CRON_SECRET = Deno.env.get("CRON_SECRET");
 
-/**
- * Limpia sólo los punteros `factura_id`/`factura_secundaria_id`.
- * NO toca `estado_proforma` — de eso se encarga la RPC
- * `revertir_proforma_al_cancelar_sustitucion`, que verifica facturas
- * hermanas vivas (por `proforma_id` y `conceptos_factura.proforma_id_origen`).
- * Ver bug histórico PRO-2026-0970 (F971 → F981).
- */
-async function limpiarPunterosProformas(supabase: SupabaseClient, facturaId: string): Promise<void> {
-  const { data: pfs } = await supabase
-    .from("proformas")
-    .select("id, factura_id, factura_secundaria_id")
-    .or(`factura_id.eq.${facturaId},factura_secundaria_id.eq.${facturaId}`);
-  for (const pf of pfs ?? []) {
-    const nuevoFacturaId = pf.factura_id === facturaId ? null : pf.factura_id;
-    const nuevoFacturaSecId = pf.factura_secundaria_id === facturaId ? null : pf.factura_secundaria_id;
-    await supabase
-      .from("proformas")
-      .update({ factura_id: nuevoFacturaId, factura_secundaria_id: nuevoFacturaSecId })
-      .eq("id", pf.id);
-  }
-}
-
 async function applyAccepted(
   supabase: SupabaseClient,
   factura: FacturaPendiente,
-  patchBase: Record<string, unknown>,
   apiKey: string,
   orgId: string,
-): Promise<boolean> {
+): Promise<void> {
   const acuse = await descargarAcuse(factura.facturapi_id, apiKey);
-  const patch = {
-    ...patchBase,
-    acuse_cancelacion_xml: acuse.xml,
-    acuse_cancelacion_fecha: acuse.xml ? new Date().toISOString() : null,
-    acuse_cancelacion_status: acuse.status,
-  };
-  const { error: upErr } = await supabase.from("facturas").update(patch).eq("id", factura.id);
-  if (upErr) return false;
-
-  // Marcar los vínculos con embarques como inactivos.
-  await supabase.from("factura_embarques").update({ activa: false }).eq("factura_id", factura.id);
-
-  // Liberar la proforma si ya no quedan facturas vivas apuntando a ella.
-  // La RPC verifica hermanas vivas (por proforma_id + conceptos_factura.proforma_id_origen)
-  // antes de degradar `estado_proforma`. Aquí sólo limpiamos punteros legacy.
-  await supabase.rpc("revertir_proforma_al_cancelar_sustitucion", { p_factura_id: factura.id });
-  await limpiarPunterosProformas(supabase, factura.id);
-
-  const esSustitucion = !!factura.sustituida_por;
+  const cierre = await cerrarFacturaConAcuse(supabase, factura, acuse, new Date().toISOString());
 
   await registrarBitacoraEdge(supabase, {
     organizationId: orgId,
     usuarioId: null,
     modulo: "facturacion",
-    accion: esSustitucion ? "facturapi_sustituida_async" : "facturapi_cancelada_async",
+    accion: cierre.estado === "Sustituida" ? "facturapi_sustituida_async" : "facturapi_cancelada_async",
     entidadId: factura.id,
     detalles: { via: "cron_reconciliacion", cancellation_status: "accepted" },
   });
-  return true;
 }
 
 async function reconcileOne(ctx: ReconcileCtx, factura: FacturaPendiente): Promise<void> {
@@ -124,14 +83,17 @@ async function reconcileOneInner(ctx: ReconcileCtx, factura: FacturaPendiente): 
     }
 
     if (decision.outcome === "accepted") {
-      const ok = await applyAccepted(supabase, factura, decision.patch, apiKey, orgId);
-      if (!ok) { resumen.errores++; return; }
+      await applyAccepted(supabase, factura, apiKey, orgId);
       resumen.aceptadas++;
       return;
     }
 
     // rejected / expired / transition
-    await supabase.from("facturas").update(decision.patch).eq("id", factura.id);
+    const { data, error } = await supabase.from("facturas").update(decision.patch)
+      .eq("id", factura.id).eq("organization_id", orgId).is("deleted_at", null)
+      .eq("cancellation_status", factura.cancellation_status).select("id").maybeSingle();
+    if (error) throw error;
+    if (!data) { resumen.sin_cambio++; return; }
     if (decision.outcome === "rejected" || decision.outcome === "expired") {
       await registrarBitacoraEdge(supabase, {
         organizationId: orgId,

@@ -111,8 +111,20 @@ export async function reconciliarSiAplica(
     new Date().toISOString(),
   );
   if (decision.outcome === "no_change" || Object.keys(decision.patch).length === 0) return false;
-  const { error: updErr } = await supabase.from("facturas").update(decision.patch).eq("id", factura.id);
-  if (updErr) return false;
+  if (decision.outcome === "accepted") {
+    // Conserva el JWT del usuario para que la RPC aplique sus permisos fiscales.
+    const { error } = await supabase.rpc("cerrar_cancelacion_factura_facturapi", {
+      p_factura_id: factura.id,
+    });
+    if (error) return false;
+  } else {
+    const update = supabase.from("facturas").update(decision.patch)
+      .eq("id", factura.id).eq("organization_id", factura.organization_id).is("deleted_at", null);
+    const { data, error } = await (factura.cancellation_status === null
+      ? update.is("cancellation_status", null)
+      : update.eq("cancellation_status", factura.cancellation_status)).select("id").maybeSingle();
+    if (error || !data) return false;
+  }
   await registrarBitacoraEdge(supabase, {
     organizationId: factura.organization_id,
     usuarioId: user.id,
