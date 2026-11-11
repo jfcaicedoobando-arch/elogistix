@@ -400,5 +400,13 @@
       "0051_procesamiento_facturapi_webhook.sql"
     ],
     "scope": "isolated-ci"
+  },
+  {
+    "file": "0052_envios_proforma_recuperables.sql",
+    "sha256": "538da7a748eda420f5ec211879c800c91a20addaf85112b149d90ea7b60c94db",
+    "replays": [
+      "0052_envios_proforma_recuperables.sql"
+    ],
+    "scope": "isolated-ci"
   }
 ]

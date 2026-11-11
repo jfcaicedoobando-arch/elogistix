@@ -287,3 +287,4 @@ supabase/tests/cotizacion_prospecto_housekeeping.sql
 supabase/tests/registrar_evento_tracking_embarque.sql
 
 supabase/tests/facturapi_webhook_procesamiento.sql
+supabase/tests/proforma_email_recuperable.sql

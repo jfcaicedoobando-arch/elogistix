@@ -2,7 +2,8 @@
  * Smoke test para el modal EnviarProformaDialog centrado en la nueva
  * funcionalidad de "ocultar correos recientes".
  */
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { webcrypto } from "node:crypto";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import React from "react";
@@ -67,6 +68,7 @@ function renderDialog() {
 
 describe("EnviarProformaDialog — ocultar correos recientes", () => {
   beforeEach(() => {
+    vi.stubGlobal("crypto", webcrypto);
     window.localStorage.clear();
     invokeMock.mockReset();
     sonnerToastMock.mockReset();
@@ -76,6 +78,29 @@ describe("EnviarProformaDialog — ocultar correos recientes", () => {
         ultimo: { to: [], cc: [] },
       },
     });
+  });
+  afterEach(() => vi.unstubAllGlobals());
+
+  it("muestra el resultado por destinatario y reconcilia con la misma clave", async () => {
+    invokeMock.mockResolvedValueOnce({
+      data: { estado: "pendiente", enlace_portal: "https://portal/abc",
+        resultados: [{ email: "a@x.com", tipo: "to", estado: "enviado" },
+          { email: "b@x.com", tipo: "to", estado: "pendiente" }] },
+      error: null,
+    }).mockResolvedValueOnce({
+      data: { estado: "enviado", enlace_portal: "https://portal/abc",
+        resultados: [{ email: "b@x.com", tipo: "to", estado: "enviado" }] },
+      error: null,
+    });
+    renderDialog();
+    fireEvent.change(screen.getByLabelText("Para *"), { target: { value: "a@x.com, b@x.com" } });
+    fireEvent.click(screen.getByRole("button", { name: "Enviar correo" }));
+    expect(await screen.findByText("a@x.com · Enviado")).toBeVisible();
+    expect(screen.getByText("b@x.com · Pendiente de confirmar")).toBeVisible();
+    fireEvent.click(screen.getByRole("button", { name: "Reintentar envío" }));
+    expect(await screen.findByText("b@x.com · Enviado")).toBeVisible();
+    expect(invokeMock.mock.calls[1][1].body.intento_id).toEqual(invokeMock.mock.calls[0][1].body.intento_id);
+    expect(invokeMock.mock.calls[0][1].body.intento_id).toMatch(/^[\da-f-]{36}$/);
   });
 
   it("renderiza chips de correos recientes", () => {

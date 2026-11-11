@@ -28,6 +28,8 @@ INSERT INTO _ci_service_role_only (fn) VALUES
   ('public.reservar_evento_facturapi_webhook(uuid, text, jsonb)'),
   ('public.finalizar_evento_facturapi_webhook(uuid, uuid, text, text, text, uuid, timestamptz, text, jsonb, text)'),
   ('public.purgar_facturapi_webhook_eventos()'),
+  ('public.reservar_proforma_email(uuid, uuid, uuid, uuid, jsonb, text)'),
+  ('public.finalizar_proforma_email(uuid, uuid, uuid)'),
   ('public._assert_concepto_no_proformado()'),
   ('public._assert_padre_misma_org()'),
   -- Ola P1 (P1-4): validación cross-org de cliente/cotización/proveedores.

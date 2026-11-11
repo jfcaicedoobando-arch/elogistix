@@ -4,7 +4,7 @@
  */
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/shared";
-import { enviarProformaPorEmail } from "@/features/proformas/services/enviarEmail";
+import { enviarProformaPorEmail, type EnviarProformaEmailResult } from "@/features/proformas/services/enviarEmail";
 import { notifyError } from "@/lib/ui/appFeedback";
 import { queryKeys } from "@/lib/query";
 
@@ -15,11 +15,9 @@ export interface EnviarProformaVars {
   mensaje: string;
 }
 
-export interface EnvioProformaOk { enlace_portal: string; estado: string }
-
 export function useEnviarProformaEmail(
   proformaId: string,
-  onEnviado: (res: EnvioProformaOk, vars: EnviarProformaVars) => void,
+  onResultado: (res: EnviarProformaEmailResult, vars: EnviarProformaVars) => void,
 ) {
   const { toast } = useToast();
   const qc = useQueryClient();
@@ -36,13 +34,14 @@ export function useEnviarProformaEmail(
       });
     },
     onSuccess: async (res, vars) => {
-      onEnviado(res, vars);
-      toast({ title: "Correo enviado", description: `Estado: ${res.estado}` });
+      onResultado(res, vars);
+      if (res.estado === "pendiente") return;
+      if (res.estado === "enviado") toast({ title: "Correo enviado" });
       await qc.invalidateQueries({ queryKey: queryKeys.proformas.all });
     },
     onError: (e: Error) => {
       notifyError(undefined, {
-        title: "No se pudo enviar",
+        title: "El envío no se confirmó",
         description: e.message,
         error: e,
         method: "PROFORMAS_ENVIAR_EMAIL",

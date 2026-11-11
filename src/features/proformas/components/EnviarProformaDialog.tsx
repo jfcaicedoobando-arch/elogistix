@@ -1,9 +1,7 @@
 /**
  * Dialog para enviar la proforma al cliente por email.
  *
- * Fase 2: invoca la edge function `enviar-proforma-email`, que genera un
- * token público, encola el correo con plantilla y registra el envío en
- * `proforma_envios`. Al terminar muestra el enlace del portal copiable.
+ * Muestra el resultado por destinatario y permite reconciliar un envío pendiente.
  */
 import { useEffect, useState } from "react";
 import { Mail } from "lucide-react";
@@ -16,9 +14,10 @@ import { useToast } from "@/hooks/shared";
 import { notifyError } from "@/lib/ui/appFeedback";
 import { useDestinatariosSugeridos } from "@/features/proformas/hooks/useDestinatariosSugeridos";
 import { useEmailsOcultos } from "@/features/proformas/hooks/useEmailsOcultos";
-import { useEnviarProformaEmail, type EnvioProformaOk } from "@/features/proformas/hooks/useEnviarProformaEmail";
+import { useEnviarProformaEmail, type EnviarProformaVars } from "@/features/proformas/hooks/useEnviarProformaEmail";
+import type { EnviarProformaEmailResult } from "@/features/proformas/services/enviarEmail";
 import { DestinatariosRecientesChips } from "./DestinatariosRecientesChips";
-import { EnvioProformaExitoso } from "./EnvioProformaExitoso";
+import { ResultadoEnvioProforma } from "./ResultadoEnvioProforma";
 import type { ProformaDetalleFull } from "@/features/proformas/services";
 
 interface Props {
@@ -45,7 +44,7 @@ export function EnviarProformaDialog({ open, onOpenChange, proforma }: Props) {
   const [cc, setCc] = useState("");
   const [asunto, setAsunto] = useState("");
   const [mensaje, setMensaje] = useState("");
-  const [enviado, setEnviado] = useState<EnvioProformaOk | null>(null);
+  const [envio, setEnvio] = useState<{ resultado: EnviarProformaEmailResult; vars: EnviarProformaVars } | null>(null);
   const { data: memoria } = useDestinatariosSugeridos(proforma.cliente_id);
   const { ocultos, isOculto, ocultar, restaurar, restaurarVarios } = useEmailsOcultos(proforma.cliente_id);
 
@@ -55,7 +54,6 @@ export function EnviarProformaDialog({ open, onOpenChange, proforma }: Props) {
     if (open) {
       setAsunto(`Proforma ${proforma.numero ?? ""} para su aprobación`.trim());
       setMensaje(defaultMensaje(proforma));
-      setEnviado(null);
       setDestinatarios(memoria?.ultimo?.to.join(", ") ?? "");
       setCc(memoria?.ultimo?.cc.join(", ") ?? "");
     }
@@ -70,8 +68,10 @@ export function EnviarProformaDialog({ open, onOpenChange, proforma }: Props) {
   }
 
   const enviarMut = useEnviarProformaEmail(proforma.id, (res, vars) => {
-    setEnviado(res);
-    restaurarVarios([...vars.to.map((t) => t.email), ...vars.ccList]);
+    setEnvio({ resultado: res, vars });
+    if (res.estado === "enviado" || res.estado === "parcial") {
+      restaurarVarios([...vars.to.map((t) => t.email), ...vars.ccList]);
+    }
   });
 
   function handleEnviar() {
@@ -85,6 +85,11 @@ export function EnviarProformaDialog({ open, onOpenChange, proforma }: Props) {
   }
 
   const loading = enviarMut.isPending;
+  const cerrar = (next: boolean) => {
+    if (loading) return;
+    if (!next && envio?.resultado.estado !== "pendiente") setEnvio(null);
+    onOpenChange(next);
+  };
 
   async function copiar(link: string) {
     try {
@@ -95,9 +100,9 @@ export function EnviarProformaDialog({ open, onOpenChange, proforma }: Props) {
     }
   }
 
-  const footer = !enviado ? (
+  const footer = !envio ? (
     <>
-      <Button variant="outline" onClick={() => onOpenChange(false)} disabled={loading}>
+      <Button variant="outline" onClick={() => cerrar(false)} disabled={loading}>
         Cancelar
       </Button>
       <Button onClick={handleEnviar} loading={loading}>
@@ -105,20 +110,25 @@ export function EnviarProformaDialog({ open, onOpenChange, proforma }: Props) {
       </Button>
     </>
   ) : (
-    <Button onClick={() => onOpenChange(false)}>Cerrar</Button>
+    <>
+      <Button variant="outline" onClick={() => cerrar(false)} disabled={loading}>Cerrar</Button>
+      {envio.resultado.estado === "pendiente" && (
+        <Button onClick={() => enviarMut.mutate(envio.vars)} loading={loading}>Reintentar envío</Button>
+      )}
+    </>
   );
 
   return (
     <FormDialogShell
       open={open}
-      onOpenChange={onOpenChange}
+      onOpenChange={cerrar}
       icon={Mail}
       title="Enviar proforma al cliente"
       description="El cliente recibirá un correo con un enlace seguro para aceptar o rechazar la proforma."
       size="lg"
       footer={footer}
     >
-      {!enviado && (
+      {!envio && (
         <div className="space-y-3">
           <datalist id="proforma-emails-sugeridos">
             {sugerenciasVisibles.map((e) => <option key={e} value={e} />)}
@@ -152,9 +162,7 @@ export function EnviarProformaDialog({ open, onOpenChange, proforma }: Props) {
         </div>
       )}
 
-      {enviado && (
-        <EnvioProformaExitoso estado={enviado.estado} enlacePortal={enviado.enlace_portal} onCopiar={copiar} />
-      )}
+      {envio && <ResultadoEnvioProforma resultado={envio.resultado} onCopiar={copiar} />}
     </FormDialogShell>
   );
 }
