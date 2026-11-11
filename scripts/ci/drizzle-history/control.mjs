@@ -42,7 +42,7 @@ export const HISTORY = [
   { file: '0049_liquidaciones_lectura_finanzas_gerentes.sql', sha256: '7ba8e14da36f37a6559f05cf427a7d1e1e9dc495fed332b9f387f75c5d589d64', eligibleName: '20261108201000_liquidaciones_lectura_finanzas_gerentes.sql' },
   { file: '0050_registrar_evento_tracking_embarque.sql', sha256: 'da871c7f6eb9dfd3811302783470944a3c397167b09341efd7d617bb33db6753', eligibleName: '20261111044000_registrar_evento_tracking_embarque.sql' },
   { file: '0051_procesamiento_facturapi_webhook.sql', sha256: '0dd5e001a5a86dbb87e8f5c200fe2226ae2b948aebcc23ec9e795365de64e938', eligibleName: '20261111045200_procesamiento_facturapi_webhook.sql' },
-  { file: '0052_envios_proforma_recuperables.sql', sha256: '538da7a748eda420f5ec211879c800c91a20addaf85112b149d90ea7b60c94db', eligibleName: '20261111053500_envios_proforma_recuperables.sql' },
+  { file: '0052_envios_proforma_recuperables.sql', sha256: '872fa26220264cf26cf2a85c0ae41b274e9361979540d76a8656502b0700faba', eligibleName: '20261111053500_envios_proforma_recuperables.sql' },
 ];
 const ARCHIVED_METADATA = [
   [`${ARCHIVE}/meta/0022_snapshot.json`, '002a1cff39197fe3431f23193a4229e1c845cbcd0ab5eaa074efded812b0081d'],

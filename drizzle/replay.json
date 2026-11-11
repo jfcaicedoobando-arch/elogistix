@@ -403,7 +403,7 @@
   },
   {
     "file": "0052_envios_proforma_recuperables.sql",
-    "sha256": "538da7a748eda420f5ec211879c800c91a20addaf85112b149d90ea7b60c94db",
+    "sha256": "872fa26220264cf26cf2a85c0ae41b274e9361979540d76a8656502b0700faba",
     "replays": [
       "0052_envios_proforma_recuperables.sql"
     ],

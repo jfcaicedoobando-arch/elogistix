@@ -12,6 +12,8 @@ CREATE TABLE public.proforma_email_intentos (
 CREATE INDEX proforma_email_intentos_proforma_idx ON public.proforma_email_intentos (proforma_id);
 ALTER TABLE public.proforma_email_intentos ENABLE ROW LEVEL SECURITY;
 REVOKE ALL ON public.proforma_email_intentos FROM PUBLIC, anon, authenticated, service_role;
+CREATE POLICY "Acceso solo desde RPC" ON public.proforma_email_intentos
+  AS RESTRICTIVE FOR ALL TO PUBLIC USING (false) WITH CHECK (false);
 
 CREATE OR REPLACE FUNCTION public.reservar_proforma_email(
   p_proforma_id uuid, p_usuario_id uuid, p_intento uuid, p_reserva uuid,

@@ -15,12 +15,16 @@ function normalizarEmail(valor: unknown): string | null {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) ? email : null;
 }
 
+function texto(valor: unknown): string {
+  return typeof valor === 'string' ? valor : '';
+}
+
 function solicitud(body: Record<string, unknown>) {
   const recipients = new Map<string, Recipient>();
   for (const d of Array.isArray(body.destinatarios) ? body.destinatarios : []) {
     const email = normalizarEmail(d?.email);
     if (email && !recipients.has(email)) {
-      const nombre = typeof d.nombre === 'string' ? d.nombre.trim() : '';
+      const nombre = texto(d.nombre).trim();
       recipients.set(email, { email, tipo: 'to', ...(nombre ? { nombre } : {}) });
     }
   }
@@ -37,8 +41,8 @@ function solicitud(body: Record<string, unknown>) {
 
   return {
     destinatarios, cc, recipients: [...recipients.values()],
-    asunto: typeof body.asunto === 'string' ? body.asunto.replace(/[\r\n]+/g, ' ').trim() : '',
-    mensaje: typeof body.mensaje === 'string' ? body.mensaje : '',
+    asunto: texto(body.asunto).replace(/[\r\n]+/g, ' ').trim(),
+    mensaje: texto(body.mensaje),
     dias_vigencia: Number.isInteger(body.dias_vigencia) && Number(body.dias_vigencia) > 0
       ? Number(body.dias_vigencia) : 30,
   };
@@ -58,7 +62,15 @@ interface Contenido {
 type Reserva =
   | { estado: 'reservado'; contenido: Contenido }
   | { estado: 'confirmado'; resultado: Record<string, unknown> }
-  | { estado: 'en_proceso' | 'sin_acceso' | 'no_encontrada' | 'cancelada' | 'intento_distinto' };
+  | { estado: 'en_proceso' }
+  | { estado: keyof typeof erroresReserva };
+
+const erroresReserva = {
+  sin_acceso: { status: 403, message: 'No tienes acceso a esta proforma' },
+  no_encontrada: { status: 404, message: 'Proforma no encontrada' },
+  cancelada: { status: 409, message: 'LC_PROFORMA_CANCELADA: crea una nueva proforma para enviar al cliente.' },
+  intento_distinto: { status: 409, message: 'El intento corresponde a otro envío.' },
+};
 
 function datosPlantilla(contenido: Contenido, entrada: NonNullable<ReturnType<typeof solicitud>>) {
   const usd = Number(contenido.total_usd ?? 0);
@@ -113,6 +125,59 @@ async function entregar(
   }
 }
 
+async function leerSolicitud(req: Request) {
+  const body = await req.json().catch(() => null);
+  if (!body || typeof body !== 'object' || Array.isArray(body)) return { error: 'Invalid JSON' };
+  const proformaId = body.proforma_id;
+  if (typeof proformaId !== 'string' || !UUID.test(proformaId)) return { error: 'proforma_id inválido' };
+  const intento = body.intento_id ?? crypto.randomUUID();
+  if (typeof intento !== 'string' || !UUID.test(intento)) return { error: 'intento_id inválido' };
+  const entrada = solicitud(body);
+  if (!entrada) return { error: 'Al menos un destinatario válido es requerido' };
+  return { proformaId, intento, entrada };
+}
+
+async function procesar(
+  req: Request,
+  admin: SupabaseClient,
+  usuarioId: string,
+  responder: (body: unknown, status?: number) => Response,
+): Promise<Response> {
+  const validada = await leerSolicitud(req);
+  if (!validada.entrada) return responder({ error: validada.error }, 400);
+
+  const { proformaId, intento, entrada } = validada;
+  const reserva = crypto.randomUUID();
+  const { data, error } = await admin.rpc('reservar_proforma_email', {
+    p_proforma_id: proformaId, p_usuario_id: usuarioId, p_intento: intento, p_reserva: reserva,
+    p_solicitud: entrada, p_portal_base: APP_URL,
+  });
+  if (error) throw error;
+
+  const reservada = data as Reserva;
+  if (reservada.estado === 'confirmado') return responder(reservada.resultado);
+  if (reservada.estado !== 'reservado' && reservada.estado !== 'en_proceso') {
+    const rechazo = erroresReserva[reservada.estado];
+    return responder({ error: rechazo.message }, rechazo.status);
+  }
+
+  const adquirido = reservada.estado === 'reservado';
+  if (adquirido) {
+    try {
+      await entregar(admin, intento, proformaId, reservada.contenido, entrada);
+    } catch (e) {
+      await captureEdgeException(e, { fn: 'enviar-proforma-email', extra: { phase: 'send' } });
+    }
+  }
+
+  const { data: resultado, error: errorFinal } = await admin.rpc('finalizar_proforma_email', {
+    p_intento: intento, p_usuario_id: usuarioId, p_reserva: adquirido ? reserva : null,
+  });
+  if (errorFinal) throw errorFinal;
+  if (resultado.estado === 'sin_acceso') return responder({ error: 'No tienes acceso a esta proforma' }, 403);
+  return responder(resultado);
+}
+
 Deno.serve(wrapEdgeHandler('enviar-proforma-email', async (req) => {
   const preflight = handlePreflightStrict(req);
   if (preflight) return preflight;
@@ -130,52 +195,9 @@ Deno.serve(wrapEdgeHandler('enviar-proforma-email', async (req) => {
   const userClient = createClient(url, anon, {
     global: { headers: { Authorization: authHeader } }, auth: { persistSession: false },
   });
-  const { data: { user }, error: authError } = await userClient.auth.getUser();
-  if (authError || !user) return responder({ error: 'Unauthorized' }, 401);
-
-  const body = await req.json().catch(() => null);
-  if (!body || typeof body !== 'object' || Array.isArray(body)) return responder({ error: 'Invalid JSON' }, 400);
-  const proformaId = body.proforma_id;
-  if (typeof proformaId !== 'string' || !UUID.test(proformaId)) return responder({ error: 'proforma_id inválido' }, 400);
-  if (body.intento_id != null && (typeof body.intento_id !== 'string' || !UUID.test(body.intento_id))) {
-    return responder({ error: 'intento_id inválido' }, 400);
-  }
-  const entrada = solicitud(body);
-  if (!entrada) return responder({ error: 'Al menos un destinatario válido es requerido' }, 400);
+  const { data: { user }, error } = await userClient.auth.getUser();
+  if (error || !user) return responder({ error: 'Unauthorized' }, 401);
 
   const admin = createClient(url, service, { auth: { persistSession: false } });
-  const intento = body.intento_id ?? crypto.randomUUID();
-  const reserva = crypto.randomUUID();
-  const { data, error } = await admin.rpc('reservar_proforma_email', {
-    p_proforma_id: proformaId, p_usuario_id: user.id, p_intento: intento, p_reserva: reserva,
-    p_solicitud: entrada, p_portal_base: APP_URL,
-  });
-  if (error) throw error;
-
-  const reservada = data as Reserva;
-  if (reservada.estado === 'confirmado') return responder(reservada.resultado);
-  if (reservada.estado === 'no_encontrada') return responder({ error: 'Proforma no encontrada' }, 404);
-  if (reservada.estado === 'sin_acceso') return responder({ error: 'No tienes acceso a esta proforma' }, 403);
-  if (reservada.estado === 'cancelada') {
-    return responder({ error: 'LC_PROFORMA_CANCELADA: crea una nueva proforma para enviar al cliente.' }, 409);
-  }
-  if (reservada.estado === 'intento_distinto') {
-    return responder({ error: 'El intento corresponde a otro envío.' }, 409);
-  }
-
-  const adquirido = reservada.estado === 'reservado';
-  if (adquirido) {
-    try {
-      await entregar(admin, intento, proformaId, reservada.contenido, entrada);
-    } catch (e) {
-      await captureEdgeException(e, { fn: 'enviar-proforma-email', extra: { phase: 'send' } });
-    }
-  }
-
-  const { data: resultado, error: errorFinal } = await admin.rpc('finalizar_proforma_email', {
-    p_intento: intento, p_usuario_id: user.id, p_reserva: adquirido ? reserva : null,
-  });
-  if (errorFinal) throw errorFinal;
-  if (resultado.estado === 'sin_acceso') return responder({ error: 'No tienes acceso a esta proforma' }, 403);
-  return responder(resultado);
+  return procesar(req, admin, user.id, responder);
 }));
