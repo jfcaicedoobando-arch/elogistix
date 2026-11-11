@@ -139,11 +139,14 @@ it("borrador vinculado sin sello conserva storage y exige datos actuales", async
   saveLocalCapture();
   const stored = JSON.parse(window.localStorage.getItem(draftKey(USER, ORG))!);
   delete stored.updatedAt;
-  window.localStorage.setItem(draftKey(USER, ORG), JSON.stringify(stored));
+  const original = JSON.stringify(stored);
+  window.localStorage.setItem(draftKey(USER, ORG), original);
   const h = renderHook(() => useHarness());
   await act(async () => h.result.current.restore.handleRestore());
   expect(h.result.current.restore.conflictoSello).toBe(true);
+  expect(h.result.current.restore.pendienteBorrador).toBe(true);
   expect(h.result.current.id).toBeNull();
+  expect(window.localStorage.getItem(draftKey(USER, ORG))).toBe(original);
 });
 it("borrar la última venta local sin form/costos no resucita el borrador anterior", () => {
   const h = renderHook(() => useHarness());
