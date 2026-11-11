@@ -372,6 +372,13 @@
       "when": 1794374978167,
       "tag": "0052_envios_proforma_recuperables",
       "breakpoints": true
+    },
+    {
+      "idx": 53,
+      "version": "7",
+      "when": 1794375207509,
+      "tag": "0053_provision_membresia_atomica",
+      "breakpoints": true
     }
   ]
 }

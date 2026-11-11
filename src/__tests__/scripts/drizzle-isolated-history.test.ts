@@ -50,8 +50,9 @@ describe("isolated Drizzle history is not deployment-eligible", () => {
       "0050_registrar_evento_tracking_embarque.sql",
       "0051_procesamiento_facturapi_webhook.sql",
       "0052_envios_proforma_recuperables.sql",
+      "0053_provision_membresia_atomica.sql",
     ]);
-    expect(readIsolatedDrizzleReplay().size).toBe(30);
+    expect(readIsolatedDrizzleReplay().size).toBe(31);
     const archive = paths[1].replace("0022_refacturar_proforma_abre_edicion.sql", "meta/_journal.json");
     expect(JSON.parse(read(archive)).entries[22]).toMatchObject({ idx: 22, when: 1792518064767, tag: "0022_refacturar_proforma_abre_edicion" });
     expect(JSON.parse(read("drizzle/migrations/meta/_journal.json")).entries[22].tag).toBe("0022_cotizacion_comercial");

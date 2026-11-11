@@ -408,5 +408,13 @@
       "0052_envios_proforma_recuperables.sql"
     ],
     "scope": "isolated-ci"
+  },
+  {
+    "file": "0053_provision_membresia_atomica.sql",
+    "sha256": "4b519d836748bf04174aae1353f1ab160996904ff6d180b001e587c4b492231e",
+    "replays": [
+      "0053_provision_membresia_atomica.sql"
+    ],
+    "scope": "isolated-ci"
   }
 ]

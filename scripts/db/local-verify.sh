@@ -383,6 +383,16 @@ for s in "${SUITES[@]}"; do
   run_sql "$file" "rls_$s" || FAILED+=("rls:$s")
 done
 
+if [ "$REUSE" = "0" ]; then
+  step "Aprovisionamiento concurrente de organizaciones"
+  if ISOLATED_QA_DB=1 bash scripts/ci/concurrencia-provision-organizacion.sh > "$LOGDIR/provision_concurrente.log" 2>&1; then
+    cat "$LOGDIR/provision_concurrente.log"
+  else
+    cat "$LOGDIR/provision_concurrente.log" >&2
+    FAILED+=("concurrencia:provision")
+  fi
+fi
+
 if [ "$RUN_BEHAVIORAL" = "1" ]; then
   step "Suites conductuales (supabase/tests/*.sql)"
   for f in $(printf '%s\n' supabase/tests/*.sql | LC_ALL=C sort); do
