@@ -1,6 +1,6 @@
 import { beforeEach, describe, it, expect, vi } from "vitest";
 import { normalizarUsoCfdi, usoCfdiDesdeXml } from "../../supabase/functions/_shared/usoCfdiEfectivo";
-import { mapEventToFacturaPatch } from "../../supabase/functions/facturapi-webhook/helpers";
+import { mapEventToFacturaPatch } from "../../supabase/functions/_shared/facturapi-webhook/helpers";
 
 const respaldo = vi.hoisted(() => vi.fn());
 vi.mock("../../supabase/functions/_shared/respaldarXmlTimbrado.ts", () => ({ respaldarXmlTimbrado: respaldo }));
@@ -9,7 +9,7 @@ vi.mock("../../supabase/functions/_shared/facturapiAuth.ts", () => ({ FACTURAPI_
 // real sin incorporar sus imports HTTPS al proyecto TypeScript del frontend.
 const persistenciaPath = "../../supabase/functions/facturapi-emitir/persistencia";
 const recuperacionPath = "../../supabase/functions/facturapi-recuperar-claim/promoverFactura";
-const webhookPath = "../../supabase/functions/facturapi-webhook/facturaPatch";
+const webhookPath = "../../supabase/functions/_shared/facturapi-webhook/facturaPatch";
 const { parseInvoiceResult, persistirFacturaTimbrada } = await import(persistenciaPath);
 const { promoverFactura } = await import(recuperacionPath);
 const { sanearPatchFactura } = await import(webhookPath);

@@ -1,5 +1,5 @@
 import type { SupabaseClient } from "npm:@supabase/supabase-js@2.119.0";
-import { captureEdgeException } from "../_shared/sentry.ts";
+import { captureEdgeException } from "../sentry.ts";
 import { despacharEvento, type ResultadoWebhook } from "./despachar.ts";
 import type { FacturapiWebhookEvent } from "./helpers.ts";
 

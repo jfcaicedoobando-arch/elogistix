@@ -1,5 +1,5 @@
 import { assertEquals, assert } from "https://deno.land/std@0.224.0/assert/mod.ts";
-import { computeEventKey, computeSignature, mapEventToFacturaPatch, mapEventToReceiptPatch, safeEqual } from "./helpers.ts";
+import { computeEventKey, computeSignature, mapEventToFacturaPatch, mapEventToReceiptPatch, safeEqual } from "../_shared/facturapi-webhook/helpers.ts";
 
 Deno.test("computeEventKey: usa event.id cuando existe", async () => {
   const key = await computeEventKey('{"id":"evt_abc","type":"invoice.status_updated"}', {

@@ -8,8 +8,8 @@
  */
 
 import { mapReceiptCancellationStatus } from "./receiptCancelacion.ts";
-import { uuidFiscalValido } from "../_shared/timbradoPendiente.ts";
-import { patchUsoCfdiEfectivo } from "../_shared/usoCfdiEfectivo.ts";
+import { uuidFiscalValido } from "../timbradoPendiente.ts";
+import { patchUsoCfdiEfectivo } from "../usoCfdiEfectivo.ts";
 
 
 export type FacturapiEventType =

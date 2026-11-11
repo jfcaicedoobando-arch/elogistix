@@ -10,7 +10,7 @@
  * El secret legado indistinto sólo se acepta si la organización no tiene NINGÚN
  * secret por ambiente y `FACTURAPI_WEBHOOK_LEGACY_HASTA` (ISO) sigue vigente.
  */
-import { computeSignatureBytes, safeEqual, type FacturapiWebhookEvent } from "./helpers.ts";
+import { computeSignatureBytes, safeEqual, type FacturapiWebhookEvent } from "../_shared/facturapi-webhook/helpers.ts";
 import { jsonResponse } from "../_shared/response.ts";
 import {
   resolverSecretosWebhook,
