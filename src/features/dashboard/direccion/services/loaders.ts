@@ -103,7 +103,7 @@ async function loadConceptosCosto(ids: string[]): Promise<ConceptoCostoRow[]> {
 }
 
 export async function loadFacturas(orgId: string | null, desdeIso: string) {
-  const facturas = await leerTodasLasPaginas<FacturaRow>("direccion.loadFacturas", (desde, hasta) => {
+  return leerTodasLasPaginas<FacturaRow>("direccion.loadFacturas", (desde, hasta) => {
     let q = supabase.from("facturas")
       .select("id, total, moneda, tipo_cambio, fecha_emision, fecha_vencimiento, estado, cliente_id, timbrado_en, uuid_fiscal, acuse_cancelacion_status")
       .gte("fecha_emision", desdeIso).is("deleted_at", null)
@@ -111,10 +111,6 @@ export async function loadFacturas(orgId: string | null, desdeIso: string) {
     if (orgId) q = q.eq("organization_id", orgId);
     return q;
   });
-  const ids = facturas.map((f) => f.id);
-  if (ids.length === 0) return { facturas: [] as FacturaRow[], pagos: [] as PagoRow[] };
-  const pagos = await loadPagos(ids, "direccion.loadPagos");
-  return { facturas, pagos };
 }
 
 function loadPagos(ids: string[], contexto: string): Promise<PagoRow[]> {

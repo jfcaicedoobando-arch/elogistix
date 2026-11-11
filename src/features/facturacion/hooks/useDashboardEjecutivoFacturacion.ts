@@ -6,11 +6,12 @@ import { queryKeys } from "@/lib/query";
 
 export function useDashboardEjecutivoFacturacion() {
   const { organizationId } = useOrgFilter();
-  const { data: tc } = useExchangeRates();
+  const { data: tc, isPending: tcPendiente } = useExchangeRates();
   const fallback = tc?.usdMxn ?? null;
   return useQuery({
     queryKey: queryKeys.facturacion.dashboardEjecutivo(organizationId, fallback),
     queryFn: () => fetchDashboardEjecutivoFacturacion(organizationId ?? null, fallback),
+    enabled: !tcPendiente,
     staleTime: 60_000,
   });
 }
