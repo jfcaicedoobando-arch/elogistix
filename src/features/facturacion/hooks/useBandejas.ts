@@ -16,6 +16,7 @@ import {
   REP_PENDIENTES_SORT_KEYS,
   type RepPendientesFilters,
   fetchRepsHistorico,
+  REP_HISTORICO_SORT_KEYS,
   fetchBandejaConteos,
   type FilaPorTimbrar,
   type FilaRepPendiente,
@@ -59,14 +60,23 @@ export function usePagosRepPendientes(organizationId: string | null) {
   return list;
 }
 
-export function useRepsHistorico() {
-  const { organizationId } = useOrgFilter();
-  return useQuery({
+export function useRepsHistorico(organizationId: string | null) {
+  const list = useServerPagedList<FilaRepHistorico>({
     queryKey: queryKeys.facturacion.bandejaRepsHistorico(organizationId),
-    queryFn: () => fetchRepsHistorico(organizationId!),
-    enabled: !!organizationId,
+    fetcher: (args) => fetchRepsHistorico(organizationId!, args),
+    defaultFilters: {},
+    defaultSort: { key: "timbrado", dir: "desc" },
+    sortableKeys: REP_HISTORICO_SORT_KEYS,
+    enabled: Boolean(organizationId),
     staleTime: STALE,
   });
+  const { error, isFetching, isStaleView, page, totalPages, setPage } = list;
+  useEffect(() => {
+    if (!organizationId || !page || isFetching || isStaleView) return;
+    if (error && "code" in error && error.code === "PGRST103") setPage(0);
+    else if (!error && page >= totalPages) setPage(totalPages - 1);
+  }, [organizationId, error, isFetching, isStaleView, page, totalPages, setPage]);
+  return list;
 }
 
 export function useBandejaConteos() {

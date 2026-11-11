@@ -1,5 +1,5 @@
 import { expect, it, vi } from "vitest";
-import { fetchPagosRepPendientes } from "../bandejasQueries";
+import { fetchPagosRepPendientes, fetchRepsHistorico } from "../bandejasQueries";
 
 const fetchMock = vi.hoisted(() => vi.fn<typeof globalThis.fetch>());
 vi.mock("@/integrations/supabase/client", async () => {
@@ -57,4 +57,22 @@ it("mantiene el filtro REP y el orden permitido ante valores de URL desconocidos
   const query = new URL(String(input)).searchParams;
   expect(query.getAll("estado_rep")).toEqual(["in.(Pendiente,Error)"]);
   expect(query.get("order")).toBe("fecha_pago.asc,id.asc");
+});
+
+it("busca y pagina el histórico de REP en PostgREST, incluso después de la fila 500", async () => {
+  fetchMock.mockResolvedValueOnce(new Response(JSON.stringify([{
+    id: "rep-501", factura_id: "factura", factura_numero: "F-501",
+    folio_rep: "REP-501", uuid_rep: "100%_histórico",
+  }]), { headers: { "content-type": "application/json", "content-range": "500-500/525" } }));
+  const result = await fetchRepsHistorico("org-a", { ...params, search: "100%_histórico", sortKey: "estado" });
+  expect(result).toMatchObject({ count: 525, rows: [{ id: "rep-501", factura_numero: "F-501" }] });
+  const [input, init] = fetchMock.mock.calls.at(-1)!;
+  const url = new URL(String(input));
+  expect(url.pathname).toBe("/rest/v1/v_reps_historico");
+  expect(url.searchParams.get("organization_id")).toBe("eq.org-a");
+  expect(url.searchParams.get("busqueda")).toBe("ilike.%100\\%\\_histórico%");
+  expect(url.searchParams.get("order")).toBe("estado_visible.asc.nullsfirst,id.asc");
+  expect(url.searchParams.get("offset")).toBe("500");
+  expect(url.searchParams.get("limit")).toBe("20");
+  expect(new Headers(init?.headers).get("prefer")).toBe("count=exact");
 });

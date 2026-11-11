@@ -5,6 +5,7 @@ export const facturacion = {
   /** Prefijo canónico del dominio (invalidación amplia). */
   all: ['facturacion'] as const,
   hueco: (organizationId?: string | null) => ['facturacion', 'hueco', organizationId] as const,
+  huecoConteo: (organizationId: string | null) => ['facturacion', 'hueco', organizationId, 'count'] as const,
   proyeccion: (organizationId: string | null | undefined, mesKey: string) =>
     ['facturacion', 'proyeccion', organizationId, mesKey] as const,
   clienteFiscal: (clienteId?: string | null) => ['cliente_fiscal', clienteId] as const,

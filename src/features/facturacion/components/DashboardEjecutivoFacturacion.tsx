@@ -12,7 +12,8 @@ import { KpiCard } from "@/components/shared/KpiCard";
 import { ErrorStateInline } from "@/components/empty/ErrorStateInline";
 import { formatCurrency, formatCurrencyCompact, formatFechaEs } from "@/lib/formatters";
 import { useDashboardEjecutivoFacturacion } from "@/features/facturacion/hooks/useDashboardEjecutivoFacturacion";
-import { useCobranza } from "@/features/facturacion/hooks/useCobranza";
+import { useCobranzaKpis } from "@/features/facturacion/hooks/useCobranza";
+import type { KpisCobranzaRemotos } from "@/features/facturacion/services";
 
 import { useProformasListasCount } from "@/features/facturacion/hooks/useProformasListas";
 import { MiniSerie } from "./DashboardEjecutivoFacturacionMiniSerie";
@@ -52,9 +53,15 @@ function montoMxn(monto: number, hayError: boolean): string {
   return hayError ? "—" : formatCurrency(monto, "MXN");
 }
 
-/** Oculta el sublabel USD mientras el dato no sea confiable. */
-function subUsdSeguro(montoUsd: number, hayError: boolean): string | undefined {
-  return hayError ? undefined : sublabelUsd(montoUsd);
+function buildCobranzaUi(kpis: KpisCobranzaRemotos | undefined) {
+  if (!kpis) return { porCobrar: "—", vencido: "—", labelVencido: "Vencido" };
+  return {
+    porCobrar: formatCurrency(kpis.total_mxn, "MXN"),
+    vencido: formatCurrency(kpis.vencido_mxn, "MXN"),
+    subUsdPorCobrar: sublabelUsd(kpis.total_usd),
+    subUsdVencido: sublabelUsd(kpis.vencido_usd),
+    labelVencido: `Vencido (${kpis.facturas_vencidas})`,
+  };
 }
 
 /** Mensaje del banner de error según qué consulta falló. */
@@ -80,8 +87,7 @@ function BannerErrorKpis({ dashError, cobError, onRetry }: {
 
 export function DashboardEjecutivoFacturacion() {
   const dash = useDashboardEjecutivoFacturacion();
-  const cobranza = useCobranza({ estatus: "todos", moneda: "todas" });
-  const cob = cobranza.kpis;
+  const cobranza = useCobranzaKpis();
   const { data: proformasListas = 0 } = useProformasListasCount();
 
   /**
@@ -89,16 +95,13 @@ export function DashboardEjecutivoFacturacion() {
    * valor con "—" y se ofrece reintentar arriba de la fila de KPIs.
    */
   const dashError = dash.isError;
-  const cobError = cobranza.kpisIsError;
+  const cobError = cobranza.isError;
 
   const dashSinMonto = dashError || !dash.data;
   const facturadoMes = montoMxn(dash.data?.facturado_mes_mxn ?? 0, dashSinMonto);
   const cobradoMes = montoMxn(dash.data?.cobrado_mes_mxn ?? 0, dashSinMonto);
-  const porCobrar = montoMxn(cob.total_mxn, cobError);
-  const vencido = montoMxn(cob.vencido_mxn, cobError);
-  const subUsdPorCobrar = subUsdSeguro(cob.total_usd, cobError);
-  const subUsdVencido = subUsdSeguro(cob.vencido_usd, cobError);
-  const labelVencido = cobError ? "Vencido" : `Vencido (${cob.facturas_vencidas})`;
+  const { porCobrar, vencido, subUsdPorCobrar, subUsdVencido, labelVencido } =
+    buildCobranzaUi(cobError ? undefined : cobranza.data);
 
   const tendencia = dash.data?.tendencia ?? [];
   const facturadoArr = tendencia.map((t) => t.facturado_mxn);
@@ -118,7 +121,7 @@ export function DashboardEjecutivoFacturacion() {
         cobError={cobError}
         onRetry={() => {
           if (dashError) void dash.refetch();
-          if (cobError) cobranza.kpisRefetch();
+          if (cobError) void cobranza.refetch();
         }}
       />
       {/* 5 KPIs ejecutivos con la card canónica del UI kit. */}

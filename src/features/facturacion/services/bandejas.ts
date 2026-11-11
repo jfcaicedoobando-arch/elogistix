@@ -17,6 +17,7 @@ export {
   REP_PENDIENTES_SORT_KEYS,
   type RepPendientesFilters,
   fetchRepsHistorico,
+  REP_HISTORICO_SORT_KEYS,
   type FilaPorTimbrar,
   type FilaRepPendiente,
   type FilaRepHistorico,

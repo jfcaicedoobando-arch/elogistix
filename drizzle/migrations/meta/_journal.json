@@ -393,6 +393,13 @@
       "when": 1794412944354,
       "tag": "0055_embarques_paginacion_filtros",
       "breakpoints": true
+    },
+    {
+      "idx": 56,
+      "version": "7",
+      "when": 1794414953248,
+      "tag": "0056_facturacion_bandejas_ligeras",
+      "breakpoints": true
     }
   ]
 }

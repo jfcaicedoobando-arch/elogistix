@@ -7,7 +7,7 @@ import { Info } from "lucide-react";
 import { TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import { useHuecoFacturacion } from "@/features/facturacion/hooks";
+import { useHuecoFacturacionCount } from "@/features/facturacion/hooks";
 import { useBandejaConteos } from "@/features/facturacion/hooks/useBandejas";
 import { useProformasListasCount } from "@/features/facturacion/hooks/useProformasListas";
 
@@ -62,24 +62,36 @@ function badgeClass(tone: Def["tone"]): string {
 
 type BadgeConteosMap = Record<Exclude<BandejaId, "emitidas" | "notas" | "reps">, number>;
 
-export function BandejaTabs({ activeBandeja, onSelect }: {
-  activeBandeja: BandejaId;
-  onSelect: (id: BandejaId) => void;
-}) {
+function useBandejaBadgeConteos() {
   const { data: conteos, isError, isFetching, refetch } = useBandejaConteos();
-  const { totalEmbarques } = useHuecoFacturacion();
+  const hueco = useHuecoFacturacionCount();
   const { data: proformasListasCount = 0 } = useProformasListasCount();
 
   const counts: BadgeConteosMap = {
-    "embarques-sin-factura": totalEmbarques,
+    "embarques-sin-factura": hueco.data ?? 0,
     "proformas-listas": proformasListasCount,
     "por-timbrar": conteos?.porTimbrar ?? 0,
-    
     "por-cobrar": conteos?.porCobrar ?? 0,
     "vencidas": conteos?.vencidas ?? 0,
     "rep-pendientes": conteos?.repPendientes ?? 0,
   };
+  return {
+    counts,
+    error: isError || hueco.isError,
+    tieneDatoAnterior: isError ? conteos !== undefined : hueco.data !== undefined,
+    actualizando: isFetching || hueco.isFetching,
+    reintentar: () => {
+      if (isError) void refetch();
+      if (hueco.isError) void hueco.refetch();
+    },
+  };
+}
 
+export function BandejaTabs({ activeBandeja, onSelect }: {
+  activeBandeja: BandejaId;
+  onSelect: (id: BandejaId) => void;
+}) {
+  const { counts, error, tieneDatoAnterior, actualizando, reintentar } = useBandejaBadgeConteos();
   const groups: GroupId[] = ["preparar", "cobrar", "historico"];
 
   const activeGroup = DEFS.find((d) => d.id === activeBandeja)?.group ?? "preparar";
@@ -144,12 +156,12 @@ export function BandejaTabs({ activeBandeja, onSelect }: {
           );
         })}
       </TabsList>
-      {isError && (
+      {error && (
         <div role="alert" className="flex flex-wrap items-center gap-2 px-3 py-2 text-body-sm text-destructive">
-          <span>{conteos
+          <span>{tieneDatoAnterior
             ? "No se pudieron actualizar los conteos. Se muestran los últimos disponibles."
             : "No se pudieron cargar los conteos."}</span>
-          <Button type="button" variant="outline" size="sm" disabled={isFetching} onClick={() => void refetch()}>
+          <Button type="button" variant="outline" size="sm" disabled={actualizando} onClick={reintentar}>
             Reintentar conteos
           </Button>
         </div>

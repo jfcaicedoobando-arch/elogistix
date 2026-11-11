@@ -290,3 +290,4 @@ supabase/tests/facturapi_webhook_procesamiento.sql
 supabase/tests/proforma_email_recuperable.sql
 supabase/tests/sidebar_conteos.sql
 supabase/tests/embarques_paginacion_filtros.sql
+supabase/tests/facturacion_bandejas_ligeras.sql

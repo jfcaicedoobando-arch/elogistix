@@ -9,8 +9,7 @@
 import { supabase } from "@/integrations/supabase/client";
 import { FECHA_INICIO_TIMBRADO_SISTEMA } from "@/features/facturacion/domain/facturaFlags";
 import { warnIfTruncated } from "@/lib/supabase/assertNotTruncated";
-import { CAP_LISTA } from "@/constants/queryCaps";
-import { orIlike } from "@/lib/search/ilike";
+import { escapeIlike, orIlike } from "@/lib/search/ilike";
 
 const LIMITE_POR_TIMBRAR = 500;
 
@@ -132,42 +131,35 @@ export interface FilaRepHistorico {
   rep_cancellation_status: string | null;
 }
 
-/**
- * Histórico de REPs (Complemento de Pago) ya timbrados ante el SAT.
- * Espejo de `fetchPagosRepPendientes`, pero de sólo lectura: consulta y
- * descarga de PDF/XML, sin acciones de timbrado/cancelación.
- */
-export async function fetchRepsHistorico(orgId: string): Promise<FilaRepHistorico[]> {
-  const { data, error } = await supabase
-    .from("pagos_factura")
-    .select(
-      "id, factura_id, fecha_pago, monto, moneda, serie_rep, folio_rep, uuid_rep, timbrado_rep_en, rep_cancellation_status, facturas!inner(numero, cliente_nombre)",
-    )
+const SORT_REP_HISTORICO = {
+  folio_rep: "folio_rep",
+  factura: "factura_numero",
+  cliente: "cliente_nombre",
+  fecha_pago: "fecha_pago",
+  monto: "monto",
+  timbrado: "timbrado_rep_en",
+  estado: "estado_visible",
+} as const;
+export const REP_HISTORICO_SORT_KEYS = Object.keys(SORT_REP_HISTORICO);
+
+export async function fetchRepsHistorico(
+  orgId: string,
+  { search, sortKey, sortDir, range }: Pick<RepPendientesPageParams, "search" | "sortKey" | "sortDir" | "range">,
+): Promise<{ rows: FilaRepHistorico[]; count: number }> {
+  let query = supabase.from("v_reps_historico")
+    .select("id, factura_id, factura_numero, cliente_nombre, fecha_pago, monto, moneda, folio_rep, uuid_rep, timbrado_rep_en, rep_cancellation_status", { count: "exact" })
     .eq("organization_id", orgId)
-    .eq("estado_rep", "Timbrado")
-    .is("deleted_at", null)
-    .order("timbrado_rep_en", { ascending: false, nullsFirst: false })
-    .limit(CAP_LISTA);
+  const term = search.trim();
+  if (term) query = query.ilike("busqueda", `%${escapeIlike(term)}%`);
+  const sort = sortKey && Object.hasOwn(SORT_REP_HISTORICO, sortKey)
+    ? SORT_REP_HISTORICO[sortKey as keyof typeof SORT_REP_HISTORICO]
+    : SORT_REP_HISTORICO.timbrado;
+  const asc = sortDir === "asc";
+  const { data, count, error } = await query
+    .order(sort, { ascending: asc, nullsFirst: asc })
+    .order("id", { ascending: true })
+    .range(range.from, range.to);
   if (error) throw error;
-  warnIfTruncated(data, CAP_LISTA, "facturacion.fetchRepsHistorico");
-  type Row = {
-    id: string; factura_id: string; fecha_pago: string;
-    monto: number; moneda: string;
-    serie_rep: string | null; folio_rep: number | null; uuid_rep: string | null;
-    timbrado_rep_en: string | null; rep_cancellation_status: string | null;
-    facturas: { numero: string; cliente_nombre: string } | null;
-  };
-  return ((data ?? []) as Row[]).map((r) => ({
-    id: r.id,
-    factura_id: r.factura_id,
-    factura_numero: r.facturas?.numero ?? "—",
-    cliente_nombre: r.facturas?.cliente_nombre ?? "—",
-    fecha_pago: r.fecha_pago,
-    monto: r.monto,
-    moneda: r.moneda,
-    folio_rep: [r.serie_rep, r.folio_rep].filter((v) => v != null && v !== "").join("-") || "—",
-    uuid_rep: r.uuid_rep,
-    timbrado_rep_en: r.timbrado_rep_en,
-    rep_cancellation_status: r.rep_cancellation_status,
-  }));
+  if (count === null) throw new Error("La bandeja de REPs históricos no recibió el total filtrado.");
+  return { rows: (data ?? []) as FilaRepHistorico[], count };
 }

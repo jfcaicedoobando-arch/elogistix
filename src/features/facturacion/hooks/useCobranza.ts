@@ -1,5 +1,6 @@
 import { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { useOrgFilter } from "@/hooks/shared";
 import { queryKeys } from "@/lib/query";
 import {
   fetchCobranza,
@@ -30,30 +31,39 @@ function puedeAgregarEnServidor(f: UseCobranzaFiltros): boolean {
   return sinBusqueda && sinEstatus;
 }
 
+export function useCobranzaFilas(filtros: UseCobranzaFiltros = {}) {
+  const { organizationId, orgListo } = useOrgFilter();
+  const filtrosLista = {
+    ...filtros,
+    moneda: filtros.moneda === "todas" ? undefined : filtros.moneda,
+    estatus: filtros.estatus === "todos" ? undefined : filtros.estatus,
+  };
+  return useQuery({
+    queryKey: queryKeys.facturas.cobranza({ organizationId, ...filtrosLista }),
+    queryFn: ({ signal }) => fetchCobranza(filtrosLista, signal),
+    enabled: orgListo,
+    staleTime: 30_000,
+  });
+}
+
+export function useCobranzaKpis(filtros: Pick<UseCobranzaFiltros, "cliente_id" | "moneda"> = {}, enabled = true) {
+  const { organizationId, orgListo } = useOrgFilter();
+  const filtrosAgregados = {
+    cliente_id: filtros.cliente_id,
+    moneda: filtros.moneda === "todas" ? undefined : filtros.moneda,
+  };
+  return useQuery({
+    queryKey: queryKeys.facturas.cobranza({ organizationId, kpis: true, ...filtrosAgregados }),
+    queryFn: ({ signal }) => fetchCobranzaKpis(filtrosAgregados, signal),
+    enabled: enabled && orgListo,
+    staleTime: 30_000,
+  });
+}
+
 export function useCobranza(filtros: UseCobranzaFiltros = {}) {
-  const key = useMemo(
-    () => ({
-      search: filtros.search, cliente_id: filtros.cliente_id,
-      moneda: filtros.moneda, estatus: filtros.estatus,
-    }),
-    [filtros.search, filtros.cliente_id, filtros.moneda, filtros.estatus],
-  );
-  const query = useQuery({
-    queryKey: queryKeys.facturas.cobranza(key),
-    queryFn: () => fetchCobranza(filtros),
-    staleTime: 30_000,
-  });
-
+  const query = useCobranzaFilas(filtros);
   const remotoHabilitado = puedeAgregarEnServidor(filtros);
-  const kpisQuery = useQuery({
-    queryKey: queryKeys.facturas.cobranza({
-      kpis: true, cliente_id: filtros.cliente_id, moneda: filtros.moneda,
-    }),
-    queryFn: () => fetchCobranzaKpis(filtros),
-    enabled: remotoHabilitado,
-    staleTime: 30_000,
-  });
-
+  const kpisQuery = useCobranzaKpis(filtros, remotoHabilitado);
   const kpisLocales = useMemo(() => calcularKPIs(query.data ?? []), [query.data]);
   const kpis = useMemo(() => {
     const remoto = kpisQuery.data;

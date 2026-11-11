@@ -9906,6 +9906,25 @@ export type Database = {
           },
         ]
       }
+      v_reps_historico: {
+        Row: {
+          busqueda: string | null
+          cliente_nombre: string | null
+          estado_visible: string | null
+          factura_id: string | null
+          factura_numero: string | null
+          fecha_pago: string | null
+          folio_rep: string | null
+          id: string | null
+          moneda: Database["public"]["Enums"]["moneda"] | null
+          monto: number | null
+          organization_id: string | null
+          rep_cancellation_status: string | null
+          timbrado_rep_en: string | null
+          uuid_rep: string | null
+        }
+        Relationships: []
+      }
       v_proforma_factura_link: {
         Row: {
           cliente_id: string | null
@@ -9999,6 +10018,10 @@ export type Database = {
       }
     }
     Functions: {
+      hueco_facturacion_count: {
+        Args: { p_limite_eta?: string; p_organization_id?: string }
+        Returns: number
+      }
       _asegurar_movimiento_pago_proveedor: {
         Args: { p_pago_id: string }
         Returns: string

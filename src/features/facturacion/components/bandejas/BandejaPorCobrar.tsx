@@ -12,7 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { clientColumn, moneyColumn, dateColumn } from "@/components/shared/dataTable/columnBuilders";
 import { formatCurrency, formatDate, toTitleCase } from "@/lib/formatters";
 import { useClientPagedList } from "@/hooks/shared/useClientPagedList";
-import { useCobranza } from "@/features/facturacion/hooks/useCobranza";
+import { useCobranzaFilas } from "@/features/facturacion/hooks/useCobranza";
 import { agingPorCobrarBucket } from "@/features/facturacion/utils/aging";
 import { BandejaShell } from "./BandejaShell";
 import { COL_W } from "@/components/shared/dataTable/columnWidths";
@@ -68,7 +68,7 @@ const columns = defineColumns<FilaCobranza>([
 ]);
 
 export function BandejaPorCobrar() {
-  const { data, isLoading, isError, refetch } = useCobranza({ estatus: "todos", moneda: "todas" });
+  const { data, isLoading, isError, refetch } = useCobranzaFilas();
   const filas = useMemo<FilaCobranza[]>(
     () => (data ?? []).filter((f) => tieneSaldoMonetario(f.saldo) && f.estatus_cobranza !== "Vencida"),
     [data],

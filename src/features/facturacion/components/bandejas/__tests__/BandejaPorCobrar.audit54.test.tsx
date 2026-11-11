@@ -7,7 +7,7 @@ const rows = vi.hoisted(() => [
   { id: "ayer", numero: "Ayer", saldo: .01, moneda: "MXN", estatus_cobranza: "Vencida" },
   { id: "ruido", numero: "Ruido", saldo: .0049, moneda: "MXN", estatus_cobranza: "Sin saldo" },
 ]);
-vi.mock("@/features/facturacion/hooks/useCobranza", () => ({ useCobranza: () => ({ data: rows, isLoading: false, isError: false, refetch: vi.fn() }) }));
+vi.mock("@/features/facturacion/hooks/useCobranza", () => ({ useCobranzaFilas: () => ({ data: rows, isLoading: false, isError: false, refetch: vi.fn() }) }));
 vi.mock("@/hooks/shared/useClientPagedList", () => ({ useClientPagedList: ({ data }: { data: typeof rows }) => ({ rows: data, filteredCount: data.length, filters: { moneda: "todas" } }) }));
 vi.mock("../BandejaShell", () => ({ BandejaShell: ({ children, counter }: { children: ReactNode; counter: ReactNode }) => <>{counter}{children}</> }));
 vi.mock("@/components/shared/dataTable/ResponsiveDataTable", () => ({ ResponsiveDataTable: ({ data }: { data: typeof rows }) => <ul>{data.map((r) => <li key={r.id}>{r.numero}</li>)}</ul> }));

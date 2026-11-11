@@ -111,11 +111,11 @@ export async function fetchHuecoFacturacion({
     new Set(arr.map((e) => e.expediente).filter((x): x is string => !!x)),
   );
 
-  const { ventas, expedientesFacturados, embarquesConBridge, conceptosDetalle } =
+  const { expedientesFacturados, embarquesConBridge, conceptosDetalle } =
     await fetchVentasYFacturas(ids, expedientes, organizationId);
   const excluidosPorProformaHistorica = calcularExclusionesPorProformaHistorica(conceptosDetalle);
   const embarquesConPendiente = calcularEmbarquesConPendiente(conceptosDetalle);
-  const ventasMap = indexarVentas(ventas);
+  const ventasMap = indexarVentas(conceptosDetalle);
 
   const filas: FilaHueco[] = [];
   let totalUsd = 0;

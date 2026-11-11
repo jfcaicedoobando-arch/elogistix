@@ -30,6 +30,11 @@ export interface ConceptoVentaDetalle {
   proforma_estado: string | null;
 }
 
+type ConceptoVentaConMonto = ConceptoVentaDetalle & {
+  total: number | null;
+  moneda: string | null;
+};
+
 /**
  * v13.217.0 — Filtra por **ETA** (llegada) del contenedor. Devuelve embarques
  * con `eta` entre el corte del modelo nuevo (`2026-04-01`) y `limiteEtaIso`
@@ -65,16 +70,18 @@ export async function fetchEmbarquesParaHueco(
  */
 export async function fetchConceptosVentaDeEmbarques(
   ids: string[],
-): Promise<ConceptoVentaDetalle[]> {
+): Promise<ConceptoVentaConMonto[]> {
   if (ids.length === 0) return [];
   const { data, error } = await supabase
     .from("conceptos_venta")
-    .select("embarque_id, estado_facturacion, proforma_id, proformas(estado_proforma, deleted_at)")
+    .select("embarque_id, total, moneda, estado_facturacion, proforma_id, proformas(estado_proforma, deleted_at)")
     .in("embarque_id", ids)
     .is("deleted_at", null);
   if (error) throw error;
   type Row = {
     embarque_id: string;
+    total: number | null;
+    moneda: string | null;
     estado_facturacion: string | null;
     proforma_id: string | null;
     proformas: { estado_proforma: string | null; deleted_at: string | null } | null;
@@ -84,6 +91,8 @@ export async function fetchConceptosVentaDeEmbarques(
   const rows = (data ?? []) as unknown as Row[];
   return rows.map((r) => ({
     embarque_id: r.embarque_id,
+    total: r.total,
+    moneda: r.moneda,
     estado_facturacion: r.estado_facturacion,
     proforma_id: r.proforma_id,
     proforma_estado:
@@ -149,21 +158,23 @@ export async function fetchVentasYFacturas(
   expedientes: string[],
   organizationId?: string | null,
 ) {
-  const [ventasRes, expedientesFacturados, embarquesConBridge, conceptosDetalle] = await Promise.all([
-    supabase
-      .from("conceptos_venta")
-      .select("embarque_id, total, moneda")
-      .in("embarque_id", ids)
-      .is("deleted_at", null),
+  const [expedientesFacturados, embarquesConBridge, conceptosDetalle] = await Promise.all([
     fetchExpedientesConFacturaVivaLegacy(expedientes, organizationId),
     fetchEmbarquesConFacturaViva(ids, organizationId),
     fetchConceptosVentaDeEmbarques(ids),
   ]);
-  if (ventasRes.error) throw ventasRes.error;
   return {
-    ventas: ventasRes.data ?? [],
     expedientesFacturados,
     embarquesConBridge,
     conceptosDetalle,
   };
+}
+
+export async function fetchHuecoFacturacionCount(organizationId: string | null): Promise<number> {
+  const { data, error } = await supabase.rpc("hueco_facturacion_count", {
+    p_organization_id: organizationId ?? undefined,
+  });
+  if (error) throw error;
+  if (typeof data !== "number") throw new Error("El hueco de facturación no recibió un conteo.");
+  return data;
 }
