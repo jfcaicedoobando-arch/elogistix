@@ -109,8 +109,7 @@ async function confirmarVinculos(
     throw error;
   }
 
-  // Una lectura inmediata puede adelantarse a una escritura aún en curso.
-  // Ante una respuesta incierta, conserva las subidas hasta confirmar el vínculo.
+  // La escritura aún puede estar en curso. Conserva las subidas si el vínculo sigue incierto.
   const actuales = await leerAdjuntos(documento).catch(() => null);
   if (actuales && Object.values(columnasPorTipo).every(
     (columna) => !(columna in nuevos) || nuevos[columna] === actuales[columna],
@@ -126,8 +125,7 @@ async function subirAdjuntos(
   const anteriores = await leerAdjuntos(documento);
   if (!anteriores) throw errorDocumentoAusente(documento);
 
-  const nuevos: Partial<Adjuntos> = {};
-  const paths: string[] = [];
+  const nuevos: Partial<Record<ColumnaAdjunto, string>> = {};
   try {
     for (const { tipo, file } of archivos) {
       const path = pathCfdi(rutaDocumento(documento), tipo, file.name);
@@ -136,14 +134,14 @@ async function subirAdjuntos(
         upsert: false,
       });
       if (error) throw error;
-      paths.push(path);
       nuevos[columnasPorTipo[tipo]] = path;
     }
   } catch (error) {
-    await borrarObjetos(paths);
+    await borrarObjetos(Object.values(nuevos));
     throw error;
   }
 
+  const paths = Object.values(nuevos);
   await confirmarVinculos(documento, anteriores, nuevos, paths);
   await limpiarAdjuntosSustituidos(documento, anteriores, nuevos);
   return paths;
