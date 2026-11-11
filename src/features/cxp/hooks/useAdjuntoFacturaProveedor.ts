@@ -25,6 +25,7 @@ interface AdjuntarVars {
 
 interface QuitarVars {
   facturaId: string;
+  organizationId?: string | null;
   path: string;
   tipo: TipoAdjuntoCfdi;
 }
@@ -43,6 +44,7 @@ export function useAdjuntarArchivoCfdiFactura() {
       notifySuccess(undefined, { title: `${vars.tipo} adjuntado` });
     },
     onError: (error: Error, vars) => {
+      invalidar(qc, vars.facturaId);
       notifyError(undefined, {
         title: `No se pudo adjuntar el ${vars.tipo}`, description: getErrorMessage(error),
         error,
@@ -61,6 +63,7 @@ export function useQuitarArchivoCfdiFactura() {
       notifySuccess(undefined, { title: `${vars.tipo} quitado` });
     },
     onError: (error: Error, vars) => {
+      invalidar(qc, vars.facturaId);
       notifyError(undefined, {
         title: `No se pudo quitar el ${vars.tipo}`, description: getErrorMessage(error),
         error,
