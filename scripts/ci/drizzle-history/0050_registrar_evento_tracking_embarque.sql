@@ -8,7 +8,7 @@ SECURITY INVOKER
 SET search_path TO 'public'
 AS $fn$
 DECLARE
-  v_embarque public.embarques%ROWTYPE;
+  v_embarque record;
   v_tipo public.tipo_evento_tracking;
   v_ubicacion text := btrim(coalesce(p_ubicacion, ''));
   v_momento timestamptz := statement_timestamp();
@@ -30,7 +30,7 @@ BEGIN
   END IF;
 
   -- RLS de embarques y eventos sigue aplicando al usuario de la llamada.
-  SELECT e.* INTO v_embarque
+  SELECT e.organization_id, e.estado, e.eta, e.etd, e.fecha_llegada_real INTO v_embarque
     FROM public.embarques e
    WHERE e.id = p_embarque_id AND e.deleted_at IS NULL
      AND (p_organization_id IS NULL OR e.organization_id = p_organization_id)

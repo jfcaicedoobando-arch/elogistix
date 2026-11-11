@@ -69,7 +69,7 @@ const REVIEWED_FORWARD_FIXES: ReadonlyArray<readonly [string, string]> = [
   ["0047_rls_auth_uid_initplan_backport.sql", "49f067b89ca5bdbc31299d621e05279639862799d0892d71cbce3cb8ea09d22a"],
   ["0048_limpieza_indices_duplicados.sql", "9e135244f1f96d2b03e2abc35c3deb1efa3d44f3ee85162f52cf16eecfba7645"],
   ["0049_liquidaciones_lectura_finanzas_gerentes.sql", "7ba8e14da36f37a6559f05cf427a7d1e1e9dc495fed332b9f387f75c5d589d64"],
-  ["0050_registrar_evento_tracking_embarque.sql", "615035080d1334e586a0bf5a1cbb8c1fa608fd441a0f62d86243bc9805840694"]
+  ["0050_registrar_evento_tracking_embarque.sql", "da871c7f6eb9dfd3811302783470944a3c397167b09341efd7d617bb33db6753"]
 ];
 
 function verificarOrdenJournal(sources: ReadonlyMap<string, string>, journal: JournalEntry[]): void {
