@@ -40,7 +40,7 @@ export function TrackingNuevoEventoForm({
       onClose();
     } catch (error) {
       if (error instanceof DocumentosTrackingPendientesError) {
-        notifyError(undefined, { title: "Documentos incompletos", description: error.message });
+        notifyError(undefined, { title: "Documentos incompletos", description: error.message, error, method: "TRACKING_MARCAR_LLEGADA" });
         return;
       }
       notifyError(undefined, {

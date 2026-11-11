@@ -1,5 +1,6 @@
 import { useRef } from "react";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQueryClient } from "@tanstack/react-query";
+import { useMutationWithFeedback } from "@/hooks/shared/useMutationWithFeedback";
 import { captureAuthDataScope } from "@/lib/auth/authOperationScope";
 import { queryKeys } from "@/lib/query";
 import { registrarEventoTracking, type DatosEventoTracking } from "../../services/registrarEventoTracking";
@@ -8,12 +9,12 @@ export function useRegistrarEventoTracking() {
   const queryClient = useQueryClient();
   const intentos = useRef(new Map<string, string>());
   const enviando = useRef(false);
-  const mutation = useMutation({
+  const mutation = useMutationWithFeedback({
     mutationFn: registrarEventoTracking,
+    invalidate: [queryKeys.embarques.all, queryKeys.auditoria.embarques],
+    silent: true,
     onSuccess: (_data, { embarqueId }) => {
-      void queryClient.invalidateQueries({ queryKey: queryKeys.embarques.all });
       void queryClient.invalidateQueries({ queryKey: queryKeys.embarques.eventos(embarqueId) });
-      void queryClient.invalidateQueries({ queryKey: queryKeys.auditoria.embarques });
     },
   });
 
