@@ -407,6 +407,13 @@
       "when": 1794419439099,
       "tag": "0057_pricing_vinculo_huella_rls_initplan",
       "breakpoints": true
+    },
+    {
+      "idx": 58,
+      "version": "7",
+      "when": 1794444261956,
+      "tag": "0058_pricing_faltantes_texto",
+      "breakpoints": true
     }
   ]
 }

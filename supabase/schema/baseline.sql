@@ -1772,6 +1772,33 @@ BEGIN
   RETURN v_result;
 END;
 $$;
+CREATE FUNCTION public._auditoria_hallazgo_hash(p_texto text) RETURNS text
+    LANGUAGE plpgsql IMMUTABLE STRICT
+    SET search_path TO ''
+    AS $$
+DECLARE
+  caracter text;
+  codigo integer;
+  hash bigint := 5381;
+  resultado text := '';
+  alfabeto constant text := '0123456789abcdefghijklmnopqrstuvwxyz';
+BEGIN
+  FOREACH caracter IN ARRAY string_to_array(p_texto, NULL) LOOP
+    codigo := ascii(caracter);
+    IF codigo > 65535 THEN
+      hash := (hash * 33 + 55296 + (codigo - 65536) / 1024) % 4294967296;
+      codigo := 56320 + (codigo - 65536) % 1024;
+    END IF;
+    hash := (hash * 33 + codigo) % 4294967296;
+  END LOOP;
+  LOOP
+    resultado := substr(alfabeto, (hash % 36)::integer + 1, 1) || resultado;
+    hash := hash / 36;
+    EXIT WHEN hash = 0;
+  END LOOP;
+  RETURN resultado;
+END;
+$$;
 CREATE FUNCTION public._bbva_guard_movimiento_manual() RETURNS trigger
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
@@ -11259,6 +11286,27 @@ BEGIN
   RETURN v_result;
 END;
 $$;
+CREATE FUNCTION public.auditoria_pendientes_count() RETURNS bigint
+    LANGUAGE sql STABLE
+    SET search_path TO ''
+    AS $$
+  WITH reporte AS MATERIALIZED (
+    SELECT public.auditoria_embarques_org() AS datos
+  )
+  SELECT count(*)
+  FROM reporte
+  CROSS JOIN LATERAL jsonb_array_elements(reporte.datos->'hallazgos') AS hallazgo(h)
+  WHERE NOT EXISTS (
+    SELECT 1
+    FROM public.auditoria_revisiones r
+    WHERE r.organization_id = (SELECT public.current_user_org_id())
+      AND r.embarque_id = (h->>'embarque_id')::uuid
+      AND r.regla = h->>'regla'
+      AND r.detalle_hash = public._auditoria_hallazgo_hash(
+        concat(h->>'embarque_id', '|', h->>'regla', '|', h->>'detalle')
+      )
+  );
+$$;
 CREATE FUNCTION public.auditoria_pfc_huerfanos() RETURNS TABLE(pfc_id uuid, proveedor_factura_id uuid, folio_interno text, embarque_id uuid, expediente text, descripcion text, monto numeric, concepto_costo_id_huerfano uuid, organization_id uuid)
     LANGUAGE sql STABLE SECURITY DEFINER
     SET search_path TO 'public'
@@ -19253,6 +19301,15 @@ CREATE FUNCTION public.cxp_por_pagar() RETURNS TABLE(factura_id uuid, proveedor_
   ORDER BY pf.fecha_vencimiento NULLS LAST, pf.created_at DESC
   LIMIT 500;
 $$;
+CREATE FUNCTION public.cxp_por_pagar_count() RETURNS bigint
+    LANGUAGE sql STABLE
+    SET search_path TO ''
+    AS $$
+  SELECT count(*)
+  FROM public.proveedor_facturas pf
+  JOIN public.v_proveedor_facturas_saldo s ON s.proveedor_factura_id = pf.id
+  WHERE pf.deleted_at IS NULL AND pf.estado::text = 'Vigente';
+$$;
 CREATE FUNCTION public.cxp_umbral_sin_vinculo(p_org uuid) RETURNS numeric
     LANGUAGE sql STABLE SECURITY DEFINER
     SET search_path TO 'public'
@@ -21898,6 +21955,18 @@ BEGIN
   RETURN v_count;
 END;
 $$;
+CREATE FUNCTION public.embarques_alertas_conteos() RETURNS jsonb
+    LANGUAGE sql STABLE
+    SET search_path TO 'public'
+    AS $$
+  SELECT jsonb_build_object(
+    'demora', count(DISTINCT embarque_id) FILTER (WHERE tipo = 'demora'),
+    'garantia', count(DISTINCT embarque_id) FILTER (WHERE tipo = 'garantia'),
+    'cierre_operativo', count(DISTINCT embarque_id) FILTER (WHERE tipo = 'cierre_operativo'),
+    'admin_pendiente', count(DISTINCT embarque_id) FILTER (WHERE tipo = 'admin_pendiente')
+  )
+  FROM public.embarques_alertas_ids();
+$$;
 CREATE FUNCTION public.embarques_alertas_ids() RETURNS TABLE(embarque_id uuid, tipo text)
     LANGUAGE sql STABLE SECURITY DEFINER
     SET search_path TO 'public'
@@ -22173,6 +22242,111 @@ BEGIN
   )
   USING p_organization_id, v_search, p_modo, p_cliente_id, p_operador,
         p_proforma, p_fecha_desde, p_fecha_hasta, p_offset, p_limit;
+END;
+$_$;
+CREATE FUNCTION public.embarques_listado_pagina(p_organization_id uuid DEFAULT NULL::uuid, p_search text DEFAULT NULL::text, p_modo text DEFAULT NULL::text, p_cliente_id uuid DEFAULT NULL::uuid, p_operador text DEFAULT NULL::text, p_proforma text DEFAULT NULL::text, p_fecha_desde date DEFAULT NULL::date, p_fecha_hasta date DEFAULT NULL::date, p_sort_by text DEFAULT 'expediente_num'::text, p_sort_dir text DEFAULT 'desc'::text, p_offset integer DEFAULT 0, p_limit integer DEFAULT 50, p_estado text DEFAULT NULL::text, p_alerta text DEFAULT NULL::text, p_agrupar boolean DEFAULT true) RETURNS jsonb
+    LANGUAGE plpgsql STABLE
+    SET search_path TO 'public'
+    AS $_$
+DECLARE
+  v_org uuid := public.org_requerida(p_organization_id);
+  v_search text := CASE WHEN NULLIF(p_search, '') IS NOT NULL THEN '%' || p_search || '%' END;
+  v_sort text := lower(coalesce(p_sort_by, 'expediente_num'));
+  v_dir text := CASE WHEN lower(p_sort_dir) = 'asc' THEN 'ASC' ELSE 'DESC' END;
+  v_nulls text := CASE WHEN v_dir = 'ASC' THEN 'NULLS FIRST' ELSE 'NULLS LAST' END;
+  v_group boolean := coalesce(p_agrupar, true);
+  v_limit integer := greatest(1, least(coalesce(p_limit, 50), CASE WHEN v_group THEN 500 ELSE 1000 END));
+  v_order text;
+  v_payload jsonb;
+BEGIN
+  v_order := CASE
+    WHEN v_sort IN ('cliente_nombre', 'modo', 'operador', 'estado') THEN
+      format('%I::text COLLATE "C" %s %s', v_sort, v_dir, v_nulls)
+    WHEN v_sort IN ('created_at', 'etd', 'eta') THEN
+      format('%I %s %s', v_sort, v_dir, v_nulls)
+    ELSE format('expediente_num %s', v_dir)
+  END;
+  v_order := v_order || ', expediente_num DESC, expediente COLLATE "C" DESC NULLS LAST, created_at DESC, id DESC';
+  EXECUTE format($query$
+    WITH alertas AS MATERIALIZED (
+      SELECT a.embarque_id
+      FROM public.embarques_alertas_ids() a
+      WHERE $10 IS NOT NULL AND a.tipo = $10
+    ),
+    base AS (
+      -- El invocador sólo tiene SELECT de columnas públicas.
+      SELECT e.id, e.expediente, e.bl_master, e.cliente_id, e.cliente_nombre,
+             e.modo, e.tipo, e.estado, e.etd, e.eta, e.fecha_llegada_real, e.operador,
+             e.puerto_origen, e.puerto_destino, e.aeropuerto_origen, e.aeropuerto_destino,
+             e.ciudad_origen, e.ciudad_destino, e.contenedor, e.tipo_contenedor,
+             e.tipo_carga, e.descripcion_mercancia, e.created_at,
+             e.tipo_cambio_usd, e.tipo_cambio_eur, e.tiene_proforma,
+             coalesce(nullif(regexp_replace(e.expediente, '\D', '', 'g'), '')::numeric, 0) AS expediente_num,
+             CASE WHEN e.estado = 'En Tránsito' AND e.modo = 'Marítimo' AND e.tipo = 'Importación'
+                        AND e.etd IS NOT NULL AND e.fecha_llegada_real IS NOT NULL
+                        AND e.eta <= (now() AT TIME ZONE 'UTC')::date
+                  THEN 'Arribo' ELSE e.estado::text END AS estado_visible
+      FROM public.embarques e
+      WHERE e.organization_id = $1 AND e.deleted_at IS NULL
+        AND ($2 IS NULL OR e.expediente ILIKE $2 OR e.cliente_nombre ILIKE $2
+          OR e.descripcion_mercancia ILIKE $2 OR e.bl_master ILIKE $2)
+        AND ($3 IS NULL OR e.modo = $3::public.modo_transporte)
+        AND ($4 IS NULL OR e.cliente_id = $4)
+        AND ($5 IS NULL OR e.operador = $5)
+        AND ($6 IS NULL OR ($6 = 'con' AND e.tiene_proforma) OR ($6 = 'sin' AND NOT e.tiene_proforma))
+        AND ($7 IS NULL OR e.etd >= $7)
+        AND ($8 IS NULL OR e.eta <= $8)
+        AND ($10 IS NULL OR EXISTS (SELECT 1 FROM alertas a WHERE a.embarque_id = e.id))
+    ),
+    agrupados AS (
+      SELECT base.*,
+        count(*) OVER (PARTITION BY CASE WHEN $11 THEN coalesce(expediente, id::text) ELSE id::text END) AS filas_expediente,
+        row_number() OVER (
+          PARTITION BY CASE WHEN $11 THEN coalesce(expediente, id::text) ELSE id::text END
+          ORDER BY created_at DESC, id DESC
+        ) AS fila_expediente
+      FROM base
+      WHERE $9 IS NULL OR estado_visible = $9
+    ),
+    visibles AS MATERIALIZED (
+      SELECT * FROM agrupados WHERE fila_expediente = 1
+    ),
+    pagina AS MATERIALIZED (
+      SELECT *
+      FROM visibles
+      ORDER BY %1$s
+      OFFSET $12 LIMIT $13
+    ),
+    extras AS (
+      SELECT pagina.*,
+        coalesce(c.total, 0) AS costos_total, coalesce(c.pagados, 0) AS costos_pagados,
+        coalesce(d.total, 0) AS docs_total, coalesce(d.pendientes, 0) AS docs_pendientes
+      FROM pagina
+      LEFT JOIN LATERAL (
+        SELECT count(*) AS total, count(*) FILTER (WHERE estado_liquidacion = 'Pagado') AS pagados
+        FROM public.conceptos_costo
+        WHERE $11 AND embarque_id = pagina.id AND deleted_at IS NULL
+      ) c ON true
+      LEFT JOIN LATERAL (
+        SELECT count(*) AS total, count(*) FILTER (WHERE estado = 'Pendiente') AS pendientes
+        FROM public.documentos_embarque
+        WHERE $11 AND embarque_id = pagina.id AND deleted_at IS NULL
+      ) d ON true
+    )
+    SELECT jsonb_build_object(
+      'rows', coalesce((
+        SELECT jsonb_agg(to_jsonb(extras) - ARRAY['fila_expediente', 'expediente_num', 'estado_visible'] ORDER BY %1$s)
+        FROM extras
+      ), '[]'::jsonb),
+      'count', count(*),
+      'filas_total', coalesce(sum(filas_expediente), 0)
+    )
+    FROM visibles
+  $query$, v_order)
+  INTO v_payload
+  USING v_org, v_search, p_modo, p_cliente_id, p_operador, p_proforma, p_fecha_desde, p_fecha_hasta,
+    p_estado, p_alerta, v_group, greatest(coalesce(p_offset, 0), 0), v_limit;
+  RETURN v_payload;
 END;
 $_$;
 CREATE FUNCTION public.embarques_protect_creator() RETURNS trigger
@@ -22855,6 +23029,163 @@ CREATE FUNCTION public.fecha_negocio_mx() RETURNS date
     SET search_path TO 'public'
     AS $$
   SELECT (now() AT TIME ZONE 'America/Mexico_City')::date;
+$$;
+CREATE FUNCTION public.finalizar_evento_facturapi_webhook(p_evento_id uuid, p_token uuid, p_resultado text, p_motivo text DEFAULT NULL::text, p_tabla text DEFAULT NULL::text, p_documento_id uuid DEFAULT NULL::uuid, p_version timestamp with time zone DEFAULT NULL::timestamp with time zone, p_claim text DEFAULT NULL::text, p_patch jsonb DEFAULT NULL::jsonb, p_accion text DEFAULT NULL::text) RETURNS jsonb
+    LANGUAGE plpgsql
+    SET search_path TO 'public'
+    AS $_$
+DECLARE
+  v_evento public.facturapi_webhook_eventos%ROWTYPE;
+  v_momento timestamptz;
+  v_estado text := p_resultado;
+  v_motivo text := p_motivo;
+  v_claim_actual text;
+  v_version_actual timestamptz;
+  v_patch jsonb := p_patch;
+  v_permitidos text[];
+  v_set text;
+BEGIN
+  SELECT * INTO v_evento FROM public.facturapi_webhook_eventos
+   WHERE id = p_evento_id FOR UPDATE;
+  v_momento := clock_timestamp();
+  IF NOT FOUND OR v_evento.procesamiento_estado <> 'procesando'
+    OR v_evento.procesamiento_token IS DISTINCT FROM p_token
+    OR v_evento.procesamiento_disponible_en <= v_momento THEN
+    RETURN jsonb_build_object('estado', 'reserva_perdida');
+  END IF;
+  IF p_resultado = 'aplicar' THEN
+    IF p_tabla = 'facturas' THEN
+      SELECT facturapi_id, updated_at INTO v_claim_actual, v_version_actual FROM public.facturas
+       WHERE id = p_documento_id AND organization_id = v_evento.organization_id AND deleted_at IS NULL FOR UPDATE;
+      v_permitidos := ARRAY['estado', 'cancellation_status', 'cancelado_en', 'cancelacion_solicitada_en',
+        'cancelacion_vence_en', 'uuid_fiscal', 'uso_cfdi', 'enviada_cliente_at', 'facturapi_id',
+        'facturapi_claim_at', 'facturapi_pendiente_id', 'facturapi_pendiente_at'];
+    ELSIF p_tabla = 'pagos_factura' THEN
+      SELECT facturapi_rep_id, updated_at INTO v_claim_actual, v_version_actual FROM public.pagos_factura
+       WHERE id = p_documento_id AND organization_id = v_evento.organization_id AND deleted_at IS NULL FOR UPDATE;
+      v_permitidos := ARRAY['uuid_rep', 'estado_rep', 'rep_cancelado_en', 'rep_cancellation_status',
+        'timbrado_rep_en', 'facturapi_rep_id', 'facturapi_rep_claim_at', 'facturapi_rep_pendiente_id', 'facturapi_rep_pendiente_at'];
+    ELSE
+      RAISE EXCEPTION 'Destino de webhook inválido' USING ERRCODE = '22023';
+    END IF;
+    IF v_version_actual IS NULL OR v_claim_actual IS DISTINCT FROM p_claim THEN
+      v_estado := 'ignorado';
+      v_motivo := 'claim_cambiado';
+    ELSIF v_version_actual IS DISTINCT FROM p_version THEN
+      v_estado := 'reintentable';
+      v_motivo := 'destino_actualizado';
+    ELSE
+      IF jsonb_typeof(v_patch) IS DISTINCT FROM 'object' OR p_accion IS NULL OR EXISTS (
+        SELECT 1 FROM jsonb_object_keys(v_patch) AS campo WHERE campo <> ALL (v_permitidos)
+      ) THEN
+        RAISE EXCEPTION 'Patch de webhook inválido' USING ERRCODE = '22023';
+      END IF;
+      IF p_tabla = 'facturas' AND v_patch->>'cancellation_status' = 'accepted' THEN
+        PERFORM public.cerrar_cancelacion_factura_facturapi(p_documento_id);
+        v_patch := v_patch - ARRAY['estado', 'cancellation_status', 'cancelado_en', 'cancelacion_solicitada_en', 'cancelacion_vence_en'];
+      END IF;
+      -- Actualiza únicamente las columnas presentes en el patch validado.
+      SELECT string_agg(format('%1$I = (jsonb_populate_record(NULL::public.%2$I, $1)).%1$I', campo, p_tabla), ', ')
+        INTO v_set FROM jsonb_object_keys(v_patch) AS campo;
+      IF v_set IS NOT NULL THEN
+        EXECUTE format('UPDATE public.%I SET %s WHERE id = $2', p_tabla, v_set) USING v_patch, p_documento_id;
+      END IF;
+      INSERT INTO public.bitacora_actividad (organization_id, usuario_id, usuario_email, modulo, accion, entidad_id, entidad_nombre, detalles)
+      VALUES (v_evento.organization_id, '00000000-0000-0000-0000-000000000000', 'system@edge', 'facturacion',
+        p_accion, p_documento_id, '', jsonb_build_object('event_type', v_evento.event_type, 'event_id', v_evento.event_id, 'patch', p_patch));
+      v_estado := 'procesado';
+    END IF;
+  ELSIF p_resultado IS NULL OR p_resultado NOT IN ('ignorado', 'reintentable') THEN
+    RAISE EXCEPTION 'Resultado de webhook inválido' USING ERRCODE = '22023';
+  END IF;
+  UPDATE public.facturapi_webhook_eventos SET procesamiento_estado = v_estado, procesamiento_token = NULL,
+    procesamiento_motivo = v_motivo,
+    procesamiento_disponible_en = CASE WHEN v_estado = 'reintentable'
+      THEN v_momento + make_interval(secs => 5 * (1 << least(v_evento.procesamiento_intentos, 8))) END,
+    procesamiento_finalizado_en = CASE WHEN v_estado <> 'reintentable' THEN v_momento END
+   WHERE id = v_evento.id;
+  RETURN jsonb_build_object('estado', v_estado, 'motivo', v_motivo, 'tabla', p_tabla);
+END;
+$_$;
+CREATE FUNCTION public.finalizar_proforma_email(p_intento uuid, p_usuario_id uuid, p_reserva uuid) RETURNS jsonb
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO ''
+    AS $$
+DECLARE
+  v_proforma public.proformas%ROWTYPE;
+  v_intento public.proforma_email_intentos%ROWTYPE;
+  v_resultados jsonb;
+  v_enviados integer;
+  v_pendientes integer;
+  v_estado text;
+  v_respuesta jsonb;
+  v_enlace_invalido boolean;
+BEGIN
+  -- Mantener el mismo orden de bloqueos que la reserva.
+  SELECT p.* INTO v_proforma FROM public.proformas p
+  JOIN public.proforma_email_intentos i ON i.proforma_id = p.id
+  WHERE i.id = p_intento AND i.usuario_id = p_usuario_id
+    AND EXISTS (SELECT 1 FROM public.organization_members m
+      WHERE m.user_id = p_usuario_id AND m.organization_id = p.organization_id)
+  FOR UPDATE OF p;
+  IF NOT FOUND THEN RETURN jsonb_build_object('estado', 'sin_acceso'); END IF;
+  SELECT * INTO v_intento FROM public.proforma_email_intentos WHERE id = p_intento FOR UPDATE;
+  IF v_intento.resultado IS NOT NULL THEN RETURN v_intento.resultado; END IF;
+  v_enlace_invalido := v_proforma.deleted_at IS NOT NULL OR v_proforma.estado_proforma = 'cancelada'
+    OR v_proforma.token_publico::text IS DISTINCT FROM v_intento.contenido->>'token'
+    OR coalesce(v_proforma.token_expira_at <= clock_timestamp(), true);
+  SELECT jsonb_agg(jsonb_build_object('email', r.dato->>'email', 'tipo', r.dato->>'tipo',
+    'estado', CASE l.status WHEN 'sent' THEN 'enviado' WHEN 'suppressed' THEN 'suprimido'
+      ELSE CASE WHEN v_enlace_invalido THEN 'sin_confirmar' ELSE 'pendiente' END END
+  ) ORDER BY r.posicion), count(*) FILTER (WHERE l.status = 'sent'),
+    count(*) FILTER (WHERE l.status IS NULL OR l.status NOT IN ('sent', 'suppressed'))
+  INTO v_resultados, v_enviados, v_pendientes
+  FROM jsonb_array_elements(v_intento.solicitud->'recipients') WITH ORDINALITY AS r(dato, posicion)
+  LEFT JOIN public.email_send_log l ON l.message_id = 'proforma:' || p_intento || ':' || r.posicion;
+  v_estado := CASE
+    WHEN v_intento.reserva IS DISTINCT FROM p_reserva OR p_reserva IS NULL THEN 'pendiente'
+    WHEN v_pendientes > 0 AND NOT v_enlace_invalido THEN 'pendiente'
+    WHEN v_enviados = jsonb_array_length(v_resultados) THEN 'enviado'
+    WHEN v_enviados > 0 THEN 'parcial'
+    ELSE 'fallido'
+  END;
+  v_respuesta := jsonb_build_object(
+    'success', v_enviados > 0, 'estado', v_estado, 'envio_id', p_intento, 'resultados', v_resultados,
+    'enlace_portal', CASE WHEN NOT v_enlace_invalido THEN v_intento.contenido->>'enlace' END,
+    'token_expira_at', v_intento.contenido->>'expira'
+  );
+  IF p_reserva IS NOT NULL AND v_intento.reserva = p_reserva THEN
+    IF v_estado <> 'pendiente' THEN
+      INSERT INTO public.proforma_envios (
+        id, proforma_id, organization_id, enviado_por, destinatarios, cc, asunto, mensaje,
+        pdf_link_publico, estado, error
+      ) VALUES (
+        p_intento, v_proforma.id, v_proforma.organization_id, p_usuario_id,
+        v_intento.solicitud->'destinatarios', v_intento.solicitud->'cc',
+        v_intento.solicitud->>'asunto', v_intento.solicitud->>'mensaje',
+        v_intento.contenido->>'enlace', v_estado,
+        CASE WHEN v_estado <> 'enviado' THEN v_resultados::text END
+      );
+      IF v_enviados > 0 THEN
+        UPDATE public.proformas SET enviada_at = clock_timestamp(), enviada_por = p_usuario_id,
+          ultimo_envio_email = v_intento.solicitud->'destinatarios'->0->>'email'
+        WHERE id = v_proforma.id AND deleted_at IS NULL AND estado_proforma <> 'cancelada';
+      END IF;
+      INSERT INTO public.bitacora_actividad (
+        organization_id, usuario_id, usuario_email, modulo, accion, entidad_id, entidad_nombre, detalles
+      ) VALUES (
+        v_proforma.organization_id, p_usuario_id,
+        coalesce((SELECT email FROM auth.users WHERE id = p_usuario_id), ''), 'proformas',
+        CASE WHEN v_enviados > 0 THEN 'proforma_enviada_email' ELSE 'proforma_envio_email_fallido' END,
+        v_proforma.id, coalesce(v_proforma.numero, ''),
+        jsonb_build_object('envio_id', p_intento, 'resultados', v_resultados)
+      );
+      UPDATE public.proforma_email_intentos SET resultado = v_respuesta WHERE id = p_intento;
+    END IF;
+    UPDATE public.proforma_email_intentos SET reserva = NULL, reserva_hasta = NULL WHERE id = p_intento;
+  END IF;
+  RETURN v_respuesta;
+END;
 $$;
 CREATE FUNCTION public.fn_admin_org_activity() RETURNS TABLE(id uuid, nombre text, embarques bigint, cotizaciones bigint)
     LANGUAGE sql STABLE SECURITY DEFINER
@@ -24753,6 +25084,49 @@ BEGIN
   FROM eventos e WHERE e.ev_ts IS NOT NULL ORDER BY e.ev_ts ASC;
 END;
 $_$;
+CREATE FUNCTION public.hueco_facturacion_count(p_organization_id uuid DEFAULT NULL::uuid, p_limite_eta date DEFAULT NULL::date) RETURNS bigint
+    LANGUAGE sql STABLE
+    SET search_path TO 'public'
+    AS $$
+  WITH alcance AS MATERIALIZED (
+    SELECT public.org_requerida(p_organization_id) AS org_id,
+           coalesce(p_limite_eta, public.fecha_negocio_mx() + 3) AS limite_eta,
+           ARRAY['Emitida', 'Pagada', 'Vencida', 'Parcialmente pagada']::public.estado_factura[] AS estados_vivos
+  )
+  SELECT count(*)
+  FROM alcance a
+  JOIN public.embarques e ON e.organization_id = a.org_id
+  CROSS JOIN LATERAL (
+    SELECT coalesce(bool_or(c.estado_facturacion = 'pendiente'), false) AS tiene_pendiente,
+           count(*) > 0 AND bool_and(coalesce(
+             c.estado_facturacion = 'facturado' OR
+             (c.estado_facturacion = 'en_proforma' AND p.estado_proforma = 'facturada'), false
+           )) AS cubierta
+    FROM public.conceptos_venta c
+    LEFT JOIN public.proformas p ON p.id = c.proforma_id AND p.deleted_at IS NULL
+    WHERE c.embarque_id = e.id AND c.deleted_at IS NULL
+  ) v
+  WHERE e.deleted_at IS NULL
+    AND e.eta BETWEEN DATE '2026-04-01' AND a.limite_eta
+    AND e.facturado_historico = false
+    AND (
+      v.tiene_pendiente OR (
+        NOT v.cubierta
+        AND NOT EXISTS (
+          SELECT 1 FROM public.factura_embarques fe
+          JOIN public.facturas f ON f.id = fe.factura_id
+          WHERE fe.organization_id = a.org_id AND fe.embarque_id = e.id
+            AND fe.activa AND f.estado = ANY(a.estados_vivos)
+        )
+        AND NOT EXISTS (
+          SELECT 1 FROM public.facturas f
+          WHERE f.organization_id = a.org_id AND f.expediente = e.expediente
+            AND f.estado = ANY(a.estados_vivos) AND f.factura_pdf_url IS NOT NULL
+            AND f.deleted_at IS NULL
+        )
+      )
+    );
+$$;
 CREATE FUNCTION public.idempotency_claim(_key uuid, _fn text) RETURNS jsonb
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
@@ -29576,7 +29950,11 @@ BEGIN
   -- Rol moderno: 'admin_org' reemplaza al legacy 'admin' (bloqueado por trg_bloquear_rol_legacy_om desde v13.312.0)
   INSERT INTO public.organization_members (organization_id, user_id, role)
   VALUES (v_org_id, p_owner_user_id, 'admin_org'::app_role)
-  ON CONFLICT DO NOTHING;
+  ON CONFLICT (user_id) DO NOTHING;
+  IF NOT FOUND THEN
+    RAISE EXCEPTION 'LC_OWNER_YA_ASIGNADO: El usuario elegido ya pertenece a una organización; elige otro o retíralo primero de la actual.'
+      USING ERRCODE = '23505';
+  END IF;
   SELECT email INTO v_caller_email FROM auth.users WHERE id = v_caller;
   INSERT INTO public.bitacora_actividad(
     usuario_id, usuario_email, accion, modulo,
@@ -29744,12 +30122,13 @@ CREATE FUNCTION public.purgar_facturapi_webhook_eventos() RETURNS integer
     SET search_path TO 'public'
     AS $$
 DECLARE
-  deleted integer;
+  v_eliminados integer;
 BEGIN
   DELETE FROM public.facturapi_webhook_eventos
-    WHERE received_at < now() - interval '60 days';
-  GET DIAGNOSTICS deleted = ROW_COUNT;
-  RETURN deleted;
+   WHERE received_at < now() - interval '60 days'
+     AND procesamiento_estado IN ('legado', 'procesado', 'ignorado', 'agotado');
+  GET DIAGNOSTICS v_eliminados = ROW_COUNT;
+  RETURN v_eliminados;
 END;
 $$;
 CREATE FUNCTION public.purge_app_logs_old() RETURNS integer
@@ -31658,6 +32037,114 @@ BEGIN
     updated_at = now();
 END;
 $$;
+CREATE FUNCTION public.registrar_evento_tracking_embarque(p_embarque_id uuid, p_request_id uuid, p_accion text, p_fecha date, p_ubicacion text, p_organization_id uuid DEFAULT NULL::uuid) RETURNS uuid
+    LANGUAGE plpgsql
+    SET search_path TO 'public'
+    AS $$
+DECLARE
+  v_embarque record;
+  v_tipo public.tipo_evento_tracking;
+  v_ubicacion text := btrim(coalesce(p_ubicacion, ''));
+  v_momento timestamptz := statement_timestamp();
+  v_descripcion text;
+  v_accion text;
+  v_detalles jsonb;
+  v_intento jsonb;
+  v_anterior jsonb;
+  v_pendientes integer;
+  v_avanza boolean;
+BEGIN
+  IF auth.uid() IS NULL THEN
+    RAISE EXCEPTION 'Se requiere una sesión para registrar tracking.' USING ERRCODE = '42501';
+  END IF;
+  IF p_request_id IS NULL OR p_fecha IS NULL OR NOT isfinite(p_fecha)
+     OR p_accion IS NULL OR p_accion NOT IN ('eta', 'llegada')
+     OR char_length(v_ubicacion) > 120 THEN
+    RAISE EXCEPTION 'Datos de tracking inválidos.' USING ERRCODE = '22023';
+  END IF;
+  -- RLS de embarques y eventos sigue aplicando al usuario de la llamada.
+  SELECT e.organization_id, e.estado, e.eta, e.etd, e.fecha_llegada_real INTO v_embarque
+    FROM public.embarques e
+   WHERE e.id = p_embarque_id AND e.deleted_at IS NULL
+     AND (p_organization_id IS NULL OR e.organization_id = p_organization_id)
+   FOR UPDATE;
+  IF NOT FOUND THEN
+    RAISE EXCEPTION 'No se encontró el embarque o no tienes permiso para editarlo.' USING ERRCODE = '42501';
+  END IF;
+  v_intento := jsonb_build_object('embarqueId', p_embarque_id,
+    'organizationId', v_embarque.organization_id, 'accion', p_accion,
+    'fecha', p_fecha, 'ubicacion', v_ubicacion);
+  v_anterior := public.idempotency_claim(p_request_id, 'registrar_evento_tracking_embarque');
+  IF v_anterior IS NOT NULL THEN
+    IF v_anterior->'intento' IS DISTINCT FROM v_intento THEN
+      RAISE EXCEPTION 'La clave de tracking ya se usó con otros datos.' USING ERRCODE = '22023';
+    END IF;
+    RETURN p_request_id;
+  END IF;
+  IF v_embarque.estado = 'Cerrado' THEN
+    RAISE EXCEPTION 'El embarque está cerrado. Reábrelo para registrar tracking.' USING ERRCODE = '23514';
+  END IF;
+  IF p_accion = 'eta' THEN
+    IF char_length(v_ubicacion) < 3 OR p_fecha IS NOT DISTINCT FROM v_embarque.eta THEN
+      RAISE EXCEPTION 'Indica la fuente y una ETA distinta a la actual.' USING ERRCODE = '23514';
+    END IF;
+    UPDATE public.embarques SET eta = p_fecha WHERE id = p_embarque_id;
+    v_tipo := 'Cambio de ETA';
+    v_descripcion := format('ETA actualizada de %s a %s',
+      coalesce(to_char(v_embarque.eta, 'DD/MM/YYYY'), '—'), to_char(p_fecha, 'DD/MM/YYYY'));
+    v_accion := 'Actualizó ETA de embarque';
+    v_detalles := jsonb_build_object('etaNueva', p_fecha);
+  ELSE
+    IF v_embarque.fecha_llegada_real IS NOT NULL THEN
+      RAISE EXCEPTION 'Este embarque ya tiene una fecha de llegada real capturada.' USING ERRCODE = '23514';
+    END IF;
+    IF v_embarque.estado NOT IN ('En Tránsito', 'En Proceso', 'Arribo', 'En Aduana', 'Entregado', 'EIR', 'Por liquidar') THEN
+      RAISE EXCEPTION 'No se puede marcar llegada real en estado "%". Confirma y pon en tránsito el embarque primero.',
+        v_embarque.estado USING ERRCODE = '23514';
+    END IF;
+    IF p_fecha < v_embarque.etd OR p_fecha > (v_momento AT TIME ZONE 'America/Mexico_City')::date THEN
+      RAISE EXCEPTION 'La llegada real debe ser igual o posterior al ETD y no puede ser futura.' USING ERRCODE = '23514';
+    END IF;
+    -- Bloquea cambios de estado documental durante la validación. El FK de
+    -- documentos bloquea altas concurrentes contra la fila del embarque.
+    PERFORM d.id FROM public.documentos_embarque d
+     WHERE d.embarque_id = p_embarque_id AND d.organization_id = v_embarque.organization_id
+       AND d.deleted_at IS NULL
+     FOR SHARE;
+    SELECT count(*) INTO v_pendientes FROM public.documentos_embarque d
+     WHERE d.embarque_id = p_embarque_id AND d.organization_id = v_embarque.organization_id
+       AND d.deleted_at IS NULL AND d.estado = 'Pendiente';
+    IF v_pendientes > 0 THEN
+      RAISE EXCEPTION 'LC_TRACKING_DOCS_PENDIENTES: Hay % documento(s) pendiente(s). Súbelos antes de marcar la llegada real.',
+        v_pendientes USING ERRCODE = '23514';
+    END IF;
+    v_avanza := v_embarque.estado IN ('En Tránsito', 'En Proceso');
+    UPDATE public.embarques
+       SET fecha_llegada_real = p_fecha,
+           estado = CASE WHEN v_avanza THEN 'Arribo' ELSE v_embarque.estado END
+     WHERE id = p_embarque_id;
+    v_tipo := 'Arribo a Puerto';
+    v_descripcion := format('Llegada real registrada: %s', to_char(p_fecha, 'DD/MM/YYYY'));
+    v_accion := 'Actualizó fecha de llegada real de embarque';
+    v_detalles := jsonb_build_object('fechaLlegadaReal', p_fecha,
+      'estadoAnterior', v_embarque.estado, 'avanzoAArribo', v_avanza);
+  END IF;
+  IF NOT FOUND THEN
+    RAISE EXCEPTION 'No se pudo editar el embarque.' USING ERRCODE = '42501';
+  END IF;
+  INSERT INTO public.eventos_embarque (id, embarque_id, organization_id, tipo, descripcion, ubicacion, fecha, usuario)
+    VALUES (p_request_id, p_embarque_id, v_embarque.organization_id, v_tipo,
+      v_descripcion, v_ubicacion, v_momento, coalesce(auth.jwt()->>'email', ''));
+  PERFORM public.registrar_bitacora('embarques', v_accion, p_embarque_id,
+    p_detalles => v_detalles || jsonb_build_object('eventoId', p_request_id),
+    p_organization_id => v_embarque.organization_id);
+  PERFORM public.registrar_bitacora('embarques', 'Registró evento de tracking en embarque', p_embarque_id,
+    p_detalles => jsonb_build_object('eventoId', p_request_id, 'tipo', v_tipo, 'ubicacion', v_ubicacion, 'fecha', v_momento),
+    p_organization_id => v_embarque.organization_id);
+  PERFORM public.idempotency_store(p_request_id, jsonb_build_object('intento', v_intento));
+  RETURN p_request_id;
+END;
+$$;
 CREATE FUNCTION public.registrar_pago_cliente_lote(p_payload jsonb) RETURNS jsonb
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
@@ -32673,6 +33160,44 @@ BEGIN
   RETURN v_out;
 END;
 $$;
+CREATE FUNCTION public.reservar_evento_facturapi_webhook(p_organization_id uuid, p_event_id text, p_payload jsonb DEFAULT NULL::jsonb) RETURNS jsonb
+    LANGUAGE plpgsql
+    SET search_path TO 'public'
+    AS $$
+DECLARE
+  v_evento public.facturapi_webhook_eventos%ROWTYPE;
+  v_momento timestamptz := clock_timestamp();
+  v_token uuid := gen_random_uuid();
+BEGIN
+  IF p_payload IS NOT NULL THEN
+    INSERT INTO public.facturapi_webhook_eventos (organization_id, event_id, event_type, payload,
+      procesamiento_estado, procesamiento_disponible_en)
+    VALUES (p_organization_id, p_event_id, p_payload->>'type', p_payload, 'reintentable', v_momento)
+    ON CONFLICT (organization_id, event_id) DO NOTHING;
+  END IF;
+  SELECT * INTO v_evento FROM public.facturapi_webhook_eventos
+   WHERE organization_id = p_organization_id AND event_id = p_event_id FOR UPDATE;
+  IF NOT FOUND THEN RETURN jsonb_build_object('estado', 'ausente'); END IF;
+  v_momento := clock_timestamp();
+  IF v_evento.procesamiento_estado NOT IN ('procesando', 'reintentable') THEN
+    RETURN jsonb_build_object('estado', 'terminado', 'resultado', v_evento.procesamiento_estado);
+  END IF;
+  IF v_evento.procesamiento_disponible_en > v_momento THEN
+    RETURN jsonb_build_object('estado', 'ocupado');
+  END IF;
+  IF v_evento.received_at < v_momento - interval '7 days' THEN
+    UPDATE public.facturapi_webhook_eventos SET procesamiento_estado = 'agotado',
+      procesamiento_token = NULL, procesamiento_disponible_en = NULL, procesamiento_finalizado_en = v_momento
+     WHERE id = v_evento.id;
+    RETURN jsonb_build_object('estado', 'terminado', 'resultado', 'agotado');
+  END IF;
+  UPDATE public.facturapi_webhook_eventos SET procesamiento_estado = 'procesando',
+    procesamiento_token = v_token, procesamiento_disponible_en = v_momento + interval '2 minutes',
+    procesamiento_intentos = procesamiento_intentos + 1
+   WHERE id = v_evento.id;
+  RETURN jsonb_build_object('estado', 'tomado', 'id', v_evento.id, 'token', v_token, 'payload', v_evento.payload);
+END;
+$$;
 CREATE FUNCTION public.reservar_folio_factura(_serie_id uuid) RETURNS TABLE(folio bigint, numero text)
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
@@ -32697,6 +33222,59 @@ BEGIN
   folio := _next;
   numero := _row.prefijo || _next::TEXT;
   RETURN NEXT;
+END;
+$$;
+CREATE FUNCTION public.reservar_proforma_email(p_proforma_id uuid, p_usuario_id uuid, p_intento uuid, p_reserva uuid, p_solicitud jsonb, p_portal_base text) RETURNS jsonb
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO ''
+    AS $$
+DECLARE
+  v_proforma public.proformas%ROWTYPE;
+  v_intento public.proforma_email_intentos%ROWTYPE;
+  v_ahora timestamptz := clock_timestamp();
+  v_dias integer := (p_solicitud->>'dias_vigencia')::integer;
+BEGIN
+  SELECT * INTO v_proforma FROM public.proformas
+  WHERE id = p_proforma_id AND deleted_at IS NULL FOR UPDATE;
+  IF NOT FOUND THEN RETURN jsonb_build_object('estado', 'no_encontrada'); END IF;
+  IF NOT EXISTS (
+    SELECT 1 FROM public.organization_members
+    WHERE user_id = p_usuario_id AND organization_id = v_proforma.organization_id
+  ) THEN RETURN jsonb_build_object('estado', 'sin_acceso'); END IF;
+  SELECT * INTO v_intento FROM public.proforma_email_intentos WHERE id = p_intento FOR UPDATE;
+  IF FOUND THEN
+    IF (v_intento.proforma_id, v_intento.usuario_id, v_intento.solicitud)
+      IS DISTINCT FROM (p_proforma_id, p_usuario_id, p_solicitud) THEN
+      RETURN jsonb_build_object('estado', 'intento_distinto');
+    END IF;
+    IF v_intento.resultado IS NOT NULL THEN
+      RETURN jsonb_build_object('estado', 'confirmado', 'resultado', v_intento.resultado);
+    END IF;
+    IF v_intento.reserva_hasta > v_ahora THEN
+      RETURN jsonb_build_object('estado', 'en_proceso');
+    END IF;
+  ELSE
+    IF v_proforma.estado_proforma = 'cancelada' THEN
+      RETURN jsonb_build_object('estado', 'cancelada');
+    END IF;
+    IF v_proforma.token_publico IS NULL OR v_proforma.token_expira_at IS NULL
+      OR v_proforma.token_expira_at <= v_ahora THEN
+      UPDATE public.proformas SET token_publico = gen_random_uuid(),
+        token_expira_at = v_ahora + make_interval(days => v_dias)
+      WHERE id = v_proforma.id RETURNING * INTO v_proforma;
+    END IF;
+    INSERT INTO public.proforma_email_intentos (id, proforma_id, usuario_id, solicitud, contenido)
+    VALUES (p_intento, p_proforma_id, p_usuario_id, p_solicitud, jsonb_build_object(
+      'token', v_proforma.token_publico, 'expira', v_proforma.token_expira_at,
+      'enlace', rtrim(p_portal_base, '/') || '/portal/proformas/' || v_proforma.token_publico,
+      'numero', v_proforma.numero, 'cliente', v_proforma.cliente_nombre, 'expediente', v_proforma.expediente,
+      'total_mxn', v_proforma.total_mxn, 'total_usd', v_proforma.total_usd
+    )) RETURNING * INTO v_intento;
+  END IF;
+  UPDATE public.proforma_email_intentos SET reserva = p_reserva,
+    reserva_hasta = clock_timestamp() + interval '5 minutes'
+  WHERE id = p_intento;
+  RETURN jsonb_build_object('estado', 'reservado', 'contenido', v_intento.contenido);
 END;
 $$;
 CREATE FUNCTION public.resolver_clave_sat(p_org uuid, p_descripcion text) RETURNS text
@@ -38847,7 +39425,14 @@ CREATE TABLE public.facturapi_webhook_eventos (
     event_id text NOT NULL,
     event_type text NOT NULL,
     received_at timestamp with time zone DEFAULT now() NOT NULL,
-    payload jsonb
+    payload jsonb,
+    procesamiento_estado text DEFAULT 'legado'::text NOT NULL,
+    procesamiento_token uuid,
+    procesamiento_disponible_en timestamp with time zone,
+    procesamiento_intentos integer DEFAULT 0 NOT NULL,
+    procesamiento_motivo text,
+    procesamiento_finalizado_en timestamp with time zone,
+    CONSTRAINT facturapi_webhook_procesamiento_valido CHECK (((procesamiento_estado = ANY (ARRAY['legado'::text, 'procesando'::text, 'reintentable'::text, 'procesado'::text, 'ignorado'::text, 'agotado'::text])) AND ((procesamiento_estado = 'procesando'::text) = (procesamiento_token IS NOT NULL)) AND ((procesamiento_estado = ANY (ARRAY['procesando'::text, 'reintentable'::text])) = (procesamiento_disponible_en IS NOT NULL))))
 );
 CREATE TABLE public.folio_secuencias (
     organization_id uuid NOT NULL,
@@ -39086,6 +39671,16 @@ CREATE TABLE public.proforma_conceptos_consolidados (
     tipo_iva text,
     CONSTRAINT pcc_tasa_iva_presente_chk CHECK (((tasa_iva_aplicada IS NOT NULL) OR (NOT (tipo_iva IS DISTINCT FROM 'no_objeto'::text)))),
     CONSTRAINT pcc_tipo_iva_chk CHECK (((tipo_iva IS NULL) OR (tipo_iva = ANY (ARRAY['gravado_16'::text, 'gravado_8'::text, 'tasa_0'::text, 'exento'::text, 'no_objeto'::text]))))
+);
+CREATE TABLE public.proforma_email_intentos (
+    id uuid NOT NULL,
+    proforma_id uuid NOT NULL,
+    usuario_id uuid NOT NULL,
+    solicitud jsonb NOT NULL,
+    contenido jsonb NOT NULL,
+    reserva uuid,
+    reserva_hasta timestamp with time zone,
+    resultado jsonb
 );
 CREATE TABLE public.proforma_envios (
     id uuid DEFAULT gen_random_uuid() NOT NULL,
@@ -39436,6 +40031,30 @@ CREATE VIEW public.v_proforma_factura_link WITH (security_invoker='on') AS
    FROM (public.proformas p
      LEFT JOIN public.facturas f ON (((f.id = p.factura_id) AND (f.deleted_at IS NULL))))
   WHERE (p.deleted_at IS NULL);
+CREATE VIEW public.v_reps_historico WITH (security_invoker='true') AS
+ SELECT p.id,
+    p.organization_id,
+    p.factura_id,
+    p.fecha_pago,
+    p.monto,
+    p.moneda,
+    p.uuid_rep,
+    p.timbrado_rep_en,
+    p.rep_cancellation_status,
+    COALESCE(f.numero, '—'::text) AS factura_numero,
+    COALESCE(f.cliente_nombre, '—'::text) AS cliente_nombre,
+    rep.folio_rep,
+    concat_ws(' '::text, rep.folio_rep, f.numero, f.cliente_nombre, p.uuid_rep) AS busqueda,
+        CASE lower(p.rep_cancellation_status)
+            WHEN 'accepted'::text THEN 'Cancelado'::text
+            WHEN 'pending'::text THEN 'En cancelación'::text
+            WHEN 'verifying'::text THEN 'En cancelación'::text
+            ELSE 'Timbrado'::text
+        END AS estado_visible
+   FROM ((public.pagos_factura p
+     JOIN public.facturas f ON (((f.id = p.factura_id) AND (f.organization_id = p.organization_id))))
+     CROSS JOIN LATERAL ( SELECT COALESCE(NULLIF(concat_ws('-'::text, NULLIF(p.serie_rep, ''::text), p.folio_rep), ''::text), '—'::text) AS folio_rep) rep)
+  WHERE ((p.estado_rep = 'Timbrado'::text) AND (p.deleted_at IS NULL));
 CREATE VIEW public.v_saldos_cuentas_bancarias WITH (security_invoker='on') AS
  SELECT m.cuenta_bancaria_id,
     COALESCE(sum(m.abono), (0)::numeric) AS total_abonos,
@@ -39795,6 +40414,8 @@ ALTER TABLE ONLY public.presupuesto_mensual
     ADD CONSTRAINT presupuesto_mensual_pkey PRIMARY KEY (id);
 ALTER TABLE ONLY public.proforma_conceptos_consolidados
     ADD CONSTRAINT proforma_conceptos_consolidados_pkey PRIMARY KEY (id);
+ALTER TABLE ONLY public.proforma_email_intentos
+    ADD CONSTRAINT proforma_email_intentos_pkey PRIMARY KEY (id);
 ALTER TABLE ONLY public.proforma_envios
     ADD CONSTRAINT proforma_envios_pkey PRIMARY KEY (id);
 ALTER TABLE ONLY public.proformas
@@ -39901,6 +40522,7 @@ CREATE INDEX crm_solicitudes_pricing_op_idx ON public.crm_solicitudes_pricing US
 CREATE UNIQUE INDEX documentos_embarque_unico_por_nombre ON public.documentos_embarque USING btree (embarque_id, nombre) WHERE (deleted_at IS NULL);
 CREATE UNIQUE INDEX embarques_cotizacion_unica_viva ON public.embarques USING btree (cotizacion_id) WHERE ((cotizacion_id IS NOT NULL) AND (deleted_at IS NULL));
 CREATE UNIQUE INDEX embarques_expediente_org_unico ON public.embarques USING btree (organization_id, expediente) WHERE (deleted_at IS NULL);
+CREATE INDEX facturapi_webhook_por_procesar ON public.facturapi_webhook_eventos USING btree (procesamiento_disponible_en, id) WHERE (procesamiento_estado = ANY (ARRAY['procesando'::text, 'reintentable'::text]));
 CREATE UNIQUE INDEX facturas_numero_org_unico ON public.facturas USING btree (organization_id, numero) WHERE ((deleted_at IS NULL) AND (numero IS NOT NULL));
 CREATE UNIQUE INDEX facturas_uuid_fiscal_unico ON public.facturas USING btree (organization_id, uuid_fiscal) WHERE ((uuid_fiscal IS NOT NULL) AND (deleted_at IS NULL));
 CREATE INDEX idx_aa_anticipo ON public.anticipos_aplicaciones USING btree (anticipo_id) WHERE (deleted_at IS NULL);
@@ -40235,6 +40857,7 @@ CREATE INDEX idx_unsubscribe_tokens_token ON public.email_unsubscribe_tokens USI
 CREATE INDEX idx_user_roles_user ON public.user_roles USING btree (user_id);
 CREATE UNIQUE INDEX pagos_factura_client_request_id_key ON public.pagos_factura USING btree (client_request_id) WHERE (client_request_id IS NOT NULL);
 CREATE UNIQUE INDEX pagos_proveedor_client_request_id_key ON public.pagos_proveedor USING btree (client_request_id) WHERE (client_request_id IS NOT NULL);
+CREATE INDEX proforma_email_intentos_proforma_idx ON public.proforma_email_intentos USING btree (proforma_id);
 CREATE UNIQUE INDEX proveedor_alias_org_alias_uq ON public.proveedor_alias USING btree (organization_id, alias_normalizado);
 CREATE INDEX proveedor_alias_proveedor_idx ON public.proveedor_alias USING btree (proveedor_id);
 CREATE UNIQUE INDEX proveedor_facturas_folio_interno_org_uq ON public.proveedor_facturas USING btree (organization_id, folio_interno) WHERE (deleted_at IS NULL);
@@ -41091,6 +41714,8 @@ ALTER TABLE ONLY public.presupuesto_mensual
     ADD CONSTRAINT presupuesto_mensual_categoria_id_fkey FOREIGN KEY (categoria_id) REFERENCES public.presupuesto_categorias(id) ON DELETE CASCADE;
 ALTER TABLE ONLY public.proforma_conceptos_consolidados
     ADD CONSTRAINT proforma_conceptos_consolidados_proforma_id_fkey FOREIGN KEY (proforma_id) REFERENCES public.proformas(id) ON DELETE CASCADE;
+ALTER TABLE ONLY public.proforma_email_intentos
+    ADD CONSTRAINT proforma_email_intentos_proforma_id_fkey FOREIGN KEY (proforma_id) REFERENCES public.proformas(id) ON DELETE CASCADE;
 ALTER TABLE ONLY public.proforma_envios
     ADD CONSTRAINT proforma_envios_proforma_id_fkey FOREIGN KEY (proforma_id) REFERENCES public.proformas(id) ON DELETE CASCADE;
 ALTER TABLE ONLY public.proformas
@@ -41151,6 +41776,7 @@ ALTER TABLE ONLY public.traspasos_bancarios
     ADD CONSTRAINT traspasos_bancarios_cuenta_destino_id_fkey FOREIGN KEY (cuenta_destino_id) REFERENCES public.cuentas_bancarias(id) ON DELETE RESTRICT;
 ALTER TABLE ONLY public.traspasos_bancarios
     ADD CONSTRAINT traspasos_bancarios_cuenta_origen_id_fkey FOREIGN KEY (cuenta_origen_id) REFERENCES public.cuentas_bancarias(id) ON DELETE RESTRICT;
+CREATE POLICY "Acceso solo desde RPC" ON public.proforma_email_intentos AS RESTRICTIVE USING (false) WITH CHECK (false);
 CREATE POLICY "Admin catalog delete clientes" ON public.clientes FOR DELETE TO authenticated USING ((((organization_id = ( SELECT public.current_user_org_id() AS current_user_org_id)) OR ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'super_admin'::public.app_role) AS has_role)) AND public.es_admin_catalogo(( SELECT auth.uid() AS uid))));
 CREATE POLICY "Admin catalog delete proveedores" ON public.proveedores FOR DELETE TO authenticated USING ((((organization_id = ( SELECT public.current_user_org_id() AS current_user_org_id)) OR ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'super_admin'::public.app_role) AS has_role)) AND public.es_admin_catalogo(( SELECT auth.uid() AS uid))));
 CREATE POLICY "Admin catalogo apaga por org" ON public.catalogo_org_desactivado FOR INSERT TO authenticated WITH CHECK (((organization_id = ( SELECT public.org_scope() AS org_scope)) AND ( SELECT public.es_admin_catalogo(( SELECT auth.uid() AS uid)) AS es_admin_catalogo)));
@@ -41872,6 +42498,7 @@ CREATE POLICY presupuesto_mensual_admin_insert ON public.presupuesto_mensual FOR
 CREATE POLICY presupuesto_mensual_admin_update ON public.presupuesto_mensual FOR UPDATE TO authenticated USING ((((organization_id = ( SELECT public.current_user_org_id() AS current_user_org_id)) OR ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'super_admin'::public.app_role) AS has_role)) AND (( SELECT public.has_role(( SELECT auth.uid() AS uid), 'admin'::public.app_role) AS has_role) OR ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'super_admin'::public.app_role) AS has_role))));
 CREATE POLICY presupuesto_mensual_select ON public.presupuesto_mensual FOR SELECT TO authenticated USING (((organization_id = ( SELECT public.current_user_org_id() AS current_user_org_id)) OR ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'super_admin'::public.app_role) AS has_role)));
 ALTER TABLE public.proforma_conceptos_consolidados ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.proforma_email_intentos ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.proforma_envios ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.proformas ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.proveedor_alias ENABLE ROW LEVEL SECURITY;
@@ -41989,6 +42616,9 @@ GRANT ALL ON FUNCTION public._audit_embarques_umbrales(p_organization_id uuid) T
 REVOKE ALL ON FUNCTION public._auditoria_embarques_org_base(p_organization_id uuid) FROM PUBLIC;
 GRANT ALL ON FUNCTION public._auditoria_embarques_org_base(p_organization_id uuid) TO authenticated;
 GRANT ALL ON FUNCTION public._auditoria_embarques_org_base(p_organization_id uuid) TO service_role;
+REVOKE ALL ON FUNCTION public._auditoria_hallazgo_hash(p_texto text) FROM PUBLIC;
+GRANT ALL ON FUNCTION public._auditoria_hallazgo_hash(p_texto text) TO authenticated;
+GRANT ALL ON FUNCTION public._auditoria_hallazgo_hash(p_texto text) TO service_role;
 REVOKE ALL ON FUNCTION public._bbva_guard_movimiento_manual() FROM PUBLIC;
 GRANT ALL ON FUNCTION public._bbva_guard_movimiento_manual() TO authenticated;
 GRANT ALL ON FUNCTION public._bbva_guard_movimiento_manual() TO service_role;
@@ -42457,6 +43087,9 @@ GRANT ALL ON FUNCTION public.auditoria_embarques_org() TO service_role;
 REVOKE ALL ON FUNCTION public.auditoria_embarques_org(p_organization_id uuid) FROM PUBLIC;
 GRANT ALL ON FUNCTION public.auditoria_embarques_org(p_organization_id uuid) TO service_role;
 GRANT ALL ON FUNCTION public.auditoria_embarques_org(p_organization_id uuid) TO authenticated;
+REVOKE ALL ON FUNCTION public.auditoria_pendientes_count() FROM PUBLIC;
+GRANT ALL ON FUNCTION public.auditoria_pendientes_count() TO authenticated;
+GRANT ALL ON FUNCTION public.auditoria_pendientes_count() TO service_role;
 REVOKE ALL ON FUNCTION public.auditoria_pfc_huerfanos() FROM PUBLIC;
 GRANT ALL ON FUNCTION public.auditoria_pfc_huerfanos() TO service_role;
 REVOKE ALL ON FUNCTION public.autorizar_cotizacion(p_id uuid, p_motivo text) FROM PUBLIC;
@@ -42821,6 +43454,9 @@ GRANT ALL ON FUNCTION public.cxp_por_capturar() TO service_role;
 REVOKE ALL ON FUNCTION public.cxp_por_pagar() FROM PUBLIC;
 GRANT ALL ON FUNCTION public.cxp_por_pagar() TO authenticated;
 GRANT ALL ON FUNCTION public.cxp_por_pagar() TO service_role;
+REVOKE ALL ON FUNCTION public.cxp_por_pagar_count() FROM PUBLIC;
+GRANT ALL ON FUNCTION public.cxp_por_pagar_count() TO authenticated;
+GRANT ALL ON FUNCTION public.cxp_por_pagar_count() TO service_role;
 REVOKE ALL ON FUNCTION public.cxp_umbral_sin_vinculo(p_org uuid) FROM PUBLIC;
 GRANT ALL ON FUNCTION public.cxp_umbral_sin_vinculo(p_org uuid) TO authenticated;
 GRANT ALL ON FUNCTION public.cxp_umbral_sin_vinculo(p_org uuid) TO service_role;
@@ -42916,6 +43552,9 @@ GRANT ALL ON FUNCTION public.embarque_operativo_completo(p_embarque_id uuid) TO 
 REVOKE ALL ON FUNCTION public.embarques_admin_pendientes_count() FROM PUBLIC;
 GRANT ALL ON FUNCTION public.embarques_admin_pendientes_count() TO authenticated;
 GRANT ALL ON FUNCTION public.embarques_admin_pendientes_count() TO service_role;
+REVOKE ALL ON FUNCTION public.embarques_alertas_conteos() FROM PUBLIC;
+GRANT ALL ON FUNCTION public.embarques_alertas_conteos() TO authenticated;
+GRANT ALL ON FUNCTION public.embarques_alertas_conteos() TO service_role;
 REVOKE ALL ON FUNCTION public.embarques_alertas_ids() FROM PUBLIC;
 GRANT ALL ON FUNCTION public.embarques_alertas_ids() TO authenticated;
 GRANT ALL ON FUNCTION public.embarques_alertas_ids() TO service_role;
@@ -42932,6 +43571,9 @@ GRANT ALL ON FUNCTION public.embarques_list_extras(p_ids uuid[]) TO authenticate
 GRANT ALL ON FUNCTION public.embarques_list_extras(p_ids uuid[]) TO service_role;
 GRANT ALL ON FUNCTION public.embarques_listado(p_organization_id uuid, p_search text, p_modo text, p_cliente_id uuid, p_operador text, p_proforma text, p_fecha_desde date, p_fecha_hasta date, p_sort_by text, p_sort_dir text, p_offset integer, p_limit integer) TO authenticated;
 GRANT ALL ON FUNCTION public.embarques_listado(p_organization_id uuid, p_search text, p_modo text, p_cliente_id uuid, p_operador text, p_proforma text, p_fecha_desde date, p_fecha_hasta date, p_sort_by text, p_sort_dir text, p_offset integer, p_limit integer) TO service_role;
+REVOKE ALL ON FUNCTION public.embarques_listado_pagina(p_organization_id uuid, p_search text, p_modo text, p_cliente_id uuid, p_operador text, p_proforma text, p_fecha_desde date, p_fecha_hasta date, p_sort_by text, p_sort_dir text, p_offset integer, p_limit integer, p_estado text, p_alerta text, p_agrupar boolean) FROM PUBLIC;
+GRANT ALL ON FUNCTION public.embarques_listado_pagina(p_organization_id uuid, p_search text, p_modo text, p_cliente_id uuid, p_operador text, p_proforma text, p_fecha_desde date, p_fecha_hasta date, p_sort_by text, p_sort_dir text, p_offset integer, p_limit integer, p_estado text, p_alerta text, p_agrupar boolean) TO authenticated;
+GRANT ALL ON FUNCTION public.embarques_listado_pagina(p_organization_id uuid, p_search text, p_modo text, p_cliente_id uuid, p_operador text, p_proforma text, p_fecha_desde date, p_fecha_hasta date, p_sort_by text, p_sort_dir text, p_offset integer, p_limit integer, p_estado text, p_alerta text, p_agrupar boolean) TO service_role;
 GRANT ALL ON FUNCTION public.embarques_protect_creator() TO authenticated;
 GRANT ALL ON FUNCTION public.embarques_protect_creator() TO service_role;
 REVOKE ALL ON FUNCTION public.enforce_cotizacion_obligatoria() FROM PUBLIC;
@@ -42982,6 +43624,10 @@ GRANT ALL ON FUNCTION public.facturas_set_fecha_vencimiento() TO service_role;
 REVOKE ALL ON FUNCTION public.fecha_negocio_mx() FROM PUBLIC;
 GRANT ALL ON FUNCTION public.fecha_negocio_mx() TO authenticated;
 GRANT ALL ON FUNCTION public.fecha_negocio_mx() TO service_role;
+REVOKE ALL ON FUNCTION public.finalizar_evento_facturapi_webhook(p_evento_id uuid, p_token uuid, p_resultado text, p_motivo text, p_tabla text, p_documento_id uuid, p_version timestamp with time zone, p_claim text, p_patch jsonb, p_accion text) FROM PUBLIC;
+GRANT ALL ON FUNCTION public.finalizar_evento_facturapi_webhook(p_evento_id uuid, p_token uuid, p_resultado text, p_motivo text, p_tabla text, p_documento_id uuid, p_version timestamp with time zone, p_claim text, p_patch jsonb, p_accion text) TO service_role;
+REVOKE ALL ON FUNCTION public.finalizar_proforma_email(p_intento uuid, p_usuario_id uuid, p_reserva uuid) FROM PUBLIC;
+GRANT ALL ON FUNCTION public.finalizar_proforma_email(p_intento uuid, p_usuario_id uuid, p_reserva uuid) TO service_role;
 REVOKE ALL ON FUNCTION public.fn_admin_org_activity() FROM PUBLIC;
 GRANT ALL ON FUNCTION public.fn_admin_org_activity() TO authenticated;
 GRANT ALL ON FUNCTION public.fn_admin_org_activity() TO service_role;
@@ -43139,6 +43785,9 @@ GRANT ALL ON FUNCTION public.historial_factura(p_factura_id uuid, p_limite integ
 REVOKE ALL ON FUNCTION public.historial_proveedor_factura(p_id uuid) FROM PUBLIC;
 GRANT ALL ON FUNCTION public.historial_proveedor_factura(p_id uuid) TO authenticated;
 GRANT ALL ON FUNCTION public.historial_proveedor_factura(p_id uuid) TO service_role;
+REVOKE ALL ON FUNCTION public.hueco_facturacion_count(p_organization_id uuid, p_limite_eta date) FROM PUBLIC;
+GRANT ALL ON FUNCTION public.hueco_facturacion_count(p_organization_id uuid, p_limite_eta date) TO authenticated;
+GRANT ALL ON FUNCTION public.hueco_facturacion_count(p_organization_id uuid, p_limite_eta date) TO service_role;
 REVOKE ALL ON FUNCTION public.idempotency_claim(_key uuid, _fn text) FROM PUBLIC;
 GRANT ALL ON FUNCTION public.idempotency_claim(_key uuid, _fn text) TO authenticated;
 GRANT ALL ON FUNCTION public.idempotency_claim(_key uuid, _fn text) TO service_role;
@@ -43354,7 +44003,6 @@ GRANT ALL ON FUNCTION public.purgar_embarque_cascade(p_embarque_id uuid) TO auth
 GRANT ALL ON FUNCTION public.purgar_embarque_cascade(p_embarque_id uuid) TO service_role;
 REVOKE ALL ON FUNCTION public.purgar_facturapi_webhook_eventos() FROM PUBLIC;
 GRANT ALL ON FUNCTION public.purgar_facturapi_webhook_eventos() TO service_role;
-GRANT ALL ON FUNCTION public.purgar_facturapi_webhook_eventos() TO authenticated;
 REVOKE ALL ON FUNCTION public.purge_app_logs_old() FROM PUBLIC;
 GRANT ALL ON FUNCTION public.purge_app_logs_old() TO service_role;
 REVOKE ALL ON FUNCTION public.purge_record(_table text, _id uuid) FROM PUBLIC;
@@ -43445,6 +44093,9 @@ GRANT ALL ON FUNCTION public.registrar_bitacora(p_modulo text, p_accion text, p_
 GRANT ALL ON FUNCTION public.registrar_bitacora(p_modulo text, p_accion text, p_entidad_id uuid, p_entidad_nombre text, p_detalles jsonb, p_organization_id uuid, p_usuario_id uuid) TO service_role;
 REVOKE ALL ON FUNCTION public.registrar_comision_pendiente(p_organization_id uuid, p_pago_factura_id uuid, p_etapa text, p_motivo text, p_sqlstate text, p_sqlerrm text) FROM PUBLIC;
 GRANT ALL ON FUNCTION public.registrar_comision_pendiente(p_organization_id uuid, p_pago_factura_id uuid, p_etapa text, p_motivo text, p_sqlstate text, p_sqlerrm text) TO service_role;
+REVOKE ALL ON FUNCTION public.registrar_evento_tracking_embarque(p_embarque_id uuid, p_request_id uuid, p_accion text, p_fecha date, p_ubicacion text, p_organization_id uuid) FROM PUBLIC;
+GRANT ALL ON FUNCTION public.registrar_evento_tracking_embarque(p_embarque_id uuid, p_request_id uuid, p_accion text, p_fecha date, p_ubicacion text, p_organization_id uuid) TO authenticated;
+GRANT ALL ON FUNCTION public.registrar_evento_tracking_embarque(p_embarque_id uuid, p_request_id uuid, p_accion text, p_fecha date, p_ubicacion text, p_organization_id uuid) TO service_role;
 REVOKE ALL ON FUNCTION public.registrar_pago_cliente_lote(p_payload jsonb) FROM PUBLIC;
 GRANT ALL ON FUNCTION public.registrar_pago_cliente_lote(p_payload jsonb) TO authenticated;
 GRANT ALL ON FUNCTION public.registrar_pago_cliente_lote(p_payload jsonb) TO service_role;
@@ -43475,9 +44126,13 @@ GRANT ALL ON FUNCTION public.reprocesar_comisiones_pendientes(p_org uuid) TO ser
 REVOKE ALL ON FUNCTION public.reseed_organization_catalogs(p_org_id uuid) FROM PUBLIC;
 GRANT ALL ON FUNCTION public.reseed_organization_catalogs(p_org_id uuid) TO authenticated;
 GRANT ALL ON FUNCTION public.reseed_organization_catalogs(p_org_id uuid) TO service_role;
+REVOKE ALL ON FUNCTION public.reservar_evento_facturapi_webhook(p_organization_id uuid, p_event_id text, p_payload jsonb) FROM PUBLIC;
+GRANT ALL ON FUNCTION public.reservar_evento_facturapi_webhook(p_organization_id uuid, p_event_id text, p_payload jsonb) TO service_role;
 REVOKE ALL ON FUNCTION public.reservar_folio_factura(_serie_id uuid) FROM PUBLIC;
 GRANT ALL ON FUNCTION public.reservar_folio_factura(_serie_id uuid) TO authenticated;
 GRANT ALL ON FUNCTION public.reservar_folio_factura(_serie_id uuid) TO service_role;
+REVOKE ALL ON FUNCTION public.reservar_proforma_email(p_proforma_id uuid, p_usuario_id uuid, p_intento uuid, p_reserva uuid, p_solicitud jsonb, p_portal_base text) FROM PUBLIC;
+GRANT ALL ON FUNCTION public.reservar_proforma_email(p_proforma_id uuid, p_usuario_id uuid, p_intento uuid, p_reserva uuid, p_solicitud jsonb, p_portal_base text) TO service_role;
 REVOKE ALL ON FUNCTION public.resolver_clave_sat(p_org uuid, p_descripcion text) FROM PUBLIC;
 GRANT ALL ON FUNCTION public.resolver_clave_sat(p_org uuid, p_descripcion text) TO authenticated;
 GRANT ALL ON FUNCTION public.resolver_clave_sat(p_org uuid, p_descripcion text) TO service_role;
@@ -44180,6 +44835,8 @@ GRANT ALL ON TABLE public.presupuesto_mensual TO service_role;
 GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.proforma_conceptos_consolidados TO anon;
 GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.proforma_conceptos_consolidados TO authenticated;
 GRANT ALL ON TABLE public.proforma_conceptos_consolidados TO service_role;
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.proforma_email_intentos TO authenticated;
+GRANT ALL ON TABLE public.proforma_email_intentos TO service_role;
 GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.proforma_envios TO authenticated;
 GRANT ALL ON TABLE public.proforma_envios TO service_role;
 GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.proveedor_alias TO authenticated;
@@ -44227,6 +44884,8 @@ GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.v_pagos_rep_pendientes TO auth
 GRANT ALL ON TABLE public.v_pagos_rep_pendientes TO service_role;
 GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.v_proforma_factura_link TO authenticated;
 GRANT ALL ON TABLE public.v_proforma_factura_link TO service_role;
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.v_reps_historico TO authenticated;
+GRANT ALL ON TABLE public.v_reps_historico TO service_role;
 GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.v_saldos_cuentas_bancarias TO authenticated;
 GRANT ALL ON TABLE public.v_saldos_cuentas_bancarias TO service_role;
 GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.vendedora_config TO authenticated;
