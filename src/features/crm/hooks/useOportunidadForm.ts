@@ -33,6 +33,7 @@ interface Precapturado {
   etapaId?: string | null;
   empresa?: RefRow | null;
   valorEstimado?: string | null;
+  moneda?: OportunidadFormState["moneda"] | null;
 }
 
 function datosIniciales(datos?: Precapturado) {
@@ -42,6 +43,7 @@ function datosIniciales(datos?: Precapturado) {
     empresaInicial: datos?.empresa ?? null,
     etapaIdInicial: datos?.etapaId ?? null,
     valorEstimadoInicial: datos?.valorEstimado ?? null,
+    monedaInicial: datos?.moneda ?? null,
   };
 }
 
@@ -61,7 +63,7 @@ export function useOportunidadForm(
    */
   precapturado?: Precapturado,
 ) {
-  const { origenInicial, nombreInicial, empresaInicial, etapaIdInicial, valorEstimadoInicial } = datosIniciales(precapturado);
+  const { origenInicial, nombreInicial, empresaInicial, etapaIdInicial, valorEstimadoInicial, monedaInicial } = datosIniciales(precapturado);
   // CTA de columna del Kanban: etapa destino prefijada (sólo si es abierta).
   const [form, setForm] = useState<OportunidadFormState>(EMPTY_OPORTUNIDAD);
 
@@ -79,6 +81,7 @@ export function useOportunidadForm(
   const empresaRef = useRef(empresaInicial);
   const etapaRef = useRef(etapaIdInicial);
   const valorRef = useRef(valorEstimadoInicial);
+  const monedaRef = useRef(monedaInicial);
   const formRef = useRef(form);
   etapasRef.current = etapas;
   userRef.current = user;
@@ -88,6 +91,7 @@ export function useOportunidadForm(
   empresaRef.current = empresaInicial;
   etapaRef.current = etapaIdInicial;
   valorRef.current = valorEstimadoInicial;
+  monedaRef.current = monedaInicial;
   formRef.current = form;
 
   /** Fotografía del estado inicial construido: base para `isDirty`. */
@@ -116,6 +120,7 @@ export function useOportunidadForm(
       if (valorRef.current != null && Number.isFinite(valor) && valor >= 0) {
         inicial = { ...inicial, monto_meta: valor };
       }
+      if (monedaRef.current) inicial = { ...inicial, moneda: monedaRef.current };
       // Etapa prefijada por el CTA de la columna: sólo se respeta si existe
       // y es ABIERTA (la regla "nunca crear en Ganada/Perdida" se mantiene).
       const etapaPreId = etapaRef.current;

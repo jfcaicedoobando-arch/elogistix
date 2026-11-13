@@ -50,7 +50,7 @@ vi.mock("@/lib/ui/appFeedback", () => ({
 vi.mock("@/components/ui/select", () => ({
   Select: ({ value, onValueChange, children }: {
     value: string; onValueChange: (v: string) => void; children: ReactNode;
-  }) => <select data-testid="quick-etapa" value={value}
+  }) => <select data-testid={["MXN", "USD", "EUR"].includes(value) ? "quick-moneda" : "quick-etapa"} value={value}
     onChange={(e) => onValueChange(e.target.value)}>{children}</select>,
   SelectTrigger: () => null,
   SelectValue: () => null,
@@ -165,5 +165,15 @@ describe("alta rápida → Más campos → envío completo real", () => {
     await waitFor(() => expect(screen.queryByRole("button", { name: "Crear oportunidad" })).toBeNull());
     expect(mocks.actividad).not.toHaveBeenCalled();
     expect(mocks.actualizar).not.toHaveBeenCalled();
+  });
+
+  it("conserva la moneda USD elegida en el alta rápida al pasar a Más campos", async () => {
+    montar();
+    fireEvent.change(screen.getByLabelText(/Nombre/i), { target: { value: "Exportación" } });
+    fireEvent.click(screen.getByRole("button", { name: "Elegir Acme" }));
+    fireEvent.change(screen.getByLabelText(/Valor estimado/i), { target: { value: "2500" } });
+    fireEvent.change(screen.getByTestId("quick-moneda"), { target: { value: "USD" } });
+    fireEvent.click(screen.getByRole("button", { name: /Más campos/ }));
+    await waitFor(() => expect(estadoCompleto()).toMatchObject({ moneda: "USD", monto_meta: 2500 }));
   });
 });

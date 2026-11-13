@@ -31,7 +31,7 @@ vi.mock("@/features/crm/services/origenEmpresaCrm", () => ({
 }));
 vi.mock("@/components/ui/select", () => ({
   Select: ({ value, onValueChange, children }: { value: string; onValueChange: (v: string) => void; children: React.ReactNode }) => (
-    <select data-testid="etapa" value={value} onChange={(e) => onValueChange(e.target.value)}>{children}</select>
+    <select data-testid={["MXN", "USD", "EUR"].includes(value) ? "moneda" : "etapa"} value={value} onChange={(e) => onValueChange(e.target.value)}>{children}</select>
   ),
   SelectTrigger: () => null,
   SelectValue: () => null,

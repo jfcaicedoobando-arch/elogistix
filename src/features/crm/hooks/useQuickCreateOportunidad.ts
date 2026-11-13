@@ -10,6 +10,7 @@ import { notifyError } from "@/lib/ui/appFeedback";
 import { useAuth } from "@/lib/contexts/AuthContext";
 import { useCrearOportunidad, useEtapasPipeline } from "@/features/crm/hooks";
 import { primeraEtapaAbierta, type OrigenInicial } from "@/features/crm/domain/oportunidadFormHelpers";
+import type { Moneda } from "@/features/crm/services/oportunidades";
 import type { RefRow } from "@/features/crm/services/objetosCrm";
 
 /** Lo capturado en el alta express que viaja a "Más campos →". */
@@ -19,6 +20,7 @@ export interface OportunidadQuickDraft {
   empresa?: RefRow | null;
   etapaId?: string | null;
   valorEstimado: string;
+  moneda?: Moneda;
 }
 
 interface Params {
@@ -46,11 +48,12 @@ export function useQuickCreateOportunidad({ open, onOpenChange, onCreated }: Par
   const [empresa, setEmpresa] = useState<RefRow | null>(null);
   const [etapaId, setEtapaId] = useState("");
   const [valorEstimado, setValorEstimado] = useState("");
+  const [moneda, setMoneda] = useState<Moneda>("MXN");
 
   const abiertoAntes = useRef(open);
   useEffect(() => {
     if (abiertoAntes.current && !open) {
-      setNombre(""); setEmpresa(null); setEtapaId(""); setValorEstimado("");
+      setNombre(""); setEmpresa(null); setEtapaId(""); setValorEstimado(""); setMoneda("MXN");
     }
     abiertoAntes.current = open;
   }, [open]);
@@ -69,7 +72,7 @@ export function useQuickCreateOportunidad({ open, onOpenChange, onCreated }: Par
     const datos = consultaOrigen.datosListos();
     return {
       nombre: nombre.trim(), empresa, origen: datos?.ok ? datos.origen : null,
-      etapaId: etapa?.id ?? null, valorEstimado,
+      etapaId: etapa?.id ?? null, valorEstimado, moneda,
     };
   };
 
@@ -98,7 +101,7 @@ export function useQuickCreateOportunidad({ open, onOpenChange, onCreated }: Par
         cliente_nombre: origen.nombre,
         lead_id: origen.tipo === "prospecto" ? origen.id : null,
         etapa_id: etapa.id,
-        moneda: "MXN",
+        moneda,
         probabilidad: etapa.probabilidad_default ?? 10,
         monto_meta: valor,
         ...resolverVendedor(origen),
@@ -115,7 +118,7 @@ export function useQuickCreateOportunidad({ open, onOpenChange, onCreated }: Par
   return {
     nombre, setNombre, empresa, setEmpresa,
     etapasAbiertas, etapa, setEtapaId,
-    valorEstimado, setValorEstimado,
+    valorEstimado, setValorEstimado, moneda, setMoneda,
     consultaOrigen, origenCargando: consultaOrigen.cargando, motivoOrigen, faltantes, listo,
     crear, submit, construirBorrador,
   };

@@ -31,8 +31,9 @@ interface Props {
   /** Nombre precapturado en el alta express al pulsar "Más campos". */
   nombreInicial?: string | null;
   empresaInicial?: RefRow | null;
-  /** Importe en MXN precapturado en el alta express. */
+  /** Importe precapturado en el alta express. */
   valorEstimadoInicial?: string | null;
+  monedaInicial?: "MXN" | "USD" | "EUR" | null;
   /** Etapa prefijada por el CTA de una columna del Kanban (sólo si abierta). */
   etapaInicialId?: string | null;
 }
@@ -46,6 +47,7 @@ export default function NuevaOportunidadDialog({
   nombreInicial,
   empresaInicial,
   valorEstimadoInicial,
+  monedaInicial,
   etapaInicialId,
 }: Props) {
   const isEdit = !!oportunidad;
@@ -59,7 +61,7 @@ export default function NuevaOportunidadDialog({
     etapas,
     user,
     { origen: origenInicial, nombre: nombreInicial, etapaId: etapaInicialId, empresa: empresaInicial,
-      valorEstimado: valorEstimadoInicial },
+      valorEstimado: valorEstimadoInicial, moneda: monedaInicial },
   );
   const [autoActividad, setAutoActividad] = useState(true);
 

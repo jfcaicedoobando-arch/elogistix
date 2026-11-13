@@ -18,6 +18,8 @@ import { OrigenEmpresaEstado } from "../nuevaOportunidad/OrigenEmpresaEstado";
 
 export type { OportunidadQuickDraft };
 
+const MONEDAS = ["MXN", "USD", "EUR"] as const;
+
 interface Props {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -29,7 +31,7 @@ export default function QuickCreateOportunidadDialog({ open, onOpenChange, onCre
   const {
     nombre, setNombre, empresa, setEmpresa,
     etapasAbiertas, etapa, setEtapaId,
-    valorEstimado, setValorEstimado,
+    valorEstimado, setValorEstimado, moneda, setMoneda,
     consultaOrigen, origenCargando, motivoOrigen, faltantes, listo,
     crear, submit, construirBorrador,
   } = useQuickCreateOportunidad({ open, onOpenChange, onCreated });
@@ -86,9 +88,17 @@ export default function QuickCreateOportunidadDialog({ open, onOpenChange, onCre
             )}
           </div>
           <div className="space-y-1">
-            <Label htmlFor="qc-oportunidad-valor">Valor estimado (MXN) *</Label>
-            <Input id="qc-oportunidad-valor" type="number" inputMode="decimal" min={0} step="0.01"
-              value={valorEstimado} onChange={(e) => setValorEstimado(e.target.value)} placeholder="0.00" />
+            <Label htmlFor="qc-oportunidad-valor">Valor estimado *</Label>
+            <div className="flex gap-2">
+              <Input id="qc-oportunidad-valor" type="number" inputMode="decimal" min={0} step="0.01" className="flex-1"
+                value={valorEstimado} onChange={(e) => setValorEstimado(e.target.value)} placeholder="0.00" />
+              <Select value={moneda} onValueChange={(v) => setMoneda(v as typeof moneda)}>
+                <SelectTrigger className="w-24" aria-label="Moneda del valor estimado"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  {MONEDAS.map((m) => <SelectItem key={m} value={m}>{m}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
           </div>
           {faltantes.length > 0 && (
             <p role="status" className="text-body-sm text-destructive">Falta: {faltantes.join(", ")}.</p>
