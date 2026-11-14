@@ -3412,6 +3412,73 @@ export type Database = {
           },
         ]
       }
+      crm_broker_solicitudes: {
+        Row: {
+          broker_id: string
+          created_at: string
+          empresa_id: string
+          estado: string
+          id: string
+          motivo: string | null
+          organization_id: string
+          relacion: string
+          resuelto_at: string | null
+          resuelto_por: string | null
+          rol_contacto: string
+          tiempo_cierre: string
+        }
+        Insert: {
+          broker_id: string
+          created_at?: string
+          empresa_id: string
+          estado?: string
+          id?: string
+          motivo?: string | null
+          organization_id: string
+          relacion: string
+          resuelto_at?: string | null
+          resuelto_por?: string | null
+          rol_contacto: string
+          tiempo_cierre: string
+        }
+        Update: {
+          broker_id?: string
+          created_at?: string
+          empresa_id?: string
+          estado?: string
+          id?: string
+          motivo?: string | null
+          organization_id?: string
+          relacion?: string
+          resuelto_at?: string | null
+          resuelto_por?: string | null
+          rol_contacto?: string
+          tiempo_cierre?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "crm_broker_solicitudes_broker_id_fkey"
+            columns: ["broker_id"]
+            isOneToOne: false
+            referencedRelation: "crm_brokers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "crm_broker_solicitudes_empresa_id_fkey"
+            columns: ["empresa_id"]
+            isOneToOne: false
+            referencedRelation: "crm_empresas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "crm_broker_solicitudes_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       crm_brokers: {
         Row: {
           activo: boolean
@@ -3508,7 +3575,9 @@ export type Database = {
           lead_origen_id: string | null
           nombre: string
           organization_id: string
+          puesto: string | null
           telefono: string | null
+          telefono_fijo: string | null
           updated_at: string
         }
         Insert: {
@@ -3520,7 +3589,9 @@ export type Database = {
           lead_origen_id?: string | null
           nombre: string
           organization_id?: string
+          puesto?: string | null
           telefono?: string | null
+          telefono_fijo?: string | null
           updated_at?: string
         }
         Update: {
@@ -3532,7 +3603,9 @@ export type Database = {
           lead_origen_id?: string | null
           nombre?: string
           organization_id?: string
+          puesto?: string | null
           telefono?: string | null
+          telefono_fijo?: string | null
           updated_at?: string
         }
         Relationships: []
@@ -10189,6 +10262,27 @@ export type Database = {
         Returns: Json
       }
       _auditoria_hallazgo_hash: { Args: { p_texto: string }; Returns: string }
+      _broker_actual: {
+        Args: { p_broker_id: string }
+        Returns: {
+          activo: boolean
+          comision_pct: number
+          created_at: string
+          created_by: string | null
+          email: string
+          id: string
+          nombre: string
+          organization_id: string
+          updated_at: string
+          user_id: string | null
+        }
+        SetofOptions: {
+          from: "*"
+          to: "crm_brokers"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       _calcular_demoras_montos_contenedor: {
         Args: {
           p_cond_id: string
@@ -10863,6 +10957,20 @@ export type Database = {
           tabla: string
         }[]
       }
+      broker_alta_prospecto: {
+        Args: { p_broker_id: string; p_contactos: Json; p_empresa: Json }
+        Returns: Json
+      }
+      broker_buscar_empresa: {
+        Args: { p_broker_id: string; p_texto: string }
+        Returns: {
+          empresa_id: string
+          es_mia: boolean
+          etapa: string
+          nombre: string
+          tipo: string
+        }[]
+      }
       broker_mis_empresas: {
         Args: never
         Returns: {
@@ -10875,6 +10983,35 @@ export type Database = {
           oportunidad: string
           organizacion: string
         }[]
+      }
+      broker_mis_organizaciones: {
+        Args: never
+        Returns: {
+          broker_id: string
+          organizacion: string
+        }[]
+      }
+      broker_mis_solicitudes: {
+        Args: never
+        Returns: {
+          created_at: string
+          empresa: string
+          estado: string
+          id: string
+          motivo: string
+          organizacion: string
+          resuelto_at: string
+        }[]
+      }
+      broker_solicitar_empresa: {
+        Args: {
+          p_broker_id: string
+          p_empresa_id: string
+          p_relacion: string
+          p_rol_contacto: string
+          p_tiempo_cierre: string
+        }
+        Returns: string
       }
       buscar_factura_proveedor_por_uuid: {
         Args: { p_uuid: string }
@@ -11695,6 +11832,23 @@ export type Database = {
         }[]
       }
       crm_backfill_cotizaciones_sin_oportunidad: { Args: never; Returns: Json }
+      crm_broker_resolver_solicitud: {
+        Args: { p_autorizar: boolean; p_id: string; p_motivo?: string }
+        Returns: undefined
+      }
+      crm_broker_solicitudes_pendientes: {
+        Args: never
+        Returns: {
+          broker: string
+          created_at: string
+          empresa: string
+          empresa_id: string
+          id: string
+          relacion: string
+          rol_contacto: string
+          tiempo_cierre: string
+        }[]
+      }
       crm_calificar_prospecto: { Args: { p_lead_id: string }; Returns: Json }
       crm_cancelar_solicitud_pricing: {
         Args: { p_id: string }
@@ -13739,6 +13893,7 @@ export type Database = {
         | "Otro"
         | "Prospección"
         | "Finkargo"
+        | "Broker"
       estado_aprobacion_factura_proveedor:
         | "pendiente"
         | "aprobada"
@@ -14047,6 +14202,7 @@ export const Constants = {
         "Otro",
         "Prospección",
         "Finkargo",
+        "Broker",
       ],
       estado_aprobacion_factura_proveedor: [
         "pendiente",

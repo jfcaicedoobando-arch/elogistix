@@ -1,0 +1,15 @@
+/** Mensajes amigables de los códigos `LC_BROKER_*` (Portal de Brokers). */
+export const LC_CODE_MESSAGES_BROKER: Record<string, string> = {
+  LC_BROKER_NO_AUTORIZADO: "Tu acceso de broker no está activo en esta empresa. Pide ayuda a tu contacto comercial.",
+  LC_BROKER_EMPRESA_ES_CLIENTE: "Esta empresa ya es cliente y no está disponible.",
+  LC_BROKER_EMPRESA_YA_ASIGNADA: "Esta empresa ya tiene un broker asignado.",
+  LC_BROKER_SOLICITUD_PENDIENTE: "Ya tienes una solicitud pendiente para esta empresa.",
+  LC_BROKER_EMPRESA_EXISTE: "Esa empresa ya está registrada. Búscala y solicita trabajarla.",
+  LC_BROKER_NOMBRE_REQUERIDO: "Escribe el nombre de la empresa.",
+  LC_BROKER_CONTACTO_REQUERIDO: "Agrega al menos un contacto con nombre.",
+  LC_BROKER_SIN_KAM: "No hay vendedores disponibles para asignar el prospecto. Avisa al administrador.",
+  LC_BROKER_SOLICITUD_NO_ENCONTRADA: "La solicitud ya no existe o pertenece a otra organización.",
+  LC_BROKER_RESOLVER_NO_AUTORIZADO: "Sólo administradores, gerencia comercial o el KAM de la cuenta pueden resolver esta solicitud.",
+  LC_BROKER_SOLICITUD_YA_RESUELTA: "Esta solicitud ya fue resuelta.",
+  LC_BROKER_MOTIVO_REQUERIDO: "Escribe el motivo del rechazo.",
+};

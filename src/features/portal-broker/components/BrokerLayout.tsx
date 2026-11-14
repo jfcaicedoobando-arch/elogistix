@@ -1,7 +1,7 @@
 /**
  * Layout del Portal de Brokers: encabezado con marca, correo y salida.
  */
-import { Link, Outlet, useNavigate } from "react-router";
+import { Link, NavLink, Outlet, useNavigate } from "react-router";
 import { LogOut } from "lucide-react";
 import { useAuth } from "@/lib/contexts/AuthContext";
 import { BrandLockup } from "@/components/layout/BrandLockup";
@@ -22,6 +22,10 @@ export default function BrokerLayout() {
           <Link to="/broker" className="flex items-center min-w-0">
             <BrandLockup variant="horizontal" size="sm" subtitle="Portal de Brokers" />
           </Link>
+          <nav className="flex items-center gap-1" aria-label="Portal de Brokers">
+            <Button asChild variant="ghost" size="sm"><NavLink to="/broker" end>Mis empresas</NavLink></Button>
+            <Button asChild variant="ghost" size="sm"><NavLink to="/broker/consultar">Consultar empresa</NavLink></Button>
+          </nav>
           <div className="flex items-center gap-2">
             <span className="hidden sm:inline text-body-sm text-muted-foreground truncate max-w-[220px]">
               {user?.email}

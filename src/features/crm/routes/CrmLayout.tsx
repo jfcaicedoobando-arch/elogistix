@@ -1,6 +1,6 @@
 import { useState, useCallback, useMemo } from "react";
 import { NavLink, Outlet } from "react-router";
-import { Target, Activity, BarChart3, LayoutDashboard, Settings, Sun, ShieldCheck, Building2, UserRound, SlidersHorizontal, Gauge, Presentation } from "lucide-react";
+import { Target, Activity, BarChart3, LayoutDashboard, Settings, Sun, ShieldCheck, Building2, UserRound, SlidersHorizontal, Gauge, Presentation, Handshake } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import { useActividadesVencidasCount } from "@/features/crm/hooks";
@@ -20,6 +20,7 @@ const TABS = [
   { to: "/crm/higiene", label: "Higiene", icon: ShieldCheck, end: false },
   { to: "/crm/analitica", label: "Analítica", icon: BarChart3, end: false },
   { to: "/crm/reportes", label: "Reportes", icon: Presentation, end: false },
+  { to: "/crm/brokers/solicitudes", label: "Brokers", icon: Handshake, end: false },
 ];
 
 export default function CrmLayout() {

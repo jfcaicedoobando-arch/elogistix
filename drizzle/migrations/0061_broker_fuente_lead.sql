@@ -1,0 +1,1 @@
+ALTER TYPE public.crm_lead_fuente ADD VALUE IF NOT EXISTS 'Broker';

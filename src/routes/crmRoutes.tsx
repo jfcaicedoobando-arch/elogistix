@@ -14,7 +14,7 @@ import { CRM_CONFIGURACION_ROLES } from "@/lib/access/roleRouteMatrix";
 import {
   CrmDashboard, CrmMiDia, LeadDetalle,
   Oportunidades, OportunidadDetalle, ActividadesCrm, AnaliticaCrm, CrmConfiguracion, CrmHigiene,
-  CrmEmpresas, CrmEmpresaDetalle, CrmContactos, CrmContactoDetalle, CrmPropiedades, CrmPuntaje, CrmReportes,
+  CrmEmpresas, CrmEmpresaDetalle, CrmContactos, CrmContactoDetalle, CrmPropiedades, CrmPuntaje, CrmReportes, CrmBrokerSolicitudes,
 } from "./appRoutes.lazy";
 
 export const crmChildRoutes = (
@@ -32,6 +32,7 @@ export const crmChildRoutes = (
     <Route path="propiedades" element={<CrmPropiedades />} />
     <Route path="puntaje" element={<CrmPuntaje />} />
     <Route path="reportes" element={<CrmReportes />} />
+    <Route path="brokers/solicitudes" element={<CrmBrokerSolicitudes />} />
     <Route path="prospectos" element={<Navigate to="/crm/empresas?estado=Prospecto" replace />} />
     <Route path="oportunidades" element={<Oportunidades />} />
     <Route path="oportunidades/:id" element={<OportunidadDetalle />} />
