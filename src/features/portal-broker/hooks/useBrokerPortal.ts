@@ -2,7 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useMutationWithFeedback } from "@/hooks/shared";
 import type { ContactoBroker, EmpresaBroker } from "../domain/altaProspecto";
 import {
-  altaProspecto, buscarEmpresa, misOrganizaciones, misSolicitudes, solicitarEmpresa, type PeticionEmpresa,
+  altaProspecto, buscarEmpresa, misComisiones, misOrganizaciones, misSolicitudes, solicitarEmpresa, type PeticionEmpresa,
 } from "../services/brokerPortal";
 
 const KEY = ["broker"] as const;
@@ -40,3 +40,6 @@ export const useAltaProspectoBroker = (brokerId: string | null) =>
     successDescription: "Se asignó un KAM por turno y ya aparece en Mis empresas.",
     errorTitle: "No se pudo registrar la empresa",
   });
+
+export const useMisComisionesBroker = () =>
+  useQuery({ queryKey: [...KEY, "comisiones"], queryFn: misComisiones, refetchInterval: 60_000 });

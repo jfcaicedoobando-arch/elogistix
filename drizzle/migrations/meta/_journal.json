@@ -449,6 +449,13 @@
       "when": 1794617696030,
       "tag": "0063_brokers_fase2_lecturas",
       "breakpoints": true
+    },
+    {
+      "idx": 64,
+      "version": "7",
+      "when": 1794618412429,
+      "tag": "0064_brokers_fase3_comisiones",
+      "breakpoints": true
     }
   ]
 }

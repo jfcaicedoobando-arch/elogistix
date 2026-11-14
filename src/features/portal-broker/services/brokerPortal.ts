@@ -44,3 +44,14 @@ export async function misSolicitudes(): Promise<SolicitudBroker[]> {
   if (error) throw error;
   return data ?? [];
 }
+
+export interface ComisionBrokerFila {
+  id: string; organizacion: string; empresa: string; factura: string; fecha: string;
+  utilidad_mxn: number; porcentaje: number; comision_mxn: number; estado: string; pagada: boolean;
+}
+
+export async function misComisiones(): Promise<ComisionBrokerFila[]> {
+  const { data, error } = await supabase.rpc("broker_mis_comisiones");
+  if (error) throw error;
+  return data ?? [];
+}

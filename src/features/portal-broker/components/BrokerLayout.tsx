@@ -25,6 +25,7 @@ export default function BrokerLayout() {
           <nav className="flex items-center gap-1" aria-label="Portal de Brokers">
             <Button asChild variant="ghost" size="sm"><NavLink to="/broker" end>Mis empresas</NavLink></Button>
             <Button asChild variant="ghost" size="sm"><NavLink to="/broker/consultar">Consultar empresa</NavLink></Button>
+            <Button asChild variant="ghost" size="sm"><NavLink to="/broker/comisiones">Comisiones</NavLink></Button>
           </nav>
           <div className="flex items-center gap-2">
             <span className="hidden sm:inline text-body-sm text-muted-foreground truncate max-w-[220px]">

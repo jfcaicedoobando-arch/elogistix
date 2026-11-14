@@ -7,6 +7,7 @@ import { BrokerProtectedRoute } from "@/features/auth/components/BrokerProtected
 
 const BrokerLayout = lazy(() => import("@/features/portal-broker/components/BrokerLayout"));
 const BrokerInicio = lazy(() => import("@/features/portal-broker/routes/BrokerInicio"));
+const BrokerComisiones = lazy(() => import("@/features/portal-broker/routes/BrokerComisiones"));
 const BrokerConsultar = lazy(() => import("@/features/portal-broker/routes/BrokerConsultar"));
 
 export const brokerRoutes = (
@@ -19,5 +20,6 @@ export const brokerRoutes = (
   >
     <Route path="/broker" element={<BrokerInicio />} />
     <Route path="/broker/consultar" element={<BrokerConsultar />} />
+    <Route path="/broker/comisiones" element={<BrokerComisiones />} />
   </Route>
 );

@@ -6,11 +6,15 @@ import { CargaGuard } from "@/components/shared/states/CargaGuard";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { useBrokers } from "@/features/admin/hooks/useBrokers";
 import NuevoBrokerDialog from "./NuevoBrokerDialog";
+import PorcentajesBrokerDialog from "./PorcentajesBrokerDialog";
+import { BrokersComisiones } from "./BrokersComisiones";
+import type { BrokerFila } from "@/features/admin/services/brokers";
 
 const pctFmt = new Intl.NumberFormat("es-MX", { maximumFractionDigits: 2 });
 
 export function BrokersTab() {
   const [open, setOpen] = useState(false);
+  const [editar, setEditar] = useState<BrokerFila | null>(null);
   const q = useBrokers();
   const brokers = q.data ?? [];
 
@@ -38,8 +42,10 @@ export function BrokersTab() {
               <TableRow>
                 <TableHead>Nombre</TableHead>
                 <TableHead>Correo</TableHead>
-                <TableHead className="text-right">% comisión</TableHead>
+                <TableHead className="text-right">% broker</TableHead>
+                <TableHead className="text-right">% KAM</TableHead>
                 <TableHead>Estado</TableHead>
+                <TableHead />
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -48,8 +54,14 @@ export function BrokersTab() {
                   <TableCell className="font-medium">{b.nombre}</TableCell>
                   <TableCell>{b.email}</TableCell>
                   <TableCell className="text-right tabular-nums">{pctFmt.format(Number(b.comision_pct))}%</TableCell>
+                  <TableCell className="text-right tabular-nums">
+                    {b.comision_kam_pct == null ? "Normal" : `${pctFmt.format(Number(b.comision_kam_pct))}%`}
+                  </TableCell>
                   <TableCell>
                     <Badge variant={b.activo ? "secondary" : "outline"}>{b.activo ? "Activo" : "Inactivo"}</Badge>
+                  </TableCell>
+                  <TableCell className="text-right">
+                    <Button size="sm" variant="ghost" onClick={() => setEditar(b)}>Porcentajes</Button>
                   </TableCell>
                 </TableRow>
               ))}
@@ -57,6 +69,8 @@ export function BrokersTab() {
           </Table>
         )}
       </CargaGuard>
+      {editar && <PorcentajesBrokerDialog broker={editar} onClose={() => setEditar(null)} />}
+      <BrokersComisiones />
     </div>
   );
 }

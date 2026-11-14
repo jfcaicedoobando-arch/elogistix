@@ -12,4 +12,10 @@ export const LC_CODE_MESSAGES_BROKER: Record<string, string> = {
   LC_BROKER_RESOLVER_NO_AUTORIZADO: "Sólo administradores, gerencia comercial o el KAM de la cuenta pueden resolver esta solicitud.",
   LC_BROKER_SOLICITUD_YA_RESUELTA: "Esta solicitud ya fue resuelta.",
   LC_BROKER_MOTIVO_REQUERIDO: "Escribe el motivo del rechazo.",
+  LC_BROKER_LIQUIDAR_NO_AUTORIZADO: "Sólo administración, contabilidad o tesorería pueden liquidar comisiones de brokers.",
+  LC_BROKER_SIN_DEVENGADO: "Este broker no tiene comisiones devengadas en ese mes.",
+  LC_BROKER_PAGO_DATOS: "Indica la fecha y la referencia del pago.",
+  LC_BROKER_LIQUIDACION_NO_PENDIENTE: "Esa liquidación ya fue pagada o no existe.",
+  LC_BROKER_PCT_NO_AUTORIZADO: "Sólo administración o gerencia comercial pueden cambiar los porcentajes.",
+  LC_BROKER_PCT_INVALIDO: "Los porcentajes deben estar entre 0 y 100.",
 };

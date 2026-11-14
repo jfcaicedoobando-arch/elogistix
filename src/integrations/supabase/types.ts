@@ -1086,6 +1086,86 @@ export type Database = {
           },
         ]
       }
+      comisiones_broker: {
+        Row: {
+          broker_id: string
+          comision_devengada_id: string
+          comision_mxn: number
+          created_at: string
+          embarque_id: string | null
+          estado: Database["public"]["Enums"]["estado_comision"]
+          factura_id: string
+          id: string
+          liquidacion_id: string | null
+          organization_id: string
+          pago_factura_id: string
+          porcentaje_aplicado: number
+          updated_at: string
+          utilidad_prorrateada_mxn: number
+        }
+        Insert: {
+          broker_id: string
+          comision_devengada_id: string
+          comision_mxn?: number
+          created_at?: string
+          embarque_id?: string | null
+          estado?: Database["public"]["Enums"]["estado_comision"]
+          factura_id: string
+          id?: string
+          liquidacion_id?: string | null
+          organization_id: string
+          pago_factura_id: string
+          porcentaje_aplicado?: number
+          updated_at?: string
+          utilidad_prorrateada_mxn?: number
+        }
+        Update: {
+          broker_id?: string
+          comision_devengada_id?: string
+          comision_mxn?: number
+          created_at?: string
+          embarque_id?: string | null
+          estado?: Database["public"]["Enums"]["estado_comision"]
+          factura_id?: string
+          id?: string
+          liquidacion_id?: string | null
+          organization_id?: string
+          pago_factura_id?: string
+          porcentaje_aplicado?: number
+          updated_at?: string
+          utilidad_prorrateada_mxn?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "comisiones_broker_broker_id_fkey"
+            columns: ["broker_id"]
+            isOneToOne: false
+            referencedRelation: "crm_brokers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "comisiones_broker_comision_devengada_id_fkey"
+            columns: ["comision_devengada_id"]
+            isOneToOne: true
+            referencedRelation: "comisiones_devengadas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "comisiones_broker_liquidacion_id_fkey"
+            columns: ["liquidacion_id"]
+            isOneToOne: false
+            referencedRelation: "liquidaciones_broker"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "comisiones_broker_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       comisiones_devengadas: {
         Row: {
           calculo_snapshot: Json | null
@@ -3482,6 +3562,7 @@ export type Database = {
       crm_brokers: {
         Row: {
           activo: boolean
+          comision_kam_pct: number | null
           comision_pct: number
           created_at: string
           created_by: string | null
@@ -3494,6 +3575,7 @@ export type Database = {
         }
         Insert: {
           activo?: boolean
+          comision_kam_pct?: number | null
           comision_pct: number
           created_at?: string
           created_by?: string | null
@@ -3506,6 +3588,7 @@ export type Database = {
         }
         Update: {
           activo?: boolean
+          comision_kam_pct?: number | null
           comision_pct?: number
           created_at?: string
           created_by?: string | null
@@ -7055,6 +7138,63 @@ export type Database = {
         }
         Relationships: []
       }
+      liquidaciones_broker: {
+        Row: {
+          broker_id: string
+          creada_por: string | null
+          created_at: string
+          estado: string
+          fecha_pago: string | null
+          id: string
+          organization_id: string
+          periodo: string
+          referencia: string | null
+          total_mxn: number
+          updated_at: string
+        }
+        Insert: {
+          broker_id: string
+          creada_por?: string | null
+          created_at?: string
+          estado?: string
+          fecha_pago?: string | null
+          id?: string
+          organization_id: string
+          periodo: string
+          referencia?: string | null
+          total_mxn: number
+          updated_at?: string
+        }
+        Update: {
+          broker_id?: string
+          creada_por?: string | null
+          created_at?: string
+          estado?: string
+          fecha_pago?: string | null
+          id?: string
+          organization_id?: string
+          periodo?: string
+          referencia?: string | null
+          total_mxn?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "liquidaciones_broker_broker_id_fkey"
+            columns: ["broker_id"]
+            isOneToOne: false
+            referencedRelation: "crm_brokers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "liquidaciones_broker_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       liquidaciones_comision: {
         Row: {
           cancelada_at: string | null
@@ -10266,6 +10406,29 @@ export type Database = {
         Args: { p_broker_id: string }
         Returns: {
           activo: boolean
+          comision_kam_pct: number | null
+          comision_pct: number
+          created_at: string
+          created_by: string | null
+          email: string
+          id: string
+          nombre: string
+          organization_id: string
+          updated_at: string
+          user_id: string | null
+        }
+        SetofOptions: {
+          from: "*"
+          to: "crm_brokers"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      _broker_de_pago: {
+        Args: { p_factura_id: string; p_org: string; p_pago_id: string }
+        Returns: {
+          activo: boolean
+          comision_kam_pct: number | null
           comision_pct: number
           created_at: string
           created_by: string | null
@@ -10969,6 +11132,21 @@ export type Database = {
           etapa: string
           nombre: string
           tipo: string
+        }[]
+      }
+      broker_mis_comisiones: {
+        Args: never
+        Returns: {
+          comision_mxn: number
+          empresa: string
+          estado: string
+          factura: string
+          fecha: string
+          id: string
+          organizacion: string
+          pagada: boolean
+          porcentaje: number
+          utilidad_mxn: number
         }[]
       }
       broker_mis_empresas: {
@@ -11836,6 +12014,10 @@ export type Database = {
         Args: { p_autorizar: boolean; p_id: string; p_motivo?: string }
         Returns: undefined
       }
+      crm_broker_set_porcentajes: {
+        Args: { p_broker_id: string; p_broker_pct: number; p_kam_pct: number }
+        Returns: undefined
+      }
       crm_broker_solicitudes_pendientes: {
         Args: never
         Returns: {
@@ -11847,6 +12029,16 @@ export type Database = {
           relacion: string
           rol_contacto: string
           tiempo_cierre: string
+        }[]
+      }
+      crm_brokers_comisiones_resumen: {
+        Args: never
+        Returns: {
+          broker: string
+          broker_id: string
+          devengado_mxn: number
+          liquidado_pendiente_mxn: number
+          pagado_mxn: number
         }[]
       }
       crm_calificar_prospecto: { Args: { p_lead_id: string }; Returns: Json }
@@ -11887,6 +12079,10 @@ export type Database = {
         Returns: Json
       }
       crm_enviar_solicitud_pricing: { Args: { p_id: string }; Returns: Json }
+      crm_generar_liquidacion_broker: {
+        Args: { p_broker_id: string; p_periodo: string }
+        Returns: string
+      }
       crm_higiene_oportunidades: {
         Args: never
         Returns: {
@@ -11941,6 +12137,10 @@ export type Database = {
           telefono: string
           telefono_norm: string
         }[]
+      }
+      crm_pagar_liquidacion_broker: {
+        Args: { p_fecha: string; p_id: string; p_referencia: string }
+        Returns: undefined
       }
       crm_pricing_ampliar_plazo: {
         Args: { p_horas: number; p_id: string; p_motivo: string }
