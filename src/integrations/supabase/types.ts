@@ -7,11 +7,6 @@ export type Json =
   | Json[]
 
 export type Database = {
-  // Allows to automatically instantiate createClient with right options
-  // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
-  __InternalSupabase: {
-    PostgrestVersion: "14.1"
-  }
   public: {
     Tables: {
       agente_users: {
@@ -3412,6 +3407,53 @@ export type Database = {
           },
         ]
       }
+      crm_brokers: {
+        Row: {
+          activo: boolean
+          comision_pct: number
+          created_at: string
+          created_by: string | null
+          email: string
+          id: string
+          nombre: string
+          organization_id: string
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          activo?: boolean
+          comision_pct: number
+          created_at?: string
+          created_by?: string | null
+          email: string
+          id?: string
+          nombre: string
+          organization_id: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          activo?: boolean
+          comision_pct?: number
+          created_at?: string
+          created_by?: string | null
+          email?: string
+          id?: string
+          nombre?: string
+          organization_id?: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "crm_brokers_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       crm_comentarios_oportunidad: {
         Row: {
           autor_email: string
@@ -3564,6 +3606,7 @@ export type Database = {
       }
       crm_empresas: {
         Row: {
+          broker_id: string | null
           cliente_id: string | null
           created_at: string
           created_by: string | null
@@ -3577,6 +3620,7 @@ export type Database = {
           letra_empresa_crm: string | null
         }
         Insert: {
+          broker_id?: string | null
           cliente_id?: string | null
           created_at?: string
           created_by?: string | null
@@ -3589,6 +3633,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          broker_id?: string | null
           cliente_id?: string | null
           created_at?: string
           created_by?: string | null
@@ -3600,7 +3645,15 @@ export type Database = {
           organization_id?: string
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "crm_empresas_broker_id_fkey"
+            columns: ["broker_id"]
+            isOneToOne: false
+            referencedRelation: "crm_brokers"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       crm_etapa_criterios: {
         Row: {
@@ -10805,6 +10858,19 @@ export type Database = {
           tabla: string
         }[]
       }
+      broker_mis_empresas: {
+        Args: never
+        Returns: {
+          actualizado: string
+          empresa: string
+          empresa_id: string
+          estado_crm: string
+          etapa: string
+          etapa_tipo: string
+          oportunidad: string
+          organizacion: string
+        }[]
+      }
       buscar_factura_proveedor_por_uuid: {
         Args: { p_uuid: string }
         Returns: Json
@@ -13646,6 +13712,7 @@ export type Database = {
         | "auxiliar_contable"
         | "ejecutivo_cobranza"
         | "agente_carga"
+        | "broker"
       categoria_proveedor: "Logistico" | "GastoOperativo"
       crm_actividad_tipo: "llamada" | "email" | "reunion" | "tarea" | "nota"
       crm_entidad_tipo: "lead" | "oportunidad" | "cliente" | "contacto"
@@ -13951,6 +14018,7 @@ export const Constants = {
         "auxiliar_contable",
         "ejecutivo_cobranza",
         "agente_carga",
+        "broker",
       ],
       categoria_proveedor: ["Logistico", "GastoOperativo"],
       crm_actividad_tipo: ["llamada", "email", "reunion", "tarea", "nota"],
@@ -14130,3 +14198,4 @@ export const Constants = {
     },
   },
 } as const
+

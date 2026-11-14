@@ -8,6 +8,7 @@ export type PostLoginRole =
   | "admin"
   | "viewer"
   | "agente_carga"
+  | "broker"
   | null;
 
 /**
@@ -19,5 +20,6 @@ export function resolveLandingRoute(role: PostLoginRole | string): string {
   if (role === "super_admin") return "/admin";
   if (role === "cliente") return "/portal";
   if (role === "agente_carga") return "/agente";
+  if (role === "broker") return "/broker";
   return "/inicio";
 }

@@ -35,6 +35,11 @@ export function resolveProtectedRouteRedirect({
     return "/agente";
   }
 
+  // Broker (vendedor externo): confinado a su portal.
+  if (role === "broker" && !pathname.startsWith("/broker")) {
+    return "/broker";
+  }
+
   // Super admin: permitirle operar módulos como cualquier admin_org. Sólo lo
   // enviamos a /admin cuando entra a la raíz `/` o `/dashboard` (aterrizaje por
   // defecto); si navega explícitamente a otra ruta operativa, respetamos su

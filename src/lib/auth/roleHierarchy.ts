@@ -58,6 +58,7 @@ export const ROLE_EQUIVALENTS: Record<AppRole, readonly AppRole[]> = {
   customer_service: ["customer_service"],
   cliente: ["cliente"],
   agente_carga: ["agente_carga"],
+  broker: ["broker"],
 } as const;
 
 /**

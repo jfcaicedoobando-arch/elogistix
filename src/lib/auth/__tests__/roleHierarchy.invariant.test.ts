@@ -67,6 +67,7 @@ const HAS_ROLE_SNAPSHOT: Record<AppRole, readonly AppRole[]> = {
   customer_service: ["customer_service"],
   cliente: ["cliente"],
   agente_carga: ["agente_carga"],
+  broker: ["broker"],
 };
 
 const sortRoles = (roles: readonly AppRole[]) => [...roles].sort();

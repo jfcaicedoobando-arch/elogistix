@@ -27,6 +27,7 @@ export const ROLE_LABELS: Record<AppRole, string> = {
   customer_service: "Atención a Clientes",
   cliente: "Cliente",
   agente_carga: "Agente de Carga",
+  broker: "Broker (vendedor externo)",
   // Legacy (no asignables desde UI, pero soportados)
   admin: "Admin (legacy)",
   operador: "Operador (legacy)",
@@ -48,6 +49,7 @@ export const ROLE_DESCRIPTIONS: Record<AppRole, string> = {
   vendedor: "Prepara cotizaciones y consulta costos y márgenes. Gestiona sus propios leads, oportunidades y actividades, y entrega a Operaciones las cotizaciones confirmadas.",
   customer_service: "Consulta embarques y clientes; crea, edita y envía cotizaciones según su estado. Sin acceso a CRM, configuración ni módulos financieros.",
   cliente: "Acceso restringido al portal del cliente.",
+  broker: "Vendedor externo: consulta sus empresas, propone prospectos y ve sus comisiones desde el Portal de Brokers. No ve datos internos.",
   agente_carga: "Acceso al portal del agente: sube tarifas marítimas, carta garantía y demoras de su propio agente. No ve datos comerciales internos.",
   admin: "Rol heredado. Revisa las tareas y los permisos antes de sustituirlo por otro rol.",
   operador: "Rol heredado. Revisa las tareas y los permisos antes de sustituirlo por otro rol.",
@@ -70,6 +72,7 @@ export const ROLE_BADGE_CLASSES: Record<AppRole, string> = {
   customer_service: "bg-muted text-muted-foreground",
   cliente: "bg-accent text-accent-foreground",
   agente_carga: "bg-info text-info-foreground",
+  broker: "bg-accent text-accent-foreground",
   admin: "bg-destructive text-destructive-foreground",
   operador: "bg-info text-info-foreground",
   viewer: "bg-muted text-muted-foreground",

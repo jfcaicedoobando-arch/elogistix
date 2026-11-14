@@ -11,6 +11,7 @@
 const AREA_POR_ROL: Record<string, string> = {
   cliente: "/portal",
   agente_carga: "/agente",
+  broker: "/broker",
 };
 
 const AREAS_EXTERNAS = Object.values(AREA_POR_ROL);

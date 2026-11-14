@@ -13,9 +13,10 @@ import {
 } from "@/features/admin/hooks/usuario";
 import { UsuariosInternosTab } from "./UsuariosInternosTab";
 import { PortalUsuariosTab } from "./PortalUsuariosTab";
+import { BrokersTab } from "@/features/admin/components/brokers/BrokersTab";
 import { useDocumentTitle } from "@/hooks/shared";
 
-type TabId = "internos" | "cliente" | "agente";
+type TabId = "internos" | "cliente" | "agente" | "brokers";
 
 export default function Usuarios() {
   useDocumentTitle('Gestión de usuarios');
@@ -35,7 +36,7 @@ export default function Usuarios() {
   // Sólo la pestaña activa consulta datos; la red de seguridad usa el estado
   // de esa consulta activa.
   const activeQuery =
-    tab === "internos" ? usuariosQ : tab === "cliente" ? portalClienteQ : portalAgenteQ;
+    tab === "internos" ? usuariosQ : tab === "cliente" ? portalClienteQ : tab === "agente" ? portalAgenteQ : null;
 
   return (
     <PageContainer>
@@ -62,9 +63,9 @@ export default function Usuarios() {
       />
 
       <CargaGuard
-        isLoading={activeQuery.isLoading}
-        isError={activeQuery.isError}
-        onRetry={activeQuery.refetch}
+        isLoading={activeQuery?.isLoading ?? false}
+        isError={activeQuery?.isError ?? false}
+        onRetry={() => void activeQuery?.refetch()}
         errorTitle="No se pudo cargar el listado de usuarios"
         errorDescription="Revisa tu conexión y vuelve a intentar."
       >
@@ -88,6 +89,7 @@ export default function Usuarios() {
               <span className="ml-1 text-body-sm text-muted-foreground">({portalAgente.length})</span>
             ) : null}
           </TabsTrigger>
+          <TabsTrigger value="brokers">Brokers</TabsTrigger>
         </TabsList>
 
         <TabsContent value="internos">
@@ -100,6 +102,10 @@ export default function Usuarios() {
 
         <TabsContent value="agente">
           <PortalUsuariosTab tipo="agente" />
+        </TabsContent>
+
+        <TabsContent value="brokers">
+          <BrokersTab />
         </TabsContent>
       </Tabs>
       </CargaGuard>

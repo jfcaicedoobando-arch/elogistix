@@ -32,6 +32,7 @@ import {
   handleListClients,
 } from "./handlers.ts";
 import { handleInviteAgente, handleListAgentes } from "./agenteHandlers.ts";
+import { handleInviteBroker } from "./brokerHandlers.ts";
 import { handleInvite, handleResetPassword } from "./inviteHandler.ts";
 import { handleListPortalEmails } from "./portalEmailsHandler.ts";
 import { handleSetActive } from "./setActiveHandler.ts";
@@ -48,6 +49,7 @@ export type Action =
   | "invite-client"
   | "list-clients"
   | "invite-agente"
+  | "invite-broker"
   | "list-agentes"
   | "list-portal-emails"
   | "set-active";
@@ -62,6 +64,7 @@ const ACTIONS = new Set<Action>([
   "invite-client",
   "list-clients",
   "invite-agente",
+  "invite-broker",
   "list-agentes",
   "list-portal-emails",
   "set-active",
@@ -86,6 +89,7 @@ const ACCIONES_ADMIN = new Set<Action>([
   "delete",
   "invite-client",
   "invite-agente",
+  "invite-broker",
   "list-portal-emails",
   "set-active",
 ]);
@@ -100,6 +104,7 @@ const HANDLERS: Record<Action, (ctx: Ctx, admin: AdminArg) => Promise<Response>>
   "invite-client": handleInviteClient,
   "list-clients": (ctx) => handleListClients(ctx),
   "invite-agente": handleInviteAgente,
+  "invite-broker": handleInviteBroker,
   "list-agentes": (ctx) => handleListAgentes(ctx),
   "list-portal-emails": handleListPortalEmails,
   "set-active": handleSetActive,
@@ -118,7 +123,7 @@ Deno.serve(async (req) => {
     if (!action) {
       log.finish(400, "invalid_action", { user_id: callerId });
       return errorResponse(
-        "action inválida. Use: list | list-nombres | create | invite | reset-password | delete | invite-client | list-clients | invite-agente | list-agentes | list-portal-emails | set-active",
+        "action inválida. Use: list | list-nombres | create | invite | reset-password | delete | invite-client | list-clients | invite-agente | invite-broker | list-agentes | list-portal-emails | set-active",
         400,
         cors,
       );

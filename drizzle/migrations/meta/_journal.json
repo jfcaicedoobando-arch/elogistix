@@ -414,6 +414,20 @@
       "when": 1794444261956,
       "tag": "0058_pricing_faltantes_texto",
       "breakpoints": true
+    },
+    {
+      "idx": 59,
+      "version": "7",
+      "when": 1794616551175,
+      "tag": "0059_broker_rol",
+      "breakpoints": true
+    },
+    {
+      "idx": 60,
+      "version": "7",
+      "when": 1794616577269,
+      "tag": "0060_brokers_fase1",
+      "breakpoints": true
     }
   ]
 }

@@ -9,9 +9,10 @@ import { portalRoutes } from "./routes/portalRoutes";
 import { adminRoutes } from "./routes/adminRoutes";
 import { appRoutes } from "./routes/appRoutes";
 import { agenteRoutes } from "./routes/agenteRoutes";
+import { brokerRoutes } from "./routes/brokerRoutes";
 
 const SentryRouteReporter = lazy(() => import("@/lib/observability/sentry/RouteReporter"));
-const routeElements = <>{portalRoutes}{agenteRoutes}{adminRoutes}{appRoutes}{publicRoutes}</>;
+const routeElements = <>{portalRoutes}{agenteRoutes}{brokerRoutes}{adminRoutes}{appRoutes}{publicRoutes}</>;
 
 function RouteTelemetry() {
   const ready = useSyncExternalStore(subscribeSentryReady, getSentryReady, () => false);
